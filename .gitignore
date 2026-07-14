@@ -1,0 +1,25 @@
+# Local/generated data
+PoST_simulations/batch.json
+PoST_simulations/*/batch.json
+PoST_simulations/*/pulse*.json
+PoST_simulations/*/noise*.json
+
+# Native build outputs and caches
+tes_cpp/build/
+tes_cpp/build-*/
+tes_cpp/**/build/
+tes_cpp/**/build-*/
+
+# Python caches and local environments
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+simu_py/output/
+**/.DS_Store
+
+# Generated plots and tabular outputs
+**/*.png
+**/*.dat

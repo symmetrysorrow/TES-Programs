@@ -1,0 +1,13 @@
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "tes-cpp"
+version = "0.1.0"
+description = "Fast TES PHITS dump conversion and pulse generation"
+requires-python = ">=3.9"
+
+[tool.scikit-build]
+wheel.packages = ["python/tes_cpp"]
+cmake.version = ">=3.20"
