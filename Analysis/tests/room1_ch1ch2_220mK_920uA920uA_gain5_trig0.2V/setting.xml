@@ -1,0 +1,119 @@
+<?xml version='1.0' standalone='yes' ?>
+<LVData xmlns="http://www.ni.com/LVData">
+<Version>16.0f7</Version>
+<Cluster>
+<Name>出力クラスタ</Name>
+<NumElts>2</NumElts>
+<Cluster>
+<Name>Hardware Config</Name>
+<NumElts>10</NumElts>
+<DBL>
+<Name>Max Input</Name>
+<Val>5.00000000000000</Val>
+</DBL>
+<DBL>
+<Name>Minimum Input</Name>
+<Val>-5.00000000000000</Val>
+</DBL>
+<DAQChannel>
+<Name>DAQ Channel</Name>
+<Val>PXI2Slot2/ai0:1</Val>
+</DAQChannel>
+<DBL>
+<Name>Sample Rate</Name>
+<Val>1000000.00000000000000</Val>
+</DBL>
+<DBL>
+<Name>Sample/Channel</Name>
+<Val>100000.00000000000000</Val>
+</DBL>
+<Refnum>
+<Name>DAQmx Task name</Name>
+<RefKind>Generic Tag</RefKind>
+<RefType>NIDAQ</RefType>
+<Val></Val>
+</Refnum>
+<Boolean>
+<Name>Reverse</Name>
+<Val>0</Val>
+</Boolean>
+<Boolean>
+<Name>Flux Jump</Name>
+<Val>0</Val>
+</Boolean>
+<DBL>
+<Name>DC</Name>
+<Val>5.00000000000000</Val>
+</DBL>
+<U32>
+<Name>time (s)</Name>
+<Val>3600</Val>
+</U32>
+</Cluster>
+<Cluster>
+<Name>Log Config</Name>
+<NumElts>13</NumElts>
+<Path>
+<Name>Log File Path</Name>
+<Val>E:\tagawa</Val>
+</Path>
+<DBL>
+<Name>Save Samples</Name>
+<Val>49999.99999999999990</Val>
+</DBL>
+<DBL>
+<Name>Trigger Threshould</Name>
+<Val>0.20000000000000</Val>
+</DBL>
+<DBL>
+<Name>Randum rate</Name>
+<Val>1.00000000000000</Val>
+</DBL>
+<Boolean>
+<Name>Threshould Trigger</Name>
+<Val>0</Val>
+</Boolean>
+<Boolean>
+<Name>Randum Trigger</Name>
+<Val>1</Val>
+</Boolean>
+<String>
+<Name>Folder name</Name>
+<Val>room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V</Val>
+</String>
+<Boolean>
+<Name>Trigger</Name>
+<Val>1</Val>
+</Boolean>
+<DBL>
+<Name>PreTrigger Samples</Name>
+<Val>4999.99999999999999</Val>
+</DBL>
+<Array>
+<Name>Pulse Data Path</Name>
+<Dimsize>0</Dimsize>
+<Path>
+<Name>appended path</Name>
+<Val></Val>
+</Path>
+</Array>
+<Array>
+<Name>Noise Data Path</Name>
+<Dimsize>0</Dimsize>
+<Path>
+<Name>appended path</Name>
+<Val></Val>
+</Path>
+</Array>
+<Boolean>
+<Name>Log?</Name>
+<Val>1</Val>
+</Boolean>
+<Refnum>
+<Name>要素</Name>
+<RefKind>Byte Stream File</RefKind>
+<Val>0x00000000</Val>
+</Refnum>
+</Cluster>
+</Cluster>
+</LVData>
