@@ -17,7 +17,9 @@ if (NOT nlohmann_json_FOUND)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-add_library(tes_cpp_pulse src/pulse.cpp)
+# Use a static library so the executable can link on MSVC without requiring
+# DLL export annotations for the pulse implementation.
+add_library(tes_cpp_pulse STATIC src/pulse.cpp)
 find_package(Threads REQUIRED)
 target_include_directories(tes_cpp_pulse
     PUBLIC

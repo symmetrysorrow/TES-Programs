@@ -3,12 +3,11 @@ requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "tes-cpp"
+name = "tes-cpp-dump2event"
 version = "0.1.0"
-description = "Fast TES PHITS dump conversion and pulse generation"
+description = "Fast, portable conversion from PHITS dumpall.dat to event.json"
 requires-python = ">=3.9"
-dependencies = ["h5py>=3.8", "numpy>=1.23"]
 
 [tool.scikit-build]
-wheel.packages = ["python/tes_cpp"]
+wheel.packages = ["python/tes_cpp_dump2event"]
 cmake.version = ">=3.20"
