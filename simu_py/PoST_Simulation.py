@@ -21,9 +21,20 @@ import scipy.fftpack as fft
 import cmath
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
-import general
-from tes_cpp import dump2json
+import sys
+from pathlib import Path
+
+# Allow running this script directly from simu_py without installing tes_cpp.
+_repo_root = Path(__file__).resolve().parents[1]
+_tes_cpp_python = _repo_root / "tes_cpp" / "python"
+if str(_tes_cpp_python) not in sys.path:
+    sys.path.insert(0, str(_tes_cpp_python))
+
+from lib import general
+from tes_cpp import dump2event
 from tes_cpp import posi2pulse
+from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
+from lib.pulse_hdf5 import PulseWriter, iter_pulse_items as iter_hdf5_pulse_items, read_all_pulses, read_time
 # --------------------------------------------------------------
 k_b = 1.381 * 1.0e-23  # Boltzmann's constant
 ptfn_Flink = 0.5
@@ -35,7 +46,7 @@ zure = 30
 
 pulse_num=500
 
-output="H:\\hata\\662_142_136_300split"
+output="H:\\hata2025\\New_test"
 
 def random_noise(spe, seed):
     spe_re = spe[::-1]  # reverce
@@ -113,9 +124,9 @@ def MakePulse():
     positions = list(range(1, int(para["n_abs"]) + 1))
     input_path = f"{output}/input.json"
 
-    # Writing directly from posi2pulse avoids holding every generated waveform
-    # in Python memory.  The complete result is saved in one JSON document.
-    posi2pulse(input_path, positions, output_path=f"{output}/pulses.json")
+    # The native generator is wrapped in the tes_cpp package and writes the
+    # shared-time pulse schema as compressed HDF5.
+    posi2pulse(input_path, positions, output_path=f"{output}/pulses.h5")
 
     # Keep the settling-time metadata without reading the large JSON file back.
     reference_pulse = posi2pulse(input_path, [1])[0]
@@ -126,18 +137,8 @@ def MakePulse():
         json.dump(para,f,indent=4)
 
 def LoadPulses():
-    """Load the shared-time, position-keyed posi2pulse JSON schema."""
-    with open(f"{output}/pulses.json", "r", encoding="utf-8") as f:
-        document = json.load(f)
-    time = document["time"]
-    return {
-        int(position): {
-            "position": int(position),
-            "time": time,
-            **waveform,
-        }
-        for position, waveform in document["pulses"].items()
-    }
+    """Load the shared-time, position-keyed HDF5 pulse schema."""
+    return read_all_pulses(f"{output}/pulses.h5")
 
 def IterJsonObjectItems(path, chunk_size=1024 * 1024):
     """Yield top-level JSON object items without loading the entire file."""
@@ -198,6 +199,10 @@ def IterJsonObjectItems(path, chunk_size=1024 * 1024):
             yield key, parse_value()
 
 def IterPulseItems(path, chunk_size=1024 * 1024):
+    """Yield pulse records from HDF5 (or legacy JSON during migration)."""
+    if Path(path).suffix.lower() in {".h5", ".hdf5"}:
+        yield from iter_hdf5_pulse_items(path)
+        return
     """Yield a shared-time JSON document's position/event-keyed pulses."""
     decoder = json.JSONDecoder()
     with open(path, "r", encoding="utf-8") as file:
@@ -430,17 +435,14 @@ def MakeNoise():
         "johnson_load2": noise[7, :].tolist(),
         "johnson_tes2": noise[8, :].tolist(),
     }
-    with open(f"{output}/noise.json", "w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "input": para,
-                "frequency": frequency.tolist(),
-                "components": components,
-                "total": noise_total.tolist(),
-            },
-            f,
-            separators=(",", ":"),
-        )
+    import h5py
+    with h5py.File(f"{output}/noise.h5", "w") as f:
+        f.attrs["input_json"] = json.dumps(para, separators=(",", ":"))
+        f.create_dataset("frequency", data=frequency, compression="gzip")
+        component_group = f.create_group("components")
+        for name, values in components.items():
+            component_group.create_dataset(name, data=values, compression="gzip")
+        f.create_dataset("total", data=noise_total, compression="gzip")
 
     # --- grough Noise Spectral Density--------------------------------------------
     plt.figure(figsize=(8, 8))
@@ -535,11 +537,12 @@ def MakeNoise():
     plt.cla()
 
 def LoadNoise():
-    """Read the total noise spectral density from noise.json."""
-    with open(f"{output}/noise.json", "r", encoding="utf-8") as f:
-        return np.asarray(json.load(f)["total"], dtype=float)
+    """Read the total noise spectral density from noise.h5."""
+    import h5py
+    with h5py.File(f"{output}/noise.h5", "r") as f:
+        return f["total"][:]
 
-def SaveNoise():
+def _ShowNoiseSpectrum():
     with open(f'{output}/input.json', "r") as f:
         para = json.load(f)
     noise_spe_dens = LoadNoise()
@@ -568,7 +571,7 @@ def SaveNoise():
     plt.clf()
     np.savetxt(f"{output}/noise_total-bessel100k.dat", amp_dens)
 
-    if True:
+    if False:
         pre=np.loadtxt(f"{output}/noise_total-bessel100k.dat")
         plt.plot(pre,label="pre")
         plt.plot(amp_dens,label="post")
@@ -578,7 +581,7 @@ def SaveNoise():
         plt.legend()
         plt.show()
 
-def CheckPulse():
+def ShowSamples():
     with open(f'{output}/input.json', "r") as f:
         para = json.load(f)
     pulses_by_position = LoadPulses()
@@ -588,7 +591,7 @@ def CheckPulse():
             values = pulses_by_position[int(position)][f"ch{channel}"]
         except KeyError as error:
             raise ValueError(
-                f"pulses.json does not contain position {position}"
+                f"pulses.h5 does not contain position {position}"
             ) from error
         # A new ndarray is required because the pulse-with-noise plot modifies it.
         return np.asarray(values, dtype=float)
@@ -691,8 +694,8 @@ def CheckPulse():
     # ---- Show Ratio---
     data=np.loadtxt(f"{output}/ratios.csv", delimiter=',', skiprows=1)
     # 1列目をX軸、2列目をY軸
-    x = data[:, 0]
-    y = data[:, 1]
+    x = data[:, 1]
+    y = data[:, 2]
 
     plt.scatter(x, y, c=x, cmap='coolwarm', s=50)
     plt.xlabel('Position[mm]')
@@ -719,8 +722,7 @@ def CheckPulse():
         plt.savefig(f"{output}/checkpulse_sn_ratio/sn_ratio_position_{i}.png", dpi=350)
         plt.cla()
 
-
-
+    _ShowNoiseSpectrum()
 
 def _legacy_MultiPulse():
 
@@ -761,7 +763,7 @@ def _legacy_MultiPulse():
                         print(f"error:{e}")
 
 def Pulse_Noise():
-    """Create noisy pulse ensembles from pulses.json.
+    """Create noisy pulse ensembles from pulses.h5.
 
     One JSON file is written per requested position. Its schema stores the
     input, one shared time array, and noise realizations keyed by index.
@@ -784,43 +786,43 @@ def Pulse_Noise():
             pulse = pulses_by_position[int(posi)]
         except KeyError as error:
             raise ValueError(
-                f"pulses.json does not contain position {posi}"
+                f"pulses.h5 does not contain position {posi}"
             ) from error
 
         ch0 = np.asarray(pulse["ch0"], dtype=float)
         ch1 = np.asarray(pulse["ch1"], dtype=float)
         position_directory = f"{output}/{posi}"
         os.makedirs(position_directory, exist_ok=True)
-        path = f"{position_directory}/pulse_noise.json"
-        # Write each realization immediately, preventing all 300 waveforms
-        # from being retained in Python memory at the same time.
-        with open(path, "w", encoding="utf-8") as f:
-            f.write('{"input":')
-            json.dump(para, f, separators=(",", ":"))
-            f.write(',"time":')
-            json.dump(pulse["time"], f, separators=(",", ":"))
-            f.write(',"pulses":{')
+        path = f"{position_directory}/pulse_noise.h5"
+        with PulseWriter(path, pulse["time"], para) as f:
             for k in range(pulse_num):
-                if k:
-                    f.write(",")
-                json.dump(str(k), f)
-                f.write(":")
-                json.dump(
-                    {
-                        "ch0": add_noise(ch0).tolist(),
-                        "ch1": add_noise(ch1).tolist(),
-                    },
-                    f,
-                    separators=(",", ":"),
-                )
-            f.write("}}\n")
+                f.append(k, add_noise(ch0), add_noise(ch1))
 
+def Dump2Event():
+    """Convert each position folder's dumpall.dat into event.h5."""
+    with open(f"{output}/input.json", "r", encoding="utf-8") as f:
+        para = json.load(f)
+
+    # dump2event expects MeV, while input.json E is in keV.
+    input_energy_mev = float(para["E"]) / 1000.0
+    for posi in tqdm.tqdm(para["position"], desc="dumpall to event"):
+        position_directory = f"{output}/{posi}"
+        dump_path = f"{position_directory}/dumpall.dat"
+        event_path = f"{position_directory}/event.h5"
+        if not os.path.isfile(dump_path):
+            raise FileNotFoundError(f"dumpall.dat was not found: {dump_path}")
+        dump2event(
+            dump_path,
+            event_path,
+            input_energy=input_energy_mev,
+            save_all=True,
+        )
 
 def Pulse_Ms():
     """Synthesize one CH0/CH1 pulse for each event in every position folder.
 
-    For each input.json position, read its batch.json and write pulse_MS.json.
-    batch.json stores event IDs as its outer keys; all deposits in one event
+    For each input.json position, read its event.h5 and write pulse_MS.h5.
+    event.h5 stores event IDs as its outer keys; all deposits in one event
     are summed into a single pulse.
     """
     with open(f"{output}/input.json", "r", encoding="utf-8") as f:
@@ -832,7 +834,7 @@ def Pulse_Ms():
     if length_mm <= 0 or reference_energy_kev <= 0:
         raise ValueError("input.json length and E must be positive")
     if set(range(1, n_abs + 1)) - reference_pulses.keys():
-        raise ValueError("pulses.json does not contain all absorber positions")
+        raise ValueError("pulses.h5 does not contain all absorber positions")
 
     # PHITS coordinates are cm, while input.json length is mm.  Return None
     # for deposits outside the absorber span instead of assigning them to an
@@ -848,29 +850,24 @@ def Pulse_Ms():
     sample_count = len(time)
     for posi in tqdm.tqdm(para["position"], desc="MS pulse positions"):
         position_directory = f"{output}/{posi}"
-        batch_path = f"{position_directory}/batch.json"
-        output_path = f"{position_directory}/pulse_MS.json"
-        if not os.path.isfile(batch_path):
-            raise FileNotFoundError(f"batch.json was not found: {batch_path}")
+        event_path = f"{position_directory}/event.h5"
+        output_path = f"{position_directory}/pulse_MS.h5"
+        if not os.path.isfile(event_path):
+            raise FileNotFoundError(f"event.h5 was not found: {event_path}")
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write('{"input":')
-            json.dump(para, f, separators=(",", ":"))
-            f.write(',"time":')
-            json.dump(time, f, separators=(",", ":"))
-            f.write(',"pulses":{')
+        with PulseWriter(output_path, time, para) as f:
             for index, (event_id, event) in enumerate(
-                tqdm.tqdm(IterJsonObjectItems(batch_path), desc=f"MS pulses {posi}", leave=False)
+                tqdm.tqdm(iter_hdf5_events(event_path), desc=f"MS pulses {posi}", leave=False)
             ):
                 energy_by_block = np.zeros(n_abs, dtype=float)
                 if not isinstance(event, dict):
-                    raise ValueError(f"batch.json event {event_id} is not an object")
+                    raise ValueError(f"event.h5 event {event_id} is not an object")
                 for particle in event.values():
                     positions = particle.get("x_deposit", [])
                     energies = particle.get("E_deposit", [])
                     if len(positions) != len(energies):
                         raise ValueError(
-                            f"batch.json event {event_id} has mismatched "
+                            f"event.h5 event {event_id} has mismatched "
                             "x_deposit and E_deposit lengths"
                         )
                     for x_deposit, e_deposit_mev in zip(positions, energies):
@@ -888,20 +885,7 @@ def Pulse_Ms():
                     ch0 += scale * np.asarray(reference["ch0"], dtype=float)
                     ch1 += scale * np.asarray(reference["ch1"], dtype=float)
 
-                if index:
-                    f.write(",")
-                json.dump(str(event_id), f)
-                f.write(":")
-                json.dump(
-                    {
-                        "ch0": ch0.tolist(),
-                        "ch1": ch1.tolist(),
-                    },
-                    f,
-                    separators=(",", ":"),
-                )
-            f.write("}}\n")
-
+                f.append(event_id, ch0, ch1)
 
 def _legacy_MS_Noise():
     with open(f"{output}/input.json", "r") as f:
@@ -944,7 +928,7 @@ def _legacy_MS_Noise():
                     future.result()  # 処理結果が必要な場合、ここで結果を取得
 
 def Pulse_MS_Noise():
-    """Add independent random noise to every pulse in each pulse_MS.json."""
+    """Add independent random noise to every pulse in each pulse_MS.h5."""
     with open(f"{output}/input.json", "r", encoding="utf-8") as f:
         para = json.load(f)
     sample = int(para["samples"])
@@ -958,17 +942,12 @@ def Pulse_MS_Noise():
 
     for posi in tqdm.tqdm(para["position"], desc="MS noise positions"):
         position_directory = f"{output}/{posi}"
-        source_path = f"{position_directory}/pulse_MS.json"
-        output_path = f"{position_directory}/pulse_MS_noise.json"
+        source_path = f"{position_directory}/pulse_MS.h5"
+        output_path = f"{position_directory}/pulse_MS_noise.h5"
         if not os.path.isfile(source_path):
-            raise FileNotFoundError(f"pulse_MS.json was not found: {source_path}")
+            raise FileNotFoundError(f"pulse_MS.h5 was not found: {source_path}")
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write('{"input":')
-            json.dump(para, f, separators=(",", ":"))
-            f.write(',"time":')
-            json.dump(time, f, separators=(",", ":"))
-            f.write(',"pulses":{')
+        with PulseWriter(output_path, time, para) as f:
             for index, (event_id, pulse) in enumerate(
                 tqdm.tqdm(IterPulseItems(source_path), desc=f"MS noise {posi}", leave=False)
             ):
@@ -978,48 +957,13 @@ def Pulse_MS_Noise():
                     raise ValueError(
                         f"pulse {event_id} in {source_path} does not match samples={sample}"
                     )
-                if index:
-                    f.write(",")
-                json.dump(str(event_id), f)
-                f.write(":")
-                json.dump(
-                    {
-                        "ch0": add_noise(ch0).tolist(),
-                        "ch1": add_noise(ch1).tolist(),
-                    },
-                    f,
-                    separators=(",", ":"),
-                )
-            f.write("}}\n")
-
-
-def Dump2Json():
-    """Convert each position folder's dumpall.dat into batch.json."""
-    with open(f"{output}/input.json", "r", encoding="utf-8") as f:
-        para = json.load(f)
-
-    # dump2json expects MeV, while input.json E is in keV.
-    input_energy_mev = float(para["E"]) / 1000.0
-    for posi in tqdm.tqdm(para["position"], desc="dumpall to batch"):
-        position_directory = f"{output}/{posi}"
-        dump_path = f"{position_directory}/dumpall.dat"
-        batch_path = f"{position_directory}/batch.json"
-        if not os.path.isfile(dump_path):
-            raise FileNotFoundError(f"dumpall.dat was not found: {dump_path}")
-        dump2json(
-            dump_path,
-            batch_path,
-            input_energy=input_energy_mev,
-            save_all=True,
-        )
-
+                f.append(event_id, add_noise(ch0), add_noise(ch1))
 
 #MakePulse()
 #FitRatios()
 #MakeNoise()
-#SaveNoise()
-#Dump2Json()
-CheckPulse()
+#ShowSamples()
 #Pulse_Noise()
-#Pulse_Ms()
-#Pulse_MS_Noise()
+Dump2Event()
+Pulse_Ms()
+Pulse_MS_Noise()

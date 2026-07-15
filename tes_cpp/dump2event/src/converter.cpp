@@ -9,8 +9,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
+#include <H5Cpp.h>
 
-namespace tes_cpp::dump2json {
+namespace tes_cpp::dump2event {
 namespace {
 
 std::vector<double> parse_numbers(const std::string& line, std::size_t line_number) {
@@ -227,7 +228,7 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     return result;
 }
 
-void write_batch_json(const Batch& batch, const std::string& output_path) {
+void write_event_json(const Batch& batch, const std::string& output_path) {
     std::ofstream out(output_path);
     if (!out) throw std::runtime_error("cannot open JSON output: " + output_path);
     out << std::setprecision(17) << "{\n";
@@ -243,10 +244,35 @@ void write_batch_json(const Batch& batch, const std::string& output_path) {
     out << "}\n";
 }
 
+void write_event_hdf5(const Batch& batch, const std::string& output_path) {
+    H5::H5File file(output_path, H5F_ACC_TRUNC);
+    file.createAttribute("format", H5::StrType(H5::PredType::C_S1, 15), H5::DataSpace())
+        .write(H5::StrType(H5::PredType::C_S1, 15), "tes-dump2event");
+    // HDF5 does not create intermediate groups when given a nested path.
+    // Create the root container before adding one group per event.
+    file.createGroup("/events");
+    for (const auto& [event_id, history] : batch) {
+        H5::Group event = file.createGroup("/events/" + std::to_string(event_id));
+        for (const auto& [particle_id, value] : history) {
+            H5::Group particle = event.createGroup(std::to_string(particle_id));
+            particle.createAttribute("ityp", H5::PredType::NATIVE_INT, H5::DataSpace())
+                .write(H5::PredType::NATIVE_INT, &value.ityp);
+            const auto write = [&](const char* name, const std::vector<double>& data) {
+                hsize_t size = data.size(); H5::DataSpace space(1, &size);
+                H5::DataSet dataset = particle.createDataSet(name, H5::PredType::NATIVE_DOUBLE, space);
+                if (!data.empty()) dataset.write(data.data(), H5::PredType::NATIVE_DOUBLE);
+            };
+            write("x", value.x); write("y", value.y); write("z", value.z); write("E", value.energy);
+            write("x_deposit", value.x_deposit); write("y_deposit", value.y_deposit);
+            write("z_deposit", value.z_deposit); write("E_deposit", value.energy_deposit);
+        }
+    }
+}
+
 void write_event_ids(const std::vector<int>& event_ids, const std::string& output_path) {
     std::ofstream out(output_path);
     if (!out) throw std::runtime_error("cannot open event ID output: " + output_path);
     for (const int event_id : event_ids) out << event_id << '\n';
 }
 
-}  // namespace tes_cpp::dump2json
+}  // namespace tes_cpp::dump2event

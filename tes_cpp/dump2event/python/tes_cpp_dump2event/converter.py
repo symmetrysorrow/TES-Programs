@@ -15,16 +15,16 @@ class ConversionResult:
 
 
 def _executable() -> str:
-    configured = os.environ.get("TES_CPP_DUMP2JSON_EXECUTABLE")
+    configured = os.environ.get("TES_CPP_DUMP2EVENT_EXECUTABLE")
     if configured:
         return configured
-    bundled = files("tes_cpp_dump2json").joinpath("bin", "dump2json.exe" if os.name == "nt" else "dump2json")
+    bundled = files("tes_cpp_dump2event").joinpath("bin", "dump2event.exe" if os.name == "nt" else "dump2event")
     if bundled.is_file():
         return str(bundled)
-    command = which("dump2json")
+    command = which("dump2event")
     if command:
         return command
-    raise RuntimeError("dump2json executable was not found; set TES_CPP_DUMP2JSON_EXECUTABLE")
+    raise RuntimeError("dump2event executable was not found; set TES_CPP_DUMP2EVENT_EXECUTABLE")
 
 
 def convert(
@@ -34,7 +34,7 @@ def convert(
     input_energy: float,
     save_all: bool = False,
 ) -> ConversionResult:
-    """Convert one PHITS ``dumpall.dat`` file to the legacy ``batch.json`` schema."""
+    """Convert one PHITS ``dumpall.dat`` file to the ``event.json`` schema."""
     dump_path, output_path = Path(dump_path), Path(output_path)
     command = [_executable(), str(dump_path), str(output_path), "--input-energy", str(input_energy)]
     full_energy_path = output_path.with_name("FullEnergyList.dat")

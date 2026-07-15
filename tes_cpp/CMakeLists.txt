@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Both native tools are distributed by the one ``tes_cpp`` Python package.
 # Each component keeps its own CMakeLists.txt so it can also be built alone.
-set(TES_CPP_DUMP2JSON_INSTALL_DIR "tes_cpp/bin" CACHE STRING
-    "Install directory for dump2json executable" FORCE)
-add_subdirectory(dump2json)
+set(TES_CPP_DUMP2EVENT_INSTALL_DIR "tes_cpp/bin" CACHE STRING
+    "Install directory for dump2event executable" FORCE)
+add_subdirectory(dump2event)
 add_subdirectory(posi2pulse)

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 
-import general as gn
+from lib import general as gn
 import pulse_model
 
 

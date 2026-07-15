@@ -1,6 +1,6 @@
 # tes_cpp
 
-PHITS の `dumpall.dat` 変換とパルス生成を同じ C++／Python パッケージで提供します。CLI は `dump2json` と `posi2pulse` です。
+PHITS の `dumpall.dat` 変換とパルス生成を同じ C++／Python パッケージで提供します。CLI は `dump2event` と `posi2pulse` です。
 
 ```python
 from tes_cpp import posi2pulse
@@ -13,9 +13,9 @@ path = posi2pulse("input.json", [1, 5, 10], output_path="pulses.json")
 ```
 
 ```python
-from tes_cpp import dump2json
+from tes_cpp import dump2event
 
-dump2json("dumpall.dat", "batch.json", input_energy=1.0)
+dump2event("dumpall.dat", "event.json", input_energy=1.0)
 ```
 
 position は既存コードと同じ、1 始まりの absorber block 番号です。JSON 出力は、再現用の
