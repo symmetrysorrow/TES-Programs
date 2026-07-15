@@ -67,7 +67,9 @@ class CMakeBuild(build_ext):
             _print_build_help(["CMake"])
             return
 
-        build_dir = ROOT / "build" / "tes_cpp"
+        # Keep all CMake-generated files inside the native project directory.
+        # This avoids creating repository-root ``build``/``CMakeFiles`` dirs.
+        build_dir = ROOT / "tes_cpp" / "build"
         configure = ["cmake", "-S", str(ROOT / "tes_cpp"), "-B", str(build_dir)]
         # CMake owns compiler discovery for this build.  ``build_ext`` does
         # not initialise ``self.compiler`` until ``super().run()``; querying
@@ -91,10 +93,9 @@ class CMakeBuild(build_ext):
         package_bin = Path(self.build_lib) / "tes_cpp" / "bin"
         package_bin.mkdir(parents=True, exist_ok=True)
         names = ["posi2pulse.exe", "dump2event.exe"] if os.name == "nt" else ["posi2pulse", "dump2event"]
-        # Search only the native CMake output directory.  Searching all of
-        # ROOT/build can find package_bin itself first on a subsequent build,
-        # causing shutil.copy2() to copy a file onto itself on Windows.
-        native_bin = ROOT / "build" / "tes_cpp"
+        # Search only the native CMake output directory.  This also avoids
+        # accidentally finding the packaged copy on a subsequent build.
+        native_bin = ROOT / "tes_cpp" / "build"
         for name in names:
             candidates = sorted(native_bin.rglob(name))
             if not candidates:

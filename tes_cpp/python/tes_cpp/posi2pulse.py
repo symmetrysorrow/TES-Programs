@@ -32,7 +32,7 @@ def _executable() -> str:
     # When running from a source checkout, also look in common CMake build
     # directories (single- and multi-configuration generators).
     repo_root = Path(__file__).resolve().parents[3]
-    for build_root in (repo_root / "build", repo_root / "tes_cpp" / "build"):
+    for build_root in (repo_root / "tes_cpp" / "build", repo_root / "build"):
         if build_root.is_dir():
             matches = sorted(build_root.rglob(name))
             if matches:
