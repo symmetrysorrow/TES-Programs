@@ -337,9 +337,10 @@ def SelectIDFrom2DF(dfX,dfY,key:str):
     return selected_key
 
 def SelectIDFrom1DF(df,keyX:str,keyY:str):
-    selected_index = GetSelectedKey(df, df, keyX, keyY)
-    selected_ids = df.iloc[selected_index]["key"].values
-    return selected_ids
+    # GetSelectedKey already returns values from the ``key`` column.  Treating
+    # those key values as positional row indices makes ``iloc`` fail whenever
+    # a selected key is outside the DataFrame's positional range.
+    return GetSelectedKey(df, df, keyX, keyY)
 
 def Scatter2D(x,y,xlabel=None,ylabel=None,title=None):
     plt.plot(x, y, "bo", markersize=1)

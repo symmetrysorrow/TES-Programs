@@ -1,0 +1,31 @@
+{
+  "mesh": "mesh_dual_base_localrefine",
+  "written": "2026-07-17T19:36:14",
+  "recipe": {
+    "generator": "generate_project_geometry.py",
+    "mesh_overrides": {},
+    "parameter_overrides": {
+      "dabs_dx": "5[mm]",
+      "tes_pitch": "4[mm]"
+    },
+    "elmergrid_args": [
+      "14",
+      "2",
+      "gmsh/project.msh",
+      "-merge",
+      "1e-10",
+      "-out",
+      "mesh_dual_base_localrefine"
+    ]
+  },
+  "notes": "local box refinement around TES_L/R+Stycast_L/R only (background mesh at 1x) -- cheap alternative to global 2x",
+  "recipe_verified": true,
+  "project_json_sha256": "354e140533f47549791e0899311c2e412be6675ed96384c425fea83ca04e4327",
+  "mesh_files_sha256": {
+    "mesh.boundary": "65762a032f19580d3fd432ef10f69ca6ac74f8a4e0d623200bad74045fdb5cf5",
+    "mesh.elements": "9bfbed2367f23befd4688d543db2876ca2f9f4afaa289d872b2829618d226511",
+    "mesh.header": "6b43bc2def26121810e2dc1c61bd2b82593cabe74152b80f18e06239e196be70",
+    "mesh.names": "6d91c5a1ec61802a8af0cd77ac5482fbf324124875ec60ead722805377faef32",
+    "mesh.nodes": "1adc1c7847a78b2e3b251aee9989b1f31012f9e20dae3914b39e966e76fe9eba"
+  }
+}

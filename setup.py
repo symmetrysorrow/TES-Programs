@@ -116,5 +116,7 @@ setup(
     package_data={"tes_cpp": ["bin/*"]},
     include_package_data=True,
     install_requires=["h5py>=3.8", "numpy>=1.23"],
+    # Keep setuptools' package build output alongside the CMake output.
+    options={"build": {"build_base": str(ROOT / "tes_cpp" / "build" / "python")}},
     cmdclass={"build_ext": CMakeBuild},
 )

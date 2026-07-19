@@ -1,0 +1,262 @@
+INCLUDE "generated/tes_shared_variables.sif"
+INCLUDE "generated/tes_case_constant_power.sif"
+
+Header
+  CHECK KEYWORDS Warn
+  Mesh DB "." "mesh_shifted_unmerged"
+End
+
+Simulation
+  Max Output Level = 5
+  Coordinate System = Cartesian 3D
+  Simulation Type = Steady State
+  Steady State Max Iterations = $ constant_power_steady_state_max_iterations
+  Output Intervals = $ constant_power_output_intervals
+  Solver Input File = case_constant_power_unmerged_zstack_mortar.sif
+  Post File = case_constant_power_unmerged_zstack_mortar.ep
+End
+
+Initial Condition 1
+  Temperature = $ T_initial_constant_power
+End
+
+Constants
+  Stefan Boltzmann = Real 5.670374419e-8
+  TES Bias Current = Real $ I_bias
+  TES Shunt Resistance = Real $ R_sh
+  TES R0 = Real $ R0
+  TES Rmin = Real $ R_min
+  TES Alpha = Real $ alpha
+  TES Beta = Real $ beta
+  TES I0 = Real $ I0
+  TES Tc = Real $ Tc
+  TES T0 = Real $ T0
+  TES Volume = Real $ TES_volume
+End
+
+Solver 1
+  Equation = Heat Equation
+  Procedure = "HeatSolve" "HeatSolver"
+  Variable = Temperature
+  Variable DOFs = 1
+  Calculate Loads = True
+  Nonlinear System Max Iterations = $ constant_power_solver_nonlinear_max_iterations
+  Nonlinear System Convergence Tolerance = $ constant_power_solver_nonlinear_convergence_tolerance
+  Nonlinear System Relaxation Factor = $ constant_power_solver_nonlinear_relaxation_factor
+  Linear System Solver = Direct
+  Linear System Direct Method = Umfpack
+  Apply Mortar BCs = True
+  Steady State Convergence Tolerance = $ constant_power_solver_steady_state_convergence_tolerance
+End
+
+Solver 2
+  Exec Solver = After Simulation
+  Equation = Result Output
+  Procedure = "ResultOutputSolve" "ResultOutputSolver"
+  Output File Name = "case_constant_power_unmerged_zstack_mortar"
+  Vtu Format = True
+End
+
+Equation 1
+  Name = "Heat"
+  Active Solvers(1) = 1
+End
+
+INCLUDE "generated/tes_materials.sif"
+
+Body Force 1
+  Name = "TES shunt power from local T"
+  Volumetric Heat Source = Variable Temperature
+    Real Procedure "tes_heat_source_t0" "TESHeatSource"
+End
+
+Body 1
+  Target Bodies(1) = 100
+  Name = "abs"
+  Equation = 1
+  Material = 1
+  Initial Condition = 1
+End
+
+Body 2
+  Target Bodies(1) = 101
+  Name = "TES"
+  Equation = 1
+  Material = 2
+  Body Force = 1
+  Initial Condition = 1
+End
+
+Body 3
+  Target Bodies(1) = 102
+  Name = "Stycast"
+  Equation = 1
+  Material = 3
+  Initial Condition = 1
+End
+
+Body 4
+  Target Bodies(1) = 103
+  Name = "Membrane_SiNx"
+  Equation = 1
+  Material = 7
+  Initial Condition = 1
+End
+
+Body 5
+  Target Bodies(1) = 104
+  Name = "SiO2_1"
+  Equation = 1
+  Material = 4
+  Initial Condition = 1
+End
+
+Body 6
+  Target Bodies(1) = 105
+  Name = "Si_1"
+  Equation = 1
+  Material = 5
+  Initial Condition = 1
+End
+
+Body 7
+  Target Bodies(1) = 106
+  Name = "SiNx"
+  Equation = 1
+  Material = 6
+  Initial Condition = 1
+End
+
+Body 8
+  Target Bodies(1) = 107
+  Name = "Si_2"
+  Equation = 1
+  Material = 5
+  Initial Condition = 1
+End
+
+Body 9
+  Target Bodies(1) = 108
+  Name = "SiO2_2"
+  Equation = 1
+  Material = 4
+  Initial Condition = 1
+End
+
+Body 10
+  Target Bodies(1) = 109
+  Name = "Membrane_Si1"
+  Equation = 1
+  Material = 7
+  Initial Condition = 1
+End
+
+Boundary Condition 1
+  Target Boundaries(1) = 1804
+  Name = "bath on SiO2_2__zmin"
+  Temperature = 0.15
+End
+
+Boundary Condition 2
+  Target Boundaries(1) = 1704
+  Name = "Si_2 bottom mortar"
+  Mortar BC = 3
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 3
+  Target Boundaries(1) = 1805
+  Name = "SiO2_2 top mortar"
+End
+
+Boundary Condition 4
+  Target Boundaries(1) = 1705
+  Name = "Si_2 top mortar"
+  Mortar BC = 5
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 5
+  Target Boundaries(1) = 1404
+  Name = "SiO2_1 bottom mortar"
+End
+
+Boundary Condition 6
+  Target Boundaries(1) = 1405
+  Name = "SiO2_1 top mortar"
+  Mortar BC = 7
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 7
+  Target Boundaries(1) = 1504
+  Name = "Si_1 bottom mortar"
+End
+
+Boundary Condition 8
+  Target Boundaries(1) = 1505
+  Name = "Si_1 top mortar"
+  Mortar BC = 9
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 9
+  Target Boundaries(1) = 1604
+  Name = "SiNx bottom mortar"
+End
+
+Boundary Condition 10
+  Target Boundaries(1) = 1905
+  Name = "Membrane_Si1 top mortar"
+  Mortar BC = 11
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 11
+  Target Boundaries(1) = 1304
+  Name = "Membrane_SiNx bottom mortar"
+End
+
+Boundary Condition 12
+  Target Boundaries(1) = 1104
+  Name = "TES bottom mortar"
+  Mortar BC = 13
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 13
+  Target Boundaries(1) = 1305
+  Name = "Membrane_SiNx top mortar"
+End
+
+Boundary Condition 14
+  Target Boundaries(1) = 1204
+  Name = "Stycast bottom mortar"
+  Mortar BC = 15
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 15
+  Target Boundaries(1) = 1105
+  Name = "TES top mortar"
+End
+
+Boundary Condition 16
+  Target Boundaries(1) = 1205
+  Name = "Stycast top mortar"
+  Mortar BC = 17
+  Galerkin Projector = True
+  Plane Projector = True
+End
+
+Boundary Condition 17
+  Target Boundaries(1) = 1004
+  Name = "Pb bottom mortar"
+End

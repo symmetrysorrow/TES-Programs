@@ -28,3 +28,44 @@ __pycache__/*
 build/*
 **/*.log
 build/*
+
+# Elmer generated meshes and result files
+mesh/
+mesh_merged/
+mesh_shifted_merged/
+*.ep
+*.vtu
+*.pvtu
+*.result
+
+# Build products and run logs
+*.dll
+*.log
+*.out
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# JSON autosnapshots (git history is the real backup)
+autosave/
+
+# Superseded geometry artifacts
+gmsh/project.geo
+gmsh/project_centered.msh
+
+# Reproducible frozen runs
+runs/*
+!runs/README.md
+!runs/.gitkeep
+
+# Organized generated artifacts
+artifacts/logs/
+artifacts/plots/
+artifacts/series/
+
+# Per-run outputs collected by run.py (curated results go to artifacts/)
+results/
+
+*.boundary
+*.elements
