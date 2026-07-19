@@ -63,7 +63,7 @@ def _extract_int(pattern, text):
 def PulseAnalysis(config: dict, path: str):
     folders=glob.glob(f"{path}/CH*_pulse")
 
-    for folder in folders:
+    for folder in tqdm.tqdm(folders, desc="Pulse analysis (channels)"):
         if os.path.exists(f"{folder}/output.csv"):
             Skip=questionary.confirm(f"output.csv already exists in {folder}. Do you want to skip Pulse Analysis for this folder?").ask()
             if Skip:
@@ -74,7 +74,9 @@ def PulseAnalysis(config: dict, path: str):
         pulse_pathes = natsort.natsorted(pulse_pathes)
         results = []
 
-        for pulse_path in tqdm.tqdm(pulse_pathes):
+        for pulse_path in tqdm.tqdm(
+            pulse_pathes, desc=f"Pulses: {os.path.basename(folder)}"
+        ):
             # ファイル名からキーを抽出
             filename = os.path.basename(pulse_path)
             key = os.path.splitext(filename)[0].split("_")[-1]
@@ -98,7 +100,7 @@ def PulseAnalysis(config: dict, path: str):
         print(f"Saved results to {output_path}")
 
     dfs = {}
-    for folder in folders:
+    for folder in tqdm.tqdm(folders, desc="Synchronizing pulse keys"):
         output_path = f"{folder}/output.csv"
         if os.path.exists(output_path):
             df = pd.read_csv(output_path)
@@ -142,7 +144,9 @@ def _legacy_noise_model(config, noise_paths):
     )
 
     model = np.zeros(sample)
-    for noise_path in natsort.natsorted(noise_paths):
+    for noise_path in tqdm.tqdm(
+        natsort.natsorted(noise_paths), desc="Legacy noise model", leave=False
+    ):
         try:
             data = general.LoadBin(noise_path)
             if len(data) != sample:
@@ -189,7 +193,9 @@ def NoiseAnalysis(
     noise_threshold=0.04
     
     # フォルダごとの処理
-    for folder in glob.glob(f"{path}/CH*_noise"):
+    for folder in tqdm.tqdm(
+        glob.glob(f"{path}/CH*_noise"), desc="Noise analysis (channels)"
+    ):
         noise_pathes = glob.glob(f"{folder}/rawdata/CH*.dat")
 
         if _is_legacy_filter_method(FilterMethod):
@@ -231,7 +237,9 @@ def NoiseAnalysis(
         filtered=0
         sample_unmatch=0
         
-        for noise_path in tqdm.tqdm(noise_pathes):
+        for noise_path in tqdm.tqdm(
+            noise_pathes, desc=f"Noise: {os.path.basename(folder)}"
+        ):
             noise = general.LoadBin(noise_path)
             if len(noise) != sample:
                 sample_unmatch+=1
@@ -435,7 +443,7 @@ def RunRT(path: str | None = None):
         if not os.path.exists("rawdata"):
             files = natsort.natsorted(glob.glob("*.dat"))
             os.mkdir("rawdata")
-            for file_path in files:
+            for file_path in tqdm.tqdm(files, desc="Moving RT data", leave=False):
                 shutil.move(file_path, "rawdata")
         else:
             files = natsort.natsorted(glob.glob("rawdata/*.dat"))
@@ -443,7 +451,7 @@ def RunRT(path: str | None = None):
         I_bias = []
         V_out = []
         T = []
-        for file_path in files:
+        for file_path in tqdm.tqdm(files, desc="Reading RT data", leave=False):
             data = _load_dat(file_path)
             name = os.path.splitext(os.path.basename(file_path))[0]
             V_out.append(np.mean(data))
@@ -463,7 +471,7 @@ def RunRT(path: str | None = None):
         channel = channel_match.group(1) if channel_match else "1"
 
         V_out = []
-        for i in I_bias_2:
+        for i in tqdm.tqdm(I_bias_2, desc="Building RT curves"):
             V = []
             for t in T:
                 data = _load_dat(f"rawdata/CH{channel}_{t}mK_{int(i)}uA.dat")

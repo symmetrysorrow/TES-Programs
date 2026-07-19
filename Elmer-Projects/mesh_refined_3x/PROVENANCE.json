@@ -1,0 +1,30 @@
+{
+  "mesh": "mesh_refined_3x",
+  "written": "2026-07-14T14:44:33",
+  "recipe": {
+    "generator": "generate_project_geometry.py",
+    "mesh_overrides": {
+      "mesh_min": 0.016666666666666666,
+      "mesh_max": 0.016666666666666666
+    },
+    "elmergrid_args": [
+      "14",
+      "2",
+      "gmsh/project.msh",
+      "-merge",
+      "1e-10",
+      "-out",
+      "mesh_refined_3x"
+    ]
+  },
+  "notes": "3x refined (~63k nodes); recipe reconstructed after the fact, not re-verified against the existing directory",
+  "recipe_verified": false,
+  "project_json_sha256": "33d1b43aed116e704657fc55fd8fb1a28e26731bda89166737e6e3fe18e400f1",
+  "mesh_files_sha256": {
+    "mesh.boundary": "bb61d65afcb9a08773ee3f83875b19ef60788e7ea89d5854c76c94db4cc9940d",
+    "mesh.elements": "60301ffabc7d4254b71840be3063f1431c2411767d8042d228e9755e787593dd",
+    "mesh.header": "5c061e55069a20e55f1cc8b68546b54369469984458ce9ae190e7842c3d11336",
+    "mesh.names": "8c37cedeec407c4e978120100395bcccc7c7dee54162ac476d8d38b4dc25336b",
+    "mesh.nodes": "aee0baebf6a84b28223538944f089449e27ed93570a238ab25a1bb24228cc823"
+  }
+}

@@ -1,0 +1,1311 @@
+{
+  "mesh": {
+    "mesh_min": 0.05,
+    "mesh_max": 0.05,
+    "mesh_min_mode": "auto",
+    "mesh_max_mode": "auto"
+  },
+  "role_map": {
+    "e448ecb0af7c4fe9b7c25977d7c52a1f": "active"
+  },
+  "parameters": {
+    "abs_dx": 0.001,
+    "abs_dy": 0.001,
+    "abs_dz": 0.0007,
+    "Si_2_dz": 0.00035,
+    "Si_dx": 0.003,
+    "Si_dy": 0.006,
+    "membrane_dz": 1e-05,
+    "membrane_dx": 0.0007,
+    "membrane_dy": 0.0007,
+    "TES_Ti_dx": 0.0005,
+    "TES_Ti_dy": 0.0005,
+    "TES_Ti_dz": 4e-08,
+    "TES_Au_dx": 0.0005,
+    "TES_Au_dy": 0.0005,
+    "TES_Au_dz": 1.2e-07,
+    "Stycast_dx": 0.0004,
+    "Stycast_dy": 0.0004,
+    "Stycast_dz": 2e-05,
+    "R_n": 0.125,
+    "T_c": 0.1709,
+    "dW": 0.001,
+    "R_0": 0.015527,
+    "R_min": 1e-06,
+    "alpha": 256.46,
+    "beta": 5.03,
+    "I_bias": 0.000715,
+    "R_sh": 0.0039,
+    "I_0": 0.000143537344932311,
+    "T_bath": 0.15,
+    "SiO2_1_dz": 1e-06,
+    "SiNx_dz": 1e-06,
+    "TES_dz": 1.6e-07,
+    "SiO2_2_dz": 2e-06,
+    "Si_1_dz": 1.5e-05,
+    "G0": 7.854e-06,
+    "T_0": 0.16857,
+    "TES_volume": 4e-14,
+    "L_tes": 1.23e-08
+  },
+  "parameter_units": {
+    "abs_dx": "mm",
+    "abs_dy": "mm",
+    "abs_dz": "mm",
+    "Si_2_dz": "um",
+    "Si_dx": "mm",
+    "Si_dy": "mm",
+    "membrane_dz": "um",
+    "membrane_dx": "um",
+    "membrane_dy": "um",
+    "TES_Ti_dx": "um",
+    "TES_Ti_dy": "um",
+    "TES_Ti_dz": "um",
+    "TES_Au_dx": "um",
+    "TES_Au_dy": "um",
+    "TES_Au_dz": "um",
+    "Stycast_dx": "um",
+    "Stycast_dy": "um",
+    "Stycast_dz": "um",
+    "R_n": "mohm",
+    "T_c": "k",
+    "dW": "",
+    "R_0": "mohm",
+    "R_min": "ohm",
+    "alpha": "",
+    "beta": "",
+    "I_bias": "ua",
+    "R_sh": "mohm",
+    "I_0": "a",
+    "T_bath": "mk",
+    "SiO2_1_dz": "um",
+    "SiNx_dz": "um",
+    "TES_dz": "m",
+    "SiO2_2_dz": "um",
+    "Si_1_dz": "um",
+    "G0": "wperkelvin",
+    "T_0": "mk",
+    "TES_volume": "",
+    "L_tes": "nh"
+  },
+  "parameter_expressions": {
+    "abs_dx": "1[mm]",
+    "abs_dy": "abs_dx",
+    "abs_dz": "0.7[mm]",
+    "Si_2_dz": "350[um]",
+    "Si_dx": "3[mm]",
+    "Si_dy": "6[mm]",
+    "membrane_dz": "10[um]",
+    "membrane_dx": "700[um]",
+    "membrane_dy": "membrane_dx",
+    "TES_Ti_dx": "500[um]",
+    "TES_Ti_dy": "TES_Ti_dx",
+    "TES_Ti_dz": "0.04[um]",
+    "TES_Au_dx": "TES_Ti_dx",
+    "TES_Au_dy": "TES_Ti_dx",
+    "TES_Au_dz": "0.12[um]",
+    "Stycast_dx": "400[um]",
+    "Stycast_dy": "Stycast_dx",
+    "Stycast_dz": "20[um]",
+    "R_n": "125[mohm]",
+    "T_c": "0.1709[K]",
+    "dW": "0.001",
+    "R_0": "15.527[mohm]",
+    "R_min": "1e-6[ohm]",
+    "alpha": "256.46",
+    "beta": "5.03",
+    "I_bias": "715[uA]",
+    "R_sh": "3.9[mohm]",
+    "I_0": "I_bias*R_sh/(R_0+R_sh)",
+    "T_bath": "150[mK]",
+    "SiO2_1_dz": "1[um]",
+    "SiNx_dz": "1[um]",
+    "TES_dz": "TES_Au_dz+TES_Ti_dz",
+    "SiO2_2_dz": "2[um]",
+    "Si_1_dz": "15[um]",
+    "G0": "7.854e-6[W/K]",
+    "T_0": "168.57[mK]",
+    "TES_volume": "TES_Au_dx*TES_Au_dy*TES_dz",
+    "L_tes": "12.3[nH]"
+  },
+  "material_assignments": {
+    "35e55830edef4c929eeb9cfecdfe1855": "Pb",
+    "e448ecb0af7c4fe9b7c25977d7c52a1f": "TES",
+    "d52e6d3377c94ca5b3e5868ba17a9d39": "Stycast",
+    "6baf4df04c8441be8b358954e201f410": "Membrane",
+    "1c53fc36e0a14f25958f2896816eeb7f": "SiO2",
+    "12dcaaf2a71841a788e17d1bf78e80c2": "Si",
+    "32ebb4265e514286a057c5a297e1d6fb": "SiNx",
+    "155fcf3574294d848bf3117fb241f0da": "Si",
+    "fbeecda2613d4f9ca6dbd19c587ea5b0": "SiO2"
+  },
+  "materials": {
+    "Pb": {
+      "k": {
+        "expression": "1.68e-2",
+        "nominal": 0.0168,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "9860",
+        "nominal": 9860.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "3.26e-05",
+        "nominal": 3.26e-05,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "Stycast": {
+      "k": {
+        "expression": "2.69094e-06",
+        "nominal": 2.69094e-06,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "2400",
+        "nominal": 2400.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "1.22e-3",
+        "nominal": 0.00122,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "TES": {
+      "k": {
+        "expression": "68",
+        "nominal": 68.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "15695",
+        "nominal": 15695.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "1.25e-3",
+        "nominal": 0.00125,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "Si": {
+      "k": {
+        "expression": "3.7e-1",
+        "nominal": 0.37,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "2332",
+        "nominal": 2332.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "1.24e-06",
+        "nominal": 1.24e-06,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "SiO2": {
+      "k": {
+        "expression": "4.94e-4",
+        "nominal": 0.000494,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "2200",
+        "nominal": 2200.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "1.24e-4",
+        "nominal": 0.000124,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "SiNx": {
+      "k": {
+        "expression": "1.02e-4",
+        "nominal": 0.000102,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "3400",
+        "nominal": 3400.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "2.43e-5",
+        "nominal": 2.43e-05,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    },
+    "Membrane": {
+      "k": {
+        "expression": "G0*T**(4.252-1)*0.4*(membrane_dx-TES_Au_dx)/(8*(SiNx_dz+Si_1_dz+SiO2_1_dz)*TES_Au_dx)",
+        "nominal": null,
+        "minimum": null,
+        "maximum": null
+      },
+      "rho": {
+        "expression": "2387",
+        "nominal": 2387.0,
+        "minimum": null,
+        "maximum": null
+      },
+      "cp": {
+        "expression": "9.82e-6",
+        "nominal": 9.82e-06,
+        "minimum": null,
+        "maximum": null
+      },
+      "kx": null,
+      "ky": null,
+      "kz": null,
+      "k_temperature_coefficient": 0.0,
+      "k_reference_temperature": 0.1,
+      "cp_temperature_coefficient": 0.0,
+      "cp_reference_temperature": 0.1
+    }
+  },
+  "boundaries": [
+    {
+      "name": "bath",
+      "value": 0.15,
+      "uid": "4e3865523d9c42c1ac79b1f37d7210f8",
+      "surface": "SiO2_2__zmin",
+      "surface_uid": "fbeecda2613d4f9ca6dbd19c587ea5b0__zmin",
+      "kind": "dirichlet",
+      "ambient_temperature": null,
+      "emissivity": null,
+      "reference_temperature": null
+    }
+  ],
+  "contacts": [],
+  "sources": [
+    {
+      "region_name": "abs",
+      "power_density": 0.0,
+      "name": "HeatSource",
+      "uid": "80d744ed99d34f8c98ad9b880ebf96d3",
+      "kind": "point_pulse",
+      "region_uid": "35e55830edef4c929eeb9cfecdfe1855",
+      "x": 0.0,
+      "x_expr": "0.0",
+      "y": 0.0,
+      "y_expr": "0.0",
+      "z": 0.0005621600000000001,
+      "z_expr": "(Si_2_dz+abs_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz+Stycast_dz",
+      "radius": 9.999999999999999e-06,
+      "radius_expr": "10[um]",
+      "energy_keV": 1332.0,
+      "energy_keV_expr": "1332",
+      "duration": 1e-06,
+      "duration_expr": "1[us]",
+      "start_time": 1.9999999999999998e-05,
+      "start_time_expr": "20[us]"
+    }
+  ],
+  "probes": [
+    {
+      "name": "TES",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "TES",
+      "geometry_uid": "e448ecb0af7c4fe9b7c25977d7c52a1f",
+      "uid": "8b85c5fee7624fe58bdfbe6561b38f0b",
+      "enabled": true,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": "0[m]"
+    },
+    {
+      "name": "Abs",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "abs",
+      "geometry_uid": "35e55830edef4c929eeb9cfecdfe1855",
+      "uid": "cc81c3016e2c4980909675157912bd0e",
+      "enabled": true,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": null
+    },
+    {
+      "name": "Si_2",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "Si_2",
+      "geometry_uid": "155fcf3574294d848bf3117fb241f0da",
+      "uid": "e626c50da0524946bedc053964c77ef3",
+      "enabled": true,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": null
+    },
+    {
+      "name": "Stycast",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "Stycast",
+      "geometry_uid": "d52e6d3377c94ca5b3e5868ba17a9d39",
+      "uid": "cf4ffcfe9b964ee2a1c544990c0b8246",
+      "enabled": true,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": null
+    },
+    {
+      "name": "Si_1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "Si_1",
+      "geometry_uid": "12dcaaf2a71841a788e17d1bf78e80c2",
+      "uid": "86dea866404041218a61065174cd6ee2",
+      "enabled": false,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": null
+    },
+    {
+      "name": "SiNx",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "kind": "geometry_average",
+      "geometry_name": "SiNx",
+      "geometry_uid": "32ebb4265e514286a057c5a297e1d6fb",
+      "uid": "f58fe46e2c0b4722a77c13608c518fc7",
+      "enabled": false,
+      "x_expr": null,
+      "y_expr": null,
+      "z_expr": null
+    }
+  ],
+  "analysis_planes": [],
+  "circuit_layout": {
+    "reference_node_name": "gnd",
+    "nodes": [
+      {
+        "name": "bias",
+        "x": 8.262379212492647,
+        "y": -56.85208771867852,
+        "kind": "node",
+        "label": null
+      },
+      {
+        "name": "sh_b",
+        "x": -189.26237921249265,
+        "y": 157.28993532094626,
+        "kind": "node",
+        "label": null
+      },
+      {
+        "name": "rl_mid",
+        "x": 203.73762078750735,
+        "y": 156.71006467905374,
+        "kind": "node",
+        "label": null
+      },
+      {
+        "name": "node_1",
+        "x": 14.0,
+        "y": 362.0,
+        "kind": "node",
+        "label": null
+      }
+    ],
+    "wires": [
+      {
+        "name": "wire_1",
+        "source": "node_1",
+        "target": "sh_b",
+        "kind": "wire",
+        "label": null
+      }
+    ],
+    "components": [
+      {
+        "name": "R_sh",
+        "kind": "resistor",
+        "node_a": "bias",
+        "node_b": "sh_b",
+        "value": {
+          "expression": "R_sh",
+          "nominal": 0.0039,
+          "minimum": null,
+          "maximum": null
+        },
+        "power": null,
+        "thermal_region_name": null,
+        "thermal_region_uid": null,
+        "thermal_fraction": 1.0,
+        "derived_variables": {},
+        "parameters": {},
+        "probe_current": false,
+        "probe_voltage": false,
+        "x": -90.5,
+        "y": 50.21892380113387,
+        "label": null
+      },
+      {
+        "name": "R_tes",
+        "kind": "resistor",
+        "node_a": "bias",
+        "node_b": "rl_mid",
+        "value": {
+          "expression": "max(R_min, R_0*(1+alpha*(T_TES-T_0)/T_0+beta*(abs(current)-I_0)/I_0))",
+          "nominal": 0.01788,
+          "minimum": null,
+          "maximum": null
+        },
+        "power": null,
+        "thermal_region_name": "TES",
+        "thermal_region_uid": "e448ecb0af7c4fe9b7c25977d7c52a1f",
+        "thermal_fraction": 1.0,
+        "derived_variables": {},
+        "parameters": {},
+        "probe_current": true,
+        "probe_voltage": false,
+        "x": 106.0,
+        "y": 49.92898848018761,
+        "label": "R_tes(T)"
+      },
+      {
+        "name": "L1",
+        "kind": "inductor",
+        "node_a": "rl_mid",
+        "node_b": "node_1",
+        "value": {
+          "expression": "1.23e-8",
+          "nominal": 1.23e-08,
+          "minimum": null,
+          "maximum": null
+        },
+        "power": null,
+        "thermal_region_name": "abs",
+        "thermal_region_uid": null,
+        "thermal_fraction": 1.0,
+        "derived_variables": {},
+        "parameters": {},
+        "probe_current": false,
+        "probe_voltage": false,
+        "x": 108.86881039375368,
+        "y": 259.3550323395269,
+        "label": "L"
+      },
+      {
+        "name": "I_Bias",
+        "kind": "current_source",
+        "node_a": "node_1",
+        "node_b": "bias",
+        "value": {
+          "expression": "I_bias",
+          "nominal": 1.0,
+          "minimum": null,
+          "maximum": null
+        },
+        "power": null,
+        "thermal_region_name": null,
+        "thermal_region_uid": null,
+        "thermal_fraction": 1.0,
+        "derived_variables": {},
+        "parameters": {},
+        "probe_current": false,
+        "probe_voltage": false,
+        "x": 11.131189606246323,
+        "y": 152.57395614066075,
+        "label": null
+      }
+    ],
+    "circuit_probes": [
+      {
+        "name": "I_R_tes",
+        "component": "R_tes",
+        "quantity": "current"
+      }
+    ]
+  },
+  "resistance": {
+    "active_region_name": "TES",
+    "active_region_uid": "e448ecb0af7c4fe9b7c25977d7c52a1f",
+    "resistance": {
+      "expression": "0.3",
+      "nominal": 0.3,
+      "minimum": null,
+      "maximum": null
+    }
+  },
+  "solver": {
+    "dt": 2e-06,
+    "t_end": 0.01,
+    "main_time_mode": "explicit_file",
+    "fixed_time_pair_mode": "total_time_and_sample_rate",
+    "fixed_time_step_count": 5000,
+    "fixed_time_total_time": 0.01,
+    "fixed_time_sample_rate": 500000.0,
+    "main_time_points_file": "tes_test2_main_times.txt",
+    "initial_temperature": 0.168,
+    "circuit_solver_backend": "custom",
+    "circuit_jacobian_backend": "hybrid",
+    "newton_max_iter": 20,
+    "newton_tol": 1e-09,
+    "newton_damping": 1.0,
+    "newton_jacobian_refresh_interval": 2,
+    "heat_nonlinear_jacobian_refresh_interval": 2,
+    "linear_solver_backend": "scipy",
+    "max_temperature": 100000.0,
+    "max_current": 10.0,
+    "adaptive_dt": false,
+    "adaptive_dt_min": 1e-12,
+    "adaptive_dt_max": 1e-05,
+    "adaptive_dt_growth": 1.25,
+    "adaptive_dt_shrink": 0.5,
+    "adaptive_dt_fast_iterations": 3,
+    "adaptive_dt_max_retries": 8,
+    "mass_blend_alpha": 0.0,
+    "theta": 1.0,
+    "equilibrium_mode": "conservative",
+    "equilibrium_steps": 5,
+    "equilibrium_window_steps": 5,
+    "equilibrium_temperature_change_percent": 1.0,
+    "equilibrium_current_change_percent": 1.0,
+    "warmup_dt": 0.0,
+    "warmup_step_cap": 100,
+    "warmup_chunk_steps": 0,
+    "skip_warmup_for_delayed_sources": false,
+    "auto_contact_mode": "penalty_continuity",
+    "auto_contact_conductance": 1000000000000.0,
+    "auto_contact_interface_resistance": 0.0
+  },
+  "geometry": {
+    "name": "Geometry",
+    "kind": "composite",
+    "template_kind": "freeform_boxes",
+    "children": [
+      {
+        "name": "abs",
+        "uid": "35e55830edef4c929eeb9cfecdfe1855",
+        "shape": "box",
+        "body_name": "",
+        "body_mode": "add",
+        "group_mode": "add",
+        "x": 0.0,
+        "y": 0.001,
+        "z": 0.00056216,
+        "dx": 0.001,
+        "dy": 0.001,
+        "dz": 0.0007,
+        "ltx": 0.0,
+        "priority": 0,
+        "x_expr": "0.0",
+        "y_expr": "1[mm]",
+        "z_expr": "(Si_2_dz+abs_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz+Stycast_dz",
+        "dx_expr": "abs_dx",
+        "dy_expr": "abs_dy",
+        "dz_expr": "abs_dz",
+        "ltx_expr": "0.0"
+      },
+      {
+        "name": "TES",
+        "uid": "e448ecb0af7c4fe9b7c25977d7c52a1f",
+        "shape": "box",
+        "body_name": "",
+        "body_mode": "add",
+        "group_mode": "add",
+        "x": 0.0,
+        "y": 0.001,
+        "z": 0.00019208,
+        "dx": 0.0005,
+        "dy": 0.0005,
+        "dz": 1.6e-07,
+        "ltx": 0.0,
+        "priority": 0,
+        "x_expr": "0.0",
+        "y_expr": "1[mm]",
+        "z_expr": "(Si_2_dz+TES_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz",
+        "dx_expr": "TES_Au_dx",
+        "dy_expr": "TES_Au_dy",
+        "dz_expr": "TES_dz",
+        "ltx_expr": "0.0"
+      },
+      {
+        "name": "Stycast",
+        "uid": "d52e6d3377c94ca5b3e5868ba17a9d39",
+        "shape": "cylinder",
+        "body_name": "",
+        "body_mode": "add",
+        "group_mode": "add",
+        "x": 0.0,
+        "y": 0.001,
+        "z": 0.00020216,
+        "dx": 0.000498,
+        "dy": 0.000498,
+        "dz": 2e-05,
+        "ltx": 0.0,
+        "priority": 0,
+        "x_expr": "0.0",
+        "y_expr": "1[mm]",
+        "z_expr": "(Si_2_dz+Stycast_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz",
+        "dx_expr": "498[um]",
+        "dy_expr": "498[um]",
+        "dz_expr": "Stycast_dz",
+        "ltx_expr": "0.0"
+      },
+      {
+        "name": "Membrane",
+        "uid": "6baf4df04c8441be8b358954e201f410",
+        "shape": "box",
+        "body_name": "",
+        "body_mode": "add",
+        "group_mode": "add",
+        "x": 0.0,
+        "y": 0.001,
+        "z": 0.000184,
+        "dx": 0.0007,
+        "dy": 0.0007,
+        "dz": 1.6e-05,
+        "ltx": 0.0,
+        "priority": 0,
+        "x_expr": "0[m]",
+        "y_expr": "1[mm]",
+        "z_expr": "Si_2_dz/2+SiO2_1_dz+(Si_1_dz+SiNx_dz)/2",
+        "dx_expr": "membrane_dx",
+        "dy_expr": "membrane_dy",
+        "dz_expr": "Si_1_dz+SiNx_dz",
+        "ltx_expr": "0[m]"
+      },
+      {
+        "name": "SiO2_1",
+        "children": [
+          {
+            "name": "SiO2_1",
+            "uid": "1c53fc36e0a14f25958f2896816eeb7f",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "add",
+            "group_mode": "add",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0001755,
+            "dx": 0.003,
+            "dy": 0.006,
+            "dz": 1e-06,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "(Si_2_dz+SiO2_1_dz)/2",
+            "dx_expr": "Si_dx",
+            "dy_expr": "Si_dy",
+            "dz_expr": "SiO2_1_dz",
+            "ltx_expr": "0[m]"
+          }
+        ],
+        "group_mode": "add"
+      },
+      {
+        "name": "Si_1",
+        "children": [
+          {
+            "name": "Si_1",
+            "uid": "12dcaaf2a71841a788e17d1bf78e80c2",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "add",
+            "group_mode": "add",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0001835,
+            "dx": 0.003,
+            "dy": 0.006,
+            "dz": 1.5e-05,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+            "dx_expr": "Si_dx",
+            "dy_expr": "Si_dy",
+            "dz_expr": "Si_1_dz",
+            "ltx_expr": "0[m]"
+          },
+          {
+            "name": "Si_1_sub",
+            "uid": "5aef1ea9cf684ef8bc55f7f691771929",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "subtract",
+            "group_mode": "subtract",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0001835,
+            "dx": 0.0007,
+            "dy": 0.0007,
+            "dz": 1.5e-05,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+            "dx_expr": "membrane_dx",
+            "dy_expr": "membrane_dy",
+            "dz_expr": "Si_1_dz",
+            "ltx_expr": "0[m]"
+          }
+        ],
+        "group_mode": "subtract"
+      },
+      {
+        "name": "SiNx",
+        "children": [
+          {
+            "name": "SiNx",
+            "uid": "32ebb4265e514286a057c5a297e1d6fb",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "add",
+            "group_mode": "add",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0001915,
+            "dx": 0.003,
+            "dy": 0.006,
+            "dz": 1e-06,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+            "dx_expr": "Si_dx",
+            "dy_expr": "Si_dy",
+            "dz_expr": "SiNx_dz",
+            "ltx_expr": "0[m]"
+          },
+          {
+            "name": "SiNx_sub",
+            "uid": "f945a913a0f640ca8d7783630a71bb1f",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "subtract",
+            "group_mode": "subtract",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0001915,
+            "dx": 0.0007,
+            "dy": 0.0007,
+            "dz": 1e-06,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+            "dx_expr": "membrane_dx",
+            "dy_expr": "membrane_dy",
+            "dz_expr": "SiNx_dz",
+            "ltx_expr": "0[m]"
+          }
+        ],
+        "group_mode": "subtract"
+      },
+      {
+        "name": "Si_2",
+        "children": [
+          {
+            "name": "Si_2",
+            "uid": "155fcf3574294d848bf3117fb241f0da",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "add",
+            "group_mode": "add",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0,
+            "dx": 0.003,
+            "dy": 0.006,
+            "dz": 0.00035,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0.0",
+            "y_expr": "1[mm]",
+            "z_expr": "0.0",
+            "dx_expr": "Si_dx",
+            "dy_expr": "Si_dy",
+            "dz_expr": "Si_2_dz",
+            "ltx_expr": "0.0"
+          },
+          {
+            "name": "Si_2_sub",
+            "uid": "095bfc4464624ea1ac95b50946a14889",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "subtract",
+            "group_mode": "subtract",
+            "x": 0.0,
+            "y": 0.001,
+            "z": 0.0,
+            "dx": 0.0007,
+            "dy": 0.0007,
+            "dz": 0.00035,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0.0",
+            "y_expr": "1[mm]",
+            "z_expr": "0",
+            "dx_expr": "membrane_dx",
+            "dy_expr": "membrane_dy",
+            "dz_expr": "Si_2_dz",
+            "ltx_expr": "0.0"
+          }
+        ],
+        "group_mode": "subtract"
+      },
+      {
+        "name": "SiO2_2",
+        "children": [
+          {
+            "name": "SiO2_2",
+            "uid": "fbeecda2613d4f9ca6dbd19c587ea5b0",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "add",
+            "group_mode": "add",
+            "x": 0.0,
+            "y": 0.001,
+            "z": -0.000176,
+            "dx": 0.003,
+            "dy": 0.006,
+            "dz": 2e-06,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+            "dx_expr": "Si_dx",
+            "dy_expr": "Si_dy",
+            "dz_expr": "SiO2_2_dz",
+            "ltx_expr": "0[m]"
+          },
+          {
+            "name": "SiO2_2_sub",
+            "uid": "3be44a048739442bbbee3520b1fa5535",
+            "shape": "box",
+            "body_name": "",
+            "body_mode": "subtract",
+            "group_mode": "subtract",
+            "x": 0.0,
+            "y": 0.001,
+            "z": -0.000176,
+            "dx": 0.0007,
+            "dy": 0.0007,
+            "dz": 2e-06,
+            "ltx": 0.0,
+            "priority": 0,
+            "x_expr": "0[m]",
+            "y_expr": "1[mm]",
+            "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+            "dx_expr": "membrane_dx",
+            "dy_expr": "membrane_dy",
+            "dz_expr": "SiO2_2_dz",
+            "ltx_expr": "0[m]"
+          }
+        ],
+        "group_mode": "subtract"
+      }
+    ],
+    "bath_surface_name": "bath",
+    "bath_surface_uid": "d9add68e3e524f29b165cac87ffaade8",
+    "reference_box_name": "Si_2",
+    "reference_box_uid": "155fcf3574294d848bf3117fb241f0da"
+  },
+  "elmer_overrides": {
+    "stycast_shape": "cylinder",
+    "stycast_x": 0.0,
+    "stycast_y": 0.001,
+    "stycast_z": 0.00020216,
+    "stycast_dx": 0.000498,
+    "stycast_dy": 0.000498,
+    "stycast_dz": 2e-05,
+    "fragment_mortar_interfaces": true
+  },
+  "meshes": {
+    "mesh_shifted_merged": {
+      "dir": "mesh_shifted_merged",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_shifted_merged"
+        ]
+      },
+      "notes": "base mesh (~26k nodes); absorber centered at (0, 1mm, 0.56216mm)"
+    },
+    "mesh_refined_3x": {
+      "dir": "mesh_refined_3x",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 0.016666666666666666,
+          "mesh_max": 0.016666666666666666
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_refined_3x"
+        ]
+      },
+      "notes": "3x refined (~63k nodes); recipe reconstructed after the fact, not re-verified against the existing directory"
+    }
+  },
+  "cases": {
+    "case_tes_shunt_internal": {
+      "template": "steady",
+      "mesh": "mesh_shifted_merged",
+      "heat_source": "circuit_local",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "post_file": true,
+      "vtu": "after_simulation",
+      "steady_state_max_iterations": 150,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 200,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 0.03,
+        "steady_state_convergence_tolerance": 1e-06
+      }
+    },
+    "case_constant_power": {
+      "template": "steady",
+      "mesh": "mesh_shifted_merged",
+      "heat_source": "circuit_local",
+      "initial_temperature": 0.168,
+      "calculate_loads": true,
+      "post_file": true,
+      "vtu": "after_simulation",
+      "steady_state_max_iterations": 150,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 200,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 0.1,
+        "steady_state_convergence_tolerance": 1e-09
+      }
+    },
+    "case_constant_power_3x_refined": {
+      "template": "steady",
+      "mesh": "mesh_refined_3x",
+      "heat_source": "circuit_local",
+      "initial_temperature": 0.168,
+      "calculate_loads": true,
+      "post_file": true,
+      "vtu": "after_simulation",
+      "steady_state_max_iterations": 150,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 200,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 0.1,
+        "steady_state_convergence_tolerance": 1e-09
+      }
+    },
+    "case_tes_steady_3x_refined": {
+      "template": "steady",
+      "mesh": "mesh_refined_3x",
+      "heat_source": "circuit_implicit",
+      "series_file": "tes_steady_3x_series.csv",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08
+      }
+    },
+    "case_tes_shunt_transient": {
+      "template": "transient",
+      "mesh": "mesh_shifted_merged",
+      "series_file": "tes_shunt_transient_series.csv",
+      "initial_temperature": "T_0",
+      "post_file": true,
+      "vtu": "after_timestep",
+      "timesteps": [
+        [
+          "1[ms]",
+          100
+        ]
+      ],
+      "output_intervals": [
+        10
+      ],
+      "steady_state_max_iterations": 1,
+      "solver": {
+        "nonlinear_max_iterations": 15,
+        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09
+      }
+    },
+    "case_tes_shunt_transient_3x_refined": {
+      "template": "transient",
+      "mesh": "mesh_refined_3x",
+      "series_file": "tes_shunt_transient_3x_series.csv",
+      "initial_temperature": "T_0",
+      "post_file": true,
+      "vtu": {
+        "exec_intervals": [
+          10
+        ]
+      },
+      "timesteps": [
+        [
+          "1[ms]",
+          100
+        ]
+      ],
+      "output_intervals": [
+        10
+      ],
+      "steady_state_max_iterations": 1,
+      "solver": {
+        "nonlinear_max_iterations": 15,
+        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09
+      }
+    },
+    "case_tes_pulse_1332kev": {
+      "template": "pulse",
+      "mesh": "mesh_shifted_merged",
+      "restart_from": "case_tes_shunt_internal",
+      "transient_restart": true,
+      "series_file": "tes_pulse_1332kev_series.csv",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "post_file": true,
+      "vtu": "after_simulation",
+      "lumped_mass": true,
+      "timesteps": [
+        [
+          "0.5[us]",
+          40
+        ],
+        [
+          "2[us]",
+          90
+        ],
+        [
+          "20[us]",
+          90
+        ],
+        [
+          "0.1[ms]",
+          80
+        ],
+        [
+          "0.5[ms]",
+          180
+        ]
+      ],
+      "output_intervals": [
+        40,
+        90,
+        90,
+        80,
+        180
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "0[s]",
+        "duration": "0.5[us]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver": {
+        "nonlinear_max_iterations": 20,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08
+      }
+    },
+    "case_tes_pulse_20ms_3x_refined": {
+      "template": "pulse",
+      "mesh": "mesh_refined_3x",
+      "restart_from": "case_tes_steady_3x_refined",
+      "restart_time": 0.0,
+      "series_file": "tes_pulse_20ms_3x_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": {
+        "exec_intervals": [
+          19,
+          1,
+          1,
+          1,
+          5,
+          4,
+          4,
+          4,
+          4,
+          20
+        ]
+      },
+      "timesteps": [
+        [
+          "1[ms]",
+          20
+        ],
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "10[us]",
+          9
+        ],
+        [
+          "100[us]",
+          9
+        ],
+        [
+          "1[ms]",
+          79
+        ]
+      ],
+      "output_intervals": [
+        10,
+        1,
+        1,
+        1,
+        5,
+        3,
+        3,
+        3,
+        3,
+        10
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09
+      }
+    }
+  }
+}
