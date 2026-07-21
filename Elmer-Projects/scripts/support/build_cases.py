@@ -72,6 +72,16 @@ HEAT_SOURCES = {
         "TESTransientHeatSource",
         "TES R(T,I) plus branch inductance",
     ),
+    "circuit_parallel": (
+        "tes_parallel_circuit",
+        "TESParallelHeatSource",
+        "MPI-safe lumped TES circuit power",
+    ),
+    "circuit_inner": (
+        "tes_parallel_circuit",
+        "TESParallelHeatSource",
+        "MPI-safe circuit updated inside HeatSolve nonlinear iterations",
+    ),
 }
 
 PULSE_PROCEDURE = ("tes_transient_heat_source_t0", "AbsorberWindowPulseHeatSource")
@@ -170,13 +180,17 @@ def materials_block(model: dict) -> list[str]:
     return lines
 
 
-def tes_constants_block(params: dict[str, float], series_file: str | None) -> list[str]:
+def tes_constants_block(
+    params: dict[str, float], series_file: str | None, state_file: str | None = None
+) -> list[str]:
     lines = [
         "Constants",
         f"  Stefan Boltzmann = Real {STEFAN_BOLTZMANN}",
     ]
     if series_file:
         lines.append(f'  TES Series File = String "{series_file}"')
+    if state_file:
+        lines.append(f'  TES State File = String "{state_file}"')
     lines += [
         f"  TES Bias Current = Real {fmt(params['I_bias'])}",
         f"  TES Shunt Resistance = Real {fmt(params['R_sh'])}",
@@ -271,14 +285,17 @@ def _side_state_file(mesh_dir_name: str, case_name: str, side: str) -> str:
 def solver1_block(
     solver: dict[str, Any],
     *,
+    solver_index: int = 1,
+    equation_name: str = "Heat Equation",
+    inner_circuit: bool = False,
     calculate_loads: bool = False,
     lumped_mass: bool = False,
     transient_restart: bool = False,
     comment: str | None = None,
 ) -> list[str]:
     lines = [
-        "Solver 1",
-        "  Equation = Heat Equation",
+        f"Solver {solver_index}",
+        f"  Equation = {equation_name}",
         '  Procedure = "HeatSolve" "HeatSolver"',
         "  Variable = Temperature",
         "  Variable DOFs = 1",
@@ -287,6 +304,11 @@ def solver1_block(
         lines.append("  Calculate Loads = True")
     if comment:
         lines.append(f"! {comment}")
+    if inner_circuit:
+        lines += [
+            '  "TES Inner Circuit Update" = Logical True',
+            '  "TES Body ID" = Integer 2',
+        ]
     lines += [
         f"  Nonlinear System Max Iterations = {solver['nonlinear_max_iterations']}",
         f"  Nonlinear System Convergence Tolerance = {fmt_real(solver['nonlinear_convergence_tolerance'])}",
@@ -299,13 +321,42 @@ def solver1_block(
             "! undershoot around the sharp pulse deposition.",
             "  Lumped Mass Matrix = True",
         ]
-    if solver.get("linear_system", "direct") == "iterative":
+    linear_system = solver.get("linear_system", "direct")
+    if linear_system == "iterative":
         lines += [
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = BiCGStabl",
             "  Linear System Preconditioning = ILU2",
             "  Linear System Max Iterations = 2000",
             "  Linear System Convergence Tolerance = 1.0e-10",
+        ]
+    elif linear_system == "iterative_hypre_boomeramg":
+        # HYPRE is an optional Elmer build dependency.  This configuration is
+        # based on Elmer's upstream BoomerAMG regression cases and is intended
+        # for the nonsymmetric heat-equation matrix of the TES model.
+        lines += [
+            "  Linear System Use Hypre = True",
+            "  Linear System Solver = Iterative",
+            "  Linear System Iterative Method = BiCGStab",
+            "  Linear System Preconditioning = BoomerAMG",
+            "  Linear System Max Iterations = 1000",
+            "  Linear System Convergence Tolerance = 1.0e-10",
+            "  Linear System Abort Not Converged = True",
+            "  Linear System Residual Output = 20",
+            "  BoomerAMG Relax Type = 3",
+            "  BoomerAMG Coarsen Type = 0",
+            "  BoomerAMG Num Sweeps = 1",
+            "  BoomerAMG Max Levels = 25",
+            "  BoomerAMG Interpolation Type = 0",
+            "  BoomerAMG Smooth Type = 6",
+            "  BoomerAMG Cycle Type = 1",
+            "  BoomerAMG Num Functions = 1",
+            "  BoomerAMG Strong Threshold = 0.25",
+        ]
+    elif linear_system == "mumps":
+        lines += [
+            "  Linear System Solver = Direct",
+            "  Linear System Direct Method = MUMPS",
         ]
     else:
         lines += [
@@ -765,26 +816,63 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             }
         lines += dual_tes_constants_block(tes_sides, params, series_file, state_files)
     else:
-        lines += tes_constants_block(params, series_file)
+        lines += tes_constants_block(params, series_file, spec.get("state_file"))
     if with_pulse:
         lines += _pulse_constants(case_name, spec, params, root, mesh_dir_name)
     lines += ["End", ""]
 
-    lines += solver1_block(
-        spec["solver"],
-        calculate_loads=bool(spec.get("calculate_loads")),
-        lumped_mass=bool(spec.get("lumped_mass")),
-        transient_restart=bool(spec.get("transient_restart")),
-        comment=spec.get("solver_comment"),
-    )
-    lines.append("")
+    parallel_circuit_iterations = int(spec.get("parallel_circuit_iterations", 1))
+    if parallel_circuit_iterations < 1:
+        raise ValueError(f"{case_name}: parallel_circuit_iterations must be >= 1")
+    if heat_source == "circuit_parallel":
+        if is_dual_tes:
+            raise ValueError(f"{case_name}: circuit_parallel prototype supports one TES only")
+        circuit_relaxation = float(spec.get("parallel_circuit_relaxation", 0.04))
+        for coupling_iter in range(parallel_circuit_iterations):
+            circuit_index = 2 * coupling_iter + 1
+            heat_index = circuit_index + 1
+            lines += [
+                f"Solver {circuit_index}",
+                f'  Equation = "TES Parallel Circuit {coupling_iter + 1}"',
+                '  Procedure = "tes_parallel_circuit" "TESParallelCircuitSolver"',
+                '  "TES Body ID" = Integer 2',
+                f'  "TES Circuit Relaxation" = Real {fmt_real(circuit_relaxation)}',
+                f'  "TES Write Series" = Logical {"True" if coupling_iter == parallel_circuit_iterations - 1 else "False"}',
+                "  Exec Solver = Always",
+                "End",
+                "",
+            ]
+            lines += solver1_block(
+                spec["solver"],
+                solver_index=heat_index,
+                equation_name=f"Heat Equation Coupling {coupling_iter + 1}",
+                calculate_loads=bool(spec.get("calculate_loads")),
+                lumped_mass=bool(spec.get("lumped_mass")),
+                transient_restart=bool(spec.get("transient_restart")),
+                comment=spec.get("solver_comment"),
+            )
+            lines.append("")
+    else:
+        lines += solver1_block(
+            spec["solver"],
+            inner_circuit=heat_source == "circuit_inner",
+            calculate_loads=bool(spec.get("calculate_loads")),
+            lumped_mass=bool(spec.get("lumped_mass")),
+            transient_restart=bool(spec.get("transient_restart")),
+            comment=spec.get("solver_comment"),
+        )
+        lines.append("")
 
     vtu_default = "after_simulation" if template == "steady" else "after_timestep"
     vtu_spec = spec.get("vtu", vtu_default)
     if vtu_spec:
         lines += vtu_solver_block(case_name, vtu_spec)
         lines.append("")
-    lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
+    if heat_source == "circuit_parallel":
+        active = " ".join(str(i) for i in range(1, 2 * parallel_circuit_iterations + 1))
+        lines += ["Equation 1", '  Name = "Heat"', f"  Active Solvers({2 * parallel_circuit_iterations}) = {active}", "End", ""]
+    else:
+        lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
 
     lines += materials_block(model)
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)

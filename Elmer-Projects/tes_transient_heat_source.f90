@@ -88,8 +88,15 @@ CONTAINS
     REAL(KIND=dp) :: StateResistance
     REAL(KIND=dp) :: StatePower
     REAL(KIND=dp) :: StatePrevCurrent
+    LOGICAL :: IsRoot
 
     ASSOCIATE (St => States(InstanceIndex))
+
+    ! The circuit is evaluated from this UDF during element assembly.
+    ! File output is therefore restricted to rank 0 below.  MPI collectives
+    ! must not be called here: ranks enter element callbacks in different
+    ! orders, whereas collectives require identical call ordering.
+    IsRoot = (ParEnv % MyPE == 0)
 
     TimeStep = GetTimeStep()
     NonlinIter = GetNonlinIter()
@@ -186,7 +193,7 @@ CONTAINS
       St % SweepSampleCount = 0
       St % Initialized = .TRUE.
 
-      IF (SteadyMode .AND. FoundState) THEN
+      IF (SteadyMode .AND. FoundState .AND. IsRoot) THEN
         OPEN(UNIT=StateUnit, FILE=TRIM(StateFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
         IF (IoStatus == 0) THEN
           WRITE(StateUnit,'(5ES24.16)') St % AverageTemperature, St % Current, &
@@ -200,9 +207,9 @@ CONTAINS
       ! sweep that just finished (i.e. the previous nonlinear iterate).
       IF (St % SweepSampleCount > 0) THEN
         St % AverageTemperature = St % SweepTemperatureSum / REAL(St % SweepSampleCount, dp)
-        St % SweepTemperatureSum = 0.0_dp
-        St % SweepSampleCount = 0
       END IF
+      St % SweepTemperatureSum = 0.0_dp
+      St % SweepSampleCount = 0
 
       Dt = GetTimeStepSize()
       IF (Dt <= 0.0_dp) Dt = 1.0_dp
@@ -212,27 +219,41 @@ CONTAINS
         CommitTime = GetTime() - Dt
         St % PreviousCurrent = St % Current
 
+        ! Optional transient checkpoint for a restartable single-pixel run.
+        ! It is written only after a timestep has converged, so a process loss
+        ! can resume from the same thermal field and circuit state.
+        IF (.NOT. SteadyMode .AND. FoundState .AND. IsRoot) THEN
+          OPEN(UNIT=StateUnit, FILE=TRIM(StateFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
+          IF (IoStatus == 0) THEN
+            WRITE(StateUnit,'(5ES24.16)') St % AverageTemperature, St % Current, &
+              St % Resistance, St % Power, St % PreviousCurrent
+            CLOSE(StateUnit)
+          END IF
+        END IF
+
         WRITE(LogMessage,'(A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,ES12.5)') &
           'step=', St % LastTimeStep, ' T=', St % AverageTemperature, ' I_TES=', St % Current, &
           ' R_TES=', St % Resistance, ' P_TES=', St % Power
-        CALL Info(Tag, TRIM(LogMessage), Level=4)
+        IF (IsRoot) CALL Info(Tag, TRIM(LogMessage), Level=4)
 
-        IF (.NOT. St % FileStarted) THEN
-          OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='REPLACE', &
-            ACTION='WRITE', IOSTAT=IoStatus)
-          IF (IoStatus == 0) THEN
-            WRITE(Unit,'(A)') 'time_s,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W'
+        IF (IsRoot) THEN
+          IF (.NOT. St % FileStarted) THEN
+            OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='REPLACE', &
+              ACTION='WRITE', IOSTAT=IoStatus)
+            IF (IoStatus == 0) THEN
+              WRITE(Unit,'(A)') 'time_s,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W'
+            END IF
+          ELSE
+            OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='OLD', &
+              POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
           END IF
-          St % FileStarted = .TRUE.
-        ELSE
-          OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='OLD', &
-            POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
+          IF (IoStatus == 0) THEN
+            WRITE(Unit,'(ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+              CommitTime, ',', St % AverageTemperature, ',', St % Current, ',', St % Resistance, ',', St % Power
+            CLOSE(Unit)
+          END IF
         END IF
-        IF (IoStatus == 0) THEN
-          WRITE(Unit,'(ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
-            CommitTime, ',', St % AverageTemperature, ',', St % Current, ',', St % Resistance, ',', St % Power
-          CLOSE(Unit)
-        END IF
+        St % FileStarted = .TRUE.
 
         ! Keep Omega: the converged relaxation factor of the previous step is
         ! the best available estimate for the next one.
@@ -312,7 +333,7 @@ CONTAINS
       St % Resistance = RawResistance
       St % LastNonlinIter = NonlinIter
 
-      IF (SteadyMode .AND. FoundState) THEN
+      IF (SteadyMode .AND. FoundState .AND. IsRoot) THEN
         OPEN(UNIT=StateUnit, FILE=TRIM(StateFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
         IF (IoStatus == 0) THEN
           WRITE(StateUnit,'(5ES24.16)') St % AverageTemperature, St % Current, &
