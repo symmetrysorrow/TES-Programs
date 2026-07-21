@@ -92,10 +92,22 @@ def result_file_of(model: dict, case_name: str) -> Path | None:
     spec = model["cases"][case_name]
     if not spec.get("output_result"):
         return None
-    return mesh_dir_of(model, case_name) / f"{case_name}.result"
+    serial = mesh_dir_of(model, case_name) / f"{case_name}.result"
+    # MPI ResultOutput writes one restart file per rank, conventionally using
+    # ``.result.0``, ``.result.1``, ... .  Returning rank 0 here makes the
+    # dependency resolver treat a completed parallel steady run as a valid
+    # restart source while the SIF still references the common base name.
+    parallel_rank0 = mesh_dir_of(model, case_name) / f"{case_name}.result.0"
+    return serial if serial.exists() or not parallel_rank0.exists() else parallel_rank0
 
 
-def run_case(model: dict, case_name: str, project_path: Path) -> int:
+def run_case(
+    model: dict,
+    case_name: str,
+    project_path: Path,
+    elmer_solver: str,
+    mpi_procs: int,
+) -> int:
     spec = model["cases"][case_name]
     sif = ROOT / "generated" / "cases" / f"{case_name}.sif"
     mesh_dir = mesh_dir_of(model, case_name)
@@ -115,8 +127,11 @@ def run_case(model: dict, case_name: str, project_path: Path) -> int:
     started = datetime.now().isoformat(timespec="seconds")
     print(f"[{case_name}] ElmerSolver {sif.relative_to(ROOT)} (log: {log_path.relative_to(ROOT)})")
     with log_path.open("w", encoding="utf-8") as log:
+        command = [elmer_solver, str(sif)]
+        if mpi_procs > 1:
+            command = ["mpiexec", "-n", str(mpi_procs), *command]
         proc = subprocess.run(
-            [ELMERSOLVER, str(sif)],
+            command,
             cwd=ROOT,
             stdout=log,
             stderr=subprocess.STDOUT,
@@ -195,6 +210,17 @@ def main() -> int:
         "main config; its case must use a distinct name so results/ and "
         "generated/cases/ outputs don't collide with the main project's.",
     )
+    parser.add_argument(
+        "--elmer-solver",
+        default=ELMERSOLVER,
+        help="path to ElmerSolver executable; use this to select an alternate build such as the HYPRE/MPI solver",
+    )
+    parser.add_argument(
+        "--mpi-procs",
+        type=int,
+        default=1,
+        help="number of MPI ranks; requires a mesh/partitioning.N directory when N > 1",
+    )
     args = parser.parse_args()
 
     project_path = Path(args.project)
@@ -227,7 +253,7 @@ def main() -> int:
         return 0
 
     for name in plan:
-        code = run_case(model, name, project_path)
+        code = run_case(model, name, project_path, args.elmer_solver, args.mpi_procs)
         if code != 0:
             print(f"aborting chain: {name} failed")
             return code
