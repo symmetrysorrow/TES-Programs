@@ -33,6 +33,7 @@ MUMPS_FAST_CASE = "case_tes_pulse_20ms_3x_fast_mumps_mpi"
 MUMPS_PARALLEL_CIRCUIT_PILOT = "case_tes_steady_3x_mumps_parallel_circuit_pilot"
 MUMPS_PARALLEL_CIRCUIT_PROBE = "case_tes_pulse_20ms_3x_parallel_circuit_probe"
 MUMPS_INNER_CIRCUIT_STEADY = "case_tes_steady_3x_mumps_inner_circuit"
+MUMPS_INNER_CIRCUIT_FAST = "case_tes_pulse_20ms_3x_mumps_inner_circuit_fast"
 UMFPACK_STEADY_CASE = "case_tes_steady_3x_umfpack_recheck"
 
 
@@ -162,6 +163,14 @@ def main() -> None:
     inner_circuit_steady["solver"] = dict(mumps_steady["solver"])
     inner_circuit_steady["solver"]["nonlinear_convergence_tolerance"] = 1.0e-6
     project["cases"][MUMPS_INNER_CIRCUIT_STEADY] = inner_circuit_steady
+
+    inner_circuit_fast = dict(fast_case)
+    inner_circuit_fast["heat_source"] = "circuit_inner"
+    inner_circuit_fast["restart_from"] = MUMPS_INNER_CIRCUIT_STEADY
+    inner_circuit_fast["series_file"] = "tes_pulse_20ms_3x_mumps_inner_circuit_fast_series.csv"
+    inner_circuit_fast.pop("state_file", None)
+    inner_circuit_fast["solver"] = dict(inner_circuit_steady["solver"])
+    project["cases"][MUMPS_INNER_CIRCUIT_FAST] = inner_circuit_fast
 
     # Short pulse-window validation of the synchronized circuit.  It reaches
     # 20.51 ms, covering the 20 ms deposition and the COMSOL current-rise
