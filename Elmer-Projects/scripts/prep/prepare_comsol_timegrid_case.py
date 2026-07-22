@@ -34,6 +34,7 @@ MUMPS_PARALLEL_CIRCUIT_PILOT = "case_tes_steady_3x_mumps_parallel_circuit_pilot"
 MUMPS_PARALLEL_CIRCUIT_PROBE = "case_tes_pulse_20ms_3x_parallel_circuit_probe"
 MUMPS_INNER_CIRCUIT_STEADY = "case_tes_steady_3x_mumps_inner_circuit"
 MUMPS_INNER_CIRCUIT_FAST = "case_tes_pulse_20ms_3x_mumps_inner_circuit_fast"
+MUMPS_INNER_CIRCUIT_FAST_ALIGNED = "case_tes_pulse_20ms_3x_mumps_inner_circuit_pulse_aligned"
 UMFPACK_STEADY_CASE = "case_tes_steady_3x_umfpack_recheck"
 
 
@@ -74,28 +75,25 @@ def main() -> None:
     }
     project["cases"][TARGET_CASE] = case
 
-    # Solver grid for a fast comparison.  It resolves the 1 ns deposition
-    # window exactly, uses 5 us through the current-rise region, then expands
-    # to 50 us and 0.5 ms.  COMSOL values are compared by interpolation in
-    # post-processing rather than forcing Elmer to take COMSOL's tiny adaptive
-    # steps (down to ~1e-13 s).
+    # Solver grid for a fast comparison.  The pulse begins at 20.02 ms, so
+    # first advance 20 us from the 20 ms steady restart, then make the 1 ns
+    # deposition interval an explicit BDF step.  This guarantees non-zero
+    # overlap in AbsorberWindowPulseHeatSource before switching to the faster
+    # 10 ns--0.5 ms stages.
     fast_case = dict(case)
     fast_case["series_file"] = "tes_pulse_20ms_3x_fast_compare_series.csv"
     fast_case["timesteps"] = [
-        # The 1 ns deposition step must immediately follow t=20 ms.  Putting
-        # a coarse step first makes the overlap-based pulse UDF skip the
-        # entire 1 ns energy deposition.
-        ["1[ms]", 20], ["1[ns]", 1], ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9],
+        ["1[ms]", 20], ["10[us]", 2], ["1[ns]", 1], ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9],
         ["5[us]", 394], ["50[us]", 160], ["0.5[ms]", 340],
     ]
-    fast_case["output_intervals"] = [20, 1, 10, 9, 9, 50, 20, 20]
+    fast_case["output_intervals"] = [20, 2, 1, 10, 9, 9, 50, 20, 20]
     fast_case["vtu"] = "after_simulation"
     # The completed steady field/state remains the restart point.  Avoid a
     # full-field checkpoint at every transient step in this speed experiment.
     fast_case.pop("output_result", None)
     fast_case["comparison_time_grid"] = {
         "mode": "fast_solver_grid; interpolate Elmer current to COMSOL timestamps",
-        "steps": 946,
+        "steps": 945,
         "smallest_step": "1 ns",
         "pulse_rise_step": "5 us",
     }
@@ -171,6 +169,12 @@ def main() -> None:
     inner_circuit_fast.pop("state_file", None)
     inner_circuit_fast["solver"] = dict(inner_circuit_steady["solver"])
     project["cases"][MUMPS_INNER_CIRCUIT_FAST] = inner_circuit_fast
+
+    # Keep the completed, pulse-missed run intact and create an explicitly
+    # named replacement for the quantitative COMSOL comparison.
+    inner_circuit_fast_aligned = dict(inner_circuit_fast)
+    inner_circuit_fast_aligned["series_file"] = "tes_pulse_20ms_3x_mumps_inner_circuit_pulse_aligned_series.csv"
+    project["cases"][MUMPS_INNER_CIRCUIT_FAST_ALIGNED] = inner_circuit_fast_aligned
 
     # Short pulse-window validation of the synchronized circuit.  It reaches
     # 20.51 ms, covering the 20 ms deposition and the COMSOL current-rise
