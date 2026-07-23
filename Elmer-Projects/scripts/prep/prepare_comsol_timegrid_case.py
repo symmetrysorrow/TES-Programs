@@ -152,11 +152,12 @@ def main() -> None:
     parallel_circuit_pilot["solver"]["nonlinear_convergence_tolerance"] = 1.0e-4
     project["cases"][MUMPS_PARALLEL_CIRCUIT_PILOT] = parallel_circuit_pilot
 
-    # Production-oriented prototype: a single HeatSolve invocation with the
-    # circuit update embedded in each of its nonlinear iterations.
+    # Production-oriented prototype: HeatSolver invokes the synchronized
+    # circuit as a nonlinear pre-solver before every assembly sweep.
+    inner_circuit_state_file = f"mesh_refined_3x/{MUMPS_INNER_CIRCUIT_STEADY}.state"
     inner_circuit_steady = dict(mumps_steady)
     inner_circuit_steady.pop("series_file", None)
-    inner_circuit_steady.pop("state_file", None)
+    inner_circuit_steady["state_file"] = inner_circuit_state_file
     inner_circuit_steady["heat_source"] = "circuit_inner"
     inner_circuit_steady["solver"] = dict(mumps_steady["solver"])
     inner_circuit_steady["solver"]["nonlinear_convergence_tolerance"] = 1.0e-6
@@ -166,7 +167,7 @@ def main() -> None:
     inner_circuit_fast["heat_source"] = "circuit_inner"
     inner_circuit_fast["restart_from"] = MUMPS_INNER_CIRCUIT_STEADY
     inner_circuit_fast["series_file"] = "tes_pulse_20ms_3x_mumps_inner_circuit_fast_series.csv"
-    inner_circuit_fast.pop("state_file", None)
+    inner_circuit_fast["state_file"] = inner_circuit_state_file
     inner_circuit_fast["solver"] = dict(inner_circuit_steady["solver"])
     project["cases"][MUMPS_INNER_CIRCUIT_FAST] = inner_circuit_fast
 
