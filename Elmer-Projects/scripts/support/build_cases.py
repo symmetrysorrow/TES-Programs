@@ -305,6 +305,9 @@ def solver1_block(
     if comment:
         lines.append(f"! {comment}")
     if inner_circuit:
+        # Implemented in the custom HeatSolve module.  Unlike an external
+        # slave solver, this hook executes within HeatSolve's nonlinear loop
+        # and is collective-safe under MPI.
         lines += [
             '  "TES Inner Circuit Update" = Logical True',
             '  "TES Body ID" = Integer 2',
@@ -373,8 +376,13 @@ def solver1_block(
     return lines
 
 
-def vtu_solver_block(case_name: str, vtu: Any) -> list[str]:
-    lines = ["Solver 2"]
+def vtu_solver_block(case_name: str, vtu: Any, *, solver_index: int = 2) -> list[str]:
+    """Build the optional result-output solver.
+
+    ``circuit_inner`` reserves Solver 1 for its nonlinear pre-solver and
+    Solver 2 for HeatSolve, so its output solver must use a distinct index.
+    """
+    lines = [f"Solver {solver_index}"]
     if vtu == "after_simulation":
         lines.append("  Exec Solver = After Simulation")
     elif vtu == "after_timestep":
@@ -852,10 +860,21 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 comment=spec.get("solver_comment"),
             )
             lines.append("")
+    elif heat_source == "circuit_inner":
+        if is_dual_tes:
+            raise ValueError(f"{case_name}: circuit_inner supports one TES only")
+        lines += solver1_block(
+            spec["solver"],
+            inner_circuit=True,
+            calculate_loads=bool(spec.get("calculate_loads")),
+            lumped_mass=bool(spec.get("lumped_mass")),
+            transient_restart=bool(spec.get("transient_restart")),
+            comment=spec.get("solver_comment"),
+        )
+        lines.append("")
     else:
         lines += solver1_block(
             spec["solver"],
-            inner_circuit=heat_source == "circuit_inner",
             calculate_loads=bool(spec.get("calculate_loads")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
