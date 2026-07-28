@@ -739,7 +739,7 @@ def _pulse_constants(
     case_name: str, spec: dict, params: dict[str, float], root: Path, mesh_dir_name: str
 ) -> list[str]:
     pulse = spec["pulse"]
-    mesh_dir = root / mesh_dir_name
+    mesh_dir = root / "work" / "meshes" / mesh_dir_name
     sigma = eval_si(pulse["sigma"], params)
     center, center_note = _resolve_pulse_center(
         pulse.get("center", "auto"), params, mesh_dir, spec["mesh"]
@@ -768,7 +768,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     if spec["mesh"] not in meshes:
         raise ValueError(f"{case_name}: mesh '{spec['mesh']}' is not in the meshes registry")
     mesh_dir_name = meshes[spec["mesh"]]["dir"]
-    if not (root / mesh_dir_name / "mesh.header").exists():
+    if not (root / "work" / "meshes" / mesh_dir_name / "mesh.header").exists():
         raise ValueError(
             f"{case_name}: mesh directory '{mesh_dir_name}' has no mesh.header "
             "(build it with: python build_mesh.py " + spec["mesh"] + ")"
@@ -781,7 +781,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     if heat_source == "circuit_implicit" and not series_file:
         raise ValueError(f"{case_name}: circuit_implicit cases need a series_file")
 
-    mesh_names = parse_mesh_names(root / mesh_dir_name / "mesh.names")
+    mesh_names = parse_mesh_names(root / "work" / "meshes" / mesh_dir_name / "mesh.names")
     tes_body_names = resolve_tes_body_names(mesh_names)
     # "" for a single-pixel mesh's unsuffixed "TES" body, "L"/"R" for a
     # dual-TES mesh's "TES_L"/"TES_R" bodies (see body_force_blocks).
@@ -795,7 +795,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         "",
         "Header",
         "  CHECK KEYWORDS Warn",
-        f'  Mesh DB "." "{mesh_dir_name}"',
+        f'  Mesh DB "." "work/meshes/{mesh_dir_name}"',
         "End",
         "",
         "Simulation",

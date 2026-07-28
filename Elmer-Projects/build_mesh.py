@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+MESH_ROOT = ROOT / "work" / "meshes"
 ELMERGRID = r"C:\Program Files\Elmer 26.1-Release\bin\ElmerGrid.exe"
 
 
@@ -35,7 +36,7 @@ def sha256(path: Path) -> str:
 
 
 def write_provenance(mesh_name: str, entry: dict, project_json: Path, verified: bool) -> None:
-    mesh_dir = ROOT / entry["dir"]
+    mesh_dir = MESH_ROOT / entry["dir"]
     mesh_files = {
         p.name: sha256(p)
         for p in sorted(mesh_dir.glob("mesh.*"))
@@ -141,8 +142,13 @@ def main() -> int:
         check=True,
     )
 
-    print(f"[2/2] ElmerGrid {' '.join(recipe['elmergrid_args'])}")
-    subprocess.run([ELMERGRID, *recipe["elmergrid_args"]], cwd=ROOT, check=True)
+    elmergrid_args = list(recipe["elmergrid_args"])
+    if "-out" in elmergrid_args:
+        out_index = elmergrid_args.index("-out") + 1
+        elmergrid_args[out_index] = str(MESH_ROOT / elmergrid_args[out_index])
+    MESH_ROOT.mkdir(parents=True, exist_ok=True)
+    print(f"[2/2] ElmerGrid {' '.join(elmergrid_args)}")
+    subprocess.run([ELMERGRID, *elmergrid_args], cwd=ROOT, check=True)
 
     write_provenance(args.mesh, entry, project_json, verified=True)
     return 0
