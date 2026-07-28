@@ -1,0 +1,36 @@
+{
+  "case": "case_tes_steady_hybrid_prism_mpi4",
+  "started": "2026-07-24T20:32:52",
+  "finished": "2026-07-24T20:35:48",
+  "exit_code": 4294967295,
+  "inputs_sha256": {
+    "elmer_project_hybrid_prism_mpi.json": "28e04259e73e1209f3bdb9bb3af46cab97de02757f8974b761dcbf85640e32ed",
+    "case_tes_steady_hybrid_prism_mpi4.sif": "5c262b7fc0a9579c672eb4e549dbd45f28e513bc4ab4a7fcf0fe99d9c229296f",
+    "mesh.header": "14539a7db1e59cf6369de6b55bbdcd8b35f33ad770cea01f19f21b9a35dc3287",
+    "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+  },
+  "runtime_sif": null,
+  "runtime_sif_sha256": "5c262b7fc0a9579c672eb4e549dbd45f28e513bc4ab4a7fcf0fe99d9c229296f",
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase1-gfortran16-release-retry5\\bin\\ElmerSolver.exe",
+  "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase1-gfortran16-release-retry5",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "runtime_artifacts_sha256": {
+    "solver": "ce71e0a62ceaabdb4f2d2d37c5870b29347987eda895b12e6c272d5a435a5aaa",
+    "libelmersolver": "abd00c2067781ea9fe00e5bc1de84e8835c6a0854e0a7adff2ce0a1a6659eaa8",
+    "HeatSolve": "ebbaf6af60c5e159e026204df78a4a0d8896de744a8c54f3adec58b325c64120"
+  },
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_conformal_repart_x",
+  "restart_from": null,
+  "collected_outputs": [],
+  "result_file": "mesh_hybrid_abs_tet_layers_prism_conformal_repart_x\\case_tes_steady_hybrid_prism_mpi4.result",
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=110) (NRM,RELC): ( 0.14954860     0.10003222E-04 ) :: heat equation",
+    "ComputeChange: NS (ITER=111) (NRM,RELC): ( 0.14954716     0.96144857E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=112) (NRM,RELC): ( 0.14954578     0.92265597E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=113) (NRM,RELC): ( 0.14954445     0.88793911E-05 ) :: heat equation"
+  ],
+  "errors": []
+}

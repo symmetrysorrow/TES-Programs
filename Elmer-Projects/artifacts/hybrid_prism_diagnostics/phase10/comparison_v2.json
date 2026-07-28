@@ -1,0 +1,58 @@
+{
+  "inputs": {
+    "reference": {
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_hybrid_prism_from_20ms_serial_tight_1rank\\tes_case_tes_pulse_hybrid_prism_from_20ms_serial_tight_1rank_series.csv",
+      "sha256": "b25f0c3a7df362b8ecccf8c888e8050379f01bd5106afd84e659346e5fae39de"
+    },
+    "candidate": {
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_hybrid_prism_from_20ms_serial_tight_mpi4\\tes_case_tes_pulse_hybrid_prism_from_20ms_serial_tight_mpi4_series.csv",
+      "sha256": "6b17508053cad2b4e340f0216fa59b9a5c133d2f7e6a0b2c1919be43dbb932ab"
+    }
+  },
+  "comparison_window_s": [
+    0.020018,
+    0.020620001000000016
+  ],
+  "matched_samples": 46,
+  "baseline_samples": 2,
+  "values": {
+    "reference_baseline_A": 0.000164466331932462,
+    "candidate_baseline_A": 0.00016451795585011925,
+    "reference_height_A": 8.162383499530127e-06,
+    "candidate_height_A": 8.024558724542384e-06,
+    "reference_peak_time_s": 0.020520001000000017,
+    "candidate_peak_time_s": 0.020520001000000017,
+    "raw_max_time_s": 0.020320001000000018,
+    "raw_max_reference_A": 0.00015644844566558783,
+    "raw_max_candidate_A": 0.00015673688178331614,
+    "baseline_corrected_max_time_s": 0.020320001000000018
+  },
+  "metrics": {
+    "baseline_current": {
+      "value": 0.00031388745070600116,
+      "limit": 0.01,
+      "passed": true
+    },
+    "pulse_height": {
+      "value": 0.016885358914547073,
+      "limit": 0.02,
+      "passed": true
+    },
+    "peak_time": {
+      "value": 0.0,
+      "limit": 1e-05,
+      "passed": true
+    },
+    "raw_max_current": {
+      "value": 0.03533724159676085,
+      "limit": 0.02,
+      "passed": false
+    },
+    "baseline_corrected_max_current": {
+      "value": 0.029012628490770513,
+      "limit": 0.02,
+      "passed": false
+    }
+  },
+  "overall_passed": false
+}

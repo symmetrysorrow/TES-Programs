@@ -1,0 +1,50 @@
+diff --git a/tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90 b/tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90
+--- a/tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90
++++ b/tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90
+@@ -1393,7 +1393,7 @@ CONTAINS
+   SUBROUTINE TESInnerCircuitUpdate()
+-    LOGICAL :: Enabled, GotIt, FoundState, FoundSeries, FoundIterationSeries, FreezePower
++    LOGICAL :: Enabled, GotIt, FoundState, FoundSeries, FoundIterationSeries, FreezePower, StepCommit
+@@
++    StepCommit = ListGetLogical(Solver % Values, 'TES Inner Circuit Step Commit', GotIt)
++    IF (.NOT. GotIt) StepCommit = .FALSE.
+@@
++      IF (StepCommit .AND. TransientSimulation .AND. dt > 0.0_dp) LastCircuitDt = dt
+@@
++      IF (StepCommit) THEN
++        StepDt = LastCircuitDt
++        IF (StepDt <= 0.0_dp) StepDt = dt
++        IF (StepDt <= 0.0_dp) CALL Fatal('HeatSolve', 'TES step commit requires positive timestep')
++        ! Solve the electrical state once from the committed previous state.
++        ! Do not use CircuitCallsInStep or MidTemperature on this path.
++        CommitCurrent = MAX(MIN((SQRT(Disc)-Cc)/(2.0_dp*B), IBias), 0.0_dp)
++        CommitResistance = A + B*ABS(CommitCurrent)
++        CommitPower = CommitCurrent*CommitCurrent*CommitResistance
++      ELSE
++        ! Existing nonlinear-sweep update path.
++      END IF
++      IF (StepCommit) THEN
++        PreviousCircuitCurrent = CommitCurrent
++        CircuitCurrent = CommitCurrent
++        CircuitResistance = CommitResistance
++        CircuitPower = CommitPower
++        CircuitAverageTemperature = UpdateTemperature
++      ELSE
++        PreviousCircuitCurrent = CircuitCurrent
++      END IF
+diff --git a/Elmer-Projects/scripts/support/build_cases.py b/Elmer-Projects/scripts/support/build_cases.py
+--- a/Elmer-Projects/scripts/support/build_cases.py
++++ b/Elmer-Projects/scripts/support/build_cases.py
+@@
++    inner_circuit_step_commit: bool = False,
+@@
++        if inner_circuit_step_commit:
++            lines.append('  "TES Inner Circuit Step Commit" = Logical True')
+@@
++            inner_circuit_step_commit=bool(spec.get("inner_circuit_step_commit")),
+diff --git a/Elmer-Projects/scripts/prep/prepare_hybrid_prism_case.py b/Elmer-Projects/scripts/prep/prepare_hybrid_prism_case.py
+--- a/Elmer-Projects/scripts/prep/prepare_hybrid_prism_case.py
++++ b/Elmer-Projects/scripts/prep/prepare_hybrid_prism_case.py
+@@
++    for name, base in ((PULSE_SERIAL_MAP_1_COMMIT,PULSE_SERIAL_MAP_1),(PULSE_SERIAL_MAP_4_COMMIT,PULSE_SERIAL_MAP_4)):
++        item=copy.deepcopy(project["cases"][base]); item.update({"series_file":f"tes_{name}_series.csv","iteration_series_file":f"tes_{name}_iterations.csv","inner_circuit_step_commit":True}); project["cases"][name]=item

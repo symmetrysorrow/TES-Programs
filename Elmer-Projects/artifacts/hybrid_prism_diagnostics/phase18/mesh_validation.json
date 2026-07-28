@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "preflight": {"msh_absent_before_generation": true, "mesh_directory_absent_before_conversion": true, "status": "passed"},
+  "generation": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_prism_stack17_abs25r75_noextend.msh --stack-local-size 16.6666666666667e-6 --absorber-local-size 25e-6 --absorber-local-radius 75e-6 --disable-mesh-size-extend-from-boundary",
+    "msh": "gmsh/project_hybrid_prism_stack17_abs25r75_noextend.msh",
+    "msh_sha256": "2b5b7f0e9771ce40a76f2c74962f77f8b525d14952d8c79339a9d5f8a4a84d2f",
+    "gmsh_3d_element_types": [4, 6],
+    "mesh_size_extend_from_boundary": 0,
+    "status": "passed_once"
+  },
+  "conversion": {
+    "command": "C:/Program Files/Elmer 26.1-Release/bin/ElmerGrid.exe 14 2 gmsh/project_hybrid_prism_stack17_abs25r75_noextend.msh -merge 1e-10 -out mesh_hybrid_abs_tet_layers_prism_stack17_abs25r75_noextend",
+    "mesh_directory": "mesh_hybrid_abs_tet_layers_prism_stack17_abs25r75_noextend",
+    "required_files": ["mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary", "mesh.names"],
+    "sha256": {"mesh.header": "10b92423428b1976e8fa5325efba8d60f36b691e82d59b282b41ec5bcfaca4ce", "mesh.nodes": "9b015c6037ba0d89b928a09294a779f2c895cb59f563e1a601a8fd4244365c97", "mesh.elements": "41fab8bb3c27404b2cf43906849ea3e884450f5808382951decc37e881ad136a", "mesh.boundary": "a4a78399c619a8bae5594fae69e169ee644443f1147761ba17fa8ae3acf61a12", "mesh.names": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb"},
+    "status": "passed_once"
+  },
+  "element_counts": {
+    "stack17_abs25r75_noextend": {"nodes": 116489, "volume_elements": 421923, "boundary_elements": 128960, "types": {"504": 324177, "706": 97746}},
+    "stack17": {"nodes": 76630, "volume_elements": 170960, "boundary_elements": 128908, "types": {"504": 73282, "706": 97678}},
+    "all_tet_3x": {"nodes": 63172, "volume_elements": 312997, "boundary_elements": 249535, "types": {"504": 312997}},
+    "vs_stack17_relative": {"nodes": 0.5201487668015138, "volume_elements": 1.4679632662611137, "tetrahedra": 3.4236920389727357, "prisms": 0.0006961649501423043},
+    "vs_all_tet_3x_relative": {"volume_elements": 0.34800972533283064},
+    "target_total_volume_elements": 250000,
+    "target_met": false,
+    "guardrail_result": "421923 >= 250000; no SIF dry-run, solver run, or solver recommendation was made."
+  },
+  "physical_names": {"body_names_match_stack17": true, "boundary_names_match_stack17": true, "body_name_set_matches_all_tet_3x": true, "tes_sif_body_ordinal": 8},
+  "body_volume_m3": {
+    "stack17_abs25r75_noextend": {"SiO2_2": 3.5019999999999695e-11, "Si_2": 6.128500000000677e-09, "SiO2_1": 1.800000000000018e-11, "Si_1": 2.6265000000002406e-10, "SiNx": 1.7509999999999848e-11, "Membrane_Si1": 7.350000000000043e-12, "Membrane_SiNx": 4.900000000000037e-13, "TES": 3.999999999999956e-14, "Stycast": 3.8927374797393434e-12, "abs": 7.000000000001249e-10},
+    "relative_change_vs_stack17": {"all_bodies": "absolute relative differences at or below 1.90e-13"},
+    "stycast_relative_change_vs_all_tet_3x": 0.007155770258475848
+  },
+  "radial_diagnostic": {
+    "method": "absorber tetrahedron centroid radius from the volume-weighted absorber centroid; h is equal-volume regular-tetra edge length in um",
+    "stack17_abs25r75_noextend_within_radius": [
+      {"radius_um": 50, "tetrahedra": 278, "volume_fraction": 0.000741692301178514, "median_h_equiv_um": 23.917213307401713, "volume_weighted_mean_h_equiv_um": 26.563484603626325},
+      {"radius_um": 100, "tetrahedra": 2156, "volume_fraction": 0.005984208005963814, "median_h_equiv_um": 23.91721534934745, "volume_weighted_mean_h_equiv_um": 27.206008581559967},
+      {"radius_um": 150, "tetrahedra": 7156, "volume_fraction": 0.02022234649152015, "median_h_equiv_um": 23.917224877509646, "volume_weighted_mean_h_equiv_um": 27.316158828332238},
+      {"radius_um": 200, "tetrahedra": 16901, "volume_fraction": 0.04782192835414226, "median_h_equiv_um": 23.91723168278281, "volume_weighted_mean_h_equiv_um": 27.29666771014346},
+      {"radius_um": 250, "tetrahedra": 33138, "volume_fraction": 0.09331830631058388, "median_h_equiv_um": 23.917226235608332, "volume_weighted_mean_h_equiv_um": 27.26157083056625},
+      {"radius_um": 350, "tetrahedra": 92585, "volume_fraction": 0.2564398837610572, "median_h_equiv_um": 23.9172153494597, "volume_weighted_mean_h_equiv_um": 27.1406776410561}
+    ],
+    "outside_350um": {"tetrahedra": 231592, "volume_fraction": 0.7435601162389427, "median_h_equiv_um": 23.91722623579539, "volume_weighted_mean_h_equiv_um": 30.02933502525909},
+    "stack17_outside_350um": {"tetrahedra": 60218, "volume_fraction": 0.7428360304340623, "median_h_equiv_um": 33.93243171602306, "volume_weighted_mean_h_equiv_um": 51.86211145457761},
+    "refinement_spread_globally": true,
+    "conclusion": "Disabling MeshSizeExtendFromBoundary reduces but does not remove the global spread: the >350 um region still contains 71.44% of candidate absorber tetrahedra and has a 23.92 um median h proxy, below stack17's 33.93 um."
+  },
+  "sif_dry_run": {"status": "not_run", "reason": "total volume element target was not met"}
+}

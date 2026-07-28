@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "preflight": {"msh_absent_before_generation": true, "mesh_directory_absent_before_conversion": true, "status": "passed"},
+  "generation": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_prism_stack17_abs35r50_noextend.msh --stack-local-size 16.6666666666667e-6 --absorber-local-size 35e-6 --absorber-local-radius 50e-6 --disable-mesh-size-extend-from-boundary",
+    "msh": "gmsh/project_hybrid_prism_stack17_abs35r50_noextend.msh",
+    "msh_sha256": "7b31fd68dca9fa3590ef636517ecd0cb633f720db31b33a3aeb8f951bbfad720",
+    "gmsh_3d_element_types": [4, 6],
+    "mesh_size_extend_from_boundary": 0,
+    "status": "passed_once"
+  },
+  "conversion": {
+    "command": "C:/Program Files/Elmer 26.1-Release/bin/ElmerGrid.exe 14 2 gmsh/project_hybrid_prism_stack17_abs35r50_noextend.msh -merge 1e-10 -out mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+    "mesh_directory": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+    "required_files": ["mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary", "mesh.names"],
+    "sha256": {"mesh.header": "9e6fcfaf0f6095485eefd6e3b24c3adea113f5a234be65b8d11e17f4d23c5d6a", "mesh.nodes": "642276adb01d358b7392a7c7d705e2fdc654057088f9fcad6a69593bb6078783", "mesh.elements": "deda84b6d2638efdeb664e869b9b35f98e8e86fd64911fb65f6e30729e57683f", "mesh.boundary": "c9535a8c391bbf1c0c4ac1f113075d7bd1d88397b411e9977b78e52370b41fdb", "mesh.names": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb"},
+    "status": "passed_once"
+  },
+  "element_counts": {
+    "stack17_abs35r50_noextend": {"nodes": 84636, "volume_elements": 223718, "boundary_elements": 128960, "types": {"504": 125972, "706": 97746}},
+    "stack17": {"nodes": 76630, "volume_elements": 170960, "boundary_elements": 128908, "types": {"504": 73282, "706": 97678}},
+    "all_tet_3x": {"nodes": 63172, "volume_elements": 312997, "boundary_elements": 249535, "types": {"504": 312997}},
+    "vs_stack17_relative": {"nodes": 0.10447605376484406, "volume_elements": 0.30859850257370147, "tetrahedra": 0.7190033023116181, "prisms": 0.0006961649501423043},
+    "vs_all_tet_3x_relative": {"volume_elements": -0.28523915564685925},
+    "target_total_volume_elements": 250000,
+    "target_met": true
+  },
+  "physical_names": {"body_names_match_stack17": true, "boundary_names_match_stack17": true, "body_name_set_matches_all_tet_3x": true, "tes_sif_body_ordinal": 8},
+  "body_volume_m3": {
+    "stack17_abs35r50_noextend": {"SiO2_2": 3.5019999999999695e-11, "Si_2": 6.128500000000677e-09, "SiO2_1": 1.800000000000018e-11, "Si_1": 2.6265000000002406e-10, "SiNx": 1.7509999999999848e-11, "Membrane_Si1": 7.350000000000043e-12, "Membrane_SiNx": 4.900000000000037e-13, "TES": 3.999999999999956e-14, "Stycast": 3.8927374797393434e-12, "abs": 7.000000000000061e-10},
+    "relative_change_vs_stack17": {"all_bodies": "absolute relative differences at or below 1.98e-14"},
+    "stycast_relative_change_vs_all_tet_3x": 0.007155770258475848
+  },
+  "radial_diagnostic": {
+    "method": "absorber tetrahedron centroid radius from the volume-weighted absorber centroid; h is equal-volume regular-tetra edge length in um",
+    "stack17_abs35r50_noextend_within_radius": [
+      {"radius_um": 50, "tetrahedra": 85, "volume_fraction": 0.0007254600403972583, "median_h_equiv_um": 34.76833586954209, "volume_weighted_mean_h_equiv_um": 38.96489243898094},
+      {"radius_um": 100, "tetrahedra": 703, "volume_fraction": 0.0058658599708978805, "median_h_equiv_um": 34.49458112727523, "volume_weighted_mean_h_equiv_um": 39.42892388314973},
+      {"radius_um": 150, "tetrahedra": 2341, "volume_fraction": 0.019923609606845614, "median_h_equiv_um": 35.35489350785987, "volume_weighted_mean_h_equiv_um": 39.48405217588424},
+      {"radius_um": 200, "tetrahedra": 5501, "volume_fraction": 0.04783154250250598, "median_h_equiv_um": 36.23962795808301, "volume_weighted_mean_h_equiv_um": 39.635411138599274},
+      {"radius_um": 250, "tetrahedra": 10987, "volume_fraction": 0.09339338107860524, "median_h_equiv_um": 35.44512149607275, "volume_weighted_mean_h_equiv_um": 39.42359533238858},
+      {"radius_um": 350, "tetrahedra": 31363, "volume_fraction": 0.2564640619185716, "median_h_equiv_um": 34.4945830898612, "volume_weighted_mean_h_equiv_um": 39.61638077646885}
+    ],
+    "outside_350um": {"tetrahedra": 94609, "volume_fraction": 0.7435359380814283, "median_h_equiv_um": 30.76665742449288, "volume_weighted_mean_h_equiv_um": 41.91854317306477},
+    "stack17_outside_350um": {"tetrahedra": 60218, "volume_fraction": 0.7428360304340623, "median_h_equiv_um": 33.93243171602306, "volume_weighted_mean_h_equiv_um": 51.86211145457761},
+    "conclusion": "The 35 um / 50 um probe stays below the total-element cap but still has some global size reduction; its outside-350 um median h proxy is 30.77 um rather than stack17's 33.93 um."
+  },
+  "sif_dry_run": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe run.py case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight --project elmer_project_hybrid_prism.json --dry-run",
+    "case": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+    "status": "passed",
+    "sif": "generated/cases/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.sif",
+    "sif_sha256": "fd95ad1f4dd166495a437964d1b1fc1212f5106203c9b2fae64c7290dfd04fc3",
+    "mesh_db": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+    "tes_body_id": 8,
+    "step_commit_present": false,
+    "nonlinear_min_iterations_present": false,
+    "tight_solver": {"nonlinear_max_iterations": 120, "nonlinear_tolerance": 1e-08, "relaxation": 1.0, "direct_method": "MUMPS", "steady_tolerance": 1e-08}
+  },
+  "candidate": {"status": "eligible_for_a_tight_steady_run_only", "reason": "The mesh passes the <250k volume-element guardrail and the SIF dry-run contract. No solver has been run in this phase."}
+}

@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "method": {
+    "center": "volume-weighted absorber centroid (the auto pulse centre)",
+    "radial_coordinate": "distance from tetrahedron centroid, micrometres",
+    "h_proxy": "regular-tetrahedron edge length with the same element volume: (6*sqrt(2)*V)^(1/3), micrometres"
+  },
+  "pulse_center_m": [0.0, 0.001, 0.00056216],
+  "cumulative_radii_um": [50, 100, 150, 200, 250, 350],
+  "stack17": {
+    "absorber_tetrahedra": 73282,
+    "absorber_volume_m3": 7e-10,
+    "within_radius": [
+      {"radius_um": 50, "tetrahedra": 25, "volume_fraction": 0.0007278717220965819, "median_h_equiv_um": 47.8344715342182, "volume_weighted_mean_h_equiv_um": 58.056530650510226},
+      {"radius_um": 100, "tetrahedra": 260, "volume_fraction": 0.005977863516518252, "median_h_equiv_um": 47.83442865804017, "volume_weighted_mean_h_equiv_um": 55.18467147241729},
+      {"radius_um": 150, "tetrahedra": 800, "volume_fraction": 0.02025320246318985, "median_h_equiv_um": 47.83443069854522, "volume_weighted_mean_h_equiv_um": 57.402269257391445},
+      {"radius_um": 200, "tetrahedra": 1874, "volume_fraction": 0.04786443488911843, "median_h_equiv_um": 47.83444090738721, "volume_weighted_mean_h_equiv_um": 57.52764487918541},
+      {"radius_um": 250, "tetrahedra": 3762, "volume_fraction": 0.09288833140333924, "median_h_equiv_um": 47.83443954593399, "volume_weighted_mean_h_equiv_um": 56.64785226946393},
+      {"radius_um": 350, "tetrahedra": 13064, "volume_fraction": 0.2571639695659378, "median_h_equiv_um": 47.8344089198081, "volume_weighted_mean_h_equiv_um": 56.40343343657171}
+    ],
+    "outside_350um": {"tetrahedra": 60218, "volume_fraction": 0.7428360304340623, "median_h_equiv_um": 33.93243171602306, "volume_weighted_mean_h_equiv_um": 51.86211145457761}
+  },
+  "stack17_abs17": {
+    "absorber_tetrahedra": 846290,
+    "absorber_volume_m3": 7e-10,
+    "within_radius": [
+      {"radius_um": 50, "tetrahedra": 691, "volume_fraction": 0.0007307687412195116, "median_h_equiv_um": 17.808972445657023, "volume_weighted_mean_h_equiv_um": 19.586868123611627},
+      {"radius_um": 100, "tetrahedra": 5956, "volume_fraction": 0.005985925048132816, "median_h_equiv_um": 17.24730087002661, "volume_weighted_mean_h_equiv_um": 19.364194575792084},
+      {"radius_um": 150, "tetrahedra": 19800, "volume_fraction": 0.020236039215146814, "median_h_equiv_um": 17.24736483567363, "volume_weighted_mean_h_equiv_um": 19.4651807898178},
+      {"radius_um": 200, "tetrahedra": 46900, "volume_fraction": 0.04784558470710223, "median_h_equiv_um": 17.26295878858489, "volume_weighted_mean_h_equiv_um": 19.470960105101327},
+      {"radius_um": 250, "tetrahedra": 91713, "volume_fraction": 0.09345197675833648, "median_h_equiv_um": 17.247343895660126, "volume_weighted_mean_h_equiv_um": 19.47490132266646},
+      {"radius_um": 350, "tetrahedra": 249760, "volume_fraction": 0.25646556167542106, "median_h_equiv_um": 17.24732819029949, "volume_weighted_mean_h_equiv_um": 19.616404190842243}
+    ],
+    "outside_350um": {"tetrahedra": 596530, "volume_fraction": 0.7435344383245791, "median_h_equiv_um": 17.905617259417657, "volume_weighted_mean_h_equiv_um": 22.71874462626773}
+  },
+  "assessment": {
+    "refinement_spread_globally": true,
+    "evidence": "The >350 um region has nearly the same volume fraction in both meshes (~74%), but its median h proxy decreases from 33.93 to 17.91 um and its tetrahedron count rises from 60,218 to 596,530. The Ball did not remain local in the final mesh.",
+    "local_gmsh_default_options": {"Mesh.MeshSizeExtendFromBoundary": 1.0, "Mesh.MeshSizeFromPoints": 1.0, "Mesh.MeshSizeFromCurvature": 0.0},
+    "interpretation": "The enabled MeshSizeExtendFromBoundary is evidence-supported as the first setting to isolate in the next experiment. MeshSizeFromPoints is also enabled, but this diagnostic alone does not isolate its contribution; MeshSizeFromCurvature is already disabled."
+  },
+  "next_experiment_proposal": {
+    "goal": "retain total volume elements below 250000",
+    "smallest_change": "Use absorber local size 25e-6 m and radius 75e-6 m, while disabling only Mesh.MeshSizeExtendFromBoundary for the absorber-Ball experiment; retain MeshSizeFromPoints and MeshSizeFromCurvature settings initially.",
+    "rationale": "The current 16.7 um / 150 um Ball produced 943,968 total volume elements because its small size reached the outer absorber. A 25 um / 75 um Ball lowers the requested refinement ratio and refined volume. Disabling boundary extension is directly motivated by the observed global spread and the locally confirmed default value of 1.",
+    "guardrail": "Preflight and stop after mesh validation if total volume elements are not below 250000; do not run ElmerSolver until that condition and radial-locality checks pass."
+  }
+}

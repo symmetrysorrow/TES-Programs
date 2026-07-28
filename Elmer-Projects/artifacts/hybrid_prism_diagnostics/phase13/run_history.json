@@ -1,0 +1,33 @@
+{
+  "case": "case_tes_pulse_hybrid_prism_from_20ms_serial_tight_mpi4_step_commit",
+  "attempts": [
+    {
+      "attempt": 1,
+      "started": "2026-07-25T00:26:52+09:00",
+      "outcome": "parent runner timed out after 64 seconds; MPI child processes remained",
+      "residual_processes": [13164, 36600, 43096, 45352, 45428]
+    },
+    {
+      "attempt": 2,
+      "started": "2026-07-25T00:28:13+09:00",
+      "finished": "2026-07-25T00:28:23+09:00",
+      "exit_code": 4294967294,
+      "outcome": "failed while the residual first attempt was still running; MUMPS allocation errors INFO(1)=-7/-13",
+      "classification": "invalid duplicate execution; excluded from comparison"
+    },
+    {
+      "event": "cleanup",
+      "after_attempt": 2,
+      "action": "explicitly stopped the verified residual ElmerSolver and mpiexec process IDs from attempt 1, then confirmed no residual Elmer/MPI processes before attempt 3"
+    },
+    {
+      "attempt": 3,
+      "started": "2026-07-25T00:29:10+09:00",
+      "finished": "2026-07-25T00:31:34+09:00",
+      "launcher_pid": 28732,
+      "exit_code": 0,
+      "udf_applied": true,
+      "outcome": "clean run; comparison input"
+    }
+  ]
+}

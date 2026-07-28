@@ -9,19 +9,26 @@ from __future__ import annotations
 
 from pathlib import Path
 
-ABS_BODY_ID = 100
+from scripts.support.mesh_names import parse_mesh_names
+
 TET_TYPE = "504"
 
 
 def _load_abs_tets(mesh_dir: Path):
     import numpy as np
 
+    # Body IDs are assigned by the mesh converter.  The original tetra mesh
+    # happened to use 100 for `abs`; the hybrid prism mesh correctly uses a
+    # compact physical-group ID instead, so resolve the name from mesh.names.
+    absorber_body_id = parse_mesh_names(mesh_dir / "mesh.names").bodies.get("abs")
+    if absorber_body_id is None:
+        raise ValueError(f"No absorber body named 'abs' in {mesh_dir / 'mesh.names'}")
     nodes = np.loadtxt(mesh_dir / "mesh.nodes", usecols=(2, 3, 4))
     tets = []
     with (mesh_dir / "mesh.elements").open() as f:
         for line in f:
             parts = line.split()
-            if len(parts) >= 7 and parts[1] == str(ABS_BODY_ID) and parts[2] == TET_TYPE:
+            if len(parts) >= 7 and parts[1] == str(absorber_body_id) and parts[2] == TET_TYPE:
                 tets.append([int(x) - 1 for x in parts[3:7]])
     if not tets:
         raise ValueError(f"No absorber (body {ABS_BODY_ID}) tetrahedra found in {mesh_dir}")

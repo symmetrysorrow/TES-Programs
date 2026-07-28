@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "reference": "all-tetra Phase14/Phase13 step-commit 1-rank pulse",
+  "mesh_progression": {
+    "phase14_legacy_hybrid": {"volume_elements": 127037, "tetrahedra": 42803, "prisms": 84234, "pulse_seconds": 236.52},
+    "phase15_stack25": {"volume_elements": 147995, "tetrahedra": 58558, "prisms": 89437, "pulse_seconds": 381.4},
+    "phase16_stack17": {"volume_elements": 170960, "tetrahedra": 73282, "prisms": 97678, "pulse_seconds": 721.43},
+    "phase17_stack17_abs17": {"volume_elements": 943968, "tetrahedra": 846290, "prisms": 97678, "status": "rejected: Ball refinement spread globally and exceeded the 250k guardrail"},
+    "phase18_stack17_abs25r75_noextend": {"volume_elements": 421923, "tetrahedra": 324177, "prisms": 97746, "status": "rejected: still exceeded the 250k guardrail"},
+    "phase19_stack17_abs35r50_noextend": {"volume_elements": 223718, "tetrahedra": 125972, "prisms": 97746, "pulse_seconds": 801.96, "status": "accepted as the bounded absorber-centre probe"},
+    "all_tet_3x": {"volume_elements": 312997, "tetrahedra": 312997, "pulse_seconds": 922.0}
+  },
+  "pulse_metrics_relative_to_all_tet": {
+    "limits": {"baseline_current": 0.01, "pulse_height": 0.02, "peak_time_seconds": 1e-05, "baseline_corrected_max_current": 0.02, "raw_max_current": 0.02},
+    "phase14_legacy": {"baseline_current": 0.11010546575275612, "pulse_height": 0.06180068836258338, "peak_time_seconds": 0.0000999999999999994, "baseline_corrected_max_current": 0.15422366892004888, "raw_max_current": 2.088361022488599},
+    "phase15_stack25": {"baseline_current": 0.026788999568062473, "pulse_height": 0.015241645424656508, "peak_time_seconds": 0.0, "baseline_corrected_max_current": 0.07239997540486534, "raw_max_current": 0.5088958761870563},
+    "phase16_stack17": {"baseline_current": 0.010298146528948171, "pulse_height": 0.001990158604216071, "peak_time_seconds": 0.0000999999999999994, "baseline_corrected_max_current": 0.06384943774675214, "raw_max_current": 0.2590906833861736},
+    "phase19_abs35r50_noextend": {"baseline_current": 0.005370524512456114, "pulse_height": 0.0002440018604279651, "peak_time_seconds": 0.0000999999999999994, "baseline_corrected_max_current": 0.06511354705094405, "raw_max_current": 0.16693263581623805, "passed": {"baseline_current": true, "pulse_height": true, "peak_time": false, "baseline_corrected_max_current": false, "raw_max_current": false}}
+  },
+  "phase19_steady": {
+    "solver_real_seconds": 191.06,
+    "state_from_final_iteration": {"temperature_K": 0.1684606304137994, "current_A": 0.00014735951116912128, "resistance_ohm": 0.015023108375405103, "power_W": 3.2622417732028553e-10},
+    "body_mean_temperature_K": {"TES": 0.1684606912098678, "Stycast": 0.16846102709350666, "absorber": 0.16846102715913192},
+    "interface_gradients_K": {"TES-Stycast": -3.3588363884673456e-07, "TES-Membrane_SiNx": 0.005188951951008325, "Stycast-absorber": -6.562525523001739e-11},
+    "all_tet_gaps": {"state_temperature_K": -2.2612026132462493e-05, "state_current_A": 7.950607150644814e-07, "TES_membrane_gradient_K": 4.573797124685086e-05, "legacy_to_all_tet_gap_closed": {"state_temperature": 1.0497223851742288, "state_current": 1.0487391118462515, "TES_membrane_gradient": 0.9155278249423318}}
+  },
+  "phase19_pulse": {
+    "solver_real_seconds": 801.96,
+    "timesteps": 47,
+    "iteration_histogram": {"1": 2, "2": 24, "3": 19, "10": 1, "12": 1},
+    "high_iteration_steps": {"42": 12, "43": 10},
+    "runtime_vs_all_tet_reduction": 0.13019522776572669,
+    "runtime_vs_stack17_growth": 0.11162552153362085,
+    "element_reduction_vs_all_tet": 0.28523915564685925
+  },
+  "state_path_incident": {
+    "cause": "The original 137-character Phase19 TES State File path exceeded the UDF CHARACTER LEN=128 storage and was written as the 122-byte truncated basename.",
+    "fix": "Moved the verified truncated 122-byte state into the same mesh directory as phase19_steady.state and added a builder-wide <=128-character validation for both single- and dual-TES State File entries.",
+    "pulse_state_sha256": "04a9fa51c0641b0bbe2544f0c60e1998111d388a7202e1a45b515e4344093f7f"
+  },
+  "provenance": {
+    "phase19_comparison": "artifacts/hybrid_prism_diagnostics/phase19/all_tet_vs_phase19_step_commit.json",
+    "phase19_iterations": "artifacts/hybrid_prism_diagnostics/phase19/pulse_iteration_summary.json",
+    "phase19_body_integrals": "artifacts/hybrid_prism_diagnostics/phase19/body_integrals_phase19_vs_all_tet.json",
+    "phase17_mesh": "artifacts/hybrid_prism_diagnostics/phase17/mesh_validation.json",
+    "phase18_mesh": "artifacts/hybrid_prism_diagnostics/phase18/mesh_validation.json",
+    "phase19_mesh": "artifacts/hybrid_prism_diagnostics/phase19/mesh_validation.json",
+    "phase19_pulse_manifest": "results/case_p19_pulse/manifest.json",
+    "reference_series_sha256": "b9cf8d6c5a3bd3f019d21e06a73f1fc215bbfa231f92ae34d8db8a859b31c1da",
+    "phase19_series_sha256": "69e73e13faa6bc13b09f36b94b31e92117b5368f5ad705df29a29493b9c958d5",
+    "phase19_iterations_sha256": "8cf131c040105620b6ba322b67258b6e3ff8479d2ecb45ca629cf4afc7d45f82",
+    "runtime_sha256": {"solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc", "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78", "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7", "udf": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b"}
+  },
+  "recommendation": "Use Phase19 as the bounded hybrid candidate for the next COMSOL waveform comparison: it passes baseline and pulse-height thresholds while preserving a 28.52% element reduction and 13.02% pulse-runtime reduction versus all-tet. Do not declare mesh convergence or perform further global absorber refinement: peak time, baseline-corrected waveform, and raw waveform remain outside thresholds, and residual global size spread is measured."
+}

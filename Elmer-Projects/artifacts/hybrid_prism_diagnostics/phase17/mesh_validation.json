@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "preflight": {
+    "msh_absent_before_generation": true,
+    "mesh_directory_absent_before_conversion": true,
+    "status": "passed"
+  },
+  "generation": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_prism_stack17_abs17.msh --stack-local-size 16.6666666666667e-6 --absorber-local-size 16.6666666666667e-6 --absorber-local-radius 150e-6",
+    "msh": "gmsh/project_hybrid_prism_stack17_abs17.msh",
+    "msh_sha256": "ca6da91981cdc688cf434aafcf3ab6124f5647e702e5b5cf511d8de5888c4c78",
+    "gmsh_3d_element_types": [4, 6],
+    "status": "passed_once"
+  },
+  "conversion": {
+    "command": "C:/Program Files/Elmer 26.1-Release/bin/ElmerGrid.exe 14 2 gmsh/project_hybrid_prism_stack17_abs17.msh -merge 1e-10 -out mesh_hybrid_abs_tet_layers_prism_stack17_abs17",
+    "mesh_directory": "mesh_hybrid_abs_tet_layers_prism_stack17_abs17",
+    "required_files": ["mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary", "mesh.names"],
+    "sha256": {
+      "mesh.header": "aee927ed6b6c669018e2378f9bdf2e70689694a98f900d09f80276ee88d027f3",
+      "mesh.nodes": "8b4516bddddfa776edfab747aefaa1ae327636b5ce34632d014a75bcd0aab6fc",
+      "mesh.elements": "f0d53ff23676c94e0cf1fc165d6ba6884b088f2b45a95afcda8ca55db28bc130",
+      "mesh.boundary": "f44f045b4c7373c084857a5c485d71140b3a75e342bb7cdce611023a1a9c6681",
+      "mesh.names": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb"
+    },
+    "status": "passed_once"
+  },
+  "element_counts": {
+    "stack17_abs17": {"nodes": 195694, "volume_elements": 943968, "boundary_elements": 128908, "types": {"504": 846290, "706": 97678}},
+    "stack17": {"nodes": 76630, "volume_elements": 170960, "boundary_elements": 128908, "types": {"504": 73282, "706": 97678}},
+    "all_tet_3x": {"nodes": 63172, "volume_elements": 312997, "boundary_elements": 249535, "types": {"504": 312997}},
+    "stack17_abs17_vs_stack17_relative": {"nodes": 1.5537517943364219, "volume_elements": 4.521572297613477, "tetrahedra": 10.548402063262465, "prisms": 0.0},
+    "stack17_abs17_vs_all_tet_relative": {"nodes": 2.0977964921167604, "volume_elements": 2.015901110873267},
+    "absorber_ball_effect": {
+      "absorber_tetrahedra_stack17": 73282,
+      "absorber_tetrahedra_stack17_abs17": 846290,
+      "increased": true,
+      "prism_count_stack17": 97678,
+      "prism_count_stack17_abs17": 97678,
+      "prism_change": 0,
+      "conclusion": "The Ball field increased absorber tetrahedral density/count; prism count is identical, so no stack remesh effect is present."
+    }
+  },
+  "physical_names": {
+    "body_names_match_stack17": true,
+    "boundary_names_match_stack17": true,
+    "body_name_set_matches_all_tet_3x": true,
+    "bodies": ["SiO2_2", "Si_2", "SiO2_1", "Si_1", "Membrane_Si1", "SiNx", "Membrane_SiNx", "TES", "Stycast", "abs"],
+    "tes_sif_body_ordinal": 8
+  },
+  "body_volume_m3": {
+    "stack17_abs17": {"SiO2_2": 3.501999999999978e-11, "Si_2": 6.128500000000678e-09, "SiO2_1": 1.8000000000000238e-11, "Si_1": 2.6265000000002147e-10, "SiNx": 1.750999999999989e-11, "Membrane_Si1": 7.350000000000043e-12, "Membrane_SiNx": 4.900000000000037e-13, "TES": 3.999999999999964e-14, "Stycast": 3.892737479739362e-12, "abs": 6.99999999999935e-10},
+    "relative_change_vs_stack17": {"SiO2_2": 0.0, "Si_2": 0.0, "SiO2_1": 0.0, "Si_1": 0.0, "SiNx": 0.0, "Membrane_Si1": 0.0, "Membrane_SiNx": 0.0, "TES": 0.0, "Stycast": 0.0, "abs": -8.183179631328256e-14},
+    "relative_change_vs_all_tet_3x": {"Stycast": 0.007155770258480655, "all_other_bodies": "absolute relative differences at or below 1.11e-13"}
+  },
+  "sif_dry_run": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe run.py case_tes_steady_hybrid_prism_stack17_abs17_inner_1rank_tight --project elmer_project_hybrid_prism.json --dry-run",
+    "case": "case_tes_steady_hybrid_prism_stack17_abs17_inner_1rank_tight",
+    "status": "passed",
+    "sif": "generated/cases/case_tes_steady_hybrid_prism_stack17_abs17_inner_1rank_tight.sif",
+    "sif_sha256": "4a639d5e9cfa3c649316f4a0a9b6870b76f3f1cba27a81a3d05b80937aacaa90",
+    "mesh_db": "mesh_hybrid_abs_tet_layers_prism_stack17_abs17",
+    "tes_body_id": 8,
+    "step_commit_present": false,
+    "nonlinear_min_iterations_present": false,
+    "tight_solver": {"nonlinear_max_iterations": 120, "nonlinear_tolerance": 1e-08, "relaxation": 1.0, "direct_method": "MUMPS", "steady_tolerance": 1e-08}
+  }
+}

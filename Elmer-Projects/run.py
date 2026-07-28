@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -62,6 +63,74 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def runtime_environment(
+    elmer_solver: str, runtime_bin: str | None
+) -> tuple[dict[str, str], Path, Path]:
+    """Return a loader environment pinned to one Elmer installation."""
+    solver = Path(elmer_solver).resolve()
+    if not solver.is_file():
+        raise FileNotFoundError(f"ElmerSolver not found: {solver}")
+    prefix = solver.parent.parent
+    parts = [str(solver.parent), str(prefix / "share" / "elmersolver" / "lib")]
+    if runtime_bin:
+        runtime = Path(runtime_bin).resolve()
+        if not runtime.is_dir():
+            raise FileNotFoundError(f"runtime DLL directory not found: {runtime}")
+        parts.append(str(runtime))
+    env = os.environ.copy()
+    env["ELMER_HOME"] = str(prefix)
+    env["PATH"] = os.pathsep.join([*parts, env.get("PATH", "")])
+    return env, solver, prefix
+
+
+def write_runtime_sif(
+    source: Path, out_dir: Path, udf_dll: str | None
+) -> tuple[Path, bool]:
+    """Create an execution-only SIF with an explicitly pinned UDF DLL."""
+    if udf_dll is None:
+        return source, False
+    dll = Path(udf_dll).resolve()
+    if not dll.is_file():
+        raise FileNotFoundError(f"UDF DLL not found: {dll}")
+    token = '"tes_transient_heat_source_t0"'
+    text = source.read_text(encoding="utf-8")
+    target_functions = ("TESTransientHeatSource", "AbsorberWindowPulseHeatSource")
+    uses_target = any(name in text for name in target_functions)
+    if not uses_target:
+        return source, False
+    if token not in text:
+        raise ValueError(f"{source}: expected Procedure library token {token} was not found")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    runtime_sif = out_dir / "runtime.sif"
+    runtime_sif.write_text(
+        text.replace(token, f'"{dll.as_posix()}"'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return runtime_sif, True
+
+
+def runtime_artifacts(
+    solver: Path, prefix: Path, udf_dll: str | None
+) -> dict[str, str]:
+    """Best-effort file hashes for loader-provenance in a run manifest."""
+    paths = {"solver": solver, "libelmersolver": solver.parent / "libelmersolver.dll"}
+    heat = prefix / "share" / "elmersolver" / "lib" / "HeatSolve.dll"
+    if heat.exists():
+        paths["HeatSolve"] = heat
+    if udf_dll:
+        paths["udf"] = Path(udf_dll).resolve()
+    return {name: sha256(path) for name, path in paths.items() if path.is_file()}
+
+
+def mpi_launcher(env: dict[str, str]) -> str:
+    """Resolve mpiexec against the pinned child environment, not the parent."""
+    launcher = shutil.which("mpiexec", path=env["PATH"])
+    if launcher is None:
+        raise FileNotFoundError("mpiexec was not found in the selected runtime PATH")
+    return str(Path(launcher).resolve())
+
+
 def restart_chain(model: dict, case_name: str) -> list[str]:
     """Dependency-first list of cases to consider for *case_name*."""
     chain: list[str] = []
@@ -101,12 +170,44 @@ def result_file_of(model: dict, case_name: str) -> Path | None:
     return serial if serial.exists() or not parallel_rank0.exists() else parallel_rank0
 
 
+def preexisting_restart_paths(model: dict, case_name: str, mpi_procs: int) -> list[Path]:
+    """Resolve the complete restart interface required by an explicit case."""
+    spec = model["cases"][case_name]
+    if not spec.get("preexisting_restart"):
+        return []
+    base = spec.get("restart_file_base")
+    if not base:
+        raise ValueError(f"{case_name}: preexisting_restart requires restart_file_base")
+    state = spec.get("state_file")
+    if not state:
+        raise ValueError(f"{case_name}: preexisting_restart requires state_file")
+    mesh = mesh_dir_of(model, case_name)
+    results = (
+        [mesh / f"{base}.result"]
+        if mpi_procs == 1
+        else [mesh / f"{base}.result.{rank}" for rank in range(mpi_procs)]
+    )
+    return [*results, ROOT / state]
+
+
+def validate_preexisting_restart(
+    model: dict, case_name: str, mpi_procs: int
+) -> list[Path]:
+    needed = preexisting_restart_paths(model, case_name, mpi_procs)
+    missing = [str(path) for path in needed if not path.is_file()]
+    if missing:
+        raise FileNotFoundError("preexisting restart missing: " + ", ".join(missing))
+    return needed
+
+
 def run_case(
     model: dict,
     case_name: str,
     project_path: Path,
     elmer_solver: str,
     mpi_procs: int,
+    udf_dll: str | None = None,
+    runtime_bin: str | None = None,
 ) -> int:
     spec = model["cases"][case_name]
     sif = ROOT / "generated" / "cases" / f"{case_name}.sif"
@@ -114,27 +215,42 @@ def run_case(
     out_dir = ROOT / "results" / case_name
     out_dir.mkdir(parents=True, exist_ok=True)
     log_path = out_dir / "solver.log"
+    runtime_sif, udf_applied = write_runtime_sif(sif, out_dir, udf_dll)
+    env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin)
 
     inputs = {
         project_path.name: sha256(project_path),
         sif.name: sha256(sif),
         "mesh.header": sha256(mesh_dir / "mesh.header"),
     }
-    for dll in ("tes_transient_heat_source_t0.dll", "tes_heat_source_t0.dll"):
+    preexisting_inputs = {
+        str(path.relative_to(ROOT)): sha256(path)
+        for path in validate_preexisting_restart(model, case_name, mpi_procs)
+    }
+    root_dlls = ("tes_heat_source_t0.dll",)
+    if udf_dll is None:
+        root_dlls = ("tes_transient_heat_source_t0.dll", *root_dlls)
+    for dll in root_dlls:
         if (ROOT / dll).exists():
             inputs[dll] = sha256(ROOT / dll)
 
     started = datetime.now().isoformat(timespec="seconds")
-    print(f"[{case_name}] ElmerSolver {sif.relative_to(ROOT)} (log: {log_path.relative_to(ROOT)})")
+    display_sif = (
+        runtime_sif.relative_to(ROOT)
+        if runtime_sif.is_relative_to(ROOT)
+        else runtime_sif
+    )
+    print(f"[{case_name}] ElmerSolver {display_sif} (log: {log_path.relative_to(ROOT)})")
     with log_path.open("w", encoding="utf-8") as log:
-        command = [elmer_solver, str(sif)]
+        command = [str(solver_path), str(runtime_sif)]
         if mpi_procs > 1:
-            command = ["mpiexec", "-n", str(mpi_procs), *command]
+            command = [mpi_launcher(env), "-n", str(mpi_procs), *command]
         proc = subprocess.run(
             command,
             cwd=ROOT,
             stdout=log,
             stderr=subprocess.STDOUT,
+            env=env,
         )
     finished = datetime.now().isoformat(timespec="seconds")
 
@@ -168,6 +284,12 @@ def run_case(
                 if found_side is not None:
                     shutil.move(str(found_side), out_dir / side_name)
                     collected.append(side_name)
+    iteration_series = spec.get("iteration_series_file")
+    if iteration_series:
+        found_iteration = find_case_insensitive(ROOT / iteration_series)
+        if found_iteration is not None:
+            shutil.move(str(found_iteration), out_dir / iteration_series)
+            collected.append(iteration_series)
     result_file = result_file_of(model, case_name)
 
     manifest = {
@@ -176,6 +298,18 @@ def run_case(
         "finished": finished,
         "exit_code": proc.returncode,
         "inputs_sha256": inputs,
+        "preexisting_restart_inputs_sha256": preexisting_inputs,
+        "runtime_sif": str(runtime_sif.relative_to(ROOT)) if runtime_sif != sif else None,
+        "runtime_sif_sha256": sha256(runtime_sif),
+        "udf_applied": udf_applied,
+        "udf_dll": str(Path(udf_dll).resolve()) if udf_applied else None,
+        "udf_sha256": sha256(Path(udf_dll).resolve()) if udf_applied else None,
+        "solver": str(solver_path),
+        "elmer_prefix": str(prefix),
+        "runtime_bin": str(Path(runtime_bin).resolve()) if runtime_bin else None,
+        "runtime_artifacts_sha256": runtime_artifacts(
+            solver_path, prefix, udf_dll if udf_applied else None
+        ),
         "mesh": spec["mesh"],
         "restart_from": spec.get("restart_from"),
         "collected_outputs": sorted(collected),
@@ -211,6 +345,14 @@ def main() -> int:
         "generated/cases/ outputs don't collide with the main project's.",
     )
     parser.add_argument(
+        "--udf-dll",
+        help="pin tes_transient_heat_source_t0 to this DLL in results/<case>/runtime.sif",
+    )
+    parser.add_argument(
+        "--runtime-bin",
+        help="runtime DLL directory appended after the selected Elmer install's bin/module paths",
+    )
+    parser.add_argument(
         "--elmer-solver",
         default=ELMERSOLVER,
         help="path to ElmerSolver executable; use this to select an alternate build such as the HYPRE/MPI solver",
@@ -236,13 +378,17 @@ def main() -> int:
 
     model = load_model(project_path)
     chain = restart_chain(model, args.case)
+    validate_preexisting_restart(model, args.case, args.mpi_procs)
+    target_preexisting = bool(model["cases"][args.case].get("preexisting_restart"))
+    if target_preexisting and args.force_deps:
+        raise ValueError("--force-deps cannot be used with preexisting_restart")
 
     plan: list[str] = []
     for name in chain[:-1]:
         result = result_file_of(model, name)
         if result is None:
             raise ValueError(f"'{name}' is a restart dependency but does not set output_result")
-        if args.force_deps or not result.exists():
+        if not target_preexisting and (args.force_deps or not result.exists()):
             plan.append(name)
         else:
             print(f"[{name}] restart field {result.relative_to(ROOT)} exists - skipping (use --force-deps to rerun)")
@@ -253,7 +399,10 @@ def main() -> int:
         return 0
 
     for name in plan:
-        code = run_case(model, name, project_path, args.elmer_solver, args.mpi_procs)
+        code = run_case(
+            model, name, project_path, args.elmer_solver, args.mpi_procs,
+            args.udf_dll, args.runtime_bin,
+        )
         if code != 0:
             print(f"aborting chain: {name} failed")
             return code

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "runtime": {
+    "solver": "tools/elmer-hypre/install-phase13-step-commit/bin/ElmerSolver.exe",
+    "runtime_bin": "C:/msys64/ucrt64/bin",
+    "sha256": {"solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc", "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78", "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7"}
+  },
+  "cases": [
+    {"case": "case_tes_steady_hybrid_prism_stack25_inner_1rank_tight", "started": "2026-07-25T01:37:54", "finished": "2026-07-25T01:40:34", "elapsed_seconds": 160.0, "solver_real_seconds": 159.45, "exit_code": 0, "errors": [], "udf_applied": false, "manifest": "results/case_tes_steady_hybrid_prism_stack25_inner_1rank_tight/manifest.json", "result": "mesh_hybrid_abs_tet_layers_prism_stack25/case_tes_steady_hybrid_prism_stack25_inner_1rank_tight.result"},
+    {"case": "case_tes_pulse_hybrid_prism_stack25_from_20ms_1rank_step_commit", "started": "2026-07-25T01:45:05", "finished": "2026-07-25T01:51:27", "elapsed_seconds": 382.0, "solver_real_seconds": 381.4, "exit_code": 0, "errors": [], "udf_applied": true, "udf_dll": "artifacts/hybrid_prism_diagnostics/phase13_udf/tes_transient_heat_source_t0.dll", "udf_sha256": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b", "manifest": "results/case_tes_pulse_hybrid_prism_stack25_from_20ms_1rank_step_commit/manifest.json", "outputs": ["tes_case_tes_pulse_hybrid_prism_stack25_from_20ms_1rank_step_commit_iterations.csv", "tes_case_tes_pulse_hybrid_prism_stack25_from_20ms_1rank_step_commit_series.csv"]}
+  ]
+}
