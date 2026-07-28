@@ -62,17 +62,16 @@ python run.py case_tes_pulse_20ms_3x_refined
 メッシュは `meshes` レジストリで管理し、`python build_mesh.py <mesh名>` で
 再生成できます(ジオメトリ生成器 gmsh 一式は `scripts/support/vendored/geometry/` に
 ベンダリング済みで、外部リポジトリ依存はありません)。
-各メッシュディレクトリの `PROVENANCE.json` にレシピとハッシュを記録します。
+各 `work/meshes/<mesh名>/PROVENANCE.json` にレシピとハッシュを記録します。
 
 ## ディレクトリ構成
 
 - `docs/`: 説明資料(モデル定義・数値スキームの詳細は `docs/README_TES_elmer.md`)
 - `generated/`: JSON から生成された SIF 断片(手動編集しない)
-- `mesh_shifted_merged/`, `mesh_refined_3x/`: 単ピクセルメッシュ(ソルバ出力もここに書かれる)
-- `mesh_dual_base/`: 2TES・長尺吸収体メッシュ(dual-TES 構成、19 body)
+- `work/meshes/`: Git管理しない再生成可能なElmerメッシュ。単ピクセル・dual-TES・分割/seed別の派生メッシュをここへ集約し、restart `.result` もここに残す
 - `gmsh/`: ジオメトリ・メッシュ生成の中間物
 - `scripts/analysis|visualization|prep|support/`: 抽出・可視化・準備・補助
-- `artifacts/series/`: 確定した時系列 CSV(git 管理)/ `artifacts/plots/`: 図
+- `artifacts/`: Git管理する軽量な比較表・図・報告（大容量の中間生成物は置かない）
 - `reference/`: 外部由来の参照データ(COMSOL 時系列 `SignglePixel.txt`、`tes.json`, `tes_test2.json`)
 - `runs/`: 凍結した再現用ラン(`python freeze_repro_run.py <name>`)
 - `archive/`: 過去の実験ケース・結果(例: `cases_mortar_debug_202607/`)

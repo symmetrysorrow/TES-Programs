@@ -86,8 +86,8 @@ class RuntimeSifTests(unittest.TestCase):
     def test_preexisting_mpi_restart_validates_every_rank_and_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            mesh = root / "mesh"
-            mesh.mkdir()
+            mesh = root / "work" / "meshes" / "mesh"
+            mesh.mkdir(parents=True)
             model = {
                 "meshes": {"m": {"dir": "mesh"}},
                 "cases": {
@@ -95,7 +95,7 @@ class RuntimeSifTests(unittest.TestCase):
                         "mesh": "m",
                         "preexisting_restart": True,
                         "restart_file_base": "mapped",
-                        "state_file": "mesh/mapped.state",
+                        "state_file": "work/meshes/mesh/mapped.state",
                     }
                 },
             }

@@ -154,7 +154,7 @@ def restart_chain(model: dict, case_name: str) -> list[str]:
 
 def mesh_dir_of(model: dict, case_name: str) -> Path:
     spec = model["cases"][case_name]
-    return ROOT / model["meshes"][spec["mesh"]]["dir"]
+    return ROOT / "work" / "meshes" / model["meshes"][spec["mesh"]]["dir"]
 
 
 def result_file_of(model: dict, case_name: str) -> Path | None:
