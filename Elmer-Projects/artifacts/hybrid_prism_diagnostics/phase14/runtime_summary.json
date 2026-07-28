@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "successful_chain": {
+    "cases": [
+      {
+        "case": "case_tes_steady_3x_inner_1rank_phase13_tight",
+        "started": "2026-07-25T00:47:27",
+        "finished": "2026-07-25T00:53:20",
+        "elapsed_seconds": 353.0,
+        "exit_code": 0,
+        "errors": [],
+        "udf_applied": false,
+        "result_file": "mesh_refined_3x/case_tes_steady_3x_inner_1rank_phase13_tight.result",
+        "inputs_sha256": {
+          "elmer_project_hybrid_prism.json": "1f88c74d48bcedb6a2ec658790face502ea2c621fa9adff893ab54f6cccec287",
+          "case_tes_steady_3x_inner_1rank_phase13_tight.sif": "3311a0fc399189f8eade2dd6e830bbdc0f8cc49a6a2b152b7a43b4d3343f3ff6",
+          "mesh.header": "5c061e55069a20e55f1cc8b68546b54369469984458ce9ae190e7842c3d11336"
+        },
+        "runtime_sif_sha256": "3311a0fc399189f8eade2dd6e830bbdc0f8cc49a6a2b152b7a43b4d3343f3ff6"
+      },
+      {
+        "case": "case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit",
+        "started": "2026-07-25T00:53:20",
+        "finished": "2026-07-25T01:08:42",
+        "elapsed_seconds": 922.0,
+        "exit_code": 0,
+        "errors": [],
+        "udf_applied": true,
+        "udf_dll": "artifacts/hybrid_prism_diagnostics/phase13_udf/tes_transient_heat_source_t0.dll",
+        "udf_sha256": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b",
+        "collected_outputs": [
+          "results/case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit/tes_case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit_iterations.csv",
+          "results/case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit/tes_case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit_series.csv"
+        ],
+        "inputs_sha256": {
+          "elmer_project_hybrid_prism.json": "1f88c74d48bcedb6a2ec658790face502ea2c621fa9adff893ab54f6cccec287",
+          "case_tes_pulse_3x_from_20ms_phase13_tight_1rank_step_commit.sif": "f628a03b05195e8389cc919e16aaabea7f2b2ba6c2430cc0eaa0ad20238271fd",
+          "mesh.header": "5c061e55069a20e55f1cc8b68546b54369469984458ce9ae190e7842c3d11336"
+        },
+        "runtime_sif_sha256": "b759cb1ff599cefd028f35160b17093fe98ed69a3b6eb787aa21107bb8911717"
+      }
+    ],
+    "runtime": {
+      "solver": "tools/elmer-hypre/install-phase13-step-commit/bin/ElmerSolver.exe",
+      "runtime_bin": "C:/msys64/ucrt64/bin",
+      "sha256": {
+        "solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc",
+        "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78",
+        "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7",
+        "udf": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b"
+      }
+    }
+  },
+  "prior_attempts": [
+    {
+      "started": "2026-07-25T00:41:46",
+      "classification": "preflight_python_dependency_failure",
+      "detail": "UCRT64 was prepended to PATH, so run.py used C:/msys64/ucrt64/bin/python.exe; sync_elmer_parameters failed with ModuleNotFoundError: No module named 'numpy'.",
+      "solver_launched": false,
+      "outputs_created": false
+    },
+    {
+      "started": "2026-07-25T00:43:53",
+      "finished": "2026-07-25T00:43:59",
+      "classification": "obsolete_physical_target_body_id",
+      "exit_code": 1,
+      "detail": "HeatSolve reported 'No TES elements found for inner circuit update' because TES Body ID used physical target 101 instead of SIF Body ordinal 2.",
+      "udf_applied": false,
+      "superseded_by": "resolve_body_sif_ordinal"
+    }
+  ]
+}

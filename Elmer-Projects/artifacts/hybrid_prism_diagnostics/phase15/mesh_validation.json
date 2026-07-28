@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "generation": {
+    "command": "C:/Users/symme/AppData/Local/Programs/Python/Python314/python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_prism_stack25.msh --stack-local-size 25e-6",
+    "msh": "gmsh/project_hybrid_prism_stack25.msh",
+    "msh_sha256": "414afacc8118582bc04683cc2e3e45bf0c6853ab4ec19c711d43f93f3ae061aa",
+    "gmsh_3d_element_types": [4, 6]
+  },
+  "conversion": {
+    "command": "C:/Program Files/Elmer 26.1-Release/bin/ElmerGrid.exe 14 2 gmsh/project_hybrid_prism_stack25.msh -merge 1e-10 -out mesh_hybrid_abs_tet_layers_prism_stack25",
+    "mesh_directory": "mesh_hybrid_abs_tet_layers_prism_stack25",
+    "required_files": ["mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary", "mesh.names"],
+    "sha256": {
+      "mesh.header": "dee24a8bda98773aa4f537582c566ac2cd41b32af16450740880b8a94ded60bc",
+      "mesh.nodes": "dba9c1b57c2591b14d1b709ea7f7b00877a2c14c434a2176b13b83780f74643e",
+      "mesh.elements": "c9bc0496a0579b02d3863c629255ce2c94d32cb8db075220b00608e240862789",
+      "mesh.boundary": "976160d26b9fc4ec86e317fe6fa1358440f2b889b7fafc313c996d85d3066f3b",
+      "mesh.names": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb"
+    }
+  },
+  "element_counts": {
+    "stack25": {"nodes": 67069, "volume_elements": 147995, "boundary_elements": 113298, "types": {"504": 58558, "706": 89437}},
+    "legacy_hybrid": {"nodes": 60093, "volume_elements": 127037, "boundary_elements": 103508, "types": {"504": 42803, "706": 84234}},
+    "all_tet_3x": {"nodes": 63172, "volume_elements": 312997, "boundary_elements": 249535, "types": {"504": 312997}},
+    "stack25_vs_legacy_relative": {"nodes": 0.11608673223170762, "volume_elements": 0.16497555830191213},
+    "stack25_vs_all_tet_relative": {"nodes": 0.061688722851896305, "volume_elements": -0.5271679920254826}
+  },
+  "physical_names": {
+    "matches_legacy_hybrid": true,
+    "bodies": ["SiO2_2", "Si_2", "SiO2_1", "Si_1", "Membrane_Si1", "SiNx", "Membrane_SiNx", "TES", "Stycast", "abs"],
+    "boundaries": ["SiO2_2__zmax", "Si_2__zmax", "SiO2_1__zmin", "SiO2_1__zmax", "Si_1__zmax", "Membrane_Si1__zmax", "SiNx__zmax", "Membrane_SiNx__zmax", "TES__zmin", "TES__zmax", "Stycast__zmin", "Stycast__zmax", "abs__zmin", "abs__zmax", "bath"],
+    "tes_sif_body_ordinal": 8
+  },
+  "body_volume_m3": {
+    "stack25": {"SiO2_2": 3.501999999999978e-11, "Si_2": 6.128500000000678e-09, "SiO2_1": 1.7999999999999986e-11, "Si_1": 2.6265000000002147e-10, "SiNx": 1.750999999999989e-11, "Membrane_Si1": 7.35000000000005e-12, "Membrane_SiNx": 4.899999999999963e-13, "TES": 3.999999999999967e-14, "Stycast": 3.889182815771598e-12, "abs": 6.999999999999698e-10},
+    "legacy_hybrid": {"Stycast": 3.870654417702527e-12, "TES": 3.999999999999961e-14, "abs": 6.999999999999723e-10},
+    "stycast_relative_change_vs_legacy": 0.004786890295431959,
+    "other_body_volume_changes": "numerical roundoff except the locally re-tessellated Stycast disk"
+  },
+  "sif_dry_run": {
+    "case": "case_tes_steady_hybrid_prism_stack25_inner_1rank_tight",
+    "status": "passed",
+    "mesh_db": "mesh_hybrid_abs_tet_layers_prism_stack25",
+    "tes_body_id": 8,
+    "step_commit_present": false,
+    "nonlinear_min_iterations_present": false,
+    "tight_solver": {"nonlinear_max_iterations": 120, "nonlinear_tolerance": 1e-08, "relaxation": 1.0, "direct_method": "MUMPS", "steady_tolerance": 1e-08}
+  }
+}

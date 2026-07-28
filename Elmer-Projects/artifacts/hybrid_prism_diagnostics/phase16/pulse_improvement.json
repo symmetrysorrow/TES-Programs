@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "comparison": "all_tet_reference_vs_hybrid_candidate; Phase14 legacy hybrid and Phase15 stack25 compared with Phase16 stack17 hybrid",
+  "metrics": {
+    "baseline_current": {"legacy": 0.11010546575275612, "stack25": 0.026788999568062473, "stack17": 0.010298146528948171, "limit": 0.01, "stack17_passed": false, "legacy_to_stack17_gap_reduced": 0.9064701605997213},
+    "pulse_height": {"legacy": 0.06180068836258338, "stack25": 0.015241645424656508, "stack17": 0.001990158604216071, "limit": 0.02, "stack17_passed": true, "legacy_to_stack17_gap_reduced": 0.9677971450327567},
+    "peak_time": {"legacy_seconds": 0.0000999999999999994, "stack25_seconds": 0.0, "stack17_seconds": 0.0000999999999999994, "limit_seconds": 1e-05, "stack17_passed": false, "legacy_to_stack17_gap_reduced": 0.0},
+    "baseline_corrected_max_current": {"legacy": 0.15422366892004888, "stack25": 0.07239997540486534, "stack17": 0.06384943774675214, "limit": 0.02, "stack17_passed": false, "legacy_to_stack17_gap_reduced": 0.5859945610563037},
+    "raw_max_current": {"legacy": 2.088361022488599, "stack25": 0.5088958761870563, "stack17": 0.2590906833861736, "limit": 0.02, "stack17_passed": false, "legacy_to_stack17_gap_reduced": 0.8759358747859469}
+  },
+  "waveform_values": {
+    "all_tet_reference": {"baseline_A": 0.00014815378025519887, "height_A": 7.814482707733597e-06, "peak_time_s": 0.020320001000000018},
+    "legacy_hybrid": {"baseline_A": 0.00016446632123322903, "height_A": 8.297423118269038e-06, "peak_time_s": 0.02022000100000002},
+    "stack25_hybrid": {"baseline_A": 0.00015212267181046222, "height_A": 7.933588282341982e-06, "peak_time_s": 0.020320001000000018},
+    "stack17_hybrid": {"baseline_A": 0.00014662807091731325, "height_A": 7.798930647735303e-06, "peak_time_s": 0.020420001000000017}
+  },
+  "tradeoff": {
+    "legacy_hybrid": {"volume_elements": 127037, "pulse_solver_real_seconds": 236.52},
+    "stack25_hybrid": {"volume_elements": 147995, "pulse_solver_real_seconds": 381.4},
+    "stack17_hybrid": {"volume_elements": 170960, "pulse_solver_real_seconds": 721.43},
+    "stack17_vs_stack25": {"element_growth": 0.15517416128923275, "runtime_growth": 0.8915312008390142},
+    "stack17_vs_legacy": {"element_growth": 0.34574966348386693, "runtime_growth": 2.050186030779638}
+  },
+  "provenance": {
+    "phase14_comparison": "artifacts/hybrid_prism_diagnostics/phase14/all_tet_vs_hybrid_step_commit.json",
+    "stack25_comparison": "artifacts/hybrid_prism_diagnostics/phase15/all_tet_vs_stack25_step_commit.json",
+    "stack17_comparison": "artifacts/hybrid_prism_diagnostics/phase16/all_tet_vs_stack17_step_commit.json",
+    "legacy_manifest": "results/case_tes_pulse_hybrid_prism_from_20ms_serial_tight_1rank_step_commit/manifest.json",
+    "stack25_manifest": "results/case_tes_pulse_hybrid_prism_stack25_from_20ms_1rank_step_commit/manifest.json",
+    "stack17_manifest": "results/case_tes_pulse_hybrid_prism_stack17_from_20ms_1rank_step_commit/manifest.json",
+    "reference_series_sha256": "b9cf8d6c5a3bd3f019d21e06a73f1fc215bbfa231f92ae34d8db8a859b31c1da",
+    "legacy_series_sha256": "b0fde9d837769685c4c6eeba5fadd81188c6b62d846fd13b6a99732955186075",
+    "stack25_series_sha256": "f5aead8212240b444a5c4e59f0e7721ff9255d8da2f711c3178b7b4c4df84662",
+    "stack17_series_sha256": "893200a1a233817dfced3582f2355686a7ca51c14a55904b2dac4e2d9643854d"
+  }
+}

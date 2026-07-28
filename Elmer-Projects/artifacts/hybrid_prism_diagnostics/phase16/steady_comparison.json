@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "state_fields": ["tes_temperature_K", "current_A", "resistance_ohm", "power_W", "previous_current_A"],
+  "states": {
+    "all_tet": [0.16843801838766695, 0.00014815457188418576, 0.014921558893098527, 3.2751680646304015e-10, 0.00014815457188418576],
+    "legacy_hybrid": [0.1679832528720299, 0.00016446715299096742, 0.013054753270114336, 3.5311672847577417e-10, 0.00016446715299096742],
+    "stack25": [0.1683258308146158, 0.00015212281789443963, 0.0144305833969956, 3.3394108550435307e-10, 0.00015212281789443963],
+    "stack17": [0.16848147073535552, 0.00014662819261547237, 0.015117488726146627, 3.250215217798459e-10, 0.00014662819261547237]
+  },
+  "body_mean_temperature_K": {
+    "all_tet": {"TES": 0.16843821035685907, "Stycast": 0.16843856204405058, "abs": 0.16843856219197367},
+    "legacy_hybrid": {"TES": 0.1679833134333871, "Stycast": 0.16798371253536712, "abs": 0.16798371258253147},
+    "stack25": {"TES": 0.1683258501701226, "Stycast": 0.16832620006290652, "abs": 0.16832620011168625},
+    "stack17": {"TES": 0.16848149349337777, "Stycast": 0.1684818317111869, "abs": 0.16848183176458206}
+  },
+  "interface_gradients_K": {
+    "all_tet": {"TES-Stycast": -3.51687191507688e-07, "TES-Membrane_SiNx": 0.005234689922255176, "Stycast-abs": -1.4792309044331375e-10},
+    "legacy_hybrid": {"TES-Stycast": -3.9910198001980035e-07, "TES-Membrane_SiNx": 0.004693233860355195, "Stycast-abs": -4.716435575424782e-11},
+    "stack25": {"TES-Stycast": -3.4989278391295286e-07, "TES-Membrane_SiNx": 0.005032965416012669, "Stycast-abs": -4.8779730255077425e-11},
+    "stack17": {"TES-Stycast": -3.382178091482224e-07, "TES-Membrane_SiNx": 0.005215750822646609, "Stycast-abs": -5.3395149413049126e-11}
+  },
+  "gaps_to_all_tet": {
+    "state_temperature_K": {"stack25_absolute": 0.0001121875730511479, "stack17_absolute": -4.345234768857176e-05, "stack25_gap_closed": 0.7533067719657891, "stack17_gap_closed": 1.0955489064022406},
+    "state_current_A": {"stack25_absolute": -3.968246010253862e-06, "stack17_absolute": 1.5263792687133983e-06, "stack25_gap_closed": 0.7567370862846385, "stack17_gap_closed": 1.0935706776703065},
+    "TES_membrane_gradient_K": {"stack25_absolute": 0.0002017245062425066, "stack17_absolute": 1.893909960856699e-05, "stack25_gap_closed": 0.6274406725918794, "stack17_gap_closed": 0.9650219086252183}
+  },
+  "element_runtime": {
+    "all_tet": {"volume_elements": 312997, "steady_solver_real_seconds": 352.58},
+    "legacy_hybrid": {"volume_elements": 127037},
+    "stack25": {"volume_elements": 147995, "steady_solver_real_seconds": 159.45},
+    "stack17": {"volume_elements": 170960, "steady_solver_real_seconds": 184.84}
+  },
+  "volume_provenance": {"stack17_stycast_relative_vs_all_tet": 0.007155770258480655, "stack17_stycast_relative_vs_stack25": 0.0009139873685929302, "note": "Stycast disk tessellation changes with local mesh size."},
+  "provenance": {"all_tet_manifest": "results/case_tes_steady_3x_inner_1rank_phase13_tight/manifest.json", "stack25_manifest": "results/case_tes_steady_hybrid_prism_stack25_inner_1rank_tight/manifest.json", "stack17_manifest": "results/case_tes_steady_hybrid_prism_stack17_inner_1rank_tight/manifest.json", "all_tet_result_sha256": "fbac1c0f0ca28dfd2eb2bf57f1927d3aadd1b4c1f861b5e5bd6fb61cba212301", "stack17_result_sha256": "4b1ba19b1262f2dc95a0e606e8ce74923373bf61fc8bb88e7ca32bef2ea86749", "runtime_sha256": {"solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc", "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78", "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7"}}
+}

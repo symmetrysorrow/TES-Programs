@@ -33,6 +33,7 @@ from scripts.support.vendored.dimensioned_expression import (
 KEV_TO_JOULE = 1.602176634e-16
 
 STEFAN_BOLTZMANN = "5.670374419e-8"
+TES_STATE_FILE_MAX_LEN = 128
 
 # Material index (matches materials_block's fixed Material 1..7 ordering),
 # keyed by a body's base name (its mesh.names name with any dual-TES `_L`/
@@ -180,6 +181,14 @@ def materials_block(model: dict) -> list[str]:
     return lines
 
 
+def validate_tes_state_file(state_file: str | None) -> None:
+    """Reject state paths that would be silently truncated by the UDF."""
+    if state_file is not None and len(state_file) > TES_STATE_FILE_MAX_LEN:
+        raise ValueError(
+            f"TES State File exceeds {TES_STATE_FILE_MAX_LEN} characters: {state_file!r}"
+        )
+
+
 def tes_constants_block(
     params: dict[str, float], series_file: str | None, state_file: str | None = None
 ) -> list[str]:
@@ -190,6 +199,7 @@ def tes_constants_block(
     if series_file:
         lines.append(f'  TES Series File = String "{series_file}"')
     if state_file:
+        validate_tes_state_file(state_file)
         lines.append(f'  TES State File = String "{state_file}"')
     lines += [
         f"  TES Bias Current = Real {fmt(params['I_bias'])}",
@@ -251,6 +261,7 @@ def tes_side_constants_block(
         f'  {prefix}Series File = String "{series_file}"',
     ]
     if state_file:
+        validate_tes_state_file(state_file)
         lines.append(f'  {prefix}State File = String "{state_file}"')
     return lines
 
@@ -288,6 +299,8 @@ def solver1_block(
     solver_index: int = 1,
     equation_name: str = "Heat Equation",
     inner_circuit: bool = False,
+    tes_body_id: int | None = None,
+    inner_circuit_step_commit: bool = False,
     calculate_loads: bool = False,
     lumped_mass: bool = False,
     transient_restart: bool = False,
@@ -305,18 +318,26 @@ def solver1_block(
     if comment:
         lines.append(f"! {comment}")
     if inner_circuit:
+        if tes_body_id is None:
+            raise ValueError("inner_circuit requires a resolved TES Body index")
         # Implemented in the custom HeatSolve module.  Unlike an external
         # slave solver, this hook executes within HeatSolve's nonlinear loop
         # and is collective-safe under MPI.
         lines += [
             '  "TES Inner Circuit Update" = Logical True',
-            '  "TES Body ID" = Integer 2',
+            f'  "TES Body ID" = Integer {tes_body_id}',
         ]
+        if inner_circuit_step_commit:
+            lines.append('  "TES Inner Circuit Step Commit" = Logical True')
     lines += [
         f"  Nonlinear System Max Iterations = {solver['nonlinear_max_iterations']}",
         f"  Nonlinear System Convergence Tolerance = {fmt_real(solver['nonlinear_convergence_tolerance'])}",
         f"  Nonlinear System Relaxation Factor = {fmt_real(solver['nonlinear_relaxation_factor'])}",
     ]
+    if "nonlinear_min_iterations" in solver:
+        lines.append(
+            f"  Nonlinear System Min Iterations = {solver['nonlinear_min_iterations']}"
+        )
     if lumped_mass:
         lines += [
             "! Lumped mass + BDF1 keeps the discrete maximum principle when dt is",
@@ -495,6 +516,19 @@ def resolve_tes_body_names(mesh_names: MeshNames) -> list[str]:
     return [name for _, name, _ in resolve_bodies(mesh_names) if _base_body_name(name) == "TES"]
 
 
+def resolve_body_sif_ordinal(mesh_names: MeshNames, body_name: str) -> int:
+    """Return the one-based SIF Body ordinal used by ``Element%BodyId``.
+
+    ``mesh.names`` target IDs are physical labels.  HeatSolve compares
+    ``Element%BodyId`` against this value, and Elmer assigns that ID from the
+    ordered SIF Body blocks instead.
+    """
+    for ordinal, (_, name, _) in enumerate(resolve_bodies(mesh_names), start=1):
+        if name == body_name:
+            return ordinal
+    raise KeyError(f"body not found: {body_name}")
+
+
 def _present_suffixes(mesh_names: MeshNames, base: str) -> list[str]:
     """Which of the stack suffixes "", "_L", "_R" actually have a
     `<base><suffix>` body in this mesh."""
@@ -505,10 +539,19 @@ def resolve_bath_boundaries(mesh_names: MeshNames) -> list[int]:
     """Target IDs of every `SiO2_2<sfx>__zmin` boundary (the bath contact),
     ascending. A single-pixel mesh has one; a dual-TES mesh has one per
     stack."""
-    targets = [
-        mesh_names.boundaries[f"SiO2_2{sfx}__zmin"]
-        for sfx in _present_suffixes(mesh_names, "SiO2_2")
-    ]
+    targets = []
+    for sfx in _present_suffixes(mesh_names, "SiO2_2"):
+        name = f"SiO2_2{sfx}__zmin"
+        # Hybrid extruded meshes assign this face the unambiguous physical
+        # name "bath". Gmsh permits only one physical label per boundary
+        # entity through ElmerGrid, whereas the historical tetra mesh uses
+        # the geometry-derived `SiO2_2__zmin` name.
+        if name in mesh_names.boundaries:
+            targets.append(mesh_names.boundaries[name])
+        elif not sfx and "bath" in mesh_names.boundaries:
+            targets.append(mesh_names.boundaries["bath"])
+        else:
+            raise KeyError(name)
     return sorted(targets)
 
 
@@ -744,6 +787,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     # dual-TES mesh's "TES_L"/"TES_R" bodies (see body_force_blocks).
     tes_sides = [name[len(_base_body_name(name)):].lstrip("_") for name in tes_body_names]
     is_dual_tes = tes_sides != [""]
+    tes_body_id = resolve_body_sif_ordinal(mesh_names, tes_body_names[0]) if not is_dual_tes else None
 
     lines: list[str] = [
         f"! Auto-generated by scripts/support/build_cases.py from elmer_project.json",
@@ -781,15 +825,14 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     lines.append(f"  Solver Input File = generated/cases/{case_name}.sif")
 
     restart_from = spec.get("restart_from")
-    if restart_from:
-        dep = model["cases"].get(restart_from)
-        if not dep or not dep.get("output_result"):
-            raise ValueError(
-                f"{case_name}: restart_from '{restart_from}' must exist and set output_result"
-            )
+    restart_file_base = spec.get("restart_file_base", restart_from)
+    if restart_file_base:
+        if restart_from:
+            dep = model["cases"].get(restart_from)
+            if not dep or not dep.get("output_result"):
+                raise ValueError(f"{case_name}: restart_from '{restart_from}' must output a result")
         lines += [
-            f"! Run {restart_from} first to produce the restart field.",
-            f"  Restart File = {restart_from}.result",
+            f"  Restart File = {restart_file_base}.result",
             f"  Restart Position = {spec.get('restart_position', 0)}",
         ]
         if "restart_time" in spec:
@@ -825,6 +868,9 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         lines += dual_tes_constants_block(tes_sides, params, series_file, state_files)
     else:
         lines += tes_constants_block(params, series_file, spec.get("state_file"))
+        iteration_series_file = spec.get("iteration_series_file")
+        if iteration_series_file:
+            lines.append(f'  TES Iteration Series File = String "{iteration_series_file}"')
     if with_pulse:
         lines += _pulse_constants(case_name, spec, params, root, mesh_dir_name)
     lines += ["End", ""]
@@ -843,6 +889,9 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 f"Solver {circuit_index}",
                 f'  Equation = "TES Parallel Circuit {coupling_iter + 1}"',
                 '  Procedure = "tes_parallel_circuit" "TESParallelCircuitSolver"',
+                # Preserve the established external-circuit contract. The
+                # inner HeatSolve hook uses the SIF Body ordinal above; this
+                # older external solver retains its historical convention.
                 '  "TES Body ID" = Integer 2',
                 f'  "TES Circuit Relaxation" = Real {fmt_real(circuit_relaxation)}',
                 f'  "TES Write Series" = Logical {"True" if coupling_iter == parallel_circuit_iterations - 1 else "False"}',
@@ -866,6 +915,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         lines += solver1_block(
             spec["solver"],
             inner_circuit=True,
+            tes_body_id=tes_body_id,
+            inner_circuit_step_commit=bool(spec.get("inner_circuit_step_commit")),
             calculate_loads=bool(spec.get("calculate_loads")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),

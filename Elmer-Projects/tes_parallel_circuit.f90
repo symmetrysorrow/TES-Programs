@@ -11,11 +11,17 @@ MODULE TESParallelCircuitModule
   LOGICAL, SAVE :: CircuitInitialized = .FALSE.
   LOGICAL, SAVE :: SeriesStarted = .FALSE.
   INTEGER, SAVE :: CircuitTimeStep = -1
+  INTEGER, SAVE :: CircuitNonlinIter = -1
+  INTEGER, SAVE :: CircuitIterInStep = 0
   REAL(KIND=dp), SAVE :: CircuitTemperature = 0.0_dp
   REAL(KIND=dp), SAVE :: CircuitPower = 0.0_dp
   REAL(KIND=dp), SAVE :: CircuitCurrent = 0.0_dp
   REAL(KIND=dp), SAVE :: CircuitResistance = 0.0_dp
   REAL(KIND=dp), SAVE :: PreviousCurrent = 0.0_dp
+  REAL(KIND=dp), SAVE :: CircuitPrevResidual = 0.0_dp
+  REAL(KIND=dp), SAVE :: CircuitOmega = 0.5_dp
+  REAL(KIND=dp), SAVE :: CircuitOmegaCap = 0.5_dp
+  REAL(KIND=dp), SAVE :: CircuitLastDt = 0.0_dp
 CONTAINS
 
   SUBROUTINE TESParallelCircuitSolverCore(Model, Solver, dt, TransientSimulation)
@@ -25,17 +31,17 @@ CONTAINS
     LOGICAL :: TransientSimulation
     TYPE(Element_t), POINTER :: Element
     TYPE(Variable_t), POINTER :: TemperatureVariable
-    INTEGER :: t, i, n, body, localCount, p, IoStatus, TimeStep
+    INTEGER :: t, i, n, body, localCount, p, IoStatus, TimeStep, NonlinIter
     LOGICAL :: Found, FoundSeries, FoundState, WriteSeries
     CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile, StateFile
     REAL(KIND=dp) :: localSum, globalSum, globalCount, localT
     REAL(KIND=dp) :: I_BIAS, R_SH, R0, R_MIN, ALPHA, BETA, I0, T0, L_TES
-    REAL(KIND=dp) :: A, B, C, Discriminant, RawPower, DtLocal
+    REAL(KIND=dp) :: A, B, C, Discriminant, RawPower, DtLocal, Residual, Denominator
     REAL(KIND=dp) :: StateTemperature, StateCurrent, StateResistance, StatePower, StatePrevious
     REAL(KIND=dp) :: StateLoaded
 
     CALL Info('TESParallelCircuitSolver', 'entered nonlinear pre-solver', Level=4)
-    TemperatureVariable => VariableGet(Solver % Mesh % Variables, 'Temperature')
+    TemperatureVariable => VariableGet(Model % Mesh % Variables, 'Temperature')
     IF (.NOT. ASSOCIATED(TemperatureVariable)) CALL Fatal('TESParallelCircuitSolver', 'Temperature variable not found')
     CALL Info('TESParallelCircuitSolver', 'temperature variable found', Level=4)
 
@@ -64,13 +70,14 @@ CONTAINS
     WriteSeries = GetLogical(GetSolverParams(), 'TES Write Series', Found)
     IF (.NOT. Found) WriteSeries = .TRUE.
     TimeStep = GetTimeStep()
+    NonlinIter = GetNonlinIter()
     CALL Info('TESParallelCircuitSolver', 'parameters loaded', Level=4)
 
     ! These two collectives are always first, on every rank and every call.
     localSum = 0.0_dp
     localCount = 0
-    DO t = 1, Solver % NumberOfActiveElements
-      Element => GetActiveElement(t, Solver)
+    DO t = 1, Model % Mesh % NumberOfBulkElements
+      Element => Model % Mesh % Elements(t)
       IF (Element % BodyId /= body) CYCLE
       n = GetElementNOFNodes(Element)
       IF (n <= 0) CYCLE
@@ -133,14 +140,38 @@ CONTAINS
       ! A loaded state contains the committed current from the preceding
       ! timestep.  Do not replace it before the first backward-Euler solve.
       CircuitTimeStep = TimeStep
+      CircuitNonlinIter = NonlinIter
+      CircuitIterInStep = 1
+      CircuitPrevResidual = 0.0_dp
+      CircuitOmega = 0.5_dp
+      CircuitOmegaCap = 0.5_dp
       CircuitInitialized = .TRUE.
-    ELSE IF (TimeStep /= CircuitTimeStep) THEN
-      ! Commit precisely once at a timestep boundary.  It must remain fixed
-      ! through all nonlinear pre-solver calls within this timestep.
+      ! Preserve the legacy serial UDF's initial electrical state for the
+      ! first assembly.  Its first update happens on the next nonlinear sweep.
+      RETURN
+    ELSE IF (TimeStep == CircuitTimeStep .AND. NonlinIter == CircuitNonlinIter) THEN
+      RETURN
+    END IF
+
+    IF (TimeStep /= CircuitTimeStep) THEN
+      ! This is the legacy serial UDF's timestep commit: PreviousCurrent is
+      ! fixed for every nonlinear sweep of the new BDF step.
       PreviousCurrent = CircuitCurrent
+      CircuitIterInStep = 0
+      CircuitPrevResidual = 0.0_dp
+      DtLocal = GetTimeStepSize()
+      CircuitOmegaCap = 0.5_dp
+      IF (CircuitLastDt > 0.0_dp .AND. ABS(DtLocal-CircuitLastDt) > 1.0e-9_dp*CircuitLastDt) THEN
+        CircuitOmega = 0.1_dp
+        CircuitOmegaCap = 0.25_dp
+      END IF
+      CircuitLastDt = DtLocal
       CircuitTimeStep = TimeStep
     END IF
 
+    ! Same circuit equation and Aitken nonlinear update as the frozen serial
+    ! reference.  Only the TES temperature average differs operationally: it
+    ! is reduced collectively before this routine is entered.
     CircuitTemperature = localT
     A = R0 * (1.0_dp + ALPHA * (CircuitTemperature - T0) / T0 - BETA)
     B = R0 * BETA / I0
@@ -157,7 +188,27 @@ CONTAINS
     CircuitResistance = MAX(A + B * ABS(CircuitCurrent), R_MIN)
     IF (CircuitResistance == R_MIN) CircuitCurrent = I_BIAS * R_SH / (R_SH + CircuitResistance)
     RawPower = CircuitCurrent * CircuitCurrent * CircuitResistance
-    CircuitPower = MAX(RawPower, 0.0_dp)
+    Residual = RawPower - CircuitPower
+    IF (ABS(Residual) > 1.0e-6_dp * MAX(ABS(CircuitPower), 1.0e-30_dp)) THEN
+      IF (CircuitIterInStep > 0) THEN
+        IF (ABS(Residual) > 1.5_dp*ABS(CircuitPrevResidual)) THEN
+          CircuitOmegaCap = MAX(0.5_dp*CircuitOmegaCap, 0.02_dp)
+        ELSE
+          CircuitOmegaCap = MIN(1.3_dp*CircuitOmegaCap, 1.0_dp)
+        END IF
+        Denominator = Residual - CircuitPrevResidual
+        IF (ABS(Denominator) > 1.0e-2_dp*ABS(Residual)) THEN
+          CircuitOmega = -CircuitOmega*CircuitPrevResidual/Denominator
+        END IF
+        CircuitOmega = MAX(MIN(CircuitOmega, CircuitOmegaCap), 0.02_dp)
+      ELSE
+        CircuitOmega = MAX(MIN(CircuitOmega, CircuitOmegaCap), 0.02_dp)
+      END IF
+      CircuitPower = MAX(CircuitPower + CircuitOmega*Residual, 0.0_dp)
+      CircuitPrevResidual = Residual
+      CircuitIterInStep = CircuitIterInStep + 1
+    END IF
+    CircuitNonlinIter = NonlinIter
 
     ! The state format is shared with tes_transient_heat_source.f90.
     ! Steady cases update it on root after every nonlinear circuit update.
