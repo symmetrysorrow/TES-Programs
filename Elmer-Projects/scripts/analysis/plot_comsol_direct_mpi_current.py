@@ -1,9 +1,8 @@
 """Plot the COMSOL, serial-direct, and four-rank MPI TES current pulse.
 
 The curves are aligned at the physical 20.020 ms pulse and expressed as a
-drop from each solver's own pre-pulse baseline.  Shape-preserving PCHIP curves
-make the nonuniform time grids readable; solver samples remain visible as
-markers so interpolation is not mistaken for additional simulation output.
+drop from each solver's own pre-pulse baseline. Shape-preserving PCHIP curves
+make the nonuniform time grids readable.
 """
 
 from __future__ import annotations
@@ -144,7 +143,7 @@ def main() -> None:
     parser.add_argument(
         "--mpi",
         type=Path,
-        default=ROOT / "tes_mpi_legacy_regression_series.csv",
+        default=ROOT / "results" / "raw" / "legacy-root-output" / "tes_mpi_legacy_regression_series.csv",
     )
     parser.add_argument(
         "--out",
@@ -264,17 +263,8 @@ def main() -> None:
             label=item.label,
             color=colors[item.label],
             linewidth=2.0,
+            linestyle=":" if item.label == "COMSOL" else "-",
         )
-        if item.label != "COMSOL":
-            sample_time, sample_drop = clipped(item, args.start_us, args.end_us)
-            response_ax.scatter(
-                sample_time,
-                sample_drop,
-                color=colors[item.label],
-                s=11,
-                alpha=0.75,
-                zorder=3,
-            )
 
     response_ax.axvline(0.0, color="#555555", linestyle="--", linewidth=1.0)
     response_ax.grid(True, alpha=0.25)
@@ -290,16 +280,10 @@ def main() -> None:
         response_ax.set_xticks([-20.0, 0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0])
     # else: symlog's default locator already places sensible ticks.
     response_ax.legend(loc="upper left", frameon=False, ncols=3)
-    response_ax.set_title("TES current pulse: COMSOL vs direct vs MPI")
-    response_ax.text(
-        0.995,
-        0.02,
-        "Lines: shape-preserving interpolation   Dots: Elmer samples",
-        transform=response_ax.transAxes,
-        ha="right",
-        va="bottom",
-        color="#555555",
-        fontsize=9,
+    response_ax.set_title(
+        "TES current pulse: COMSOL vs Elmer MPI"
+        if args.skip_direct
+        else "TES current pulse: COMSOL vs Elmer direct vs MPI"
     )
 
     png_path = tagged("current_timeseries_comparison.png")

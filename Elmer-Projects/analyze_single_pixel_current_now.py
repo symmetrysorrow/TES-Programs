@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent
 comsol = np.loadtxt(ROOT / "reference" / "SignglePixel.txt", comments="%", encoding="utf-8")
-elmer = np.genfromtxt(ROOT / "tes_mpi_comsol_grid_series.csv", delimiter=",", names=True)
+elmer = np.genfromtxt(
+    ROOT / "results" / "raw" / "legacy-root-output" / "tes_mpi_comsol_grid_series.csv",
+    delimiter=",",
+    names=True,
+)
 tc, ic = comsol[:, 0], comsol[:, 3] * 1e-6
 te, ie = elmer["time_s"] * 1e3, elmer["tes_current_A"]
 end = min(tc.max(), te.max())

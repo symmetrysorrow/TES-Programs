@@ -72,6 +72,7 @@ python run.py case_tes_pulse_20ms_3x_refined
 - `gmsh/`: ジオメトリ・メッシュ生成の中間物
 - `scripts/analysis|visualization|prep|support/`: 抽出・可視化・準備・補助
 - `artifacts/`: Git管理する軽量な比較表・図・報告（大容量の中間生成物は置かない）
+- `results/raw/`: `run.py` 経由ではない直接実行のログ・CSV出力の退避先。解析済み・確定したものだけ `artifacts/` に昇格する
 - `reference/`: 外部由来の参照データ(COMSOL 時系列 `SignglePixel.txt`、`tes.json`, `tes_test2.json`)
 - `runs/`: 凍結した再現用ラン(`python freeze_repro_run.py <name>`)
 - `archive/`: 過去の実験ケース・結果(例: `cases_mortar_debug_202607/`)
