@@ -442,6 +442,161 @@ def main() -> None:
     }
     project["cases"][FULL_UNIFORM_CONTINUOUS_MPI] = continuous_case
 
+    # Time-grid sensitivity case for the small post-peak COMSOL crossing.
+    # Keep pulse+500--1000 us at the validated 4 us cadence, so the observed
+    # crossing near pulse+655 us cannot occur inside a 100 us BDF step.  Only
+    # after that diagnostic window do we grow the step by at most 25 percent
+    # per step up to the 100 us far-tail cadence.  This remains one continuous
+    # process from the pre-pulse steady restart: do not use a checkpoint
+    # restart here, since it would introduce the known circuit-history seam.
+    FULL_UNIFORM_RAMPED_TRANSITION_MPI = (
+        "case_tes_mpi_comsol_grid_full_uniform_ramped_transition"
+    )
+    crossing_window_end_us = 1000.0
+    fixed_crossing_dt_us = 4.0
+    tail_dt_us = 100.0
+    ramp_growth = 1.25
+    fixed_crossing_steps = int(
+        (crossing_window_end_us - CHECKPOINT_REL_US) / fixed_crossing_dt_us
+    )
+    if CHECKPOINT_REL_US + fixed_crossing_steps * fixed_crossing_dt_us != crossing_window_end_us:
+        raise ValueError("The fixed crossing window must land exactly at 1000 us")
+
+    ramp_steps_us: list[float] = []
+    previous_dt_us = fixed_crossing_dt_us
+    while previous_dt_us < tail_dt_us:
+        previous_dt_us = min(previous_dt_us * ramp_growth, tail_dt_us)
+        ramp_steps_us.append(previous_dt_us)
+
+    # Preserve the final time of the accepted uniform-100-us reference
+    # (pulse+180 ms, i.e. 200.02 ms absolute), rather than shortening this
+    # sensitivity case to COMSOL's nominal 200 ms table endpoint.
+    final_rel_us = CHECKPOINT_REL_US + continuous_tail_n_steps * tail_dt_us
+    remaining_tail_us = (
+        final_rel_us
+        - crossing_window_end_us
+        - float(sum(ramp_steps_us))
+    )
+    uniform_tail_steps = int(remaining_tail_us // tail_dt_us)
+    final_tail_dt_us = remaining_tail_us - uniform_tail_steps * tail_dt_us
+    if not (0.0 < final_tail_dt_us <= tail_dt_us):
+        raise ValueError("Expected a positive final tail step no larger than 100 us")
+
+    ramped_transition_case = dict(inner_circuit_regression)
+    ramped_transition_case["series_file"] = (
+        "tes_mpi_comsol_grid_full_uniform_ramped_transition_series.csv"
+    )
+    ramped_transition_case["iteration_series_file"] = (
+        "tes_mpi_comsol_grid_full_uniform_ramped_transition_iterations.csv"
+    )
+    ramped_transition_case["timesteps"] = (
+        [[f"{dt:.17g}[s]", 1] for dt in np.diff(fine_ms) * 1.0e-3]
+        + [[f"{fixed_crossing_dt_us}e-6[s]", fixed_crossing_steps]]
+        + [[f"{dt_us:.17g}e-6[s]", 1] for dt_us in ramp_steps_us]
+        + [[f"{tail_dt_us}e-6[s]", uniform_tail_steps]]
+        + [[f"{final_tail_dt_us:.17g}e-6[s]", 1]]
+    )
+    ramped_transition_case["output_intervals"] = (
+        [999999] * fine_stage_count
+        + [999999] * (1 + len(ramp_steps_us))
+        + [uniform_tail_steps // 2, 999999]
+    )
+    ramped_transition_case["output_result"] = True
+    ramped_transition_case["comparison_time_grid"] = {
+        "description": (
+            "Single continuous run (no restart mid-way): COMSOL's exact grid "
+            "through pulse+500 us; fixed 4 us steps through pulse+1000 us; "
+            "then a maximum-1.25x geometric ramp to 100 us and a 100 us "
+            f"uniform tail to pulse+{final_rel_us:g} us. Isolates the "
+            "pulse+655 us COMSOL-crossing sensitivity from the prior "
+            "4 us-to-100 us step jump."
+        ),
+        "fixed_crossing_window_us": [CHECKPOINT_REL_US, crossing_window_end_us],
+        "fixed_crossing_dt_us": fixed_crossing_dt_us,
+        "ramp_growth_limit": ramp_growth,
+        "ramp_steps_us": ramp_steps_us,
+        "uniform_tail_dt_us": tail_dt_us,
+    }
+    project["cases"][FULL_UNIFORM_RAMPED_TRANSITION_MPI] = ramped_transition_case
+
+    # Follow-up sensitivity case: the first 100 us step in the preceding
+    # ramped-transition run spans the 1.53--1.63 ms dip against COMSOL.  Keep
+    # a 20 us bridge through approximately pulse+2 ms, with 1.25x-limited
+    # ramps on both sides, before allowing the established 100 us far tail.
+    FULL_UNIFORM_20US_BRIDGE_MPI = (
+        "case_tes_mpi_comsol_grid_full_uniform_20us_bridge"
+    )
+    bridge_dt_us = 20.0
+    bridge_target_end_us = 2000.0
+
+    ramp_to_bridge_us: list[float] = []
+    previous_dt_us = fixed_crossing_dt_us
+    while previous_dt_us < bridge_dt_us:
+        previous_dt_us = min(previous_dt_us * ramp_growth, bridge_dt_us)
+        ramp_to_bridge_us.append(previous_dt_us)
+
+    bridge_start_us = crossing_window_end_us + float(sum(ramp_to_bridge_us))
+    bridge_steps = int((bridge_target_end_us - bridge_start_us) // bridge_dt_us)
+    if bridge_steps < 1:
+        raise ValueError("The 20 us bridge must contain at least one time step")
+    bridge_end_us = bridge_start_us + bridge_steps * bridge_dt_us
+
+    ramp_from_bridge_us: list[float] = []
+    previous_dt_us = bridge_dt_us
+    while previous_dt_us < tail_dt_us:
+        previous_dt_us = min(previous_dt_us * ramp_growth, tail_dt_us)
+        ramp_from_bridge_us.append(previous_dt_us)
+
+    bridge_remaining_tail_us = (
+        final_rel_us
+        - bridge_end_us
+        - float(sum(ramp_from_bridge_us))
+    )
+    bridge_uniform_tail_steps = int(bridge_remaining_tail_us // tail_dt_us)
+    bridge_final_tail_dt_us = (
+        bridge_remaining_tail_us - bridge_uniform_tail_steps * tail_dt_us
+    )
+    if not (0.0 < bridge_final_tail_dt_us <= tail_dt_us):
+        raise ValueError("Expected a positive final 20 us bridge tail step")
+
+    bridge_case = dict(inner_circuit_regression)
+    bridge_case["series_file"] = (
+        "tes_mpi_comsol_grid_full_uniform_20us_bridge_series.csv"
+    )
+    bridge_case["iteration_series_file"] = (
+        "tes_mpi_comsol_grid_full_uniform_20us_bridge_iterations.csv"
+    )
+    bridge_case["timesteps"] = (
+        [[f"{dt:.17g}[s]", 1] for dt in np.diff(fine_ms) * 1.0e-3]
+        + [[f"{fixed_crossing_dt_us}e-6[s]", fixed_crossing_steps]]
+        + [[f"{dt_us:.17g}e-6[s]", 1] for dt_us in ramp_to_bridge_us]
+        + [[f"{bridge_dt_us}e-6[s]", bridge_steps]]
+        + [[f"{dt_us:.17g}e-6[s]", 1] for dt_us in ramp_from_bridge_us]
+        + [[f"{tail_dt_us}e-6[s]", bridge_uniform_tail_steps]]
+        + [[f"{bridge_final_tail_dt_us:.17g}e-6[s]", 1]]
+    )
+    bridge_case["output_intervals"] = (
+        [999999] * fine_stage_count
+        + [999999] * (2 + len(ramp_to_bridge_us) + len(ramp_from_bridge_us))
+        + [bridge_uniform_tail_steps // 2, 999999]
+    )
+    bridge_case["output_result"] = True
+    bridge_case["comparison_time_grid"] = {
+        "description": (
+            "Single continuous run: COMSOL-exact through pulse+500 us; "
+            "4 us through pulse+1000 us; a maximum-1.25x ramp to 20 us; "
+            f"20 us through pulse+{bridge_end_us:g} us; then a maximum-1.25x "
+            f"ramp to 100 us and a 100 us tail through pulse+{final_rel_us:g} us."
+        ),
+        "fixed_crossing_window_us": [CHECKPOINT_REL_US, crossing_window_end_us],
+        "fixed_crossing_dt_us": fixed_crossing_dt_us,
+        "bridge_dt_us": bridge_dt_us,
+        "bridge_end_us": bridge_end_us,
+        "ramp_growth_limit": ramp_growth,
+        "uniform_tail_dt_us": tail_dt_us,
+    }
+    project["cases"][FULL_UNIFORM_20US_BRIDGE_MPI] = bridge_case
+
     # Resume-from-checkpoint case: only the remaining coarse tail, restarting
     # from the single snapshot saved above. Use this if the coarse tail alone
     # needs to be redone after an interruption.

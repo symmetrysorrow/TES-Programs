@@ -795,7 +795,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         "",
         "Header",
         "  CHECK KEYWORDS Warn",
-        f'  Mesh DB "." "work/meshes/{mesh_dir_name}"',
+        f'  Mesh DB "work/meshes" "{mesh_dir_name}"',
         "End",
         "",
         "Simulation",
@@ -827,12 +827,16 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     restart_from = spec.get("restart_from")
     restart_file_base = spec.get("restart_file_base", restart_from)
     if restart_file_base:
+        restart_file = f"{restart_file_base}.result"
         if restart_from:
             dep = model["cases"].get(restart_from)
             if not dep or not dep.get("output_result"):
                 raise ValueError(f"{case_name}: restart_from '{restart_from}' must output a result")
+            # Elmer resolves Restart File inside the active Mesh DB.  The
+            # target's mesh directory is therefore selected by Header/Mesh DB
+            # above; keep only the result basename here.
         lines += [
-            f"  Restart File = {restart_file_base}.result",
+            f"  Restart File = {restart_file}",
             f"  Restart Position = {spec.get('restart_position', 0)}",
         ]
         if "restart_time" in spec:
