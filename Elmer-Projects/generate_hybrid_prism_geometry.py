@@ -58,6 +58,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--disable-mesh-size-extend-from-boundary", action="store_true",
         help="disable Gmsh Mesh.MeshSizeExtendFromBoundary for a local-field probe",
     )
+    parser.add_argument(
+        "--stycast-diameter", type=float, default=498.0e-6, metavar="METERS",
+        help="Stycast disk diameter; default retains the established 498 um geometry",
+    )
     args = parser.parse_args(argv)
     if args.stack_local_size is not None and args.stack_local_size <= 0.0:
         parser.error("--stack-local-size must be positive")
@@ -71,6 +75,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--absorber-local-size may not exceed the legacy 50 um size")
     if args.absorber_local_radius <= 0.0:
         parser.error("--absorber-local-radius must be positive")
+    if args.stycast_diameter <= 0.0:
+        parser.error("--stycast-diameter must be positive")
     return args
 
 
@@ -264,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
     mem_x, mem_y = p["membrane_dx"], p["membrane_dy"]
     abs_x, abs_y, abs_z = p["abs_dx"], p["abs_dy"], p["abs_dz"]
     tes_x, tes_y, tes_z = p["TES_Au_dx"], p["TES_Au_dy"], p["TES_dz"]
-    sty_d, sty_z = 498.0e-6, p["Stycast_dz"]
+    sty_d, sty_z = args.stycast_diameter, p["Stycast_dz"]
     z0 = -0.5 * p["Si_2_dz"] - p["SiO2_2_dz"]
     z_sio2_2 = z0
     z_si2 = z_sio2_2 + p["SiO2_2_dz"]

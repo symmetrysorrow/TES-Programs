@@ -69,3 +69,11 @@ results/
 
 *.boundary
 *.elements
+
+# Local Elmer build trees and transient solver outputs
+tools/
+Elmer-Projects/artifacts/hybrid_prism_diagnostics/
+Elmer-Projects/mesh_hybrid_abs_tet_layers_prism_*/
+Elmer-Projects/case_*_iterations.csv
+Elmer-Projects/case_*_series.csv
+Elmer-Projects/*.o

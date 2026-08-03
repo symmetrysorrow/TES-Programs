@@ -59,3 +59,18 @@ def gaussian_discrete_norm(
     r2 = ((nodes - np.asarray(center)) ** 2).sum(axis=1)
     weights = np.exp(-r2 / (2.0 * sigma * sigma))
     return float((volumes * weights[tets].mean(axis=1)).sum())
+
+
+def sphere_discrete_norm(
+    mesh_dir: Path, center: tuple[float, float, float], radius: float
+) -> float:
+    """FE integral of a nodal indicator for a uniform spherical source."""
+    import numpy as np
+
+    nodes, tets, volumes = _load_abs_tets(mesh_dir)
+    r2 = ((nodes - np.asarray(center)) ** 2).sum(axis=1)
+    weights = (r2 <= radius * radius).astype(float)
+    norm = float((volumes * weights[tets].mean(axis=1)).sum())
+    if norm <= 0.0:
+        raise ValueError("uniform-sphere pulse has zero discrete absorber volume")
+    return norm
