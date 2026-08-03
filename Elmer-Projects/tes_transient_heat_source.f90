@@ -416,16 +416,19 @@ FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSour
   REAL(KIND=dp) :: TimeNow
   REAL(KIND=dp) :: TimePrev
   REAL(KIND=dp) :: Dt
-  REAL(KIND=dp) :: Overlap
+  REAL(KIND=dp) :: TimeIntegral
   REAL(KIND=dp) :: RadiusSquared
   REAL(KIND=dp) :: ENERGY
   REAL(KIND=dp) :: START_TIME
   REAL(KIND=dp) :: DURATION
+  REAL(KIND=dp) :: TRANSITION_ZONE
   REAL(KIND=dp) :: SIGMA
+  REAL(KIND=dp) :: PULSE_RADIUS
   REAL(KIND=dp) :: X0
   REAL(KIND=dp) :: Y0
   REAL(KIND=dp) :: Z0
   REAL(KIND=dp) :: DISCRETE_NORM
+  INTEGER :: PULSE_SHAPE
   LOGICAL :: Found
 
   HeatSource = 0.0_dp
@@ -441,8 +444,17 @@ FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSour
   IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Start Time is required')
   DURATION = GetConstReal(Model % Constants, 'Pulse Duration', Found)
   IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Duration is required')
+  TRANSITION_ZONE = GetConstReal(Model % Constants, 'Pulse Transition Zone', Found)
+  IF (.NOT. Found) TRANSITION_ZONE = 0.0_dp
+  IF (TRANSITION_ZONE < 0.0_dp) THEN
+    CALL Fatal('AbsorberWindowPulseHeatSource', 'Pulse Transition Zone must be non-negative')
+  END IF
   SIGMA = GetConstReal(Model % Constants, 'Pulse Sigma', Found)
   IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Sigma is required')
+  PULSE_SHAPE = NINT(GetConstReal(Model % Constants, 'Pulse Shape', Found))
+  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Shape is required')
+  PULSE_RADIUS = GetConstReal(Model % Constants, 'Pulse Radius', Found)
+  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Radius is required')
   X0 = GetConstReal(Model % Constants, 'Pulse Center X', Found)
   IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center X is required')
   Y0 = GetConstReal(Model % Constants, 'Pulse Center Y', Found)
@@ -455,18 +467,58 @@ FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSour
   DISCRETE_NORM = GetConstReal(Model % Constants, 'Pulse Discrete Norm', Found)
   IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Discrete Norm is required')
 
-  ! Rectangular pulse in time: distribute ENERGY uniformly over
-  ! [START_TIME, START_TIME + DURATION]. Each timestep receives the exact
-  ! fraction of the window it overlaps, so the total is preserved for any
-  ! timestep staging.
+  ! Temporal rectangular pulse.  With a positive transition zone this uses
+  ! COMSOL's flc2hs C2 step (a fifth-degree polynomial), centered at each
+  ! rectangle edge.  The exact interval integral is used so that ENERGY is
+  ! preserved for any timestep staging, including steps that cross an edge.
   TimeNow = GetTime()
   TimePrev = TimeNow - Dt
-  Overlap = MIN(TimeNow, START_TIME + DURATION) - MAX(TimePrev, START_TIME)
-  IF (Overlap <= 0.0_dp) RETURN
+  IF (TRANSITION_ZONE > 0.0_dp) THEN
+    TimeIntegral = SmoothStepIntegral(TimeNow - START_TIME, 0.5_dp*TRANSITION_ZONE) - &
+                   SmoothStepIntegral(TimePrev - START_TIME, 0.5_dp*TRANSITION_ZONE) - &
+                   SmoothStepIntegral(TimeNow - START_TIME - DURATION, 0.5_dp*TRANSITION_ZONE) + &
+                   SmoothStepIntegral(TimePrev - START_TIME - DURATION, 0.5_dp*TRANSITION_ZONE)
+  ELSE
+    TimeIntegral = MIN(TimeNow, START_TIME + DURATION) - MAX(TimePrev, START_TIME)
+  END IF
+  IF (TimeIntegral <= 0.0_dp) RETURN
 
   RadiusSquared = (Model % Nodes % x(Node)-X0)**2 + &
                   (Model % Nodes % y(Node)-Y0)**2 + &
                   (Model % Nodes % z(Node)-Z0)**2
-  HeatSource = ENERGY * (Overlap/DURATION) * &
-               EXP(-RadiusSquared/(2.0_dp*SIGMA**2)) / (DISCRETE_NORM * Dt)
+  SELECT CASE (PULSE_SHAPE)
+  CASE (0)
+    HeatSource = EXP(-RadiusSquared/(2.0_dp*SIGMA**2))
+  CASE (1)
+    IF (RadiusSquared <= PULSE_RADIUS**2) THEN
+      HeatSource = 1.0_dp
+    ELSE
+      HeatSource = 0.0_dp
+    END IF
+  CASE DEFAULT
+    CALL Fatal('AbsorberWindowPulseHeatSource', 'Pulse Shape must be 0 (Gaussian) or 1 (uniform sphere)')
+  END SELECT
+  HeatSource = ENERGY * (TimeIntegral/DURATION) * HeatSource / (DISCRETE_NORM * Dt)
+
+CONTAINS
+
+  FUNCTION SmoothStepIntegral(X, HalfZone) RESULT(Integral)
+    ! Antiderivative of COMSOL flc2hs(X, HalfZone), with Integral=0 for
+    ! X <= -HalfZone and Integral=X for X >= HalfZone.  Within the zone,
+    ! flc2hs is 1/2 + 15*u/16 - 5*u**3/8 + 3*u**5/16, u=X/HalfZone.
+    REAL(KIND=dp), INTENT(IN) :: X
+    REAL(KIND=dp), INTENT(IN) :: HalfZone
+    REAL(KIND=dp) :: Integral
+    REAL(KIND=dp) :: U
+
+    IF (X <= -HalfZone) THEN
+      Integral = 0.0_dp
+    ELSE IF (X >= HalfZone) THEN
+      Integral = X
+    ELSE
+      U = X / HalfZone
+      Integral = HalfZone * (5.0_dp/32.0_dp + U/2.0_dp + 15.0_dp*U**2/32.0_dp - &
+        5.0_dp*U**4/32.0_dp + U**6/32.0_dp)
+    END IF
+  END FUNCTION SmoothStepIntegral
 END FUNCTION AbsorberWindowPulseHeatSource

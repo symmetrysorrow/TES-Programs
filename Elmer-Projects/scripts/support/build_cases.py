@@ -23,7 +23,11 @@ from pathlib import Path
 from typing import Any
 
 from scripts.support.mesh_names import MeshNames, parse_mesh_names
-from scripts.support.mesh_quantities import absorber_centroid, gaussian_discrete_norm
+from scripts.support.mesh_quantities import (
+    absorber_centroid,
+    gaussian_discrete_norm,
+    sphere_discrete_norm,
+)
 from scripts.support.vendored.dimensioned_expression import (
     dimension_name_of,
     evaluate_dimensioned_expression,
@@ -555,7 +559,9 @@ def resolve_bath_boundaries(mesh_names: MeshNames) -> list[int]:
     return sorted(targets)
 
 
-def resolve_mortar_pairs(mesh_names: MeshNames) -> list[tuple[int, str, int, str]]:
+def resolve_mortar_pairs(
+    mesh_names: MeshNames, *, reverse_stycast_abs: bool = False
+) -> list[tuple[int, str, int, str]]:
     """(slave target, slave label, master target, master label) for every
     mortar pair, expanded over whichever of the "", "_L", "_R" stack
     suffixes are actually present in the mesh -- looked up by boundary
@@ -569,6 +575,11 @@ def resolve_mortar_pairs(mesh_names: MeshNames) -> list[tuple[int, str, int, str
     pairs = []
     for slave_base, slave_face, master_base, master_face, master_suffixed in _MORTAR_PAIRS:
         for sfx in suffixes:
+            if reverse_stycast_abs and slave_base == "Stycast" and master_base == "abs":
+                slave_base, master_base = master_base, slave_base
+                slave_face, master_face = master_face, slave_face
+                # The absorber is unsuffixed while Stycast follows the TES stack.
+                master_suffixed = True
             master_sfx = sfx if master_suffixed else ""
             slave_name = f"{slave_base}{sfx}__{slave_face}"
             master_name = f"{master_base}{master_sfx}__{master_face}"
@@ -595,7 +606,9 @@ def _target_boundaries_line(targets: list[int]) -> str:
     return f"  Target Boundaries({len(targets)}) = " + " ".join(str(t) for t in targets)
 
 
-def bodies_and_bcs(mesh_names: MeshNames, with_pulse: bool) -> list[str]:
+def bodies_and_bcs(
+    mesh_names: MeshNames, with_pulse: bool, *, reverse_stycast_abs: bool = False
+) -> list[str]:
     bodies = resolve_bodies(mesh_names)
     # TES-role bodies get Body Force 1..N (ascending target id, i.e. one per
     # stack); the pulse (if any) is appended after them on the abs body.
@@ -629,7 +642,9 @@ def bodies_and_bcs(mesh_names: MeshNames, with_pulse: bool) -> list[str]:
     ]
     bc_number = 2
     master_bc_of: dict[int, int] = {}
-    for slave_target, slave_label, master_target, master_label in resolve_mortar_pairs(mesh_names):
+    for slave_target, slave_label, master_target, master_label in resolve_mortar_pairs(
+        mesh_names, reverse_stycast_abs=reverse_stycast_abs
+    ):
         slave_bc = bc_number
         bc_number += 1
         is_new_master = master_target not in master_bc_of
@@ -741,21 +756,37 @@ def _pulse_constants(
     pulse = spec["pulse"]
     mesh_dir = root / "work" / "meshes" / mesh_dir_name
     sigma = eval_si(pulse["sigma"], params)
+    shape = pulse.get("shape", "gaussian")
+    radius = eval_si(pulse.get("radius", pulse["sigma"]), params)
+    shape_codes = {"gaussian": 0, "uniform_sphere": 1}
+    if shape not in shape_codes:
+        raise ValueError(f"Unsupported pulse shape: {shape!r}")
     center, center_note = _resolve_pulse_center(
         pulse.get("center", "auto"), params, mesh_dir, spec["mesh"]
     )
-    norm = gaussian_discrete_norm(mesh_dir, center, sigma)
+    norm = (
+        gaussian_discrete_norm(mesh_dir, center, sigma)
+        if shape == "gaussian"
+        else sphere_discrete_norm(mesh_dir, center, radius)
+    )
     energy = eval_si(pulse["energy"], params)
+    transition_zone = eval_si(pulse.get("transition_zone", "0[s]"), params)
+    if transition_zone < 0.0:
+        raise ValueError(f"{case_name}: pulse.transition_zone must be non-negative")
     return [
         f"  Pulse Energy = Real {fmt(energy)}",
         f"  Pulse Start Time = Real {fmt(eval_si(pulse['start'], params))}",
         f"  Pulse Duration = Real {fmt(eval_si(pulse['duration'], params))}",
+        f"! Zero is an exact rectangle; a positive value enables COMSOL flc2hs C2 edges.",
+        f"  Pulse Transition Zone = Real {fmt(transition_zone)}",
         f"  Pulse Sigma = Real {fmt(sigma)}",
+        f"  Pulse Shape = Real {fmt_real(shape_codes[shape])}",
+        f"  Pulse Radius = Real {fmt(radius)}",
         f"! Pulse center: {center_note}",
         f"  Pulse Center X = Real {fmt(center[0])}",
         f"  Pulse Center Y = Real {fmt(center[1])}",
         f"  Pulse Center Z = Real {fmt(center[2])}",
-        f"! FE integral of the nodal Gaussian over the absorber of {spec['mesh']}",
+        f"! FE integral of the nodal {shape} source over the absorber of {spec['mesh']}",
         "! (recomputed automatically at build time)",
         f"  Pulse Discrete Norm = Real {fmt(norm)}",
     ]
@@ -827,14 +858,14 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     restart_from = spec.get("restart_from")
     restart_file_base = spec.get("restart_file_base", restart_from)
     if restart_file_base:
-        restart_file = f"{restart_file_base}.result"
+        # Most cases keep the restart alongside the active mesh.  A caller
+        # may supply restart_file_path when reproducing a legacy case whose
+        # restart lives elsewhere.
+        restart_file = spec.get("restart_file_path", f"{restart_file_base}.result")
         if restart_from:
             dep = model["cases"].get(restart_from)
             if not dep or not dep.get("output_result"):
                 raise ValueError(f"{case_name}: restart_from '{restart_from}' must output a result")
-            # Elmer resolves Restart File inside the active Mesh DB.  The
-            # target's mesh directory is therefore selected by Header/Mesh DB
-            # above; keep only the result basename here.
         lines += [
             f"  Restart File = {restart_file}",
             f"  Restart Position = {spec.get('restart_position', 0)}",
@@ -950,7 +981,11 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
 
     lines += materials_block(model)
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)
-    body_lines = bodies_and_bcs(mesh_names, with_pulse)
+    body_lines = bodies_and_bcs(
+        mesh_names,
+        with_pulse,
+        reverse_stycast_abs=bool(spec.get("reverse_stycast_abs_mortar", False)),
+    )
     body_lines = [
         line.replace("__T_BATH__", fmt(params["T_bath"])) for line in body_lines
     ]
