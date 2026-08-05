@@ -1,0 +1,105 @@
+{
+  "base_project": "elmer_project_comsol_timegrid.json",
+  "reference": "reference/SignglePixel.txt",
+  "reference_data": {
+    "delimiter": null,
+    "comments": "%",
+    "time_column": 0,
+    "signal_column": 4,
+    "time_scale_to_ms": 1.0,
+    "signal_scale": 1.0,
+    "response_direction": "drop"
+  },
+  "simulation_data": {
+    "time_column": "time_s",
+    "signal_column": "tes_current_A",
+    "time_scale_to_ms": 1000.0,
+    "signal_scale": 1000000.0,
+    "response_direction": "drop"
+  },
+  "output_dir": "artifacts/search/single_pixel",
+  "mesh": "mesh_shifted_merged",
+  "pulse_start": "20[us]",
+  "pulse_start_ms": 0.02,
+  "reference_pulse_start_ms": 20.02,
+  "baseline_window_ms": [19.5, 20.02],
+  "comparison_window_ms": [0.0, 0.59],
+  "screen_timesteps": [
+    ["18[us]", 1],
+    ["1[us]", 2],
+    ["1[ns]", 1],
+    ["10[ns]", 10],
+    ["100[ns]", 9],
+    ["1[us]", 9],
+    ["5[us]", 18],
+    ["20[us]", 25]
+  ],
+  "variables": {
+    "pb_cp": {
+      "path": ["materials", "Pb", "cp", "expression"],
+      "factors": [0.8, 1.2],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35,
+      "steady_sensitive": false
+    },
+    "tes_cp": {
+      "path": ["materials", "TES", "cp", "expression"],
+      "factors": [0.8, 1.2],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35,
+      "steady_sensitive": false
+    },
+    "membrane_cp": {
+      "path": ["materials", "Membrane", "cp", "expression"],
+      "factors": [0.8, 1.2],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35,
+      "steady_sensitive": false
+    },
+    "stycast_k": {
+      "path": ["materials", "Stycast", "k", "expression"],
+      "factors": [0.8, 1.2],
+      "search_range": [0.5, 2.0],
+      "prior_sigma_log": 0.5,
+      "steady_sensitive": true
+    },
+    "pb_k": {
+      "path": ["materials", "Pb", "k", "expression"],
+      "factors": [0.8, 1.2],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35,
+      "steady_sensitive": true
+    }
+  },
+  "multivariate_search": {
+    "variables": ["pb_cp", "tes_cp", "membrane_cp", "stycast_k", "pb_k"],
+    "samples": 48,
+    "seed": 20260804
+  },
+  "g0_calibration": {
+    "enabled": true,
+    "initial_factor": 1.0,
+    "lower_factor": 0.4,
+    "upper_factor": 2.5,
+    "temperature_tolerance_mK": 0.01,
+    "max_iterations": 12
+  },
+  "score": {
+    "baseline_statistic": "median",
+    "max_shift_ms": 0.1,
+    "shift_step_ms": 0.001,
+    "shift_sigma_ms": 0.05,
+    "shift_penalty_weight": 0.005,
+    "grid_points": 1200,
+    "peak_half_width_ms": 0.03,
+    "tail_threshold": 0.2,
+    "region_weights": {
+      "rise": 2.0,
+      "peak": 3.0,
+      "decay": 2.0,
+      "tail": 0.5
+    },
+    "prior_scale": 2.0,
+    "prior_weight": 0.01
+  }
+}

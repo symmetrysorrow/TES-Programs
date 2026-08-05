@@ -1,0 +1,33 @@
+{
+  "candidate_id": "mv_044_41613e53",
+  "candidate_factors": {
+    "pb_cp": 1.3442059563822337,
+    "tes_cp": 0.9554473843095244,
+    "membrane_cp": 1.3717094962307625,
+    "stycast_k": 0.7407296725969701,
+    "pb_k": 1.5583169902684917
+  },
+  "g0_factor": 1.0,
+  "trial_index": 0,
+  "steady_case": "postsearch_mv_044_41613e53_00_steady",
+  "steady_series": "postsearch_mv_044_41613e53_00_steady_series.csv",
+  "mesh": "mesh_dual_20mm_localrefine",
+  "mesh_dir": "mesh_dual_20mm_localrefine",
+  "state_files": {
+    "L": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_044_41613e53_00_steady_L.state",
+    "R": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_044_41613e53_00_steady_R.state"
+  },
+  "pulse_cases": {
+    "high": {
+      "case": "postsearch_mv_044_41613e53_00_high",
+      "series_file": "postsearch_mv_044_41613e53_00_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    },
+    "low": {
+      "case": "postsearch_mv_044_41613e53_00_high",
+      "series_file": "postsearch_mv_044_41613e53_00_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    }
+  },
+  "project_hash": "b4d3d4b9"
+}

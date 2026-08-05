@@ -1,0 +1,41 @@
+{
+  "experiment_root": "G:\\TSURUTA\\20230616_post\\room1-ch2-3_180mK_570uA_100kHz_g10",
+  "rate_hz": 100000.0,
+  "sample_count": 100000,
+  "presample": 10000,
+  "cutoff_hz": 2000.0,
+  "filter_order": 2,
+  "channel_gain_equalization": "selected_median_peak",
+  "channel_peak_gains": {
+    "left": 0.5285159328348271,
+    "right": 0.2581893718238864
+  },
+  "targets": {
+    "high": {
+      "selection": "left_peak_max",
+      "keys": [
+        80537
+      ],
+      "mean_left_peak": 1.5800819059157838,
+      "mean_left_fraction": 0.6103974551542621,
+      "min_left_fraction": 0.6103974551542621,
+      "max_left_fraction": 0.6103974551542621,
+      "reference": "artifacts\\search\\post_multivariate\\references\\high.csv",
+      "source_case": "case_dual20_lr_pos30",
+      "swap_simulation_channels": false
+    },
+    "low": {
+      "selection": "left_peak_min",
+      "keys": [
+        54562
+      ],
+      "mean_left_peak": 0.6497298081989324,
+      "mean_left_fraction": 0.3855048644035011,
+      "min_left_fraction": 0.3855048644035011,
+      "max_left_fraction": 0.3855048644035011,
+      "reference": "artifacts\\search\\post_multivariate\\references\\low.csv",
+      "source_case": "case_dual20_lr_pos30",
+      "swap_simulation_channels": true
+    }
+  }
+}

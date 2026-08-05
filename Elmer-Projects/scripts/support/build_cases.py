@@ -294,7 +294,7 @@ def _side_state_file(mesh_dir_name: str, case_name: str, side: str) -> str:
     one side's persisted circuit state file. Lives in the mesh directory
     alongside the .result restart interface (never collected into
     results/<case>/ by run.py) so it survives across runs the same way."""
-    return f"{mesh_dir_name}/{case_name}_{side}.state"
+    return f"work/meshes/{mesh_dir_name}/{case_name}_{side}.state"
 
 
 def solver1_block(
@@ -873,7 +873,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         if "restart_time" in spec:
             lines.append(f"  Restart Time = Real {fmt(float(spec['restart_time']))}")
     if spec.get("output_result"):
-        lines.append(f"  Output File = {case_name}.result")
+        output_file = spec.get("output_file_path", f"{case_name}.result")
+        lines.append(f"  Output File = {output_file}")
     if spec.get("post_file"):
         lines.append(f"  Post File = {case_name}.ep")
     lines += ["End", ""]

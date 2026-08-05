@@ -1,0 +1,33 @@
+{
+  "candidate_id": "mv_031_a0939b09",
+  "candidate_factors": {
+    "pb_cp": 1.5960054968528397,
+    "tes_cp": 0.8462043166580875,
+    "membrane_cp": 0.7241577728004792,
+    "stycast_k": 0.838398973144281,
+    "pb_k": 1.3783653686485329
+  },
+  "g0_factor": 1.0,
+  "trial_index": 0,
+  "steady_case": "postsearch_mv_031_a0939b09_00_steady",
+  "steady_series": "postsearch_mv_031_a0939b09_00_steady_series.csv",
+  "mesh": "mesh_dual_20mm_localrefine",
+  "mesh_dir": "mesh_dual_20mm_localrefine",
+  "state_files": {
+    "L": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_031_a0939b09_00_steady_L.state",
+    "R": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_031_a0939b09_00_steady_R.state"
+  },
+  "pulse_cases": {
+    "high": {
+      "case": "postsearch_mv_031_a0939b09_00_high",
+      "series_file": "postsearch_mv_031_a0939b09_00_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    },
+    "low": {
+      "case": "postsearch_mv_031_a0939b09_00_high",
+      "series_file": "postsearch_mv_031_a0939b09_00_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    }
+  },
+  "project_hash": "879059ab"
+}
