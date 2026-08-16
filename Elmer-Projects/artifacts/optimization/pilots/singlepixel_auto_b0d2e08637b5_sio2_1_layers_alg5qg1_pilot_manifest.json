@@ -1,0 +1,35 @@
+{
+  "axis": "sio2_1_layers",
+  "levels": [
+    1.0,
+    2.0,
+    4.0
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "sinx_layers": 1.0,
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0
+  },
+  "tag": "auto_b0d2e08637b5",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_auto_b0d2e08637b5_sio2_1_layers_alg5qg1_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_pilot_auto_b0d2e08637b5_sio2_1_layers_1_alg5qg1_pulse",
+    "case_pilot_auto_b0d2e08637b5_sio2_1_layers_2_alg5qg1_pulse",
+    "case_pilot_auto_b0d2e08637b5_sio2_1_layers_4_alg5qg1_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.0030177469322323347,
+      "time_us": 103.74,
+      "pct_comsol_peak": 0.03881424593256345,
+      "left": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_1_alg5qg1_pulse",
+      "right": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_2_alg5qg1_pulse",
+      "accepted": true
+    }
+  ]
+}

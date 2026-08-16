@@ -1,0 +1,46 @@
+{
+  "axis": "stack_local_size_um",
+  "levels": [
+    50.0,
+    25.0,
+    16.6666667
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0
+  },
+  "tag": "auto_882e7aeac5df",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_auto_882e7aeac5df_stack_local_size_um_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_pilot_auto_882e7aeac5df_stack_local_size_um_50_pulse",
+    "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
+    "case_pilot_auto_882e7aeac5df_stack_local_size_um_16p6667_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.11517016584187445,
+      "time_us": 104.475,
+      "pct_comsol_peak": 1.481318096403079,
+      "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_50_pulse",
+      "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
+      "accepted": false
+    },
+    {
+      "max_abs_uA": 0.06925740879853493,
+      "time_us": 104.475,
+      "pct_comsol_peak": 0.890788445196059,
+      "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
+      "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_16p6667_pulse",
+      "accepted": false
+    }
+  ]
+}

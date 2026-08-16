@@ -1,0 +1,34 @@
+{
+  "axis": "sinx_layers",
+  "levels": [
+    1.0,
+    2.0,
+    4.0
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0
+  },
+  "tag": "auto_stycast32_tes1",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_auto_stycast32_tes1_sinx_layers_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_pilot_auto_stycast32_tes1_sinx_layers_1_pulse",
+    "case_pilot_auto_stycast32_tes1_sinx_layers_2_pulse",
+    "case_pilot_auto_stycast32_tes1_sinx_layers_4_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.00010790688426100606,
+      "time_us": 15.014999999999999,
+      "pct_comsol_peak": 0.00138789780507708,
+      "left": "case_pilot_auto_stycast32_tes1_sinx_layers_1_pulse",
+      "right": "case_pilot_auto_stycast32_tes1_sinx_layers_2_pulse",
+      "accepted": true
+    }
+  ]
+}

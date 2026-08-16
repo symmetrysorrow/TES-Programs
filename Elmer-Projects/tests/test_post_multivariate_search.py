@@ -123,6 +123,72 @@ def test_pair_score_recovers_shared_shift_and_peak_share() -> None:
     assert metrics["peak_share_error"] < 1e-12
 
 
+def test_ch0_extrema_score_ignores_unselected_channel() -> None:
+    score = {
+        "region_weights": {"rise": 2.0, "peak": 3.0, "decay": 2.0, "tail": 0.5}
+    }
+    grid = np.linspace(0.0, 20.0, 2001)
+    filter_grid = np.linspace(-2.0, 22.0, 2401)
+
+    def pulse(time: np.ndarray) -> np.ndarray:
+        return np.where(
+            time >= 0.0,
+            (1.0 - np.exp(-time / 0.8)) * np.exp(-time / 7.0),
+            0.0,
+        )
+
+    shift = 0.35
+    reference = pulse(grid)
+    simulation = pulse(filter_grid - shift)
+    regions = SEARCH.waveform_regions(
+        grid,
+        reference / np.max(reference),
+        float(grid[np.argmax(reference)]),
+        {"peak_half_width_ms": 0.5, "tail_threshold": 0.2},
+    )
+    data = {
+        "comparison_mode": "ch0_extrema",
+        "comparison_grid": grid,
+        "filter_grid": filter_grid,
+        "reference_selected": reference,
+        "simulation_selected": simulation,
+        "simulation_left": np.full_like(filter_grid, 999.0),
+        "simulation_right": np.full_like(filter_grid, -999.0),
+        "regions": regions,
+    }
+    metrics = SEARCH.score_target_shift(data, -shift, score)
+    assert metrics["waveform_objective"] < 1e-3
+    assert metrics["selected_rmse"] < 1e-3
+    assert "peak_share_error" not in metrics
+
+
+def test_ch0_extrema_peak_ratio_uses_high_and_low_only() -> None:
+    metrics = SEARCH.relative_peak_ratio_metrics(
+        [
+            {
+                "name": "high",
+                "reference_selected_peak": 4.0,
+                "simulation_selected_peak": 6.0,
+            },
+            {
+                "name": "low",
+                "reference_selected_peak": 2.0,
+                "simulation_selected_peak": 3.0,
+            },
+        ],
+        {"peak_ratio_targets": ["high", "low"]},
+    )
+    assert metrics["reference_peak_ratio"] == 2.0
+    assert metrics["simulation_peak_ratio"] == 2.0
+    assert metrics["peak_ratio_error"] == 0.0
+
+
+def test_ch0_extrema_artifacts_do_not_replace_paired_score() -> None:
+    cfg = config()
+    assert SEARCH.score_filename(cfg) == "score_ch0_extrema.json"
+    assert SEARCH.leaderboard_filename(cfg) == "leaderboard_ch0_extrema.csv"
+
+
 def test_side_series_file_matches_dual_builder_convention() -> None:
     assert (
         SEARCH.side_series_file("postsearch_case_series.csv", "L")

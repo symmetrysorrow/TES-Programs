@@ -25,6 +25,9 @@ from scripts.support.reconcile_project import reconcile_project
 DEFAULT_OUT = ROOT / "gmsh" / "project_hybrid_prism.msh"
 DEFAULT_PROJECT = ROOT / "elmer_project_comsol_timegrid.json"
 GLOBAL_STACK_SIZE = 50.0e-6
+MAX_INTERFACE_FACE_COUNT_RATIO = 4.0
+MIN_PRISM_SICN = 0.01
+MEMBRANE_PRISM_BODIES = ("Membrane_SiNx", "Membrane_Si1")
 # OCC bounding boxes can differ from the analytic plane by roughly 1e-7 m.
 TOL = 1.0e-8
 
@@ -59,9 +62,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="disable Gmsh Mesh.MeshSizeExtendFromBoundary for a local-field probe",
     )
     parser.add_argument(
+        "--mesh-algorithm", type=int, choices=range(1, 10), default=6, metavar="ID",
+        help="Gmsh 2-D mesh algorithm ID (default: 6, Frontal-Delaunay)",
+    )
+    parser.add_argument(
         "--stycast-diameter", type=float, default=498.0e-6, metavar="METERS",
         help="Stycast disk diameter; default retains the established 498 um geometry",
     )
+    parser.add_argument(
+        "--stycast-layers", type=int, default=1, metavar="COUNT",
+        help="number of prism elements through the Stycast thickness (default: 1)",
+    )
+    for name, help_name in (
+        ("sio2-2", "lower SiO2"),
+        ("si-2", "lower Si"),
+        ("sio2-1", "upper SiO2"),
+        ("si-1", "upper Si"),
+        ("sinx", "SiNx"),
+        ("tes", "TES"),
+    ):
+        parser.add_argument(
+            f"--{name}-layers", type=int, default=1, metavar="COUNT",
+            help=f"number of prism elements through the {help_name} thickness (default: 1)",
+        )
     args = parser.parse_args(argv)
     if args.stack_local_size is not None and args.stack_local_size <= 0.0:
         parser.error("--stack-local-size must be positive")
@@ -77,6 +100,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--absorber-local-radius must be positive")
     if args.stycast_diameter <= 0.0:
         parser.error("--stycast-diameter must be positive")
+    for name in ("stycast", "sio2_2", "si_2", "sio2_1", "si_1", "sinx", "tes"):
+        if getattr(args, f"{name}_layers") < 1:
+            parser.error(f"--{name.replace('_', '-')}-layers must be at least 1")
     return args
 
 
@@ -165,6 +191,112 @@ def configure_mesh_size_options(disable_extend_from_boundary: bool) -> None:
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
 
 
+def assess_mesh_quality(
+    tes_face_elements: int,
+    membrane_face_elements: int,
+    membrane_prism_qualities: dict[str, list[float]],
+) -> list[str]:
+    """Return rejection reasons for the TES/membrane mesh quality contract.
+
+    This deliberately contains no Gmsh calls so the acceptance thresholds are
+    testable without generating a full 3-D mesh.
+    """
+    reasons: list[str] = []
+    if tes_face_elements < 1 or membrane_face_elements < 1:
+        reasons.append(
+            "TES__zmin and Membrane_SiNx__zmax must both contain 2-D elements "
+            f"(TES={tes_face_elements}, Membrane_SiNx={membrane_face_elements})"
+        )
+    else:
+        ratio = max(tes_face_elements, membrane_face_elements) / min(tes_face_elements, membrane_face_elements)
+        if ratio > MAX_INTERFACE_FACE_COUNT_RATIO:
+            reasons.append(
+                "TES__zmin/Membrane_SiNx__zmax 2-D element-count ratio "
+                f"{ratio:.3g} exceeds {MAX_INTERFACE_FACE_COUNT_RATIO:g} "
+                f"(TES={tes_face_elements}, Membrane_SiNx={membrane_face_elements})"
+            )
+    for body in MEMBRANE_PRISM_BODIES:
+        qualities = membrane_prism_qualities.get(body, [])
+        if not qualities:
+            reasons.append(f"{body} contains no 6-node prism elements to evaluate")
+            continue
+        minimum = min(qualities)
+        if minimum < MIN_PRISM_SICN:
+            reasons.append(
+                f"{body} prism minSICN {minimum:.6g} is below {MIN_PRISM_SICN:g} "
+                f"({sum(value < MIN_PRISM_SICN for value in qualities)} prism elements below limit)"
+            )
+    return reasons
+
+
+def _physical_surface_element_count(name: str) -> int:
+    """Count all 2-D elements belonging to one named physical surface."""
+    groups = [tag for dim, tag in gmsh.model.getPhysicalGroups(2) if gmsh.model.getPhysicalName(dim, tag) == name]
+    if len(groups) != 1:
+        raise RuntimeError(f"expected exactly one physical surface named {name!r}, got {len(groups)}")
+    return sum(
+        len(element_tags)
+        for entity in gmsh.model.getEntitiesForPhysicalGroup(2, groups[0])
+        for element_tags in gmsh.model.mesh.getElements(2, entity)[1]
+    )
+
+
+def _physical_volume_prism_qualities(name: str) -> list[float]:
+    """Return minSICN values for 6-node prisms in one named physical volume."""
+    groups = [tag for dim, tag in gmsh.model.getPhysicalGroups(3) if gmsh.model.getPhysicalName(dim, tag) == name]
+    if len(groups) != 1:
+        raise RuntimeError(f"expected exactly one physical volume named {name!r}, got {len(groups)}")
+    prism_tags = [
+        tag
+        for entity in gmsh.model.getEntitiesForPhysicalGroup(3, groups[0])
+        for element_type, tags in zip(*gmsh.model.mesh.getElements(3, entity)[:2])
+        if element_type == 6
+        for tag in tags
+    ]
+    return [float(value) for value in gmsh.model.mesh.getElementQualities(prism_tags, "minSICN")]
+
+
+def measure_mesh_quality() -> dict:
+    """Measure interface quality, retaining global and membrane-body diagnostics."""
+    tes_face_elements = _physical_surface_element_count("TES__zmin")
+    membrane_face_elements = _physical_surface_element_count("Membrane_SiNx__zmax")
+    types, element_tags_by_type, _ = gmsh.model.mesh.getElements(3)
+    prism_tags = [tag for element_type, tags in zip(types, element_tags_by_type) if element_type == 6 for tag in tags]
+    prism_qualities = [float(value) for value in gmsh.model.mesh.getElementQualities(prism_tags, "minSICN")]
+    membrane_qualities = {body: _physical_volume_prism_qualities(body) for body in MEMBRANE_PRISM_BODIES}
+    membrane_stats = {
+        body: {
+            "prism_count": len(qualities),
+            "prism_min_sicn": min(qualities) if qualities else float("nan"),
+            "prism_below_min_sicn": sum(value < MIN_PRISM_SICN for value in qualities),
+        }
+        for body, qualities in membrane_qualities.items()
+    }
+    return {
+        "tes_face_elements": tes_face_elements,
+        "membrane_face_elements": membrane_face_elements,
+        "prism_count": len(prism_qualities),
+        "prism_min_sicn": min(prism_qualities) if prism_qualities else float("nan"),
+        "prism_below_min_sicn": sum(value < MIN_PRISM_SICN for value in prism_qualities),
+        "membrane_prism_stats": membrane_stats,
+        "reasons": assess_mesh_quality(tes_face_elements, membrane_face_elements, membrane_qualities),
+    }
+
+
+def inspect_mesh_file(path: Path) -> dict[str, float | int | list[str]]:
+    """Open an existing MSH and apply the same quality contract as generation.
+
+    Gmsh is always finalized, including when opening or measuring fails, so a
+    resume-time inspection cannot poison a later Gmsh invocation.
+    """
+    gmsh.initialize()
+    try:
+        gmsh.open(str(path))
+        return measure_mesh_quality()
+    finally:
+        gmsh.finalize()
+
+
 def _surface_at_z(tags: list[int], z: float) -> list[int]:
     result: list[int] = []
     for tag in tags:
@@ -188,11 +320,11 @@ def _extrude(faces: list[int], dz: float, layers: int = 1) -> tuple[list[int], l
     return volumes, sorted(set(tops))
 
 
-def _extrude_partitioned(faces: list[int], dz: float) -> list[tuple[int, int]]:
+def _extrude_partitioned(faces: list[int], dz: float, layers: int = 1) -> list[tuple[int, int]]:
     """Extrude adjacent faces together and return (volume, top-face) pairs."""
     result = gmsh.model.occ.extrude(
         [(2, face) for face in faces], 0.0, 0.0, dz,
-        numElements=[1], heights=[1.0], recombine=True,
+        numElements=[layers], heights=[1.0], recombine=True,
     )
     pairs = [
         (result[i + 1][1], tag)
@@ -302,7 +434,7 @@ def main(argv: list[str] | None = None) -> int:
     global_min = min(active_local_sizes, default=GLOBAL_STACK_SIZE)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", global_min)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", GLOBAL_STACK_SIZE)
-    gmsh.option.setNumber("Mesh.Algorithm", 6)
+    gmsh.option.setNumber("Mesh.Algorithm", args.mesh_algorithm)
     gmsh.option.setNumber("Mesh.Algorithm3D", 4)
     gmsh.option.setNumber("Mesh.Optimize", 1)
     configure_mesh_size_options(args.disable_mesh_size_extend_from_boundary)
@@ -310,12 +442,12 @@ def main(argv: list[str] | None = None) -> int:
     volumes: dict[str, list[int]] = defaultdict(list)
     faces_by_name: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(list))
     ring = _ring(ox0, ox1, oy0, oy1, mx0, mx1, my0, my1, z_sio2_2)
-    v, ring_top = _extrude(ring, p["SiO2_2_dz"])
+    v, ring_top = _extrude(ring, p["SiO2_2_dz"], args.sio2_2_layers)
     volumes["SiO2_2"] += v
     faces_by_name["SiO2_2"]["zmin"] += ring
     faces_by_name["SiO2_2"]["zmax"] += ring_top
     bath_faces = list(ring)
-    v, ring_top = _extrude(ring_top, p["Si_2_dz"])
+    v, ring_top = _extrude(ring_top, p["Si_2_dz"], args.si_2_layers)
     volumes["Si_2"] += v
     faces_by_name["Si_2"]["zmin"] += faces_by_name["SiO2_2"]["zmax"]
     faces_by_name["Si_2"]["zmax"] += ring_top
@@ -327,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
     ring_top, centre_faces = _join_ring_and_centre(ring_top, centre)
     faces_by_name["Si_2"]["zmax"] = list(ring_top)
 
-    pairs = _extrude_partitioned(ring_top + centre_faces, p["SiO2_1_dz"])
+    pairs = _extrude_partitioned(ring_top + centre_faces, p["SiO2_1_dz"], args.sio2_1_layers)
     split = len(ring_top)
     volumes["SiO2_1"] += [vol for vol, _ in pairs]
     faces_by_name["SiO2_1"]["zmin"] += ring_top + centre_faces
@@ -335,7 +467,7 @@ def main(argv: list[str] | None = None) -> int:
     centre_top = [top for _, top in pairs[split:]]
     faces_by_name["SiO2_1"]["zmax"] += ring_top + centre_top
 
-    pairs = _extrude_partitioned(ring_top + centre_top, p["Si_1_dz"])
+    pairs = _extrude_partitioned(ring_top + centre_top, p["Si_1_dz"], args.si_1_layers)
     split = len(ring_top)
     volumes["Si_1"] += [vol for vol, _ in pairs[:split]]
     volumes["Membrane_Si1"] += [vol for vol, _ in pairs[split:]]
@@ -346,7 +478,7 @@ def main(argv: list[str] | None = None) -> int:
     faces_by_name["Si_1"]["zmax"] += ring_top
     faces_by_name["Membrane_Si1"]["zmax"] += centre_top
 
-    pairs = _extrude_partitioned(ring_top + centre_top, p["SiNx_dz"])
+    pairs = _extrude_partitioned(ring_top + centre_top, p["SiNx_dz"], args.sinx_layers)
     split = len(ring_top)
     volumes["SiNx"] += [vol for vol, _ in pairs[:split]]
     volumes["Membrane_SiNx"] += [vol for vol, _ in pairs[split:]]
@@ -358,12 +490,12 @@ def main(argv: list[str] | None = None) -> int:
     faces_by_name["Membrane_SiNx"]["zmax"] += centre_top
 
     tes = _rectangle(x0 - tes_x / 2.0, x0 + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z_tes)
-    v, _ = _extrude([tes], tes_z)
+    v, _ = _extrude([tes], tes_z, args.tes_layers)
     volumes["TES"] += v
     faces_by_name["TES"]["zmin"] += [tes]
     faces_by_name["TES"]["zmax"] += _
     disk = gmsh.model.occ.addDisk(x0, y0, z_sty, sty_d / 2.0, sty_d / 2.0)
-    v, _ = _extrude([disk], sty_z)
+    v, _ = _extrude([disk], sty_z, layers=args.stycast_layers)
     volumes["Stycast"] += v
     faces_by_name["Stycast"]["zmin"] += [disk]
     faces_by_name["Stycast"]["zmax"] += _
@@ -380,6 +512,24 @@ def main(argv: list[str] | None = None) -> int:
     _add_boundary_groups(faces_by_name, bath_faces)
     configure_local_fields(local_profile, absorber_profile)
     gmsh.model.mesh.generate(3)
+    quality = measure_mesh_quality()
+    print(
+        "mesh quality: "
+        f"TES__zmin={quality['tes_face_elements']}, "
+        f"Membrane_SiNx__zmax={quality['membrane_face_elements']}, "
+        f"prisms={quality['prism_count']}, minSICN={quality['prism_min_sicn']:.6g}, "
+        f"prisms<0.01={quality['prism_below_min_sicn']}"
+    )
+    for body, stats in quality["membrane_prism_stats"].items():
+        print(
+            f"mesh quality: {body} prisms={stats['prism_count']}, "
+            f"minSICN={stats['prism_min_sicn']:.6g}, prisms<0.01={stats['prism_below_min_sicn']}"
+        )
+    if quality["reasons"]:
+        for reason in quality["reasons"]:
+            print(f"ERROR: mesh rejected: {reason}", file=sys.stderr)
+        gmsh.finalize()
+        raise RuntimeError("mesh quality gate rejected generated mesh; formal .msh was not written")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     gmsh.write(str(args.output))
     types, _, _ = gmsh.model.mesh.getElements(3)

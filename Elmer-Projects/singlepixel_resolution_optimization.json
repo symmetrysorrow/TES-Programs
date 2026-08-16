@@ -1,0 +1,21 @@
+{
+  "description": "SinglePixel の空間・時間解像度を段階的なパイロット計算で止めるための判定条件。",
+  "waveform_change_limit_pct_of_peak": 0.25,
+  "comparison_window_us": [0.0, 100.0],
+  "spatial_axes": {
+    "stycast_layers": [1, 8, 16, 32],
+    "tes_layers": [1, 2, 4],
+    "sinx_layers": [1, 2, 4],
+    "sio2_1_layers": [1, 2, 4],
+    "si_1_layers": [1, 2, 4],
+    "si_2_layers": [1, 2, 4],
+    "stack_local_size_um": [50.0, 25.0, 16.6666667],
+    "absorber_local_size_um": [50.0, 25.0, 16.6666667]
+  },
+  "time_step_candidates_us": [0.625, 1.25, 2.5, 5.0],
+  "method": {
+    "spatial": "一度に一軸だけを細分化し、同一の最小時間刻みで隣接候補を比較する。",
+    "temporal": "空間を採用値に固定し、時間刻みを半分にした隣接候補の波形差で判定する。",
+    "tail": "短い初期パイロットで選んだ刻みを開始値とし、後半は粗い候補へ切替えた別パイロットで確認する。"
+  }
+}

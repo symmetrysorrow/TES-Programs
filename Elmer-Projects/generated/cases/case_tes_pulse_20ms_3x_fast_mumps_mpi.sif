@@ -85,6 +85,12 @@ Solver 2
   Vtu Format = True
 End
 
+Solver 3
+  Exec Solver = After Simulation
+  Equation = TES Circuit Finalize
+  Procedure = "tes_transient_heat_source_t0" "TESCircuitFinalizeAll"
+End
+
 Equation 1
   Name = "Heat"
   Active Solvers(1) = 1

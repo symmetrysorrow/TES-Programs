@@ -1,0 +1,131 @@
+{
+  "execute": true,
+  "seed": {
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0,
+    "sinx_layers": 1.0
+  },
+  "axes": [
+    {
+      "axis": "stycast_layers",
+      "selected": 32.0,
+      "status": "seeded"
+    },
+    {
+      "axis": "tes_layers",
+      "selected": 1.0,
+      "status": "seeded"
+    },
+    {
+      "axis": "sinx_layers",
+      "selected": 1.0,
+      "status": "seeded"
+    },
+    {
+      "axis": "sio2_1_layers",
+      "levels": [
+        1.0,
+        2.0,
+        4.0
+      ],
+      "tag": "auto_b0d2e08637b5",
+      "selected": 2.0,
+      "status": "accepted",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_b0d2e08637b5_sio2_1_layers_pilot_manifest.json",
+      "comparisons": [
+        {
+          "max_abs_uA": 0.00021463023040167728,
+          "time_us": 21.314999999999998,
+          "pct_comsol_peak": 0.0027605729487763693,
+          "left": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_1_pulse",
+          "right": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_2_pulse",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "axis": "si_1_layers",
+      "levels": [
+        1.0,
+        2.0,
+        4.0
+      ],
+      "tag": "auto_f8e6153ea4c6",
+      "selected": 2.0,
+      "status": "accepted",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_f8e6153ea4c6_si_1_layers_pilot_manifest.json",
+      "comparisons": [
+        {
+          "max_abs_uA": 0.009956419085227708,
+          "time_us": 104.475,
+          "pct_comsol_peak": 0.12805941242257354,
+          "left": "case_pilot_auto_f8e6153ea4c6_si_1_layers_1_pulse",
+          "right": "case_pilot_auto_f8e6153ea4c6_si_1_layers_2_pulse",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "axis": "si_2_layers",
+      "levels": [
+        1.0,
+        2.0,
+        4.0
+      ],
+      "tag": "auto_506de6785fe4",
+      "selected": 2.0,
+      "status": "accepted",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_506de6785fe4_si_2_layers_pilot_manifest.json",
+      "comparisons": [
+        {
+          "max_abs_uA": 0.0003964071336435282,
+          "time_us": 102.47999999999999,
+          "pct_comsol_peak": 0.005098586568119116,
+          "left": "case_pilot_auto_506de6785fe4_si_2_layers_1_pulse",
+          "right": "case_pilot_auto_506de6785fe4_si_2_layers_2_pulse",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "axis": "stack_local_size_um",
+      "levels": [
+        50.0,
+        25.0,
+        16.6666667
+      ],
+      "tag": "auto_882e7aeac5df",
+      "selected": 16.6666667,
+      "status": "unresolved_at_finest_candidate",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_882e7aeac5df_stack_local_size_um_pilot_manifest.json",
+      "comparisons": [
+        {
+          "max_abs_uA": 0.11517016584187445,
+          "time_us": 104.475,
+          "pct_comsol_peak": 1.481318096403079,
+          "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_50_pulse",
+          "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
+          "accepted": false
+        },
+        {
+          "max_abs_uA": 0.06925740879853493,
+          "time_us": 104.475,
+          "pct_comsol_peak": 0.890788445196059,
+          "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
+          "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_16p6667_pulse",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "selected": {
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "stack_local_size_um": 16.6666667
+  },
+  "status": "needs_more_refinement"
+}

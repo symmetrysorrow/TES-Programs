@@ -4,8 +4,9 @@
 
 - Regenerates generated/cases/ first (unless --skip-sync).
 - Resolves the restart chain: if the case has `restart_from` and the
-  dependency's `.result` file is missing, the dependency is run first
-  (recursively). `--force-deps` reruns dependencies even when present.
+  dependency's `.result` file is missing (or its recorded run failed), the
+  dependency is run first (recursively). `--force-deps` reruns dependencies
+  even when present.
 - Runs ElmerSolver from the repository root, captures the log, and collects
   the case outputs (VTU/EP from the mesh directory, the series CSV from the
   root, the solver log) into results/<case>/. The `.result` file stays in the
@@ -168,6 +169,34 @@ def result_file_of(model: dict, case_name: str) -> Path | None:
     # restart source while the SIF still references the common base name.
     parallel_rank0 = mesh_dir_of(model, case_name) / f"{case_name}.result.0"
     return serial if serial.exists() or not parallel_rank0.exists() else parallel_rank0
+
+
+def restart_result_is_reusable(
+    result: Path, case_name: str, project_path: Path
+) -> bool:
+    """Return whether a restart result may safely be reused.
+
+    Elmer can create a ``.result`` before a later nonlinear iteration or a
+    direct-solver allocation fails.  A restart also must not be reused after
+    its project has been regenerated with different solver settings.  When a
+    manifest is available, its status and project hash are authoritative;
+    untracked legacy results remain reusable for backwards compatibility.
+    """
+    if not result.is_file():
+        return False
+    manifest_path = ROOT / "results" / case_name / "manifest.json"
+    if not manifest_path.is_file():
+        return True
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    inputs = manifest.get("inputs_sha256", {})
+    return (
+        manifest.get("exit_code") == 0
+        and not manifest.get("errors")
+        and inputs.get(project_path.name) == sha256(project_path)
+    )
 
 
 def preexisting_restart_paths(model: dict, case_name: str, mpi_procs: int) -> list[Path]:
@@ -388,10 +417,12 @@ def main() -> int:
         result = result_file_of(model, name)
         if result is None:
             raise ValueError(f"'{name}' is a restart dependency but does not set output_result")
-        if not target_preexisting and (args.force_deps or not result.exists()):
+        if not target_preexisting and (
+            args.force_deps or not restart_result_is_reusable(result, name, project_path)
+        ):
             plan.append(name)
         else:
-            print(f"[{name}] restart field {result.relative_to(ROOT)} exists - skipping (use --force-deps to rerun)")
+            print(f"[{name}] successful restart field {result.relative_to(ROOT)} exists - skipping (use --force-deps to rerun)")
     plan.append(args.case)
 
     print("run plan: " + " -> ".join(plan))

@@ -1,0 +1,127 @@
+{
+  "input": {
+    "config": "singlepixel_resolution_optimization.json",
+    "metrics": "artifacts\\comparison\\stycast_z16_resolution\\metrics.json"
+  },
+  "criterion": {
+    "waveform_change_limit_pct_of_peak": 0.25,
+    "window_us": [
+      0.0,
+      100.0
+    ]
+  },
+  "current_recommendation": {
+    "mesh": {
+      "stycast_layers": 32,
+      "tes_layers": 1,
+      "note": "TES is intentionally held at one layer until its own one-axis pilot is measured; its 0.16 um thermal time scale is far shorter than the present microsecond response."
+    },
+    "time": {
+      "initial_step_us": 0.625
+    }
+  },
+  "spatial": {
+    "stycast_layers": {
+      "status": "accepted",
+      "pair": "z16_1p25us_minus_z32_1p25us",
+      "waveform_change_pct_of_peak": 0.20641704826762838,
+      "limit_pct_of_peak": 0.25,
+      "max_difference_time_us": 43.7,
+      "selected_layers": 32,
+      "next_case": null
+    },
+    "other_axes": {
+      "tes_layers": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          1,
+          2
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "sinx_layers": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          1,
+          2
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "sio2_1_layers": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          1,
+          2
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "si_1_layers": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          1,
+          2
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "si_2_layers": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          1,
+          2
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "stack_local_size_um": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          50.0,
+          25.0
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      },
+      "absorber_local_size_um": {
+        "status": "not_measured",
+        "recommended_first_comparison": [
+          50.0,
+          25.0
+        ],
+        "note": "Keep all already accepted axes fixed; use the selected 0.625 us time step."
+      }
+    }
+  },
+  "time": {
+    "status": "accepted",
+    "pair": "z32_1p25us_minus_z32_0p625us",
+    "waveform_change_pct_of_peak": 0.19301504778632025,
+    "limit_pct_of_peak": 0.25,
+    "max_difference_time_us": 34.4,
+    "selected_early_step_us": 0.625,
+    "schedule_to_validate": [
+      {
+        "start_us": 0.0,
+        "end_us": 105.0,
+        "step_us": 0.625,
+        "purpose": "initial response"
+      },
+      {
+        "start_us": 105.0,
+        "end_us": 225.0,
+        "step_us": 1.25,
+        "purpose": "first tail coarsening pilot"
+      },
+      {
+        "start_us": 225.0,
+        "end_us": null,
+        "step_us": 2.5,
+        "purpose": "provisional late-tail step; accept only after comparison"
+      }
+    ],
+    "acceptance_rule": "At each switch, compare against a run retaining the preceding step; accept only when the maximum waveform change is <= 0.25% of the COMSOL peak."
+  },
+  "execution_order": [
+    "Use the accepted Stycast=32 / early dt=0.625 us baseline.",
+    "Run the 105--225 us tail-coarsening pair before using 1.25 us in production.",
+    "For each remaining spatial axis, run only its first two candidates; continue only when that pair exceeds the budget.",
+    "Repeat lateral stack and absorber local-size pilots last, because they change the total element count most strongly."
+  ]
+}

@@ -50,6 +50,12 @@ Solver 1
   Steady State Convergence Tolerance = 1e-08
 End
 
+Solver 2
+  Exec Solver = After Simulation
+  Equation = TES Circuit Finalize
+  Procedure = "tes_transient_heat_source_t0" "TESCircuitFinalizeAll"
+End
+
 Equation 1
   Name = "Heat"
   Active Solvers(1) = 1

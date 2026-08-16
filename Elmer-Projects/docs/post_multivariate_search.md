@@ -57,6 +57,26 @@ single-pixel sensitivity study:
 it is calibrated against the mean steady temperature of the left and right TES
 stacks, keeping the operating point separate from the transient shape fit.
 
+## Current CH0-only scoring
+
+The current configured method uses CH0 only, because CH1 from this
+measurement set is not considered sufficiently reliable for fitting.  The
+CH0 waveform from the CH0-largest event is compared with the larger Elmer
+response.  The CH0 waveform from the CH0-smallest event is compared with the
+smaller Elmer response, obtained by the existing mirrored-channel mapping.
+
+Each retained waveform is normalized by its own peak, so the waveform term
+tests shape.  The high/low CH0 peak ratio is included separately as a squared
+log-ratio error; since both measurements are CH0, it does not depend on the
+unknown CH0-to-CH1 gain.  CH1 remains available in the reference CSV for
+diagnostics, but does not contribute to the objective.  One common time shift
+is fitted across high and low.
+
+This mode writes separate score and trace files, preserving the older paired
+CH0/CH1 results.  Use the rescore-all command with skip-scored to score
+already-computed Elmer traces under the CH0-only method without rerunning
+Elmer.
+
 ## Commands
 
 Run from `Elmer-Projects`:

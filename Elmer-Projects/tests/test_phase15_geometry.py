@@ -3,12 +3,30 @@ import math
 from generate_hybrid_prism_geometry import (
     DEFAULT_OUT,
     GLOBAL_STACK_SIZE,
+    assess_mesh_quality,
     absorber_local_field_profile,
     configure_local_fields,
     configure_mesh_size_options,
+    inspect_mesh_file,
     parse_args,
     stack_local_field_profile,
 )
+
+
+def test_mesh_quality_contract_accepts_balanced_interfaces_and_good_prisms() -> None:
+    assert assess_mesh_quality(2116, 3822, {"Membrane_SiNx": [0.01797], "Membrane_Si1": [0.5]}) == []
+
+
+def test_mesh_quality_contract_rejects_coarse_mortar_side_and_bad_prisms() -> None:
+    reasons = assess_mesh_quality(3710, 174, {"Membrane_SiNx": [0.007744], "Membrane_Si1": [0.058]})
+    assert any("element-count ratio" in reason for reason in reasons)
+    assert any("Membrane_SiNx" in reason and "minSICN" in reason for reason in reasons)
+
+
+def test_mesh_quality_contract_ignores_thin_nonmembrane_prism_quality() -> None:
+    # SiO2_1 layer splitting can make the global prism minSICN low without
+    # degrading either membrane volume or the TES/membrane Mortar interface.
+    assert assess_mesh_quality(4274, 7476, {"Membrane_SiNx": [0.015], "Membrane_Si1": [0.058]}) == []
 
 
 def test_default_cli_preserves_legacy_uniform_mesh_recipe() -> None:
@@ -18,7 +36,51 @@ def test_default_cli_preserves_legacy_uniform_mesh_recipe() -> None:
     assert args.absorber_local_size is None
     assert args.absorber_local_radius == 150e-6
     assert args.disable_mesh_size_extend_from_boundary is False
+    assert args.mesh_algorithm == 6
+    assert args.stycast_layers == 1
+    assert args.tes_layers == 1
+    assert args.sio2_1_layers == 1
     assert stack_local_field_profile(None, args.stack_local_half_width, 0.0, 1e-3, 0.0, 1e-3) is None
+
+
+def test_mesh_algorithm_override() -> None:
+    assert parse_args(["--mesh-algorithm", "5"]).mesh_algorithm == 5
+
+
+def test_inspect_mesh_file_always_finalizes(monkeypatch, tmp_path) -> None:
+    calls: list[tuple[str, str] | tuple[str]] = []
+
+    class Gmsh:
+        def initialize(self) -> None:
+            calls.append(("initialize",))
+
+        def open(self, path: str) -> None:
+            calls.append(("open", path))
+
+        def finalize(self) -> None:
+            calls.append(("finalize",))
+
+    monkeypatch.setattr("generate_hybrid_prism_geometry.gmsh", Gmsh())
+    monkeypatch.setattr("generate_hybrid_prism_geometry.measure_mesh_quality", lambda: (_ for _ in ()).throw(RuntimeError("bad mesh")))
+    try:
+        inspect_mesh_file(tmp_path / "bad.msh")
+    except RuntimeError as error:
+        assert str(error) == "bad mesh"
+    else:
+        raise AssertionError("inspection error was not propagated")
+    assert calls[-1] == ("finalize",)
+
+
+def test_stycast_layer_override() -> None:
+    args = parse_args(["--stycast-layers", "8"])
+    assert args.stycast_layers == 8
+
+
+def test_independent_stack_layer_overrides() -> None:
+    args = parse_args(["--tes-layers", "2", "--sinx-layers", "4", "--si-2-layers", "3"])
+    assert args.tes_layers == 2
+    assert args.sinx_layers == 4
+    assert args.si_2_layers == 3
 
 
 def test_stack25_profile_is_central_and_uses_50um_transition() -> None:

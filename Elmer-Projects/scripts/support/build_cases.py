@@ -401,6 +401,21 @@ def solver1_block(
     return lines
 
 
+def tes_circuit_finalize_block(*, solver_index: int) -> list[str]:
+    """Standalone solver that flushes TESCircuitCompute's deferred final-
+    timestep row (see TESCircuitFlush / TESCircuitFinalizeAll in
+    tes_transient_heat_source.f90). Only meaningful for circuit_implicit
+    cases; a no-op (via the TransientSimulation guard) if wired into a
+    steady case."""
+    return [
+        f"Solver {solver_index}",
+        "  Exec Solver = After Simulation",
+        "  Equation = TES Circuit Finalize",
+        '  Procedure = "tes_transient_heat_source_t0" "TESCircuitFinalizeAll"',
+        "End",
+    ]
+
+
 def vtu_solver_block(case_name: str, vtu: Any, *, solver_index: int = 2) -> list[str]:
     """Build the optional result-output solver.
 
@@ -973,6 +988,12 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     vtu_spec = spec.get("vtu", vtu_default)
     if vtu_spec:
         lines += vtu_solver_block(case_name, vtu_spec)
+        lines.append("")
+    if heat_source == "circuit_implicit":
+        # Solver 1 = Heat Equation always (the `else` branch below); Solver 2
+        # = Result Output if vtu_spec, else this is 2.
+        finalize_index = 3 if vtu_spec else 2
+        lines += tes_circuit_finalize_block(solver_index=finalize_index)
         lines.append("")
     if heat_source == "circuit_parallel":
         active = " ".join(str(i) for i in range(1, 2 * parallel_circuit_iterations + 1))

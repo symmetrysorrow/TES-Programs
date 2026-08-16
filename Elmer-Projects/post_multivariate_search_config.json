@@ -32,7 +32,7 @@
         ["10[ns]", 10],
         ["100[ns]", 9],
         ["5[us]", 2000],
-        ["100[us]", 700]
+        ["100[us]", 750]
       ],
       "output_intervals": [1, 1, 1, 1, 1, 1, 1, 1]
     }
@@ -95,6 +95,8 @@
     "max_iterations": 12
   },
   "score": {
+    "comparison_mode": "ch0_extrema",
+    "comparison_channel": "left",
     "readout_rate_hz": 100000.0,
     "readout_cutoff_hz": 2000.0,
     "filter_order": 2,
@@ -112,7 +114,8 @@
       "decay": 2.0,
       "tail": 0.5
     },
-    "peak_share_weight": 2.0,
+    "peak_ratio_targets": ["high", "low"],
+    "peak_ratio_weight": 2.0,
     "prior_weight": 0.01
   }
 }

@@ -1,0 +1,47 @@
+{
+  "axis": "stycast_layers",
+  "levels": [
+    1.0,
+    8.0,
+    16.0,
+    32.0
+  ],
+  "tail_start_us": null,
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_stycast_layers_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_pilot_stycast_layers_1_pulse",
+    "case_pilot_stycast_layers_8_pulse",
+    "case_pilot_stycast_layers_16_pulse",
+    "case_pilot_stycast_layers_32_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 3.041081568633868,
+      "time_us": 46.934999999999995,
+      "pct_comsol_peak": 39.11437590912384,
+      "left": "case_pilot_stycast_layers_1_pulse",
+      "right": "case_pilot_stycast_layers_8_pulse",
+      "accepted": false
+    },
+    {
+      "max_abs_uA": 0.06284137352224173,
+      "time_us": 43.155,
+      "pct_comsol_peak": 0.8082654315973582,
+      "left": "case_pilot_stycast_layers_8_pulse",
+      "right": "case_pilot_stycast_layers_16_pulse",
+      "accepted": false
+    },
+    {
+      "max_abs_uA": 0.0158466171436219,
+      "time_us": 42.525,
+      "pct_comsol_peak": 0.20381911035751565,
+      "left": "case_pilot_stycast_layers_16_pulse",
+      "right": "case_pilot_stycast_layers_32_pulse",
+      "accepted": true
+    }
+  ]
+}

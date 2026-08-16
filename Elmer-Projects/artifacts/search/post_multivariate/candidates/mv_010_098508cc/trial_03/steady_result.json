@@ -1,0 +1,52 @@
+{
+  "candidate_id": "mv_010_098508cc",
+  "candidate_factors": {
+    "pb_cp": 1.375816379972359,
+    "tes_cp": 1.1014743735311243,
+    "membrane_cp": 0.8012497029767802,
+    "stycast_k": 0.5542181956864208,
+    "pb_k": 0.8791943337095905
+  },
+  "g0_factor": 0.8752823400131144,
+  "trial_index": 3,
+  "steady_case": "postsearch_mv_010_098508cc_03_steady",
+  "steady_series": "postsearch_mv_010_098508cc_03_steady_series.csv",
+  "mesh": "mesh_dual_20mm_localrefine",
+  "mesh_dir": "mesh_dual_20mm_localrefine",
+  "state_files": {
+    "L": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_010_098508cc_03_steady_L.state",
+    "R": "work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_010_098508cc_03_steady_R.state"
+  },
+  "pulse_cases": {
+    "high": {
+      "case": "postsearch_mv_010_098508cc_03_high",
+      "series_file": "postsearch_mv_010_098508cc_03_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    },
+    "low": {
+      "case": "postsearch_mv_010_098508cc_03_high",
+      "series_file": "postsearch_mv_010_098508cc_03_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    }
+  },
+  "project_hash": "d9435943",
+  "target_temperature_K": 0.16857,
+  "fitted_temperature_K": 0.16862908047295372,
+  "temperature_error_mK": 0.059080472953720875,
+  "states": {
+    "L": {
+      "temperature_K": 0.16863793714437353,
+      "current_A": 0.00014118321469251409,
+      "resistance_ohm": 0.01585093168850798,
+      "power_W": 3.159829910162892e-10,
+      "previous_current_A": 0.00014353734493231094
+    },
+    "R": {
+      "temperature_K": 0.16862022380153388,
+      "current_A": 0.00014179549207336752,
+      "resistance_ohm": 0.015765646493063196,
+      "power_W": 3.169861972841597e-10,
+      "previous_current_A": 0.00014353734493231094
+    }
+  }
+}

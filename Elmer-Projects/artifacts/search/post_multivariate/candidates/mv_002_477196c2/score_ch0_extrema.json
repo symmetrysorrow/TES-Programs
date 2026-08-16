@@ -1,0 +1,74 @@
+{
+  "candidate_id": "mv_002_477196c2",
+  "factors": {
+    "pb_cp": 1.4802386376190462,
+    "tes_cp": 1.2126755396585627,
+    "membrane_cp": 1.4975023616361196,
+    "stycast_k": 1.7299884634836575,
+    "pb_k": 1.357833913339258
+  },
+  "comparison_mode": "ch0_extrema",
+  "comparison_channel": "left",
+  "best_shift_ms": 0.06000000000000094,
+  "waveform_objective": 0.19980468010894065,
+  "peak_share_objective": 0.0,
+  "peak_ratio_objective": 0.1517193888640935,
+  "shift_penalty": 0.00014400000000000453,
+  "aligned_objective": 0.3516680689730341,
+  "objective_no_shift": 0.3550931929039011,
+  "prior_penalty": 4.85583311822292,
+  "objective": 0.4002264001552633,
+  "reference_peak_ratio": 2.407016828931857,
+  "simulation_peak_ratio": 3.1702629596910974,
+  "peak_ratio_error": 0.07585969443204675,
+  "targets": {
+    "high": {
+      "weight": 1.0,
+      "comparison_channel": "left",
+      "waveform_objective": 0.24520023058783863,
+      "region_rmse": {
+        "peak": 0.2581899768035688,
+        "decay": 0.22571561126424336
+      },
+      "selected_rmse": 0.22640073672958377,
+      "reference_peak": 1.58790392954,
+      "simulation_peak": 1.2501977218588154e-06,
+      "reference_file": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\search\\post_multivariate\\references\\high.csv",
+      "left_series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\postsearch_mv_002_477196c2_04_high\\postsearch_mv_002_477196c2_04_high_L_series.csv",
+      "right_series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\postsearch_mv_002_477196c2_04_high\\postsearch_mv_002_477196c2_04_high_R_series.csv",
+      "aligned_trace": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\search\\post_multivariate\\candidates\\mv_002_477196c2\\aligned_ch0_extrema_high.csv"
+    },
+    "low": {
+      "weight": 1.0,
+      "comparison_channel": "left",
+      "waveform_objective": 0.15440912963004264,
+      "region_rmse": {
+        "rise": 0.11687415107700395,
+        "peak": 0.10871082239052222,
+        "decay": 0.2604915690423619
+      },
+      "selected_rmse": 0.22572183824544806,
+      "reference_peak": 0.659697892617,
+      "simulation_peak": 3.9435142691779473e-07,
+      "reference_file": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\search\\post_multivariate\\references\\low.csv",
+      "left_series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\postsearch_mv_002_477196c2_04_high\\postsearch_mv_002_477196c2_04_high_L_series.csv",
+      "right_series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\postsearch_mv_002_477196c2_04_high\\postsearch_mv_002_477196c2_04_high_R_series.csv",
+      "aligned_trace": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\search\\post_multivariate\\candidates\\mv_002_477196c2\\aligned_ch0_extrema_low.csv"
+    }
+  },
+  "project": "artifacts\\search\\post_multivariate\\candidates\\mv_002_477196c2\\trial_04\\project.json",
+  "steady_case": "postsearch_mv_002_477196c2_04_steady",
+  "pulse_cases": {
+    "high": {
+      "case": "postsearch_mv_002_477196c2_04_high",
+      "series_file": "postsearch_mv_002_477196c2_04_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    },
+    "low": {
+      "case": "postsearch_mv_002_477196c2_04_high",
+      "series_file": "postsearch_mv_002_477196c2_04_high_series.csv",
+      "source_case": "case_dual20_lr_pos30"
+    }
+  },
+  "g0_factor": 0.9005571014388041
+}

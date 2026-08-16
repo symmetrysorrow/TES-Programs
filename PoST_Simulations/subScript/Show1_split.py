@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pandas as pd
+from show_data import load_energy_resolution
 
 
 BASE_DIR = Path(r"h:\hata")
@@ -9,18 +9,8 @@ ENERGY_FOLDERS = {
     "662 keV": BASE_DIR / "662_142_136_300split",
     "1332 keV": BASE_DIR / "1332_142_136_300split",
 }
-CSV_CANDIDATE = "ene_resos_Pulse_ms_noise.csv"
-
-
-def load_dataset(folder: Path) -> pd.DataFrame:
-    csv_path = folder / CSV_CANDIDATE
-    if not csv_path.is_file():
-        raise FileNotFoundError(f"No energy-resolution CSV found in {folder}: {CSV_CANDIDATE}")
-    return pd.read_csv(csv_path, index_col=0)
-
-
 def plot_energy(energy_label: str, folder: Path) -> None:
-    df = load_dataset(folder)
+    df = load_energy_resolution(folder)
     positions = df.index.to_numpy(dtype=float)
 
     fig, ax = plt.subplots(figsize=(11, 6))

@@ -799,7 +799,7 @@ def waveform_regions(
 
 def regional_pair_error(
     left_residual: np.ndarray,
-    right_residual: np.ndarray,
+    right_residual: np.ndarray | None,
     regions: np.ndarray,
     weights: dict[str, float],
 ) -> tuple[float, dict[str, float]]:
@@ -811,7 +811,10 @@ def regional_pair_error(
         mask = regions == name
         if weight <= 0 or np.count_nonzero(mask) == 0:
             continue
-        combined = np.concatenate([left_residual[mask], right_residual[mask]])
+        series = [left_residual[mask]]
+        if right_residual is not None:
+            series.append(right_residual[mask])
+        combined = np.concatenate(series)
         rmse = float(np.sqrt(np.mean(combined**2)))
         region_rmse[name] = rmse
         weighted += weight * rmse
@@ -828,6 +831,33 @@ def pair_scale(left: np.ndarray, right: np.ndarray) -> tuple[float, float, float
     if not math.isfinite(scale) or scale <= 0:
         raise ValueError("paired waveform has no positive peak sum")
     return scale, left_peak, right_peak
+
+
+def signal_peak(signal: np.ndarray, *, label: str) -> float:
+    peak = float(np.max(signal))
+    if not math.isfinite(peak) or peak <= 0:
+        raise ValueError(f"{label} has no positive peak")
+    return peak
+
+
+def comparison_mode(score: dict[str, Any]) -> str:
+    mode = str(score.get("comparison_mode", "paired"))
+    if mode not in {"paired", "ch0_extrema"}:
+        raise ValueError(
+            "score.comparison_mode must be 'paired' or 'ch0_extrema', "
+            f"got {mode!r}"
+        )
+    return mode
+
+
+def selected_channel(score: dict[str, Any]) -> str:
+    channel = str(score.get("comparison_channel", "left"))
+    if channel not in {"left", "right"}:
+        raise ValueError(
+            "score.comparison_channel must be 'left' or 'right', "
+            f"got {channel!r}"
+        )
+    return channel
 
 
 def prepare_target_score_data(
@@ -897,6 +927,7 @@ def prepare_target_score_data(
     )
     ref_left_grid = np.interp(comparison_grid, ref_time, ref_left)
     ref_right_grid = np.interp(comparison_grid, ref_time, ref_right)
+    mode = comparison_mode(score)
     ref_scale, ref_left_peak, ref_right_peak = pair_scale(
         ref_left_grid, ref_right_grid
     )
@@ -908,11 +939,32 @@ def prepare_target_score_data(
     sim_left_norm = sim_left_filtered / sim_scale
     sim_right_norm = sim_right_filtered / sim_scale
     envelope = ref_left_norm + ref_right_norm
+    comparison_channel = selected_channel(score)
+    if comparison_channel == "left":
+        reference_selected_raw = ref_left_grid
+        simulation_selected_raw = sim_left_filtered
+    else:
+        reference_selected_raw = ref_right_grid
+        simulation_selected_raw = sim_right_filtered
+    reference_selected_peak = signal_peak(
+        reference_selected_raw,
+        label=f"target {target['name']} reference {comparison_channel}",
+    )
+    simulation_selected_peak = signal_peak(
+        simulation_selected_raw,
+        label=f"target {target['name']} simulation {comparison_channel}",
+    )
+    reference_selected = reference_selected_raw / reference_selected_peak
+    simulation_selected = simulation_selected_raw / simulation_selected_peak
+    if mode == "ch0_extrema":
+        envelope = reference_selected
     peak_time = float(comparison_grid[int(np.argmax(envelope))])
     regions = waveform_regions(comparison_grid, envelope, peak_time, score)
     return {
         "name": str(target["name"]),
         "weight": float(target.get("weight", 1.0)),
+        "comparison_mode": mode,
+        "comparison_channel": comparison_channel,
         "comparison_grid": comparison_grid,
         "filter_grid": filter_grid,
         "reference_left": ref_left_norm,
@@ -924,6 +976,10 @@ def prepare_target_score_data(
         "simulation_peaks": {"left": sim_left_peak, "right": sim_right_peak},
         "reference_left_fraction": ref_left_peak / ref_scale,
         "simulation_left_fraction": sim_left_peak / sim_scale,
+        "reference_selected": reference_selected,
+        "simulation_selected": simulation_selected,
+        "reference_selected_peak": reference_selected_peak,
+        "simulation_selected_peak": simulation_selected_peak,
         "reference_file": str(reference),
         "left_series": str(left_series),
         "right_series": str(right_series),
@@ -937,13 +993,32 @@ def score_target_shift(
     query = grid - shift_ms
     sim_left = np.interp(query, data["filter_grid"], data["simulation_left"])
     sim_right = np.interp(query, data["filter_grid"], data["simulation_right"])
+    weights = {name: float(weight) for name, weight in score["region_weights"].items()}
+    if data.get("comparison_mode", "paired") == "ch0_extrema":
+        simulation_selected = np.interp(
+            query, data["filter_grid"], data["simulation_selected"]
+        )
+        selected_residual = simulation_selected - data["reference_selected"]
+        waveform, region_rmse = regional_pair_error(
+            selected_residual,
+            None,
+            data["regions"],
+            weights,
+        )
+        return {
+            "waveform_objective": waveform,
+            "region_rmse": region_rmse,
+            "selected_rmse": float(np.sqrt(np.mean(selected_residual**2))),
+            "simulation_selected_aligned": simulation_selected,
+        }
+
     left_residual = sim_left - data["reference_left"]
     right_residual = sim_right - data["reference_right"]
     waveform, region_rmse = regional_pair_error(
         left_residual,
         right_residual,
         data["regions"],
-        {name: float(weight) for name, weight in score["region_weights"].items()},
+        weights,
     )
     peak_share_error = (
         data["simulation_left_fraction"] - data["reference_left_fraction"]
@@ -994,6 +1069,76 @@ def write_aligned_pair(path: Path, data: dict[str, Any], metrics: dict[str, Any]
             )
 
 
+def write_aligned_selected(
+    path: Path, data: dict[str, Any], metrics: dict[str, Any]
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(
+            [
+                "time_after_pulse_ms",
+                "comparison_channel",
+                "reference_normalized",
+                "simulation_normalized",
+                "residual",
+                "region",
+            ]
+        )
+        for index, time_ms in enumerate(data["comparison_grid"]):
+            reference = data["reference_selected"][index]
+            simulation = metrics["simulation_selected_aligned"][index]
+            writer.writerow(
+                [
+                    f"{time_ms:.12g}",
+                    data["comparison_channel"],
+                    f"{reference:.12g}",
+                    f"{simulation:.12g}",
+                    f"{simulation-reference:.12g}",
+                    data["regions"][index],
+                ]
+            )
+
+
+def relative_peak_ratio_metrics(
+    target_data: list[dict[str, Any]], score: dict[str, Any]
+) -> dict[str, float]:
+    names = score.get("peak_ratio_targets", ["high", "low"])
+    if not isinstance(names, list) or len(names) != 2:
+        raise ValueError("score.peak_ratio_targets must name exactly two targets")
+    by_name = {str(data["name"]): data for data in target_data}
+    numerator, denominator = (str(name) for name in names)
+    if numerator not in by_name or denominator not in by_name:
+        raise ValueError(
+            "score.peak_ratio_targets must refer to configured targets, "
+            f"got {names!r}"
+        )
+    reference_ratio = (
+        by_name[numerator]["reference_selected_peak"]
+        / by_name[denominator]["reference_selected_peak"]
+    )
+    simulation_ratio = (
+        by_name[numerator]["simulation_selected_peak"]
+        / by_name[denominator]["simulation_selected_peak"]
+    )
+    log_error = math.log(simulation_ratio / reference_ratio)
+    return {
+        "reference_peak_ratio": float(reference_ratio),
+        "simulation_peak_ratio": float(simulation_ratio),
+        "peak_ratio_error": float(log_error**2),
+    }
+
+
+def score_filename(config: dict[str, Any]) -> str:
+    mode = comparison_mode(config["score"])
+    return "score.json" if mode == "paired" else f"score_{mode}.json"
+
+
+def leaderboard_filename(config: dict[str, Any]) -> str:
+    mode = comparison_mode(config["score"])
+    return "leaderboard.csv" if mode == "paired" else f"leaderboard_{mode}.csv"
+
+
 def score_candidate_outputs(
     config: dict[str, Any],
     candidate: Candidate,
@@ -1010,7 +1155,14 @@ def score_candidate_outputs(
     shift_step = float(score["shift_step_ms"])
     shift_sigma = float(score["shift_sigma_ms"])
     shift_penalty_weight = float(score["shift_penalty_weight"])
-    peak_share_weight = float(score["peak_share_weight"])
+    mode = comparison_mode(score)
+    peak_share_weight = float(score.get("peak_share_weight", 0.0))
+    peak_ratio = (
+        relative_peak_ratio_metrics(target_data, score)
+        if mode == "ch0_extrema"
+        else None
+    )
+    peak_ratio_weight = float(score.get("peak_ratio_weight", 0.0))
     shifts = np.arange(-max_shift, max_shift + 0.5 * shift_step, shift_step)
     best: dict[str, Any] | None = None
     no_shift: dict[str, Any] | None = None
@@ -1021,16 +1173,31 @@ def score_candidate_outputs(
             data["weight"] * metrics["waveform_objective"]
             for data, metrics in zip(target_data, target_metrics)
         ) / weight_sum
-        peak_share = sum(
-            data["weight"] * metrics["peak_share_error"]
-            for data, metrics in zip(target_data, target_metrics)
-        ) / weight_sum
+        peak_share = (
+            sum(
+                data["weight"] * metrics["peak_share_error"]
+                for data, metrics in zip(target_data, target_metrics)
+            ) / weight_sum
+            if mode == "paired"
+            else 0.0
+        )
         shift_penalty = shift_penalty_weight * (float(shift) / shift_sigma) ** 2
-        aligned = waveform + peak_share_weight * peak_share + shift_penalty
+        peak_ratio_objective = (
+            peak_ratio_weight * peak_ratio["peak_ratio_error"]
+            if peak_ratio is not None
+            else 0.0
+        )
+        aligned = (
+            waveform
+            + peak_share_weight * peak_share
+            + peak_ratio_objective
+            + shift_penalty
+        )
         record = {
             "shift_ms": float(shift),
             "waveform_objective": waveform,
             "peak_share_objective": peak_share,
+            "peak_ratio_objective": peak_ratio_objective,
             "shift_penalty": shift_penalty,
             "aligned_objective": aligned,
             "target_metrics": target_metrics,
@@ -1051,35 +1218,59 @@ def score_candidate_outputs(
 
     targets: dict[str, Any] = {}
     for data, metrics in zip(target_data, best["target_metrics"]):
-        trace_path = candidate_dir(config, candidate.candidate_id) / f"aligned_{data['name']}.csv"
-        write_aligned_pair(trace_path, data, metrics)
-        targets[data["name"]] = {
-            "weight": data["weight"],
-            "waveform_objective": metrics["waveform_objective"],
-            "peak_share_error": metrics["peak_share_error"],
-            "region_rmse": metrics["region_rmse"],
-            "left_rmse": metrics["left_rmse"],
-            "right_rmse": metrics["right_rmse"],
-            "reference_left_fraction": data["reference_left_fraction"],
-            "simulation_left_fraction": data["simulation_left_fraction"],
-            "reference_peaks": data["reference_peaks"],
-            "simulation_peaks": data["simulation_peaks"],
-            "reference_file": data["reference_file"],
-            "left_series": data["left_series"],
-            "right_series": data["right_series"],
-            "aligned_trace": str(trace_path),
-        }
+        if mode == "ch0_extrema":
+            trace_path = (
+                candidate_dir(config, candidate.candidate_id)
+                / f"aligned_{mode}_{data['name']}.csv"
+            )
+            write_aligned_selected(trace_path, data, metrics)
+            targets[data["name"]] = {
+                "weight": data["weight"],
+                "comparison_channel": data["comparison_channel"],
+                "waveform_objective": metrics["waveform_objective"],
+                "region_rmse": metrics["region_rmse"],
+                "selected_rmse": metrics["selected_rmse"],
+                "reference_peak": data["reference_selected_peak"],
+                "simulation_peak": data["simulation_selected_peak"],
+                "reference_file": data["reference_file"],
+                "left_series": data["left_series"],
+                "right_series": data["right_series"],
+                "aligned_trace": str(trace_path),
+            }
+        else:
+            trace_path = candidate_dir(config, candidate.candidate_id) / f"aligned_{data['name']}.csv"
+            write_aligned_pair(trace_path, data, metrics)
+            targets[data["name"]] = {
+                "weight": data["weight"],
+                "waveform_objective": metrics["waveform_objective"],
+                "peak_share_error": metrics["peak_share_error"],
+                "region_rmse": metrics["region_rmse"],
+                "left_rmse": metrics["left_rmse"],
+                "right_rmse": metrics["right_rmse"],
+                "reference_left_fraction": data["reference_left_fraction"],
+                "simulation_left_fraction": data["simulation_left_fraction"],
+                "reference_peaks": data["reference_peaks"],
+                "simulation_peaks": data["simulation_peaks"],
+                "reference_file": data["reference_file"],
+                "left_series": data["left_series"],
+                "right_series": data["right_series"],
+                "aligned_trace": str(trace_path),
+            }
     return {
         "candidate_id": candidate.candidate_id,
         "factors": candidate.factors,
+        "comparison_mode": mode,
+        "comparison_channel": target_data[0]["comparison_channel"],
         "best_shift_ms": best["shift_ms"],
         "waveform_objective": best["waveform_objective"],
         "peak_share_objective": best["peak_share_objective"],
+        "peak_ratio_objective": best["peak_ratio_objective"],
         "shift_penalty": best["shift_penalty"],
         "aligned_objective": best["aligned_objective"],
         "objective_no_shift": no_shift["aligned_objective"],
         "prior_penalty": prior,
         "objective": objective,
+        **(peak_ratio or {}),
         "targets": targets,
     }
 
@@ -1138,14 +1329,16 @@ def prepare(
 
 def update_leaderboard(config: dict[str, Any]) -> None:
     rows: list[dict[str, Any]] = []
-    for path in output_root(config).glob("candidates/*/score.json"):
+    for path in output_root(config).glob(f"candidates/*/{score_filename(config)}"):
         score = load_json(path)
         rows.append(
             {
                 "candidate_id": score["candidate_id"],
+                "comparison_mode": score.get("comparison_mode", "paired"),
                 "objective": score["objective"],
                 "waveform_objective": score["waveform_objective"],
                 "peak_share_objective": score["peak_share_objective"],
+                "peak_ratio_objective": score.get("peak_ratio_objective", 0.0),
                 "best_shift_ms": score["best_shift_ms"],
                 "g0_factor": score.get("g0_factor", ""),
                 "factors": json.dumps(score["factors"], sort_keys=True),
@@ -1154,7 +1347,7 @@ def update_leaderboard(config: dict[str, Any]) -> None:
     if not rows:
         return
     rows.sort(key=lambda row: float(row["objective"]))
-    with (output_root(config) / "leaderboard.csv").open(
+    with (output_root(config) / leaderboard_filename(config)).open(
         "w", newline="", encoding="utf-8"
     ) as file:
         writer = csv.DictWriter(file, fieldnames=list(rows[0].keys()))
@@ -1195,7 +1388,31 @@ def run_candidate(config: dict[str, Any], candidate: Candidate) -> dict[str, Any
             "g0_factor": metadata["g0_factor"],
         }
     )
-    write_json(candidate_dir(config, candidate.candidate_id) / "score.json", score)
+    write_json(candidate_dir(config, candidate.candidate_id) / score_filename(config), score)
+    update_leaderboard(config)
+    return score
+
+
+def rescore_candidate(config: dict[str, Any], candidate: Candidate) -> dict[str, Any]:
+    """Score an already-run candidate without executing Elmer again."""
+    legacy_path = candidate_dir(config, candidate.candidate_id) / "score.json"
+    if not legacy_path.exists():
+        raise FileNotFoundError(
+            f"candidate {candidate.candidate_id} has no legacy score metadata at "
+            f"{legacy_path}; run the candidate before rescoring it"
+        )
+    existing = load_json(legacy_path)
+    required = ("project", "steady_case", "pulse_cases", "g0_factor")
+    missing = [key for key in required if key not in existing]
+    if missing:
+        raise ValueError(
+            f"candidate {candidate.candidate_id} cannot be rescored; "
+            f"legacy score lacks {missing}"
+        )
+    metadata = {key: existing[key] for key in required}
+    score = score_candidate_outputs(config, candidate, metadata)
+    score.update(metadata)
+    write_json(candidate_dir(config, candidate.candidate_id) / score_filename(config), score)
     update_leaderboard(config)
     return score
 
@@ -1218,11 +1435,15 @@ def main() -> int:
     dry_parser.add_argument("candidate")
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("candidate")
+    rescore_parser = subparsers.add_parser("rescore")
+    rescore_parser.add_argument("candidate")
     run_all_parser = subparsers.add_parser("run-all")
     run_all_parser.add_argument("--limit", type=int)
     run_all_parser.add_argument("--samples", type=int)
     run_all_parser.add_argument("--seed", type=int)
     run_all_parser.add_argument("--skip-scored", action="store_true")
+    rescore_all_parser = subparsers.add_parser("rescore-all")
+    rescore_all_parser.add_argument("--skip-scored", action="store_true")
     args = parser.parse_args()
 
     config_path = args.config if args.config.is_absolute() else ROOT / args.config
@@ -1264,19 +1485,40 @@ def main() -> int:
             raise SystemExit(f"unknown candidate: {args.candidate}")
         print(json.dumps(run_candidate(config, by_id[args.candidate]), indent=2))
         return 0
+    if args.command == "rescore":
+        if args.candidate not in by_id:
+            raise SystemExit(f"unknown candidate: {args.candidate}")
+        print(json.dumps(rescore_candidate(config, by_id[args.candidate]), indent=2))
+        return 0
     if args.command == "run-all":
         selected = candidates
         if args.skip_scored:
             selected = [
                 candidate
                 for candidate in selected
-                if not (candidate_dir(config, candidate.candidate_id) / "score.json").exists()
+                if not (candidate_dir(config, candidate.candidate_id) / score_filename(config)).exists()
             ]
         if args.limit is not None:
             selected = selected[: args.limit]
         for index, candidate in enumerate(selected, start=1):
             print(f"[{index}/{len(selected)}] {candidate.candidate_id}", flush=True)
             run_candidate(config, candidate)
+        return 0
+    if args.command == "rescore-all":
+        selected = [
+            candidate
+            for candidate in candidates
+            if (candidate_dir(config, candidate.candidate_id) / "score.json").exists()
+        ]
+        if args.skip_scored:
+            selected = [
+                candidate
+                for candidate in selected
+                if not (candidate_dir(config, candidate.candidate_id) / score_filename(config)).exists()
+            ]
+        for index, candidate in enumerate(selected, start=1):
+            print(f"[{index}/{len(selected)}] {candidate.candidate_id}", flush=True)
+            rescore_candidate(config, candidate)
         return 0
     raise AssertionError(args.command)
 

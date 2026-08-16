@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pandas as pd
+from show_data import load_energy_resolution
 
 
 BASE_DIR = Path(r"h:\hata")
@@ -9,24 +9,7 @@ ENERGY_FOLDERS = {
     "662 keV": BASE_DIR / "662_142_136_300split",
     "1332 keV": BASE_DIR / "1332_142_136_300split",
 }
-CSV_CANDIDATES = ("ene_resos_Pulse_ms_noise.csv",)
 OUT_PATH = BASE_DIR / "energy_resolution_vs_position_662_1332_single.png"
-
-
-def find_csv(folder: Path) -> Path:
-    for name in CSV_CANDIDATES:
-        path = folder / name
-        if path.is_file():
-            return path
-    raise FileNotFoundError(
-        f"No energy-resolution CSV found in {folder}. "
-        f"Checked: {', '.join(CSV_CANDIDATES)}"
-    )
-
-
-def load_dataset(folder: Path) -> pd.DataFrame:
-    csv_path = find_csv(folder)
-    return pd.read_csv(csv_path, index_col=0)
 
 
 def main():
@@ -46,7 +29,7 @@ def main():
             print(f"Skipping missing folder: {folder}")
             continue
 
-        df = load_dataset(folder)
+        df = load_energy_resolution(folder)
         positions = df.index.to_numpy(dtype=float)
 
         for metric in ("Sum", "ST"):

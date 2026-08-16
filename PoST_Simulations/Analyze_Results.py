@@ -2,15 +2,14 @@ import numpy as np
 import argparse
 import json
 import pandas as pd
-import os
 from pathlib import Path
 from scipy.optimize import curve_fit
 from scipy.interpolate import PchipInterpolator
+from scipy.signal import bessel, filtfilt
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import re
 import tqdm
-import getpara as gp
 import questionary
 import h5py
 from lib.pulse_hdf5 import iter_pulse_items as iter_hdf5_pulse_items
@@ -22,15 +21,23 @@ PULSE_FILES = {
     "pulse_noise": "pulse_noise.json",
     "pulse_ms": "pulse_MS.json",
     "pulse_ms_noise": "pulse_MS_noise.json",
-    "pulse_noise_ms_test": "pulse_MS_noise.json",
 }
 
 PULSE_HDF5_FILES = {
     "pulse_noise": "pulse_noise.h5",
     "pulse_ms": "pulse_MS.h5",
     "pulse_ms_noise": "pulse_MS_noise.h5",
-    "pulse_noise_ms_test": "pulse_MS_noise.h5",
 }
+
+# Every target accepted by the command line is also available in the
+# interactive selector when --target is omitted.
+TARGET_CHOICES = (
+    "Pulse_ms",
+    "Pulse_noise",
+    "Pulse_ms_noise",
+)
+ALL_TARGETS_CHOICE = "All targets"
+FULL_ENERGY_TARGETS = {"pulse_ms", "pulse_ms_noise"}
 
 
 def pulse_file_name(target):
@@ -52,9 +59,39 @@ def pulse_data_path(data_path, position, target):
 
 
 def output_csv_path(data_path, position, target, channel):
-    """Analysis CSV path, next to its source JSON rather than legacy .dat folders."""
+    """Feature CSV path in the target's dedicated numerical-results folder."""
     stem = Path(pulse_file_name(target)).stem
-    return Path(data_path) / str(position) / f"{stem}_output_TES{channel}.csv"
+    return resolution_output_dir(data_path, target) / f"position_{position}" / f"{stem}_output_TES{channel}.csv"
+
+
+def resolution_output_dir(data_path, target):
+    """Directory for feature, resolution, and failure outputs of one target."""
+    return Path(data_path) / "results" / target.lower()
+
+
+def figure_output_dir(data_path, target):
+    """Directory for plot images of one target."""
+    return Path(data_path) / "figures" / target.lower()
+
+
+def full_energy_event_ids(data_path, position, target):
+    """Return the full-energy event IDs required for MS resolution analysis."""
+    if target.lower() not in FULL_ENERGY_TARGETS:
+        return None
+    path = Path(data_path) / str(position) / "FullEnergyList.dat"
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Full-energy event list was not found for {target}: {path}. "
+            "Run Dump2Event before extracting MS features."
+        )
+    return {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+
+
+def bessel_filter(pulse, rate, cutoff):
+    """Apply the noise-target low-pass filter without depending on getpara."""
+    normalized_cutoff = float(cutoff) / float(rate) * 2.0
+    coefficients_b, coefficients_a = bessel(2, normalized_cutoff, "low")
+    return filtfilt(coefficients_b, coefficients_a, pulse)
 
 
 class JsonStream:
@@ -220,9 +257,9 @@ def iter_pulse_items(path):
         raise ValueError(f"{path} contains no pulses")
 
 
-def save_readpulse_debug(Data_path, pulse_raw, pulse_filt, para, path, reason, peak_index=None, rise_10=None, rise_90=None):
-    debug_dir = f"{Data_path}/debug_readpulse"
-    os.makedirs(debug_dir, exist_ok=True)
+def save_readpulse_debug(Data_path, target, pulse_raw, pulse_filt, para, path, reason, peak_index=None, rise_10=None, rise_90=None):
+    debug_dir = figure_output_dir(Data_path, target) / "debug_readpulse"
+    debug_dir.mkdir(parents=True, exist_ok=True)
 
     t = np.arange(len(pulse_raw)) / para["rate"]
     st_l = max(0, para["SettlingTime"] - 10)
@@ -251,7 +288,7 @@ def save_readpulse_debug(Data_path, pulse_raw, pulse_filt, para, path, reason, p
     plt.tight_layout()
 
     safe_path = re.sub(r'[\\/:*?"<>|]', "_", str(path))
-    plt.savefig(f"{debug_dir}/{safe_path}.png", dpi=200)
+    plt.savefig(debug_dir / f"{safe_path}.png", dpi=200)
     plt.close()
 
 
@@ -313,13 +350,17 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
     if np.mean(pulse) <= 0:
         pulse *= -1
 
-    pulse_filt = gp.BesselFilter(pulse, para["rate"], para["cutoff"]) if target.lower() != "pulse_ms" else pulse
+    pulse_filt = (
+        bessel_filter(pulse, para["rate"], para["cutoff"])
+        if target.lower() != "pulse_ms"
+        else pulse
+    )
 
     def failed(reason):
         if failures is not None:
             failures.append({"event": str(path).rsplit(":", 1)[-1], "reason": reason})
         if debug_plot:
-            save_readpulse_debug(Data_path, pulse, pulse_filt, para, path, reason)
+            save_readpulse_debug(Data_path, target, pulse, pulse_filt, para, path, reason)
         return [np.nan, np.nan, np.nan, np.nan]
 
     if not np.all(np.isfinite(pulse_filt)):
@@ -387,27 +428,37 @@ def MakeOutput(Data_path, target):
     """Extract pulse features from the current post_all HDF5 or JSON files.
 
     HDF5 is preferred when available, with JSON retained as a fallback.
-    Feature CSVs are written next to the source pulse file.
+    MS targets retain only FullEnergyList.dat events before feature extraction.
+    Feature CSVs are written to the target's numerical-results folder.
     """
     data_path = Path(Data_path)
     with open(data_path / "input.json", encoding="utf-8") as f:
         para = json.load(f)
 
-    if target.lower() != "pulse_ms":
+    if target.lower() == "pulse_ms":
+        print("Pulse_ms: no Bessel filter")
+    else:
         print("BesselFilter")
+
+    result_dir = resolution_output_dir(data_path, target)
+    result_dir.mkdir(parents=True, exist_ok=True)
+    feature_summary = []
 
     for i, posi in enumerate(para["position"]):
         print(f"{i+1}/{len(para['position'])}")
         source_path = pulse_data_path(data_path, posi, target)
         if not source_path.is_file():
             raise FileNotFoundError(f"Pulse data was not found: {source_path}")
+        full_energy_ids = full_energy_event_ids(data_path, posi, target)
         results = {0: [], 1: []}
         pulse_ids = []
         failures = []
+        source_event_count = None
         total = None
         if source_path.suffix.lower() == ".h5":
             with h5py.File(source_path, "r") as file:
-                total = len(file["event_id"])
+                source_event_count = len(file["event_id"])
+                total = source_event_count
         pulse_iterator = (
             iter_hdf5_pulse_items(source_path)
             if source_path.suffix.lower() == ".h5"
@@ -416,6 +467,8 @@ def MakeOutput(Data_path, target):
         for pulse_id, pulse_data in tqdm.tqdm(
             pulse_iterator, total=total, desc=f"Position {posi}", unit="event"
         ):
+            if full_energy_ids is not None and str(pulse_id) not in full_energy_ids:
+                continue
             if not isinstance(pulse_data, dict):
                 raise ValueError(f"Pulse {pulse_id!r} in {source_path} is not an object")
             pulse_ids.append(pulse_id)
@@ -434,15 +487,40 @@ def MakeOutput(Data_path, target):
                 )
 
         columns = ["height", "peak_index", "rise", "ST_Height"]
+        feature_frames = {}
         for ch in [0, 1]:
             df = pd.DataFrame(results[ch], columns=columns, index=pulse_ids)
             df.index.name = "id"
-            df.to_csv(output_csv_path(data_path, posi, target, ch))
-        with open(data_path / f"reso_failures_{target}_position_{posi}.json", "w", encoding="utf-8") as file:
+            feature_frames[ch] = df
+            output_path = output_csv_path(data_path, posi, target, ch)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(output_path)
+        failure_path = resolution_output_dir(data_path, target) / f"reso_failures_{target}_position_{posi}.json"
+        failure_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(failure_path, "w", encoding="utf-8") as file:
             json.dump(failures, file, ensure_ascii=False, indent=2)
         if failures:
             failed_events = {item["event"] for item in failures}
             print(f"Position {posi}: Failed {len(failed_events)} events ({len(failures)} channel analyses)")
+        else:
+            failed_events = set()
+        valid_feature_events = (
+            np.isfinite(feature_frames[0]["height"])
+            & np.isfinite(feature_frames[0]["peak_index"])
+            & np.isfinite(feature_frames[1]["height"])
+        ).sum()
+        feature_summary.append({
+            "position": posi,
+            "source_event_count": source_event_count if source_event_count is not None else len(pulse_ids),
+            "selected_event_count": len(pulse_ids),
+            "full_energy_event_count": len(full_energy_ids) if full_energy_ids is not None else np.nan,
+            "failed_event_count": len(failed_events),
+            "valid_feature_event_count": int(valid_feature_events),
+        })
+
+    pd.DataFrame(feature_summary).to_csv(
+        result_dir / f"feature_summary_{target}.csv", index=False
+    )
 
 
 def gaussian(x, amp, mean, stddev):
@@ -468,7 +546,6 @@ def MakeHistgram(data, posi, HistColor=None, bin_num=None):
         return np.nan, np.nan
 
     bin_num = optimal_bin_count(data) if bin_num is None else int(bin_num)
-    bin_num=300
     hist, bin_edges = np.histogram(data, bins=bin_num, density=False)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     initial_guess = [np.max(hist), np.mean(data), np.std(data)]
@@ -568,6 +645,14 @@ def load_feature_pair(data_path, position, target):
     common_ids = ch0.index.intersection(ch1.index, sort=False)
     if common_ids.empty:
         raise ValueError(f"No matching event IDs in {ch0_path} and {ch1_path}")
+    if target.lower() in FULL_ENERGY_TARGETS:
+        allowed_ids = full_energy_event_ids(data_path, position, target)
+        non_full_ids = common_ids[~common_ids.astype(str).isin(allowed_ids)]
+        if len(non_full_ids):
+            raise ValueError(
+                f"Feature CSVs for {target}, position {position} include "
+                f"{len(non_full_ids)} non-full-energy events. Run MakeOutput again."
+            )
     filtered_ch0, filtered_ch1, mask = remove_outlier_events(
         ch0.loc[common_ids], ch1.loc[common_ids]
     )
@@ -580,6 +665,7 @@ def save_histogram(path, xlabel, title, show):
     plt.title(title)
     plt.tight_layout()
     plt.legend(labelspacing=0, fontsize=8, markerscale=0.5)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(path)
     if show:
         plt.show()
@@ -589,6 +675,9 @@ def save_histogram(path, xlabel, title, show):
 def Resos(Data_path, target, show=False, bin_num=None):
     """Calculate position and energy resolutions from current-format feature CSVs."""
     data_path = Path(Data_path)
+    result_dir = resolution_output_dir(data_path, target)
+    figure_dir = figure_output_dir(data_path, target)
+    result_dir.mkdir(parents=True, exist_ok=True)
     with open(data_path / "input.json", encoding="utf-8") as f:
         para = json.load(f)
     position_from_ratio = load_ratio_calibration(data_path)
@@ -597,16 +686,31 @@ def Resos(Data_path, target, show=False, bin_num=None):
 
     feature_pairs = []
     outlier_report = []
+    quality_rows = []
     for position in positions:
         ch0, ch1, outlier_ids = load_feature_pair(data_path, position, target)
         removed = len(outlier_ids)
         if removed:
             print(f"Position {position}: removed {removed} outlier events")
         outlier_report.append({"position": position, "events": outlier_ids})
+        quality_rows.append({
+            "position": position,
+            "outlier_or_invalid_event_count": removed,
+            "resolution_event_count": len(ch0),
+        })
         feature_pairs.append((ch0, ch1))
 
-    with open(data_path / f"reso_outliers_{target}.json", "w", encoding="utf-8") as file:
+    with open(result_dir / f"reso_outliers_{target}.json", "w", encoding="utf-8") as file:
         json.dump(outlier_report, file, ensure_ascii=False, indent=2)
+
+    feature_summary_path = result_dir / f"feature_summary_{target}.csv"
+    if feature_summary_path.is_file():
+        quality_summary = pd.read_csv(feature_summary_path).merge(
+            pd.DataFrame(quality_rows), on="position", how="left"
+        )
+    else:
+        quality_summary = pd.DataFrame(quality_rows)
+    quality_summary.to_csv(result_dir / f"quality_summary_{target}.csv", index=False)
 
     position_fwhms = []
     for (ch0, ch1), position in zip(feature_pairs, positions):
@@ -616,10 +720,10 @@ def Resos(Data_path, target, show=False, bin_num=None):
         fwhm, _ = MakeHistgram(reconstructed, position, bin_num=bin_num)
         position_fwhms.append(fwhm)
     save_histogram(
-        data_path / f"position_histgram_{target}_{para['E']}.png",
+        figure_dir / f"position_histgram_{target}_{para['E']}.png",
         "Position [mm]", f"{para['E']} keV", show,
     )
-    np.savetxt(data_path / f"fwhms_{target}.txt", position_fwhms)
+    np.savetxt(result_dir / f"fwhms_{target}.txt", position_fwhms)
 
     estimators = {
         "Sum": lambda ch0, ch1: ch0["height"].to_numpy(float) + ch1["height"].to_numpy(float),
@@ -635,7 +739,7 @@ def Resos(Data_path, target, show=False, bin_num=None):
             resolutions.append(resolution * float(para["E"]))
         energy_resolutions[name] = resolutions
         save_histogram(
-            data_path / f"energy_{name.lower()}_histgram_{target}_{para['E']}.png",
+            figure_dir / f"energy_{name.lower()}_histgram_{target}_{para['E']}.png",
             "Current [A]", f"{name}: {para['E']} keV", show,
         )
 
@@ -645,7 +749,7 @@ def Resos(Data_path, target, show=False, bin_num=None):
         np.asarray(positions, dtype=float) - (float(para["n_abs"]) + 1.0) / 2.0
     ) * float(para["length"]) / float(para["n_abs"])
     pd.DataFrame(energy_resolutions, index=index).rename_axis("x_mm").to_csv(
-        data_path / f"ene_resos_{target}.csv"
+        result_dir / f"ene_resos_{target}.csv"
     )
 
 
@@ -672,6 +776,18 @@ def ask_mode():
         choices=["extract", "reso", "both"],
         default="both",
     ).ask()
+
+
+def ask_targets():
+    """Select one target, or request every supported target interactively."""
+    selection = questionary.select(
+        "Pulse target:",
+        choices=[*TARGET_CHOICES, ALL_TARGETS_CHOICE],
+        default="Pulse_ms",
+    ).ask()
+    if selection is None:
+        return None
+    return list(TARGET_CHOICES) if selection == ALL_TARGETS_CHOICE else [selection]
 
 
 def ask_bin_num():
@@ -702,7 +818,10 @@ if __name__ == "__main__":
         "data_path", nargs="?",
         help="Directory containing input.json, ratios.csv, and position folders (prompted when omitted)",
     )
-    parser.add_argument("--target", default="Pulse_ms", help="Pulse type (default: Pulse_ms)")
+    parser.add_argument(
+        "--target", choices=TARGET_CHOICES, default=None,
+        help="Pulse type (prompted when omitted)",
+    )
     parser.add_argument(
         "--mode", choices=("extract", "reso", "both"), default=None,
         help="Extract features, calculate resolutions, or do both (prompted when omitted)",
@@ -715,9 +834,14 @@ if __name__ == "__main__":
     mode = arguments.mode if arguments.mode is not None else ask_mode()
     if mode is None:
         raise SystemExit(0)
+    targets = [arguments.target] if arguments.target is not None else ask_targets()
+    if targets is None:
+        raise SystemExit(0)
     bin_num = ask_bin_num() if mode in ("reso", "both") else None
 
-    if mode in ("extract", "both"):
-        MakeOutput(data_path, arguments.target)
-    if mode in ("reso", "both"):
-        Resos(data_path, arguments.target, arguments.show, bin_num)
+    for target in targets:
+        print(f"Analyzing target: {target}")
+        if mode in ("extract", "both"):
+            MakeOutput(data_path, target)
+        if mode in ("reso", "both"):
+            Resos(data_path, target, arguments.show, bin_num)

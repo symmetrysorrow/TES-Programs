@@ -351,6 +351,70 @@ CONTAINS
     END ASSOCIATE
   END SUBROUTINE TESCircuitCompute
 
+  ! TESCircuitCompute defers a timestep's series-CSV row until the *next*
+  ! timestep's first assembly call commits it (needed to know the previous
+  ! nonlinear sweep has actually finished). The true final timestep of a
+  ! transient/pulse run has no such next call, so its row is otherwise never
+  ! written even though the solver did compute it. Called once, after the
+  ! whole simulation, by TESCircuitFinalizeAll (Exec Solver = After
+  ! Simulation) to flush it. A no-op for any instance this case never used
+  ! (KeyPrefix's Series File Constant absent) and, via the TransientSimulation
+  ! guard in TESCircuitFinalizeAll, for steady-state runs, whose series file
+  ! (if any) is intentionally never written here (docs/dual_tes_plan.md).
+  SUBROUTINE TESCircuitFlush(Model, InstanceIndex, KeyPrefix, Unit)
+    TYPE(Model_t) :: Model
+    INTEGER :: InstanceIndex
+    CHARACTER(LEN=*) :: KeyPrefix
+    INTEGER :: Unit
+
+    CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile
+    CHARACTER(LEN=256) :: LogMessage
+    LOGICAL :: Found
+    LOGICAL :: IsRoot
+    INTEGER :: IoStatus
+    REAL(KIND=dp) :: CommitTime
+
+    ASSOCIATE (St => States(InstanceIndex))
+
+    IF (.NOT. St % Initialized) RETURN
+
+    IsRoot = (ParEnv % MyPE == 0)
+    IF (.NOT. IsRoot) RETURN
+
+    SeriesFile = ListGetString(Model % Constants, KeyPrefix // 'Series File', Found)
+    IF (.NOT. Found) RETURN
+
+    IF (St % SweepSampleCount > 0) THEN
+      St % AverageTemperature = St % SweepTemperatureSum / REAL(St % SweepSampleCount, dp)
+    END IF
+
+    CommitTime = GetTime()
+
+    WRITE(LogMessage,'(A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,ES12.5)') &
+      'flush: step=', St % LastTimeStep, ' T=', St % AverageTemperature, ' I_TES=', St % Current, &
+      ' R_TES=', St % Resistance, ' P_TES=', St % Power
+    CALL Info('TESCircuitFlush', TRIM(LogMessage), Level=4)
+
+    IF (.NOT. St % FileStarted) THEN
+      OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='REPLACE', &
+        ACTION='WRITE', IOSTAT=IoStatus)
+      IF (IoStatus == 0) THEN
+        WRITE(Unit,'(A)') 'time_s,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W'
+      END IF
+    ELSE
+      OPEN(UNIT=Unit, FILE=TRIM(SeriesFile), STATUS='OLD', &
+        POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
+    END IF
+    IF (IoStatus == 0) THEN
+      WRITE(Unit,'(ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+        CommitTime, ',', St % AverageTemperature, ',', St % Current, ',', St % Resistance, ',', St % Power
+      CLOSE(Unit)
+    END IF
+    St % FileStarted = .TRUE.
+
+    END ASSOCIATE
+  END SUBROUTINE TESCircuitFlush
+
 END MODULE TESCircuitModule
 
 
@@ -402,6 +466,28 @@ FUNCTION TESTransientHeatSourceR(Model, Node, Temperature) RESULT(HeatSource)
   CALL TESCircuitCompute(Model, Node, Temperature, 3, 'TES R ', &
     'TESTransientHeatSourceR', 93, HeatSource)
 END FUNCTION TESTransientHeatSourceR
+
+
+! Solver (not a body-force UDF): wired via Exec Solver = After Simulation on a
+! standalone Solver section, so it runs exactly once, after the last
+! timestep, and flushes whichever of the 3 TESCircuitCompute instances this
+! case actually used (see TESCircuitFlush).
+SUBROUTINE TESCircuitFinalizeAll(Model, Solver, dt, TransientSimulation)
+  USE DefUtils
+  USE TESCircuitModule, ONLY: TESCircuitFlush
+  IMPLICIT NONE
+
+  TYPE(Model_t) :: Model
+  TYPE(Solver_t) :: Solver
+  REAL(KIND=dp) :: dt
+  LOGICAL :: TransientSimulation
+
+  IF (.NOT. TransientSimulation) RETURN
+
+  CALL TESCircuitFlush(Model, 1, 'TES ', 91)
+  CALL TESCircuitFlush(Model, 2, 'TES L ', 92)
+  CALL TESCircuitFlush(Model, 3, 'TES R ', 93)
+END SUBROUTINE TESCircuitFinalizeAll
 
 
 FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSource)

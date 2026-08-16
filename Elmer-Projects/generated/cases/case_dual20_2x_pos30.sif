@@ -39,7 +39,7 @@ Constants
   TES L T0 = Real 0.16857
   TES L Volume = Real 4e-14
   TES L Series File = String "tes_dual20_2x_pos30_L_series.csv"
-  TES L State File = String "mesh_dual_20mm_2x/case_dual20_2x_steady_L.state"
+  TES L State File = String "work/meshes/mesh_dual_20mm_2x/case_dual20_2x_steady_L.state"
   TES R Bias Current = Real 0.000715
   TES R Shunt Resistance = Real 0.0039
   TES R Inductance = Real 1.23e-08
@@ -51,7 +51,7 @@ Constants
   TES R T0 = Real 0.16857
   TES R Volume = Real 4e-14
   TES R Series File = String "tes_dual20_2x_pos30_R_series.csv"
-  TES R State File = String "mesh_dual_20mm_2x/case_dual20_2x_steady_R.state"
+  TES R State File = String "work/meshes/mesh_dual_20mm_2x/case_dual20_2x_steady_R.state"
   Pulse Energy = Real 2.134099276488e-13
   Pulse Start Time = Real 0.02002
   Pulse Duration = Real 1e-09
@@ -96,6 +96,12 @@ Solver 2
   Procedure = "ResultOutputSolve" "ResultOutputSolver"
   Output File Name = "case_dual20_2x_pos30"
   Vtu Format = True
+End
+
+Solver 3
+  Exec Solver = After Simulation
+  Equation = TES Circuit Finalize
+  Procedure = "tes_transient_heat_source_t0" "TESCircuitFinalizeAll"
 End
 
 Equation 1

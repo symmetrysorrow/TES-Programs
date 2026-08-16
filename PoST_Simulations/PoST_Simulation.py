@@ -46,7 +46,7 @@ zure = 30
 
 pulse_num=500
 
-output="H:\\hata2025\\New_test"
+output="H:\\hata\\662_142_136_300split"
 
 def random_noise(spe, seed):
     spe_re = spe[::-1]  # reverce
@@ -627,7 +627,7 @@ def ShowSamples():
         )
     ax.set_xlabel("Time [ms]", fontsize=20)
     ax.set_ylabel("Current [uA]", fontsize=20)
-    plt.xlim(0,5)
+    plt.xlim(-0.1, 5)
     #plt.ylim(0,2)
     ax.grid()
     fig.tight_layout()
@@ -639,7 +639,8 @@ def ShowSamples():
     cbar.set_label("Distance [mm]", fontsize=20)
     cbar.ax.tick_params(labelsize=12)
     cbar.ax.invert_yaxis()
-    fig.savefig(f"{output}/checkpulse_pulses.png", dpi=350)
+    
+    fig.savefig(f"{output}/checkpulse_pulses.png", dpi=350, transparent=True)
     plt.close(fig)
 
     # ---- noise time domain --------
@@ -649,7 +650,7 @@ def ShowSamples():
     plt.grid()
     plt.tight_layout()
     #plt.legend(fontsize=12, loc='upper right')
-    plt.savefig(f"{output}/checkpulse_noise.png", dpi=350)
+    plt.savefig(f"{output}/checkpulse_noise.png", dpi=350, transparent=True)
     plt.clf()
 
     # ---- pulse with noise time domain -------
@@ -675,7 +676,7 @@ def ShowSamples():
         )
     ax.set_xlabel("Time [ms]", fontsize=20)
     ax.set_ylabel("Current [uA]", fontsize=20)
-    ax.set_xlim(-0.1, 2.5)
+    ax.set_xlim(-0.1, 5)
     ax.grid()
     fig.tight_layout()
     cbar = fig.colorbar(
@@ -768,7 +769,7 @@ def Pulse_Noise():
     One JSON file is written per requested position. Its schema stores the
     input, one shared time array, and noise realizations keyed by index.
     """
-    pulse_num = 300
+    pulse_num = 500
     with open(f"{output}/input.json", "r", encoding="utf-8") as f:
         para = json.load(f)
     pulses_by_position = LoadPulses()
@@ -962,8 +963,8 @@ def Pulse_MS_Noise():
 #MakePulse()
 #FitRatios()
 #MakeNoise()
-#ShowSamples()
+ShowSamples()
 #Pulse_Noise()
-Dump2Event()
-Pulse_Ms()
-Pulse_MS_Noise()
+#Dump2Event()
+#Pulse_Ms()
+#Pulse_MS_Noise()

@@ -1,0 +1,1192 @@
+{
+  "mesh": {
+    "mesh_min": 0.05,
+    "mesh_max": 0.05,
+    "mesh_min_mode": "auto",
+    "mesh_max_mode": "auto"
+  },
+  "meshes": {
+    "mesh_shifted_merged": {
+      "geometry": "single_pixel",
+      "dir": "mesh_shifted_merged",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_shifted_merged"
+        ]
+      },
+      "notes": "base mesh (~26k nodes); absorber centered at (0, 1mm, 0.56216mm)"
+    },
+    "mesh_refined_3x": {
+      "geometry": "single_pixel",
+      "dir": "mesh_refined_3x",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 0.016666666666666666,
+          "mesh_max": 0.016666666666666666
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_refined_3x"
+        ]
+      },
+      "notes": "3x refined (~63k nodes); recipe reconstructed after the fact, not re-verified against the existing directory"
+    },
+    "mesh_dual_base": {
+      "geometry": "dual_tes",
+      "dir": "mesh_dual_base",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "parameter_overrides": {
+          "dabs_dx": "5[mm]",
+          "tes_pitch": "4[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_base"
+        ]
+      },
+      "notes": "dual-TES base mesh (base resolution); single long absorber over two TES stacks at x=-tes_pitch/2 and x=+tes_pitch/2. Pinned to the original 5mm absorber / 4mm pitch experiment via parameter_overrides, independent of the project's global dabs_dx/tes_pitch defaults."
+    },
+    "mesh_dual_20mm": {
+      "geometry": "dual_tes",
+      "dir": "mesh_dual_20mm",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "parameter_overrides": {
+          "dabs_dx": "20[mm]",
+          "tes_pitch": "19[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_20mm"
+        ]
+      },
+      "notes": "20mm absorber, TES at x=±9.5mm (pitch 19mm), base resolution"
+    },
+    "mesh_dual_base_3x": {
+      "dir": "mesh_dual_base_3x",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 2.7777777777777776e-05,
+          "mesh_max": 5.555555555555555e-05,
+          "mesh_min_mode": "manual",
+          "mesh_max_mode": "manual"
+        },
+        "parameter_overrides": {
+          "dabs_dx": "5[mm]",
+          "tes_pitch": "4[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_base_3x"
+        ]
+      },
+      "notes": "3x-refined dual_tes (5mm absorber, 4mm pitch) -- test of L/R mesh-asymmetry convergence"
+    },
+    "mesh_dual_base_2x": {
+      "dir": "mesh_dual_base_2x",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 4.1666666666666665e-05,
+          "mesh_max": 8.333333333333333e-05,
+          "mesh_min_mode": "manual",
+          "mesh_max_mode": "manual"
+        },
+        "parameter_overrides": {
+          "dabs_dx": "5[mm]",
+          "tes_pitch": "4[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_base_2x"
+        ]
+      },
+      "notes": "2x-refined dual_tes (5mm absorber, 4mm pitch) -- test of L/R mesh-asymmetry convergence, direct-solver-tractable"
+    },
+    "mesh_dual_base_15x": {
+      "dir": "mesh_dual_base_15x",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 5.555555555555555e-05,
+          "mesh_max": 0.0001111111111111111,
+          "mesh_min_mode": "manual",
+          "mesh_max_mode": "manual"
+        },
+        "parameter_overrides": {
+          "dabs_dx": "5[mm]",
+          "tes_pitch": "4[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_base_15x"
+        ]
+      },
+      "notes": "1.5x-refined dual_tes (5mm absorber, 4mm pitch) -- interpolation point for L/R mesh-asymmetry convergence"
+    },
+    "mesh_dual_20mm_2x": {
+      "dir": "mesh_dual_20mm_2x",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 4.1666666666666665e-05,
+          "mesh_max": 8.333333333333333e-05,
+          "mesh_min_mode": "manual",
+          "mesh_max_mode": "manual"
+        },
+        "parameter_overrides": {
+          "dabs_dx": "20[mm]",
+          "tes_pitch": "19[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_20mm_2x"
+        ]
+      },
+      "notes": "2x-refined dual_tes (20mm absorber, TES at x=+/-9.5mm) -- L/R asymmetry reduction test"
+    },
+    "mesh_dual_base_localrefine": {
+      "dir": "mesh_dual_base_localrefine",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "parameter_overrides": {
+          "dabs_dx": "5[mm]",
+          "tes_pitch": "4[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_base_localrefine"
+        ]
+      },
+      "notes": "local box refinement around TES_L/R+Stycast_L/R only (background mesh at 1x) -- cheap alternative to global 2x"
+    },
+    "mesh_dual_20mm_localrefine": {
+      "dir": "mesh_dual_20mm_localrefine",
+      "geometry": "dual_tes",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {},
+        "parameter_overrides": {
+          "dabs_dx": "20[mm]",
+          "tes_pitch": "19[mm]"
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_dual_20mm_localrefine"
+        ]
+      },
+      "notes": "20mm dual_tes with local TES-column refinement only (TES_LOCAL_REFINE_H env var required at build time) -- cheap alternative to global 2x"
+    }
+  },
+  "parameter_expressions": {
+    "abs_dx": "1[mm]",
+    "abs_dy": "abs_dx",
+    "abs_dz": "0.7[mm]",
+    "Si_2_dz": "350[um]",
+    "Si_dx": "3[mm]",
+    "Si_dy": "6[mm]",
+    "membrane_dz": "10[um]",
+    "membrane_dx": "700[um]",
+    "membrane_dy": "membrane_dx",
+    "TES_Ti_dx": "500[um]",
+    "TES_Ti_dy": "TES_Ti_dx",
+    "TES_Ti_dz": "0.04[um]",
+    "TES_Au_dx": "TES_Ti_dx",
+    "TES_Au_dy": "TES_Ti_dx",
+    "TES_Au_dz": "0.12[um]",
+    "Stycast_dx": "400[um]",
+    "Stycast_dy": "Stycast_dx",
+    "Stycast_dz": "20[um]",
+    "R_n": "125[mohm]",
+    "T_c": "0.1709[K]",
+    "dW": "0.001",
+    "R_0": "15.527[mohm]",
+    "R_min": "1e-6[ohm]",
+    "alpha": "256.46",
+    "beta": "5.03",
+    "I_bias": "715[uA]",
+    "R_sh": "3.9[mohm]",
+    "I_0": "I_bias*R_sh/(R_0+R_sh)",
+    "T_bath": "150[mK]",
+    "SiO2_1_dz": "1[um]",
+    "SiNx_dz": "1[um]",
+    "TES_dz": "TES_Au_dz+TES_Ti_dz",
+    "SiO2_2_dz": "2[um]",
+    "Si_1_dz": "15[um]",
+    "G0": "(7.854e-6[W/K])*2.5",
+    "T_0": "168.57[mK]",
+    "TES_volume": "TES_Au_dx*TES_Au_dy*TES_dz",
+    "L_tes": "12.3[nH]",
+    "dabs_dx": "20[mm]",
+    "tes_pitch": "19[mm]"
+  },
+  "materials": {
+    "Pb": {
+      "k": {
+        "expression": "(1.68e-2)*0.745661987802"
+      },
+      "rho": {
+        "expression": "9860"
+      },
+      "cp": {
+        "expression": "(3.26e-05)*1.23373505403"
+      }
+    },
+    "Stycast": {
+      "k": {
+        "expression": "(2.69094e-06)*0.59905788032"
+      },
+      "rho": {
+        "expression": "2400"
+      },
+      "cp": {
+        "expression": "1.22e-3"
+      }
+    },
+    "TES": {
+      "k": {
+        "expression": "68"
+      },
+      "rho": {
+        "expression": "15695"
+      },
+      "cp": {
+        "expression": "(1.25e-3)*1.59148152699"
+      }
+    },
+    "Si": {
+      "k": {
+        "expression": "3.7e-1"
+      },
+      "rho": {
+        "expression": "2332"
+      },
+      "cp": {
+        "expression": "1.24e-06"
+      }
+    },
+    "SiO2": {
+      "k": {
+        "expression": "4.94e-4"
+      },
+      "rho": {
+        "expression": "2200"
+      },
+      "cp": {
+        "expression": "1.24e-4"
+      }
+    },
+    "SiNx": {
+      "k": {
+        "expression": "1.02e-4"
+      },
+      "rho": {
+        "expression": "3400"
+      },
+      "cp": {
+        "expression": "2.43e-5"
+      }
+    },
+    "Membrane": {
+      "k": {
+        "expression": "G0*T**(4.252-1)*0.4*(membrane_dx-TES_Au_dx)/(8*(SiNx_dz+Si_1_dz+SiO2_1_dz)*TES_Au_dx)"
+      },
+      "rho": {
+        "expression": "2387"
+      },
+      "cp": {
+        "expression": "(9.82e-6)*1.18573722481"
+      }
+    }
+  },
+  "geometries": {
+    "single_pixel": {
+      "name": "Geometry",
+      "kind": "composite",
+      "template_kind": "freeform_boxes",
+      "children": [
+        {
+          "name": "abs",
+          "uid": "35e55830edef4c929eeb9cfecdfe1855",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "0.0",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+abs_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz+Stycast_dz",
+          "dx_expr": "abs_dx",
+          "dy_expr": "abs_dy",
+          "dz_expr": "abs_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "TES",
+          "uid": "e448ecb0af7c4fe9b7c25977d7c52a1f",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "0.0",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+TES_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz",
+          "dx_expr": "TES_Au_dx",
+          "dy_expr": "TES_Au_dy",
+          "dz_expr": "TES_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Stycast",
+          "uid": "d52e6d3377c94ca5b3e5868ba17a9d39",
+          "shape": "cylinder",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "0.0",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+Stycast_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz",
+          "dx_expr": "498[um]",
+          "dy_expr": "498[um]",
+          "dz_expr": "Stycast_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Membrane",
+          "uid": "6baf4df04c8441be8b358954e201f410",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "0[m]",
+          "y_expr": "1[mm]",
+          "z_expr": "Si_2_dz/2+SiO2_1_dz+(Si_1_dz+SiNx_dz)/2",
+          "dx_expr": "membrane_dx",
+          "dy_expr": "membrane_dy",
+          "dz_expr": "Si_1_dz+SiNx_dz",
+          "ltx_expr": "0[m]"
+        },
+        {
+          "name": "SiO2_1",
+          "children": [
+            {
+              "name": "SiO2_1",
+              "uid": "1c53fc36e0a14f25958f2896816eeb7f",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiO2_1_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "add"
+        },
+        {
+          "name": "Si_1",
+          "children": [
+            {
+              "name": "Si_1",
+              "uid": "12dcaaf2a71841a788e17d1bf78e80c2",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "Si_1_sub",
+              "uid": "5aef1ea9cf684ef8bc55f7f691771929",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiNx",
+          "children": [
+            {
+              "name": "SiNx",
+              "uid": "32ebb4265e514286a057c5a297e1d6fb",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiNx_sub",
+              "uid": "f945a913a0f640ca8d7783630a71bb1f",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "Si_2",
+          "children": [
+            {
+              "name": "Si_2",
+              "uid": "155fcf3574294d848bf3117fb241f0da",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "0.0",
+              "y_expr": "1[mm]",
+              "z_expr": "0.0",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            },
+            {
+              "name": "Si_2_sub",
+              "uid": "095bfc4464624ea1ac95b50946a14889",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "0.0",
+              "y_expr": "1[mm]",
+              "z_expr": "0",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiO2_2",
+          "children": [
+            {
+              "name": "SiO2_2",
+              "uid": "fbeecda2613d4f9ca6dbd19c587ea5b0",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiO2_2_sub",
+              "uid": "3be44a048739442bbbee3520b1fa5535",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "0[m]",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        }
+      ],
+      "bath_surface_name": "bath",
+      "bath_surface_uid": "d9add68e3e524f29b165cac87ffaade8",
+      "reference_box_name": "Si_2",
+      "reference_box_uid": "155fcf3574294d848bf3117fb241f0da"
+    },
+    "dual_tes": {
+      "name": "Geometry",
+      "kind": "composite",
+      "template_kind": "freeform_boxes",
+      "children": [
+        {
+          "name": "abs",
+          "uid": "487ee1ec7ac147509f39fb00a88d7a77",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "0.0",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+abs_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz+Stycast_dz",
+          "dx_expr": "dabs_dx",
+          "dy_expr": "abs_dy",
+          "dz_expr": "abs_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "TES_L",
+          "uid": "05ace825d5124408abfbbb4556e83ff6",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "-tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+TES_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz",
+          "dx_expr": "TES_Au_dx",
+          "dy_expr": "TES_Au_dy",
+          "dz_expr": "TES_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Stycast_L",
+          "uid": "7426598ebc4f4d40b06e73761947d4da",
+          "shape": "cylinder",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "-tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+Stycast_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz",
+          "dx_expr": "498[um]",
+          "dy_expr": "498[um]",
+          "dz_expr": "Stycast_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Membrane_L",
+          "uid": "bbed51458c8c4cd58abb5a5fb058cffc",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "-tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "Si_2_dz/2+SiO2_1_dz+(Si_1_dz+SiNx_dz)/2",
+          "dx_expr": "membrane_dx",
+          "dy_expr": "membrane_dy",
+          "dz_expr": "Si_1_dz+SiNx_dz",
+          "ltx_expr": "0[m]"
+        },
+        {
+          "name": "SiO2_1_L",
+          "children": [
+            {
+              "name": "SiO2_1_L",
+              "uid": "7e463aa0a61e4d0b8c3cfc92d3f06d29",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiO2_1_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "add"
+        },
+        {
+          "name": "Si_1_L",
+          "children": [
+            {
+              "name": "Si_1_L",
+              "uid": "90f81f2bde444f42b668dfe786359bbd",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "Si_1_sub_L",
+              "uid": "5c37c335d24546cea70846577665beb3",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiNx_L",
+          "children": [
+            {
+              "name": "SiNx_L",
+              "uid": "7cd3ce81bf584e7da1152e97d5ee31c2",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiNx_sub_L",
+              "uid": "b25e4dcc574f484e967f1e7a0b689166",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "Si_2_L",
+          "children": [
+            {
+              "name": "Si_2_L",
+              "uid": "e3dad9a7ecad4539b1e8d25ba714f652",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "0.0",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            },
+            {
+              "name": "Si_2_sub_L",
+              "uid": "2388ef842fca4742b94734bf0377f4fd",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "0",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiO2_2_L",
+          "children": [
+            {
+              "name": "SiO2_2_L",
+              "uid": "3208298149534b47b52f25e7cc769759",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiO2_2_sub_L",
+              "uid": "3bad5b82c97b4e24bad1c0100ffaf8c4",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "-tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "TES_R",
+          "uid": "1d85acef665040f19484644f0e5b103a",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "+tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+TES_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz",
+          "dx_expr": "TES_Au_dx",
+          "dy_expr": "TES_Au_dy",
+          "dz_expr": "TES_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Stycast_R",
+          "uid": "504291cdb94a44d583da54ea492ff41a",
+          "shape": "cylinder",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "+tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "(Si_2_dz+Stycast_dz)/2+SiO2_1_dz+Si_1_dz+SiNx_dz+TES_dz",
+          "dx_expr": "498[um]",
+          "dy_expr": "498[um]",
+          "dz_expr": "Stycast_dz",
+          "ltx_expr": "0.0"
+        },
+        {
+          "name": "Membrane_R",
+          "uid": "bc5ad90a77bc467ea88f17a12e3890ff",
+          "shape": "box",
+          "body_name": "",
+          "body_mode": "add",
+          "group_mode": "add",
+          "priority": 0,
+          "x_expr": "+tes_pitch/2",
+          "y_expr": "1[mm]",
+          "z_expr": "Si_2_dz/2+SiO2_1_dz+(Si_1_dz+SiNx_dz)/2",
+          "dx_expr": "membrane_dx",
+          "dy_expr": "membrane_dy",
+          "dz_expr": "Si_1_dz+SiNx_dz",
+          "ltx_expr": "0[m]"
+        },
+        {
+          "name": "SiO2_1_R",
+          "children": [
+            {
+              "name": "SiO2_1_R",
+              "uid": "7c700a9f0699462a8e910cafab13095c",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiO2_1_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "add"
+        },
+        {
+          "name": "Si_1_R",
+          "children": [
+            {
+              "name": "Si_1_R",
+              "uid": "712557a263af43ebbc8e211adfcc1c21",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "Si_1_sub_R",
+              "uid": "6c6e91a796734cee93568d2cb6f43466",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+Si_1_dz)/2+SiO2_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_1_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiNx_R",
+          "children": [
+            {
+              "name": "SiNx_R",
+              "uid": "c8cd2fd946a148d9a7fcc0a57d8dc5ec",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiNx_sub_R",
+              "uid": "929d5c6d7b4446d9b86626a40b7fc5c5",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "(Si_2_dz+SiNx_dz)/2+SiO2_1_dz+Si_1_dz",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiNx_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "Si_2_R",
+          "children": [
+            {
+              "name": "Si_2_R",
+              "uid": "a9b8593faa5b4ac0927acc99524e61d1",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "0.0",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            },
+            {
+              "name": "Si_2_sub_R",
+              "uid": "af8356016cf34e99a8d04f9ddb5e5af5",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "0",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "Si_2_dz",
+              "ltx_expr": "0.0"
+            }
+          ],
+          "group_mode": "subtract"
+        },
+        {
+          "name": "SiO2_2_R",
+          "children": [
+            {
+              "name": "SiO2_2_R",
+              "uid": "6f12b2681ce546c487c91a36c60c9f40",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "add",
+              "group_mode": "add",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "Si_dx",
+              "dy_expr": "Si_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            },
+            {
+              "name": "SiO2_2_sub_R",
+              "uid": "654230b9524445118e18c174935c535d",
+              "shape": "box",
+              "body_name": "",
+              "body_mode": "subtract",
+              "group_mode": "subtract",
+              "priority": 0,
+              "x_expr": "+tes_pitch/2",
+              "y_expr": "1[mm]",
+              "z_expr": "-(Si_2_dz+SiO2_2_dz)/2",
+              "dx_expr": "membrane_dx",
+              "dy_expr": "membrane_dy",
+              "dz_expr": "SiO2_2_dz",
+              "ltx_expr": "0[m]"
+            }
+          ],
+          "group_mode": "subtract"
+        }
+      ],
+      "bath_surface_name": "bath",
+      "bath_surface_uid": "10670a7380e2445fa1368842c9faee16",
+      "reference_box_name": "Si_2_L",
+      "reference_box_uid": "e3dad9a7ecad4539b1e8d25ba714f652"
+    }
+  },
+  "elmer_overrides": {
+    "stycast_shape": "cylinder",
+    "stycast_x": 0.0,
+    "stycast_y": 0.001,
+    "stycast_z": 0.00020216,
+    "stycast_dx": 0.000498,
+    "stycast_dy": 0.000498,
+    "stycast_dz": 2e-05,
+    "fragment_mortar_interfaces": true
+  },
+  "cases": {
+    "postsearch_mv_003_a02a4d2c_02_steady": {
+      "template": "steady",
+      "mesh": "mesh_dual_20mm_localrefine",
+      "heat_source": "circuit_implicit",
+      "series_file": "postsearch_mv_003_a02a4d2c_02_steady_series.csv",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08
+      },
+      "output_file_path": "../work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_003_a02a4d2c_02_steady.result"
+    },
+    "postsearch_mv_003_a02a4d2c_02_high": {
+      "template": "pulse",
+      "mesh": "mesh_dual_20mm_localrefine",
+      "restart_from": "postsearch_mv_003_a02a4d2c_02_steady",
+      "restart_time": 0.0,
+      "series_file": "postsearch_mv_003_a02a4d2c_02_high_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1[ms]",
+          20
+        ],
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "5[us]",
+          2000
+        ],
+        [
+          "100[us]",
+          750
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": {
+          "x": "-8[mm]",
+          "y": "auto",
+          "z": "auto"
+        }
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09
+      },
+      "restart_file_path": "../work/meshes/mesh_dual_20mm_localrefine/postsearch_mv_003_a02a4d2c_02_steady.result"
+    }
+  }
+}

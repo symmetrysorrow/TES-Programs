@@ -1,8 +1,8 @@
 from pathlib import Path
-import json
 
 import matplotlib.pyplot as plt
-import numpy as np
+
+from show_data import load_position_resolution
 
 
 BASE_DIR = Path(r"h:\hata")
@@ -17,23 +17,11 @@ DATASETS = {
     },
 }
 CONDITIONS = {
-    "MS": {"file": "fwhms_Pulse_ms.txt", "linestyle": "-", "marker": "o"},
-    "Noise": {"file": "fwhms_Pulse_noise.txt", "linestyle": "--", "marker": "^"},
-    "MS+Noise": {"file": "fwhms_Pulse_ms_noise.txt", "linestyle": "-.", "marker": "s"},
+    "MS": {"target": "Pulse_ms", "linestyle": "-", "marker": "o"},
+    "Noise": {"target": "Pulse_noise", "linestyle": "--", "marker": "^"},
+    "MS+Noise": {"target": "Pulse_ms_noise", "linestyle": "-.", "marker": "s"},
 }
 OUT_PATH = BASE_DIR / "position_resolution_662_1332_ms_noise_compare.png"
-
-
-def load_positions(folder: Path) -> np.ndarray:
-    with open(folder / "input.json", "r", encoding="utf-8") as f:
-        para = json.load(f)
-    return np.asarray(para["position"], dtype=float)
-
-
-def load_fwhm(path: Path) -> np.ndarray:
-    if not path.is_file():
-        raise FileNotFoundError(f"Missing file: {path}")
-    return np.loadtxt(path, dtype=float)
 
 
 def main():
@@ -47,15 +35,12 @@ def main():
             print(f"Skipping missing folder: {folder}")
             continue
 
-        positions = load_positions(folder)
-
         for condition, cond_info in CONDITIONS.items():
-            fwhm_path = folder / cond_info["file"]
-            if not fwhm_path.is_file():
-                print(f"Skipping missing file: {fwhm_path}")
+            try:
+                positions, fwhm = load_position_resolution(folder, cond_info["target"])
+            except FileNotFoundError as error:
+                print(f"Skipping missing result: {error}")
                 continue
-
-            fwhm = load_fwhm(fwhm_path)
             style = {
                 "color": info["color"],
                 "linestyle": cond_info["linestyle"],

@@ -13,7 +13,7 @@ Simulation
   Timestepping Method = BDF
   BDF Order = 1
   Timestep Sizes(8) = 0.001 1.8e-05 1e-06 1e-09 1e-08 1e-07 5e-06 0.0001
-  Timestep Intervals(8) = 20 1 2 1 10 9 2000 700
+  Timestep Intervals(8) = 20 1 2 1 10 9 2000 750
   Output Intervals(8) = 1 1 1 1 1 1 1 1
   Steady State Max Iterations = 1
   Solver Input File = generated/cases/postsearch_mv_000_de53353f_03_high.sif
@@ -86,6 +86,12 @@ Solver 1
   Linear System Direct Method = Umfpack
   Apply Mortar BCs = True
   Steady State Convergence Tolerance = 1e-09
+End
+
+Solver 2
+  Exec Solver = After Simulation
+  Equation = TES Circuit Finalize
+  Procedure = "tes_transient_heat_source_t0" "TESCircuitFinalizeAll"
 End
 
 Equation 1
