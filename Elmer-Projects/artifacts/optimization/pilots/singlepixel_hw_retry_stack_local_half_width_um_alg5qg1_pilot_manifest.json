@@ -1,0 +1,38 @@
+{
+  "axis": "stack_local_half_width_um",
+  "levels": [
+    300.0,
+    400.0
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "global_mesh_size_um": 100.0,
+    "stack_local_size_um": 12.5
+  },
+  "tag": "hw_retry",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_hw_retry_stack_local_half_width_um_alg5qg1_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_hw_retry_stack_local_half_width_um_300_alg5qg1_pulse",
+    "case_hw_retry_stack_local_half_width_um_400_alg5qg1_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.007756726172885919,
+      "time_us": 104.475,
+      "pct_comsol_peak": 0.09976697319785939,
+      "left": "case_hw_retry_stack_local_half_width_um_300_alg5qg1_pulse",
+      "right": "case_hw_retry_stack_local_half_width_um_400_alg5qg1_pulse",
+      "accepted": true
+    }
+  ]
+}

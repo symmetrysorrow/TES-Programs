@@ -119,6 +119,12 @@ def _is_legacy_filter_method(filter_method):
     return filter_method == "Legacy (fft/ifft)"
 
 
+def _remove_dc(data):
+    """Remove the per-record DC component before filtering and FFT."""
+    data = np.asarray(data)
+    return data - np.mean(data)
+
+
 def _legacy_output_name(config):
     """Return the filename used for the legacy numerical result."""
     return "modelnoise_old.txt"
@@ -154,6 +160,7 @@ def _legacy_noise_model(config, noise_paths):
 
             base = np.mean(data[:presample]) if presample else 0
             data_baseline = data - base
+            data = _remove_dc(data)
             if cutoff > 0:
                 data = general.Bessel(data, rate, cutoff)
 
@@ -228,11 +235,19 @@ def NoiseAnalysis(
         amplitude_model = np.zeros(sample)
         count = 0
         original_noise_list = []
-        
+
         # メディアンフィルタのカーネルサイズ (窓サイズ) を定義
         # 奇数に設定し、ノイズの幅に応じて調整します。3, 5, 7 などが一般的です。
         # ここでは例としてカーネルサイズ3を使用します。
         median_kernel_size = 3
+
+        # 窓関数なしでFFTすると、矩形窓のサイドローブを通じて低周波成分が
+        # 高周波ビンへ漏れ込み(スペクトル漏れ)、実在しない高周波ノイズ床が
+        # 見かけ上生じる。Hann窓でこれを抑える。
+        # ENBW補正(sqrt(mean(window**2)))を使うのは、対象が正弦波ではなく
+        # 広帯域ランダムノイズのパワーだから(コヒーレントゲイン補正ではない)。
+        fft_window = np.hanning(sample)
+        window_power_gain = np.sqrt(np.mean(fft_window ** 2))
 
         filtered=0
         sample_unmatch=0
@@ -255,6 +270,11 @@ def NoiseAnalysis(
             #noise = scipy.signal.medfilt(noise, kernel_size=median_kernel_size)
             
             # 2. 既存の処理を続行
+            # 各レコードの大きなDCオフセットをHann窓へ入れると、窓の有限長
+            # スペクトルが高周波側まで漏れ込み、特にデジタルBesselがほぼ0に
+            # なるNyquist近傍で偽のノイズ床として支配的になる。平均値だけを
+            # 引けばACノイズ成分は保ったまま、この解析アーティファクトを除ける。
+            noise = _remove_dc(noise)
             noise = general.Bessel(noise, rate, cutoff)
             diff=np.max(noise)-np.min(noise)
             if diff>noise_threshold:
@@ -262,7 +282,7 @@ def NoiseAnalysis(
                 continue
             original_noise_list.append(noise)
 
-            noise_fft = np.fft.fft(noise)
+            noise_fft = np.fft.fft(noise * fft_window) / window_power_gain
             noise_amp = np.abs(noise_fft)
             amplitude_model += noise_amp
             count += 1

@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from generate_hybrid_prism_geometry import inspect_mesh_file
+from scripts.support.build_cases import TES_STATE_FILE_MAX_LEN
 
 
 CONFIG = ROOT / "singlepixel_resolution_optimization.json"
@@ -139,6 +140,12 @@ def fixed_generator_options(settings: dict[str, float]) -> list[str]:
             options.extend(["--stack-local-size", f"{value}e-6"])
         elif axis == "absorber_local_size_um":
             options.extend(["--absorber-local-size", f"{value}e-6"])
+        elif axis == "global_mesh_size_um":
+            options.extend(["--global-mesh-size", f"{value}e-6"])
+        elif axis == "stack_local_half_width_um":
+            options.extend(["--stack-local-half-width", f"{value}e-6"])
+        elif axis == "absorber_local_radius_um":
+            options.extend(["--absorber-local-radius", f"{value}e-6"])
         else:
             raise ValueError(axis)
     return options
@@ -349,8 +356,20 @@ def build_project(axis: str, levels: list[float], step_us: float, end_us: float,
     for level in levels:
         # Namespace every generated artifact (raw MSH, converted mesh, cases,
         # results and restart state) away from pre-quality-gate pilot runs.
-        ident = f"pilot_{tag + '_' if tag else ''}{axis}_{slug(level)}_{PILOT_IMPLEMENTATION_SUFFIX}"
+        # The "pilot_" literal is dropped (redundant with the "auto_" tag and
+        # this directory's own name) to keep the identifier well under the
+        # TES UDF's 128-character state-file limit for the longest axis name
+        # (absorber_local_size_um) chained with a full autotune tag.
+        ident = f"{tag + '_' if tag else 'pilot_'}{axis}_{slug(level)}_{PILOT_IMPLEMENTATION_SUFFIX}"
         mesh = f"mesh_{ident}"
+        state_file = f"work/meshes/{mesh}/{ident}.state"
+        if len(state_file) > TES_STATE_FILE_MAX_LEN:
+            raise ValueError(
+                f"[{axis}={level}] generated TES state file would be {len(state_file)} "
+                f"characters, over the UDF's {TES_STATE_FILE_MAX_LEN}-character limit: "
+                f"{state_file!r}. Shorten --tag or the axis/level naming before running "
+                "mesh generation."
+            )
         mesh_file = f"{ident}.msh"
         options: list[str] = []
         if axis in LAYER_AXIS_TO_OPTION:
@@ -359,6 +378,12 @@ def build_project(axis: str, levels: list[float], step_us: float, end_us: float,
             options = ["--stack-local-size", f"{level}e-6"]
         elif axis == "absorber_local_size_um":
             options = ["--absorber-local-size", f"{level}e-6"]
+        elif axis == "global_mesh_size_um":
+            options = ["--global-mesh-size", f"{level}e-6"]
+        elif axis == "stack_local_half_width_um":
+            options = ["--stack-local-half-width", f"{level}e-6"]
+        elif axis == "absorber_local_radius_um":
+            options = ["--absorber-local-radius", f"{level}e-6"]
         elif axis == "time":
             options = ["--stycast-layers", "32"]
         else:

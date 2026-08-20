@@ -3,7 +3,13 @@
   "seed": {
     "stycast_layers": 32.0,
     "tes_layers": 1.0,
-    "sinx_layers": 1.0
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "global_mesh_size_um": 100.0,
+    "stack_local_size_um": 12.5,
+    "stack_local_half_width_um": 400.0
   },
   "axes": [
     {
@@ -23,97 +29,75 @@
     },
     {
       "axis": "sio2_1_layers",
-      "levels": [
-        1.0,
-        2.0,
-        4.0
-      ],
-      "tag": "auto_b0d2e08637b5",
       "selected": 2.0,
-      "status": "accepted",
-      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_b0d2e08637b5_sio2_1_layers_pilot_manifest.json",
-      "comparisons": [
-        {
-          "max_abs_uA": 0.00021463023040167728,
-          "time_us": 21.314999999999998,
-          "pct_comsol_peak": 0.0027605729487763693,
-          "left": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_1_pulse",
-          "right": "case_pilot_auto_b0d2e08637b5_sio2_1_layers_2_pulse",
-          "accepted": true
-        }
-      ]
+      "status": "seeded"
     },
     {
       "axis": "si_1_layers",
-      "levels": [
-        1.0,
-        2.0,
-        4.0
-      ],
-      "tag": "auto_f8e6153ea4c6",
       "selected": 2.0,
-      "status": "accepted",
-      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_f8e6153ea4c6_si_1_layers_pilot_manifest.json",
-      "comparisons": [
-        {
-          "max_abs_uA": 0.009956419085227708,
-          "time_us": 104.475,
-          "pct_comsol_peak": 0.12805941242257354,
-          "left": "case_pilot_auto_f8e6153ea4c6_si_1_layers_1_pulse",
-          "right": "case_pilot_auto_f8e6153ea4c6_si_1_layers_2_pulse",
-          "accepted": true
-        }
-      ]
+      "status": "seeded"
     },
     {
       "axis": "si_2_layers",
-      "levels": [
-        1.0,
-        2.0,
-        4.0
-      ],
-      "tag": "auto_506de6785fe4",
       "selected": 2.0,
-      "status": "accepted",
-      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_506de6785fe4_si_2_layers_pilot_manifest.json",
-      "comparisons": [
-        {
-          "max_abs_uA": 0.0003964071336435282,
-          "time_us": 102.47999999999999,
-          "pct_comsol_peak": 0.005098586568119116,
-          "left": "case_pilot_auto_506de6785fe4_si_2_layers_1_pulse",
-          "right": "case_pilot_auto_506de6785fe4_si_2_layers_2_pulse",
-          "accepted": true
-        }
-      ]
+      "status": "seeded"
+    },
+    {
+      "axis": "global_mesh_size_um",
+      "selected": 100.0,
+      "status": "seeded"
     },
     {
       "axis": "stack_local_size_um",
+      "selected": 12.5,
+      "status": "seeded"
+    },
+    {
+      "axis": "stack_local_half_width_um",
+      "selected": 400.0,
+      "status": "seeded"
+    },
+    {
+      "axis": "absorber_local_size_um",
       "levels": [
         50.0,
         25.0,
         16.6666667
       ],
-      "tag": "auto_882e7aeac5df",
-      "selected": 16.6666667,
-      "status": "unresolved_at_finest_candidate",
-      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_882e7aeac5df_stack_local_size_um_pilot_manifest.json",
+      "tag": "auto_ff149d",
+      "selected": 25.0,
+      "status": "accepted",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_ff149d_absorber_local_size_um_alg5qg1_pilot_manifest.json",
       "comparisons": [
         {
-          "max_abs_uA": 0.11517016584187445,
-          "time_us": 104.475,
-          "pct_comsol_peak": 1.481318096403079,
-          "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_50_pulse",
-          "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
-          "accepted": false
-        },
+          "max_abs_uA": 0.0005814717954202298,
+          "time_us": 60.059999999999995,
+          "pct_comsol_peak": 0.00747888732127536,
+          "left": "case_auto_ff149d_absorber_local_size_um_50_alg5qg1_pulse",
+          "right": "case_auto_ff149d_absorber_local_size_um_25_alg5qg1_pulse",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "axis": "absorber_local_radius_um",
+      "levels": [
+        15.0,
+        25.0,
+        50.0
+      ],
+      "tag": "auto_014457",
+      "selected": 25.0,
+      "status": "accepted",
+      "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_014457_absorber_local_radius_um_alg5qg1_pilot_manifest.json",
+      "comparisons": [
         {
-          "max_abs_uA": 0.06925740879853493,
-          "time_us": 104.475,
-          "pct_comsol_peak": 0.890788445196059,
-          "left": "case_pilot_auto_882e7aeac5df_stack_local_size_um_25_pulse",
-          "right": "case_pilot_auto_882e7aeac5df_stack_local_size_um_16p6667_pulse",
-          "accepted": false
+          "max_abs_uA": 0.00030709468775214077,
+          "time_us": 103.74,
+          "pct_comsol_peak": 0.0039498503362500265,
+          "left": "case_auto_014457_absorber_local_radius_um_15_alg5qg1_pulse",
+          "right": "case_auto_014457_absorber_local_radius_um_25_alg5qg1_pulse",
+          "accepted": true
         }
       ]
     }
@@ -125,7 +109,51 @@
     "sio2_1_layers": 2.0,
     "si_1_layers": 2.0,
     "si_2_layers": 2.0,
-    "stack_local_size_um": 16.6666667
+    "global_mesh_size_um": 100.0,
+    "stack_local_size_um": 12.5,
+    "stack_local_half_width_um": 400.0,
+    "absorber_local_size_um": 25.0,
+    "absorber_local_radius_um": 25.0,
+    "early_step_us": 0.625
   },
-  "status": "needs_more_refinement"
+  "time": {
+    "axis": "time",
+    "levels": [
+      0.625,
+      1.25,
+      2.5,
+      5.0
+    ],
+    "tag": "auto_2fd409",
+    "selected": 0.625,
+    "status": "finest_candidate_required",
+    "manifest": "artifacts\\optimization\\pilots\\singlepixel_auto_2fd409_time_alg5qg1_pilot_manifest.json",
+    "comparisons": [
+      {
+        "max_abs_uA": 0.041939987410444246,
+        "time_us": 104.475,
+        "pct_comsol_peak": 0.5394319080803125,
+        "left": "case_auto_2fd409_time_0p625_alg5qg1_pulse",
+        "right": "case_auto_2fd409_time_1p25_alg5qg1_pulse",
+        "accepted": false
+      },
+      {
+        "max_abs_uA": 0.04478524880050827,
+        "time_us": 103.845,
+        "pct_comsol_peak": 0.5760276458331395,
+        "left": "case_auto_2fd409_time_1p25_alg5qg1_pulse",
+        "right": "case_auto_2fd409_time_2p5_alg5qg1_pulse",
+        "accepted": false
+      },
+      {
+        "max_abs_uA": 0.13229444306202254,
+        "time_us": 102.585,
+        "pct_comsol_peak": 1.7015704642676517,
+        "left": "case_auto_2fd409_time_2p5_alg5qg1_pulse",
+        "right": "case_auto_2fd409_time_5_alg5qg1_pulse",
+        "accepted": false
+      }
+    ]
+  },
+  "status": "finest_candidate_required"
 }

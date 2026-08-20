@@ -1,0 +1,42 @@
+{
+  "axis": "absorber_local_radius_um",
+  "levels": [
+    15.0,
+    25.0,
+    50.0
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "absorber_local_size_um": 25.0,
+    "global_mesh_size_um": 100.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "stack_local_half_width_um": 400.0,
+    "stack_local_size_um": 12.5,
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0
+  },
+  "tag": "auto_014457",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_auto_014457_absorber_local_radius_um_alg5qg1_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_auto_014457_absorber_local_radius_um_15_alg5qg1_pulse",
+    "case_auto_014457_absorber_local_radius_um_25_alg5qg1_pulse",
+    "case_auto_014457_absorber_local_radius_um_50_alg5qg1_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.00030709468775214077,
+      "time_us": 103.74,
+      "pct_comsol_peak": 0.0039498503362500265,
+      "left": "case_auto_014457_absorber_local_radius_um_15_alg5qg1_pulse",
+      "right": "case_auto_014457_absorber_local_radius_um_25_alg5qg1_pulse",
+      "accepted": true
+    }
+  ]
+}

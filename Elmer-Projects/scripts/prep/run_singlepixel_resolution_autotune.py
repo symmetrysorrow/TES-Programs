@@ -52,7 +52,7 @@ def context_tag(selected: dict[str, float]) -> str:
     if not selected:
         return "auto_base"
     encoded = json.dumps(sorted(selected.items()), separators=(",", ":"), ensure_ascii=True).encode("ascii")
-    return "auto_" + hashlib.sha256(encoded).hexdigest()[:12]
+    return "auto_" + hashlib.sha256(encoded).hexdigest()[:6]
 
 
 def selected_spatial_level(manifest: dict, levels: list[float]) -> tuple[float, str]:

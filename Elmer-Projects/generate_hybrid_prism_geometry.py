@@ -42,8 +42,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("project", nargs="?", type=Path, default=DEFAULT_PROJECT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
+        "--global-mesh-size", type=float, default=GLOBAL_STACK_SIZE, metavar="METERS",
+        help="uniform background size outside the local refinement fields (default: legacy 50 um)",
+    )
+    parser.add_argument(
         "--stack-local-size", type=float, default=None, metavar="METERS",
-        help="central stack/contact Box-field size; omit for legacy uniform 50 um mesh",
+        help="central stack/contact Box-field size; omit for a uniform mesh at --global-mesh-size",
     )
     parser.add_argument(
         "--stack-local-half-width", type=float, default=0.4e-3, metavar="METERS",
@@ -86,16 +90,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             help=f"number of prism elements through the {help_name} thickness (default: 1)",
         )
     args = parser.parse_args(argv)
+    if args.global_mesh_size <= 0.0:
+        parser.error("--global-mesh-size must be positive")
     if args.stack_local_size is not None and args.stack_local_size <= 0.0:
         parser.error("--stack-local-size must be positive")
-    if args.stack_local_size is not None and args.stack_local_size > GLOBAL_STACK_SIZE:
-        parser.error("--stack-local-size may not exceed the legacy 50 um size")
+    if args.stack_local_size is not None and args.stack_local_size > args.global_mesh_size:
+        parser.error("--stack-local-size may not exceed --global-mesh-size")
     if args.stack_local_half_width <= 0.0:
         parser.error("--stack-local-half-width must be positive")
     if args.absorber_local_size is not None and args.absorber_local_size <= 0.0:
         parser.error("--absorber-local-size must be positive")
-    if args.absorber_local_size is not None and args.absorber_local_size > GLOBAL_STACK_SIZE:
-        parser.error("--absorber-local-size may not exceed the legacy 50 um size")
+    if args.absorber_local_size is not None and args.absorber_local_size > args.global_mesh_size:
+        parser.error("--absorber-local-size may not exceed --global-mesh-size")
     if args.absorber_local_radius <= 0.0:
         parser.error("--absorber-local-radius must be positive")
     if args.stycast_diameter <= 0.0:
@@ -113,13 +119,14 @@ def stack_local_field_profile(
     y0: float,
     z_sio2_1: float,
     z_abs: float,
+    global_size: float = GLOBAL_STACK_SIZE,
 ) -> dict[str, float] | None:
     """Return a pure Gmsh Box-field profile for the optional stack probe."""
-    if local_size is None or local_size >= GLOBAL_STACK_SIZE:
+    if local_size is None or local_size >= global_size:
         return None
     return {
         "VIn": local_size,
-        "VOut": GLOBAL_STACK_SIZE,
+        "VOut": global_size,
         "XMin": x0 - half_width,
         "XMax": x0 + half_width,
         "YMin": y0 - half_width,
@@ -128,9 +135,9 @@ def stack_local_field_profile(
         # smooth through the membrane/stack column. The top is the absorber
         # contact plane; this necessarily refines tetrahedra adjacent to the
         # absorber-bottom interface but not the absorber bulk.
-        "ZMin": z_sio2_1 - GLOBAL_STACK_SIZE,
+        "ZMin": z_sio2_1 - global_size,
         "ZMax": z_abs,
-        "Thickness": GLOBAL_STACK_SIZE,
+        "Thickness": global_size,
     }
 
 
@@ -141,18 +148,19 @@ def absorber_local_field_profile(
     y0: float,
     z_abs: float,
     abs_z: float,
+    global_size: float = GLOBAL_STACK_SIZE,
 ) -> dict[str, float] | None:
     """Return a pure Gmsh Ball-field profile for absorber-centre refinement."""
-    if local_size is None or local_size >= GLOBAL_STACK_SIZE:
+    if local_size is None or local_size >= global_size:
         return None
     return {
         "VIn": local_size,
-        "VOut": GLOBAL_STACK_SIZE,
+        "VOut": global_size,
         "XCenter": x0,
         "YCenter": y0,
         "ZCenter": z_abs + abs_z / 2.0,
         "Radius": radius,
-        "Thickness": GLOBAL_STACK_SIZE,
+        "Thickness": global_size,
     }
 
 
@@ -425,15 +433,15 @@ def main(argv: list[str] | None = None) -> int:
     # so the 1--20 um films do not force the absorber to use a 1--20 um 3-D
     # tetrahedral size.  This is the principal saving of the hybrid mesh.
     local_profile = stack_local_field_profile(
-        args.stack_local_size, args.stack_local_half_width, x0, y0, z_sio2_1, z_abs
+        args.stack_local_size, args.stack_local_half_width, x0, y0, z_sio2_1, z_abs, args.global_mesh_size
     )
     absorber_profile = absorber_local_field_profile(
-        args.absorber_local_size, args.absorber_local_radius, x0, y0, z_abs, abs_z
+        args.absorber_local_size, args.absorber_local_radius, x0, y0, z_abs, abs_z, args.global_mesh_size
     )
     active_local_sizes = [profile["VIn"] for profile in (local_profile, absorber_profile) if profile is not None]
-    global_min = min(active_local_sizes, default=GLOBAL_STACK_SIZE)
+    global_min = min(active_local_sizes, default=args.global_mesh_size)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", global_min)
-    gmsh.option.setNumber("Mesh.CharacteristicLengthMax", GLOBAL_STACK_SIZE)
+    gmsh.option.setNumber("Mesh.CharacteristicLengthMax", args.global_mesh_size)
     gmsh.option.setNumber("Mesh.Algorithm", args.mesh_algorithm)
     gmsh.option.setNumber("Mesh.Algorithm3D", 4)
     gmsh.option.setNumber("Mesh.Optimize", 1)

@@ -1,5 +1,7 @@
 import math
 
+import pytest
+
 from generate_hybrid_prism_geometry import (
     DEFAULT_OUT,
     GLOBAL_STACK_SIZE,
@@ -45,6 +47,30 @@ def test_default_cli_preserves_legacy_uniform_mesh_recipe() -> None:
 
 def test_mesh_algorithm_override() -> None:
     assert parse_args(["--mesh-algorithm", "5"]).mesh_algorithm == 5
+
+
+def test_global_mesh_size_defaults_to_legacy_50um() -> None:
+    assert parse_args([]).global_mesh_size == GLOBAL_STACK_SIZE
+
+
+def test_global_mesh_size_override_raises_the_local_size_ceiling() -> None:
+    with pytest.raises(SystemExit):
+        parse_args(["--absorber-local-size", "75e-6"])
+    args = parse_args(["--global-mesh-size", "100e-6", "--absorber-local-size", "75e-6"])
+    assert args.global_mesh_size == 100e-6
+    assert args.absorber_local_size == 75e-6
+
+
+def test_absorber_profile_uses_overridden_global_size() -> None:
+    profile = absorber_local_field_profile(
+        75e-6, 150e-6, 0.0, 1e-3, 20e-6, 525e-6, global_size=100e-6
+    )
+    assert profile is not None
+    assert profile["VIn"] == 75e-6
+    assert profile["VOut"] == 100e-6
+    assert profile["Thickness"] == 100e-6
+    # At the legacy 50 um background, the same 75 um local size would be a no-op.
+    assert absorber_local_field_profile(75e-6, 150e-6, 0.0, 1e-3, 20e-6, 525e-6) is None
 
 
 def test_inspect_mesh_file_always_finalizes(monkeypatch, tmp_path) -> None:

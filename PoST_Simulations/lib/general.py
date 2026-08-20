@@ -43,6 +43,64 @@ def Bessel(data,rate:float,fs:float):
     filtered_data=scipy.signal.filtfilt(b,a,data)
     return filtered_data
 
+def BesselCausal(data,rate:float,fs:float):
+    """Single-pass (causal) Bessel low-pass, matching a real-time analog filter.
+
+    Unlike Bessel() (which uses filtfilt and therefore squares the magnitude
+    response), a physical analog hardware filter can only be applied once,
+    forward in time. Use this to emulate hardware filter stages instead of
+    software/analysis filter stages.
+    """
+    ws=GetWs(rate,fs)
+    b,a=scipy.signal.bessel(2,ws,"low")
+    filtered_data=scipy.signal.lfilter(b,a,data)
+    return filtered_data
+
+def BesselMagnitudeResponse(frequency, rate:float, fs:float, passes:int=1):
+    """Return the digital Bessel filter magnitude at physical frequencies.
+
+    ``passes=1`` represents a causal hardware stage.  ``passes=2`` represents
+    the magnitude response of the forward/backward ``Bessel`` analysis filter.
+    Computing this response directly avoids finite-record startup transients
+    and FFT leakage when filtering a theoretical ASD.
+    """
+    if passes < 1:
+        raise ValueError("passes must be at least one")
+    frequency = np.asarray(frequency, dtype=float)
+    if np.any(frequency < 0) or np.any(frequency > rate / 2):
+        raise ValueError("frequency must be between zero and the Nyquist frequency")
+    ws=GetWs(rate,fs)
+    b,a=scipy.signal.bessel(2,ws,"low")
+    angular_frequency = 2 * np.pi * frequency / rate
+    _, response = scipy.signal.freqz(b, a, worN=angular_frequency)
+    return np.abs(response) ** passes
+
+def AnalogBesselMagnitudeResponse(frequency, fs:float, order:int=2, norm:str="phase"):
+    """Return a continuous-time analog Bessel low-pass magnitude response.
+
+    This is for physical analog circuitry.  Unlike a bilinear-transformed
+    digital IIR, its response remains finite at the acquisition Nyquist
+    frequency.  ``fs`` is the Bessel normalization frequency in Hz.
+    """
+    frequency = np.asarray(frequency, dtype=float)
+    if np.any(frequency < 0):
+        raise ValueError("frequency must be non-negative")
+    if fs <= 0:
+        raise ValueError("fs must be positive")
+    b,a=scipy.signal.bessel(
+        order,
+        2 * np.pi * fs,
+        "low",
+        analog=True,
+        norm=norm,
+    )
+    _, response = scipy.signal.freqs(
+        b,
+        a,
+        worN=2 * np.pi * frequency,
+    )
+    return np.abs(response)
+
 def gaussian(x, amp, mean, stddev):
     return amp * np.exp(-((x - mean) ** 2) / (2 * stddev ** 2))
 

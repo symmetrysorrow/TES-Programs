@@ -1,0 +1,58 @@
+{
+  "axis": "time",
+  "levels": [
+    0.625,
+    1.25,
+    2.5,
+    5.0
+  ],
+  "tail_start_us": null,
+  "fixed_settings": {
+    "absorber_local_size_um": 25.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "stack_local_size_um": 16.6667,
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0
+  },
+  "tag": "auto_9448aa",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_auto_9448aa_time_alg5qg1_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_auto_9448aa_time_0p625_alg5qg1_pulse",
+    "case_auto_9448aa_time_1p25_alg5qg1_pulse",
+    "case_auto_9448aa_time_2p5_alg5qg1_pulse",
+    "case_auto_9448aa_time_5_alg5qg1_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.031201010227562165,
+      "time_us": 104.475,
+      "pct_comsol_peak": 0.40130723732396384,
+      "left": "case_auto_9448aa_time_0p625_alg5qg1_pulse",
+      "right": "case_auto_9448aa_time_1p25_alg5qg1_pulse",
+      "accepted": false
+    },
+    {
+      "max_abs_uA": 0.05136713363381773,
+      "time_us": 103.845,
+      "pct_comsol_peak": 0.6606838156037775,
+      "left": "case_auto_9448aa_time_1p25_alg5qg1_pulse",
+      "right": "case_auto_9448aa_time_2p5_alg5qg1_pulse",
+      "accepted": false
+    },
+    {
+      "max_abs_uA": 0.11729998952179699,
+      "time_us": 102.585,
+      "pct_comsol_peak": 1.5087118779102509,
+      "left": "case_auto_9448aa_time_2p5_alg5qg1_pulse",
+      "right": "case_auto_9448aa_time_5_alg5qg1_pulse",
+      "accepted": false
+    }
+  ]
+}

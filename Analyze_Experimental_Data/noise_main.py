@@ -39,6 +39,9 @@ def main():
         try:
             data = gp.loadbi(i, "binary")
             base, data_ba = gp.baseline(data, set["Config"]["presamples"], 1000, 500)
+            # Remove each record's DC component before filtering and FFT so all
+            # noise-generation paths use the same AC-only analysis.
+            data = data - np.mean(data)
             if set["main"]["cutoff"] > 0:
                 data = gp.BesselFilter(data, rate, set["main"]["cutoff"])
             peak = np.max(data_ba)
