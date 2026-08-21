@@ -83,7 +83,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--result", type=Path, required=True)
-    parser.add_argument("--sweep", choices=("lr", "etf", "thermal"), default="lr")
+    parser.add_argument("--sweep", choices=("lr", "etf", "thermal", "bath", "bath-lr"), default="lr")
     args = parser.parse_args()
     args.work_dir.mkdir(parents=True, exist_ok=True)
 
@@ -117,7 +117,7 @@ def main():
             for alpha_scale in [0.5, 0.75, 1.0, 1.25, 1.5]
             for beta_scale in [0.5, 0.75, 1.0, 1.25, 1.5]
         ]
-    else:
+    elif args.sweep == "thermal":
         # One-at-a-time thermal scan.  The range is deliberately broad; a
         # candidate must improve the noise score before pulse work is run.
         thermal_keys = ("C_tes", "G_abs-tes", "G_tes-bath")
@@ -133,6 +133,35 @@ def main():
                         "_scale": scale,
                     }
                 )
+    elif args.sweep == "bath":
+        # T_bath must remain below T_c.  This scan spans the plausible
+        # sub-transition operating range without approaching the singular
+        # T_bath == T_c limit.
+        trials = [
+            {
+                "L": 1.0e-6,
+                "R": base_r * 1.25,
+                "T_bath": temperature,
+                "_varied_key": "T_bath",
+                "_scale": temperature / parameters["T_bath"],
+            }
+            for temperature in [0.195, 0.1975, 0.200, 0.2025, 0.205, 0.2075, 0.210]
+        ]
+    else:
+        # Re-optimise the electrical knee at two physically plausible bath
+        # temperatures; a fixed-L/R bath scan is not sufficient here.
+        trials = [
+            {
+                "L": inductance,
+                "R": base_r * r_scale,
+                "T_bath": temperature,
+                "_varied_key": "T_bath+L+R",
+                "_scale": temperature / parameters["T_bath"],
+            }
+            for temperature in [0.195, 0.200]
+            for inductance in [1.0e-6, 7.5e-7, 5.0e-7, 3.0e-7]
+            for r_scale in [0.5, 0.75, 1.0, 1.25]
+        ]
     rows = []
     for changes in trials:
         trial = dict(parameters)
