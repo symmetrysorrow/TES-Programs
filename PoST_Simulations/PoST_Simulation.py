@@ -24,6 +24,7 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import sys
 from pathlib import Path
+import questionary
 
 # Allow running this script directly from simu_py without installing tes_cpp.
 _repo_root = Path(__file__).resolve().parents[1]
@@ -55,7 +56,8 @@ pulse_num = 500
 FINITE_RECORDS = 500
 FINITE_RECORD_SEED = 20260819
 
-output = "H:\\hata2025\\new"
+output = "H:\\hata\\test"
+event_root = None
 
 
 def random_noise(spe, seed):
@@ -238,18 +240,30 @@ def MakePulse():
         output_path=f"{output}/pulses.h5",
     )
 
-    reference_pulse = posi2pulse(
-        input_path,
-        [1],
-    )[0]
+    settling_time = int(para.get("SettlingTime", 0))
+    if settling_time == 0:
+        # A zero value means that the settling window has not been selected
+        # yet.  Use the weakest CH1 reference pulse across all absorber
+        # positions, then take the sample where that waveform peaks.
+        weakest = None
+        for position, pulse in iter_hdf5_pulse_items(f"{output}/pulses.h5"):
+            waveform = np.asarray(pulse["ch1"], dtype=float)
+            if waveform.size == 0 or not np.all(np.isfinite(waveform)):
+                continue
+            peak = float(np.max(waveform))
+            if weakest is None or peak < weakest[0]:
+                weakest = (peak, int(position), int(np.argmax(waveform)))
 
-    SettlingTime = int(
-        np.argmax(
-            reference_pulse.ch1
+        if weakest is None:
+            raise ValueError("Could not determine SettlingTime from CH1 reference pulses")
+
+        _, settling_position, settling_time = weakest
+        print(
+            f"SettlingTime was 0; selected the weakest CH1 waveform at "
+            f"position {settling_position}: sample {settling_time}"
         )
-    )
 
-    para["SettlingTime"] = SettlingTime
+    para["SettlingTime"] = settling_time
 
     with open(
         f"{output}/input.json",
@@ -268,6 +282,15 @@ def LoadPulses():
     return read_all_pulses(
         f"{output}/pulses.h5"
     )
+
+
+def _event_data_root():
+    """Return the root containing external dumpall.dat/event.h5 data."""
+
+    if event_root is None:
+        return Path(output)
+
+    return Path(event_root).expanduser()
 
 
 def IterJsonObjectItems(
@@ -2397,7 +2420,12 @@ def Pulse_Noise():
 
 
 def Dump2Event():
-    """Convert each position folder's dumpall.dat into event.h5."""
+    """Convert external dumpall.dat files into event.h5 files.
+
+    ``input.json`` supplies the input energy and position list, while the
+    dump/event files themselves can live under ``event_root``. If no external
+    root is configured, the existing ``output`` layout is used.
+    """
 
     with open(
         f"{output}/input.json",
@@ -2413,21 +2441,21 @@ def Dump2Event():
         / 1000.0
     )
 
+    data_root = _event_data_root()
+
     for posi in tqdm.tqdm(
         para["position"],
         desc="dumpall to event",
     ):
 
-        position_directory = (
-            f"{output}/{posi}"
-        )
+        position_directory = data_root / str(posi)
 
         dump_path = (
-            f"{position_directory}/dumpall.dat"
+            position_directory / "dumpall.dat"
         )
 
         event_path = (
-            f"{position_directory}/event.h5"
+            position_directory / "event.h5"
         )
 
         if not os.path.isfile(
@@ -2449,9 +2477,9 @@ def Pulse_Ms():
     """
     Synthesize one CH0/CH1 pulse for each event in every position folder.
 
-    For each input.json position, read its event.h5 and write pulse_MS.h5.
-    event.h5 stores event IDs as its outer keys; all deposits in one event
-    are summed into a single pulse.
+    For each input.json position, read event.h5 from ``event_root`` and
+    write pulse_MS.h5 under ``output``. event.h5 stores event IDs as its outer
+    keys; all deposits in one event are summed into a single pulse.
     """
 
     with open(
@@ -2476,6 +2504,8 @@ def Pulse_Ms():
     reference_energy_kev = float(
         para["E"]
     )
+
+    event_data_root = _event_data_root()
 
     if (
         length_mm <= 0
@@ -2547,16 +2577,17 @@ def Pulse_Ms():
         desc="MS pulse positions",
     ):
 
-        position_directory = (
-            f"{output}/{posi}"
-        )
+        position_directory = Path(output) / str(posi)
+        event_directory = event_data_root / str(posi)
+
+        position_directory.mkdir(parents=True, exist_ok=True)
 
         event_path = (
-            f"{position_directory}/event.h5"
+            event_directory / "event.h5"
         )
 
         output_path = (
-            f"{position_directory}/pulse_MS.h5"
+            position_directory / "pulse_MS.h5"
         )
 
         if not os.path.isfile(
@@ -2949,6 +2980,121 @@ def Pulse_MS_Noise():
                 )
 
 
+def _run_selected_actions(selected_actions):
+    """Run selected processing steps in dependency-safe order."""
+
+    actions = {
+        "make_pulse": ("MakePulse", MakePulse),
+        "fit_ratios": ("FitRatios", FitRatios),
+        "make_noise": ("MakeNoise", MakeNoise),
+        "show_noise_spectrum": ("_ShowNoiseSpectrum", _ShowNoiseSpectrum),
+        "show_samples": ("ShowSamples", ShowSamples),
+        "pulse_noise": ("Pulse_Noise", Pulse_Noise),
+        "dump_to_event": ("Dump2Event", Dump2Event),
+        "pulse_ms": ("Pulse_Ms", Pulse_Ms),
+        "pulse_ms_noise": ("Pulse_MS_Noise", Pulse_MS_Noise),
+    }
+
+    # The menu is not executed in the order in which the user moves the
+    # cursor.  This keeps the common pulse -> ratio/noise -> derived-data
+    # pipeline reproducible when several items are selected.
+    execution_order = (
+        "make_pulse",
+        "fit_ratios",
+        "make_noise",
+        "show_noise_spectrum",
+        "show_samples",
+        "pulse_noise",
+        "dump_to_event",
+        "pulse_ms",
+        "pulse_ms_noise",
+    )
+
+    selected_actions = set(selected_actions)
+    for action_key in execution_order:
+        if action_key not in selected_actions:
+            continue
+
+        action_name, action = actions[action_key]
+        print(f"\n=== {action_name} ===")
+        action()
+
+
+def _run_interactive():
+    """Ask which simulation steps should be executed."""
+
+    global event_root
+
+    choices = [
+        questionary.Choice(
+            "パルスを生成 (MakePulse) -> pulses.h5",
+            value="make_pulse",
+        ),
+        questionary.Choice(
+            "パルス比を計算 (FitRatios) -> ratios.csv",
+            value="fit_ratios",
+        ),
+        questionary.Choice(
+            "ノイズを生成 (MakeNoise) -> noise.h5",
+            value="make_noise",
+        ),
+        questionary.Choice(
+            "ノイズスペクトルを出力 (_ShowNoiseSpectrum)",
+            value="show_noise_spectrum",
+        ),
+        questionary.Choice(
+            "サンプル波形を表示 (ShowSamples)",
+            value="show_samples",
+        ),
+        questionary.Choice(
+            "単一サイト・ノイズパルスを生成 (Pulse_Noise)",
+            value="pulse_noise",
+        ),
+        questionary.Choice(
+            "外部dumpall.dat を event.h5 に変換 (Dump2Event)",
+            value="dump_to_event",
+        ),
+        questionary.Choice(
+            "外部event.h5 から複数相互作用パルスを生成 (Pulse_Ms)",
+            value="pulse_ms",
+        ),
+        questionary.Choice(
+            "複数相互作用 + ノイズを生成 (Pulse_MS_Noise)",
+            value="pulse_ms_noise",
+        ),
+    ]
+
+    print(f"出力先: {output}")
+    selected_actions = questionary.checkbox(
+        "実行する処理を選択してください（Space: ON/OFF、Enter: 実行）",
+        choices=choices,
+    ).ask()
+
+    if selected_actions is None:
+        print("キャンセルしました。")
+        return
+
+    if not selected_actions:
+        print("処理が選択されていません。")
+        return
+
+    external_data_actions = {
+        "dump_to_event",
+        "pulse_ms",
+    }
+    if external_data_actions.intersection(selected_actions) and event_root is None:
+        data_root = questionary.path(
+            "dumpall.dat / event.h5 のルートを指定してください",
+            default=output,
+        ).ask()
+        if data_root is None:
+            print("キャンセルしました。")
+            return
+        event_root = str(Path(data_root).expanduser())
+
+    _run_selected_actions(selected_actions)
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -2963,12 +3109,32 @@ if __name__ == "__main__":
         default=output,
         help="Directory containing input.json and receiving simulation outputs.",
     )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Show the interactive action menu even when other arguments are given.",
+    )
+    parser.add_argument(
+        "--event-root",
+        default=None,
+        help=(
+            "Root directory containing position/<id>/dumpall.dat and "
+            "event.h5. pulse_MS outputs remain under --output."
+        ),
+    )
     script_args = parser.parse_args()
     output = script_args.output
+    event_root = script_args.event_root
 
-    MakeNoise()
-
-    if script_args.noise_only:
-        _ShowNoiseSpectrum()
+    if script_args.interactive or len(sys.argv) == 1:
+        if script_args.noise_only:
+            parser.error("--noise-only cannot be combined with interactive mode.")
+        _run_interactive()
     else:
-        ShowSamples()
+        # Preserve the previous command-line behavior for existing scripts.
+        MakeNoise()
+
+        if script_args.noise_only:
+            _ShowNoiseSpectrum()
+        else:
+            ShowSamples()

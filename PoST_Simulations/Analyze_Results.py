@@ -74,17 +74,39 @@ def figure_output_dir(data_path, target):
     return Path(data_path) / "figures" / target.lower()
 
 
-def full_energy_event_ids(data_path, position, target):
-    """Return the full-energy event IDs required for MS resolution analysis."""
+def full_energy_event_ids(data_path, position, target, event_path=None):
+    """Return the full-energy event IDs required for MS resolution analysis.
+
+    ``FullEnergyList.dat`` is created alongside the external ``event.h5``
+    data by ``PoST_Simulation.py``.  ``event_path`` is the external event
+    root, matching ``PoST_Simulation.py``'s ``event_root``.
+    """
     if target.lower() not in FULL_ENERGY_TARGETS:
         return None
-    path = Path(data_path) / str(position) / "FullEnergyList.dat"
+    if event_path is None:
+        raise ValueError(
+            "EventPath is required for MS analysis. "
+            "Specify the root containing position/<id>/FullEnergyList.dat."
+        )
+    event_root = Path(event_path).expanduser()
+    path = event_root / str(position) / "FullEnergyList.dat"
     if not path.is_file():
         raise FileNotFoundError(
             f"Full-energy event list was not found for {target}: {path}. "
-            "Run Dump2Event before extracting MS features."
+            "Check EventPath and run Dump2Event before extracting MS features."
         )
-    return {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+    event_ids = {
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+    if not event_ids:
+        raise ValueError(
+            f"Full-energy event list is empty: {path}. "
+            "Check that EventPath matches the simulation energy and rerun "
+            "Dump2Event with the correct input.json."
+        )
+    return event_ids
 
 
 def bessel_filter(pulse, rate, cutoff):
@@ -424,7 +446,7 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
     return [peak_av, peak_index, rise, ST_height]
 
 
-def MakeOutput(Data_path, target):
+def MakeOutput(Data_path, target, event_path=None):
     """Extract pulse features from the current post_all HDF5 or JSON files.
 
     HDF5 is preferred when available, with JSON retained as a fallback.
@@ -434,6 +456,11 @@ def MakeOutput(Data_path, target):
     data_path = Path(Data_path)
     with open(data_path / "input.json", encoding="utf-8") as f:
         para = json.load(f)
+
+    if target.lower() in FULL_ENERGY_TARGETS and event_path is None:
+        event_path = ask_event_path(data_path)
+        if event_path is None:
+            raise SystemExit(0)
 
     if target.lower() == "pulse_ms":
         print("Pulse_ms: no Bessel filter")
@@ -449,7 +476,7 @@ def MakeOutput(Data_path, target):
         source_path = pulse_data_path(data_path, posi, target)
         if not source_path.is_file():
             raise FileNotFoundError(f"Pulse data was not found: {source_path}")
-        full_energy_ids = full_energy_event_ids(data_path, posi, target)
+        full_energy_ids = full_energy_event_ids(data_path, posi, target, event_path)
         results = {0: [], 1: []}
         pulse_ids = []
         failures = []
@@ -632,7 +659,7 @@ def load_ratio_calibration(data_path):
     return PchipInterpolator(ratios, positions, extrapolate=False)
 
 
-def load_feature_pair(data_path, position, target):
+def load_feature_pair(data_path, position, target, event_path=None):
     """Load matching channel features and retain only shared event IDs."""
     ch0_path = output_csv_path(data_path, position, target, 0)
     ch1_path = output_csv_path(data_path, position, target, 1)
@@ -646,7 +673,7 @@ def load_feature_pair(data_path, position, target):
     if common_ids.empty:
         raise ValueError(f"No matching event IDs in {ch0_path} and {ch1_path}")
     if target.lower() in FULL_ENERGY_TARGETS:
-        allowed_ids = full_energy_event_ids(data_path, position, target)
+        allowed_ids = full_energy_event_ids(data_path, position, target, event_path)
         non_full_ids = common_ids[~common_ids.astype(str).isin(allowed_ids)]
         if len(non_full_ids):
             raise ValueError(
@@ -672,9 +699,13 @@ def save_histogram(path, xlabel, title, show):
     plt.close()
 
 
-def Resos(Data_path, target, show=False, bin_num=None):
+def Resos(Data_path, target, show=False, bin_num=None, event_path=None):
     """Calculate position and energy resolutions from current-format feature CSVs."""
     data_path = Path(Data_path)
+    if target.lower() in FULL_ENERGY_TARGETS and event_path is None:
+        event_path = ask_event_path(data_path)
+        if event_path is None:
+            raise SystemExit(0)
     result_dir = resolution_output_dir(data_path, target)
     figure_dir = figure_output_dir(data_path, target)
     result_dir.mkdir(parents=True, exist_ok=True)
@@ -688,7 +719,9 @@ def Resos(Data_path, target, show=False, bin_num=None):
     outlier_report = []
     quality_rows = []
     for position in positions:
-        ch0, ch1, outlier_ids = load_feature_pair(data_path, position, target)
+        ch0, ch1, outlier_ids = load_feature_pair(
+            data_path, position, target, event_path
+        )
         removed = len(outlier_ids)
         if removed:
             print(f"Position {position}: removed {removed} outlier events")
@@ -719,6 +752,15 @@ def Resos(Data_path, target, show=False, bin_num=None):
         reconstructed = position_from_ratio(ratios)
         fwhm, _ = MakeHistgram(reconstructed, position, bin_num=bin_num)
         position_fwhms.append(fwhm)
+    finite_position_fwhms = np.asarray(position_fwhms)[np.isfinite(position_fwhms)]
+    if finite_position_fwhms.size:
+        print(
+            "Position resolution FWHM [mm]: "
+            f"max = {np.max(finite_position_fwhms)}, "
+            f"min = {np.min(finite_position_fwhms)}"
+        )
+    else:
+        print("Position resolution FWHM [mm]: max = nan, min = nan")
     save_histogram(
         figure_dir / f"position_histgram_{target}_{para['E']}.png",
         "Position [mm]", f"{para['E']} keV", show,
@@ -738,6 +780,15 @@ def Resos(Data_path, target, show=False, bin_num=None):
             _, resolution = MakeHistgram(estimator(ch0, ch1), position, color, bin_num=bin_num)
             resolutions.append(resolution * float(para["E"]))
         energy_resolutions[name] = resolutions
+        finite_resolutions = np.asarray(resolutions)[np.isfinite(resolutions)]
+        if finite_resolutions.size:
+            print(
+                f"Energy resolution {name} [keV]: "
+                f"max = {np.max(finite_resolutions)}, "
+                f"min = {np.min(finite_resolutions)}"
+            )
+        else:
+            print(f"Energy resolution {name} [keV]: max = nan, min = nan")
         save_histogram(
             figure_dir / f"energy_{name.lower()}_histgram_{target}_{para['E']}.png",
             "Current [A]", f"{name}: {para['E']} keV", show,
@@ -767,6 +818,23 @@ def ask_data_path(initial_path=None):
             return data_path
         print(f"input.json was not found in: {data_path}")
         default = str(data_path)
+
+
+def ask_event_path(initial_path=None):
+    """Request the EventPath used by PoST_Simulation.py for external events."""
+    default = str(initial_path) if initial_path else ""
+    while True:
+        answer = questionary.path(
+            "EventPath (contains position/<id>/FullEnergyList.dat):",
+            default=default,
+        ).ask()
+        if answer is None:
+            return None
+        event_path = Path(answer).expanduser()
+        if event_path.is_dir():
+            return event_path
+        print(f"EventPath was not found or is not a directory: {event_path}")
+        default = str(event_path)
 
 
 def ask_mode():
@@ -819,6 +887,14 @@ if __name__ == "__main__":
         help="Directory containing input.json, ratios.csv, and position folders (prompted when omitted)",
     )
     parser.add_argument(
+        "--event-path",
+        default=None,
+        help=(
+            "EventPath containing position/<id>/FullEnergyList.dat; "
+            "prompted for MS targets when omitted"
+        ),
+    )
+    parser.add_argument(
         "--target", choices=TARGET_CHOICES, default=None,
         help="Pulse type (prompted when omitted)",
     )
@@ -837,11 +913,20 @@ if __name__ == "__main__":
     targets = [arguments.target] if arguments.target is not None else ask_targets()
     if targets is None:
         raise SystemExit(0)
+    event_path = arguments.event_path
+    needs_event_path = (
+        mode in ("extract", "reso", "both")
+        and any(target.lower() in FULL_ENERGY_TARGETS for target in targets)
+    )
+    if needs_event_path and event_path is None:
+        event_path = ask_event_path(data_path)
+        if event_path is None:
+            raise SystemExit(0)
     bin_num = ask_bin_num() if mode in ("reso", "both") else None
 
     for target in targets:
         print(f"Analyzing target: {target}")
         if mode in ("extract", "both"):
-            MakeOutput(data_path, target)
+            MakeOutput(data_path, target, event_path)
         if mode in ("reso", "both"):
-            Resos(data_path, target, arguments.show, bin_num)
+            Resos(data_path, target, arguments.show, bin_num, event_path)

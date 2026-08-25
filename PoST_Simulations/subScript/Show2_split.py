@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from show_data import load_energy_resolution
 
 
-BASE_DIR = Path(r"h:\hata\662_142_136_300split")
+BASE_DIR = Path(r"h:\hata\new")
 TARGETS = {
     "MS": "Pulse_ms",
     "noise": "Pulse_noise",

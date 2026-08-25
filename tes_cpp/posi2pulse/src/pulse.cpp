@@ -5,6 +5,7 @@
 #include <cmath>
 #include <atomic>
 #include <chrono>
+#include <complex>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -110,11 +111,11 @@ nlohmann::json read_input_document(const std::string& path) {
 
 Pulse make_pulse(
     const Input& in,
-    const Eigen::MatrixXd& real_vectors,
-    const Eigen::VectorXd& eigenvalues,
+    const Eigen::MatrixXcd& eigenvectors,
+    const Eigen::VectorXcd& eigenvalues,
     const std::vector<double>& time,
     int position,
-    const Eigen::VectorXd& constants) {
+    const Eigen::VectorXcd& constants) {
     const int samples = static_cast<int>(time.size());
     Pulse pulse;
     pulse.position = position;
@@ -122,13 +123,14 @@ Pulse make_pulse(
     pulse.ch0.assign(samples, 0.0);
     pulse.ch1.assign(samples, 0.0);
     for (int mode = 0; mode < constants.size(); ++mode) {
-        const double eigenvalue = eigenvalues[mode];
+        const std::complex<double> eigenvalue = eigenvalues[mode];
         for (int sample = 0; sample < samples; ++sample) {
             // ``pulse_model.py`` defines its output current with the
             // opposite sign from the state-vector reconstruction.
-            const double factor = -constants[mode] * std::exp(eigenvalue * time[sample]);
-            pulse.ch0[sample] += factor * real_vectors(0, mode);
-            pulse.ch1[sample] += factor * real_vectors(in.n_abs + 3, mode);
+            const std::complex<double> factor =
+                -constants[mode] * std::exp(eigenvalue * time[sample]);
+            pulse.ch0[sample] += (factor * eigenvectors(0, mode)).real();
+            pulse.ch1[sample] += (factor * eigenvectors(in.n_abs + 3, mode)).real();
         }
     }
     return pulse;
@@ -171,19 +173,20 @@ std::vector<Pulse> generate_pulses(const std::string& input_json_path, const std
         const auto norm = vectors.col(i).norm();
         if (std::abs(norm) > 0) vectors.col(i) /= norm;
     }
-    // This intentionally follows the established application algorithm, which
-    // uses the real component of the eigensystem for pulse reconstruction.
-    const Eigen::MatrixXd real_vectors = vectors.real();
+    // Keep the complex eigensystem through reconstruction.  Taking only the
+    // real part of the eigenvectors loses the sine component of complex
+    // conjugate modes and makes the basis rank-deficient.
+    const Eigen::VectorXcd eigenvalues = solver.eigenvalues();
     const auto time = linspace(0, in.samples / in.rate, samples);
     const double c_abs = in.c_abs / in.n_abs;
     constexpr double electron_charge = 1.602e-19;
     std::vector<Pulse> result;
     result.reserve(positions.size());
     for (int position : positions) {
-        Eigen::VectorXd initial = Eigen::VectorXd::Zero(in.n_abs + 4);
+        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.n_abs + 4);
         initial[position + 1] = in.energy * 1e3 * electron_charge / c_abs;
-        const Eigen::VectorXd constants = real_vectors.colPivHouseholderQr().solve(initial);
-        result.push_back(make_pulse(in, real_vectors, solver.eigenvalues().real(), time, position, constants));
+        const Eigen::VectorXcd constants = vectors.colPivHouseholderQr().solve(initial);
+        result.push_back(make_pulse(in, vectors, eigenvalues, time, position, constants));
     }
     return result;
 }
@@ -227,16 +230,15 @@ void generate_pulses_json(
         const auto norm = vectors.col(i).norm();
         if (std::abs(norm) > 0) vectors.col(i) /= norm;
     }
-    const Eigen::MatrixXd real_vectors = vectors.real();
-    const Eigen::VectorXd eigenvalues = solver.eigenvalues().real();
+    const Eigen::VectorXcd eigenvalues = solver.eigenvalues();
     const auto time = linspace(0, in.samples / in.rate, samples);
     const double c_abs = in.c_abs / in.n_abs;
     constexpr double electron_charge = 1.602e-19;
-    const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr(real_vectors);
-    std::vector<Eigen::VectorXd> constants;
+    const Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> qr(vectors);
+    std::vector<Eigen::VectorXcd> constants;
     constants.reserve(positions.size());
     for (int position : positions) {
-        Eigen::VectorXd initial = Eigen::VectorXd::Zero(in.n_abs + 4);
+        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.n_abs + 4);
         initial[position + 1] = in.energy * 1e3 * electron_charge / c_abs;
         constants.push_back(qr.solve(initial));
     }
@@ -259,7 +261,7 @@ void generate_pulses_json(
             const std::size_t index = next.fetch_add(1, std::memory_order_relaxed);
             if (index >= positions.size()) return;
             try {
-                const Pulse pulse = make_pulse(in, real_vectors, eigenvalues, time, positions[index], constants[index]);
+                const Pulse pulse = make_pulse(in, vectors, eigenvalues, time, positions[index], constants[index]);
                 std::ofstream fragment(fragments[index]);
                 if (!fragment) throw std::runtime_error("cannot write temporary pulse fragment");
                 fragment << std::setprecision(17);
