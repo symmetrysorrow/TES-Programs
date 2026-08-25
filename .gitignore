@@ -33,10 +33,17 @@ build/*
 mesh/
 mesh_merged/
 mesh_shifted_merged/
+*.msh
+*.msh.*
 *.ep
 *.vtu
 *.pvtu
-*.result
+*.result*
+*.vtk
+*.h5
+*.hdf5
+*.npy
+*.npz
 
 # Build products and run logs
 *.dll
@@ -69,6 +76,10 @@ results/
 
 *.boundary
 *.elements
+
+# Large generated pulse/noise data
+**/*pulse*.json
+**/*noise*.json
 
 # Local Elmer build trees and transient solver outputs
 tools/
