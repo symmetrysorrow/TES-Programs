@@ -19,6 +19,7 @@ from scipy.optimize import curve_fit
 from contextlib import contextmanager
 
 from . import analysis_utils as general
+from .noise_utils import one_sided_asd_from_power, voltage_asd_to_pA
 
 
 @contextmanager
@@ -188,6 +189,7 @@ def NoiseAnalysis(
     config: dict,
     path: str,
     FilterMethod="Current (rfft/irfft + Bessel)",
+    eta_uA_per_V=None,
 ):
     
     # 設定値の取得
@@ -195,7 +197,10 @@ def NoiseAnalysis(
     rate = config["Readout"]["Rate"]     # サンプリングレート (Fs)
     cutoff = config["Analysis"]["CutoffFrequency"] # ローパスフィルタのカットオフ周波数
 
-    eta=float(input("eta:"))
+    if eta_uA_per_V is None:
+        eta_uA_per_V = float(input("eta [uA/V]:"))
+    else:
+        eta_uA_per_V = float(eta_uA_per_V)
 
     noise_threshold=0.04
     
@@ -217,10 +222,11 @@ def NoiseAnalysis(
                 FilterMethod,
                 config,
             )
-            np.savetxt(noise_model_path, amp_dens * eta * 1e6)
+            amp_dens_pA = voltage_asd_to_pA(amp_dens, eta_uA_per_V)
+            np.savetxt(noise_model_path, amp_dens_pA)
             plt.plot(
                 general.GetFreq(rate, sample)[: sample // 2 + 1],
-                amp_dens * eta * 1e6,
+                amp_dens_pA,
                 linestyle="-",
                 linewidth=0.7,
             )
@@ -232,7 +238,7 @@ def NoiseAnalysis(
             plt.show()
             continue
         
-        amplitude_model = np.zeros(sample)
+        power_model = np.zeros(sample // 2 + 1)
         count = 0
         original_noise_list = []
 
@@ -282,9 +288,8 @@ def NoiseAnalysis(
                 continue
             original_noise_list.append(noise)
 
-            noise_fft = np.fft.fft(noise * fft_window) / window_power_gain
-            noise_amp = np.abs(noise_fft)
-            amplitude_model += noise_amp
+            noise_fft = np.fft.rfft(noise * fft_window)
+            power_model += np.abs(noise_fft) ** 2
             count += 1
 
         print(f"count;{count}")
@@ -295,14 +300,23 @@ def NoiseAnalysis(
             print(f"No usable noise data found in {folder}; skipping.")
             continue
 
-        amplitude_model/=count
+        mean_power = power_model / count
+        # Keep the historical filename for downstream users, but make its
+        # contents explicit: RMS (power-averaged) Hann-window FFT magnitude
+        # before ASD and eta normalization.
+        np.savetxt(
+            f"{folder}/noise_fft_Amplitude.txt",
+            np.sqrt(mean_power),
+            header="RMS magnitude sqrt(mean(abs(rfft(noise * Hann))**2))",
+        )
 
-        np.savetxt(f"{folder}/noise_fft_Amplitude.txt",amplitude_model)
-
-        df=rate/sample
-        power=amplitude_model**2 / df
-        amp_dens=np.sqrt(power)
-        amp_dens = amp_dens[: int(sample / 2) + 1] * eta * 1e+6
+        amp_dens = one_sided_asd_from_power(
+            mean_power,
+            sample,
+            rate,
+            window_power_gain,
+        )
+        amp_dens = voltage_asd_to_pA(amp_dens, eta_uA_per_V)
 
         noise_model_path = NoiseModelPath(
             path,
@@ -352,7 +366,7 @@ def OptimalFilter(
     rate = config["Readout"]["Rate"]
     cf = config["Analysis"]["CutoffFrequency"]
 
-    eta = float(input("eta:"))
+    eta_uA_per_V = float(input("eta [uA/V]:"))
 
     df = pd.read_csv(f"{path}/CH{Channel}_pulse/output.csv")
 
@@ -481,8 +495,8 @@ def RunRT(path: str | None = None):
         low_temp = T.count(np.min(T))
 
         popt, _cov = curve_fit(_linear, I_bias[:low_temp], V_out[:low_temp])
-        eta = 1 / popt[0]
-        print(f"eta (uA/V): {eta}")
+        eta_uA_per_V = 1 / popt[0]
+        print(f"eta (uA/V): {eta_uA_per_V}")
 
         T = natsort.natsorted(set(T[low_temp:]))
         I_bias_2 = natsort.natsorted(set(I_bias[low_temp:]))
@@ -503,7 +517,7 @@ def RunRT(path: str | None = None):
         for values in V_out:
             if cnt > 0:
                 V_out_base = values - V_out[0]
-                R = 3.9 * (I_bias_2[cnt] / (eta * V_out_base) - 1)
+                R = 3.9 * (I_bias_2[cnt] / (eta_uA_per_V * V_out_base) - 1)
                 plt.title("R-T")
                 plt.plot(T, R, marker="o", linewidth=1, label=f"{I_bias_2[cnt]}uA", markersize=4)
                 plt.xlabel("Temperature[mK]", fontsize=16)

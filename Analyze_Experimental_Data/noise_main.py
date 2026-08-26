@@ -14,25 +14,44 @@ import pandas as pd
 import json
 import tqdm
 
+try:
+    from tes_analysis.noise_utils import (
+        one_sided_asd_from_power,
+        voltage_asd_to_pA,
+    )
+except ImportError:  # Package import (e.g. from the repository root).
+    from .tes_analysis.noise_utils import (
+        one_sided_asd_from_power,
+        voltage_asd_to_pA,
+    )
+
 
 # 実行
 def main():
     set = gp.loadJson()
-    if not "eta" in set["Config"]:
-        eta = input("eta: ")
-        set["Config"]["eta"] = float(eta)
+    if "eta_uA_per_V" not in set["Config"]:
+        if "eta" in set["Config"]:
+            # Accept old settings files once, while using the explicit unit
+            # name for all subsequent calculations and saved settings.
+            set["Config"]["eta_uA_per_V"] = float(set["Config"]["eta"])
+        else:
+            eta_uA_per_V = input("eta [uA/V]:")
+            set["Config"]["eta_uA_per_V"] = float(eta_uA_per_V)
         jsn = json.dumps(set, indent=4)
         with open("setting.json", "w") as file:
             file.write(jsn)
     os.chdir(set["Config"]["path"])
     ch = set["Config"]["channel"]
     rate, samples = set["Config"]["rate"], set["Config"]["samples"]
-    eta = set["Config"]["eta"] * 1e-6
+    eta_uA_per_V = float(set["Config"]["eta_uA_per_V"])
     time = gp.data_time(rate, samples)
     fq = np.arange(0, rate, rate / samples)
     output = f'CH{set["Config"]["channel"]}_noise/output/{set["Config"]["output"]}'
 
-    model = np.array(0) * samples
+    window = np.hanning(samples)
+    window_power_gain = np.sqrt(np.mean(window**2))
+    power_model = np.zeros(samples // 2 + 1)
+    accepted = 0
     noise = natsorted(glob.glob(f"CH{ch}_noise/rawdata/CH{ch}_*.dat"))
 
     for i in tqdm.tqdm(noise):
@@ -49,18 +68,22 @@ def main():
                 print("error")
                 continue
             else:
-                data_fft = np.fft.fft(data)
-            amp = np.abs(data_fft)
-            model = model + amp
+                data_fft = np.fft.rfft(data * window)
+            power_model += np.abs(data_fft) ** 2
+            accepted += 1
 
         except FileNotFoundError:
             continue
     
-    model = model / len(noise)
-    df = rate / samples
-    power = model**2 / df
-    amp_dens = np.sqrt(power)
-    amp_dens = amp_dens[: int(samples / 2) + 1] * eta * 1e+6
+    if accepted == 0:
+        raise RuntimeError("No accepted noise records found")
+    amp_dens = one_sided_asd_from_power(
+        power_model / accepted,
+        samples,
+        rate,
+        window_power_gain,
+    )
+    amp_dens = voltage_asd_to_pA(amp_dens, eta_uA_per_V)
     print(amp_dens)
     np.savetxt(f"{output}/modelnoise.txt", amp_dens)
 

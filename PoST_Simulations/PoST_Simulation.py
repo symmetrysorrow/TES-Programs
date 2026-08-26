@@ -1491,7 +1491,11 @@ def finite_record_simulation_spectrum(
         "low",
     )
     rng = np.random.default_rng(seed)
-    amplitude_sum = np.zeros(len(frequency))
+    # Average power spectra before taking the square root.  Averaging the
+    # magnitudes directly estimates the mean of a Rayleigh-distributed
+    # random variable, rather than the ASD, and also misses the rFFT
+    # normalization/one-sided factors handled by ``asd_from_rfft``.
+    power_sum = np.zeros(len(frequency))
 
     for _ in range(records):
         spectrum = np.zeros(len(frequency), dtype=np.complex128)
@@ -1507,9 +1511,10 @@ def finite_record_simulation_spectrum(
         noise = noise - np.mean(noise)
         noise = scipy.signal.filtfilt(numerator, denominator, noise)
         noise_fft = np.fft.rfft(noise * window) / window_power_gain
-        amplitude_sum += np.abs(noise_fft)
+        power_sum += np.abs(noise_fft) ** 2
 
-    return amplitude_sum / records / np.sqrt(df)
+    mean_amplitude = np.sqrt(power_sum / records)
+    return asd_from_rfft(mean_amplitude, sample, rate)
 
 
 def LoadNoiseTransfers():
@@ -1691,7 +1696,6 @@ def _ShowNoiseSpectrum():
             rate,
             para["cutoff"],
         )
-        * eta
         * 1e6
     )
 
