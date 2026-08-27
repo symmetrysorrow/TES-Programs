@@ -166,7 +166,8 @@ def candidate_dir(config: dict[str, Any], candidate_id: str) -> Path:
 
 
 def reference_path(config: dict[str, Any], target: dict[str, Any]) -> Path:
-    return output_root(config) / "references" / f"{target['name']}.csv"
+    reference_root = config.get("reference_output_dir", config["output_dir"])
+    return resolve_from_root(reference_root) / "references" / f"{target['name']}.csv"
 
 
 def side_series_file(series_file: str, side: str) -> str:
@@ -244,7 +245,12 @@ def mutate_project(
             pulse_case.pop("restart_file_path", None)
             pulse_case["series_file"] = f"{pulse_name}_series.csv"
             pulse_case["vtu"] = False
-            apply_case_overrides(pulse_case, config["cases"].get("pulse_overrides", {}))
+            pulse_overrides = copy.deepcopy(config["cases"].get("pulse_overrides", {}))
+            solver_overrides = pulse_overrides.pop("solver_overrides", {})
+            apply_case_overrides(pulse_case, pulse_overrides)
+            if solver_overrides:
+                pulse_case["solver"] = copy.deepcopy(pulse_case.get("solver", {}))
+                pulse_case["solver"].update(copy.deepcopy(solver_overrides))
             pulse_case.setdefault("restart_file_path", steady_result_path)
             cases[pulse_name] = pulse_case
             source_case_to_pulse_name[source_name] = pulse_name

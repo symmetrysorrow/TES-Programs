@@ -1,0 +1,126 @@
+{
+  "base_project": "elmer_project.json",
+  "output_dir": "artifacts/search/post_multivariate_tail_screen",
+  "reference_output_dir": "artifacts/search/post_multivariate",
+  "pulse_start_ms": 20.02,
+  "experiment": {
+    "root": "G:/TSURUTA/20230616_post/room1-ch2-3_180mK_570uA_100kHz_g10",
+    "pulse_config": "PulseConfig.json",
+    "selected_keys": "SelectedKeys_fromScatter.txt",
+    "left_summary": "CH0_pulse/output.csv",
+    "right_summary": "CH1_pulse/output.csv",
+    "left_pulse_pattern": "CH0_pulse/rawdata/CH0_{key}.dat",
+    "right_pulse_pattern": "CH1_pulse/rawdata/CH1_{key}.dat",
+    "binary_skip_bytes": 4,
+    "filter_order": 2,
+    "cutoff_hz": 2000.0,
+    "channel_gain_equalization": "selected_median_peak",
+    "response_direction": "rise",
+    "reference_window_ms": [-20.0, 100.0]
+  },
+  "cases": {
+    "steady": "case_dual20_lr_steady",
+    "steady_overrides": {
+      "vtu": false
+    },
+    "pulse_overrides": {
+      "vtu": false,
+      "timesteps": [
+        ["1[ms]", 20],
+        ["18[us]", 1],
+        ["1[us]", 2],
+        ["1[ns]", 1],
+        ["10[ns]", 10],
+        ["100[ns]", 9],
+        ["2.5[us]", 36],
+        ["100[us]", 800]
+      ],
+      "output_intervals": [1, 1, 1, 1, 1, 1, 1, 1],
+      "solver_overrides": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 3e-7
+      }
+    }
+  },
+  "targets": [
+    {
+      "name": "high",
+      "source_case": "case_dual20_lr_pos30",
+      "selector": {"extremum": "max"},
+      "weight": 1.0,
+      "swap_simulation_channels": false
+    },
+    {
+      "name": "low",
+      "source_case": "case_dual20_lr_pos30",
+      "selector": {"extremum": "min"},
+      "weight": 1.0,
+      "swap_simulation_channels": true
+    }
+  ],
+  "variables": {
+    "pb_cp": {
+      "path": ["materials", "Pb", "cp", "expression"],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35
+    },
+    "tes_cp": {
+      "path": ["materials", "TES", "cp", "expression"],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35
+    },
+    "membrane_cp": {
+      "path": ["materials", "Membrane", "cp", "expression"],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35
+    },
+    "stycast_k": {
+      "path": ["materials", "Stycast", "k", "expression"],
+      "search_range": [0.5, 2.0],
+      "prior_sigma_log": 0.5
+    },
+    "pb_k": {
+      "path": ["materials", "Pb", "k", "expression"],
+      "search_range": [0.65, 1.6],
+      "prior_sigma_log": 0.35
+    }
+  },
+  "multivariate_search": {
+    "variables": ["pb_cp", "tes_cp", "membrane_cp", "stycast_k", "pb_k"],
+    "samples": 12,
+    "seed": 20260804
+  },
+  "g0_calibration": {
+    "enabled": false,
+    "initial_factor": 0.9006,
+    "lower_factor": 0.4,
+    "upper_factor": 2.5,
+    "temperature_metric": "mean",
+    "temperature_tolerance_mK": 0.05,
+    "max_iterations": 1
+  },
+  "score": {
+    "comparison_mode": "ch0_extrema",
+    "comparison_channel": "left",
+    "readout_rate_hz": 100000.0,
+    "readout_cutoff_hz": 2000.0,
+    "filter_order": 2,
+    "comparison_window_ms": [0.0, 60.0],
+    "filter_padding_ms": 9.0,
+    "max_shift_ms": 1.0,
+    "shift_step_ms": 0.01,
+    "shift_sigma_ms": 0.5,
+    "shift_penalty_weight": 0.01,
+    "peak_half_width_ms": 1.0,
+    "tail_threshold": 0.2,
+    "region_weights": {
+      "rise": 2.0,
+      "peak": 3.0,
+      "decay": 2.0,
+      "tail": 0.5
+    },
+    "peak_ratio_targets": ["high", "low"],
+    "peak_ratio_weight": 2.0,
+    "prior_weight": 0.01
+  }
+}

@@ -45,7 +45,7 @@ from lib.pulse_hdf5 import (
 
 # --------------------------------------------------------------
 k_b = 1.381 * 1.0e-23  # Boltzmann's constant
-ptfn_Flink = 0.5
+ptfn_Flink = 0.9
 e = 1.602e-19
 eta = 100
 amp = 10
@@ -56,8 +56,47 @@ pulse_num = 500
 FINITE_RECORDS = 500
 FINITE_RECORD_SEED = 20260819
 
-output = "H:\\hata\\test"
+output = "H:\\hata\\new_noise_test"
 event_root = None
+
+
+def resolve_excess_johnson_M(parameters):
+    """Return the configured excess-Johnson coefficient (dimensionless)."""
+    value = parameters.get("excess_johnson_M", 0.0)
+    try:
+        value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "excess_johnson_M must be a finite non-negative number"
+        ) from exc
+    if not np.isfinite(value) or value < 0.0:
+        raise ValueError("excess_johnson_M must be a finite non-negative number")
+    return value
+
+
+def tes_johnson_voltage_asd(temperature, resistance, beta, excess_johnson_M=0.0):
+    """TES Johnson voltage ASD in V/sqrt(Hz).
+
+    S_V,J = 4 k_B T R (1 + 2 beta) (1 + M^2).
+    """
+    temperature = float(temperature)
+    resistance = float(resistance)
+    beta = float(beta)
+    M = resolve_excess_johnson_M(
+        {"excess_johnson_M": excess_johnson_M}
+    )
+    if not np.isfinite(temperature) or temperature <= 0.0:
+        raise ValueError("temperature must be positive and finite")
+    if not np.isfinite(resistance) or resistance <= 0.0:
+        raise ValueError("resistance must be positive and finite")
+    if not np.isfinite(beta) or 1.0 + 2.0 * beta < 0.0:
+        raise ValueError("beta must be finite with 1 + 2 beta non-negative")
+    if not np.isfinite(M) or M < 0.0:
+        raise ValueError("excess_johnson_M must be finite and non-negative")
+    return np.sqrt(
+        4.0 * k_b * temperature * resistance
+        * (1.0 + 2.0 * beta) * (1.0 + M**2)
+    )
 
 
 def random_noise(spe, seed):
@@ -712,6 +751,8 @@ def MakeNoise():
         "beta"
     ]
 
+    excess_johnson_M = resolve_excess_johnson_M(para)
+
     L = para[
         "L"
     ]
@@ -842,17 +883,14 @@ def MakeNoise():
     # Johnson noise amplitudes
     # --------------------------------------------------------
 
-    enj = np.sqrt(
-        4
-        * k_b
-        * T_c
-        * R
-        * (
-            1
-            + 2 * b
-            + b**2
-        )
+    enj = tes_johnson_voltage_asd(
+        T_c,
+        R,
+        b,
+        excess_johnson_M,
     )
+
+    print(f"TES excess Johnson M = {excess_johnson_M:g}")
 
     enj_R = np.sqrt(
         4
@@ -1234,6 +1272,12 @@ def MakeNoise():
             "noise_model"
         ] = (
             "five_state_effective_conductance"
+        )
+
+        f.attrs["excess_johnson_M"] = excess_johnson_M
+        f.attrs["johnson_model"] = "standard_tes_johnson_with_excess_factor"
+        f.attrs["johnson_formula"] = (
+            "S_V_J = 4*k_B*T*R*(1+2*beta)*(1+M^2)"
         )
 
         f.attrs[

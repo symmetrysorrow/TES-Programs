@@ -117,7 +117,17 @@ def PulseAnalysis(config: dict, path: str):
         df.to_csv(output_path, index=False)
 
 def _is_legacy_filter_method(filter_method):
-    return filter_method == "Legacy (fft/ifft)"
+    return filter_method == general.LEGACY_FFT_METHOD
+
+
+# 方式ごとに出力名を分けておかないと、比較のために方式を切り替えたときに
+# 直前のテンプレートを上書きしてしまう。
+_METHOD_SUFFIX = {
+    general.LEGACY_FFT_METHOD: "_old",
+    general.CURRENT_METHOD: "_new",
+    general.CURRENT_NO_TEMPLATE_BESSEL_METHOD: "_nobessel",
+    general.PSD_OPTIMAL_METHOD: "_psd",
+}
 
 
 def _remove_dc(data):
@@ -137,6 +147,14 @@ def NoiseModelPath(path, channel, filter_method="Current (rfft/irfft + Bessel)",
     if _is_legacy_filter_method(filter_method):
         return os.path.join(noise_folder, _legacy_output_name(config))
     return os.path.join(noise_folder, "modelnoise.txt")
+
+
+def OptimalFilterPath(path, channel, filter_method="Current (rfft/irfft + Bessel)", name="opt_template", ext="txt"):
+    """Return the optimal-filter output path for the selected FFT policy."""
+    # getparaが出力した既存ファイルを上書きしないよう、必ずサフィックスを付ける。
+    pulse_folder = os.path.join(path, f"CH{channel}_pulse")
+    suffix = _METHOD_SUFFIX.get(filter_method, "_new")
+    return os.path.join(pulse_folder, f"{name}{suffix}.{ext}")
 
 
 def _legacy_noise_model(config, noise_paths):
@@ -223,7 +241,14 @@ def NoiseAnalysis(
                 config,
             )
             amp_dens_pA = voltage_asd_to_pA(amp_dens, eta_uA_per_V)
-            np.savetxt(noise_model_path, amp_dens_pA)
+            np.savetxt(
+                noise_model_path,
+                amp_dens_pA,
+                header=(
+                    "one-sided amplitude spectral DENSITY (ASD) [pA/sqrt(Hz)];"
+                    " PSD = this**2 ; legacy amplitude-averaged model"
+                ),
+            )
             plt.plot(
                 general.GetFreq(rate, sample)[: sample // 2 + 1],
                 amp_dens_pA,
@@ -325,7 +350,16 @@ def NoiseAnalysis(
             config,
         )
         os.makedirs(os.path.dirname(noise_model_path), exist_ok=True)
-        np.savetxt(noise_model_path, amp_dens)
+        # 保存しているのは ASD（振幅密度）であってPSDでもFFT振幅でもない。
+        # 最適フィルタで S*/PSD を組むときは PSD = ASD**2 を使うこと。
+        np.savetxt(
+            noise_model_path,
+            amp_dens,
+            header=(
+                "one-sided amplitude spectral DENSITY (ASD) [pA/sqrt(Hz)];"
+                " PSD = this**2 ; power-averaged, Hann window, ENBW corrected"
+            ),
+        )
 
         fq=general.GetFreq(rate,sample)
 
@@ -344,15 +378,290 @@ def NoiseAnalysis(
 # Calibration and optimal filtering
 # ---------------------------------------------------------------------------
 
-def TempCalib(path:str,SelectedKeys,SavePath="output_tempcalib.csv",LoadPath="output_optimalfilter.csv"):
+# 波高推定量として比較したいカラム（存在するものだけ使う）。
+ESTIMATOR_COLUMNS = (
+    "Peak",
+    "PeakOptLegacy",
+    "PeakOpt",
+    "PeakOptPSD",
+)
+
+# TempCalib 後のカラム名（推定量 -> 補正後）。
+CALIBRATED_SUFFIX = "Temp"
+
+
+def _estimator_columns(df):
+    return [col for col in ESTIMATOR_COLUMNS if col in df.columns]
+
+
+def _calibrated_name(column):
+    # PeakOpt -> PeakOptTemp（既存の後段処理が使う名前を維持する）。
+    return f"{column}{CALIBRATED_SUFFIX}"
+
+
+def TempCalib(
+    path: str,
+    SelectedKeys,
+    SavePath="output_tempcalib.csv",
+    LoadPath="output_optimalfilter.csv",
+    Columns=None,
+    plot=True,
+):
+    """全推定量カラムについてベースライン補正を掛け、分解能を比較表示する。
+
+    ``PeakOpt`` -> ``PeakOptTemp`` は従来どおり。加えて ``Peak`` や
+    ``PeakOptPSD`` も同じ手続きで補正するので、どの段階で Getpara と差が
+    出るのかを補正前後の両方で追える。
+    """
+    results = {}
     for folder in tqdm.tqdm(glob.glob(f"{path}/CH*_pulse")):
-        if os.path.exists(f"{folder}/{LoadPath}"):
-            df=pd.read_csv(f"{folder}/{LoadPath}")
-            df=df[df["key"].isin(SelectedKeys)].reset_index(drop=True)
-            data_calib=general.TempCalib(df)
-            data_calib.to_csv(f"{folder}/{SavePath}",index=False)
-        else:
+        if not os.path.exists(f"{folder}/{LoadPath}"):
             print(f"output.csv not found in {folder}/{LoadPath}, skipping TempCalib.")
+            continue
+
+        df=pd.read_csv(f"{folder}/{LoadPath}")
+        df=df[df["key"].isin(SelectedKeys)].reset_index(drop=True)
+
+        columns = Columns if Columns is not None else _estimator_columns(df)
+        for column in columns:
+            if column not in df.columns:
+                continue
+            # PeakOptだけはフィット結果のプロットを出す（従来の挙動）。
+            try:
+                df = general.TempCalib(
+                    df,
+                    ValueKey=column,
+                    ResultKey=_calibrated_name(column),
+                    Title=f"{os.path.basename(folder)} / {column}",
+                    plot=plot and column == "PeakOpt",
+                )
+            except Exception as exc:
+                print(f"[警告] {column} のTempCalibに失敗しました: {exc}")
+
+        df.to_csv(f"{folder}/{SavePath}",index=False)
+        results[folder] = df
+
+        summary = general.ResolutionSummary(
+            df, columns=_comparison_columns(df, columns)
+        )
+        print(f"\n--- {os.path.basename(folder)}: FWHM before/after baseline calibration ---")
+        print(summary.to_string(index=False))
+
+    return results
+
+
+def _comparison_columns(df, estimators):
+    columns = []
+    for column in estimators:
+        if column in df.columns:
+            columns.append(column)
+        calibrated = _calibrated_name(column)
+        if calibrated in df.columns:
+            columns.append(calibrated)
+    return columns
+
+
+def CompareEstimators(csv_path, Columns=None, binNum=None, plot=True):
+    """1つのCSVについて mean/std/FWHM/FWHM|mean| の比較表を返す（項目7）。
+
+    ``Base vs Peak`` / ``Base vs PeakOpt`` / ``Base vs PeakOptTemp`` /
+    ``Decay vs PeakOpt`` の散布図とヒストグラムも合わせて表示する。
+    """
+    df = pd.read_csv(csv_path)
+    if Columns is None:
+        Columns = _comparison_columns(df, _estimator_columns(df))
+    Columns = [col for col in Columns if col in df.columns]
+    if not Columns:
+        print(f"比較できるカラムがありません: {csv_path}")
+        return pd.DataFrame()
+
+    summary = general.ResolutionSummary(df, columns=Columns, bin_num=binNum)
+    print(f"\n--- {csv_path} ---")
+    print(summary.to_string(index=False))
+
+    if plot:
+        DiagnosticPlots(df, Columns, binNum=binNum, title=os.path.basename(csv_path))
+    return summary
+
+
+def DiagnosticPlots(df, Columns=None, binNum=None, title=None):
+    """相関図とヒストグラムを1枚にまとめて表示する。"""
+    if Columns is None:
+        Columns = _comparison_columns(df, _estimator_columns(df))
+    Columns = [col for col in Columns if col in df.columns]
+    if not Columns:
+        return
+
+    scatter_pairs = [("Base", col) for col in Columns]
+    if "Decay" in df.columns and "PeakOpt" in df.columns:
+        scatter_pairs.append(("Decay", "PeakOpt"))
+
+    rows = 2
+    cols = max(len(scatter_pairs), len(Columns))
+    fig, axes = plt.subplots(rows, cols, figsize=(3.2 * cols, 6.4), squeeze=False)
+    if title:
+        fig.suptitle(title)
+
+    for ax in axes.ravel():
+        ax.set_visible(False)
+
+    for i, (xkey, ykey) in enumerate(scatter_pairs):
+        ax = axes[0][i]
+        ax.set_visible(True)
+        ax.plot(df[xkey], df[ykey], "o", markersize=1)
+        ax.set_xlabel(xkey)
+        ax.set_ylabel(ykey)
+        ax.grid(True)
+
+    for i, column in enumerate(Columns):
+        ax = axes[1][i]
+        ax.set_visible(True)
+        values = df[column].to_numpy(dtype=float)
+        values = values[np.isfinite(values)]
+        if len(values) == 0:
+            continue
+        bins = binNum if binNum is not None else general.OptimalBinCount(values)
+        ax.hist(values, bins=bins)
+        try:
+            fwhm, popt, edges = general.GaussianFWHM(values, bin_num=bins)
+            x_fit = np.linspace(edges[0], edges[-1], 500)
+            ax.plot(x_fit, general.gaussian(x_fit, *popt), color="red", alpha=0.6)
+            ax.set_title(f"{column}\nFWHM/mean={fwhm / abs(popt[1]) * 100:.3f}%", fontsize=9)
+        except Exception:
+            ax.set_title(column, fontsize=9)
+        ax.grid(True)
+
+    fig.tight_layout()
+    plt.show()
+    plt.close(fig)
+
+
+def CompareChain(config: dict, path: str, Channel, SelectedKeys=None,
+                 LoadPath="output_tempcalib.csv", FilterMethod=None):
+    """Getparaとの差がどの段階で出るかを順に確認する（項目8）。
+
+    1. Average Pulse       波高・立ち上がり・raw平均との差
+    2. Noise spectrum      使用中のASDの帯域とレベル
+    3. Optimal Filter template  時間領域テンプレートのノルム
+    4. 各イベントのOF出力  推定量ごとのmean/std
+    5. Baseline補正前FWHM
+    6. Baseline補正後FWHM
+    """
+    rate = config["Readout"]["Rate"]
+    sample = config["Readout"]["Sample"]
+    methods = (
+        list(general.OPTIMAL_FILTER_METHODS)
+        if FilterMethod is None else [FilterMethod]
+    )
+
+    print("=" * 70)
+    print(f"CompareChain: CH{Channel}")
+    print("=" * 70)
+
+    # --- 1. Average pulse ---------------------------------------------------
+    for method in methods:
+        avg_path = OptimalFilterPath(path, Channel, method, name="average_pulse")
+        raw_path = OptimalFilterPath(path, Channel, method, name="average_pulse_raw")
+        if not os.path.exists(avg_path):
+            continue
+        avg = np.loadtxt(avg_path)
+        peak_av, peak_index = general.PeakHeight(avg, config)
+        print(f"\n[1] Average pulse ({method})")
+        print(f"    file        : {avg_path}")
+        print(f"    peak height : {peak_av:.6g} @ index {peak_index} "
+              f"({peak_index / rate:.6g} s)")
+        print(f"    baseline rms: {np.std(avg[:general.BaselineWindow(config, len(avg))[1]]):.6g}")
+        if os.path.exists(raw_path):
+            raw_avg = np.loadtxt(raw_path)
+            raw_peak, _ = general.PeakHeight(raw_avg, config)
+            print(f"    raw (no Bessel) peak: {raw_peak:.6g} "
+                  f"(diff {100 * (peak_av - raw_peak) / raw_peak:+.3f}%)")
+
+    # --- 2. Noise spectrum --------------------------------------------------
+    for method in methods:
+        noise_path = NoiseModelPath(path, Channel, method, config)
+        if not os.path.exists(noise_path):
+            continue
+        asd = np.loadtxt(noise_path)
+        fq = np.fft.rfftfreq(sample, d=1 / rate)[: len(asd)]
+        print(f"\n[2] Noise ASD ({method})")
+        print(f"    file   : {noise_path}")
+        print(f"    length : {len(asd)} (rfft length {sample // 2 + 1})")
+        print(f"    units  : ASD [pA/sqrt(Hz)]  ->  PSD = ASD**2")
+        for target in (100.0, 1000.0, 10000.0):
+            if target <= fq[-1]:
+                idx = int(np.searchsorted(fq, target))
+                idx = min(idx, len(asd) - 1)
+                print(f"    ASD({fq[idx]:8.1f} Hz) = {asd[idx]:.6g}")
+
+    # --- 3. Templates -------------------------------------------------------
+    for method in methods:
+        template_path = OptimalFilterPath(path, Channel, method)
+        if not os.path.exists(template_path):
+            continue
+        template = np.loadtxt(template_path)
+        print(f"\n[3] Template ({method})")
+        print(f"    file  : {template_path}")
+        print(f"    |h|   : {np.linalg.norm(template):.6g}, "
+              f"sum={np.sum(template):.6g}, max={np.max(np.abs(template)):.6g}")
+
+    # --- 4-6. Estimators ----------------------------------------------------
+    csv_path = os.path.join(path, f"CH{Channel}_pulse", LoadPath)
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(path, f"CH{Channel}_pulse", "output_optimalfilter.csv")
+    if not os.path.exists(csv_path):
+        print(f"\n[4-6] {csv_path} が見つかりません。OptimalFilterを先に実行してください。")
+        return None
+
+    df = pd.read_csv(csv_path)
+    if SelectedKeys is not None:
+        df = df[df["key"].isin(SelectedKeys)].reset_index(drop=True)
+
+    estimators = _estimator_columns(df)
+    print(f"\n[4] Per-event optimal filter outputs ({len(df)} events)")
+    before = general.ResolutionSummary(df, columns=estimators)
+    print("\n[5] FWHM before baseline (temperature) calibration")
+    print(before.to_string(index=False))
+
+    calibrated = [_calibrated_name(col) for col in estimators]
+    calibrated = [col for col in calibrated if col in df.columns]
+    if calibrated:
+        after = general.ResolutionSummary(df, columns=calibrated)
+        print("\n[6] FWHM after baseline (temperature) calibration")
+        print(after.to_string(index=False))
+    else:
+        after = pd.DataFrame()
+        print("\n[6] 補正後カラムがありません。TempCalibを先に実行してください。")
+
+    return {"before": before, "after": after, "csv": csv_path}
+
+def _pulse_path(path, channel, key):
+    return f"{path}/CH{channel}_pulse/rawdata/CH{channel}_{key}.dat"
+
+
+def _prepared_pulse(raw, base, config, apply_bessel=True):
+    """OF適用時と同じ前処理（baseline減算 → Bessel）を1か所にまとめる。
+
+    テンプレート作成側と適用側で必ずこの関数を通すことで、両者の前処理が
+    ずれないようにする。前処理が食い違うとテンプレートと波形の形が合わず、
+    最適フィルタの利得が落ちてFWHMが悪化する。
+    """
+    pulse = np.asarray(raw, dtype=float) - float(base)
+    if apply_bessel:
+        cf = config["Analysis"]["CutoffFrequency"]
+        if cf and cf > 0:
+            pulse = general.Bessel(pulse, config["Readout"]["Rate"], cf)
+    return pulse
+
+
+def _resample_to(array, length):
+    array = np.asarray(array, dtype=float)
+    if len(array) == length:
+        return array
+    return np.interp(
+        np.linspace(0, 1, length), np.linspace(0, 1, len(array)), array
+    )
+
 
 def OptimalFilter(
     config: dict,
@@ -362,63 +671,137 @@ def OptimalFilter(
     SelectedKeys,
     SavePath="output_optimalfilter.csv",
     FilterMethod="Current (rfft/irfft + Bessel)",
+    eta_uA_per_V=None,
+    Compare=True,
+    plot=True,
 ):
-    rate = config["Readout"]["Rate"]
-    cf = config["Analysis"]["CutoffFrequency"]
+    """最適フィルタを掛けて ``PeakOpt`` などの波高推定量を出力する。
 
-    eta_uA_per_V = float(input("eta [uA/V]:"))
+    出力カラム:
+      ``PeakOpt``        選択した ``FilterMethod`` の結果（本命）
+      ``PeakOptLegacy``  修正前と同じ処理（raw平均パルス + テンプレートBessel）
+      ``PeakOptPSD``     理論最適 ``S*/PSD`` を規格化したもの（Peakと同スケール）
+
+    ``PeakOptLegacy`` を必ず残すのは、修正の前後を同一データ・同一
+    SelectedKeys で直接比較できるようにするため（Compare=Falseで無効）。
+    """
+    rate = config["Readout"]["Rate"]
+    sample = config["Readout"]["Sample"]
+
+    if eta_uA_per_V is None:
+        eta_uA_per_V = float(input("eta [uA/V]:"))
+    else:
+        eta_uA_per_V = float(eta_uA_per_V)
 
     df = pd.read_csv(f"{path}/CH{Channel}_pulse/output.csv")
 
     # --- SelectedKeys のみを残す ---
     df = df[df["key"].isin(SelectedKeys)].reset_index(drop=True)
+    # 以降のキーはすべて df["key"] 由来にそろえる。SelectedKeys が float や
+    # numpy 型で渡ってきても、辞書引きと df への書き戻しが食い違わない。
+    keys = df["key"].to_numpy()
+    base_by_key = dict(zip(keys, df["Base"].to_numpy()))
 
-    AveragePulse = np.zeros(config["Readout"]["Sample"], dtype=float)
-    count = 0
+    # 平均パルスは2種類作る。
+    #   average_filtered : baseline減算 → Bessel → 平均（OF適用時と同じ前処理）
+    #   average_raw      : baseline減算のみ（修正前の挙動、比較用）
+    average_filtered = np.zeros(sample, dtype=float)
+    average_raw = np.zeros(sample, dtype=float)
+    usable_keys = []
 
-    for key in tqdm.tqdm(SelectedKeys):
-        pulse = general.LoadBin(f"{path}/CH{Channel}_pulse/rawdata/CH{Channel}_{key}.dat")
-        if len(pulse) != config["Readout"]["Sample"]:
+    for key in tqdm.tqdm(keys, desc="Average pulse"):
+        raw = general.LoadBin(_pulse_path(path, Channel, key))
+        if raw is None or len(raw) != sample:
             continue
-        AveragePulse += pulse
-        count += 1
-
-    if count > 0:
-        AveragePulse /= count
-    else:
-        print("[警告] 有効なパルスがありません。")
-        return
-
-    filt = general.OptimalFilterTemplate(
-        NoiseSPE, AveragePulse, config, method=FilterMethod
-    )
-
-    pulse_length = len(AveragePulse)
-    # 各配列の「もとのインデックス軸」
-    x_avg = np.linspace(0, 1, pulse_length)
-
-    # filt の補間処理
-    if len(filt) != pulse_length:
-        x_filt = np.linspace(0, 1, len(filt))
-        filt = np.interp(x_avg, x_filt, filt)
-
-    # SelectedKeys に対応する行だけ処理
-    for key in tqdm.tqdm(SelectedKeys):
-        pulse = general.LoadBin(f"{path}/CH{Channel}_pulse/rawdata/CH{Channel}_{key}.dat").copy()
-        if len(pulse) != config["Readout"]["Sample"]:
-            continue
-        base_values = df.loc[df["key"] == key, "Base"].values
-
-        if len(base_values) > 0 and not pd.isna(base_values[0]):
-            pulse -= base_values[0]
-        else:
+        base = base_by_key.get(key)
+        if base is None or pd.isna(base):
             print(f"[警告] key={key} に対応するBase値が見つかりません。スキップします。")
             continue
+        average_raw += _prepared_pulse(raw, base, config, apply_bessel=False)
+        average_filtered += _prepared_pulse(raw, base, config, apply_bessel=True)
+        usable_keys.append(key)
 
-        pulse = general.Bessel(pulse, rate, cf)
-        df.loc[df["key"] == key, "PeakOpt"] = np.sum(pulse * filt)
+    count = len(usable_keys)
+    if count == 0:
+        print("[警告] 有効なパルスがありません。")
+        return
+    average_raw /= count
+    average_filtered /= count
 
-    df.to_csv(f"{path}/CH{Channel}_pulse/{SavePath}", index=False)
+    # PSD最適フィルタの出力をPeakと同じ単位で読めるようにするためのスケール。
+    amplitude_scale, _peak_index = general.PeakHeight(average_filtered, config)
+
+    templates = {
+        "PeakOpt": general.OptimalFilterTemplate(
+            NoiseSPE, average_filtered, config,
+            method=FilterMethod, plot=plot,
+            AmplitudeScale=amplitude_scale,
+        )
+    }
+    if Compare:
+        # 修正前と同じ組み合わせ: raw平均パルス + テンプレートBessel。
+        templates["PeakOptLegacy"] = general.OptimalFilterTemplate(
+            NoiseSPE, average_raw, config,
+            method=general.CURRENT_METHOD, plot=False,
+        )
+        if FilterMethod != general.PSD_OPTIMAL_METHOD:
+            templates["PeakOptPSD"] = general.OptimalFilterTemplate(
+                NoiseSPE, average_filtered, config,
+                method=general.PSD_OPTIMAL_METHOD, plot=False,
+                AmplitudeScale=amplitude_scale,
+            )
+
+    templates = {name: _resample_to(filt, sample) for name, filt in templates.items()}
+    filt = templates["PeakOpt"]
+
+    # 実際に適用したテンプレートと平均パルスを保存する。
+    template_path = OptimalFilterPath(path, Channel, FilterMethod)
+    average_path = OptimalFilterPath(path, Channel, FilterMethod, name="average_pulse")
+    np.savetxt(template_path, filt)
+    np.savetxt(
+        average_path,
+        average_filtered,
+        header="baseline-subtracted, Bessel-filtered average pulse",
+    )
+    np.savetxt(
+        OptimalFilterPath(path, Channel, FilterMethod, name="average_pulse_raw"),
+        average_raw,
+        header="baseline-subtracted only (pre-fix template input)",
+    )
+
+    time = np.arange(sample) / rate
+    plt.plot(time, filt)
+    plt.title(f"Optimal Filter (time domain)\n{FilterMethod}")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Amplitude")
+    plt.grid()
+    plt.savefig(OptimalFilterPath(path, Channel, FilterMethod, ext="png"))
+    plt.cla()
+    print(f"Saved optimal filter to {template_path}")
+    print(f"Saved average pulse to {average_path}")
+
+    # SelectedKeys に対応する行だけ処理
+    estimates = {name: {} for name in templates}
+    for key in tqdm.tqdm(usable_keys, desc="Applying filter"):
+        raw = general.LoadBin(_pulse_path(path, Channel, key))
+        if raw is None or len(raw) != sample:
+            continue
+        pulse = _prepared_pulse(raw, base_by_key[key], config, apply_bessel=True)
+        for name, template in templates.items():
+            estimates[name][key] = float(np.sum(pulse * template))
+
+    for name, values in estimates.items():
+        df[name] = df["key"].map(values)
+
+    output_csv = f"{path}/CH{Channel}_pulse/{SavePath}"
+    df.to_csv(output_csv, index=False)
+
+    if Compare:
+        summary = general.ResolutionSummary(df, columns=_estimator_columns(df))
+        print(f"\n--- CH{Channel} pulse-height estimators (before TempCalib) ---")
+        print(summary.to_string(index=False))
+
+    return df
 
 # ---------------------------------------------------------------------------
 # Interactive views and summaries

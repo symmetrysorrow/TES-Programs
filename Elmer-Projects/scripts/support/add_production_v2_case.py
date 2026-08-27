@@ -1,5 +1,9 @@
-"""One-off: add the validated production-v2 mesh, steady case, and full-decay
-pulse case to elmer_project_hybrid_prism_phase23_pulse_tight.json.
+"""Add production-v2 cases to the phase23 project definition.
+
+The strict case is for the final COMSOL comparison.  The tail-screen case is
+for parameter triage only: it removes the expensive 0.625 us refinement after
+the pulse and uses the pilot nonlinear stopping criteria.  It must not be
+used as the final waveform.
 
 Settings come from the singlepixel_resolution_optimization.json sensitivity
 search (global_mesh_size_um=100, stack_local_size_um=12.5,
@@ -19,6 +23,7 @@ MESH_NAME = "mesh_singlepixel_prod_v2"
 MESH_FILE = "project_hybrid_prism_prod_v2.msh"
 STEADY_NAME = "case_tes_steady_singlepixel_prod_v2"
 PULSE_NAME = "case_tes_pulse_singlepixel_prod_v2_full"
+TAIL_SCREEN_NAME = "case_tes_pulse_singlepixel_prod_v2_tail_screen"
 SOURCE_STEADY = "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight"
 SOURCE_PULSE = "case_p19_pulse_phase23_tight"
 
@@ -29,6 +34,9 @@ FINE_STEP = ["0.625[us]", 144]
 # Coarsening tail mirroring case_tes_pulse_20ms_3x_refined's established post-pulse schedule,
 # reaching ~80 ms after the pulse (full return toward baseline).
 TAIL = [["10[us]", 9], ["100[us]", 9], ["1[ms]", 79]]
+# Tail sensitivity does not need the early 0.625 us waveform.  The first
+# post-pulse sample remains at 10.001 us, then the same 80 ms tail is retained.
+TAIL_SCREEN = TAIL
 
 
 def main() -> None:
@@ -91,9 +99,35 @@ def main() -> None:
     pulse.pop("comparison_time_grid", None)
     project["cases"][PULSE_NAME] = pulse
 
+    tail_screen = copy.deepcopy(pulse)
+    tail_screen["series_file"] = f"{TAIL_SCREEN_NAME}_series.csv"
+    tail_screen["iteration_series_file"] = f"{TAIL_SCREEN_NAME}_iterations.csv"
+    tail_screen["output_file_path"] = (
+        f"../work/meshes/{MESH_NAME}/{TAIL_SCREEN_NAME}.result"
+    )
+    tail_screen["timesteps"] = [*PULSE_PREFIX, *TAIL_SCREEN]
+    tail_screen["output_intervals"] = [1] * len(tail_screen["timesteps"])
+    # These are the already-used resolution-pilot settings.  They reduce
+    # wasted iterations in the 1 ms tail; the strict case above is unchanged.
+    tail_screen_solver = copy.deepcopy(tail_screen.get("solver", {}))
+    tail_screen_solver.update({
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 3e-7,
+    })
+    tail_screen["solver"] = tail_screen_solver
+    tail_screen["solver_comment"] = (
+        "Tail screening only: coarse post-pulse grid and pilot nonlinear tolerance; "
+        "rerun selected candidates with the strict full case."
+    )
+    project["cases"][TAIL_SCREEN_NAME] = tail_screen
+
     PROJECT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
     print(f"added mesh={MESH_NAME!r} steady={STEADY_NAME!r} pulse={PULSE_NAME!r}")
     print(f"pulse timesteps ({len(timesteps)} entries):", timesteps)
+    print(
+        f"tail-screen timesteps ({len(tail_screen['timesteps'])} entries):",
+        tail_screen["timesteps"],
+    )
 
 
 if __name__ == "__main__":

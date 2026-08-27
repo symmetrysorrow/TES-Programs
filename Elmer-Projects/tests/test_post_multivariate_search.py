@@ -194,3 +194,19 @@ def test_side_series_file_matches_dual_builder_convention() -> None:
         SEARCH.side_series_file("postsearch_case_series.csv", "L")
         == "postsearch_case_L_series.csv"
     )
+
+
+def test_tail_screen_applies_coarse_grid_and_pilot_solver_limits() -> None:
+    cfg = json.loads(
+        (ROOT / "post_multivariate_tail_screen_config.json").read_text(encoding="utf-8")
+    )
+    base = json.loads((ROOT / cfg["base_project"]).read_text(encoding="utf-8"))
+    candidate = SEARCH.candidates_from_config(cfg, sample_count=1, seed=17)[0]
+    project, metadata = SEARCH.mutate_project(
+        base, cfg, candidate, cfg["g0_calibration"]["initial_factor"], 0
+    )
+    pulse = project["cases"][metadata["pulse_cases"]["high"]["case"]]
+    assert pulse["timesteps"][-2:] == [["2.5[us]", 36], ["100[us]", 800]]
+    assert pulse["solver"]["nonlinear_max_iterations"] == 25
+    assert pulse["solver"]["nonlinear_convergence_tolerance"] == 3e-7
+    assert "solver_overrides" not in pulse

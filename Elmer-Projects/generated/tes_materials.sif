@@ -2,14 +2,14 @@
 Material 1
   Name = "Pb"
   Density = 9860
-  Heat Capacity = 3.26e-05
-  Heat Conductivity = 0.0168
+  Heat Capacity = 2.15486589261952e-05
+  Heat Conductivity = 0.021326079490968
 End
 
 Material 2
   Name = "TES"
   Density = 15695
-  Heat Capacity = 0.00125
+  Heat Capacity = 0.0012602481638125
   Heat Conductivity = 68
 End
 
@@ -17,7 +17,7 @@ Material 3
   Name = "Stycast"
   Density = 2400
   Heat Capacity = 0.00122
-  Heat Conductivity = 2.69094e-06
+  Heat Conductivity = 2.07905605026656e-06
 End
 
 Material 4
@@ -44,7 +44,7 @@ End
 Material 7
   Name = "Membrane"
   Density = 2387
-  Heat Capacity = 9.819999999999999e-06
+  Heat Capacity = 1.44307372339174e-05
   Heat Conductivity = Variable Temperature
     Real MATC "G0*(0.5*((tx+1.0e-12)+abs(tx-1.0e-12)))^(4.252-1)*0.4*(membrane_dx-TES_Au_dx)/(8*(SiNx_dz+Si_1_dz+SiO2_1_dz)*TES_Au_dx)"
 End

@@ -1,0 +1,125 @@
+{
+  "search_root": "artifacts\\search\\post_multivariate",
+  "completed_candidates": [
+    "mv_000_de53353f",
+    "mv_001_ac76bb56",
+    "mv_002_477196c2",
+    "mv_003_a02a4d2c",
+    "mv_004_9b9a4eef",
+    "mv_005_ed377c2b",
+    "mv_006_7878d06b",
+    "mv_007_cf88e5a2",
+    "mv_008_fc8884f3",
+    "mv_009_0eefba7b",
+    "mv_010_098508cc",
+    "mv_017_b785a133"
+  ],
+  "baseline_factor_vector": {
+    "membrane_cp": 1.0,
+    "pb_cp": 1.0,
+    "pb_k": 1.0,
+    "stycast_k": 1.0,
+    "tes_cp": 1.0
+  },
+  "baseline_trace_available": false,
+  "interpretation": "Proxy ranking from completed dual-TES PoST traces. The factor=1 baseline is the physical reference point but is not present as a completed tail trace. Use the ranking to choose single-pixel OFAT runs, then re-fit against the actual single-pixel baseline.",
+  "windows_ms": [
+    [
+      5.0,
+      20.0
+    ],
+    [
+      20.0,
+      40.0
+    ],
+    [
+      40.0,
+      70.0
+    ]
+  ],
+  "candidate_score_file": "artifacts\\analysis\\tail_parameter_sensitivity\\tail_candidate_scores.csv",
+  "sensitivity_file": "artifacts\\analysis\\tail_parameter_sensitivity\\tail_parameter_sensitivity.csv",
+  "top_by_window": {
+    "5-20": [
+      {
+        "parameter": "stycast_k",
+        "pearson_r": 0.7357019926043493,
+        "coefficient_per_log_factor": 0.03204872980657097
+      },
+      {
+        "parameter": "membrane_cp",
+        "pearson_r": 0.5146474856725305,
+        "coefficient_per_log_factor": 0.04461950594028913
+      },
+      {
+        "parameter": "pb_cp",
+        "pearson_r": -0.39630320563749527,
+        "coefficient_per_log_factor": -0.02931840244188247
+      },
+      {
+        "parameter": "tes_cp",
+        "pearson_r": 0.35593378228481454,
+        "coefficient_per_log_factor": 0.03344798605318799
+      },
+      {
+        "parameter": "pb_k",
+        "pearson_r": -0.26486543581417193,
+        "coefficient_per_log_factor": -0.020762328959463512
+      }
+    ],
+    "20-40": [
+      {
+        "parameter": "stycast_k",
+        "pearson_r": 0.8434938395370557,
+        "coefficient_per_log_factor": 0.10569262072589893
+      },
+      {
+        "parameter": "pb_cp",
+        "pearson_r": -0.6719602203809021,
+        "coefficient_per_log_factor": -0.14299147389393602
+      },
+      {
+        "parameter": "membrane_cp",
+        "pearson_r": 0.5669962981437602,
+        "coefficient_per_log_factor": 0.14139986259565013
+      },
+      {
+        "parameter": "tes_cp",
+        "pearson_r": -0.03898863172463257,
+        "coefficient_per_log_factor": -0.01053883536915506
+      },
+      {
+        "parameter": "pb_k",
+        "pearson_r": 0.022869984554246124,
+        "coefficient_per_log_factor": 0.005156683936549903
+      }
+    ],
+    "40-70": [
+      {
+        "parameter": "stycast_k",
+        "pearson_r": 0.8480420633751653,
+        "coefficient_per_log_factor": 0.16111697714513068
+      },
+      {
+        "parameter": "pb_cp",
+        "pearson_r": -0.6999469814509438,
+        "coefficient_per_log_factor": -0.22583584933106815
+      },
+      {
+        "parameter": "membrane_cp",
+        "pearson_r": 0.5711770689171864,
+        "coefficient_per_log_factor": 0.2159736096676812
+      },
+      {
+        "parameter": "tes_cp",
+        "pearson_r": -0.10458615117592977,
+        "coefficient_per_log_factor": -0.04286373058270829
+      },
+      {
+        "parameter": "pb_k",
+        "pearson_r": 0.07570633341032085,
+        "coefficient_per_log_factor": 0.025882010833249047
+      }
+    ]
+  }
+}

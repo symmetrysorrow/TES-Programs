@@ -3,12 +3,37 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 
 SIMULATION_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIMULATION_ROOT))
 
 import PoST_Simulation as simulation  # noqa: E402
+
+
+def test_tes_johnson_m_zero_is_standard_expression():
+    expected = np.sqrt(4 * simulation.k_b * 0.1 * 0.01 * (1 + 2 * 1.6))
+    np.testing.assert_allclose(
+        simulation.tes_johnson_voltage_asd(0.1, 0.01, 1.6, 0.0), expected
+    )
+
+
+def test_tes_johnson_m_one_increases_asd_by_sqrt_two():
+    standard = simulation.tes_johnson_voltage_asd(0.1, 0.01, 1.6, 0.0)
+    excess = simulation.tes_johnson_voltage_asd(0.1, 0.01, 1.6, 1.0)
+    np.testing.assert_allclose(excess / standard, np.sqrt(2.0))
+
+
+def test_excess_johnson_validation_and_default():
+    assert simulation.resolve_excess_johnson_M({}) == 0.0
+    for value in (-1, np.inf, "not-a-number"):
+        with pytest.raises(ValueError):
+            simulation.resolve_excess_johnson_M({"excess_johnson_M": value})
+
+    for args in ((0, 1, 0, 0), (1, 0, 0, 0), (1, 1, -0.6, 0), (1, 1, 0, -1)):
+        with pytest.raises(ValueError):
+            simulation.tes_johnson_voltage_asd(*args)
 
 
 def test_asd_to_time_and_back_preserves_one_sided_asd():

@@ -1,10 +1,13 @@
 import questionary
 
+from .analysis_utils import OPTIMAL_FILTER_METHODS
+
 
 ANALYSIS_COMMANDS = [
     "Pulse Analysis",
     "Noise Analysis",
     "Temp and Optimal",
+    "Compare Estimators",
     "Scatter2D",
     "Select from Scatter",
     "ViewPulse",
@@ -14,11 +17,10 @@ ANALYSIS_COMMANDS = [
 
 KEY_CHOICES = ["Peak", "Base", "Rise", "Decay"]
 MODE_CHOICES = ["Single Channel", "Two Channels"]
+REFINE_CHOICES = ["Finish", "Select again"]
 BIN_CHOICES = ["Auto", "Manual"]
-OPTIMAL_FILTER_METHOD_CHOICES = [
-    "Current (rfft/irfft + Bessel)",
-    "Legacy (fft/ifft)",
-]
+# analysis_utils が唯一の定義元。ここは表示順を決めるだけ。
+OPTIMAL_FILTER_METHOD_CHOICES = list(OPTIMAL_FILTER_METHODS)
 
 
 def select_analysis_type():
@@ -33,16 +35,22 @@ def select_channel(chs):
     return questionary.select("Select Channel:", choices=chs).ask()
 
 
-def select_x_key():
-    return questionary.select("Select X Key:", choices=KEY_CHOICES).ask()
+def select_x_key(choices=None):
+    return questionary.select("Select X Key:", choices=choices or KEY_CHOICES).ask()
 
 
-def select_y_key():
-    return questionary.select("Select Y Key:", choices=KEY_CHOICES).ask()
+def select_y_key(choices=None):
+    return questionary.select("Select Y Key:", choices=choices or KEY_CHOICES).ask()
 
 
-def select_key():
-    return questionary.select("Select Key:", choices=KEY_CHOICES).ask()
+def select_key(choices=None):
+    return questionary.select("Select Key:", choices=choices or KEY_CHOICES).ask()
+
+
+def select_refine_action(count):
+    return questionary.select(
+        f"Selected {count} keys. Next:", choices=REFINE_CHOICES
+    ).ask()
 
 
 def select_two_channels(chs):
@@ -66,6 +74,10 @@ def select_optimal_filter_method():
         "Select optimal filter numerical method:",
         choices=OPTIMAL_FILTER_METHOD_CHOICES,
     ).ask()
+
+
+def input_eta():
+    return questionary.text("eta [uA/V]:").ask()
 
 
 def input_integer(prompt):
