@@ -1,7 +1,5 @@
 import questionary
 
-from .analysis_utils import OPTIMAL_FILTER_METHODS
-
 
 ANALYSIS_COMMANDS = [
     "Pulse Analysis",
@@ -19,8 +17,6 @@ KEY_CHOICES = ["Peak", "Base", "Rise", "Decay"]
 MODE_CHOICES = ["Single Channel", "Two Channels"]
 REFINE_CHOICES = ["Finish", "Select again"]
 BIN_CHOICES = ["Auto", "Manual"]
-# analysis_utils が唯一の定義元。ここは表示順を決めるだけ。
-OPTIMAL_FILTER_METHOD_CHOICES = list(OPTIMAL_FILTER_METHODS)
 
 
 def select_analysis_type():
@@ -67,13 +63,6 @@ def select_csv_column(columns):
 
 def select_bin_option():
     return questionary.select("Choose bin number option:", choices=BIN_CHOICES).ask()
-
-
-def select_optimal_filter_method():
-    return questionary.select(
-        "Select optimal filter numerical method:",
-        choices=OPTIMAL_FILTER_METHOD_CHOICES,
-    ).ask()
 
 
 def input_eta():

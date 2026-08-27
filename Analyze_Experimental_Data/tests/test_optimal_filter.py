@@ -107,55 +107,29 @@ def test_peak_search_window_ignores_pretrigger_spike():
 # Optimal filter template (items 3, 4, 5)
 # ---------------------------------------------------------------------------
 
-def test_method_list_exposes_all_comparison_variants():
-    assert general.CURRENT_METHOD in general.OPTIMAL_FILTER_METHODS
-    assert general.CURRENT_NO_TEMPLATE_BESSEL_METHOD in general.OPTIMAL_FILTER_METHODS
-    assert general.PSD_OPTIMAL_METHOD in general.OPTIMAL_FILTER_METHODS
-    assert general.LEGACY_FFT_METHOD in general.OPTIMAL_FILTER_METHODS
-
-
-def test_template_bessel_variant_differs_from_plain_variant():
+def test_estimator_is_normalized_to_unit_amplitude():
     config = make_config()
     avg = make_pulse()
     asd = make_asd(SAMPLE // 2 + 1)
 
-    with_bessel = general.OptimalFilterTemplate(
-        asd, avg, config, method=general.CURRENT_METHOD, plot=False
-    )
-    without = general.OptimalFilterTemplate(
-        asd, avg, config,
-        method=general.CURRENT_NO_TEMPLATE_BESSEL_METHOD, plot=False,
-    )
-
-    assert with_bessel.shape == without.shape == (SAMPLE,)
-    assert not np.allclose(with_bessel, without)
-
-
-def test_psd_optimal_estimator_is_normalized_to_unit_amplitude():
-    config = make_config()
-    avg = make_pulse()
-    asd = make_asd(SAMPLE // 2 + 1)
-
-    filt = general.OptimalFilterTemplate(
-        asd, avg, config, method=general.PSD_OPTIMAL_METHOD, plot=False
-    )
+    filt = general.OptimalFilterTemplate(asd, avg, config, plot=False)
+    assert filt.shape == (SAMPLE,)
     assert np.sum(avg * filt) == pytest.approx(1.0, rel=1e-9)
 
 
-def test_psd_optimal_estimator_is_linear_in_pulse_amplitude():
+def test_estimator_is_linear_in_pulse_amplitude():
     config = make_config()
     avg = make_pulse()
     asd = make_asd(SAMPLE // 2 + 1)
 
     filt = general.OptimalFilterTemplate(
-        asd, avg, config, method=general.PSD_OPTIMAL_METHOD, plot=False,
-        AmplitudeScale=3.0,
+        asd, avg, config, plot=False, AmplitudeScale=3.0
     )
     assert np.sum(avg * filt) == pytest.approx(3.0, rel=1e-9)
     assert np.sum(2.0 * avg * filt) == pytest.approx(6.0, rel=1e-9)
 
 
-def test_psd_optimal_template_is_invariant_to_noise_normalization():
+def test_template_is_invariant_to_noise_normalization():
     # Only the *shape* of the PSD may matter; a global unit/eta factor must not
     # change the estimator.  This is what makes the ASD/PSD ambiguity harmless
     # for the normalized method.
@@ -163,52 +137,49 @@ def test_psd_optimal_template_is_invariant_to_noise_normalization():
     avg = make_pulse()
     asd = make_asd(SAMPLE // 2 + 1)
 
-    a = general.OptimalFilterTemplate(
-        asd, avg, config, method=general.PSD_OPTIMAL_METHOD, plot=False
-    )
-    b = general.OptimalFilterTemplate(
-        asd * 137.0, avg, config, method=general.PSD_OPTIMAL_METHOD, plot=False
-    )
+    a = general.OptimalFilterTemplate(asd, avg, config, plot=False)
+    b = general.OptimalFilterTemplate(asd * 137.0, avg, config, plot=False)
     np.testing.assert_allclose(a, b, rtol=1e-9, atol=0)
 
 
-def test_psd_optimal_beats_asd_weighting_on_simulated_noise():
-    """S*/PSD must not be worse than the 1/ASD weighting currently used."""
-    config = make_config()
-    avg = make_pulse()
+def test_filter_beats_a_plain_peak_average_on_simulated_noise():
+    """The matched filter must resolve better than the raw peak height."""
+    config = make_config(PeakSearchSample=SAMPLE)
     length = SAMPLE // 2 + 1
     asd = make_asd(length)
-
-    psd_filt = general.OptimalFilterTemplate(
-        asd, avg, config, method=general.PSD_OPTIMAL_METHOD, plot=False
-    )
-    asd_filt = general.OptimalFilterTemplate(
-        asd, avg, config,
-        method=general.CURRENT_NO_TEMPLATE_BESSEL_METHOD, plot=False,
-    )
-    # Put both filters on the same signal gain so the noise widths compare.
-    asd_filt = asd_filt / np.sum(avg * asd_filt)
+    signal = make_pulse()
 
     rng = np.random.default_rng(7)
-    psd_out = []
-    asd_out = []
-    for _ in range(400):
+
+    def draw():
         phase = np.exp(1j * rng.uniform(0, 2 * np.pi, length))
         spectrum = asd * phase
-        spectrum[0] = spectrum[0].real
-        spectrum[-1] = spectrum[-1].real
-        noise = np.fft.irfft(spectrum, n=SAMPLE)
-        psd_out.append(np.sum(noise * psd_filt))
-        asd_out.append(np.sum(noise * asd_filt))
+        spectrum[0] = abs(spectrum[0])
+        spectrum[-1] = abs(spectrum[-1])
+        return np.fft.irfft(spectrum, n=SAMPLE)
 
-    assert np.std(psd_out) <= np.std(asd_out)
+    avg = np.mean([signal + draw() for _ in range(200)], axis=0)
+    scale, _index = general.PeakHeight(avg, config)
+    filt = general.OptimalFilterTemplate(
+        asd, avg, config, plot=False, AmplitudeScale=scale
+    )
+
+    peak_out, filt_out = [], []
+    for _ in range(400):
+        d = signal + draw()
+        peak_out.append(general.PeakHeight(d, config)[0])
+        filt_out.append(np.sum(d * filt))
+
+    # Compare fractional resolution so the two gains cancel.
+    peak_reso = np.std(peak_out) / abs(np.mean(peak_out))
+    filt_reso = np.std(filt_out) / abs(np.mean(filt_out))
+    assert filt_reso < peak_reso
 
 
-def test_unknown_method_is_rejected():
+def test_degenerate_noise_model_is_rejected():
     with pytest.raises(ValueError):
         general.OptimalFilterTemplate(
-            make_asd(SAMPLE // 2 + 1), make_pulse(), make_config(),
-            method="nope", plot=False,
+            np.zeros(SAMPLE // 2 + 1), make_pulse(), make_config(), plot=False
         )
 
 
@@ -251,15 +222,11 @@ def test_tempcalib_honours_value_and_result_keys():
 
 def test_tempcalib_can_be_applied_to_every_estimator_column():
     frame = _calib_frame()
-    frame["PeakOptPSD"] = frame["PeakOpt"] * 3.0
-    for column in ("Peak", "PeakOpt", "PeakOptPSD"):
+    for column in ("Peak", "PeakOpt"):
         frame = general.TempCalib(
             frame, ValueKey=column, ResultKey=f"{column}Temp", plot=False
         )
-    assert {"PeakTemp", "PeakOptTemp", "PeakOptPSDTemp"} <= set(frame.columns)
-    np.testing.assert_allclose(
-        frame["PeakOptPSDTemp"], 3.0 * frame["PeakOptTemp"], rtol=1e-9
-    )
+    assert {"PeakTemp", "PeakOptTemp"} <= set(frame.columns)
 
 
 # ---------------------------------------------------------------------------
@@ -270,13 +237,13 @@ def test_resolution_summary_reports_fwhm_and_ratio():
     rng = np.random.default_rng(11)
     df = pd.DataFrame({
         "key": np.arange(4000),
-        "PeakOpt": rng.normal(loc=1.0, scale=0.01, size=4000),
-        "PeakOptPSD": rng.normal(loc=1.0, scale=0.005, size=4000),
+        "Peak": rng.normal(loc=1.0, scale=0.01, size=4000),
+        "PeakOpt": rng.normal(loc=1.0, scale=0.005, size=4000),
     })
 
-    summary = general.ResolutionSummary(df, columns=["PeakOpt", "PeakOptPSD"])
+    summary = general.ResolutionSummary(df, columns=["Peak", "PeakOpt"])
 
-    assert list(summary["column"]) == ["PeakOpt", "PeakOptPSD"]
+    assert list(summary["column"]) == ["Peak", "PeakOpt"]
     expected = 0.01 * 2 * np.sqrt(2 * np.log(2))
     assert summary.loc[0, "FWHM"] == pytest.approx(expected, rel=0.1)
     assert summary.loc[1, "FWHM"] < summary.loc[0, "FWHM"]

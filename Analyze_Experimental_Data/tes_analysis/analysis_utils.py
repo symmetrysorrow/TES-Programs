@@ -576,19 +576,9 @@ def _resize_spectrum(spectrum, target_length):
 #   FFT振幅そのものでも PSD でもない。したがって
 #       PSD(f) = NoiseSPE(f) ** 2
 #   Getpara の modelnoise.txt も |FFT|/sqrt(df)*eta という ASD なので、
-#   「NoiseSPE で割る」= ASD 重み付け = 1/sqrt(PSD) 重み付けであり、
-#   理論的な最適フィルタ S*(f)/PSD(f) とは重みが異なる。
-LEGACY_FFT_METHOD = "Legacy (fft/ifft)"
-CURRENT_METHOD = "Current (rfft/irfft + Bessel)"
-CURRENT_NO_TEMPLATE_BESSEL_METHOD = "Current (rfft/irfft, no template Bessel)"
-PSD_OPTIMAL_METHOD = "PSD-optimal (S*/PSD, normalized)"
-
-OPTIMAL_FILTER_METHODS = (
-    CURRENT_METHOD,
-    CURRENT_NO_TEMPLATE_BESSEL_METHOD,
-    PSD_OPTIMAL_METHOD,
-    LEGACY_FFT_METHOD,
-)
+#   Getpara の「NoiseSPE で割る」は 1/sqrt(PSD) 重み付けであり、理論的な
+#   最適フィルタ S*(f)/PSD(f) とは重みが異なる。実データでの比較の結果、
+#   S*/PSD が明確に最良だったため、こちらだけを残している。
 
 
 def _full_spectrum_sum(one_sided, sample):
@@ -619,91 +609,58 @@ def OptimalFilterTemplate(
     NoiseSPE,
     AveragePulse,
     config,
-    method=CURRENT_METHOD,
     plot=True,
     AmplitudeScale=None,
 ):
-    """最適フィルタのテンプレート（時間領域）を返す。
+    """最適フィルタ ``S*(f)/PSD(f)`` のテンプレート（時間領域）を返す。
 
-    どの方式でも ``np.sum(pulse * filt)`` で使う前提。実数波形どうしの
-    内積は周波数領域では ``(1/N) Σ_full D(f) conj(H(f))`` になるので、
-    ``filt = irfft(W)`` としたとき推定量は ``(1/N) Σ_full D(f) conj(W(f))``
-    となる。つまり ``W = S/PSD`` と置けば推定量は自動的に
-    ``Σ S*(f) D(f) / PSD(f)`` になり、複素共役は時間領域の相関側が担う
-    （テンプレート側で conj を取ると符号付き虚部が二重に反転する）。
+    ``np.sum(pulse * filt)`` で使う前提。実数波形どうしの内積は周波数領域
+    では ``(1/N) Σ_full D(f) conj(H(f))`` になるので、``filt = irfft(W)``
+    としたとき推定量は ``(1/N) Σ_full D(f) conj(W(f))`` となる。つまり
+    ``W = S/PSD`` と置けば推定量は自動的に ``Σ S*(f) D(f) / PSD(f)`` に
+    なり、複素共役は時間領域の相関側が担う（テンプレート側で conj を取ると
+    虚部の符号が二重に反転して誤る）。
 
-    method:
-      ``"Legacy (fft/ifft)"``
-          旧版と同じ全周波数FFT/ifft。重みは 1/ASD。
-      ``"Current (rfft/irfft + Bessel)"``
-          rfft/irfft。重みは 1/ASD。テンプレートに追加でBesselを掛ける
-          （各パルスにも掛かるので帯域制限は二重になる）。
-      ``"Current (rfft/irfft, no template Bessel)"``
-          上と同じだがテンプレート側のBesselを外す。Getparaと同じ
-          「パルスにだけBessel」になる。
-      ``"PSD-optimal (S*/PSD, normalized)"``
-          理論的な最適フィルタ ``S*(f)/PSD(f)``。``Σ|S|^2/PSD`` で規格化
-          するので、平均パルスと同じ波形に対して推定量は 1 になる。
-          ``AmplitudeScale`` を渡すとその値（通常は平均パルスの波高）を
-          掛けて ``Peak`` と同じスケールに揃える。
+    ``Σ|S|^2/PSD`` で規格化しているので、平均パルスと同じ波形に対して推定量
+    はちょうど 1 になる。``AmplitudeScale`` を渡すとその値（通常は平均パルス
+    の波高）を掛けて ``Peak`` と同じスケールへ揃える。
 
-    規格化されるのは PSD-optimal のみ。他の方式は既存の ``PeakOpt`` の
-    スケールを保つため従来どおり無規格化のまま。
+    規格化のおかげで、ノイズモデル全体に掛かる定数倍（eta やFFT正規化の流儀、
+    ASD と PSD の取り違え）は推定量に影響しない。効くのは PSD の *形* だけ。
+
+    テンプレートには Bessel を掛けない。各パルス側に掛かっているので、
+    ここでも掛けると帯域制限が二重になり分解能が落ちる。
     """
     rate = config["Readout"]["Rate"]
     sample = config["Readout"]["Sample"]
     cf = config["Analysis"]["CutoffFrequency"]
 
-    if method == LEGACY_FFT_METHOD:
-        # 旧版と同じ全周波数FFT・旧周波数軸・ifftの組み合わせ。
-        # 現行のmodelnoise.txtは片側長の場合があるため、除算できる全長へ
-        # 補間する（入力ファイル形式自体は変更しない）。
-        fq = np.arange(0, rate, rate / sample)
-        F = scipy.fftpack.fft(AveragePulse)
-        asd = _resize_spectrum(NoiseSPE, sample)
-        F_filtered = np.copy(F)
-        F_filtered[fq > cf] = 0
-        filt_time = scipy.fftpack.ifft(F_filtered / asd).real
-    elif method in (CURRENT_METHOD, CURRENT_NO_TEMPLATE_BESSEL_METHOD):
-        # 現行方式：実信号用の片側FFTとirfftを使用。重みは 1/ASD。
-        fq = np.fft.rfftfreq(sample, d=1 / rate)
-        F = np.fft.rfft(AveragePulse)
-        asd = _resize_spectrum(NoiseSPE, len(F))
-        F_filtered = np.copy(F)
-        F_filtered[fq > cf] = 0
-        filt_time = np.fft.irfft(F_filtered / asd, n=sample).real
-        if method == CURRENT_METHOD:
-            # 各パルスにもBesselが掛かるので、これは二重の帯域制限になる。
-            filt_time = Bessel(filt_time, rate, cf)
-    elif method == PSD_OPTIMAL_METHOD:
-        fq = np.fft.rfftfreq(sample, d=1 / rate)
-        S = np.fft.rfft(AveragePulse)
-        asd = _resize_spectrum(NoiseSPE, len(S))
-        psd = np.asarray(asd, dtype=float) ** 2  # ASD -> PSD
+    fq = np.fft.rfftfreq(sample, d=1 / rate)
+    S = np.fft.rfft(AveragePulse)
+    asd = _resize_spectrum(NoiseSPE, len(S))
+    psd = np.asarray(asd, dtype=float) ** 2  # ASD -> PSD
 
-        band = (fq <= cf) & (psd > 0)
-        weight = np.zeros(len(S), dtype=complex)
-        weight[band] = S[band] / psd[band]
+    band = (fq <= cf) & (psd > 0)
+    weight = np.zeros(len(S), dtype=complex)
+    weight[band] = S[band] / psd[band]
 
-        norm = MatchedFilterNormalization(S, psd, sample, band=band)
-        if not np.isfinite(norm) or norm <= 0:
-            raise ValueError(
-                "OptimalFilterTemplate: Σ|S|^2/PSD が0以下です。"
-                "ノイズモデルと平均パルスの整合を確認してください。"
-            )
-        # ここで割ると sum(AveragePulse * filt) == 1 になる。
-        weight /= norm
-        filt_time = np.fft.irfft(weight, n=sample)
-        if AmplitudeScale is not None:
-            # PeakやPeakOptと同じ単位で読めるよう、波高スケールへ戻す。
-            filt_time = filt_time * float(AmplitudeScale)
-    else:
-        raise ValueError(f"Unknown optimal filter method: {method}")
+    norm = MatchedFilterNormalization(S, psd, sample, band=band)
+    if not np.isfinite(norm) or norm <= 0:
+        raise ValueError(
+            "OptimalFilterTemplate: Σ|S|^2/PSD が0以下です。"
+            "ノイズモデルと平均パルスの整合を確認してください。"
+        )
+    # ここで割ると sum(AveragePulse * filt) == 1 になる。
+    weight /= norm
+    filt_time = np.fft.irfft(weight, n=sample)
+    if AmplitudeScale is not None:
+        # PeakやPeakOptと同じ単位で読めるよう、波高スケールへ戻す。
+        filt_time = filt_time * float(AmplitudeScale)
 
     if plot:
         time = np.arange(sample) / rate
         plt.plot(time, filt_time)
-        plt.title(f"Optimal Filter (time domain)\n{method}")
+        plt.title("Optimal Filter (time domain)")
         plt.xlabel("Time [s]")
         plt.ylabel("Amplitude")
         plt.show()

@@ -134,14 +134,14 @@ def _save_selected_keys(path, selected_keys):
     print(f"Saved selected keys to {output_path}")
 
 
-def _load_noise_models(path, channels, filter_method, config):
+def _load_noise_models(path, channels):
     noises = {}
     for ch in channels:
-        noise_path = exp_process.NoiseModelPath(path, ch, filter_method, config)
+        noise_path = exp_process.NoiseModelPath(path, ch)
         if not os.path.exists(noise_path):
             raise FileNotFoundError(
-                f"Noise model not found for {filter_method}: {noise_path}. "
-                "Run Noise Analysis with the same numerical method first."
+                f"Noise model not found: {noise_path}. "
+                "Run Noise Analysis first."
             )
         noises[ch] = general.LoadTxt(noise_path)
     return noises
@@ -159,7 +159,6 @@ def _input_eta():
 def _run_temp_and_optimal(config, path):
     chs = _get_channels(path)
     mode = _select_mode()
-    filter_method = prompts.select_optimal_filter_method()
 
     if mode == "Single Channel":
         channels = [prompts.select_channel(chs)]
@@ -170,7 +169,7 @@ def _run_temp_and_optimal(config, path):
     else:
         return
 
-    noises = _load_noise_models(path, channels, filter_method, config)
+    noises = _load_noise_models(path, channels)
     # 選択のたびに最適フィルタを掛け直すので、etaは最初に一度だけ聞く。
     eta = _input_eta()
     if eta is None:
@@ -202,7 +201,7 @@ def _run_temp_and_optimal(config, path):
         for ch in channels:
             exp_process.OptimalFilter(
                 config, path, noises[ch], ch, selected_keys,
-                FilterMethod=filter_method, eta_uA_per_V=eta,
+                eta_uA_per_V=eta,
             )
 
         if _refine_done(selected_keys):
@@ -303,8 +302,7 @@ def pulse_main(path):
     if choice == "Pulse Analysis":
         exp_process.PulseAnalysis(config, path)
     elif choice == "Noise Analysis":
-        filter_method = prompts.select_optimal_filter_method()
-        exp_process.NoiseAnalysis(config, path, FilterMethod=filter_method)
+        exp_process.NoiseAnalysis(config, path)
     elif choice == "Temp and Optimal":
         _run_temp_and_optimal(config, path)
     elif choice == "Compare Estimators":

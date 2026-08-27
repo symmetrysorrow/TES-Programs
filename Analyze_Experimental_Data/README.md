@@ -54,30 +54,29 @@ python -m scripts.inspect_noise
 ベースラインはゲイン補正 (`TempCalib`) の説明変数そのものなので、区間の
 取り方が `Base` のばらつき、ひいては補正後の分解能に直接効きます。
 
-## 最適フィルタの方式
+## 最適フィルタ
 
-`Temp and Optimal` の実行時に選べます。
+方式は理論的な最適フィルタ `H(f) ∝ S*(f)/PSD(f)` の一本だけです。実データで
+`1/ASD` 重み付けやテンプレートへの Bessel を含む方式と比較した結果、こちらが
+明確に最良だったため、他の方式は削除しました。
 
-| 方式 | 重み | テンプレートへの Bessel | 規格化 |
-| --- | --- | --- | --- |
-| `Current (rfft/irfft + Bessel)` | `1/ASD` | あり（パルス側と二重） | なし |
-| `Current (rfft/irfft, no template Bessel)` | `1/ASD` | なし（Getpara と同じ） | なし |
-| `PSD-optimal (S*/PSD, normalized)` | `1/PSD` | なし | `Σ|S|²/PSD` |
-| `Legacy (fft/ifft)` | `1/ASD` | なし | なし |
+- 重み: `1/PSD`（`PSD = ASD**2`）
+- テンプレートには Bessel を掛けない（各パルス側に掛かっているので、
+  掛けると帯域制限が二重になる）
+- `Σ|S|²/PSD` で規格化。平均パルスと同じ波形に対して推定量がちょうど 1 に
+  なり、そこへ平均パルスの波高を掛けて `Peak` と同じスケールに戻す
 
-`modelnoise.txt` に保存されるのは **ASD**（振幅密度, pA/√Hz）です。したがって
-`PSD = ASD**2`。`PSD-optimal` だけは `Σ|S|²/PSD` で規格化されるので、
-ノイズモデル全体に掛かる定数倍（eta や FFT 正規化の流儀）に依存しません。
+`modelnoise.txt` に保存されるのは **ASD**（振幅密度, pA/√Hz）です。規格化の
+おかげで、ノイズモデル全体に掛かる定数倍（eta や FFT 正規化の流儀、ASD と PSD
+の取り違え）は推定量に影響しません。効くのは PSD の *形* だけです。
 
 出力される波高推定量:
 
 | カラム | 内容 |
 | --- | --- |
 | `Peak` | Bessel 後の波高平均 |
-| `PeakOptLegacy` | 修正前と同じ処理（raw 平均パルス + テンプレート Bessel）。比較用 |
-| `PeakOpt` | 選択した方式の結果 |
-| `PeakOptPSD` | 理論最適 `S*/PSD`。`Peak` と同じスケールに規格化済み |
-| `*Temp` | 上記各カラムに `TempCalib`（ベースライン依存ゲイン補正）を掛けたもの |
+| `PeakOpt` | 最適フィルタ出力。`Peak` と同じスケール |
+| `PeakTemp` / `PeakOptTemp` | 上記に `TempCalib`（ベースライン依存ゲイン補正）を掛けたもの |
 
 `Compare Estimators` メニューで、これらの mean / std / FWHM / FWHM÷mean を
 一覧表示し、`Base` vs 各推定量、`Decay` vs `PeakOpt`、ヒストグラムをまとめて
