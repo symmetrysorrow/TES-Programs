@@ -95,6 +95,19 @@ def smooth_grid(start_us: float, end_us: float) -> np.ndarray:
     return np.unique(np.concatenate(nonempty + [np.asarray([start_us, end_us])]))
 
 
+def log_grid(start_us: float, end_us: float) -> np.ndarray:
+    if start_us <= 0.0 or end_us <= start_us:
+        raise ValueError("log time axis requires 0 < start_us < end_us")
+    key_times = np.asarray(
+        [value for value in (0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0)
+         if start_us <= value <= end_us],
+        dtype=float,
+    )
+    return np.unique(
+        np.concatenate([np.geomspace(start_us, end_us, 4000), key_times])
+    )
+
+
 def interpolator(series: Series, start_us: float, end_us: float) -> PchipInterpolator:
     time_us, drop_uA = clipped(series, start_us, end_us)
     return PchipInterpolator(time_us, drop_uA, extrapolate=False)
@@ -146,6 +159,11 @@ def main() -> None:
         default=ROOT / "results" / "raw" / "legacy-root-output" / "tes_mpi_legacy_regression_series.csv",
     )
     parser.add_argument(
+        "--elmer-label",
+        default="Elmer MPI (4 ranks)",
+        help="legend label for the Elmer series supplied with --mpi",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=ROOT / "artifacts" / "comparison" / "comsol_direct_mpi",
@@ -171,7 +189,16 @@ def main() -> None:
         action="store_true",
         help="force a linear time axis even when end_us > 600 (default: symlog)",
     )
+    parser.add_argument(
+        "--log-x",
+        action="store_true",
+        help="use a true logarithmic post-pulse time axis; start_us must be positive",
+    )
     args = parser.parse_args()
+    if args.linear_x and args.log_x:
+        parser.error("--linear-x and --log-x are mutually exclusive")
+    if args.log_x and args.start_us <= 0.0:
+        parser.error("--log-x requires --start-us > 0")
 
     series = [read_comsol(args.comsol, args.pulse_ms, args.baseline_start_ms)]
     if not args.skip_direct:
@@ -179,9 +206,9 @@ def main() -> None:
             read_elmer(args.direct, "Elmer direct", args.pulse_ms, args.baseline_start_ms)
         )
     series.append(
-        read_elmer(args.mpi, "Elmer MPI (4 ranks)", args.pulse_ms, args.baseline_start_ms)
+        read_elmer(args.mpi, args.elmer_label, args.pulse_ms, args.baseline_start_ms)
     )
-    grid = smooth_grid(args.start_us, args.end_us)
+    grid = log_grid(args.start_us, args.end_us) if args.log_x else smooth_grid(args.start_us, args.end_us)
     curves = {
         item.label: interpolator(item, args.start_us, args.end_us)(grid)
         for item in series
@@ -204,7 +231,7 @@ def main() -> None:
         writer.writerow(header)
         for index, time_us in enumerate(grid):
             comsol = curves["COMSOL"][index]
-            mpi = curves["Elmer MPI (4 ranks)"][index]
+            mpi = curves[args.elmer_label][index]
             row = [time_us, comsol]
             if not args.skip_direct:
                 direct = curves["Elmer direct"][index]
@@ -253,7 +280,7 @@ def main() -> None:
     colors = {
         "COMSOL": "#2166ac",
         "Elmer direct": "#1b9e77",
-        "Elmer MPI (4 ranks)": "#d95f02",
+        args.elmer_label: "#d95f02",
     }
     fig, response_ax = plt.subplots(1, 1, figsize=(10.2, 5.6), constrained_layout=True)
     for item in series:
@@ -266,13 +293,16 @@ def main() -> None:
             linestyle=":" if item.label == "COMSOL" else "-",
         )
 
-    response_ax.axvline(0.0, color="#555555", linestyle="--", linewidth=1.0)
+    if not args.log_x:
+        response_ax.axvline(0.0, color="#555555", linestyle="--", linewidth=1.0)
     response_ax.grid(True, alpha=0.25)
     response_ax.set_xlim(args.start_us, args.end_us)
     # A long tail (e.g. out to COMSOL's full 180 ms) squashes the sub-ms
     # rise/decay into an unreadable sliver under a linear axis; symlog
     # keeps that detail visible while still showing the long relaxation.
-    if args.end_us > 600.0 and not args.linear_x:
+    if args.log_x:
+        response_ax.set_xscale("log")
+    elif args.end_us > 600.0 and not args.linear_x:
         response_ax.set_xscale("symlog", linthresh=100.0, linscale=1.0)
     response_ax.set_ylabel("Current drop from baseline [uA]")
     response_ax.set_xlabel("Time from pulse [us]")

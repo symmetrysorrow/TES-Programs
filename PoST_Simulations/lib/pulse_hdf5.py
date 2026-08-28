@@ -61,8 +61,14 @@ class PulseWriter:
         self.close()
 
 
-def iter_pulse_items(path):
-    """Yield one ``(event_id, {ch0, ch1})`` pair at a time."""
+def iter_pulse_items(path, event_ids=None):
+    """Yield one ``(event_id, {ch0, ch1})`` pair at a time.
+
+    When *event_ids* is supplied, skip non-selected rows before reading the
+    two large waveform datasets.  This is important for FullEnergy analyses,
+    where only a small subset of the stored events is needed.
+    """
+    selected_ids = None if event_ids is None else {str(event_id) for event_id in event_ids}
     with h5py.File(path, "r") as file:
         if file.attrs.get("format", "") != FORMAT_NAME:
             raise ValueError(f"{path} is not a {FORMAT_NAME} HDF5 file")
@@ -70,6 +76,8 @@ def iter_pulse_items(path):
         if not (len(ids) == len(ch0) == len(ch1)):
             raise ValueError(f"{path} has inconsistent pulse dataset lengths")
         for index, event_id in enumerate(ids.asstr()):
+            if selected_ids is not None and event_id not in selected_ids:
+                continue
             yield event_id, {"ch0": ch0[index], "ch1": ch1[index]}
 
 

@@ -43,12 +43,16 @@ Constants
   Pulse Energy = Real 2.134099276488e-13
   Pulse Start Time = Real 0.02002
   Pulse Duration = Real 1e-09
+! Zero is an exact rectangle; a positive value enables COMSOL flc2hs C2 edges.
+  Pulse Transition Zone = Real 0
   Pulse Sigma = Real 5e-05
+  Pulse Shape = Real 0.0
+  Pulse Radius = Real 5e-05
 ! Pulse center: auto (absorber centroid of mesh_refined_3x_repart_x)
   Pulse Center X = Real 6.37427785022e-21
   Pulse Center Y = Real 0.001
   Pulse Center Z = Real 0.00056216
-! FE integral of the nodal Gaussian over the absorber of mesh_refined_3x_repart_x
+! FE integral of the nodal gaussian source over the absorber of mesh_refined_3x_repart_x
 ! (recomputed automatically at build time)
   Pulse Discrete Norm = Real 1.92452795676361e-12
 End

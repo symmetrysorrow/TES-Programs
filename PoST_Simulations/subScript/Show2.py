@@ -5,7 +5,7 @@ import questionary
 from show_data import load_energy_resolution
 
 
-BASE_DIR = Path(r"h:\hata\1332_142_136_300split")
+BASE_DIR = Path(r"h:\hata\new_noise_test")
 TARGETS = {
     "MS": "Pulse_ms",
     "noise": "Pulse_noise",

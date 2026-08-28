@@ -38,6 +38,12 @@ TARGET_CHOICES = (
 )
 ALL_TARGETS_CHOICE = "All targets"
 FULL_ENERGY_TARGETS = {"pulse_ms", "pulse_ms_noise"}
+COMMON_MS_TARGETS = ("Pulse_ms", "Pulse_ms_noise")
+
+# Pulse_ms position calibration is based on a short, symmetric average around
+# the peak.  The old -10/+90 sample window mixed the fast CH0 decay and the
+# slow CH1 rise, biasing CH1/CH0 toward the wrong absorber position.
+PULSE_MS_PEAK_AVERAGE_HALF_WIDTH = 5
 
 
 def pulse_file_name(target):
@@ -346,7 +352,13 @@ def remove_outlier_events(CH0_df, CH1_df, z_thresh=4.5):
         & np.isfinite(CH1_df["height"].to_numpy(dtype=float))
     )
 
-    sum_height = CH0_df["height"].to_numpy(dtype=float) + CH1_df["height"].to_numpy(dtype=float)
+    energy_column = "energy_height" if "energy_height" in CH0_df and "energy_height" in CH1_df else "height"
+    if energy_column != "height":
+        mask &= (
+            np.isfinite(CH0_df[energy_column].to_numpy(dtype=float))
+            & np.isfinite(CH1_df[energy_column].to_numpy(dtype=float))
+        )
+    sum_height = CH0_df[energy_column].to_numpy(dtype=float) + CH1_df[energy_column].to_numpy(dtype=float)
     log_sum_height = np.log10(np.clip(sum_height, np.finfo(float).tiny, None))
 
     median, scale = robust_scale(log_sum_height[mask])
@@ -362,7 +374,18 @@ def remove_outlier_events(CH0_df, CH1_df, z_thresh=4.5):
     return CH0_df.loc[mask].reset_index(drop=True), CH1_df.loc[mask].reset_index(drop=True), mask
 
 
-def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, failures=None):
+def ReadPulse(
+    Data_path,
+    pulse,
+    target="Pulse_ms",
+    path="",
+    debug_plot=False,
+    failures=None,
+    processing_filter=None,
+    peak_average_half_width=None,
+    settling_half_width=None,
+    fixed_peak_index=None,
+):
     with open(f"{Data_path}/input.json") as f:
         para = json.load(f)
 
@@ -372,18 +395,23 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
     if np.mean(pulse) <= 0:
         pulse *= -1
 
-    pulse_filt = (
-        bessel_filter(pulse, para["rate"], para["cutoff"])
-        if target.lower() != "pulse_ms"
-        else pulse
-    )
+    if processing_filter is None:
+        use_bessel = target.lower() != "pulse_ms"
+    elif processing_filter.lower() in {"bessel", "bessel_filter"}:
+        use_bessel = True
+    elif processing_filter.lower() in {"none", "raw"}:
+        use_bessel = False
+    else:
+        raise ValueError(f"Unknown processing filter: {processing_filter!r}")
+
+    pulse_filt = bessel_filter(pulse, para["rate"], para["cutoff"]) if use_bessel else pulse
 
     def failed(reason):
         if failures is not None:
             failures.append({"event": str(path).rsplit(":", 1)[-1], "reason": reason})
         if debug_plot:
             save_readpulse_debug(Data_path, target, pulse, pulse_filt, para, path, reason)
-        return [np.nan, np.nan, np.nan, np.nan]
+        return [np.nan, np.nan, np.nan, np.nan, np.nan]
 
     if not np.all(np.isfinite(pulse_filt)):
         return failed("non-finite values")
@@ -394,9 +422,43 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
     if peak_index < 10:
         return failed("peak too early")
 
-    l = max(0, peak_index - 10)
-    r = min(len(pulse_filt), peak_index + 90)
+    if peak_average_half_width is not None:
+        half_width = int(peak_average_half_width)
+        if half_width < 0:
+            raise ValueError("peak_average_half_width must be non-negative")
+        l = max(0, peak_index - half_width)
+        r = min(len(pulse_filt), peak_index + half_width + 1)
+    elif target.lower() == "pulse_ms":
+        half_width = PULSE_MS_PEAK_AVERAGE_HALF_WIDTH
+        l = max(0, peak_index - half_width)
+        r = min(len(pulse_filt), peak_index + half_width + 1)
+    else:
+        # Keep the existing feature definition for the separately filtered
+        # noise target until it has its own matching calibration curve.
+        l = max(0, peak_index - 10)
+        r = min(len(pulse_filt), peak_index + 90)
     peak_av = np.mean(pulse_filt[l:r])
+
+    if fixed_peak_index is None:
+        energy_height = peak_av
+    else:
+        if isinstance(fixed_peak_index, (bool, np.bool_)):
+            return failed("fixed_peak_index must be an integer")
+        try:
+            fixed_peak_index_float = float(fixed_peak_index)
+        except (TypeError, ValueError):
+            return failed("fixed_peak_index must be an integer")
+        if not np.isfinite(fixed_peak_index_float) or fixed_peak_index_float != int(fixed_peak_index_float):
+            return failed("fixed_peak_index must be an integer")
+        fixed_peak_index = int(fixed_peak_index_float)
+        if fixed_peak_index < 0 or fixed_peak_index >= len(pulse_filt):
+            return failed("fixed_peak_index outside waveform")
+        half_width = PULSE_MS_PEAK_AVERAGE_HALF_WIDTH
+        fixed_l = max(0, fixed_peak_index - half_width)
+        fixed_r = min(len(pulse_filt), fixed_peak_index + half_width + 1)
+        if fixed_l >= fixed_r:
+            return failed("invalid fixed energy window")
+        energy_height = np.mean(pulse_filt[fixed_l:fixed_r])
 
     rise_90 = None
     for i in reversed(range(0, peak_index)):
@@ -416,8 +478,15 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
 
     rise = (rise_90 - rise_10) / para["rate"]
 
-    st_l = para["SettlingTime"] - 10
-    st_r = para["SettlingTime"] + 90
+    if settling_half_width is None:
+        st_l = para["SettlingTime"] - 10
+        st_r = para["SettlingTime"] + 90
+    else:
+        settling_half_width = int(settling_half_width)
+        if settling_half_width < 0:
+            raise ValueError("settling_half_width must be non-negative")
+        st_l = max(0, peak_index - settling_half_width)
+        st_r = min(len(pulse_filt), peak_index + settling_half_width + 1)
     if st_l < 0 or st_r > len(pulse_filt) or st_l >= st_r:
         return failed("invalid settling window")
 
@@ -443,7 +512,39 @@ def ReadPulse(Data_path, pulse, target="Pulse_ms", path="", debug_plot=False, fa
         plt.tight_layout()
         plt.show()
 
-    return [peak_av, peak_index, rise, ST_height]
+    return [peak_av, peak_index, rise, ST_height, energy_height]
+
+
+def reference_peak_indices(data_path, position, target="Pulse_ms", processing_filter=None):
+    """Return filtered noiseless-reference peak indices for CH0 and CH1."""
+    path = Path(data_path) / "pulses.h5"
+    if not path.is_file():
+        raise FileNotFoundError(f"Reference pulse file was not found: {path}")
+    try:
+        reference = next(iter_hdf5_pulse_items(path, event_ids={str(position)}))[1]
+    except StopIteration as error:
+        raise ValueError(f"Reference pulses.h5 does not contain position {position}") from error
+    with open(Path(data_path) / "input.json", encoding="utf-8") as file:
+        para = json.load(file)
+    if processing_filter is None:
+        processing_filter = "none" if target.lower() == "pulse_ms" else "bessel"
+    indices = []
+    for channel in ("ch0", "ch1"):
+        pulse = np.asarray(reference[channel], dtype=float).copy()
+        if np.mean(pulse) <= 0:
+            pulse *= -1
+        if processing_filter.lower() in {"bessel", "bessel_filter"}:
+            pulse = bessel_filter(pulse, para["rate"], para["cutoff"])
+        elif processing_filter.lower() not in {"none", "raw"}:
+            raise ValueError(f"Unknown processing filter: {processing_filter!r}")
+        if pulse.size == 0 or not np.all(np.isfinite(pulse)):
+            raise ValueError(f"Invalid reference waveform for position {position}, {channel}")
+        indices.append(int(np.argmax(pulse)))
+    return tuple(indices)
+
+
+# Descriptive alias for callers that want to make the reference role explicit.
+load_reference_peak_indices = reference_peak_indices
 
 
 def MakeOutput(Data_path, target, event_path=None):
@@ -477,6 +578,7 @@ def MakeOutput(Data_path, target, event_path=None):
         if not source_path.is_file():
             raise FileNotFoundError(f"Pulse data was not found: {source_path}")
         full_energy_ids = full_energy_event_ids(data_path, posi, target, event_path)
+        fixed_indices = reference_peak_indices(data_path, posi, target)
         results = {0: [], 1: []}
         pulse_ids = []
         failures = []
@@ -487,7 +589,7 @@ def MakeOutput(Data_path, target, event_path=None):
                 source_event_count = len(file["event_id"])
                 total = source_event_count
         pulse_iterator = (
-            iter_hdf5_pulse_items(source_path)
+            iter_hdf5_pulse_items(source_path, event_ids=full_energy_ids)
             if source_path.suffix.lower() == ".h5"
             else iter_pulse_items(source_path)
         )
@@ -510,10 +612,11 @@ def MakeOutput(Data_path, target, event_path=None):
                     ReadPulse(
                         Data_path, pulse, path=f"{source_path}:{pulse_id}",
                         target=target, failures=failures,
+                        fixed_peak_index=fixed_indices[ch],
                     )
                 )
 
-        columns = ["height", "peak_index", "rise", "ST_Height"]
+        columns = ["height", "peak_index", "rise", "ST_Height", "energy_height"]
         feature_frames = {}
         for ch in [0, 1]:
             df = pd.DataFrame(results[ch], columns=columns, index=pulse_ids)
@@ -535,6 +638,8 @@ def MakeOutput(Data_path, target, event_path=None):
             np.isfinite(feature_frames[0]["height"])
             & np.isfinite(feature_frames[0]["peak_index"])
             & np.isfinite(feature_frames[1]["height"])
+            & np.isfinite(feature_frames[0]["energy_height"])
+            & np.isfinite(feature_frames[1]["energy_height"])
         ).sum()
         feature_summary.append({
             "position": posi,
@@ -566,21 +671,51 @@ def optimal_bin_count(data):
     return int(np.clip(bin_count, 20, 40))
 
 
-def MakeHistgram(data, posi, HistColor=None, bin_num=None):
+def MakeHistgram(
+    data,
+    posi,
+    HistColor=None,
+    bin_num=None,
+    stabilize=True,
+    fit_method="histogram",
+):
+    """Plot a histogram and return FWHM and relative resolution.
+
+    ``fit_method='unbinned_gaussian'`` uses the Gaussian maximum-likelihood
+    estimates of the finite samples.  The histogram remains a display only,
+    so the result does not depend on bin edges or bin count.
+    """
     data = np.asarray(data, dtype=float)
     data = data[np.isfinite(data)]
     if len(data) < 3 or np.ptp(data) == 0:
         return np.nan, np.nan
 
+    fit_method = fit_method.lower()
     bin_num = optimal_bin_count(data) if bin_num is None else int(bin_num)
     hist, bin_edges = np.histogram(data, bins=bin_num, density=False)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    initial_guess = [np.max(hist), np.mean(data), np.std(data)]
 
     if HistColor is not None:
         plt.hist(data, bins=bin_num, density=False, label=f"abs-{posi}", color=HistColor)
     else:
         plt.hist(data, bins=bin_num, density=False, label=f"abs-{posi}")
+
+    if fit_method in {"unbinned", "unbinned_gaussian"}:
+        mean_fit = np.mean(data)
+        stddev_fit = np.std(data, ddof=0)
+        if not np.isfinite(mean_fit) or not np.isfinite(stddev_fit) or stddev_fit <= 0:
+            return np.nan, np.nan
+        fwhm = 2 * stddev_fit * np.sqrt(2 * np.log(2))
+        bin_width = np.mean(np.diff(bin_edges))
+        amplitude = len(data) * bin_width / (stddev_fit * np.sqrt(2 * np.pi))
+        x_fit = np.linspace(bin_edges[0], bin_edges[-1], 1000)
+        plt.plot(x_fit, gaussian(x_fit, amplitude, mean_fit, stddev_fit), color="red", alpha=0.5)
+        return fwhm, fwhm / mean_fit if mean_fit > 0 else np.nan
+
+    if fit_method not in {"histogram", "binned"}:
+        raise ValueError(f"Unknown histogram fit method: {fit_method!r}")
+
+    initial_guess = [np.max(hist), np.mean(data), np.std(data)]
 
     try:
         popt, _ = curve_fit(gaussian, bin_centers, hist, p0=initial_guess, maxfev=100000)
@@ -600,7 +735,7 @@ def MakeHistgram(data, posi, HistColor=None, bin_num=None):
     robust_reso = robust_fwhm / sample_mean if sample_mean > 0 else np.nan
     fit_reso = fwhm / mean_fit if mean_fit > 0 else np.nan
 
-    if np.isfinite(reference_width) and reference_width > 0 and fwhm < 0.6 * reference_width:
+    if stabilize and np.isfinite(reference_width) and reference_width > 0 and fwhm < 0.6 * reference_width:
         retry_bins = min(max(12, bin_num // 2), 14)
         if retry_bins != bin_num:
             hist, bin_edges = np.histogram(data, bins=retry_bins, density=False)
@@ -618,7 +753,7 @@ def MakeHistgram(data, posi, HistColor=None, bin_num=None):
     # If the Gaussian fit becomes much broader than a robust percentile-based
     # estimate, fall back to the robust width so one skewed histogram binning
     # does not dominate the reported resolution.
-    if np.isfinite(robust_reso) and np.isfinite(fit_reso) and fit_reso > 1.5 * robust_reso:
+    if stabilize and np.isfinite(robust_reso) and np.isfinite(fit_reso) and fit_reso > 1.5 * robust_reso:
         fwhm = robust_fwhm
         mean_fit = sample_mean
 
@@ -639,22 +774,31 @@ def generate_symmetric_colors(n):
 
 
 def load_ratio_calibration(data_path):
-    """Return a bounded interpolator from current ``ratios.csv`` data."""
+    """Return a bounded interpolator from current ``ratios.csv`` data.
+
+    New files use the same short peak-average definition as Pulse_ms.  The
+    old maximum-ratio column remains accepted for older result directories.
+    """
     ratio_path = Path(data_path) / "ratios.csv"
     if not ratio_path.is_file():
         raise FileNotFoundError(f"Ratio calibration was not found: {ratio_path}")
 
     table = pd.read_csv(ratio_path)
-    required = {"x_mm", "ch1_ch0_max_ratio"}
+    ratio_column = (
+        "ch1_ch0_peak_average_ratio"
+        if "ch1_ch0_peak_average_ratio" in table.columns
+        else "ch1_ch0_max_ratio"
+    )
+    required = {"x_mm", ratio_column}
     missing = required - set(table.columns)
     if missing:
         raise ValueError(f"{ratio_path} is missing columns: {', '.join(sorted(missing))}")
-    table = table.dropna(subset=["x_mm", "ch1_ch0_max_ratio"]).sort_values("ch1_ch0_max_ratio")
-    table = table.drop_duplicates("ch1_ch0_max_ratio")
+    table = table.dropna(subset=["x_mm", ratio_column]).sort_values(ratio_column)
+    table = table.drop_duplicates(ratio_column)
     if len(table) < 2:
         raise ValueError(f"{ratio_path} needs at least two distinct ratio samples")
 
-    ratios = table["ch1_ch0_max_ratio"].to_numpy(float)
+    ratios = table[ratio_column].to_numpy(float)
     positions = table["x_mm"].to_numpy(float)
     return PchipInterpolator(ratios, positions, extrapolate=False)
 
@@ -686,6 +830,389 @@ def load_feature_pair(data_path, position, target, event_path=None):
     return filtered_ch0, filtered_ch1, common_ids[~mask].astype(str).tolist()
 
 
+def _read_common_target_features(data_path, position, target, event_path, event_ids):
+    """Read one target using the processing settings of the fair MS comparison."""
+    source_path = pulse_data_path(data_path, position, target)
+    if not source_path.is_file():
+        raise FileNotFoundError(f"Pulse data was not found: {source_path}")
+
+    if source_path.suffix.lower() == ".h5":
+        pulse_iterator = iter_hdf5_pulse_items(source_path, event_ids=event_ids)
+        with h5py.File(source_path, "r") as file:
+            total = len(event_ids) if event_ids is not None else len(file["event_id"])
+    else:
+        pulse_iterator = iter_pulse_items(source_path)
+        total = len(event_ids) if event_ids is not None else None
+
+    features = {}
+    fixed_indices = reference_peak_indices(data_path, position, target, processing_filter="bessel")
+    progress = tqdm.tqdm(
+        pulse_iterator,
+        total=total,
+        desc=f"Position {position}: {target}",
+        position=1,
+        leave=False,
+        dynamic_ncols=True,
+    )
+    for pulse_id, pulse_data in progress:
+        pulse_id = str(pulse_id)
+        if event_ids is not None and pulse_id not in event_ids:
+            continue
+        values = []
+        for channel in (0, 1):
+            values.append(
+                ReadPulse(
+                    data_path,
+                    pulse_data[f"ch{channel}"],
+                    target=target,
+                    path=f"{source_path}:{pulse_id}",
+                    # Use the common Bessel filter. Position ratios retain
+                    # adaptive 11-sample peaks; energy uses fixed 11-sample
+                    # windows at the noiseless-reference peak.
+                    processing_filter="bessel",
+                    peak_average_half_width=PULSE_MS_PEAK_AVERAGE_HALF_WIDTH,
+                    fixed_peak_index=fixed_indices[channel],
+                )
+            )
+        features[pulse_id] = values
+    return features
+
+
+def CommonMSComparison(Data_path, position, event_path, show=False, bin_num=None):
+    """Compare MS and MS+noise using common event/filter conventions.
+
+    Position ratios retain adaptive 11-sample peaks. Energy Max/Sum/Min use
+    fixed 11-sample noiseless-reference windows; ST uses SettlingTime.
+
+    ``Pulse_noise`` is reported as an additional, independent baseline.  It
+    is a separate single-site event population, so it has no event-by-event
+    counterpart to MS and is not part of the common-event comparison.
+    Results are written separately from the ordinary target-specific ``Resos``
+    output so the latter remains backward compatible.
+    """
+    data_path = Path(Data_path)
+    position = int(position)
+    with open(data_path / "input.json", encoding="utf-8") as file:
+        para = json.load(file)
+    if position not in para["position"]:
+        raise ValueError(f"Position {position} is not in input.json: {para['position']}")
+    if event_path is None:
+        raise ValueError("EventPath is required for the common MS comparison")
+
+    event_ids = full_energy_event_ids(data_path, position, "Pulse_ms", event_path)
+    target_features = {
+        target: _read_common_target_features(
+            data_path, position, target, event_path, event_ids
+        )
+        for target in COMMON_MS_TARGETS
+    }
+    common_ids = [
+        event_id
+        for event_id in target_features[COMMON_MS_TARGETS[0]]
+        if event_id in target_features[COMMON_MS_TARGETS[1]]
+    ]
+    if not common_ids:
+        raise ValueError(f"No common FullEnergy events found at position {position}")
+
+    valid_ids = []
+    estimators = ("Max", "Sum", "Min", "ST")
+    values = {
+        target: {estimator: [] for estimator in estimators}
+        for target in COMMON_MS_TARGETS
+    }
+    for event_id in common_ids:
+        row = {
+            target: target_features[target][event_id]
+            for target in COMMON_MS_TARGETS
+        }
+        if not all(np.all(np.isfinite(row[target][channel][0:5]))
+                   for target in COMMON_MS_TARGETS for channel in (0, 1)):
+            continue
+        valid_ids.append(event_id)
+        for target in COMMON_MS_TARGETS:
+            ch0, ch1 = row[target]
+            values[target]["Max"].append(max(ch0[4], ch1[4]))
+            values[target]["Sum"].append(ch0[4] + ch1[4])
+            values[target]["Min"].append(min(ch0[4], ch1[4]))
+            values[target]["ST"].append(ch0[3] + ch1[3])
+
+    if len(valid_ids) < 3:
+        raise ValueError(
+            f"Fewer than three valid common events at position {position}: "
+            f"{len(valid_ids)}"
+        )
+
+    position_from_ratio = load_ratio_calibration(data_path)
+    position_values = {target: [] for target in COMMON_MS_TARGETS}
+    for event_id in valid_ids:
+        for target in COMMON_MS_TARGETS:
+            ch0, ch1 = target_features[target][event_id]
+            ratio = ch1[0] / ch0[0] if ch0[0] != 0 else np.nan
+            position_values[target].append(position_from_ratio(ratio))
+
+    noise_values = None
+    noise_source = pulse_data_path(data_path, position, "Pulse_noise")
+    if noise_source.is_file():
+        noise_features = _read_common_target_features(
+            data_path, position, "Pulse_noise", event_path, None
+        )
+        noise_values = {estimator: [] for estimator in estimators}
+        for channel_features in noise_features.values():
+            if not all(np.all(np.isfinite(channel_features[channel][0:5])) for channel in (0, 1)):
+                continue
+            ch0, ch1 = channel_features
+            noise_values["Max"].append(max(ch0[4], ch1[4]))
+            noise_values["Sum"].append(ch0[4] + ch1[4])
+            noise_values["Min"].append(min(ch0[4], ch1[4]))
+            noise_values["ST"].append(ch0[3] + ch1[3])
+
+    output_dir = data_path / "results" / "common_comparison"
+    figure_dir = data_path / "figures" / "common_comparison"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    figure_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for estimator in estimators:
+        for target in COMMON_MS_TARGETS:
+            target_label = target.lower()
+            plt.figure()
+            fwhm_current, resolution_fraction = MakeHistgram(
+                values[target][estimator],
+                position,
+                bin_num=bin_num,
+                stabilize=False,
+                fit_method="unbinned_gaussian",
+            )
+            plt.title(f"{estimator}: position {position}")
+            save_histogram(
+                figure_dir / f"position_{position}_{estimator.lower()}_{target_label}.png",
+                "Current [A]",
+                f"{estimator}: position {position}",
+                show,
+            )
+            array = np.asarray(values[target][estimator], dtype=float)
+            rows.append({
+                "position": position,
+                "metric": "energy",
+                "estimator": estimator,
+                "target": target,
+                "event_set": "common_full_energy",
+                "fit_method": "unbinned_gaussian",
+                "event_count": len(valid_ids),
+                "fwhm_current": fwhm_current,
+                "resolution_fraction": resolution_fraction,
+                "resolution_keV": resolution_fraction * float(para["E"]),
+                "mean_current": np.mean(array),
+                "std_current": np.std(array, ddof=1),
+            })
+
+    if noise_values is not None:
+        for estimator in estimators:
+            if len(noise_values[estimator]) < 3:
+                continue
+            plt.figure()
+            fwhm_current, resolution_fraction = MakeHistgram(
+                noise_values[estimator],
+                position,
+                bin_num=bin_num,
+                stabilize=False,
+                fit_method="unbinned_gaussian",
+            )
+            plt.title(f"{estimator}: position {position}")
+            save_histogram(
+                figure_dir / f"position_{position}_{estimator.lower()}_pulse_noise.png",
+                "Current [A]",
+                f"{estimator}: position {position}",
+                show,
+            )
+            array = np.asarray(noise_values[estimator], dtype=float)
+            rows.append({
+                "position": position,
+                "metric": "energy",
+                "estimator": estimator,
+                "target": "Pulse_noise",
+                "event_set": "independent_noise",
+                "fit_method": "unbinned_gaussian",
+                "event_count": len(array),
+                "fwhm_current": fwhm_current,
+                "resolution_fraction": resolution_fraction,
+                "resolution_keV": resolution_fraction * float(para["E"]),
+                "mean_current": np.mean(array),
+                "std_current": np.std(array, ddof=1),
+            })
+
+    for target in COMMON_MS_TARGETS:
+        target_label = target.lower()
+        plt.figure()
+        position_fwhm, _ = MakeHistgram(
+            position_values[target],
+            position,
+            bin_num=bin_num,
+            stabilize=False,
+            fit_method="unbinned_gaussian",
+        )
+        save_histogram(
+            figure_dir / f"position_{position}_position_{target_label}.png",
+            "Position [mm]",
+            f"Position: position {position}",
+            show,
+        )
+        rows.append({
+            "position": position,
+            "metric": "position",
+            "estimator": "Position",
+            "target": target,
+            "event_set": "common_full_energy",
+            "fit_method": "unbinned_gaussian",
+            "event_count": len(valid_ids),
+            "fwhm_current": position_fwhm,
+            "resolution_fraction": np.nan,
+            "resolution_keV": np.nan,
+            "position_fwhm_mm": position_fwhm,
+            "mean_current": np.nan,
+            "std_current": np.nan,
+        })
+
+    if noise_values is not None:
+        noise_position_values = []
+        for channel_features in noise_features.values():
+            if not all(np.all(np.isfinite(channel_features[channel][:2])) for channel in (0, 1)):
+                continue
+            ch0, ch1 = channel_features
+            ratio = ch1[0] / ch0[0] if ch0[0] != 0 else np.nan
+            noise_position_values.append(position_from_ratio(ratio))
+        plt.figure()
+        position_fwhm, _ = MakeHistgram(
+            noise_position_values,
+            position,
+            bin_num=bin_num,
+            stabilize=False,
+            fit_method="unbinned_gaussian",
+        )
+        save_histogram(
+            figure_dir / f"position_{position}_position_pulse_noise.png",
+            "Position [mm]",
+            f"Position: position {position}",
+            show,
+        )
+        rows.append({
+            "position": position,
+            "metric": "position",
+            "estimator": "Position",
+            "target": "Pulse_noise",
+            "event_set": "independent_noise",
+            "fit_method": "unbinned_gaussian",
+            "event_count": len(noise_position_values),
+            "fwhm_current": position_fwhm,
+            "resolution_fraction": np.nan,
+            "resolution_keV": np.nan,
+            "position_fwhm_mm": position_fwhm,
+            "mean_current": np.nan,
+            "std_current": np.nan,
+        })
+
+    result_path = output_dir / f"position_{position}_ms_vs_ms_noise.csv"
+    pd.DataFrame(rows).to_csv(result_path, index=False)
+    pd.DataFrame({"event_id": valid_ids}).to_csv(
+        output_dir / f"position_{position}_common_event_ids.csv", index=False
+    )
+    return pd.DataFrame(rows)
+
+
+def RunCommonAnalysis(Data_path, event_path, show=False, bin_num=None, positions=None):
+    """Run the common processing for every requested absorber position."""
+    data_path = Path(Data_path)
+    with open(data_path / "input.json", encoding="utf-8") as file:
+        para = json.load(file)
+    all_positions = [int(value) for value in para["position"]]
+    if positions is None:
+        positions = all_positions
+    else:
+        positions = [int(value) for value in positions]
+        unknown = sorted(set(positions) - set(all_positions))
+        if unknown:
+            raise ValueError(f"Positions are not in input.json: {unknown}")
+
+    result_frames = []
+    position_progress = tqdm.tqdm(
+        positions,
+        desc="All positions",
+        position=0,
+        leave=True,
+        dynamic_ncols=True,
+    )
+    for position in position_progress:
+        result_frames.append(
+            CommonMSComparison(data_path, position, event_path, show, bin_num)
+        )
+
+    result_dir = data_path / "results" / "common_comparison"
+    figure_dir = data_path / "figures" / "common_comparison"
+    combined = pd.concat(result_frames, ignore_index=True)
+    pitch = float(para["length"]) / float(para["n_abs"])
+    combined["x_mm"] = (
+        combined["position"].astype(float)
+        - (float(para["n_abs"]) + 1.0) / 2.0
+    ) * pitch
+    combined_path = result_dir / f"all_positions_common_{para['E']}.csv"
+    combined.to_csv(combined_path, index=False)
+
+    # Keep the conventional files used by subScript/Show*.py.  Each target
+    # receives the same common-processing data, but MS and MS+noise retain
+    # only their shared FullEnergy events as indicated by event_set.
+    for target in ("Pulse_ms", "Pulse_noise", "Pulse_ms_noise"):
+        energy = combined[
+            (combined["metric"] == "energy")
+            & (combined["target"] == target)
+        ]
+        energy_table = (
+            energy.pivot(index="x_mm", columns="estimator", values="resolution_keV")
+            .reindex(columns=["Sum", "Max", "Min", "ST"])
+            .sort_index()
+        )
+        target_result_dir = data_path / "results" / target.lower()
+        target_result_dir.mkdir(parents=True, exist_ok=True)
+        energy_table.to_csv(
+            target_result_dir / f"ene_resos_{target}.csv",
+            index_label="x_mm",
+        )
+
+        position = combined[
+            (combined["metric"] == "position")
+            & (combined["target"] == target)
+        ].set_index("position").reindex(all_positions)
+        np.savetxt(
+            target_result_dir / f"fwhms_{target}.txt",
+            position["position_fwhm_mm"].to_numpy(float),
+        )
+
+    target_labels = {
+        "Pulse_ms": "MS",
+        "Pulse_noise": "noise",
+        "Pulse_ms_noise": "MS+noise",
+    }
+    for estimator in ("Max", "Sum"):
+        figure, axis = plt.subplots(figsize=(9, 6))
+        energy = combined[
+            (combined["metric"] == "energy")
+            & (combined["estimator"] == estimator)
+        ]
+        for target, label in target_labels.items():
+            values = energy[energy["target"] == target].sort_values("x_mm")
+            if not values.empty:
+                axis.plot(values["x_mm"], values["resolution_keV"], "o-", label=label)
+        axis.set_xlabel("Position [mm]")
+        axis.set_ylabel("Energy Resolution [keV]")
+        axis.set_title(f"{estimator}: {para['E']} keV")
+        axis.grid(alpha=0.3)
+        axis.legend()
+        figure.tight_layout()
+        figure.savefig(figure_dir / f"energy_{estimator.lower()}_all_positions_{para['E']}.png")
+        plt.close(figure)
+
+    return combined
+
+
 def save_histogram(path, xlabel, title, show):
     plt.xlabel(xlabel, fontsize=15)
     plt.ylabel("Count", fontsize=15)
@@ -697,6 +1224,11 @@ def save_histogram(path, xlabel, title, show):
     if show:
         plt.show()
     plt.close()
+
+
+def _energy_column(frame):
+    """Use fixed-window energy features, accepting legacy CSVs."""
+    return frame["energy_height"] if "energy_height" in frame.columns else frame["height"]
 
 
 def Resos(Data_path, target, show=False, bin_num=None, event_path=None):
@@ -768,9 +1300,15 @@ def Resos(Data_path, target, show=False, bin_num=None, event_path=None):
     np.savetxt(result_dir / f"fwhms_{target}.txt", position_fwhms)
 
     estimators = {
-        "Sum": lambda ch0, ch1: ch0["height"].to_numpy(float) + ch1["height"].to_numpy(float),
-        "Max": lambda ch0, ch1: np.maximum(ch0["height"].to_numpy(float), ch1["height"].to_numpy(float)),
-        "Min": lambda ch0, ch1: np.minimum(ch0["height"].to_numpy(float), ch1["height"].to_numpy(float)),
+        "Sum": lambda ch0, ch1: (
+            _energy_column(ch0).to_numpy(float) + _energy_column(ch1).to_numpy(float)
+        ),
+        "Max": lambda ch0, ch1: np.maximum(
+            _energy_column(ch0).to_numpy(float), _energy_column(ch1).to_numpy(float)
+        ),
+        "Min": lambda ch0, ch1: np.minimum(
+            _energy_column(ch0).to_numpy(float), _energy_column(ch1).to_numpy(float)
+        ),
         "ST": lambda ch0, ch1: ch0["ST_Height"].to_numpy(float) + ch1["ST_Height"].to_numpy(float),
     }
     energy_resolutions = {}
@@ -806,6 +1344,10 @@ def Resos(Data_path, target, show=False, bin_num=None, event_path=None):
 
 def ask_data_path(initial_path=None):
     """Request a usable simulation directory when it was not passed on the CLI."""
+    if initial_path is not None:
+        supplied_path = Path(initial_path).expanduser()
+        if (supplied_path / "input.json").is_file():
+            return supplied_path
     default = str(initial_path) if initial_path else ""
     while True:
         answer = questionary.text(
@@ -881,7 +1423,13 @@ def ask_bin_num():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Calculate TES position and energy resolutions.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run the common TES analysis for all positions. Position ratios "
+            "use adaptive 11-sample peaks; energy Max/Sum/Min use fixed "
+            "noiseless-reference windows and ST uses SettlingTime."
+        )
+    )
     parser.add_argument(
         "data_path", nargs="?",
         help="Directory containing input.json, ratios.csv, and position folders (prompted when omitted)",
@@ -891,42 +1439,38 @@ if __name__ == "__main__":
         default=None,
         help=(
             "EventPath containing position/<id>/FullEnergyList.dat; "
-            "prompted for MS targets when omitted"
+            "prompted when omitted"
         ),
     )
+    # Kept as a harmless compatibility flag for old command lines.  The
+    # common analysis is now always the only execution path.
     parser.add_argument(
-        "--target", choices=TARGET_CHOICES, default=None,
-        help="Pulse type (prompted when omitted)",
+        "--common-ms-comparison", action="store_true", help=argparse.SUPPRESS
     )
     parser.add_argument(
-        "--mode", choices=("extract", "reso", "both"), default=None,
-        help="Extract features, calculate resolutions, or do both (prompted when omitted)",
+        "--position", type=int, default=None,
+        help="Analyze only this absorber block (default: all positions)",
+    )
+    parser.add_argument(
+        "--bin-num", type=int, default=None,
+        help="Display histogram bins (default: automatic; fit is always unbinned)",
     )
     parser.add_argument("--show", action="store_true", help="Display plots as well as saving them")
     arguments = parser.parse_args()
     data_path = ask_data_path(arguments.data_path)
     if data_path is None:
         raise SystemExit(0)
-    mode = arguments.mode if arguments.mode is not None else ask_mode()
-    if mode is None:
-        raise SystemExit(0)
-    targets = [arguments.target] if arguments.target is not None else ask_targets()
-    if targets is None:
-        raise SystemExit(0)
     event_path = arguments.event_path
-    needs_event_path = (
-        mode in ("extract", "reso", "both")
-        and any(target.lower() in FULL_ENERGY_TARGETS for target in targets)
-    )
-    if needs_event_path and event_path is None:
+    if event_path is None:
         event_path = ask_event_path(data_path)
         if event_path is None:
             raise SystemExit(0)
-    bin_num = ask_bin_num() if mode in ("reso", "both") else None
-
-    for target in targets:
-        print(f"Analyzing target: {target}")
-        if mode in ("extract", "both"):
-            MakeOutput(data_path, target, event_path)
-        if mode in ("reso", "both"):
-            Resos(data_path, target, arguments.show, bin_num, event_path)
+    if arguments.bin_num is not None and arguments.bin_num <= 0:
+        parser.error("--bin-num must be positive")
+    RunCommonAnalysis(
+        data_path,
+        event_path,
+        show=arguments.show,
+        bin_num=arguments.bin_num,
+        positions=[arguments.position] if arguments.position is not None else None,
+    )

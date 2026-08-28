@@ -53,8 +53,14 @@ cf = 10000
 zure = 30
 
 pulse_num = 500
+PULSE_NOISE_COUNT = 500
 FINITE_RECORDS = 500
 FINITE_RECORD_SEED = 20260819
+
+# Keep the Pulse_ms position feature short enough to avoid averaging across
+# the different CH0/CH1 pulse time scales.  This is 11 samples total: +/-5
+# around the detected peak.
+PULSE_MS_PEAK_AVERAGE_HALF_WIDTH = 5
 
 output = "H:\\hata\\new_noise_test"
 event_root = None
@@ -621,6 +627,11 @@ def FitRatios():
         float(para["length"])
         / int(para["n_abs"])
     )
+    ratio_b, ratio_a = scipy.signal.bessel(
+        2,
+        float(para["cutoff"]) / (float(para["rate"]) / 2.0),
+        "low",
+    )
 
     rows = []
 
@@ -629,15 +640,27 @@ def FitRatios():
         pulse,
     ) in pulses_by_position.items():
 
-        ch0_max = max(
-            pulse["ch0"]
+        # Position calibration must use the same digital filter as the
+        # common Analyze_Results path; otherwise the filtered event ratios
+        # are compared with an unfiltered calibration curve.
+        ch0 = scipy.signal.filtfilt(
+            ratio_b, ratio_a, np.asarray(pulse["ch0"], dtype=float)
+        )
+        ch1 = scipy.signal.filtfilt(
+            ratio_b, ratio_a, np.asarray(pulse["ch1"], dtype=float)
         )
 
-        ch1_max = max(
-            pulse["ch1"]
-        )
+        def peak_average(values):
+            peak_index = int(np.argmax(values))
+            half_width = PULSE_MS_PEAK_AVERAGE_HALF_WIDTH
+            left = max(0, peak_index - half_width)
+            right = min(len(values), peak_index + half_width + 1)
+            return float(np.mean(values[left:right]))
 
-        if ch0_max == 0:
+        ch0_peak_average = peak_average(ch0)
+        ch1_peak_average = peak_average(ch1)
+
+        if ch0_peak_average == 0:
             raise ValueError(
                 f"CH0 maximum is zero at position {pulse['position']}"
             )
@@ -650,9 +673,9 @@ def FitRatios():
                     - center_position
                 )
                 * pitch,
-                "ch1_ch0_max_ratio": (
-                    ch1_max
-                    / ch0_max
+                "ch1_ch0_peak_average_ratio": (
+                    ch1_peak_average
+                    / ch0_peak_average
                 ),
             }
         )
@@ -2370,7 +2393,9 @@ def Pulse_Noise():
     Create noisy single-site pulses with correlated CH0/CH1 detector noise.
     """
 
-    pulse_num = 500
+    pulse_num = int(PULSE_NOISE_COUNT)
+    if pulse_num < 1:
+        raise ValueError("PULSE_NOISE_COUNT must be positive")
 
     with open(
         f"{output}/input.json",
