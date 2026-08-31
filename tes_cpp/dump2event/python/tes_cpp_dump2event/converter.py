@@ -33,15 +33,20 @@ def convert(
     *,
     input_energy: float,
     save_all: bool = False,
+    full_energy_only: bool = False,
 ) -> ConversionResult:
     """Convert one PHITS ``dumpall.dat`` file to the ``event.json`` schema."""
     dump_path, output_path = Path(dump_path), Path(output_path)
     command = [_executable(), str(dump_path), str(output_path), "--input-energy", str(input_energy)]
     full_energy_path = output_path.with_name("FullEnergyList.dat")
     if save_all:
-        command += ["--save-all", "--full-energy-list", str(full_energy_path)]
+        command += ["--save-all"]
+    if save_all or full_energy_only:
+        command += ["--full-energy-list", str(full_energy_path)]
+    if full_energy_only:
+        command += ["--full-energy-only"]
     subprocess.run(command, check=True)
     event_ids = ()
-    if save_all and full_energy_path.exists():
+    if (save_all or full_energy_only) and full_energy_path.exists():
         event_ids = tuple(int(line) for line in full_energy_path.read_text().splitlines() if line)
     return ConversionResult(output_path=output_path, full_energy_event_ids=event_ids)

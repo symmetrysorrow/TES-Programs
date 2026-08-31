@@ -84,30 +84,248 @@ def runtime_environment(
     return env, solver, prefix
 
 
+def configure_amgx_sif(
+    text: str, config: Path, mesh_dir: Path | None = None,
+    constraint_mode: str = "default",
+) -> str:
+    """Switch every HeatSolve solver block in *text* to AMGX.
+
+    The generated production SIFs intentionally keep their normal direct
+    solver setting.  AMGX is injected only into the execution copy so a GPU
+    experiment cannot silently change the reproducible source SIF or project
+    JSON.  The config path is written in POSIX form because the GPU run is
+    launched inside WSL.
+    """
+    valid_constraint_modes = {
+        "default", "slave", "master", "slave-transpose", "master-transpose",
+        "dual-lagrange",
+    }
+    if constraint_mode not in valid_constraint_modes:
+        raise ValueError(f"invalid AMGX constraint mode: {constraint_mode}")
+    config_token = config.as_posix()
+    lines = text.splitlines()
+    out: list[str] = []
+    in_solver = False
+    amgx_block = False
+    changed = False
+    inserted_config = False
+    iterative_present = False
+    preconditioning_present = False
+    mortar_present = False
+    constraint_elimination_present = False
+    scaling_method_present = False
+
+    solver_header = re.compile(r"^\s*Solver\s+\d+\s*$", re.IGNORECASE)
+    end_line = re.compile(r"^\s*End\s*$", re.IGNORECASE)
+    linear_solver = re.compile(r"^(\s*)Linear System Solver\s*=", re.IGNORECASE)
+    amgx_config = re.compile(r"^\s*AMGX Config\s*=", re.IGNORECASE)
+    iterative_method = re.compile(
+        r"^(\s*)Linear System Iterative Method\s*=", re.IGNORECASE
+    )
+    preconditioning = re.compile(
+        r"^(\s*)Linear System Preconditioning\s*=", re.IGNORECASE
+    )
+    direct_method = re.compile(
+        r"^\s*Linear System Direct Method\s*=", re.IGNORECASE
+    )
+    apply_mortar = re.compile(
+        r"^\s*Apply Mortar BCs\s*=\s*(?:Logical\s+)?True\s*$", re.IGNORECASE
+    )
+    eliminate_constraints = re.compile(
+        r"^(\s*)Eliminate Linear Constraints\s*=", re.IGNORECASE
+    )
+    scaling_method = re.compile(
+        r"^(\s*)Linear System Scaling Method\s*=", re.IGNORECASE
+    )
+    mesh_file = re.compile(r"^(\s*)(Restart File|Output File)\s*=\s*(.+)$", re.IGNORECASE)
+
+    for line in lines:
+        if solver_header.match(line):
+            in_solver = True
+            amgx_block = False
+            inserted_config = False
+            iterative_present = False
+            preconditioning_present = False
+            mortar_present = False
+            constraint_elimination_present = False
+            scaling_method_present = False
+        if in_solver and end_line.match(line):
+            if amgx_block and not iterative_present:
+                out.append('  Linear System Iterative Method = "FGMRES"')
+            if amgx_block and not preconditioning_present:
+                out.append('  Linear System Preconditioning = "AMG"')
+            if amgx_block and not inserted_config:
+                out.append(f'  AMGX Config = String "{config_token}"')
+                inserted_config = True
+            # Mortar coupling otherwise appends zero-diagonal Lagrange
+            # multiplier rows.  They make pointwise AMG smoothers singular.
+            # Elmer's native constraint elimination gives AMGX the reduced
+            # thermal system while preserving the same mortar continuity.
+            if amgx_block and mortar_present and not constraint_elimination_present:
+                out.append("  Eliminate Linear Constraints = Logical True")
+            if amgx_block and constraint_mode.startswith("slave"):
+                out.append("  Eliminate Slave = Logical True")
+            if amgx_block and constraint_mode.startswith("master"):
+                out.append("  Eliminate From Master = Logical True")
+            if amgx_block and constraint_mode.endswith("transpose"):
+                out.append("  Use Transpose Values = Logical True")
+            if amgx_block and not scaling_method_present:
+                out.append('  Linear System Scaling Method = "row equilibration"')
+            out.append(line)
+            in_solver = False
+            continue
+        if mesh_dir is not None:
+            path_match = mesh_file.match(line)
+            if path_match:
+                indent, keyword, value = path_match.groups()
+                filename = Path(value.strip().strip('"')).name
+                line = f"{indent}{keyword} = {(mesh_dir / filename).as_posix()}"
+        if in_solver:
+            if apply_mortar.match(line):
+                mortar_present = True
+            match = linear_solver.match(line)
+            if match:
+                indent = match.group(1)
+                out.append(f'{indent}Linear System Solver = "AMGX"')
+                amgx_block = True
+                changed = True
+                continue
+            if amgx_block and direct_method.match(line):
+                changed = True
+                continue
+            if amgx_block and iterative_method.match(line):
+                indent = iterative_method.match(line).group(1)
+                out.append(f'{indent}Linear System Iterative Method = "FGMRES"')
+                iterative_present = True
+                changed = True
+                continue
+            if amgx_block and preconditioning.match(line):
+                indent = preconditioning.match(line).group(1)
+                out.append(f'{indent}Linear System Preconditioning = "AMG"')
+                preconditioning_present = True
+                changed = True
+                continue
+            if amgx_block and amgx_config.match(line):
+                out.append(f'  AMGX Config = String "{config_token}"')
+                inserted_config = True
+                changed = True
+                continue
+            match = eliminate_constraints.match(line)
+            if amgx_block and match:
+                out.append(
+                    f"{match.group(1)}Eliminate Linear Constraints = Logical True"
+                )
+                constraint_elimination_present = True
+                changed = True
+                continue
+            match = scaling_method.match(line)
+            if amgx_block and match:
+                # The eliminated TES heat matrix is nonsymmetric.  Row
+                # equilibration bounds its 1e7-scale coefficient spread and
+                # makes AMGX's L1 smoother effective.
+                out.append(
+                    f'{match.group(1)}Linear System Scaling Method = "row equilibration"'
+                )
+                scaling_method_present = True
+                changed = True
+                continue
+        out.append(line)
+
+    if not amgx_block or not changed:
+        raise ValueError("SIF does not contain a Linear System Solver block to configure for AMGX")
+    result = "\n".join(out)
+    if constraint_mode == "dual-lagrange":
+        result = configure_mortar_dual_lagrange(result)
+    return result + ("\n" if text.endswith(("\n", "\r")) else "")
+
+
+def configure_mortar_dual_lagrange(text: str) -> str:
+    """Use a dual Lagrange basis on Mortar BCs without changing field bases."""
+    lines = text.splitlines()
+    out: list[str] = []
+    block: list[str] = []
+    in_boundary = False
+    boundary_header = re.compile(r"^\s*Boundary\s+Condition\s+\d+\s*$", re.IGNORECASE)
+    end_line = re.compile(r"^\s*End\s*$", re.IGNORECASE)
+    mortar = re.compile(r"^\s*Mortar\s+BC\s*=", re.IGNORECASE)
+    dual_setting = re.compile(
+        r"^\s*(?:Use Biorthogonal Basis|Biorthogonal Dual (?:Slave|Master|Lagrange Coefficients))\s*=",
+        re.IGNORECASE,
+    )
+
+    def emit_boundary(items: list[str]) -> list[str]:
+        if not any(mortar.match(item) for item in items):
+            return items
+        clean = [item for item in items[:-1] if not dual_setting.match(item)]
+        clean.extend([
+            "  Use Biorthogonal Basis = Logical True",
+            "  Biorthogonal Dual Slave = Logical False",
+            "  Biorthogonal Dual Master = Logical False",
+            "  Biorthogonal Dual Lagrange Coefficients = Logical True",
+            items[-1],
+        ])
+        return clean
+
+    for line in lines:
+        if not in_boundary and boundary_header.match(line):
+            in_boundary = True
+            block = [line]
+            continue
+        if in_boundary:
+            block.append(line)
+            if end_line.match(line):
+                out.extend(emit_boundary(block))
+                block = []
+                in_boundary = False
+            continue
+        out.append(line)
+    if block:
+        out.extend(block)
+    return "\n".join(out)
+
+
 def write_runtime_sif(
-    source: Path, out_dir: Path, udf_dll: str | None
+    source: Path, out_dir: Path, udf_dll: str | None,
+    amgx_config: str | None = None, mesh_dir: Path | None = None,
+    amgx_constraint_mode: str = "default",
 ) -> tuple[Path, bool]:
-    """Create an execution-only SIF with an explicitly pinned UDF DLL."""
-    if udf_dll is None:
+    """Create an execution-only SIF with optional UDF and AMGX overrides."""
+    if udf_dll is None and amgx_config is None:
         return source, False
-    dll = Path(udf_dll).resolve()
-    if not dll.is_file():
-        raise FileNotFoundError(f"UDF DLL not found: {dll}")
-    token = '"tes_transient_heat_source_t0"'
+
     text = source.read_text(encoding="utf-8")
-    target_functions = ("TESTransientHeatSource", "AbsorberWindowPulseHeatSource")
-    uses_target = any(name in text for name in target_functions)
-    if not uses_target:
+    changed = False
+    if udf_dll is not None:
+        dll = Path(udf_dll).resolve()
+        if not dll.is_file():
+            raise FileNotFoundError(f"UDF DLL not found: {dll}")
+        token = '"tes_transient_heat_source_t0"'
+        target_functions = ("TESTransientHeatSource", "AbsorberWindowPulseHeatSource")
+        uses_target = any(name in text for name in target_functions)
+        if uses_target:
+            if token not in text:
+                raise ValueError(
+                    f"{source}: expected Procedure library token {token} was not found"
+                )
+            text = text.replace(token, f'"{dll.as_posix()}"')
+            changed = True
+
+    config = None
+    if amgx_config is not None:
+        config = Path(amgx_config).resolve()
+        if not config.is_file():
+            raise FileNotFoundError(f"AMGX config not found: {config}")
+        text = configure_amgx_sif(
+            text, config, mesh_dir=mesh_dir,
+            constraint_mode=amgx_constraint_mode,
+        )
+        changed = True
+
+    if not changed:
         return source, False
-    if token not in text:
-        raise ValueError(f"{source}: expected Procedure library token {token} was not found")
     out_dir.mkdir(parents=True, exist_ok=True)
     runtime_sif = out_dir / "runtime.sif"
-    runtime_sif.write_text(
-        text.replace(token, f'"{dll.as_posix()}"'),
-        encoding="utf-8",
-        newline="\n",
-    )
+    runtime_sif.write_text(text, encoding="utf-8", newline="\n")
     return runtime_sif, True
 
 
@@ -237,6 +455,8 @@ def run_case(
     mpi_procs: int,
     udf_dll: str | None = None,
     runtime_bin: str | None = None,
+    amgx_config: str | None = None,
+    amgx_constraint_mode: str = "default",
 ) -> int:
     spec = model["cases"][case_name]
     sif = ROOT / "generated" / "cases" / f"{case_name}.sif"
@@ -244,8 +464,26 @@ def run_case(
     out_dir = ROOT / "results" / case_name
     out_dir.mkdir(parents=True, exist_ok=True)
     log_path = out_dir / "solver.log"
-    runtime_sif, udf_applied = write_runtime_sif(sif, out_dir, udf_dll)
+    runtime_sif, runtime_override_applied = write_runtime_sif(
+        sif, out_dir, udf_dll, amgx_config,
+        amgx_constraint_mode=amgx_constraint_mode,
+    )
+    udf_applied = bool(
+        udf_dll
+        and any(
+            name in sif.read_text(encoding="utf-8")
+            for name in ("TESTransientHeatSource", "AbsorberWindowPulseHeatSource")
+        )
+    )
     env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin)
+    if amgx_config:
+        # Linux Elmer prefixes restart/output names with the mesh basename.
+        # The historical ../work/meshes/... paths therefore need that
+        # basename to exist in the launch CWD for ``mesh/../work`` to be
+        # normalized by the POSIX filesystem.  The real mesh remains under
+        # work/meshes; this is only an empty path anchor for WSL runs.
+        mesh_anchor = ROOT / model["meshes"][spec["mesh"]]["dir"]
+        mesh_anchor.mkdir(parents=True, exist_ok=True)
 
     inputs = {
         project_path.name: sha256(project_path),
@@ -262,6 +500,9 @@ def run_case(
     for dll in root_dlls:
         if (ROOT / dll).exists():
             inputs[dll] = sha256(ROOT / dll)
+    amgx_path = Path(amgx_config).resolve() if amgx_config else None
+    if amgx_path is not None:
+        inputs["amgx_config"] = sha256(amgx_path)
 
     started = datetime.now().isoformat(timespec="seconds")
     display_sif = (
@@ -286,6 +527,28 @@ def run_case(
     log_text = log_path.read_text(encoding="utf-8", errors="replace")
     convergence = re.findall(r"ComputeChange:.*", log_text)[-4:]
     fatal = re.findall(r"(?:ERROR|Fatal).*", log_text)[:3]
+    amgx_failures = re.findall(
+        r".*(?:Caught amgx exception|AMGX did not converge).*",
+        log_text,
+        flags=re.IGNORECASE,
+    )[:3]
+    for line in amgx_failures:
+        if line not in fatal:
+            fatal.append(line)
+    load_failures = re.findall(
+        r".*(?:cannot open shared object file|failed to load|Unable to load).*",
+        log_text,
+        flags=re.IGNORECASE,
+    )
+    for line in load_failures:
+        if line not in fatal:
+            fatal.append(line)
+    reported_done = "MAIN: *** Elmer Solver: ALL DONE ***" in log_text
+    if not reported_done:
+        fatal.append("solver did not report 'ALL DONE'")
+    if proc.returncode != 0:
+        fatal.append(f"solver process exited with code {proc.returncode}")
+    completed = reported_done and proc.returncode == 0 and not fatal
 
     collected: list[str] = []
     for pattern in (f"{case_name}_t*.vtu", f"{case_name}*.pvtu", f"{case_name}.ep"):
@@ -330,12 +593,15 @@ def run_case(
         "preexisting_restart_inputs_sha256": preexisting_inputs,
         "runtime_sif": str(runtime_sif.relative_to(ROOT)) if runtime_sif != sif else None,
         "runtime_sif_sha256": sha256(runtime_sif),
+        "runtime_override_applied": runtime_override_applied,
         "udf_applied": udf_applied,
         "udf_dll": str(Path(udf_dll).resolve()) if udf_applied else None,
         "udf_sha256": sha256(Path(udf_dll).resolve()) if udf_applied else None,
         "solver": str(solver_path),
         "elmer_prefix": str(prefix),
         "runtime_bin": str(Path(runtime_bin).resolve()) if runtime_bin else None,
+        "amgx_config": str(amgx_path) if amgx_path else None,
+        "amgx_config_sha256": sha256(amgx_path) if amgx_path else None,
         "runtime_artifacts_sha256": runtime_artifacts(
             solver_path, prefix, udf_dll if udf_applied else None
         ),
@@ -344,19 +610,20 @@ def run_case(
         "collected_outputs": sorted(collected),
         "result_file": str(result_file.relative_to(ROOT)) if result_file else None,
         "convergence_tail": convergence,
+        "solver_completed": completed,
         "errors": fatal,
     }
     (out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
 
-    status = "OK" if proc.returncode == 0 and not fatal else "FAILED"
+    status = "OK" if completed else "FAILED"
     print(f"[{case_name}] {status} (exit {proc.returncode}); outputs -> {out_dir.relative_to(ROOT)}")
     for line in convergence[-2:]:
         print(f"[{case_name}]   {line.strip()}")
     for line in fatal:
         print(f"[{case_name}]   {line.strip()}")
-    return proc.returncode
+    return 0 if completed else (proc.returncode or 1)
 
 
 def main() -> int:
@@ -380,6 +647,22 @@ def main() -> int:
     parser.add_argument(
         "--runtime-bin",
         help="runtime DLL directory appended after the selected Elmer install's bin/module paths",
+    )
+    parser.add_argument(
+        "--amgx-config",
+        help=(
+            "AMGX JSON config to inject into the target case's execution-only "
+            "SIF; restart dependencies retain their configured solver"
+        ),
+    )
+    parser.add_argument(
+        "--amgx-constraint-mode",
+        choices=[
+            "default", "slave", "master", "slave-transpose", "master-transpose",
+            "dual-lagrange",
+        ],
+        default="default",
+        help="Mortar constraint elimination variant used by the AMGX target",
     )
     parser.add_argument(
         "--elmer-solver",
@@ -430,9 +713,15 @@ def main() -> int:
         return 0
 
     for name in plan:
+        # A restart dependency is an input-generation step, not part of the
+        # requested target override.  Keeping its configured direct solver is
+        # also important for this TES model: eliminating mortar multipliers is
+        # required by AMGX but changes the steady initial field measurably.
+        target_amgx_config = args.amgx_config if name == args.case else None
         code = run_case(
             model, name, project_path, args.elmer_solver, args.mpi_procs,
-            args.udf_dll, args.runtime_bin,
+            args.udf_dll, args.runtime_bin, target_amgx_config,
+            args.amgx_constraint_mode,
         )
         if code != 0:
             print(f"aborting chain: {name} failed")

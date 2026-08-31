@@ -45,6 +45,86 @@ class RuntimeSifTests(unittest.TestCase):
             self.assertFalse(applied)
             self.assertEqual(runtime_sif, source)
 
+    def test_amgx_override_replaces_direct_solver_in_runtime_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "case.sif"
+            source.write_text(
+                "Solver 1\n"
+                "  Linear System Solver = Direct\n"
+                "  Linear System Direct Method = MUMPS\n"
+                "End\n"
+            )
+            config = root / "amgx.json"
+            config.write_text("{}")
+            runtime_sif, applied = run.write_runtime_sif(
+                source, root / "results", None, str(config)
+            )
+            self.assertTrue(applied)
+            runtime_text = runtime_sif.read_text()
+            self.assertIn('Linear System Solver = "AMGX"', runtime_text)
+            self.assertIn('Linear System Iterative Method = "FGMRES"', runtime_text)
+            self.assertIn('Linear System Preconditioning = "AMG"', runtime_text)
+            self.assertIn(
+                'Linear System Scaling Method = "row equilibration"', runtime_text
+            )
+            self.assertIn(f'AMGX Config = String "{config.resolve().as_posix()}"', runtime_text)
+            self.assertNotIn("Linear System Direct Method", runtime_text)
+            self.assertIn("Linear System Solver = Direct", source.read_text())
+
+    def test_amgx_eliminates_mortar_multiplier_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "case.sif"
+            source.write_text(
+                "Solver 1\n"
+                "  Linear System Solver = Direct\n"
+                "  Apply Mortar BCs = True\n"
+                "End\n"
+            )
+            config = root / "amgx.json"
+            config.write_text("{}")
+            runtime_sif, _ = run.write_runtime_sif(
+                source, root / "results", None, str(config)
+            )
+            self.assertIn(
+                "Eliminate Linear Constraints = Logical True",
+                runtime_sif.read_text(),
+            )
+
+    def test_amgx_slave_constraint_mode(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="slave"
+        )
+        self.assertIn("Eliminate Slave = Logical True", configured)
+
+    def test_amgx_dual_lagrange_constraint_mode(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+            "Boundary Condition 1\n"
+            "  Mortar BC = 2\n"
+            "End\n"
+            "Boundary Condition 2\n"
+            "  Name = not_mortar\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="dual-lagrange"
+        )
+        self.assertIn("Biorthogonal Dual Lagrange Coefficients = Logical True", configured)
+        self.assertIn("Biorthogonal Dual Slave = Logical False", configured)
+        self.assertIn("Biorthogonal Dual Master = Logical False", configured)
+        self.assertEqual(configured.count("Use Biorthogonal Basis"), 1)
+
     def test_runtime_environment_orders_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

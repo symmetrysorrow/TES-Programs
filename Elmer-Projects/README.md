@@ -59,6 +59,20 @@ python run.py case_tes_pulse_20ms_3x_refined
 `ElmerSolver generated\cases\<case>.sif` の直接実行も従来どおり可能です
 (その場合の出力はメッシュディレクトリに残ります)。
 
+### RTX 3060 Ti / AMGX
+
+単ピクセルproduction-v2の過渡熱ソルバーは、WSL上のCUDA版ElmerからAMGXを使って
+実行できます。最初は検証済みの同一メッシュ用定常結果を使った10ステップ試験を推奨します。
+
+```powershell
+.\scripts\run_singlepixel_gpu_wsl.ps1 -SmokeSteps 10 -ReuseKnownSteady
+```
+
+完走後は `-SmokeSteps 10` を外すと全時間範囲を実行します。AMGX指定は対象の過渡ケース
+だけに適用され、restart依存ケースは元の線形ソルバーを維持します。MortarのLagrange
+乗数行はAMGXへ渡す前にElmer側で消去し、行equilibrationを適用します。このためMUMPSと
+完全に同一の離散連立系ではなく、系列値は別途検証が必要です。
+
 メッシュは `meshes` レジストリで管理し、`python build_mesh.py <mesh名>` で
 再生成できます(ジオメトリ生成器 gmsh 一式は `scripts/support/vendored/geometry/` に
 ベンダリング済みで、外部リポジトリ依存はありません)。

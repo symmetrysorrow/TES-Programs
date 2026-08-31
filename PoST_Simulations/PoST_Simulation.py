@@ -64,6 +64,44 @@ PULSE_MS_PEAK_AVERAGE_HALF_WIDTH = 5
 
 output = "H:\\hata\\new_noise_test"
 event_root = None
+use_mirrored_events = None
+dump_save_all_override = None
+
+
+def _read_save_all(parameters):
+    """Read the user-facing event retention setting from input.json."""
+
+    value = parameters.get("SaveAll", False)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "1", "on"}:
+            return True
+        if normalized in {"false", "no", "0", "off"}:
+            return False
+    raise ValueError("input.json の SaveAll は true または false にしてください")
+
+
+def _read_use_mirrored_events(parameters):
+    """Read the user-facing symmetry setting from input.json."""
+
+    value = parameters.get("UseMirroredEvents", False)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "1", "on"}:
+            return True
+        if normalized in {"false", "no", "0", "off"}:
+            return False
+    raise ValueError(
+        "input.json の UseMirroredEvents は true または false にしてください"
+    )
 
 
 def resolve_excess_johnson_M(parameters):
@@ -336,6 +374,36 @@ def _event_data_root():
         return Path(output)
 
     return Path(event_root).expanduser()
+
+
+def _event_source_position(position, n_abs, mirror_events=False):
+    """Return the event position to use and whether its x axis is mirrored.
+
+    For a left/right symmetric absorber, the event at the lower-numbered
+    position is sufficient.  The corresponding higher-numbered position is
+    obtained by reflecting all x coordinates around the absorber centre.
+    """
+
+    position = int(position)
+    n_abs = int(n_abs)
+
+    if not mirror_events:
+        return position, False
+
+    mirrored_position = n_abs + 1 - position
+    source_position = min(position, mirrored_position)
+    return source_position, position != source_position
+
+
+def _event_positions_to_convert(positions, n_abs, mirror_events=False):
+    """Return unique event positions needed by ``Dump2Event``."""
+
+    return list(
+        dict.fromkeys(
+            _event_source_position(position, n_abs, mirror_events)[0]
+            for position in positions
+        )
+    )
 
 
 def IterJsonObjectItems(
@@ -2495,9 +2563,12 @@ def Pulse_Noise():
 def Dump2Event():
     """Convert external dumpall.dat files into event.h5 files.
 
-    ``input.json`` supplies the input energy and position list, while the
-    dump/event files themselves can live under ``event_root``. If no external
-    root is configured, the existing ``output`` layout is used.
+    ``input.json`` supplies the input energy, ``SaveAll`` policy, and position list, while the
+    dump/event files themselves can live under ``event_root``. If mirrored
+    events are enabled, only the lower-numbered position in each symmetric
+    pair is converted. If no external root is configured, the existing
+    ``output`` layout is used. ``SaveAll=false`` retains only full-energy
+    histories; ``SaveAll=true`` retains every history.
     """
 
     with open(
@@ -2513,11 +2584,24 @@ def Dump2Event():
         )
         / 1000.0
     )
+    save_all = _read_save_all(para)
+    if dump_save_all_override is not None:
+        save_all = dump_save_all_override
 
     data_root = _event_data_root()
+    mirror_events = (
+        _read_use_mirrored_events(para)
+        if use_mirrored_events is None
+        else use_mirrored_events
+    )
+    positions = _event_positions_to_convert(
+        para["position"],
+        para["n_abs"],
+        mirror_events,
+    )
 
     for posi in tqdm.tqdm(
-        para["position"],
+        positions,
         desc="dumpall to event",
     ):
 
@@ -2542,7 +2626,8 @@ def Dump2Event():
             dump_path,
             event_path,
             input_energy=input_energy_mev,
-            save_all=True,
+            save_all=save_all,
+            full_energy_only=not save_all,
         )
 
 
@@ -2551,8 +2636,11 @@ def Pulse_Ms():
     Synthesize one CH0/CH1 pulse for each event in every position folder.
 
     For each input.json position, read event.h5 from ``event_root`` and
-    write pulse_MS.h5 under ``output``. event.h5 stores event IDs as its outer
-    keys; all deposits in one event are summed into a single pulse.
+    write pulse_MS.h5 under ``output``. In mirrored-event mode, the
+    lower-numbered symmetric position is used as the source and its x
+    coordinates are reflected for the higher-numbered position. event.h5
+    stores event IDs as its outer keys; all deposits in one event are summed
+    into a single pulse.
     """
 
     with open(
@@ -2645,13 +2733,23 @@ def Pulse_Ms():
         time
     )
 
+    mirror_events = (
+        _read_use_mirrored_events(para)
+        if use_mirrored_events is None
+        else use_mirrored_events
+    )
     for posi in tqdm.tqdm(
         para["position"],
         desc="MS pulse positions",
     ):
 
         position_directory = Path(output) / str(posi)
-        event_directory = event_data_root / str(posi)
+        source_position, mirror_x = _event_source_position(
+            posi,
+            n_abs,
+            mirror_events,
+        )
+        event_directory = event_data_root / str(source_position)
 
         position_directory.mkdir(parents=True, exist_ok=True)
 
@@ -2687,7 +2785,11 @@ def Pulse_Ms():
                     iter_hdf5_events(
                         event_path
                     ),
-                    desc=f"MS pulses {posi}",
+                    desc=(
+                        f"MS pulses {posi}"
+                        if source_position == posi
+                        else f"MS pulses {posi} (source {source_position})"
+                    ),
                     leave=False,
                 )
             ):
@@ -2734,9 +2836,10 @@ def Pulse_Ms():
                         energies,
                     ):
 
-                        block = block_from_x_deposit(
-                            x_deposit
-                        )
+                        if mirror_x:
+                            x_deposit = -float(x_deposit)
+
+                        block = block_from_x_deposit(x_deposit)
 
                         if block is not None:
                             energy_by_block[
@@ -3096,7 +3199,7 @@ def _run_selected_actions(selected_actions):
 def _run_interactive():
     """Ask which simulation steps should be executed."""
 
-    global event_root
+    global event_root, use_mirrored_events, dump_save_all_override
 
     choices = [
         questionary.Choice(
@@ -3164,6 +3267,38 @@ def _run_interactive():
             print("キャンセルしました。")
             return
         event_root = str(Path(data_root).expanduser())
+
+    if external_data_actions.intersection(selected_actions):
+        with open(
+            Path(output) / "input.json",
+            "r",
+            encoding="utf-8",
+        ) as f:
+            parameters = json.load(f)
+        configured_mirror_events = _read_use_mirrored_events(parameters)
+        use_mirrored_events = questionary.confirm(
+            "Eventを左右反転し、対称位置では番号の小さい側のEventを利用しますか？",
+            default=configured_mirror_events,
+        ).ask()
+        if use_mirrored_events is None:
+            print("キャンセルしました。")
+            return
+
+    if "dump_to_event" in selected_actions:
+        with open(
+            Path(output) / "input.json",
+            "r",
+            encoding="utf-8",
+        ) as f:
+            parameters = json.load(f)
+        configured_save_all = _read_save_all(parameters)
+        dump_save_all_override = questionary.confirm(
+            "全イベントを保存しますか？ (SaveAll=true、OFFなら全吸収イベントのみ)",
+            default=configured_save_all,
+        ).ask()
+        if dump_save_all_override is None:
+            print("キャンセルしました。")
+            return
 
     _run_selected_actions(selected_actions)
 

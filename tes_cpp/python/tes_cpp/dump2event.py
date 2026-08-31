@@ -40,6 +40,7 @@ def dump2event(
     *,
     input_energy: float,
     save_all: bool = False,
+    full_energy_only: bool = False,
 ) -> Dump2EventResult:
     """Convert ``dumpall.dat`` into event JSON or ``.h5`` data.
 
@@ -50,9 +51,13 @@ def dump2event(
     command = [_executable(), str(dump_path), str(output), "--input-energy", str(input_energy)]
     index_path = output.with_name("FullEnergyList.dat")
     if save_all:
-        command += ["--save-all", "--full-energy-list", str(index_path)]
+        command += ["--save-all"]
+    if save_all or full_energy_only:
+        command += ["--full-energy-list", str(index_path)]
+    if full_energy_only:
+        command += ["--full-energy-only"]
     subprocess.run(command, check=True)
     event_ids = ()
-    if save_all and index_path.exists():
+    if (save_all or full_energy_only) and index_path.exists():
         event_ids = tuple(int(line) for line in index_path.read_text().splitlines() if line)
     return Dump2EventResult(output_path=output, full_energy_event_ids=event_ids)

@@ -45,6 +45,11 @@ COMMON_MS_TARGETS = ("Pulse_ms", "Pulse_ms_noise")
 # slow CH1 rise, biasing CH1/CH0 toward the wrong absorber position.
 PULSE_MS_PEAK_AVERAGE_HALF_WIDTH = 5
 
+# Keep the settling-time estimator on the same 11-sample basis as the energy
+# peak estimator.  The centre is still SettlingTime; only the averaging
+# window is changed from the former 100 samples to +/-5 samples.
+ST_AVERAGE_HALF_WIDTH = 5
+
 
 def pulse_file_name(target):
     """Return the current post_all JSON filename for *target*."""
@@ -80,6 +85,16 @@ def figure_output_dir(data_path, target):
     return Path(data_path) / "figures" / target.lower()
 
 
+def _event_source_position(position, n_abs, use_mirrored_events):
+    """Return the stored event position for a requested absorber position."""
+
+    position = int(position)
+    n_abs = int(n_abs)
+    if not use_mirrored_events:
+        return position
+    return min(position, n_abs + 1 - position)
+
+
 def full_energy_event_ids(data_path, position, target, event_path=None):
     """Return the full-energy event IDs required for MS resolution analysis.
 
@@ -94,11 +109,19 @@ def full_energy_event_ids(data_path, position, target, event_path=None):
             "EventPath is required for MS analysis. "
             "Specify the root containing position/<id>/FullEnergyList.dat."
         )
+    with open(Path(data_path) / "input.json", encoding="utf-8") as file:
+        parameters = json.load(file)
+    source_position = _event_source_position(
+        position,
+        parameters["n_abs"],
+        parameters.get("UseMirroredEvents", False),
+    )
     event_root = Path(event_path).expanduser()
-    path = event_root / str(position) / "FullEnergyList.dat"
+    path = event_root / str(source_position) / "FullEnergyList.dat"
     if not path.is_file():
         raise FileNotFoundError(
-            f"Full-energy event list was not found for {target}: {path}. "
+            f"Full-energy event list was not found for {target}, position "
+            f"{position} (source position {source_position}): {path}. "
             "Check EventPath and run Dump2Event before extracting MS features."
         )
     event_ids = {
@@ -108,7 +131,8 @@ def full_energy_event_ids(data_path, position, target, event_path=None):
     }
     if not event_ids:
         raise ValueError(
-            f"Full-energy event list is empty: {path}. "
+            f"Full-energy event list is empty: {path} "
+            f"(requested position {position}, source position {source_position}). "
             "Check that EventPath matches the simulation energy and rerun "
             "Dump2Event with the correct input.json."
         )
@@ -290,8 +314,8 @@ def save_readpulse_debug(Data_path, target, pulse_raw, pulse_filt, para, path, r
     debug_dir.mkdir(parents=True, exist_ok=True)
 
     t = np.arange(len(pulse_raw)) / para["rate"]
-    st_l = max(0, para["SettlingTime"] - 10)
-    st_r = min(len(pulse_filt), para["SettlingTime"] + 90)
+    st_l = para["SettlingTime"] - ST_AVERAGE_HALF_WIDTH
+    st_r = para["SettlingTime"] + ST_AVERAGE_HALF_WIDTH + 1
 
     plt.figure(figsize=(10, 5))
     plt.plot(t, pulse_raw, color="gray", alpha=0.35, label="raw")
@@ -479,8 +503,8 @@ def ReadPulse(
     rise = (rise_90 - rise_10) / para["rate"]
 
     if settling_half_width is None:
-        st_l = para["SettlingTime"] - 10
-        st_r = para["SettlingTime"] + 90
+        st_l = para["SettlingTime"] - ST_AVERAGE_HALF_WIDTH
+        st_r = para["SettlingTime"] + ST_AVERAGE_HALF_WIDTH + 1
     else:
         settling_half_width = int(settling_half_width)
         if settling_half_width < 0:
@@ -882,7 +906,8 @@ def CommonMSComparison(Data_path, position, event_path, show=False, bin_num=None
     """Compare MS and MS+noise using common event/filter conventions.
 
     Position ratios retain adaptive 11-sample peaks. Energy Max/Sum/Min use
-    fixed 11-sample noiseless-reference windows; ST uses SettlingTime.
+    fixed 11-sample noiseless-reference windows; ST uses an 11-sample window
+    centred on SettlingTime.
 
     ``Pulse_noise`` is reported as an additional, independent baseline.  It
     is a separate single-site event population, so it has no event-by-event
@@ -1427,7 +1452,8 @@ if __name__ == "__main__":
         description=(
             "Run the common TES analysis for all positions. Position ratios "
             "use adaptive 11-sample peaks; energy Max/Sum/Min use fixed "
-            "noiseless-reference windows and ST uses SettlingTime."
+            "noiseless-reference windows and ST uses an 11-sample window "
+            "centred on SettlingTime."
         )
     )
     parser.add_argument(
