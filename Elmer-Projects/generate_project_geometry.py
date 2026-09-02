@@ -80,7 +80,8 @@ class TesGmshBuilder(GmshApiBuilder):
         # ElmerGrid then merges (1e-10) into direct node coupling across the
         # mortar gap. The single-pixel reference mesh has zero shared nodes on
         # these contacts; the rotation (geometry unchanged) restores that.
-        gmsh.model.occ.rotate([(2, disk)], cx, cy, primitive.zmin, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
+        if not getattr(self, "merge_mortar_interfaces", False):
+            gmsh.model.occ.rotate([(2, disk)], cx, cy, primitive.zmin, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
         # OCCBooleanGlue=2 (the global default here) skips real boolean
         # computation for interfering shapes; disable it for this 2D split.
         _original_set_number("Geometry.OCCBooleanGlue", 0)
@@ -182,7 +183,8 @@ class TesGmshBuilder(GmshApiBuilder):
                 # Same seam rotation as _add_contact_film_primitive: keep the
                 # imprinted circle's mesh nodes off the Stycast rim nodes so
                 # ElmerGrid does not merge them across the mortar gap.
-                gmsh.model.occ.rotate([(2, disk)], x, y, z, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
+                if not getattr(self, "merge_mortar_interfaces", False):
+                    gmsh.model.occ.rotate([(2, disk)], x, y, z, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
                 tools.append((2, disk))
             # OCCBooleanGlue=2 (the builder's global setting) skips the real
             # boolean computation, so the disk tools would not imprint at all;
@@ -224,6 +226,84 @@ class TesGmshBuilder(GmshApiBuilder):
             self.group_entities[body] = new_body_tags
             for tag in new_body_tags:
                 self.fragment_sources.setdefault(tag, set()).update(sources or {body})
+
+    def _before_mesh_generate(self):
+        """Copy meshes across coincident contact faces for Elmer node merging."""
+        if not getattr(self, "merge_mortar_interfaces", False):
+            return
+
+        def horizontal_faces(body: str, z_target: float) -> list[int]:
+            faces: set[int] = set()
+            for volume in self.group_entities.get(body, []):
+                for dim, face in gmsh.model.getBoundary(
+                    [(3, volume)], oriented=False, recursive=False
+                ):
+                    if dim != 2:
+                        continue
+                    if abs(gmsh.model.occ.getCenterOfMass(2, face)[2] - z_target) <= 5.0e-8:
+                        faces.add(int(face))
+            return sorted(faces)
+
+        identity = [
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ]
+
+        def match_faces(slave: list[int], master: list[int], label: str) -> None:
+            unused = set(master)
+            if len(slave) != len(master) or not slave:
+                raise RuntimeError(
+                    f"{label}: contact face count mismatch {len(slave)} vs {len(master)}"
+                )
+            for slave_face in slave:
+                slave_area = abs(gmsh.model.occ.getMass(2, slave_face))
+                master_face = min(
+                    unused,
+                    key=lambda face: abs(abs(gmsh.model.occ.getMass(2, face)) - slave_area),
+                )
+                master_area = abs(gmsh.model.occ.getMass(2, master_face))
+                if abs(master_area - slave_area) > 1.0e-6 * max(master_area, slave_area):
+                    raise RuntimeError(
+                        f"{label}: unmatched face areas {slave_area} and {master_area}"
+                    )
+                gmsh.model.mesh.setPeriodic(2, [slave_face], [master_face], identity)
+                unused.remove(master_face)
+
+        for slave_body, slave_z, master_body, master_z, target_area, region, label in getattr(
+            self, "conformal_contact_pairs", []
+        ):
+            slave_faces = horizontal_faces(slave_body, slave_z)
+            master_faces = horizontal_faces(master_body, master_z)
+            if region is not None:
+                xmin, xmax, ymin, ymax = region
+                slave_faces = [
+                    face for face in slave_faces
+                    if xmin <= gmsh.model.occ.getCenterOfMass(2, face)[0] <= xmax
+                    and ymin <= gmsh.model.occ.getCenterOfMass(2, face)[1] <= ymax
+                ]
+                master_faces = [
+                    face for face in master_faces
+                    if xmin <= gmsh.model.occ.getCenterOfMass(2, face)[0] <= xmax
+                    and ymin <= gmsh.model.occ.getCenterOfMass(2, face)[1] <= ymax
+                ]
+            if target_area is not None:
+                slave_faces = [
+                    face for face in slave_faces
+                    if abs(abs(gmsh.model.occ.getMass(2, face)) - target_area)
+                    <= 1.0e-6 * target_area
+                ]
+                master_faces = [
+                    face for face in master_faces
+                    if abs(abs(gmsh.model.occ.getMass(2, face)) - target_area)
+                    <= 1.0e-6 * target_area
+                ]
+            match_faces(
+                slave_faces,
+                master_faces,
+                label,
+            )
 
     def _thin_box_refinements(self):
         # Optional mesh-convergence hook: set MEMBRANE_REFINE_H (metres) to add a
@@ -713,6 +793,7 @@ def _retag_mortar_interface_surfaces(
     volume_tag: int = 103,
     face_base: int = 1300,
     legacy_contact: bool = True,
+    conformal_shared_interfaces: bool = False,
 ) -> None:
     """Re-tag the Membrane_SiNx (island) volume + zmin/zmax surface groups from
     their transient per-zone pieces into the final semantic groups.
@@ -726,16 +807,32 @@ def _retag_mortar_interface_surfaces(
     _replace_volume_group(name_prefix, volume_tag, membrane_sinx_volume_tags)
     volume_groups = _physical_groups_by_name(3)
     membrane_sinx_volumes = set(membrane_sinx_volume_tags)
-    membrane_bottom_surfaces = _find_surfaces_by_plane(
-        zmid_target=191.0e-6,
-        allowed_upward_volumes=membrane_sinx_volumes,
-        z_tol=2.5e-7,
-    )
-    membrane_top_surfaces = _find_surfaces_by_plane(
-        zmid_target=192.0e-6,
-        allowed_upward_volumes=membrane_sinx_volumes,
-        z_tol=2.5e-7,
-    )
+    if conformal_shared_interfaces:
+        def touching_faces_at_z(z_target: float) -> list[int]:
+            matches: list[int] = []
+            for _, surface_tag in gmsh.model.getEntities(2):
+                if not membrane_sinx_volumes.intersection(_upward_volumes(surface_tag)):
+                    continue
+                bbox = gmsh.model.getBoundingBox(2, surface_tag)
+                if abs(bbox[5] - bbox[2]) > 5.0e-7:
+                    continue
+                if abs(_surface_zmid(surface_tag) - z_target) <= 2.5e-7:
+                    matches.append(int(surface_tag))
+            return sorted(matches)
+
+        membrane_bottom_surfaces = touching_faces_at_z(191.0e-6)
+        membrane_top_surfaces = touching_faces_at_z(192.0e-6)
+    else:
+        membrane_bottom_surfaces = _find_surfaces_by_plane(
+            zmid_target=191.0e-6,
+            allowed_upward_volumes=membrane_sinx_volumes,
+            z_tol=2.5e-7,
+        )
+        membrane_top_surfaces = _find_surfaces_by_plane(
+            zmid_target=192.0e-6,
+            allowed_upward_volumes=membrane_sinx_volumes,
+            z_tol=2.5e-7,
+        )
     membrane_contact_surface = min(
         membrane_top_surfaces,
         key=lambda tag: abs(_surface_area(tag) - 500.0e-6 * 500.0e-6),
@@ -1220,8 +1317,14 @@ def build(write_mesh: bool = True) -> None:
         elmer_overrides.get("fragment_mortar_interfaces", False)
     )
 
+    conformal_shared_interfaces = bool(
+        elmer_overrides.get("conformal_shared_interfaces", False)
+    )
+    conformal_mortar_interfaces = bool(
+        elmer_overrides.get("conformal_mortar_interfaces", False)
+    )
     builder = TesGmshBuilder(spec=spec, verbose=False)
-    if fragment_mortar_interfaces and len(sides) > 1:
+    if fragment_mortar_interfaces and (len(sides) > 1 or conformal_mortar_interfaces):
         # Multi-side (dual_tes) contact refinement, all BEFORE meshing, with
         # each side's real Stycast position/radius. The single_pixel path
         # keeps the legacy post-builder calls below untouched for
@@ -1254,34 +1357,107 @@ def build(write_mesh: bool = True) -> None:
                 ],
             }
         ]
+        if conformal_mortar_interfaces:
+            for suffix in sides:
+                tes_box = _find_box(spec, f"TES{suffix}")
+                stycast = stycast_boxes[suffix]
+                builder.contact_disc_specs.append(
+                    {
+                        "body": f"Membrane_SiNx{suffix}",
+                        "discs": [
+                            (
+                                stycast.x,
+                                stycast.y,
+                                tes_box.zmin,
+                                float(stycast.dx) / 2.0,
+                            )
+                        ],
+                    }
+                )
+            builder.merge_mortar_interfaces = True
+            builder.conformal_contact_pairs = []
+            for suffix in sides:
+                tes_box = _find_box(spec, f"TES{suffix}")
+                stycast = stycast_boxes[suffix]
+                disc_area = pi * (float(stycast.dx) / 2.0) ** 2
+                builder.conformal_contact_pairs.extend(
+                    [
+                        (
+                            f"TES{suffix}", tes_box.zmin,
+                            f"Membrane_SiNx{suffix}", tes_box.zmin,
+                            None,
+                            (tes_box.xmin, tes_box.xmax, tes_box.ymin, tes_box.ymax),
+                            f"TES{suffix}/membrane",
+                        ),
+                        (
+                            f"Stycast{suffix}", stycast.zmin,
+                            f"TES{suffix}", tes_box.zmax,
+                            disc_area, None, f"Stycast{suffix}/TES",
+                        ),
+                        (
+                            f"Stycast{suffix}", stycast.zmax,
+                            "abs", _find_box(spec, "abs").zmin,
+                            disc_area, None, f"Stycast{suffix}/absorber",
+                        ),
+                    ]
+                )
 
     try:
         gmsh.option.setNumber = _set_number_without_optimize
-        builder.build()
-        if len(sides) == 1:
-            _fragment_mortar_interfaces(fragment_mortar_interfaces)
-        for suffix in sides:
-            _retag_mortar_interface_surfaces(
-                fragment_mortar_interfaces,
-                membrane_sinx_parts_by_side[suffix],
-                name_prefix=f"Membrane_SiNx{suffix}",
-                volume_tag=expected_tags[f"Membrane_SiNx{suffix}"],
-                face_base=face_bases[f"Membrane_SiNx{suffix}"],
-                legacy_contact=len(sides) == 1,
+        builder.build(conformal_shared_interfaces=conformal_shared_interfaces)
+        if conformal_mortar_interfaces:
+            for body_name, physical_tag in expected_tags.items():
+                body_tags = sorted(set(builder.group_entities.get(body_name, [])))
+                if not body_tags:
+                    body_boxes = [
+                        box for box in spec.boxes
+                        if body_name_of(box) == body_name
+                    ]
+                    body_tags = _find_volume_tags_for_boxes(body_boxes)
+                if not body_tags:
+                    raise RuntimeError(
+                        f"Periodic contact meshing lost material volume {body_name!r}"
+                    )
+                _replace_volume_group(body_name, physical_tag, body_tags)
+        if conformal_shared_interfaces:
+            # OCC fragmentation changes entity tags. Re-register every material
+            # group from its semantic source boxes before writing the mesh.
+            for body_name, physical_tag in expected_tags.items():
+                body_boxes = [
+                    box for box in spec.boxes
+                    if body_name_of(box) == body_name
+                ]
+                body_tags = _find_volume_tags_for_boxes(body_boxes)
+                if not body_tags:
+                    raise RuntimeError(
+                        f"Conformal fragmentation lost material volume {body_name!r}"
+                    )
+                _replace_volume_group(body_name, physical_tag, body_tags)
+        if not conformal_shared_interfaces and not conformal_mortar_interfaces:
+            if len(sides) == 1:
+                _fragment_mortar_interfaces(fragment_mortar_interfaces)
+            for suffix in sides:
+                _retag_mortar_interface_surfaces(
+                    fragment_mortar_interfaces,
+                    membrane_sinx_parts_by_side[suffix],
+                    name_prefix=f"Membrane_SiNx{suffix}",
+                    volume_tag=expected_tags[f"Membrane_SiNx{suffix}"],
+                    face_base=face_bases[f"Membrane_SiNx{suffix}"],
+                    legacy_contact=len(sides) == 1,
+                )
+            if len(sides) > 1:
+                _retag_contact_surfaces_multi(
+                    fragment_mortar_interfaces,
+                    sides=sides,
+                    spec=spec,
+                    stycast_boxes=stycast_boxes,
+                    face_bases=face_bases,
+                )
+            (ROOT / "generated" / "mortar_surface_groups.json").write_text(
+                json.dumps(_identify_contact_surface_groups(), indent=2),
+                encoding="utf-8",
             )
-        if len(sides) > 1:
-            _retag_contact_surfaces_multi(
-                fragment_mortar_interfaces,
-                sides=sides,
-                spec=spec,
-                stycast_boxes=stycast_boxes,
-                face_bases=face_bases,
-            )
-        (ROOT / "generated" / "mortar_surface_groups.json").write_text(
-            json.dumps(_identify_contact_surface_groups(), indent=2),
-            encoding="utf-8",
-        )
-        _write_mortar_surface_report(ROOT / "generated" / "mortar_surface_report.json")
+            _write_mortar_surface_report(ROOT / "generated" / "mortar_surface_report.json")
         gmsh.write(str(ROOT / "gmsh" / "project_shifted.brep"))
         if write_mesh:
             # ElmerGrid (Elmer 26.1) misreads multi-block msh 4.1 $Nodes sections and

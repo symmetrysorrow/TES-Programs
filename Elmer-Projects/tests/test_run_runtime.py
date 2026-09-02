@@ -104,6 +104,19 @@ class RuntimeSifTests(unittest.TestCase):
         )
         self.assertIn("Eliminate Slave = Logical True", configured)
 
+    def test_amgx_no_scaling_mode_omits_row_equilibration(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="no-scaling"
+        )
+        self.assertNotIn("Linear System Scaling Method", configured)
+        self.assertIn("Linear System Scaling = Logical False", configured)
+
     def test_amgx_dual_lagrange_constraint_mode(self) -> None:
         text = (
             "Solver 1\n"
@@ -124,6 +137,59 @@ class RuntimeSifTests(unittest.TestCase):
         self.assertIn("Biorthogonal Dual Slave = Logical False", configured)
         self.assertIn("Biorthogonal Dual Master = Logical False", configured)
         self.assertEqual(configured.count("Use Biorthogonal Basis"), 1)
+
+    def test_amgx_penalty_constraint_mode(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="penalty",
+            constraint_penalty=2500.0,
+        )
+        self.assertNotIn("Eliminate Linear Constraints = Logical True", configured)
+        self.assertIn("Penalty Linear Constraints = Logical True", configured)
+        self.assertIn("Linear Constraint Penalty = Real 2500", configured)
+
+    def test_amgx_schur_constraint_mode(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="schur"
+        )
+        self.assertIn('Linear System Solver = "AMGX Schur"', configured)
+        self.assertIn('Linear System Iterative Method = "GMRES"', configured)
+        self.assertNotIn("Eliminate Linear Constraints", configured)
+        self.assertNotIn("Penalty Linear Constraints", configured)
+        self.assertIn("AMGX Schur Augmentation = Real 10000", configured)
+        self.assertIn("Linear System Min Iterations = Integer 1", configured)
+        self.assertIn("Linear System Convergence Tolerance = Real 1.0e-6", configured)
+        self.assertIn("Linear System GMRES Restart = Integer 100", configured)
+        self.assertIn("Linear System Scaling = Logical True", configured)
+        self.assertIn("AMGX Allow Not Converged = Logical True", configured)
+
+    def test_amgx_stabilized_constraint_mode(self) -> None:
+        text = (
+            "Solver 1\n"
+            "  Linear System Solver = Direct\n"
+            "  Apply Mortar BCs = True\n"
+            "End\n"
+        )
+        configured = run.configure_amgx_sif(
+            text, Path("amgx.json"), constraint_mode="stabilized",
+            constraint_penalty=4.0,
+        )
+        self.assertIn('Linear System Solver = "AMGX Stabilized"', configured)
+        self.assertIn('Linear System Iterative Method = "GCR"', configured)
+        self.assertNotIn("Eliminate Linear Constraints", configured)
+        self.assertIn("AMGX Constraint Stabilization = Real 0.25", configured)
+        self.assertIn("Linear System Scaling = Logical True", configured)
 
     def test_runtime_environment_orders_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

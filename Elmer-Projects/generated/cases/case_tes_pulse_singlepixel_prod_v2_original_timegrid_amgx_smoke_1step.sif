@@ -17,7 +17,7 @@ Simulation
   Output Intervals = 1
   Steady State Max Iterations = 1
   Solver Input File = generated/cases/case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_1step.sif
-  Restart File = ../work/meshes/mesh_singlepixel_prod_v2/case_tes_steady_singlepixel_prod_v2_original_timegrid.result
+  Restart File = ../work/meshes/mesh_singlepixel_prod_v2/case_tes_steady_singlepixel_prod_v2.result
   Restart Position = 0
   Restart Time = Real 0.02
   Output File = ../work/meshes/mesh_singlepixel_prod_v2/case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_1step.result
@@ -78,7 +78,6 @@ Solver 1
   Linear System Solver = Direct
   Linear System Direct Method = MUMPS
   Apply Mortar BCs = True
-  Linear System Scaling Method = "row equilibration"
   Steady State Convergence Tolerance = 1e-09
 End
 

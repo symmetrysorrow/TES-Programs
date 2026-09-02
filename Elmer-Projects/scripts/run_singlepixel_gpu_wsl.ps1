@@ -5,10 +5,14 @@ param(
     # -MpiProcs 4 only when deliberately comparing against the four-rank run.
     [int]$MpiProcs = 1,
     [int]$SmokeSteps = 0,
+    [string]$Project = "",
+    [string]$Case = "",
+    [switch]$NoAmgx,
     [string]$Distro = "Ubuntu",
     [string]$AmgxConfig = "config\amgx\tes_fgmres_aggregation_l1_5e-8.json",
-    [ValidateSet("default", "slave", "master", "slave-transpose", "master-transpose", "dual-lagrange")]
+    [ValidateSet("default", "no-scaling", "slave", "master", "slave-transpose", "master-transpose", "dual-lagrange", "penalty", "schur", "stabilized")]
     [string]$AmgxConstraintMode = "default",
+    [double]$ConstraintPenalty = 1.0e4,
     [switch]$ReuseSteady,
     [switch]$ReuseKnownSteady,
     [switch]$ForceDeps,
@@ -23,6 +27,9 @@ if ($MpiProcs -lt 1) {
 if ($SmokeSteps -lt 0) {
     throw "SmokeSteps must be zero (disabled) or a positive integer."
 }
+if ([string]::IsNullOrWhiteSpace($Project) -xor [string]::IsNullOrWhiteSpace($Case)) {
+    throw "Project and Case must be supplied together."
+}
 if ($ReuseSteady -and $ReuseKnownSteady) {
     throw "ReuseSteady and ReuseKnownSteady are mutually exclusive."
 }
@@ -33,9 +40,10 @@ if ($ForceDeps -and $ReuseKnownSteady) {
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $tools = Join-Path (Split-Path $repo -Parent) "tools"
 $solverWin = Join-Path $tools "elmer-gpu-wsl\bin\ElmerSolver_mpi"
-$amgxWin = Join-Path $repo $AmgxConfig
+$amgxWin = if ($NoAmgx) { $null } else { Join-Path $repo $AmgxConfig }
+$projectWin = if ($Project) { Join-Path $repo $Project } else { $null }
 
-foreach ($path in @($solverWin, $amgxWin)) {
+foreach ($path in @($solverWin, $amgxWin, $projectWin) | Where-Object { $_ }) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Required GPU file is missing: $path"
     }
@@ -62,7 +70,8 @@ function Bash-Quote([string]$Value) {
 $repoWsl = Convert-ToWslPath $repo
 $toolsWsl = Convert-ToWslPath $tools
 $solverWsl = "$toolsWsl/elmer-gpu-wsl/bin/ElmerSolver_mpi"
-$amgxWsl = Convert-ToWslPath $amgxWin
+$amgxWsl = if ($amgxWin) { Convert-ToWslPath $amgxWin } else { $null }
+$projectWsl = if ($projectWin) { Convert-ToWslPath $projectWin } else { $null }
 $amgxLibWsl = "$toolsWsl/amgx-gpu-install-mpi/lib"
 $elmerWsl = "$toolsWsl/elmer-gpu-wsl"
 $fmodulesWsl = "/home/symme/elmer-gpu-build/fmodules"
@@ -76,30 +85,54 @@ $buildUdfs = @(
     "gfortran -O2 -fPIC -shared -I$(Bash-Quote $fmodulesWsl) $(Bash-Quote "$repoWsl/tes_transient_heat_source.f90") -L$(Bash-Quote $elmerBuildLibWsl) -L$(Bash-Quote $amgxLibWsl) -Wl,-rpath,$(Bash-Quote "$elmerWsl/lib/elmersolver") -Wl,-rpath,$(Bash-Quote $amgxLibWsl) -lelmersolver -lamgxsh -o $(Bash-Quote $transientUdfWsl)"
 )
 
-$arguments = @(
-    "python3 scripts/prep/run_singlepixel_prod_v2_original_timegrid.py",
-    "--mpi-procs $MpiProcs",
-    "--time-grid $TimeGrid",
-    "--linear-system mumps",
-    "--elmer-solver $(Bash-Quote $solverWsl)",
-    "--runtime-bin ''",
-    "--amgx-config $(Bash-Quote $amgxWsl)"
-    "--amgx-constraint-mode $AmgxConstraintMode"
-)
-if ($ReuseSteady) {
-    $arguments += "--reuse-steady"
-}
-if ($ReuseKnownSteady) {
-    $arguments += "--reuse-known-serial-steady"
-}
-if ($ForceDeps) {
-    $arguments += "--force-deps"
-}
-if ($SmokeSteps -gt 0) {
-    $arguments += "--smoke-steps $SmokeSteps"
-}
-if ($DryRun) {
-    $arguments += "--dry-run"
+if ($projectWsl) {
+    $arguments = @(
+        "python3 run.py $(Bash-Quote $Case)",
+        "--project $(Bash-Quote $projectWsl)",
+        "--mpi-procs $MpiProcs",
+        "--elmer-solver $(Bash-Quote $solverWsl)",
+        "--runtime-bin ''"
+    )
+    if (-not $NoAmgx) {
+        $arguments += "--amgx-config $(Bash-Quote $amgxWsl)"
+        $arguments += "--amgx-constraint-mode $AmgxConstraintMode"
+        $arguments += "--amgx-constraint-penalty $ConstraintPenalty"
+    }
+    if ($ForceDeps) {
+        $arguments += "--force-deps"
+    }
+    if ($DryRun) {
+        $arguments += "--dry-run"
+    }
+} else {
+    $arguments = @(
+        "python3 scripts/prep/run_singlepixel_prod_v2_original_timegrid.py",
+        "--mpi-procs $MpiProcs",
+        "--time-grid $TimeGrid",
+        "--linear-system mumps",
+        "--elmer-solver $(Bash-Quote $solverWsl)",
+        "--runtime-bin ''"
+    )
+    if (-not $NoAmgx) {
+        $arguments += "--amgx-config $(Bash-Quote $amgxWsl)"
+        $arguments += "--amgx-constraint-mode $AmgxConstraintMode"
+        $arguments += "--amgx-constraint-penalty $ConstraintPenalty"
+    }
+    if ($ReuseSteady) {
+        $arguments += "--reuse-steady"
+    }
+    if ($ReuseKnownSteady) {
+        $arguments += "--reuse-known-serial-steady"
+    }
+    if ($ForceDeps) {
+        $arguments += "--force-deps"
+    }
+    if ($SmokeSteps -gt 0) {
+        $arguments += "--smoke-steps $SmokeSteps"
+    }
+    if ($DryRun) {
+        $arguments += "--dry-run"
+    }
 }
 
 $bashScript = @(

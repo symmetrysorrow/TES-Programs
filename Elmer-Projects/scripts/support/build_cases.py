@@ -308,6 +308,7 @@ def solver1_block(
     calculate_loads: bool = False,
     lumped_mass: bool = False,
     transient_restart: bool = False,
+    apply_mortar_bcs: bool = True,
     comment: str | None = None,
 ) -> list[str]:
     lines = [
@@ -392,7 +393,7 @@ def solver1_block(
             "  Linear System Direct Method = Umfpack",
         ]
     lines += [
-        "  Apply Mortar BCs = True",
+        f"  Apply Mortar BCs = {'True' if apply_mortar_bcs else 'False'}",
         f"  Steady State Convergence Tolerance = {fmt_real(solver['steady_state_convergence_tolerance'])}",
     ]
     if transient_restart:
@@ -622,7 +623,8 @@ def _target_boundaries_line(targets: list[int]) -> str:
 
 
 def bodies_and_bcs(
-    mesh_names: MeshNames, with_pulse: bool, *, reverse_stycast_abs: bool = False
+    mesh_names: MeshNames, with_pulse: bool, *, reverse_stycast_abs: bool = False,
+    apply_mortar_bcs: bool = True,
 ) -> list[str]:
     bodies = resolve_bodies(mesh_names)
     # TES-role bodies get Body Force 1..N (ascending target id, i.e. one per
@@ -657,9 +659,10 @@ def bodies_and_bcs(
     ]
     bc_number = 2
     master_bc_of: dict[int, int] = {}
-    for slave_target, slave_label, master_target, master_label in resolve_mortar_pairs(
+    mortar_pairs = resolve_mortar_pairs(
         mesh_names, reverse_stycast_abs=reverse_stycast_abs
-    ):
+    ) if apply_mortar_bcs else []
+    for slave_target, slave_label, master_target, master_label in mortar_pairs:
         slave_bc = bc_number
         bc_number += 1
         is_new_master = master_target not in master_bc_of
@@ -957,6 +960,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 calculate_loads=bool(spec.get("calculate_loads")),
                 lumped_mass=bool(spec.get("lumped_mass")),
                 transient_restart=bool(spec.get("transient_restart")),
+                apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
                 comment=spec.get("solver_comment"),
             )
             lines.append("")
@@ -971,6 +975,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             calculate_loads=bool(spec.get("calculate_loads")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
+            apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -980,6 +985,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             calculate_loads=bool(spec.get("calculate_loads")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
+            apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -1007,6 +1013,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         mesh_names,
         with_pulse,
         reverse_stycast_abs=bool(spec.get("reverse_stycast_abs_mortar", False)),
+        apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
     )
     body_lines = [
         line.replace("__T_BATH__", fmt(params["T_bath"])) for line in body_lines

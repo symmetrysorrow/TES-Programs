@@ -87,6 +87,7 @@ def runtime_environment(
 def configure_amgx_sif(
     text: str, config: Path, mesh_dir: Path | None = None,
     constraint_mode: str = "default",
+    constraint_penalty: float = 1.0e4,
 ) -> str:
     """Switch every HeatSolve solver block in *text* to AMGX.
 
@@ -97,11 +98,13 @@ def configure_amgx_sif(
     launched inside WSL.
     """
     valid_constraint_modes = {
-        "default", "slave", "master", "slave-transpose", "master-transpose",
-        "dual-lagrange",
+        "default", "no-scaling", "slave", "master", "slave-transpose", "master-transpose",
+        "dual-lagrange", "penalty", "schur", "stabilized",
     }
     if constraint_mode not in valid_constraint_modes:
         raise ValueError(f"invalid AMGX constraint mode: {constraint_mode}")
+    if constraint_penalty <= 0:
+        raise ValueError("AMGX constraint penalty must be positive")
     config_token = config.as_posix()
     lines = text.splitlines()
     out: list[str] = []
@@ -114,6 +117,7 @@ def configure_amgx_sif(
     mortar_present = False
     constraint_elimination_present = False
     scaling_method_present = False
+    linear_system_scaling_present = False
 
     solver_header = re.compile(r"^\s*Solver\s+\d+\s*$", re.IGNORECASE)
     end_line = re.compile(r"^\s*End\s*$", re.IGNORECASE)
@@ -149,9 +153,13 @@ def configure_amgx_sif(
             mortar_present = False
             constraint_elimination_present = False
             scaling_method_present = False
+            linear_system_scaling_present = False
         if in_solver and end_line.match(line):
             if amgx_block and not iterative_present:
-                out.append('  Linear System Iterative Method = "FGMRES"')
+                method = "GMRES" if constraint_mode == "schur" else (
+                    "GCR" if constraint_mode == "stabilized" else "FGMRES"
+                )
+                out.append(f'  Linear System Iterative Method = "{method}"')
             if amgx_block and not preconditioning_present:
                 out.append('  Linear System Preconditioning = "AMG"')
             if amgx_block and not inserted_config:
@@ -161,16 +169,45 @@ def configure_amgx_sif(
             # multiplier rows.  They make pointwise AMG smoothers singular.
             # Elmer's native constraint elimination gives AMGX the reduced
             # thermal system while preserving the same mortar continuity.
-            if amgx_block and mortar_present and not constraint_elimination_present:
+            if (amgx_block and mortar_present and not constraint_elimination_present
+                    and constraint_mode not in {"penalty", "schur", "stabilized"}):
                 out.append("  Eliminate Linear Constraints = Logical True")
+            if amgx_block and mortar_present and constraint_mode == "penalty":
+                out.append("  Penalty Linear Constraints = Logical True")
+                out.append(f"  Linear Constraint Penalty = Real {constraint_penalty:.17g}")
+            if amgx_block and mortar_present and constraint_mode == "schur":
+                out.append(
+                    f"  AMGX Schur Augmentation = Real {constraint_penalty:.17g}"
+                )
+                out.append("  Linear System Scaling = Logical True")
+                out.append("  Linear System Refactorize = Logical False")
+                out.append("  AMGX Allow Not Converged = Logical True")
+                out.append("  Linear System Max Iterations = Integer 300")
+                out.append("  Linear System Min Iterations = Integer 1")
+                out.append("  Linear System Convergence Tolerance = Real 1.0e-6")
+                out.append("  Linear System GMRES Restart = Integer 100")
+                out.append("  Linear System Abort Not Converged = Logical True")
+            if amgx_block and mortar_present and constraint_mode == "stabilized":
+                out.append(
+                    f"  AMGX Constraint Stabilization = Real {1.0 / constraint_penalty:.17g}"
+                )
+                out.append("  Linear System Scaling = Logical True")
+                out.append("  Linear System Refactorize = Logical False")
+                out.append("  AMGX Allow Not Converged = Logical True")
+                out.append("  Linear System Max Iterations = Integer 300")
+                out.append("  Linear System Min Iterations = Integer 1")
+                out.append("  Linear System Convergence Tolerance = Real 1.0e-6")
+                out.append("  Linear System Abort Not Converged = Logical True")
             if amgx_block and constraint_mode.startswith("slave"):
                 out.append("  Eliminate Slave = Logical True")
             if amgx_block and constraint_mode.startswith("master"):
                 out.append("  Eliminate From Master = Logical True")
             if amgx_block and constraint_mode.endswith("transpose"):
                 out.append("  Use Transpose Values = Logical True")
-            if amgx_block and not scaling_method_present:
+            if amgx_block and not scaling_method_present and constraint_mode != "no-scaling":
                 out.append('  Linear System Scaling Method = "row equilibration"')
+            if amgx_block and constraint_mode == "no-scaling" and not linear_system_scaling_present:
+                out.append("  Linear System Scaling = Logical False")
             out.append(line)
             in_solver = False
             continue
@@ -186,7 +223,13 @@ def configure_amgx_sif(
             match = linear_solver.match(line)
             if match:
                 indent = match.group(1)
-                out.append(f'{indent}Linear System Solver = "AMGX"')
+                if constraint_mode == "schur":
+                    solver_name = "AMGX Schur"
+                elif constraint_mode == "stabilized":
+                    solver_name = "AMGX Stabilized"
+                else:
+                    solver_name = "AMGX"
+                out.append(f'{indent}Linear System Solver = "{solver_name}"')
                 amgx_block = True
                 changed = True
                 continue
@@ -195,7 +238,10 @@ def configure_amgx_sif(
                 continue
             if amgx_block and iterative_method.match(line):
                 indent = iterative_method.match(line).group(1)
-                out.append(f'{indent}Linear System Iterative Method = "FGMRES"')
+                method = "GMRES" if constraint_mode == "schur" else (
+                    "GCR" if constraint_mode == "stabilized" else "FGMRES"
+                )
+                out.append(f'{indent}Linear System Iterative Method = "{method}"')
                 iterative_present = True
                 changed = True
                 continue
@@ -212,9 +258,8 @@ def configure_amgx_sif(
                 continue
             match = eliminate_constraints.match(line)
             if amgx_block and match:
-                out.append(
-                    f"{match.group(1)}Eliminate Linear Constraints = Logical True"
-                )
+                enabled = "False" if constraint_mode in {"penalty", "schur", "stabilized"} else "True"
+                out.append(f"{match.group(1)}Eliminate Linear Constraints = Logical {enabled}")
                 constraint_elimination_present = True
                 changed = True
                 continue
@@ -227,6 +272,13 @@ def configure_amgx_sif(
                     f'{match.group(1)}Linear System Scaling Method = "row equilibration"'
                 )
                 scaling_method_present = True
+                changed = True
+                continue
+            if amgx_block and re.match(r"^(\s*)Linear System Scaling\s*=", line, re.IGNORECASE):
+                indent = re.match(r"^(\s*)Linear System Scaling\s*=", line, re.IGNORECASE).group(1)
+                value = "False" if constraint_mode == "no-scaling" else line.split("=", 1)[1].strip()
+                out.append(f"{indent}Linear System Scaling = Logical {value}" if constraint_mode == "no-scaling" else line)
+                linear_system_scaling_present = True
                 changed = True
                 continue
         out.append(line)
@@ -288,6 +340,7 @@ def write_runtime_sif(
     source: Path, out_dir: Path, udf_dll: str | None,
     amgx_config: str | None = None, mesh_dir: Path | None = None,
     amgx_constraint_mode: str = "default",
+    amgx_constraint_penalty: float = 1.0e4,
 ) -> tuple[Path, bool]:
     """Create an execution-only SIF with optional UDF and AMGX overrides."""
     if udf_dll is None and amgx_config is None:
@@ -318,6 +371,7 @@ def write_runtime_sif(
         text = configure_amgx_sif(
             text, config, mesh_dir=mesh_dir,
             constraint_mode=amgx_constraint_mode,
+            constraint_penalty=amgx_constraint_penalty,
         )
         changed = True
 
@@ -457,6 +511,7 @@ def run_case(
     runtime_bin: str | None = None,
     amgx_config: str | None = None,
     amgx_constraint_mode: str = "default",
+    amgx_constraint_penalty: float = 1.0e4,
 ) -> int:
     spec = model["cases"][case_name]
     sif = ROOT / "generated" / "cases" / f"{case_name}.sif"
@@ -467,6 +522,7 @@ def run_case(
     runtime_sif, runtime_override_applied = write_runtime_sif(
         sif, out_dir, udf_dll, amgx_config,
         amgx_constraint_mode=amgx_constraint_mode,
+        amgx_constraint_penalty=amgx_constraint_penalty,
     )
     udf_applied = bool(
         udf_dll
@@ -658,11 +714,17 @@ def main() -> int:
     parser.add_argument(
         "--amgx-constraint-mode",
         choices=[
-            "default", "slave", "master", "slave-transpose", "master-transpose",
-            "dual-lagrange",
+            "default", "no-scaling", "slave", "master", "slave-transpose", "master-transpose",
+            "dual-lagrange", "penalty", "schur", "stabilized",
         ],
         default="default",
         help="Mortar constraint elimination variant used by the AMGX target",
+    )
+    parser.add_argument(
+        "--amgx-constraint-penalty",
+        type=float,
+        default=1.0e4,
+        help="normalized penalty strength for --amgx-constraint-mode penalty",
     )
     parser.add_argument(
         "--elmer-solver",
@@ -721,7 +783,7 @@ def main() -> int:
         code = run_case(
             model, name, project_path, args.elmer_solver, args.mpi_procs,
             args.udf_dll, args.runtime_bin, target_amgx_config,
-            args.amgx_constraint_mode,
+            args.amgx_constraint_mode, args.amgx_constraint_penalty,
         )
         if code != 0:
             print(f"aborting chain: {name} failed")

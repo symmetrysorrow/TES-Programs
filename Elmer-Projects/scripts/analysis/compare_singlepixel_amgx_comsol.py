@@ -169,6 +169,7 @@ def write_outputs(
     elmer: Series,
     metrics: dict[str, object],
     aligned: np.ndarray,
+    solver_label: str = "AMGX / RTX 3060 Ti",
 ) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(
@@ -198,14 +199,17 @@ def write_outputs(
     )
     axes[0].plot(
         elmer.time_us[mask_e], elmer.drop_uA[mask_e],
-        label="Elmer AMGX / RTX 3060 Ti", color="#d95f02", linewidth=1.7,
+        label=f"Elmer {solver_label}", color="#d95f02", linewidth=1.7,
     )
     axes[0].set_ylabel("TES current drop [µA]")
     axes[0].legend(frameon=False)
     axes[0].grid(True, alpha=0.25)
     axes[1].plot(aligned[:, 0], aligned[:, 3], color="#6a3d9a", linewidth=1.5)
     axes[1].axhline(0.0, color="#555555", linewidth=0.8)
-    axes[1].set(xlabel="Time from pulse [µs]", ylabel="AMGX − COMSOL [µA]")
+    axes[1].set(
+        xlabel="Time from pulse [µs]",
+        ylabel=f"{solver_label} − COMSOL [µA]",
+    )
     axes[1].grid(True, alpha=0.25)
     fig.savefig(out / "current_comparison.png", dpi=220)
     fig.savefig(out / "current_comparison.svg")
@@ -214,17 +218,18 @@ def write_outputs(
     baseline = metrics["baseline_uA"]
     crossings = metrics["crossing_us_at_comsol_peak_fraction"]
     assert isinstance(baseline, dict) and isinstance(crossings, dict)
-    summary = f"""# Optimized SinglePixel AMGX versus COMSOL
+    summary = f"""# Optimized SinglePixel {solver_label} versus COMSOL
 
 - Comparison window: 0–{end_us:.3f} µs after the 20.020 ms pulse
 - Mesh: `mesh_singlepixel_prod_v2` (optimized production-v2)
+- Solver: `{solver_label}`
 - Early timestep: 0.625 µs (optimized hybrid grid)
 - COMSOL baseline: {baseline['COMSOL']:.6f} µA
-- AMGX baseline: {baseline['AMGX']:.6f} µA ({baseline['AMGX_error_pct']:+.3f}%)
+- {solver_label} baseline: {baseline['AMGX']:.6f} µA ({baseline['AMGX_error_pct']:+.3f}%)
 - Maximum absolute waveform difference: {metrics['max_abs_difference_uA']:.6f} µA at {metrics['max_abs_difference_time_us']:.3f} µs ({metrics['max_abs_difference_pct_comsol_peak']:.3f}% of COMSOL full-trace peak)
 - RMSE: {metrics['rmse_uA']:.6f} µA ({metrics['rmse_pct_comsol_peak']:.3f}% of COMSOL full-trace peak)
-- t10 (COMSOL / AMGX): {formatted_time(crossings['0.1']['COMSOL'])} / {formatted_time(crossings['0.1']['AMGX'])} µs
-- t50 (COMSOL / AMGX): {formatted_time(crossings['0.5']['COMSOL'])} / {formatted_time(crossings['0.5']['AMGX'])} µs
+- t10 (COMSOL / {solver_label}): {formatted_time(crossings['0.1']['COMSOL'])} / {formatted_time(crossings['0.1']['AMGX'])} µs
+- t50 (COMSOL / {solver_label}): {formatted_time(crossings['0.5']['COMSOL'])} / {formatted_time(crossings['0.5']['AMGX'])} µs
 
 The traces are compared after subtracting each model's own pre-pulse baseline.
 """
@@ -237,11 +242,23 @@ def main() -> None:
     parser.add_argument("--comsol", type=Path, default=ROOT / "docs" / "Single-Pixel.txt")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--end-us", type=float, default=100.0)
+    parser.add_argument(
+        "--solver-label",
+        default="AMGX / RTX 3060 Ti",
+        help="label used in the plot and summary (for example: CPU MUMPS)",
+    )
     args = parser.parse_args()
     metrics, aligned = compare(
         read_comsol(args.comsol), read_elmer(args.elmer), args.end_us
     )
-    write_outputs(args.out, read_comsol(args.comsol), read_elmer(args.elmer), metrics, aligned)
+    write_outputs(
+        args.out,
+        read_comsol(args.comsol),
+        read_elmer(args.elmer),
+        metrics,
+        aligned,
+        solver_label=args.solver_label,
+    )
     print(json.dumps(metrics, indent=2))
 
 

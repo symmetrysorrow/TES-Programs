@@ -191,11 +191,12 @@ def make_project(
     reuse_known_serial_steady: bool,
     time_grid: str,
     smoke_steps: int | None = None,
+    smoke_label: str = "amgx",
 ) -> str:
     steady_case = HYBRID_STEADY if time_grid == "hybrid" else STEADY
     pulse_case = HYBRID_PULSE if time_grid == "hybrid" else PULSE
     if smoke_steps is not None:
-        pulse_case = f"{pulse_case}_amgx_smoke_{smoke_steps}step"
+        pulse_case = f"{pulse_case}_{smoke_label}_smoke_{smoke_steps}step"
     project = json.loads(SOURCE_PROJECT.read_text(encoding="utf-8"))
     mesh_name = mesh_dir
     project["meshes"][mesh_name] = {
@@ -336,6 +337,12 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--smoke-label",
+        choices=["amgx", "cpu"],
+        default="amgx",
+        help="label for a truncated benchmark case name (default: amgx)",
+    )
+    parser.add_argument(
         "--time-grid",
         choices=["original", "hybrid"],
         default="original",
@@ -372,10 +379,13 @@ def main() -> int:
     parser.add_argument(
         "--amgx-constraint-mode",
         choices=[
-            "default", "slave", "master", "slave-transpose", "master-transpose",
-            "dual-lagrange",
+            "default", "no-scaling", "slave", "master", "slave-transpose", "master-transpose",
+            "dual-lagrange", "penalty", "schur", "stabilized",
         ],
         default="default",
+    )
+    parser.add_argument(
+        "--amgx-constraint-penalty", type=float, default=1.0e4,
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
@@ -403,6 +413,7 @@ def main() -> int:
         args.reuse_known_serial_steady,
         args.time_grid,
         args.smoke_steps,
+        args.smoke_label,
     )
 
     command = [
@@ -421,6 +432,7 @@ def main() -> int:
     if args.amgx_config:
         command += ["--amgx-config", args.amgx_config]
         command += ["--amgx-constraint-mode", args.amgx_constraint_mode]
+        command += ["--amgx-constraint-penalty", str(args.amgx_constraint_penalty)]
     if args.dry_run:
         command.append("--dry-run")
     if args.force_deps:

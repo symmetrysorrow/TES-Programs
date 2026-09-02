@@ -1,0 +1,32 @@
+{
+  "config_version": 2,
+  "determinism_flag": 1,
+  "solver": {
+    "solver": "FGMRES",
+    "preconditioner": {
+      "solver": "AMG",
+      "algorithm": "AGGREGATION",
+      "selector": "SIZE_2",
+      "smoother": {"solver": "JACOBI_L1", "relaxation_factor": 0.9, "scope": "jacobi"},
+      "error_scaling": 2,
+      "presweeps": 2,
+      "postsweeps": 3,
+      "coarse_solver": "DENSE_LU_SOLVER",
+      "min_coarse_rows": 32,
+      "max_levels": 50,
+      "max_iters": 1,
+      "cycle": "V",
+      "scope": "amg"
+    },
+    "convergence": "RELATIVE_INI",
+    "tolerance": 1e-8,
+    "norm": "L2",
+    "use_scalar_norm": 1,
+    "max_iters": 2000,
+    "gmres_n_restart": 500,
+    "monitor_residual": 1,
+    "print_solve_stats": 1,
+    "obtain_timings": 1,
+    "scope": "main"
+  }
+}

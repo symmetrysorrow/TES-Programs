@@ -1,0 +1,48 @@
+{
+  "case": "case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step",
+  "started": "2026-08-31T23:21:29",
+  "finished": "2026-08-31T23:23:15",
+  "exit_code": 1,
+  "inputs_sha256": {
+    "elmer_project_singlepixel_prod_v2_original_timegrid.json": "2070fd1dd711f832cac1139dd7041d06fa13ad7d1cff4fce7f99e3eaed4c2cd0",
+    "case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step.sif": "6a59f9219e58df639f2d0cc1d6999755dcbab2a57ebe42d44a4b19159d46702f",
+    "mesh.header": "e1643089eb1e5301fbf88fe61b7634aebd997d96624c0402159c55174d29f3fb",
+    "tes_transient_heat_source_t0.dll": "85cc6955c9dac8272860f88e5ae80cd8021087bd4c51e3c37e26a4340a1b8fc4",
+    "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72",
+    "amgx_config": "c3a3b30ac65675af04ef9f4df1c7066c6e3a6ad1426c656611a47a78d375200f"
+  },
+  "preexisting_restart_inputs_sha256": {},
+  "runtime_sif": "results/case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step/runtime.sif",
+  "runtime_sif_sha256": "348fd9a87932d8f1bf8b99238a6556afcd7ea1cf8e135cf2a79917f359ab85bf",
+  "runtime_override_applied": true,
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "/mnt/d/Github/TES-Programs/tools/elmer-gpu-wsl/bin/ElmerSolver_mpi",
+  "elmer_prefix": "/mnt/d/Github/TES-Programs/tools/elmer-gpu-wsl",
+  "runtime_bin": null,
+  "amgx_config": "/mnt/d/Github/TES-Programs/Elmer-Projects/config/amgx/tes_amg_aggregation_l1_2cycle.json",
+  "amgx_config_sha256": "c3a3b30ac65675af04ef9f4df1c7066c6e3a6ad1426c656611a47a78d375200f",
+  "runtime_artifacts_sha256": {
+    "solver": "5cbc52678ec3c384b9b7554a9197d8cc47ff96fa42bc090f14405e5178f631ff"
+  },
+  "mesh": "mesh_singlepixel_prod_v2",
+  "restart_from": null,
+  "collected_outputs": [
+    "case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step_iterations.csv",
+    "case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step_series.csv"
+  ],
+  "result_file": "work/meshes/mesh_singlepixel_prod_v2/case_tes_pulse_singlepixel_prod_v2_original_timegrid_amgx_smoke_7step.result",
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16298700     0.30380305E-12 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16298700     0.25509920E-12 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16298700     0.35591277E-13 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16298700     0.32185413E-12 ) :: heat equation"
+  ],
+  "solver_completed": false,
+  "errors": [
+    "ERROR:: IterSolve: Numerical Error: Too many iterations were needed.",
+    "solver did not report 'ALL DONE'",
+    "solver process exited with code 1"
+  ]
+}

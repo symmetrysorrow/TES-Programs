@@ -1,0 +1,30 @@
+{
+  "config_version": 2,
+  "determinism_flag": 1,
+  "solver": {
+    "solver": "AMG",
+    "algorithm": "AGGREGATION",
+    "selector": "SIZE_2",
+    "smoother": {
+      "solver": "JACOBI_L1",
+      "relaxation_factor": 0.9,
+      "scope": "jacobi"
+    },
+    "error_scaling": 2,
+    "presweeps": 2,
+    "postsweeps": 3,
+    "coarse_solver": "DENSE_LU_SOLVER",
+    "min_coarse_rows": 32,
+    "max_levels": 50,
+    "max_iters": 10,
+    "cycle": "V",
+    "convergence": "ABSOLUTE",
+    "tolerance": 1e-30,
+    "norm": "L2",
+    "use_scalar_norm": 1,
+    "monitor_residual": 0,
+    "print_solve_stats": 0,
+    "obtain_timings": 0,
+    "scope": "main"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "config_version": 2,
+  "determinism_flag": 1,
+  "solver": {
+    "solver": "FGMRES",
+    "preconditioner": {
+      "solver": "AMG",
+      "algorithm": "AGGREGATION",
+      "selector": "SIZE_2",
+      "smoother": "MULTICOLOR_DILU",
+      "matrix_coloring_scheme": "PARALLEL_GREEDY",
+      "max_uncolored_percentage": 0.05,
+      "relaxation_factor": 0.75,
+      "error_scaling": 0,
+      "presweeps": 0,
+      "postsweeps": 3,
+      "coarse_solver": "DENSE_LU_SOLVER",
+      "min_coarse_rows": 32,
+      "max_levels": 50,
+      "max_iters": 1,
+      "cycle": "V",
+      "scope": "amg"
+    },
+    "convergence": "ABSOLUTE",
+    "tolerance": 5e-12,
+    "norm": "L2",
+    "use_scalar_norm": 1,
+    "max_iters": 2000,
+    "gmres_n_restart": 500,
+    "monitor_residual": 1,
+    "print_solve_stats": 1,
+    "obtain_timings": 1,
+    "scope": "main"
+  }
+}

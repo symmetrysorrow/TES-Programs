@@ -198,6 +198,10 @@ class GmshApiBuilder:
             gmsh.model.mesh.field.setNumbers(min_id, "FieldsList", field_ids)
             gmsh.model.mesh.field.setAsBackgroundMesh(min_id)
 
+        before_mesh = getattr(self, "_before_mesh_generate", None)
+        if before_mesh is not None:
+            before_mesh()
+
         gmsh.model.mesh.generate(3)
 
     def write(self, path: str | Path) -> None:
