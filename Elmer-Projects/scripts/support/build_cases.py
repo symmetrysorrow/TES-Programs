@@ -382,6 +382,37 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+    elif linear_system in {
+        "iterative_hypre_flexgmres_boomeramg",
+        "iterative_hypre_flexgmres_boomeramg_gpu",
+        "iterative_hypre_flexgmres_mgr",
+        "iterative_hypre_flexgmres_mgr_gpu",
+    }:
+        # CUDA/HIP-safe HYPRE IJ choices: PMIS, extended+i interpolation, and
+        # l1-Jacobi.  The same formulation is also the CPU correctness gate.
+        hypre_gpu = linear_system.endswith("_gpu")
+        hypre_preconditioning = "MGR" if "_mgr" in linear_system else "BoomerAMG"
+        lines += [
+            "  Linear System Use Hypre = True",
+            "  Linear System Solver = Iterative",
+            "  Linear System Iterative Method = FlexGMRES",
+            f"  Linear System Preconditioning = {hypre_preconditioning}",
+            "  Linear System Max Iterations = 2000",
+            "  Linear System Convergence Tolerance = 1.0e-11",
+            "  Linear System Abort Not Converged = True",
+            "  Linear System Residual Output = 1",
+            "  HYPRE GmRes Dimension = 100",
+            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            "  BoomerAMG Relax Type = 18",
+            "  BoomerAMG Coarsen Type = 8",
+            "  BoomerAMG Num Sweeps = 1",
+            "  BoomerAMG Max Levels = 25",
+            "  BoomerAMG Interpolation Type = 6",
+            "  BoomerAMG Smooth Type = 0",
+            "  BoomerAMG Cycle Type = 1",
+            "  BoomerAMG Num Functions = 1",
+            "  BoomerAMG Strong Threshold = 0.25",
+        ]
     elif linear_system == "mumps":
         lines += [
             "  Linear System Solver = Direct",
@@ -392,6 +423,21 @@ def solver1_block(
             "  Linear System Solver = Direct",
             "  Linear System Direct Method = Umfpack",
         ]
+    matrix_dump_prefix = solver.get("matrix_dump_prefix")
+    if matrix_dump_prefix:
+        # Save the fully assembled collection matrix at the solver dispatch
+        # point.  This is after mortar restriction/penalty/elimination, so a
+        # MUMPS-vs-HYPRE comparison detects an algebraic mismatch rather than
+        # merely comparing the unrestrained PDE matrix.
+        lines += [
+            "  Linear System Save = True",
+            "  Linear System Save Slot = String \"linear solve\"",
+            f'  Linear System Save Prefix = String "{matrix_dump_prefix}"',
+            "  Linear System Save Continuous Numbering = True",
+            "  Linear System Save Skip Zeros = True",
+        ]
+    if solver.get("eliminate_linear_constraints", False):
+        lines.append("  Eliminate Linear Constraints = True")
     lines += [
         f"  Apply Mortar BCs = {'True' if apply_mortar_bcs else 'False'}",
         f"  Steady State Convergence Tolerance = {fmt_real(solver['steady_state_convergence_tolerance'])}",
@@ -848,7 +894,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         "End",
         "",
         "Simulation",
-        "  Max Output Level = 5",
+        f"  Max Output Level = {spec.get('max_output_level', 5)}",
         "  Coordinate System = Cartesian 3D",
     ]
 
