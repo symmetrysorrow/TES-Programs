@@ -1,0 +1,31 @@
+diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
+--- a/fem/src/BlockSolve.F90
++++ b/fem/src/BlockSolve.F90
+@@
+         ELSE
++          ! Opt-in mortar block inner solves: one AMG cycle for the large
++          ! primal block and a direct factorization for the small Schur block.
++          IF( i == 1 .AND. ListGetLogical( Params, &
++              'Block Nested Primal AMG', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Iterative Method', 'boomeramg' )
++            CALL ListAddString( ASolver % Values, 'Linear System Preconditioning', 'none' )
++            CALL ListAddInteger( ASolver % Values, 'Linear System Max Iterations', &
++                ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
++                Found, DefValue=1 ) )
++          ELSE IF( i == 2 .AND. ListGetLogical( Params, &
++              'Block Schur Direct Solver', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
++            CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'umfpack' )
++          END IF
+           CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
+         END IF
+diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
+--- a/fem/src/SOLVER.KEYWORDS
++++ b/fem/src/SOLVER.KEYWORDS
+@@
+ Solver:Logical:     'No Explicit Constrained Matrix'
++Solver:Logical:     'Block Nested Primal AMG'
++Solver:Integer:     'Block Nested Primal Max Iterations'
++Solver:Logical:     'Block Schur Direct Solver'

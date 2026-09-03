@@ -16,16 +16,25 @@ $drive = $repo.Substring(0, 1).ToLowerInvariant()
 $repoWsl = "/mnt/$drive" + (($repo.Substring(2) -replace '\\', '/'))
 $toolsWsl = "/mnt/$drive" + (($tools.Substring(2) -replace '\\', '/'))
 
-$hypreSrc = "$toolsWsl/hypre-$Backend-src"
-$hypreBuild = "/home/symme/hypre-$Backend-build"
-$hypreInstall = "$toolsWsl/hypre-$Backend-install"
-$elmerBuild = "/home/symme/elmer-hypre-$Backend-build"
-$elmerInstall = "$toolsWsl/elmer-hypre-$Backend-wsl"
+# Keep the established v3.0.0 paths stable, while making every other HYPRE
+# tag side-by-side and reproducible.  This prevents a v3.1.0 build from
+# silently reconfiguring or overwriting the validated v3.0 installation.
+$tagSuffix = if ($HypreTag -eq "v3.0.0") { "" } else {
+    "-" + (($HypreTag -replace '[^A-Za-z0-9]+', '-').Trim('-'))
+}
+$hypreSrc = "$toolsWsl/hypre-$Backend$tagSuffix-src"
+$hypreBuild = "/home/symme/hypre-$Backend$tagSuffix-build"
+$hypreInstall = "$toolsWsl/hypre-$Backend$tagSuffix-install"
+$elmerBuild = "/home/symme/elmer-hypre-$Backend$tagSuffix-build"
+$elmerInstall = "$toolsWsl/elmer-hypre-$Backend$tagSuffix-wsl"
 $amgxInstall = "$toolsWsl/amgx-gpu-install-mpi"
 $gpuOptions = if ($Backend -eq "cuda") {
-    "-DHYPRE_ENABLE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=$GpuArchitecture -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-13 -DHYPRE_ENABLE_CUSPARSE=ON"
+    "-DHYPRE_ENABLE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=$GpuArchitecture -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-13 -DHYPRE_ENABLE_CUSPARSE=ON -DCUDAToolkit_INCLUDE_DIRECTORIES=/usr/include"
 } else {
-    "-DHYPRE_ENABLE_HIP=ON -DCMAKE_HIP_ARCHITECTURES=$GpuArchitecture"
+    # Prefer ROCm's HIP-aware Thrust headers.  The WSL image also exposes
+    # CUDA Thrust under /usr/include; letting it win causes vector type
+    # collisions when clang++ compiles HYPRE's .c sources as HIP.
+    "-DHYPRE_ENABLE_HIP=ON -DCMAKE_HIP_ARCHITECTURES=$GpuArchitecture -DCMAKE_CXX_FLAGS=-isystem/opt/rocm/include -DCMAKE_HIP_FLAGS=-isystem/opt/rocm/include"
 }
 $examples = if ($BuildExamples) { "ON" } else { "OFF" }
 
@@ -54,6 +63,7 @@ cmake --install '$hypreBuild'
 cmake -S '$toolsWsl/elmer-hypre/src' -B '$elmerBuild' -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$elmerInstall' \
   -DWITH_MPI=ON -DWITH_Mumps=ON -DWITH_Hypre=ON -DWITH_AMGX=ON \
+  -DBUILD_TESTING=OFF \
   -DMUMPSROOT=/usr -DPARMETISROOT=/usr \
   -DMetis_INCLUDE_DIR=/usr/include -DMetis_LIBRARIES=/usr/lib/x86_64-linux-gnu/libmetis.so \
   -DParMetis_INCLUDE_DIR=/usr/include/parmetis -DParMetis_LIBRARIES=/usr/lib/x86_64-linux-gnu/libparmetis.so \

@@ -49,7 +49,8 @@ def main() -> None:
     m = np.loadtxt(a.mumps_sol, dtype=np.float64)
     if m.ndim == 2:
         m = m[:, -1]
-    m = m[:n_f]
+    mumps_solution_size = int(m.size)
+    m_primal = m[:n_f]
 
     # SuperLU is used only to establish an independent one-rank reference;
     # no HYPRE/MGR object participates in this calculation.
@@ -65,9 +66,14 @@ def main() -> None:
     saddle_abs = float(np.linalg.norm(ax_b))
     saddle_res = saddle_abs / np.linalg.norm(rhs)
     constraint_abs = float(np.linalg.norm(B @ u + D @ lam - g))
-    g_norm = float(np.linalg.norm(g))
-    constraint_res = None if g_norm == 0.0 else constraint_abs / g_norm
-    agreement = np.linalg.norm(u - m) / np.linalg.norm(m)
+    # For the mortar problem g is exactly zero.  A relative value against
+    # ||g|| is therefore undefined and must not be reported as a meaningful
+    # accuracy number.  Keep the absolute residual as the primary gate and
+    # provide a scale-free diagnostic against the assembled constraint action.
+    constraint_scale = max(float(np.linalg.norm(B @ u)),
+                           float(np.linalg.norm(D @ lam)),
+                           float(np.linalg.norm(g)))
+    agreement = np.linalg.norm(u - m_primal) / np.linalg.norm(m_primal)
     result = {
         "n_f": n_f,
         "n_c": n_c,
@@ -77,10 +83,15 @@ def main() -> None:
         "absolute_residual_Ax_minus_b": saddle_abs,
         "relative_residual_Ax_minus_b": float(saddle_res),
         "absolute_constraint_residual": constraint_abs,
-        "relative_constraint_residual": (None if constraint_res is None
-                                          else float(constraint_res)),
+        "relative_constraint_residual": (
+            None if constraint_scale <= 1.0e-14 else float(constraint_abs / constraint_scale)
+        ),
+        "constraint_rhs_norm": float(np.linalg.norm(g)),
+        "constraint_residual_scale": constraint_scale,
         "relative_primal_agreement_with_mumps": float(agreement),
-        "mumps_primal_norm": float(np.linalg.norm(m)),
+        "mumps_solution_size": mumps_solution_size,
+        "mumps_solution_is_full_saddle_vector": bool(mumps_solution_size >= a.rows),
+        "mumps_primal_norm": float(np.linalg.norm(m_primal)),
         "block_primal_norm": float(np.linalg.norm(u)),
     }
     encoded = json.dumps(result, indent=2)

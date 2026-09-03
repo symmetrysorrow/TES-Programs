@@ -17,6 +17,8 @@ MGR_CPU_CASE = "case_p19_hypre_flexgmres_mgr_cpu_time5us"
 MGR_GPU_CASE = "case_p19_hypre_flexgmres_mgr_gpu_time5us"
 CONTROL_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us"
 GPU_CONTROL_CASE = "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us"
+BLOCK_CPU_CASE = "case_p19_hypre_block_diag_cpu_time5us"
+BLOCK_GPU_CASE = "case_p19_hypre_block_diag_gpu_time5us"
 
 
 def truncate(groups: list[list[object]], count: int) -> list[list[object]]:
@@ -90,6 +92,32 @@ def hypre_nomortar_case(source: dict, name: str, use_gpu: bool) -> dict:
     return result
 
 
+def block_diag_case(source: dict, name: str, use_gpu: bool) -> dict:
+    """Build the native Elmer block-driver Schur candidate.
+
+    ``No Explicit Constrained Matrix`` is important here: it preserves the
+    original ``ConstraintMatrix`` metadata so BlockSolve can construct the
+    K/B/B^T blocks.  The ordinary collection-matrix path would flatten the
+    saddle system before the block driver sees it.
+    """
+    result = hypre_case(source, name, use_gpu=use_gpu)
+    result["comparison_time_grid"] = {
+        "mode": "Phase19 native block Schur candidate",
+        "purpose": "Elmer block driver with diagonal Schur approximation",
+        "reference_case": SOURCE_CASE,
+        "linear_solver": "native BlockSolve + HYPRE BoomerAMG diagonal blocks",
+    }
+    result["solver"] = dict(result["solver"])
+    result["solver"]["linear_system"] = (
+        "iterative_hypre_block_diag_gpu" if use_gpu
+        else "iterative_hypre_block_diag"
+    )
+    result["solver"]["eliminate_linear_constraints"] = False
+    result["solver"]["no_explicit_constrained_matrix"] = True
+    result["solver"]["matrix_dump_prefix"] = name
+    return result
+
+
 def main() -> None:
     project = json.loads(SOURCE.read_text(encoding="utf-8"))
     for name, use_gpu, use_mgr in (
@@ -127,6 +155,22 @@ def main() -> None:
         diag["solver"]["nonlinear_convergence_tolerance"] = 1e-3
         diag["max_output_level"] = 10
         project["cases"][diag_name] = diag
+
+    # Native block-driver candidate.  Keep this A/B pair one-step only until
+    # the Schur approximation passes the original full-system residual gate.
+    for block_name, use_gpu in ((BLOCK_CPU_CASE, False), (BLOCK_GPU_CASE, True)):
+        block = block_diag_case(project["cases"][SOURCE_CASE], block_name, use_gpu)
+        block["timesteps"] = truncate(block["timesteps"], 1)
+        block["output_intervals"] = [1]
+        block["series_file"] = f"{block_name}_series.csv"
+        block["iteration_series_file"] = f"{block_name}_iterations.csv"
+        block["output_file_path"] = f"../work/meshes/{block['mesh']}/{block_name}.result"
+        block["solver"] = dict(block["solver"])
+        block["solver"]["nonlinear_max_iterations"] = 1
+        block["solver"]["nonlinear_convergence_tolerance"] = 1e-3
+        block["solver"]["matrix_dump_prefix"] = block_name
+        block["max_output_level"] = 10
+        project["cases"][block_name] = block
 
     # SPD control: validates the HYPRE/BoomerAMG path without explicit mortar
     # rows.  Keep this separate from the constrained CPU/GPU cases.

@@ -15372,6 +15372,112 @@
       "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step.result",
       "max_output_level": 10
     },
+    "case_p19_hypre_block_diag_cpu_time5us": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p19_hypre_block_diag_cpu_time5us_series.csv",
+      "iteration_series_file": "case_p19_hypre_block_diag_cpu_time5us_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_diag",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p19_hypre_block_diag_cpu_time5us",
+        "no_explicit_constrained_matrix": true
+      },
+      "comparison_time_grid": {
+        "mode": "Phase19 native block Schur candidate",
+        "purpose": "Elmer block driver with diagonal Schur approximation",
+        "reference_case": "case_p19_pulse_time5us",
+        "linear_solver": "native BlockSolve + HYPRE BoomerAMG diagonal blocks"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_block_diag_cpu_time5us.result",
+      "max_output_level": 10
+    },
+    "case_p19_hypre_block_diag_gpu_time5us": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p19_hypre_block_diag_gpu_time5us_series.csv",
+      "iteration_series_file": "case_p19_hypre_block_diag_gpu_time5us_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_diag_gpu",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p19_hypre_block_diag_gpu_time5us",
+        "no_explicit_constrained_matrix": true
+      },
+      "comparison_time_grid": {
+        "mode": "Phase19 native block Schur candidate",
+        "purpose": "Elmer block driver with diagonal Schur approximation",
+        "reference_case": "case_p19_pulse_time5us",
+        "linear_solver": "native BlockSolve + HYPRE BoomerAMG diagonal blocks"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_block_diag_gpu_time5us.result",
+      "max_output_level": 10
+    },
     "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us": {
       "template": "pulse",
       "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",

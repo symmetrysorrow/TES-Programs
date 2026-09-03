@@ -413,6 +413,45 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+    elif linear_system in {
+        "iterative_hypre_block_diag",
+        "iterative_hypre_block_diag_gpu",
+    }:
+        # Keep the mortar projector attached to the primal matrix and let
+        # Elmer's native block driver split [K B^T; B 0].  The block driver
+        # creates the diagonal Schur approximation B diag(K)^-1 B^T and
+        # recursively sends both diagonal blocks through this HYPRE setup.
+        # This is intentionally separate from the monolithic MGR path.
+        hypre_gpu = linear_system.endswith("_gpu")
+        lines += [
+            "  Linear System Block Mode = True",
+            "  Linear System Use Hypre = True",
+            "  Linear System Solver = Iterative",
+            "  Linear System Iterative Method = FlexGMRES",
+            "  Linear System Preconditioning = BoomerAMG",
+            "  Linear System Max Iterations = 2000",
+            "  Linear System Convergence Tolerance = 1.0e-11",
+            "  Linear System Abort Not Converged = True",
+            "  Linear System Residual Output = 1",
+            "  HYPRE GmRes Dimension = 100",
+            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            "  Block Preconditioner = True",
+            "  Block Gauss-Seidel = False",
+            "  Block Matrix Reuse = True",
+            "  Create Schur Matrix Approximation = True",
+            "  Block Nested Primal AMG = True",
+            "  Block Nested Primal Max Iterations = 1",
+            "  Block Schur Direct Solver = True",
+            "  BoomerAMG Relax Type = 18",
+            "  BoomerAMG Coarsen Type = 8",
+            "  BoomerAMG Num Sweeps = 1",
+            "  BoomerAMG Max Levels = 25",
+            "  BoomerAMG Interpolation Type = 6",
+            "  BoomerAMG Smooth Type = 0",
+            "  BoomerAMG Cycle Type = 1",
+            "  BoomerAMG Num Functions = 1",
+            "  BoomerAMG Strong Threshold = 0.25",
+        ]
     elif linear_system == "mumps":
         lines += [
             "  Linear System Solver = Direct",
@@ -440,6 +479,8 @@ def solver1_block(
             lines.append("  Linear System Save Solution = Logical True")
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")
+    if solver.get("no_explicit_constrained_matrix", False):
+        lines.append("  No Explicit Constrained Matrix = True")
     lines += [
         f"  Apply Mortar BCs = {'True' if apply_mortar_bcs else 'False'}",
         f"  Steady State Convergence Tolerance = {fmt_real(solver['steady_state_convergence_tolerance'])}",
