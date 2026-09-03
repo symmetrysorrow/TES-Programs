@@ -368,6 +368,30 @@
         ]
       },
       "notes": "4-rank hybrid partition without boundary ownership optimization."
+    },
+    "mesh_tail1000_fine_time_0p625_alg5qg1": {
+      "geometry": "single_pixel",
+      "dir": "mesh_tail1000_fine_time_0p625_alg5qg1",
+      "recipe": {
+        "generator": "generate_hybrid_prism_geometry.py",
+        "commands": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/tail1000_fine_time_0p625_alg5qg1.msh --stack-local-size 16.6666666666667e-6 --absorber-local-size 35e-6 --absorber-local-radius 50e-6 --disable-mesh-size-extend-from-boundary --mesh-algorithm 5 --absorber-local-radius 25.0e-6 --absorber-local-size 25.0e-6 --global-mesh-size 100.0e-6 --si-1-layers 2 --si-2-layers 2 --sinx-layers 1 --sio2-1-layers 2 --stack-local-half-width 400.0e-6 --stack-local-size 12.5e-6 --stycast-layers 32 --tes-layers 1 --stycast-layers 32",
+          "\"C:\\Program Files\\Elmer 26.1-Release\\bin\\ElmerGrid.EXE\" 14 2 gmsh/tail1000_fine_time_0p625_alg5qg1.msh -merge 1e-10 -out work/meshes/mesh_tail1000_fine_time_0p625_alg5qg1"
+        ]
+      },
+      "notes": "Automatic one-axis convergence pilot: time=0.625; fixed={'stycast_layers': 32.0, 'tes_layers': 1.0, 'sinx_layers': 1.0, 'sio2_1_layers': 2.0, 'si_1_layers': 2.0, 'si_2_layers': 2.0, 'global_mesh_size_um': 100.0, 'stack_local_size_um': 12.5, 'stack_local_half_width_um': 400.0, 'absorber_local_size_um': 25.0, 'absorber_local_radius_um': 25.0}."
+    },
+    "mesh_tail1000_fine_time_1p25_alg5qg1": {
+      "geometry": "single_pixel",
+      "dir": "mesh_tail1000_fine_time_1p25_alg5qg1",
+      "recipe": {
+        "generator": "generate_hybrid_prism_geometry.py",
+        "commands": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/tail1000_fine_time_1p25_alg5qg1.msh --stack-local-size 16.6666666666667e-6 --absorber-local-size 35e-6 --absorber-local-radius 50e-6 --disable-mesh-size-extend-from-boundary --mesh-algorithm 5 --absorber-local-radius 25.0e-6 --absorber-local-size 25.0e-6 --global-mesh-size 100.0e-6 --si-1-layers 2 --si-2-layers 2 --sinx-layers 1 --sio2-1-layers 2 --stack-local-half-width 400.0e-6 --stack-local-size 12.5e-6 --stycast-layers 32 --tes-layers 1 --stycast-layers 32",
+          "\"C:\\Program Files\\Elmer 26.1-Release\\bin\\ElmerGrid.EXE\" 14 2 gmsh/tail1000_fine_time_1p25_alg5qg1.msh -merge 1e-10 -out work/meshes/mesh_tail1000_fine_time_1p25_alg5qg1"
+        ]
+      },
+      "notes": "Automatic one-axis convergence pilot: time=1.25; fixed={'stycast_layers': 32.0, 'tes_layers': 1.0, 'sinx_layers': 1.0, 'sio2_1_layers': 2.0, 'si_1_layers': 2.0, 'si_2_layers': 2.0, 'global_mesh_size_um': 100.0, 'stack_local_size_um': 12.5, 'stack_local_half_width_um': 400.0, 'absorber_local_size_um': 25.0, 'absorber_local_radius_um': 25.0}."
     }
   },
   "parameter_expressions": {
@@ -14556,14 +14580,12 @@
       "inner_circuit_step_commit": true,
       "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result"
     },
-    "case_p19_hypre_flexgmres_boomeramg_cpu_time5us": {
+    "case_tes_pulse_3x_phase23_tight": {
       "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
+      "mesh": "mesh_refined_3x",
+      "restart_from": "case_tes_steady_3x_inner_1rank_phase13_tight",
       "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "series_file": "case_tes_pulse_3x_phase23_tight_series.csv",
       "initial_temperature": "T_0",
       "lumped_mass": true,
       "vtu": false,
@@ -14621,153 +14643,32 @@
       "steady_state_max_iterations": 1,
       "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
       "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us"
+        "linear_system": "mumps"
       },
       "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
+        "mode": "Phase23 nonlinear coupling tolerance probe",
+        "reference_case": "case_tes_pulse_3x_phase19_time5us",
+        "only_changed_factor": "nonlinear_convergence_tolerance 3e-7 -> 1e-8; max_iterations 25 -> 120",
+        "time_step": "5[us]"
       },
       "heat_source": "circuit_inner",
+      "iteration_series_file": "case_tes_pulse_3x_phase23_tight_iterations.csv",
+      "state_file": "mesh_refined_3x/case_tes_steady_3x_inner_1rank_phase13_tight.state",
       "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_cpu_time5us.result"
+      "restart_file_path": "../work/meshes/mesh_refined_3x/case_tes_steady_3x_inner_1rank_phase13_tight.result"
     },
-    "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step": {
+    "case_p19_pulse_phase23_tight": {
       "template": "pulse",
       "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
+      "restart_from": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
       "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          3
-        ]
-      ],
-      "output_intervals": [
-        999999,
-        999999,
-        999999,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step.result"
-    },
-    "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_1step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_1step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_1step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_1step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_1step.result",
-      "max_output_level": 10
-    },
-    "case_p19_hypre_flexgmres_boomeramg_gpu_time5us": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "series_file": "case_p19_pulse_phase23_tight_series.csv",
+      "iteration_series_file": "case_p19_pulse_phase23_tight_iterations.csv",
+      "state_file": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
       "initial_temperature": "T_0",
       "lumped_mass": true,
       "vtu": false,
@@ -14825,778 +14726,220 @@
       "steady_state_max_iterations": 1,
       "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
       "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us"
+        "linear_system": "mumps"
       },
       "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
+        "mode": "Phase23 nonlinear coupling tolerance probe",
         "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
+        "only_changed_factor": "nonlinear_convergence_tolerance 3e-7 -> 1e-8; max_iterations 25 -> 120",
+        "time_step": "5[us]"
       },
       "heat_source": "circuit_inner",
       "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_gpu_time5us.result"
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result"
     },
-    "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          3
-        ]
-      ],
-      "output_intervals": [
-        999999,
-        999999,
-        999999,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
+    "case_tail1000_fine_time_0p625_alg5qg1_steady": {
+      "template": "steady",
+      "mesh": "mesh_tail1000_fine_time_0p625_alg5qg1",
       "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step.result"
-    },
-    "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_1step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_1step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_1step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
       "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_1step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_1step.result",
-      "max_output_level": 10
-    },
-    "case_p19_hypre_flexgmres_mgr_cpu_time5us": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          10
-        ],
-        [
-          "100[ns]",
-          9
-        ],
-        [
-          "1[us]",
-          9
-        ],
-        [
-          "10[us]",
-          9
-        ],
-        [
-          "5[us]",
-          100
-        ]
-      ],
-      "output_intervals": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_cpu_time5us"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_cpu_time5us.result"
-    },
-    "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_7step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_7step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_7step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          3
-        ]
-      ],
-      "output_intervals": [
-        999999,
-        999999,
-        999999,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_7step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_7step.result"
-    },
-    "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step.result",
-      "max_output_level": 10
-    },
-    "case_p19_hypre_flexgmres_mgr_gpu_time5us": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          10
-        ],
-        [
-          "100[ns]",
-          9
-        ],
-        [
-          "1[us]",
-          9
-        ],
-        [
-          "10[us]",
-          9
-        ],
-        [
-          "5[us]",
-          100
-        ]
-      ],
-      "output_intervals": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_gpu_time5us"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_gpu_time5us.result"
-    },
-    "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_7step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_7step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_7step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          3
-        ]
-      ],
-      "output_intervals": [
-        999999,
-        999999,
-        999999,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_7step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_7step.result"
-    },
-    "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_mgr_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_mgr_gpu_time5us_smoke_1step.result",
-      "max_output_level": 10
-    },
-    "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CPU control",
-        "purpose": "same restart and physics with mortar constraints disabled",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CPU)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us.result",
-      "apply_mortar_bcs": false,
-      "max_output_level": 10
-    },
-    "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us_series.csv",
-      "iteration_series_file": "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CPU control",
-        "purpose": "same restart and physics with mortar constraints disabled",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CPU)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us.result",
-      "apply_mortar_bcs": false,
-      "max_output_level": 10
-    },
-    "case_p19_mumps_matrixdiag_time5us_smoke_7step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_mumps_matrixdiag_time5us_smoke_7step_series.csv",
-      "iteration_series_file": "case_p19_mumps_matrixdiag_time5us_smoke_7step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ],
-        [
-          "1[us]",
-          2
-        ],
-        [
-          "1[ns]",
-          1
-        ],
-        [
-          "10[ns]",
-          3
-        ]
-      ],
-      "output_intervals": [
-        999999,
-        999999,
-        999999,
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 25,
-        "nonlinear_convergence_tolerance": 3e-07,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_mumps_matrixdiag_time5us_smoke_7step"
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_mumps_matrixdiag_time5us_smoke_7step.result"
-    },
-    "case_p19_mumps_matrixdiag_time5us_smoke_1step": {
-      "template": "pulse",
-      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
-      "restart_from": null,
-      "restart_time": 0.02,
-      "series_file": "case_p19_mumps_matrixdiag_time5us_smoke_1step_series.csv",
-      "iteration_series_file": "case_p19_mumps_matrixdiag_time5us_smoke_1step_iterations.csv",
-      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
-      "initial_temperature": "T_0",
-      "lumped_mass": true,
-      "vtu": false,
-      "timesteps": [
-        [
-          "18[us]",
-          1
-        ]
-      ],
-      "output_intervals": [
-        1
-      ],
-      "pulse": {
-        "energy": "1332[keV]",
-        "start": "20.02[ms]",
-        "duration": "1[ns]",
-        "sigma": "50[um]",
-        "center": "auto"
-      },
-      "steady_state_max_iterations": 1,
-      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 0.001,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps",
-        "eliminate_linear_constraints": false,
-        "matrix_dump_prefix": "case_p19_mumps_matrixdiag_time5us_smoke_1step",
-        "matrix_dump_solution": true
-      },
-      "comparison_time_grid": {
-        "mode": "Phase19 HYPRE CUDA/HIP benchmark",
-        "purpose": "same mesh, restart, source, circuit, and 5-us rise grid as CPU/MUMPS",
-        "reference_case": "case_p19_pulse_time5us",
-        "linear_solver": "FlexGMRES + BoomerAMG (HYPRE CUDA/HIP)"
-      },
-      "heat_source": "circuit_inner",
-      "inner_circuit_step_commit": true,
-      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
-      "preexisting_restart": true,
-      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
-      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_mumps_matrixdiag_time5us_smoke_1step.result",
       "output_result": true,
-      "max_output_level": 10
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 60,
+        "nonlinear_convergence_tolerance": 1e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "mumps"
+      },
+      "state_file": "work/meshes/mesh_tail1000_fine_time_0p625_alg5qg1/tail1000_fine_time_0p625_alg5qg1.state",
+      "series_file": "case_tail1000_fine_time_0p625_alg5qg1_steady_series.csv",
+      "iteration_series_file": "case_tail1000_fine_time_0p625_alg5qg1_steady_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_tail1000_fine_time_0p625_alg5qg1/case_tail1000_fine_time_0p625_alg5qg1_steady.result"
+    },
+    "case_tail1000_fine_time_0p625_alg5qg1_pulse": {
+      "template": "pulse",
+      "mesh": "mesh_tail1000_fine_time_0p625_alg5qg1",
+      "restart_from": "case_tail1000_fine_time_0p625_alg5qg1_steady",
+      "restart_time": 0.02,
+      "series_file": "case_tail1000_fine_time_0p625_alg5qg1_pulse_series.csv",
+      "iteration_series_file": "case_tail1000_fine_time_0p625_alg5qg1_pulse_iterations.csv",
+      "state_file": "work/meshes/mesh_tail1000_fine_time_0p625_alg5qg1/tail1000_fine_time_0p625_alg5qg1.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          1584
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 1e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "mumps"
+      },
+      "comparison_time_grid": {
+        "mode": "automatic one-axis pilot",
+        "axis": "time",
+        "value": 0.625,
+        "end_after_pulse": "1000[us]"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_tail1000_fine_time_0p625_alg5qg1/case_tail1000_fine_time_0p625_alg5qg1_steady.result"
+    },
+    "case_tail1000_fine_time_1p25_alg5qg1_steady": {
+      "template": "steady",
+      "mesh": "mesh_tail1000_fine_time_1p25_alg5qg1",
+      "heat_source": "circuit_inner",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "solver": {
+        "nonlinear_max_iterations": 60,
+        "nonlinear_convergence_tolerance": 1e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "mumps"
+      },
+      "state_file": "work/meshes/mesh_tail1000_fine_time_1p25_alg5qg1/tail1000_fine_time_1p25_alg5qg1.state",
+      "series_file": "case_tail1000_fine_time_1p25_alg5qg1_steady_series.csv",
+      "iteration_series_file": "case_tail1000_fine_time_1p25_alg5qg1_steady_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_tail1000_fine_time_1p25_alg5qg1/case_tail1000_fine_time_1p25_alg5qg1_steady.result"
+    },
+    "case_tail1000_fine_time_1p25_alg5qg1_pulse": {
+      "template": "pulse",
+      "mesh": "mesh_tail1000_fine_time_1p25_alg5qg1",
+      "restart_from": "case_tail1000_fine_time_1p25_alg5qg1_steady",
+      "restart_time": 0.02,
+      "series_file": "case_tail1000_fine_time_1p25_alg5qg1_pulse_series.csv",
+      "iteration_series_file": "case_tail1000_fine_time_1p25_alg5qg1_pulse_iterations.csv",
+      "state_file": "work/meshes/mesh_tail1000_fine_time_1p25_alg5qg1/tail1000_fine_time_1p25_alg5qg1.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          144
+        ],
+        [
+          "1.25[us]",
+          720
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 1e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "mumps"
+      },
+      "comparison_time_grid": {
+        "mode": "automatic one-axis pilot",
+        "axis": "time",
+        "value": 1.25,
+        "end_after_pulse": "1000[us]"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_tail1000_fine_time_1p25_alg5qg1/case_tail1000_fine_time_1p25_alg5qg1_steady.result"
     }
   }
 }

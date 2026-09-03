@@ -155,11 +155,15 @@ def main() -> None:
     mdiag = copy.deepcopy(mumps)
     mdiag["timesteps"] = truncate(mumps["timesteps"], 1)
     mdiag["output_intervals"] = [1]
+    # Persist the direct MUMPS field so block-Schur diagnostics can compare
+    # the reconstructed solution against the full saddle-point solve.
+    mdiag["output_result"] = True
     mdiag["series_file"] = f"{mdiag_name}_series.csv"
     mdiag["iteration_series_file"] = f"{mdiag_name}_iterations.csv"
     mdiag["output_file_path"] = f"../work/meshes/{mumps['mesh']}/{mdiag_name}.result"
     mdiag["solver"] = dict(mdiag["solver"])
     mdiag["solver"]["matrix_dump_prefix"] = mdiag_name
+    mdiag["solver"]["matrix_dump_solution"] = True
     mdiag["solver"]["nonlinear_max_iterations"] = 1
     mdiag["solver"]["nonlinear_convergence_tolerance"] = 1e-3
     mdiag["max_output_level"] = 10

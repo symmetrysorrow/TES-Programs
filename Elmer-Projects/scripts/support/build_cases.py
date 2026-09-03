@@ -436,6 +436,8 @@ def solver1_block(
             "  Linear System Save Continuous Numbering = True",
             "  Linear System Save Skip Zeros = True",
         ]
+        if solver.get("matrix_dump_solution", False):
+            lines.append("  Linear System Save Solution = Logical True")
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")
     lines += [

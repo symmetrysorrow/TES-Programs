@@ -75,13 +75,55 @@ constraint-row range to the C layer, which builds the MGR C/F marker array with
 
 The one-rank CPU and CUDA MGR smoke cases both initialize successfully.  They
 report C rows `84637..87534` (2,898 rows), and the CUDA case initializes the
-RTX 3060 Ti.  With the current one-level MGR settings, however, both runs stop
-at 2,000 FlexGMRES iterations with relative residual `4.24851e-6` (requested
-`1e-11`).  The fail-fast guard returns exit code 1, so no MGR solution is
-accepted.
+RTX 3060 Ti.  Adding a dedicated BoomerAMG F solver and changing restriction
+to approximate-inverse (`R=3`, `P=2`) improves both CPU and CUDA to the same
+relative residual `2.12417e-10` after 2,000 iterations (requested `1e-11`).
+The fail-fast guard returns exit code 1, so no MGR solution is accepted.
 
 Thus option 1 is implemented and the library path is exercised on CPU/GPU,
 but numerical verification is not yet passed.  The next required work is
 calibration of the MGR F-relaxation/coarse (Schur) solver for this mortar
 projector, followed by an MPI-rank validation; loosening the tolerance or
 silently accepting the final iterate would be incorrect.
+
+## Block diagnosis and tuning results
+
+The saved one-step matrix was split at row 84,637 (`n_F=84,636`,
+`n_C=2,898`).  The measured blocks are:
+
+| quantity | value |
+|---|---:|
+| `nnz(K), nnz(B), nnz(Bt), nnz(D)` | `1,340,068`, `53,564`, `53,564`, `0` |
+| `||D||` | `0` |
+| `||B-Bt^T||/||B||` | `0` |
+| `||K-K^T||/||K||` | `1.0400e-5` |
+| `diag(K)` min/max | `1.61847e-10 / 6.166998e-2` |
+| K row norm min/max | `1.64079e-10 / 9.32446e-2` |
+| B row norm min/max | `5.61702e-11 / 2.14576e-10` |
+
+The `K` block is byte-for-byte identical to the no-mortar matrix dump.  This
+rules out the F block and assembly as the primary cause; the difficult part is
+the very small, zero-diagonal constraint Schur block
+`S = -B K^{-1} B^T`.
+
+An independent one-rank block-Schur reference (SuperLU factorization of `K`,
+dense `S`) gives `||Ax-b||/||b|| = 3.36e-11` and absolute constraint residual
+`6.70e-25`; the reconstructed primal norm is `45.75255699` versus the saved
+MUMPS primal norm `45.75255316` (relative difference `2.21e-6`, attributable to
+the ill-conditioned Schur reduction).  The calculation is recorded in
+`results/block_schur_reference.json`.
+
+MGR tuning was then limited to targeted comparisons.  Registering a dedicated
+GPU-capable BoomerAMG F solver reduced the baseline residual from `4.25e-6` to
+`5.68e-10`.  Approximate-inverse restriction (`R=3`) improved it further to
+`2.12e-10`, while stronger F cycles, approximate-inverse interpolation
+(`P=4`), coarse-solver replacement, and symmetric constraint scaling all
+degraded the result.  The best tested one-level configuration is therefore
+dedicated BoomerAMG F (`tol=1e-4`, max 2 AMG iterations), `R=3`, `P=2`, with
+`NonCpointsToFpoints=1`; it still misses the required `1e-11` by about 21x.
+
+HYPRE 3.1.0 and MPI 2/4-rank validation have not yet been promoted to the
+baseline.  The current conclusion is that MGR is a valid library/GPU path but
+is not yet a production solver for this mortar system.  The next production
+candidate is an explicit Schur preconditioner: BoomerAMG for `K` (GPU) and a
+small, separately solved constraint Schur problem.
