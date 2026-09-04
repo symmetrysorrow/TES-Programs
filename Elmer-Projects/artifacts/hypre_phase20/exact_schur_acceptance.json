@@ -1,0 +1,32 @@
+{
+  "status": "INCOMPLETE",
+  "production_ready": false,
+  "hard_fail_reasons": [],
+  "metrics": {
+    "original_system_absolute_residual": 1.1384928931822508e-16,
+    "original_system_relative_residual": 3.180826027618793e-11,
+    "constraint_absolute_residual": 1.1589146152036896e-24,
+    "backward_error": null,
+    "relative_primal_error_vs_MUMPS": 2.2119885798515586e-06
+  },
+  "checks": {
+    "absolute_residual": true,
+    "constraint_absolute_residual": true,
+    "backward_error": false,
+    "primal_comparison": true
+  },
+  "missing_primary_metrics": [
+    "backward_error"
+  ],
+  "relative_residual_warning": true,
+  "relative_residual_is_numerical_floor_warning": true,
+  "policy": {
+    "absolute_residual_max": 1e-12,
+    "backward_error_max": 1e-12,
+    "constraint_absolute_residual_max": 1e-12,
+    "relative_primal_error_max": 0.0001,
+    "relative_residual_warning": 1e-11,
+    "numerical_floor": 1e-14
+  },
+  "interpretation": "relative residual exceeded its diagnostic threshold, but the absolute residual is at the configured numerical floor; this is not a hard failure"
+}

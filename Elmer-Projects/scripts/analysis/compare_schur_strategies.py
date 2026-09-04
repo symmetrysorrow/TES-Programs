@@ -69,6 +69,10 @@ def solve_with_action(name: str, K: csr_matrix, B: csr_matrix,
     x = np.concatenate((u, lam))
     full_abs = float(np.linalg.norm(A @ x - rhs))
     full_rel = full_abs / max(float(np.linalg.norm(rhs)), np.finfo(float).tiny)
+    backward = full_abs / max(
+        float(np.linalg.norm(A.data)) * float(np.linalg.norm(x))
+        + float(np.linalg.norm(rhs)), np.finfo(float).tiny
+    )
     constraint = B @ u + D @ lam - g
     constraint_abs = float(np.linalg.norm(constraint))
     constraint_scale = max(float(np.linalg.norm(B @ u)),
@@ -79,11 +83,17 @@ def solve_with_action(name: str, K: csr_matrix, B: csr_matrix,
         "strategy": name,
         "setup_seconds": setup_seconds,
         "solve_seconds": solve_seconds,
+        # The factorization is intentionally built once, then reused for all
+        # columns of B^T and the final primal action.  This is the prototype
+        # reuse boundary for a production explicit/frozen Schur candidate.
+        "reuse_scope": "same matrix / same timestep",
+        "factorization_reused_for_schur_rhs": True,
         "schur_shape": list(S.shape),
         "schur_nnz": int(np.count_nonzero(S)),
         "schur_dense_bytes": s_bytes,
         "full_absolute_residual": full_abs,
         "full_relative_residual": float(full_rel),
+        "backward_error": float(backward),
         "absolute_constraint_residual": constraint_abs,
         "relative_constraint_residual": (
             None if constraint_scale <= 1.0e-14 else float(constraint_abs / constraint_scale)

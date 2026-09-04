@@ -1,0 +1,27 @@
+{
+  "status": "INCOMPLETE",
+  "cases_generated": [
+    "case_p20_hypre_block_lower_cpu_probe",
+    "case_p20_hypre_block_lower_gpu_probe",
+    "case_p20_hypre_block_full_cpu_probe",
+    "case_p20_hypre_block_full_gpu_probe"
+  ],
+  "outer_max_iterations": 15,
+  "runtime": {
+    "cpu_lower": "TIME_LIMIT_AFTER_SETUP_AND_MATRIX_DUMP",
+    "cpu_full": "NOT RUN",
+    "gpu_lower": "NOT RUN",
+    "gpu_full": "NOT RUN"
+  },
+  "production_ready": false,
+  "observed": {
+    "cpu_lower": {
+      "wall_time_limit_seconds": 120,
+      "reached": ["Elmer startup", "HYPRE BoomerAMG setup", "matrix dump", "Schur diagnostic logging"],
+      "outer_convergence_metrics": "NOT AVAILABLE",
+      "probe_csv": "headers_only",
+      "accepted_as_baseline": false
+    }
+  },
+  "note": "The bounded CPU run was stopped at the 120-second limit while writing the large matrix dump; no partial iterate was accepted. Generated cases and instrumentation are validated by unit tests."
+}

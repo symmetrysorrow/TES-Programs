@@ -15747,6 +15747,262 @@
       "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p19_hypre_block_full_gpu_time5us.result",
       "max_output_level": 10
     },
+    "case_p20_hypre_block_lower_cpu_probe": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p20_hypre_block_lower_cpu_probe_series.csv",
+      "iteration_series_file": "case_p20_hypre_block_lower_cpu_probe_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_lower",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p20_hypre_block_lower_cpu_probe",
+        "no_explicit_constrained_matrix": true,
+        "linear_system_max_iterations": 15,
+        "linear_system_abort_not_converged": false,
+        "linear_system_residual_output": 1,
+        "block_nested_primal_max_iterations": 1,
+        "block_schur_inner_tolerance": 0.0001,
+        "block_schur_max_iterations": 30,
+        "block_schur_restart": 30,
+        "block_schur_probe": true,
+        "block_schur_probe_prefix": "case_p20_hypre_block_lower_cpu_probe"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase20 bounded convergence probe",
+        "purpose": "peer comparison of lower/full block candidates before production timing",
+        "reference_case": "case_p19_pulse_time5us",
+        "same_mesh_restart_timestep": true,
+        "outer_max_iterations": 15,
+        "linear_solver": "native block lower + HYPRE BoomerAMG"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p20_hypre_block_lower_cpu_probe.result",
+      "max_output_level": 10
+    },
+    "case_p20_hypre_block_lower_gpu_probe": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p20_hypre_block_lower_gpu_probe_series.csv",
+      "iteration_series_file": "case_p20_hypre_block_lower_gpu_probe_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_lower_gpu",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p20_hypre_block_lower_gpu_probe",
+        "no_explicit_constrained_matrix": true,
+        "linear_system_max_iterations": 15,
+        "linear_system_abort_not_converged": false,
+        "linear_system_residual_output": 1,
+        "block_nested_primal_max_iterations": 1,
+        "block_schur_inner_tolerance": 0.0001,
+        "block_schur_max_iterations": 30,
+        "block_schur_restart": 30,
+        "block_schur_probe": true,
+        "block_schur_probe_prefix": "case_p20_hypre_block_lower_gpu_probe"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase20 bounded convergence probe",
+        "purpose": "peer comparison of lower/full block candidates before production timing",
+        "reference_case": "case_p19_pulse_time5us",
+        "same_mesh_restart_timestep": true,
+        "outer_max_iterations": 15,
+        "linear_solver": "native block lower + HYPRE BoomerAMG"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p20_hypre_block_lower_gpu_probe.result",
+      "max_output_level": 10
+    },
+    "case_p20_hypre_block_full_cpu_probe": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p20_hypre_block_full_cpu_probe_series.csv",
+      "iteration_series_file": "case_p20_hypre_block_full_cpu_probe_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_full",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p20_hypre_block_full_cpu_probe",
+        "no_explicit_constrained_matrix": true,
+        "linear_system_max_iterations": 15,
+        "linear_system_abort_not_converged": false,
+        "linear_system_residual_output": 1,
+        "block_nested_primal_max_iterations": 1,
+        "block_schur_inner_tolerance": 0.0001,
+        "block_schur_max_iterations": 30,
+        "block_schur_restart": 30,
+        "block_schur_probe": true,
+        "block_schur_probe_prefix": "case_p20_hypre_block_full_cpu_probe"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase20 bounded convergence probe",
+        "purpose": "peer comparison of lower/full block candidates before production timing",
+        "reference_case": "case_p19_pulse_time5us",
+        "same_mesh_restart_timestep": true,
+        "outer_max_iterations": 15,
+        "linear_solver": "native block full + HYPRE BoomerAMG"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p20_hypre_block_full_cpu_probe.result",
+      "max_output_level": 10
+    },
+    "case_p20_hypre_block_full_gpu_probe": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_p20_hypre_block_full_gpu_probe_series.csv",
+      "iteration_series_file": "case_p20_hypre_block_full_gpu_probe_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 1,
+        "nonlinear_convergence_tolerance": 0.001,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_block_full_gpu",
+        "eliminate_linear_constraints": false,
+        "matrix_dump_prefix": "case_p20_hypre_block_full_gpu_probe",
+        "no_explicit_constrained_matrix": true,
+        "linear_system_max_iterations": 15,
+        "linear_system_abort_not_converged": false,
+        "linear_system_residual_output": 1,
+        "block_nested_primal_max_iterations": 1,
+        "block_schur_inner_tolerance": 0.0001,
+        "block_schur_max_iterations": 30,
+        "block_schur_restart": 30,
+        "block_schur_probe": true,
+        "block_schur_probe_prefix": "case_p20_hypre_block_full_gpu_probe"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase20 bounded convergence probe",
+        "purpose": "peer comparison of lower/full block candidates before production timing",
+        "reference_case": "case_p19_pulse_time5us",
+        "same_mesh_restart_timestep": true,
+        "outer_max_iterations": 15,
+        "linear_solver": "native block full + HYPRE BoomerAMG"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_p20_hypre_block_full_gpu_probe.result",
+      "max_output_level": 10
+    },
     "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us": {
       "template": "pulse",
       "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",

@@ -48,3 +48,9 @@ small; it does satisfy the constraint algebra to the reported precision.
 
 No production candidate is accepted until a full candidate reports all
 available algebraic metrics and then passes the physical 7-step gate.
+
+Phase20 adds a separate bounded convergence/performance probe.  Its outer
+iteration limit is intentionally not an acceptance gate; it records progress,
+inner Schur cost, K actions, and wall time so lower and full candidates can be
+compared before any long production run.  See
+`docs/hypre_gpu_phase20_status.md`.

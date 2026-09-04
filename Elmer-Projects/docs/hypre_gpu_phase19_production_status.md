@@ -151,3 +151,13 @@ CPU lower/full one-step、GPU、transient は未承認。same-binary correctness
 - Lower CPU: NOT RUN（実行試行は `INCOMPLETE`、partial iterate は不採用）
 - Full CPU: NOT RUN
 - Ready for GPU: NO
+
+## Phase20 handoff
+
+The Phase19 correctness conclusion is retained, while convergence and
+performance are now investigated with bounded peer probes.  Lower CPU's
+45-minute incomplete run is evidence of nested-Krylov cost and stagnation,
+not evidence against GPU plumbing.  Full CPU/GPU are generated and compared
+under the same conditions rather than gated on lower CPU acceptance.  The
+Phase20 probe and acceptance policy are documented in
+[hypre_gpu_phase20_status.md](hypre_gpu_phase20_status.md).
