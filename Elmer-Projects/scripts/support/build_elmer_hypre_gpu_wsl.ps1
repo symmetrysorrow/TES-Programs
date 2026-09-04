@@ -60,13 +60,18 @@ cmake -S '$hypreSrc/src' -B '$hypreBuild' -G Ninja \
   -DHYPRE_ENABLE_UMPIRE=OFF $gpuOptions
 cmake --build '$hypreBuild' --parallel
 cmake --install '$hypreBuild'
+parmetis_include=`$(dirname "`$(find /usr/include /usr/local/include -name parmetis.h -print -quit)`")
+if [ -z "`$parmetis_include" ] || [ "`$parmetis_include" = "." ]; then
+  echo 'ParMETIS header parmetis.h was not found in standard WSL include roots' >&2
+  exit 1
+fi
 cmake -S '$toolsWsl/elmer-hypre/src' -B '$elmerBuild' -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$elmerInstall' \
   -DWITH_MPI=ON -DWITH_Mumps=ON -DWITH_Hypre=ON -DWITH_AMGX=ON \
   -DBUILD_TESTING=OFF \
   -DMUMPSROOT=/usr -DPARMETISROOT=/usr \
   -DMetis_INCLUDE_DIR=/usr/include -DMetis_LIBRARIES=/usr/lib/x86_64-linux-gnu/libmetis.so \
-  -DParMetis_INCLUDE_DIR=/usr/include/parmetis -DParMetis_LIBRARIES=/usr/lib/x86_64-linux-gnu/libparmetis.so \
+  -DParMetis_INCLUDE_DIR=`$parmetis_include -DParMetis_LIBRARIES=/usr/lib/x86_64-linux-gnu/libparmetis.so \
   -DHypre_INCLUDE_DIR='$hypreInstall/include' -DHypre_LIBRARIES='$hypreInstall/lib/libHYPRE.so' \
   -DAMGXINCLUDE='$amgxInstall/include' -DAMGXLIB='$amgxInstall/lib'
 cmake --build '$elmerBuild' --parallel

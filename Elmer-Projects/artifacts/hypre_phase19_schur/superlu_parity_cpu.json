@@ -1,0 +1,45 @@
+{
+  "n_f": 84636,
+  "n_c": 2898,
+  "scipy_solver": "SuperLU via scipy.sparse.linalg.splu, COLAMD",
+  "elmer_solver": "system SuperLU emitted by the diagnostic",
+  "records": [
+    {
+      "name": "all_ones",
+      "ku_relative_error": 7.94518155614961e-06,
+      "action_relative_error_vs_scipy": 2.7049928926904933e-07,
+      "action_relative_error_vs_elmer_ku": 2.2717267537180104e-07,
+      "scipy_ku_norm": 832.3631100030361,
+      "elmer_ku_norm": 832.363196239607,
+      "pass": false
+    },
+    {
+      "name": "alternating_sign",
+      "ku_relative_error": 2.5767791412291462e-06,
+      "action_relative_error_vs_scipy": 5.072016506502946e-07,
+      "action_relative_error_vs_elmer_ku": 2.0103853192353797e-07,
+      "scipy_ku_norm": 18.273270141373196,
+      "elmer_ku_norm": 18.273271094420828,
+      "pass": false
+    },
+    {
+      "name": "deterministic_sine",
+      "ku_relative_error": 3.727353516261085e-06,
+      "action_relative_error_vs_scipy": 2.561639268245784e-07,
+      "action_relative_error_vs_elmer_ku": 1.708311471990811e-07,
+      "scipy_ku_norm": 53.40986993053594,
+      "elmer_ku_norm": 53.40987508848491,
+      "pass": false
+    },
+    {
+      "name": "basis_like_17",
+      "ku_relative_error": 2.2156007911125086e-12,
+      "action_relative_error_vs_scipy": 1.1450969445882333e-09,
+      "action_relative_error_vs_elmer_ku": 1.1453616982434156e-09,
+      "scipy_ku_norm": 0.3065359254252997,
+      "elmer_ku_norm": 0.30653592542529473,
+      "pass": false
+    }
+  ],
+  "passed": false
+}

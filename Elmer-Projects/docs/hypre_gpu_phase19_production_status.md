@@ -1,121 +1,79 @@
-# Phase 19 HYPRE GPU / mortar status
+# Phase 19 HYPRE GPU / mortar production status
 
-This is the implementation handoff for the Phase 19 saddle-point experiment.
-The acceptance gate remains the original full-system residual tolerance of
-`1e-11`; an iteration-limit result is not accepted.
+更新日: 2026-09-04
 
-## Verified algebra
+## 結論
 
-The saved explicit mortar matrix has `nF = 84636`, `nC = 2898`,
-`nnz(K) = 1,340,068`, `nnz(B) = nnz(B^T) = 53,564`, and `D = 0`.
-The block-driver K dump matches the no-mortar K dump byte-for-byte for the
-tested case.  The independent SuperLU Schur oracle gives
-`||A x - b||_2 = 1.14e-16` and `||B u||_2 = 1.16e-24`.
+Phase A のクリーン適用と CPU HYPRE ビルドは完了した。Phase B の 4 ベクトル診断も、以前の 1 ベクトルだけの実行から前進し、全段階が有限値になった。
 
-The saved MUMPS reference is primal-only (`84636` entries), so it is used for
-primal agreement, not for a fictitious full saddle residual.  The exact Schur
-primal agrees with it to `2.21e-6` relative.
+ただし、独立 SciPy/SuperLU oracle との既存の厳格ゲート（vector 相対誤差 `<=1e-14`、action 相対誤差 `<=1e-10`）は未達である。したがって指示どおり、CPU lower/full、GPU、短時間 transient、MPI へは進めていない。反復回数上限到達や solver residual のみを合格とはしていない。
 
-## Candidate results
+## Phase A: clean base / build
 
-| Candidate | Result |
-|---|---|
-| HYPRE 3.0 FlexGMRES + BoomerAMG, no mortar, CPU | converged in 286 iterations, relative residual `9.63e-12` |
-| HYPRE 3.0 FlexGMRES + BoomerAMG, no mortar, CUDA-enabled library with GPU disabled/enabled | both matched the 286-iteration CPU result in the existing A/B run |
-| HYPRE 3.0 MGR, explicit mortar, CPU/GPU | both hit 2000 iterations at `2.12417e-10`; rejected |
-| HYPRE 3.1 MGR, explicit mortar, CPU | NaN from iteration 2; HYPRE reported input INF/NaN and exited 1; rejected |
-| HYPRE 3.1 BoomerAMG, no mortar, CPU | converged in 286 iterations, relative residual `9.63e-12`; control passed |
-| HYPRE 3.1 BoomerAMG, no mortar, GPU | CUDA runtime reported no CUDA-capable device in this process; not a solver result |
-| Native block, diagonal Schur, one-cycle AMG K + direct Schur | initially decreases, then diverges; rejected |
-| Native block, Gauss–Seidel variant | diverges earlier; rejected |
-| Native block, diagonal Schur, ten-cycle AMG K | still diverges; rejected |
+- source base: `5a8de867068be0568f09af40fb90fee300dfbede`
+- feature patch: [hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch)
+- `git apply --check`: clean
+- build: isolated source worktree + Ninja, MPI/HYPRE/MUMPS/UMFPACK enabled
+- HYPRE library: `tools/hypre-cuda-install/lib/libHYPRE.so` (CPU execution mode)
+- executable: `tools/elmer-phase19-feature-cpu-install/bin/ElmerSolver_mpi`
+- optional serial SuperLU diagnostic wrapper is enabled by `WITH_SuperLU=ON`; it links the system SuperLU library and does not alter the production solver path.
 
-The exact-versus-approximate Schur diagnostic is in
-`results/schur_strategy_comparison.json`, with the ILU candidate in
-`results/schur_strategy_ilu.json`.  The exact setup is about 173 s and is the
-correctness oracle: it reaches a near-machine-precision absolute residual but
-does not satisfy the strict `1e-11` normalized gate because `||b||` is small.
-Diagonal setup is about 1 s but leaves a full relative residual of about
-`1.99`; ILU setup is about 82 s and leaves a full relative residual of about
-`3.06`.  These are independent CPU reference
-experiments; the ILU case is a portable proxy for an approximate AMG action,
-not a claim that HYPRE used ILU.
+主要な build commands:
 
-Residual names and normalization rules are consolidated in
-`docs/hypre_gpu_phase19_residuals.md`; the committed copies of the four
-Schur/MGR reference records are under `artifacts/hypre_phase19_schur/`.
+```text
+git -C ../tools/elmer-hypre/src worktree add --detach ../tools/elmer-phase19-feature-gate 5a8de867068be0568f09af40fb90fee300dfbede
+git -C ../tools/elmer-phase19-feature-gate apply --check docs/hypre_gpu_phase19_schur_feature.patch
+cmake -S ../tools/elmer-phase19-feature-gate -B /home/symme/elmer-phase19-feature-cpu-build -G Ninja -DWITH_MPI=ON -DWITH_Mumps=ON -DWITH_Hypre=ON -DWITH_AMGX=OFF -DWITH_SuperLU=ON
+cmake --build /home/symme/elmer-phase19-feature-cpu-build --parallel 4
+cmake --install /home/symme/elmer-phase19-feature-cpu-build
+```
 
-The checkout now also contains the next candidate implementation. The native
-block path supports `Block Lower Triangular` and `Block Full Factorization`;
-both use the existing `Schur Operator 2 = 1` algebra as the matrix-free action
-`D - B K^-1 B^T`. A restarted right-preconditioned GMRES solves that action,
-while the existing `diag(K)^-1` sparse Schur approximation is used only for
-the inner Schur preconditioner. The K action reuses the same nested Solver_t
-/ AMG object and sets `No Precondition Recompute` during the inner solve. The
-reusable Schur diagonal is invalidated at block setup, not at each outer
-preconditioner application.
+前回の ParMETIS 検出失敗は、`/usr/include/parmetis` という固定仮定が、Ubuntu の `/usr/include/scotch/parmetis.h` 配置と一致しなかったことが原因だった。build helper は標準 include root から `parmetis.h` を探索する方式に変更した。新規コードにユーザー固有の WSL パスは追加していない。
 
-The generated CPU/GPU lower and full cases are in
-`elmer_project_hypre_gpu_phase19.json`. The implementation is intentionally
-one-rank-only until the parallel ownership of every `B^T v`, `K^-1`, and `B`
-stage is validated; it fails fast in MPI rather than reporting a misleading
-result. Matrix-free action validation is performed by
-`scripts/analysis/validate_matrix_free_schur.py` after an Elmer diagnostic
-run emits the four deterministic vector/action pairs.
-The diagnostic now supports a diagnostic-only process exit, preserves all
-solver keywords it temporarily changes, writes the full four deterministic
-vector/action pairs, and fails fast at the first non-finite Schur stage.  The
-existing artifact predates this rerun and still records only one emitted pair;
-therefore no matrix-free action pass is claimed until the rebuilt executable
-has produced and independently validated all four pairs.
+## Phase B: matrix-free Schur diagnostic
 
-## Implementation
+対象の block sizes は `nu=84636`、`nl=2898`、`D=0`。実行ログは `results/case_p19_hypre_block_schur_diag_cpu_time5us/solver_phase19_cpu_superlu_parity.log` にある。各ベクトルについて `B^T v`、K solve、`B K^{-1}B^T v`、`Dv`、最終 `D v-B K^{-1}B^T v` の norm/min/max/nonzero/finite を記録した。全段階で `finite=T` だった。
 
-The block candidate is opt-in. It sets one BoomerAMG cycle for the large
-primal block and carries the matrix-free Schur implementation in the local
-Elmer source tree. The complete generated upstream-to-local local-tree
-snapshot is [hypre_gpu_phase19_blocksolve_full.patch](hypre_gpu_phase19_blocksolve_full.patch);
-it is not the production handoff patch. The feature-only handoff patch with
-`ELMER_BASE_SHA` is
-[hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch).
-The original `hypre_gpu_phase19_blocksolve.patch` is retained as the
-historical Phase19 fragment.
+| vector | `||B^Tv||_2` | `||K^{-1}B^Tv||_2` | `||BK^{-1}B^Tv||_2` | oracle action norm | action relative error | gate |
+|---|---:|---:|---:|---:|---:|---|
+| all ones | 1.71951e-08 | 8.32363e+02 | 1.06040e-07 | 1.060403652e-07 | 2.70e-07 | fail |
+| alternating sign | 8.92621e-09 | 1.82733e+01 | 2.42168e-09 | 2.421675477e-09 | 5.07e-07 | fail |
+| deterministic sine | 1.16776e-08 | 5.34099e+01 | 8.70324e-09 | 8.703234620e-09 | 2.56e-07 | fail |
+| basis-like 17 | 1.42681e-10 | 3.06536e-01 | 3.99849e-11 | 3.998488629e-11 | 1.15e-09 | fail |
 
-The HYPRE build helper now keeps non-default tags side-by-side.  HYPRE
-`v3.1.0` CUDA and Elmer builds complete after explicitly pointing CMake at the
-WSL `/usr/include` CUDA headers.  The 3.1 no-mortar CPU control is unchanged,
-but 3.1 MGR becomes NaN immediately, so upgrading HYPRE alone is not a fix.
-The current WSL CUDA process also reports no CUDA-capable device even though
-`nvidia-smi` exposes an RTX 3060 Ti; GPU promotion therefore remains blocked
-by the runtime/device mismatch.
+再現 command:
 
-The HIP helper now prefers ROCm's Thrust headers over the CUDA Thrust headers
-present in `/usr/include`.  The first HIP build exposed a mixed-header failure;
-after fixing the include order, HYPRE 3.1 still stops in
-`csr_spgemm_device_symbl.c` at `HYPRE_THRUST_IDENTITY(char)` under ROCm 7.14.
-Thus HIP is toolchain-blocked, not solver-validated.  ROCm sees an AMD Radeon
-RX 9070 XT in this WSL image, so this is an actionable HYPRE/ROCm compatibility
-fix for a subsequent pass.
+```text
+ELMER_HOME=../tools/elmer-phase19-feature-cpu-install \
+LD_LIBRARY_PATH=../tools/elmer-phase19-feature-cpu-install/lib/elmersolver:../tools/hypre-cuda-install/lib \
+  ../tools/elmer-phase19-feature-cpu-install/bin/ElmerSolver_mpi generated/cases/case_p19_hypre_block_schur_diag_cpu_time5us.sif
+python scripts/analysis/validate_matrix_free_schur.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/matrix_free_validation_rebuilt_cpu_superlu.json
+```
 
-No short transient is accepted yet: the available seven-step run was
-interrupted during the rejected MGR investigation.  MPI is not yet a result
-for this case because the mesh has no `partitioning.2` directory.  These are
-explicitly open validation gates, not successful production evidence.
+vector 自体は 4/4 pass（最大相対誤差 `1.32e-16`）。action はノルムの絶対値と sparsity pattern が一致するが、最大相対誤差 `5.0720165e-7` で厳格値に届かない。これは UMFPACK 版でも同じ桁の差が出たため、残る問題は stage 欠落ではなく、非常に小さい Schur action に対する factorization/backend の数値差である。許容値は変更していない。
 
-## Lower/full CPU one-step gate
+### SuperLU parity check
 
-The rebuilt executable was not available in this environment.  The Elmer
-build reconfiguration stops during MPI C/C++/Fortran detection before a new
-`elmersolver` is produced, and direct compiler probing did not yield a usable
-replacement.  Consequently the revised CPU lower-triangular and full-
-factorization one-step cases have not been run; no lower/full residual or
-iteration result is claimed, and tuning, GPU, and MPI validation remain
-blocked behind that gate.
+Elmer の diagnostic が保存した `K^-1 B^T v` と、同じ明示行列に対する SciPy `splu(..., permc_spec="COLAMD")` を比較した。K solve 相対差は all-ones `7.945e-6`、alternating `2.577e-6`、sine `3.727e-6`、basis `2.216e-12`。system SuperLU と SciPy が同一実装ではなく、同じ ordering 指定だけでは strict parity にならないことを確認した。結果は [superlu_parity_cpu.json](../artifacts/hypre_phase19_schur/superlu_parity_cpu.json) に保存した。なお、Elmer action と explicit matrix から Elmer K solve を再構成した差も `1.7e-7〜2.3e-7` であり、solver 差だけでなく block 抽出行列の fingerprint も次に固定すべきである。
 
-## Recommendation at this point
+### 直した根本原因
 
-Do not promote the 3.0/3.1 MGR result or the native block approximation to
-production.  The exact Schur path is a correctness oracle, not a production
-memory strategy.  Promotion requires a matrix-free Schur/AMG variant to pass
-the full residual and constraint gates, followed by the short-transient, MPI,
-and real GPU checks.
+診断 loop の 1 回目後に `Aij` が B を指したままになり、2〜4 回目の `B^T v` が誤って B を使っていた。各 q の冒頭で `Aij => Submatrix(1,2)%Mat` を再設定した。また、`B^T) の行数が K の 84636 より小さい 81501 であるため、出力 RHS/work array をゼロ初期化し、未初期化 tail が混入しないようにした。
+
+## 未達ゲートと次の一手
+
+CPU lower/full one-step、GPU、transient は未実行・未承認。未達ゲートは「独立 SciPy/SuperLU action 相対誤差 `<=1e-10`」である。
+
+次の一手は、block 抽出後の `K,B,B^T,D` の fingerprint を保存し、Elmer と oracle が同一行列を使うことを確認した上で、同一 SuperLU 実装・同一オプションの parity check を再実行すること。これが pass するまで production promotion は行わない。
+
+## 変更ファイル
+
+- [docs/hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch): base から clean apply できる feature patch。Schur stage diagnostics、4-vector reset、optional serial SuperLU gate を含む。
+- feature source diff: `CMakeLists.txt`、`fem/src/CMakeLists.txt`、`fem/src/BlockSolve.F90`、`fem/src/SolveSuperLUStandard.c`、`fem/src/SOLVER.KEYWORDS`、`fem/src/SParIterSolver.F90`、`fem/src/SolveHypre.c`。
+- [scripts/support/build_elmer_hypre_gpu_wsl.ps1](../scripts/support/build_elmer_hypre_gpu_wsl.ps1): ParMETIS header discovery を portable 化。
+- [scripts/run_hypre_gpu_wsl.ps1](../scripts/run_hypre_gpu_wsl.ps1): HYPRE tag suffix、installed module/lib path、tag forwarding を修正。
+- [scripts/analysis/validate_matrix_free_schur.py](../scripts/analysis/validate_matrix_free_schur.py): strict validator は変更なし。
+- [artifacts/hypre_phase19_schur/matrix_free_validation_rebuilt_cpu_superlu.json](../artifacts/hypre_phase19_schur/matrix_free_validation_rebuilt_cpu_superlu.json): 再実行結果。
+- [artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json](../artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json): 全 stage の診断要約。
+- [artifacts/hypre_phase19_schur/superlu_parity_cpu.json](../artifacts/hypre_phase19_schur/superlu_parity_cpu.json): Elmer K solve と SciPy/SuperLU の parity 結果。
+- `tools/elmer-phase19-feature-gate`: isolated build source worktree。通常の `main` worktree は変更していない。

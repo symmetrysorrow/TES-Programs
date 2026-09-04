@@ -1,14 +1,47 @@
 # Feature-only HYPRE/Mortar block-solver patch
 # Base: ElmerCSC/elmerfem commit 5a8de867068be0568f09af40fb90fee300dfbede
-# Generated from the current local feature tree; unrelated CMake/UMFPACK,
-# module-migration, adaptive-integration, and historical local changes are omitted.
+# Generated from the isolated feature tree; includes the portable diagnostic
+# and optional serial SuperLU gate used by the Phase19 independent check.
 
+warning: in the working copy of 'CMakeLists.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fem/src/BlockSolve.F90', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fem/src/CMakeLists.txt', LF will be replaced by CRLF the next time Git touches it
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index faa8bee1cf714f7d4e2d3a6f1c54be5fa1dfcd73..0cffbf39d778362837bf5ab8d2f78e4d4c74a139 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -91,6 +91,7 @@ SET(WITH_Mumps FALSE CACHE BOOL "Use Mumps sparse direct solver")
+ SET(WITH_Hypre FALSE CACHE BOOL "Use Hypre linear algebra library")
+ SET(WITH_CHOLMOD FALSE CACHE BOOL "Use CHOLMOD linear algebra library")
+ SET(WITH_UMFPACK TRUE CACHE BOOL "Use UMFPACK for LU factorization")
++SET(WITH_SuperLU FALSE CACHE BOOL "Use serial SuperLU for matrix-free Schur diagnostics")
+ SET(WITH_ELMERGUI FALSE CACHE BOOL "Include ElmerGUI")
+ SET(WITH_ElmerIce FALSE CACHE BOOL "Include ElmerIce")
+ SET(WITH_XIOS FALSE CACHE BOOL "Include XIOS")
+@@ -107,6 +108,14 @@ SET(WITH_LUA FALSE CACHE BOOL "Include LUA extensions.")
+ SET(WITH_MMG FALSE CACHE BOOL "Compile with MMG library.")
+ SET(WITH_ROCALUTION FALSE CACHE BOOL "Compile with Rocalution library.")
+ 
++IF(WITH_SuperLU)
++  FIND_PATH(SUPERLU_INCLUDE_DIR NAMES slu_ddefs.h PATH_SUFFIXES superlu)
++  FIND_LIBRARY(SUPERLU_LIBRARY NAMES superlu)
++  IF(NOT SUPERLU_INCLUDE_DIR OR NOT SUPERLU_LIBRARY)
++    MESSAGE(FATAL_ERROR "WITH_SuperLU requires the SuperLU headers and library")
++  ENDIF()
++ENDIF()
++
+ SET(WITH_Zoltan FALSE CACHE BOOL "Link in Zoltan mesh repartitioning library.")
+ SET(USE_SYSTEM_ZOLTAN FALSE CACHE BOOL "Use system Zoltan library")
+ 
 diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
-index fd722cfde..24e5a1490 100644
+index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f43819edf 100644
 --- a/fem/src/BlockSolve.F90
 +++ b/fem/src/BlockSolve.F90
-@@ -44,6 +44,8 @@ MODULE BlockSolve
+@@ -42,8 +42,11 @@ MODULE BlockSolve
+      BackScaleLinearSystem, AMGXMatrixVectorMultiply, AMGXSolver, DiagonalMatrixSumming, &
+      StructureCouplingAssembly, FSICouplingAssembly, SaveLinearSystem, &
       MassMatrixAssembly, VectorValuesRange, LaplaceMatrixAssembly
++ USE DirectSolve, ONLY : DirectSolver
   USE MeshUtils, ONLY : SaveProjector   
   USE DefUtils, ONLY : DefaultSolve, GetElementDOFs, GetElementNodes, GetLogical
 + USE Lists, ONLY : ListGetLogical, ListGetString, ListGetInteger, ListGetCReal, &
@@ -16,7 +49,7 @@ index fd722cfde..24e5a1490 100644
   
   IMPLICIT NONE
  
-@@ -54,6 +56,13 @@ MODULE BlockSolve
+@@ -54,6 +57,13 @@ MODULE BlockSolve
    TYPE(Solver_t), POINTER, SAVE :: SolverRef
    TYPE(Variable_t), POINTER :: SolverVar => Null()
    TYPE(Matrix_t), POINTER :: SolverMatrix => Null(), SaveMatrix
@@ -30,7 +63,7 @@ index fd722cfde..24e5a1490 100644
  
  CONTAINS
  
-@@ -115,6 +124,376 @@ CONTAINS
+@@ -115,6 +125,434 @@ CONTAINS
      
    END FUNCTION CreateSchurApproximation
  
@@ -158,6 +191,59 @@ index fd722cfde..24e5a1490 100644
 +  END SUBROUTINE BlockSchurCheckFinite
 +
 +
++  SUBROUTINE BlockSchurReport(Stage, Values)
++    CHARACTER(LEN=*), INTENT(in) :: Stage
++    REAL(KIND=dp), INTENT(in) :: Values(:)
++    INTEGER :: n, nonzero
++    REAL(KIND=dp) :: nrm, vmin, vmax
++    LOGICAL :: finite
++    CHARACTER(256) :: Report
++
++    n = SIZE(Values)
++    finite = .NOT. (ANY(Values /= Values) .OR. ANY(ABS(Values) > HUGE(1.0_dp)))
++    nonzero = COUNT(Values /= 0.0_dp)
++    IF( n > 0 ) THEN
++      nrm = SQRT(SUM(Values*Values))
++      vmin = MINVAL(Values)
++      vmax = MAXVAL(Values)
++    ELSE
++      nrm = 0.0_dp
++      vmin = 0.0_dp
++      vmax = 0.0_dp
++    END IF
++    WRITE(Report,'(A,A,A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,I0,A,L1)') &
++        'stage=',TRIM(Stage),' n=',n,' norm=',nrm,' min=',vmin,' max=',vmax, &
++        ' nonzero=',nonzero,' finite=',finite
++    CALL Info('BlockSchurDiagnostic',Report,Level=5)
++  END SUBROUTINE BlockSchurReport
++
++
++  SUBROUTINE BlockSchurSuperLUSolve(A, Rhs, Sol, InfoCode)
++    TYPE(Matrix_t), POINTER :: A
++    REAL(KIND=dp), INTENT(in) :: Rhs(:)
++    REAL(KIND=dp), INTENT(out) :: Sol(:)
++    INTEGER, INTENT(out) :: InfoCode
++    INTERFACE
++      SUBROUTINE block_schur_superlu_solve(n,nnz,values,rowind,colptr,rhs,info) &
++          BIND(C,NAME='block_schur_superlu_solve')
++        USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_INT, C_DOUBLE
++        INTEGER(C_INT) :: n,nnz,rowind(*),colptr(*),info
++        REAL(C_DOUBLE) :: values(*),rhs(*)
++      END SUBROUTINE block_schur_superlu_solve
++    END INTERFACE
++    INTEGER :: n, nnz
++
++    n = A % NumberOfRows
++    nnz = A % Rows(n+1) - 1
++    IF( SIZE(Rhs) /= n .OR. SIZE(Sol) /= n ) CALL Fatal( &
++        'BlockSchurSuperLUSolve','Incompatible direct solve size')
++    Sol = Rhs
++    CALL block_schur_superlu_solve(n,nnz,A % Values,A % Cols,A % Rows,Sol,InfoCode)
++    IF( InfoCode /= 0 ) CALL Fatal('BlockSchurSuperLUSolve', &
++        'SuperLU failed with info='//I2S(InfoCode))
++  END SUBROUTINE BlockSchurSuperLUSolve
++
++
 +  SUBROUTINE BlockSchurCheckScalarFinite(Stage, Value)
 +    CHARACTER(LEN=*), INTENT(in) :: Stage
 +    REAL(KIND=dp), INTENT(in) :: Value
@@ -268,19 +354,24 @@ index fd722cfde..24e5a1490 100644
 +        CALL Fatal('BlockSchurActionWork','Incompatible Schur work size')
 +    CALL CRS_MatrixVectorMultiply(Bt,v,bt_v)
 +    CALL BlockSchurCheckFinite('Bt*v',bt_v)
++    CALL BlockSchurReport('Bt*v',bt_v)
 +    k_u = 0.0_dp
 +    ! The same Solver_t owns the already-configured BoomerAMG hierarchy.  The
 +    ! no-recompute flag is essential: a Schur matvec must not rebuild AMG.
 +    CALL SolveLinearSystem(K,bt_v,k_u,KVar % Norm,KVar % DOFs,KSolver)
 +    CALL BlockSchurCheckFinite('K solve',k_u)
++    CALL BlockSchurReport('K solve',k_u)
 +    CALL CRS_MatrixVectorMultiply(B,k_u,b_k_u)
 +    CALL BlockSchurCheckFinite('B*K^-1*Bt*v',b_k_u)
++    CALL BlockSchurReport('B*K^-1*Bt*v',b_k_u)
 +    d_v = 0.0_dp
 +    IF( ASSOCIATED(D) ) THEN
 +      IF( D % NumberOfRows > 0 ) CALL CRS_MatrixVectorMultiply(D,v,d_v)
 +    END IF
++    CALL BlockSchurReport('D*v',d_v)
 +    y = d_v - b_k_u
 +    CALL BlockSchurCheckFinite('Schur output',y)
++    CALL BlockSchurReport('Schur output',y)
 +  END SUBROUTINE BlockSchurActionWork
 +
 +
@@ -407,7 +498,7 @@ index fd722cfde..24e5a1490 100644
    
    
    !-----------------------------------------------------------------------------------
-@@ -2356,6 +2735,11 @@ CONTAINS
+@@ -2356,6 +2794,11 @@ CONTAINS
      
      CALL Info('BlockPrecMatrix','Checking for tailored preconditioning matrices',Level=6)
  
@@ -419,7 +510,7 @@ index fd722cfde..24e5a1490 100644
      Params => Solver % Values
      SplitComplexHcurl = ListGetLogical( Params,'Block Split Complex Hcurl', GotIt ) 
      
-@@ -3767,19 +4151,31 @@ CONTAINS
+@@ -3767,19 +4210,31 @@ CONTAINS
      INTEGER :: ipar(*)
  !---------------------------------------------------------------------------------
      REAL(KIND=dp), POINTER :: rtmp(:),vtmp(:),xtmp(:),btmp(:),diagtmp(:),b(:),x(:), a_rhs_save(:)
@@ -458,7 +549,7 @@ index fd722cfde..24e5a1490 100644
      INTEGER(KIND=AddrInt) :: AddrFunc
      EXTERNAL :: AddrFunc
  
-@@ -3815,6 +4211,47 @@ CONTAINS
+@@ -3815,6 +4270,47 @@ CONTAINS
  
      BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
      BlockSch = ListGetLogical( Params,'Block Schur',Found)
@@ -506,7 +597,7 @@ index fd722cfde..24e5a1490 100644
      
      
     
-@@ -3828,6 +4265,162 @@ CONTAINS
+@@ -3828,6 +4324,190 @@ CONTAINS
        CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
            //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
      END IF
@@ -561,7 +652,7 @@ index fd722cfde..24e5a1490 100644
 +            DiagHadHypreGPU)
 +        CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
 +        CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
-+        CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'superlu' )
++        CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'umfpack' )
 +      END IF
 +      SchurDiagnosticPrefix = ListGetString( Params, &
 +          'Schur Diagnostic Prefix', Found )
@@ -574,7 +665,13 @@ index fd722cfde..24e5a1490 100644
 +        ALLOCATE(ADiag)
 +        ADiag % NumberOfRows = 0
 +        CALL CRS_CopyMatrixTopology(A,ADiag)
++        ADiag % COMPLEX = .FALSE.
 +      END IF
++
++      CALL Info('BlockSchurDiagnostic','work sizes nu='//I2S(d_nu)// &
++          ' nl='//I2S(d_nl)//' Bt rows='//I2S(TotMatrix % Submatrix(1,2) % Mat % NumberOfRows)// &
++          ' B rows='//I2S(TotMatrix % Submatrix(2,1) % Mat % NumberOfRows)// &
++          ' D rows='//I2S(TotMatrix % Submatrix(2,2) % Mat % NumberOfRows),Level=5)
 +
 +      DO q=1,4
 +        SELECT CASE(q)
@@ -593,28 +690,44 @@ index fd722cfde..24e5a1490 100644
 +          d_v(MIN(17,d_nl)) = 1.0_dp
 +        END SELECT
 +
++        d_bt = 0.0_dp
++        d_ku = 0.0_dp
++        d_y = 0.0_dp
++        d_dv = 0.0_dp
++        Aij => TotMatrix % Submatrix(1,2) % Mat
 +        CALL CRS_MatrixVectorMultiply(Aij,d_v,d_bt)
++        CALL BlockSchurCheckFinite('Bt*v',d_bt)
++        CALL BlockSchurReport('q='//I2S(q)//' Bt*v',d_bt)
 +        IF( SchurDiagnosticDirect ) THEN
 +          ! Some direct backends overwrite the matrix values during numeric
 +          ! factorization.  Give each deterministic RHS a pristine value
 +          ! copy while reusing the CRS topology; this keeps the diagnostic
 +          ! independent of backend-specific factorization ownership.
 +          ADiag % Values = A % Values
-+          CALL ListAddLogical( ASolver % Values, 'No Precondition Recompute', .FALSE. )
-+          CALL SolveLinearSystem(ADiag,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
++#ifdef HAVE_SUPERLU_SERIAL
++          CALL BlockSchurSuperLUSolve(ADiag,d_bt,d_ku,istat)
++#else
++          CALL DirectSolver(ADiag,d_ku,d_bt,ASolver)
++#endif
 +        ELSE
 +          CALL SolveLinearSystem(A,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
 +        END IF
++        CALL BlockSchurCheckFinite('K solve',d_ku)
++        CALL BlockSchurReport('q='//I2S(q)//' K solve',d_ku)
 +        Aij => TotMatrix % Submatrix(2,1) % Mat
 +        CALL CRS_MatrixVectorMultiply(Aij,d_ku,d_y)
++        CALL BlockSchurCheckFinite('B*K^-1*Bt*v',d_y)
++        CALL BlockSchurReport('q='//I2S(q)//' B*K^-1*Bt*v',d_y)
 +        CALL BlockSchurCheckFinite('B*K^-1*Bt*v',d_y)
 +        d_dv = 0.0_dp
 +        Aij => TotMatrix % Submatrix(2,2) % Mat
 +        IF( ASSOCIATED(Aij) .AND. Aij % NumberOfRows > 0 ) &
 +            CALL CRS_MatrixVectorMultiply(Aij,d_v,d_dv)
 +        CALL BlockSchurCheckFinite('D*v',d_dv)
++        CALL BlockSchurReport('q='//I2S(q)//' D*v',d_dv)
 +        d_y = d_dv - d_y
 +        CALL BlockSchurCheckFinite('Schur output',d_y)
++        CALL BlockSchurReport('q='//I2S(q)//' Schur output',d_y)
 +
 +        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_v'//I2S(q)//'.dat', &
 +            STATUS='REPLACE',ACTION='WRITE')
@@ -626,6 +739,12 @@ index fd722cfde..24e5a1490 100644
 +            STATUS='REPLACE',ACTION='WRITE')
 +        DO l=1,d_nl
 +          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_y(l)
++        END DO
++        CLOSE(unit)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_ku'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nu
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_ku(l)
 +        END DO
 +        CLOSE(unit)
 +      END DO
@@ -669,7 +788,7 @@ index fd722cfde..24e5a1490 100644
      
      ! Save the initial solver stuff
      solver_save => Solver
-@@ -4074,7 +4667,40 @@ CONTAINS
+@@ -4074,7 +4754,40 @@ CONTAINS
            CALL AMGXSolver( A, x, btmp, ASolver )
            IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,A,btmp,x)
          ELSE
@@ -711,7 +830,7 @@ index fd722cfde..24e5a1490 100644
          END IF
        END IF
        
-@@ -4185,6 +4811,44 @@ CONTAINS
+@@ -4185,6 +4898,44 @@ CONTAINS
        
      END DO ! j=1,NoVar
  
@@ -756,8 +875,36 @@ index fd722cfde..24e5a1490 100644
      IF (isParallel) DEALLOCATE(x,b)
  
      CALL ListPopNameSpace('block:') ! block:
+diff --git a/fem/src/CMakeLists.txt b/fem/src/CMakeLists.txt
+index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..57e8d844853135932e48804caf157177b2edf186 100644
+--- a/fem/src/CMakeLists.txt
++++ b/fem/src/CMakeLists.txt
+@@ -45,6 +45,10 @@ SET(solverlib_SOURCES AddrFunc.F90 NavierStokes.F90 NavierStokesGeneral.F90
+   ZirkaHysteresis.F90 SolidMechanicsUtils.F90 MatrixAssembly.F90 
+   OptimizationUtils.F90 MeshGenerate.F90)
+ 
++IF(WITH_SuperLU)
++  LIST(APPEND solverlib_SOURCES SolveSuperLUStandard.c)
++ENDIF()
++
+ #SET_PROPERTY(SOURCE MaxwellAxiS.F90 PROPERTY
+ #	COMPILE_DEFINITIONS FULL_INDUCTION)
+ 
+@@ -148,6 +152,12 @@ SET_TARGET_PROPERTIES(mpi_stubs
+ SET_TARGET_PROPERTIES(elmersolver
+                       PROPERTIES LINKER_LANGUAGE Fortran)
+ 
++IF(WITH_SuperLU)
++  TARGET_COMPILE_DEFINITIONS(elmersolver PRIVATE HAVE_SUPERLU_SERIAL)
++  TARGET_INCLUDE_DIRECTORIES(elmersolver PRIVATE ${SUPERLU_INCLUDE_DIR})
++  TARGET_LINK_LIBRARIES(elmersolver ${SUPERLU_LIBRARY})
++ENDIF()
++
+ #We want MMG & Zoltan in the RPATH (if found), but given how many other 
+ #components use ELMERSOLVER_RPATH_STRING, it seemed best to make
+ #a local copy just for ElmerSolver and libelmersolver
 diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
-index f2a0a7ff0..8d4518e3b 100644
+index f2a0a7ff0acce231cc10195af1a0b2067569bb69..8d4518e3b54cb71484265a1b50bbfe305e5dc9c7 100644
 --- a/fem/src/SOLVER.KEYWORDS
 +++ b/fem/src/SOLVER.KEYWORDS
 @@ -1031,6 +1031,22 @@ Solver:Logical:     'Block A-V System'
@@ -801,7 +948,7 @@ index f2a0a7ff0..8d4518e3b 100644
  solver:logical:      'normalize coil current'
  solver:logical:      'use unity conductivity'
 diff --git a/fem/src/SParIterSolver.F90 b/fem/src/SParIterSolver.F90
-index 10a938538..2a41f958c 100644
+index 10a9385386dee29c355cc5fb6709dca0d9441353..2a41f958ce09036ebf6210555dc249f3f165fbfb 100644
 --- a/fem/src/SParIterSolver.F90
 +++ b/fem/src/SParIterSolver.F90
 @@ -927,6 +927,16 @@ END SUBROUTINE ZeroSplittedMatrix
@@ -848,7 +995,7 @@ index 10a938538..2a41f958c 100644
      END IF
  
 diff --git a/fem/src/SolveHypre.c b/fem/src/SolveHypre.c
-index 5628f72ca..3ee48e8dd 100644
+index 5628f72ca6b07ad2afa1a87e502627aeded9408c..a252c1a5cdb419d791ffe42cae1446abc57346a2 100644
 --- a/fem/src/SolveHypre.c
 +++ b/fem/src/SolveHypre.c
 @@ -44,6 +44,8 @@
@@ -1009,7 +1156,7 @@ index 5628f72ca..3ee48e8dd 100644
     Container->A = A;
     Container->b = b;
     Container->x = x;
-@@ -924,10 +1010,8 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -924,10 +1014,8 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
  //     HYPRE_ParCSRFlexGMRESSetMaxIter(solver, *Rounds); /* max iterations */
       HYPRE_ParCSRFlexGMRESSolve(Container->solver, parcsr_A, par_b, par_x);
       
@@ -1022,7 +1169,7 @@ index 5628f72ca..3ee48e8dd 100644
     }
  
     else if ( hypre_sol == 10) {
-@@ -953,7 +1037,17 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -953,7 +1041,17 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     
     for( k=0,i=0; i<local_size; i++ )
       if ( owner[i] ) rcols[k++] = globaldofs[i];
@@ -1040,7 +1187,7 @@ index 5628f72ca..3ee48e8dd 100644
     HYPRE_IJVectorGetValues(x, k, rcols, txvec );
     
     for( i=0,k=0; i<local_size; i++ )
-@@ -1012,6 +1106,9 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -1012,6 +1110,9 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
       HYPRE_ILUDestroy(Container->precond);
     } else if ( hypre_pre == 4 ) {
       HYPRE_ParaSailsDestroy(Container->precond);
@@ -1050,7 +1197,7 @@ index 5628f72ca..3ee48e8dd 100644
     }
  
     
-@@ -1057,6 +1154,8 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -1057,6 +1158,8 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
     if(Container->x) HYPRE_IJVectorDestroy(Container->x);
     if(Container->b) HYPRE_IJVectorDestroy(Container->b);
  
@@ -1059,3 +1206,56 @@ index 5628f72ca..3ee48e8dd 100644
     free(Container);
     *ContainerPtr = NULL;
  }
+diff --git a/fem/src/SolveSuperLUStandard.c b/fem/src/SolveSuperLUStandard.c
+new file mode 100644
+--- /dev/null
++++ b/fem/src/SolveSuperLUStandard.c
+@@ -0,0 +1,47 @@
++/* Minimal serial SuperLU wrapper used by the matrix-free Schur diagnostic. */
++
++#include <stdlib.h>
++#include <superlu/slu_ddefs.h>
++
++void block_schur_superlu_solve(int *n, int *nnz, double *values,
++                               int *rowind, int *colptr, double *rhs,
++                               int *info)
++{
++    SuperMatrix A, B, L, U;
++    superlu_options_t options;
++    SuperLUStat_t stat;
++    int *perm_c = NULL;
++    int *perm_r = NULL;
++    int i;
++
++    *info = -1;
++    perm_c = (int *) malloc((size_t) *n * sizeof(int));
++    perm_r = (int *) malloc((size_t) *n * sizeof(int));
++    if (perm_c == NULL || perm_r == NULL) goto cleanup;
++
++    /* Elmer's CRS indices are one-based; SuperLU expects zero-based CSC. */
++    for (i = 0; i < *nnz; ++i) --rowind[i];
++    for (i = 0; i <= *n; ++i) --colptr[i];
++
++    dCreate_CompCol_Matrix(&A, *n, *n, *nnz, values, rowind, colptr,
++                           SLU_NC, SLU_D, SLU_GE);
++    dCreate_Dense_Matrix(&B, *n, 1, rhs, *n, SLU_DN, SLU_D, SLU_GE);
++    set_default_options(&options);
++    options.ColPerm = COLAMD;
++    StatInit(&stat);
++    dgssv(&options, &A, perm_c, perm_r, &L, &U, &B, &stat, info);
++    StatFree(&stat);
++    Destroy_SuperMatrix_Store(&A);
++    Destroy_SuperNode_Matrix(&L);
++    Destroy_CompCol_Matrix(&U);
++    Destroy_SuperMatrix_Store(&B);
++
++    for (i = 0; i < *nnz; ++i) ++rowind[i];
++    for (i = 0; i <= *n; ++i) ++colptr[i];
++
++cleanup:
++    free(perm_c);
++    free(perm_r);
++}
++
++
+
