@@ -39,12 +39,40 @@ relative residual of about `3.06`.  These are independent CPU reference
 experiments; the ILU case is a portable proxy for an approximate AMG action,
 not a claim that HYPRE used ILU.
 
+Residual names and normalization rules are consolidated in
+`docs/hypre_gpu_phase19_residuals.md`; the committed copies of the four
+Schur/MGR reference records are under `artifacts/hypre_phase19_schur/`.
+
+The checkout now also contains the next candidate implementation. The native
+block path supports `Block Lower Triangular` and `Block Full Factorization`;
+both use the existing `Schur Operator 2 = 1` algebra as the matrix-free action
+`D - B K^-1 B^T`. A restarted right-preconditioned GMRES solves that action,
+while the existing `diag(K)^-1` sparse Schur approximation is used only for
+the inner Schur preconditioner. The K action reuses the same nested Solver_t
+/ AMG object and sets `No Precondition Recompute` during the inner solve. The
+reusable Schur diagonal is invalidated at block setup, not at each outer
+preconditioner application.
+
+The generated CPU/GPU lower and full cases are in
+`elmer_project_hypre_gpu_phase19.json`. The implementation is intentionally
+one-rank-only until the parallel ownership of every `B^T v`, `K^-1`, and `B`
+stage is validated; it fails fast in MPI rather than reporting a misleading
+result. Matrix-free action validation is performed by
+`scripts/analysis/validate_matrix_free_schur.py` after an Elmer diagnostic
+run emits the four deterministic vector/action pairs.
+The current rebuilt diagnostic reached the direct K solve and emitted the
+first pair, then the surrounding one-step solve produced NaN before the
+remaining pairs were written; therefore no matrix-free action pass is
+claimed yet.
+
 ## Implementation
 
-The block candidate is opt-in.  It sets one BoomerAMG cycle for the large
-primal block and routes the small Schur approximation to UMFPACK through the
-nested solver's own parameter list.  The ignored Elmer source tree is carried
-as [hypre_gpu_phase19_blocksolve.patch](hypre_gpu_phase19_blocksolve.patch).
+The block candidate is opt-in. It sets one BoomerAMG cycle for the large
+primal block and carries the matrix-free Schur implementation in the ignored
+Elmer source tree. The complete generated upstream-to-local handoff patch is
+[hypre_gpu_phase19_blocksolve_full.patch](hypre_gpu_phase19_blocksolve_full.patch);
+the original `hypre_gpu_phase19_blocksolve.patch` is retained as the historical
+Phase19 fragment.
 
 The HYPRE build helper now keeps non-default tags side-by-side.  HYPRE
 `v3.1.0` CUDA and Elmer builds complete after explicitly pointing CMake at the

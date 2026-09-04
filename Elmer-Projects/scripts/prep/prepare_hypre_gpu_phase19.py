@@ -19,6 +19,11 @@ CONTROL_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us"
 GPU_CONTROL_CASE = "case_p19_hypre_flexgmres_boomeramg_gpu_nomortar_time5us"
 BLOCK_CPU_CASE = "case_p19_hypre_block_diag_cpu_time5us"
 BLOCK_GPU_CASE = "case_p19_hypre_block_diag_gpu_time5us"
+LOWER_CPU_CASE = "case_p19_hypre_block_lower_cpu_time5us"
+LOWER_GPU_CASE = "case_p19_hypre_block_lower_gpu_time5us"
+FULL_CPU_CASE = "case_p19_hypre_block_full_cpu_time5us"
+FULL_GPU_CASE = "case_p19_hypre_block_full_gpu_time5us"
+SCHUR_DIAG_CASE = "case_p19_hypre_block_schur_diag_cpu_time5us"
 
 
 def truncate(groups: list[list[object]], count: int) -> list[list[object]]:
@@ -166,6 +171,55 @@ def main() -> None:
         block["iteration_series_file"] = f"{block_name}_iterations.csv"
         block["output_file_path"] = f"../work/meshes/{block['mesh']}/{block_name}.result"
         block["solver"] = dict(block["solver"])
+        block["solver"]["nonlinear_max_iterations"] = 1
+        block["solver"]["nonlinear_convergence_tolerance"] = 1e-3
+        block["solver"]["matrix_dump_prefix"] = block_name
+        block["max_output_level"] = 10
+        project["cases"][block_name] = block
+
+    # Deterministic one-rank CPU action diagnostic.  The Elmer block driver
+    # writes four matrix-free Schur action pairs; its K solve is switched to
+    # SuperLU only for this oracle-quality operator check.
+    schur_diag = block_diag_case(project["cases"][SOURCE_CASE], SCHUR_DIAG_CASE, False)
+    schur_diag["comparison_time_grid"]["purpose"] = (
+        "deterministic matrix-free Schur action versus independent SuperLU"
+    )
+    schur_diag["timesteps"] = truncate(schur_diag["timesteps"], 1)
+    schur_diag["output_intervals"] = [1]
+    schur_diag["series_file"] = f"{SCHUR_DIAG_CASE}_series.csv"
+    schur_diag["iteration_series_file"] = f"{SCHUR_DIAG_CASE}_iterations.csv"
+    schur_diag["output_file_path"] = f"../work/meshes/{schur_diag['mesh']}/{SCHUR_DIAG_CASE}.result"
+    schur_diag["solver"] = dict(schur_diag["solver"])
+    schur_diag["solver"]["block_schur_diagnostic"] = True
+    schur_diag["solver"]["block_schur_diagnostic_direct"] = True
+    schur_diag["solver"]["block_schur_diagnostic_prefix"] = SCHUR_DIAG_CASE
+    schur_diag["solver"]["nonlinear_max_iterations"] = 1
+    schur_diag["solver"]["nonlinear_convergence_tolerance"] = 1e-3
+    schur_diag["max_output_level"] = 10
+    project["cases"][SCHUR_DIAG_CASE] = schur_diag
+
+    # Compare the diagonal candidate with the two factorized variants.  Keep
+    # all three one-step cases on the same mesh/restart and tolerance.
+    for block_name, use_gpu, variant in (
+        (LOWER_CPU_CASE, False, "lower triangular"),
+        (LOWER_GPU_CASE, True, "lower triangular"),
+        (FULL_CPU_CASE, False, "full approximate factorization"),
+        (FULL_GPU_CASE, True, "full approximate factorization"),
+    ):
+        block = block_diag_case(project["cases"][SOURCE_CASE], block_name, use_gpu)
+        block["comparison_time_grid"]["purpose"] = (
+            f"Elmer native {variant} with matrix-free Schur action"
+        )
+        block["solver"] = dict(block["solver"])
+        block["solver"]["linear_system"] = (
+            f"iterative_hypre_block_{'full' if variant.startswith('full') else 'lower'}"
+            f"_{'gpu' if use_gpu else 'cpu'}"
+        )
+        block["timesteps"] = truncate(block["timesteps"], 1)
+        block["output_intervals"] = [1]
+        block["series_file"] = f"{block_name}_series.csv"
+        block["iteration_series_file"] = f"{block_name}_iterations.csv"
+        block["output_file_path"] = f"../work/meshes/{block['mesh']}/{block_name}.result"
         block["solver"]["nonlinear_max_iterations"] = 1
         block["solver"]["nonlinear_convergence_tolerance"] = 1e-3
         block["solver"]["matrix_dump_prefix"] = block_name

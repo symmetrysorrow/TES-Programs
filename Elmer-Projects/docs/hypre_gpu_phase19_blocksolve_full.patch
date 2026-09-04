@@ -1,0 +1,1150 @@
+--- a/fem/src/BlockSolve.F90
++++ b/fem/src/BlockSolve.F90
+@@ -38,13 +38,11 @@
+  USE IterativeMethods, ONLY : PseudoZDotProd
+  USE IterSolve, ONLY : IterSolver
+  USE ElementDescription, ONLY : ElementInfo, EdgeElementInfo
+- USE SolverBasics, ONLY : LagrangeMultiplierName, ScaleLinearSystem, &
+-     BackScaleLinearSystem, DiagonalMatrixSumming, &
+-     StructureCouplingAssembly, FSICouplingAssembly, &
++ USE SolverUtils, ONLY : LagrangeMultiplierName, SolveLinearSystem, ScaleLinearSystem, &
++     BackScaleLinearSystem, AMGXMatrixVectorMultiply, AMGXSolver, DiagonalMatrixSumming, &
++     StructureCouplingAssembly, FSICouplingAssembly, SaveLinearSystem, &
+      MassMatrixAssembly, VectorValuesRange, LaplaceMatrixAssembly
+- USE SolveCore, ONLY : SolveLinearSystem, AMGXMatrixVectorMultiply, &
+-     AMGXSolver, SaveLinearSystem
+- USE MortarUtils, ONLY : SaveProjector   
++ USE MeshUtils, ONLY : SaveProjector   
+  USE DefUtils, ONLY : DefaultSolve, GetElementDOFs, GetElementNodes, GetLogical
+  
+  IMPLICIT NONE
+@@ -56,6 +54,13 @@
+   TYPE(Solver_t), POINTER, SAVE :: SolverRef
+   TYPE(Variable_t), POINTER :: SolverVar => Null()
+   TYPE(Matrix_t), POINTER :: SolverMatrix => Null(), SaveMatrix
++  ! The diagonal Schur preconditioner is algebraic data attached to the
++  ! current block matrices.  Keep it across applications of the outer
++  ! preconditioner; BlockPrecMatrix invalidates it when the block values are
++  ! rebuilt (normally once per nonlinear/timestep setup).
++  REAL(KIND=dp), ALLOCATABLE, SAVE :: SchurDiagCache(:)
++  INTEGER, SAVE :: SchurDiagCacheN = 0
++  LOGICAL, SAVE :: SchurDiagCacheValid = .FALSE.
+ 
+ CONTAINS
+ 
+@@ -63,8 +68,7 @@
+   !------------------------------------------------------------------------  
+   FUNCTION CreateSchurApproximation(A,P,Q) RESULT ( S ) 
+ 
+-    TYPE(Matrix_t), TARGET :: A
+-    TYPE(Matrix_t), POINTER :: P, Q
++    TYPE(Matrix_t), POINTER :: A, P, Q
+     TYPE(Matrix_t), POINTER :: S, R
+ 
+     INTEGER :: n, i, j, k, l, j2, k2
+@@ -117,6 +121,259 @@
+     END IF          
+     
+   END FUNCTION CreateSchurApproximation
++
++
++  !------------------------------------------------------------------------------
++  !> Build the cheap diagonal of the existing diag(K)^-1 Schur approximation.
++  !>
++  !> This is deliberately a preconditioner for the matrix-free Schur solve,
++  !> not the Schur operator itself.  The latter is applied by
++  !> BlockSchurAction below and therefore never assembled as a dense matrix.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurPrepareDiagonal( DiagS )
++    REAL(KIND=dp), INTENT(out) :: DiagS(:)
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D, SPrec
++    INTEGER :: i,j,colk,l,n
++    LOGICAL :: HavePrec, HaveEntry
++    REAL(KIND=dp) :: val
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    n = B % NumberOfRows
++    IF( SIZE(DiagS) /= n ) CALL Fatal('BlockSchurPrepareDiagonal', &
++        'Incompatible Schur diagonal size')
++
++    ! Prefer the already-created sparse diag(K)^-1 Schur approximation.  This
++    ! preserves the existing topology and avoids any per-matvec construction.
++    SPrec => TotMatrix % Submatrix(2,2) % PrecMat
++    HavePrec = .FALSE.
++    IF( ASSOCIATED(SPrec) ) HavePrec = SPrec % NumberOfRows >= n
++    DiagS = 0.0_dp
++    IF( HavePrec ) THEN
++      DO i=1,n
++        HaveEntry = .FALSE.
++        DO j=SPrec % Rows(i),SPrec % Rows(i+1)-1
++          IF( SPrec % Cols(j) == i ) THEN
++            DiagS(i) = SPrec % Values(j)
++            HaveEntry = .TRUE.
++            EXIT
++          END IF
++        END DO
++        IF( .NOT. HaveEntry ) HavePrec = .FALSE.
++      END DO
++    END IF
++
++    ! Fallback for configurations which intentionally skipped the explicit
++    ! Schur approximation.  Compute only its diagonal, O(nnz(B)+nnz(Bt)),
++    ! while retaining the exact matrix-free operator for all Krylov actions.
++    IF( .NOT. HavePrec ) THEN
++      DiagS = 0.0_dp
++      DO i=1,n
++        DO j=B % Rows(i),B % Rows(i+1)-1
++          colk = B % Cols(j)
++          IF( K % Diag(colk) <= 0 ) CYCLE
++          val = B % Values(j) / K % Values(K % Diag(colk))
++          DO l=Bt % Rows(colk),Bt % Rows(colk+1)-1
++            IF( Bt % Cols(l) == i ) THEN
++              DiagS(i) = DiagS(i) - val * Bt % Values(l)
++              EXIT
++            END IF
++          END DO
++        END DO
++        IF( ASSOCIATED(D) ) THEN
++          IF( D % NumberOfRows < i ) CYCLE
++          DO j=D % Rows(i),D % Rows(i+1)-1
++            IF( D % Cols(j) == i ) THEN
++              DiagS(i) = DiagS(i) + D % Values(j)
++              EXIT
++            END IF
++          END DO
++        END IF
++      END DO
++    END IF
++
++    ! A singular/empty diagonal is not a usable preconditioner entry.  Use a
++    ! neutral value for that row; GMRES still sees the true matrix-free action.
++    DO i=1,n
++      IF( ABS(DiagS(i)) <= TINY(1.0_dp) ) DiagS(i) = 1.0_dp
++    END DO
++  END SUBROUTINE BlockSchurPrepareDiagonal
++
++
++  !------------------------------------------------------------------------------
++  !> Apply S = D - B K^-1 B^T without constructing S.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurAction( v, y, KSolver, KVar )
++    REAL(KIND=dp), INTENT(in) :: v(:)
++    REAL(KIND=dp), INTENT(out) :: y(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D
++    REAL(KIND=dp), ALLOCATABLE :: bt_v(:), k_u(:), b_k_u(:), d_v(:)
++    INTEGER :: nu,nc
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    nu = K % NumberOfRows
++    nc = B % NumberOfRows
++    IF( SIZE(v) /= nc .OR. SIZE(y) /= nc ) CALL Fatal('BlockSchurAction', &
++        'Incompatible Schur vector size')
++    ALLOCATE(bt_v(nu), k_u(nu), b_k_u(nc), d_v(nc))
++
++    CALL BlockSchurActionWork(v,y,KSolver,KVar,bt_v,k_u,b_k_u,d_v)
++    DEALLOCATE(bt_v,k_u,b_k_u,d_v)
++  END SUBROUTINE BlockSchurAction
++
++
++  ! Work-array form used by the inner Krylov solver.  Keeping these arrays
++  ! outside the matvec loop avoids allocator traffic for every Schur action.
++  SUBROUTINE BlockSchurActionWork( v, y, KSolver, KVar, bt_v, k_u, &
++      b_k_u, d_v )
++    REAL(KIND=dp), INTENT(in) :: v(:)
++    REAL(KIND=dp), INTENT(out) :: y(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    REAL(KIND=dp), INTENT(out) :: bt_v(:), k_u(:), b_k_u(:), d_v(:)
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D
++    INTEGER :: nu,nc
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    nu = K % NumberOfRows
++    nc = B % NumberOfRows
++    IF( SIZE(v) /= nc .OR. SIZE(y) /= nc .OR. SIZE(bt_v) /= nu .OR. &
++        SIZE(k_u) /= nu .OR. SIZE(b_k_u) /= nc .OR. SIZE(d_v) /= nc ) &
++        CALL Fatal('BlockSchurActionWork','Incompatible Schur work size')
++    CALL CRS_MatrixVectorMultiply(Bt,v,bt_v)
++    k_u = 0.0_dp
++    ! The same Solver_t owns the already-configured BoomerAMG hierarchy.  The
++    ! no-recompute flag is essential: a Schur matvec must not rebuild AMG.
++    CALL SolveLinearSystem(K,bt_v,k_u,KVar % Norm,KVar % DOFs,KSolver)
++    CALL CRS_MatrixVectorMultiply(B,k_u,b_k_u)
++    d_v = 0.0_dp
++    IF( ASSOCIATED(D) ) THEN
++      IF( D % NumberOfRows > 0 ) CALL CRS_MatrixVectorMultiply(D,v,d_v)
++    END IF
++    y = d_v - b_k_u
++  END SUBROUTINE BlockSchurActionWork
++
++
++  !------------------------------------------------------------------------------
++  !> Solve S x = rhs with restarted right-preconditioned GMRES.
++  !>
++  !> The Schur operator is matrix-free and each K action reuses the caller's
++  !> K Solver_t (BoomerAMG on CPU/CUDA/HIP).  The small diagonal extracted by
++  !> BlockSchurPrepareDiagonal is used only as the inner Schur preconditioner.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurMatrixFreeSolve( rhs, sol, KSolver, KVar, DiagS, &
++      SchurTol, SchurMaxIter, SchurRestart )
++    REAL(KIND=dp), INTENT(in) :: rhs(:), DiagS(:)
++    REAL(KIND=dp), INTENT(inout) :: sol(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    REAL(KIND=dp), INTENT(in) :: SchurTol
++    INTEGER, INTENT(in) :: SchurMaxIter, SchurRestart
++    REAL(KIND=dp), ALLOCATABLE :: r(:),w(:),z(:),v(:,:),zz(:,:),h(:,:), &
++        cs(:),sn(:),g(:),coef(:),ax(:),sbt(:),sku(:),sbku(:),sdv(:)
++    REAL(KIND=dp) :: beta,res,den,tmp
++    INTEGER :: n,m,i,j,k,iter,istat,nu
++    LOGICAL :: Found,OldNoPrec
++
++    n = SIZE(rhs)
++    IF( SIZE(sol) /= n .OR. SIZE(DiagS) /= n ) CALL Fatal( &
++        'BlockSchurMatrixFreeSolve','Incompatible Schur solve sizes')
++    IF( SchurMaxIter < 1 .OR. SchurRestart < 1 ) CALL Fatal( &
++        'BlockSchurMatrixFreeSolve','Schur iteration settings must be positive')
++    m = MIN(SchurMaxIter,SchurRestart)
++    nu = TotMatrix % Submatrix(1,1) % Mat % NumberOfRows
++    ALLOCATE(r(n),w(n),z(n),v(n,m+1),zz(n,m),h(m+1,m),cs(m),sn(m), &
++        g(m+1),coef(m),ax(n),sbt(nu),sku(nu), &
++        sbku(n),sdv(n),STAT=istat)
++    IF( istat /= 0 ) CALL Fatal('BlockSchurMatrixFreeSolve', &
++        'Allocation error for Schur GMRES work vectors')
++
++    OldNoPrec = ListGetLogical(KSolver % Values,'No Precondition Recompute',Found)
++    CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',.TRUE.)
++    iter = 0
++    sol = 0.0_dp
++    CALL BlockSchurActionWork(sol,r,KSolver,KVar,sbt,sku,sbku,sdv)
++    r = rhs - r
++    beta = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++    IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++        TINY(1.0_dp)) ) GOTO 900
++
++    DO WHILE( iter < SchurMaxIter )
++      beta = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++      IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++          TINY(1.0_dp)) ) EXIT
++      v = 0.0_dp; zz = 0.0_dp; h = 0.0_dp; cs = 0.0_dp; sn = 0.0_dp
++      g = 0.0_dp; g(1) = beta; v(:,1) = r / beta
++      k = 0
++      DO j=1,m
++        IF( iter >= SchurMaxIter ) EXIT
++        k = j; iter = iter + 1
++        z = v(:,j) / DiagS
++        zz(:,j) = z
++        CALL BlockSchurActionWork(z,w,KSolver,KVar,sbt,sku,sbku,sdv)
++        DO i=1,j
++          h(i,j) = DOT_PRODUCT(v(:,i),w)
++          w = w - h(i,j)*v(:,i)
++        END DO
++        h(j+1,j) = SQRT(MAX(0.0_dp,DOT_PRODUCT(w,w)))
++        IF( h(j+1,j) > TINY(1.0_dp) ) v(:,j+1) = w / h(j+1,j)
++        DO i=1,j-1
++          tmp = cs(i)*h(i,j) + sn(i)*h(i+1,j)
++          h(i+1,j) = -sn(i)*h(i,j) + cs(i)*h(i+1,j)
++          h(i,j) = tmp
++        END DO
++        den = SQRT(h(j,j)*h(j,j) + h(j+1,j)*h(j+1,j))
++        IF( den <= TINY(1.0_dp) ) THEN
++          cs(j) = 1.0_dp; sn(j) = 0.0_dp
++        ELSE
++          cs(j) = h(j,j)/den; sn(j) = h(j+1,j)/den
++        END IF
++        h(j,j) = cs(j)*h(j,j) + sn(j)*h(j+1,j)
++        h(j+1,j) = 0.0_dp
++        g(j+1) = -sn(j)*g(j); g(j) = cs(j)*g(j)
++        res = ABS(g(j+1))
++        IF( res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++            TINY(1.0_dp)) ) EXIT
++      END DO
++      IF( k == 0 ) EXIT
++      coef = 0.0_dp
++      DO i=k,1,-1
++        coef(i) = g(i)
++        IF( i < k ) coef(i) = coef(i) - DOT_PRODUCT(h(i,i+1:k), &
++            coef(i+1:k))
++        IF( ABS(h(i,i)) <= TINY(1.0_dp) ) THEN
++          coef(i) = 0.0_dp
++        ELSE
++          coef(i) = coef(i) / h(i,i)
++        END IF
++      END DO
++      DO j=1,k
++        sol = sol + coef(j)*zz(:,j)
++      END DO
++      CALL BlockSchurActionWork(sol,ax,KSolver,KVar,sbt,sku,sbku,sdv)
++      r = rhs - ax
++    END DO
++900 CONTINUE
++    CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',OldNoPrec)
++    res = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++    WRITE(Message,'(A,I0,A,ES12.5)') 'Matrix-free Schur GMRES iterations: ', &
++        iter, ' residual: ', res
++    CALL Info('BlockSchurMatrixFreeSolve',Message,Level=7)
++    IF( res > SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++        TINY(1.0_dp)) ) CALL Warn('BlockSchurMatrixFreeSolve', &
++        'Inner Schur GMRES reached its limit before tolerance')
++    DEALLOCATE(r,w,z,v,zz,h,cs,sn,g,coef,ax,sbt,sku,sbku,sdv)
++  END SUBROUTINE BlockSchurMatrixFreeSolve
+ 
+   
+   
+@@ -132,11 +389,11 @@
+   !-----------------------------------------------------------------------------------
+   FUNCTION CreateBlockVariable( Solver, VariableNo, VarName, ExtDofs, ExtPerm ) RESULT ( Var )
+     
+-    TYPE(Solver_t), TARGET :: Solver
++    TYPE(Solver_t), POINTER :: Solver
+     INTEGER :: VariableNo
+     CHARACTER(LEN=*) :: VarName
+     INTEGER, OPTIONAL :: ExtDofs
+-    INTEGER, TARGET, OPTIONAL :: ExtPerm(:)
++    INTEGER, POINTER, OPTIONAL :: ExtPerm(:)
+     TYPE(Variable_t), POINTER :: Var
+     
+     TYPE(Solver_t), POINTER :: PSolver
+@@ -196,8 +453,8 @@
+       MaxFDOFs  = MAX( MaxFDOFs,  Element % BDOFs )
+     END DO
+     
+-    ! Inherit the bubbles from primary solver
+-    GlobalBubbles = Solver % GlobalBubbles
++    GlobalBubbles = ListGetLogical( Params, 'Bubbles in Global System', Found )
++    IF (.NOT.Found) GlobalBubbles = .TRUE.
+     
+     Ndeg = Ndeg + Mesh % NumberOfNodes
+     IF ( MaxEDOFs > 0 ) Ndeg = Ndeg + MaxEDOFs * Mesh % NumberOFEdges
+@@ -214,7 +471,7 @@
+     solver_id = 0
+     DO i = 1, CurrentModel % NumberOfSolvers
+       PSolver => CurrentModel % Solvers(i)
+-      IF( ASSOCIATED( PSolver, Solver ) ) THEN
++      IF( ASSOCIATED( Solver, PSolver ) ) THEN
+         solver_id = i
+         EXIT
+       END IF
+@@ -525,9 +782,9 @@
+     IMPLICIT NONE
+     
+     TYPE(Solver_t), TARGET :: Solver
+-    TYPE(BlockMatrix_t) :: BlockMatrix
+-    INTEGER, OPTIONAL :: BlockIndex(:)
+-
++    TYPE(BlockMatrix_t), POINTER :: BlockMatrix
++    INTEGER, POINTER, OPTIONAL :: BlockIndex(:)
++    
+     TYPE(Solver_t), POINTER :: PSolver
+     TYPE(Matrix_t), POINTER :: Amat
+     INTEGER :: i,j,k,n,m,Novar
+@@ -643,8 +900,8 @@
+     IMPLICIT NONE
+     
+     TYPE(Solver_t), TARGET :: Solver
+-    TYPE(BlockMatrix_t), TARGET :: BlockMatrix
+-
++    TYPE(BlockMatrix_t), POINTER :: BlockMatrix
++    
+     TYPE(Matrix_t), POINTER :: Amat
+     INTEGER :: i,j,k,n,m,Novar
+     TYPE(Variable_t), POINTER :: Var
+@@ -830,8 +1087,8 @@
+   !-------------------------------------------------------------------------------------
+   SUBROUTINE BlockPickDofsPhysical( Solver, BlockIndex, NoVar )
+     
+-    TYPE(Solver_t) :: Solver
+-    INTEGER :: BlockIndex(:)
++    TYPE(Solver_t), POINTER :: Solver
++    INTEGER, POINTER :: BlockIndex(:)
+     INTEGER :: Novar
+     
+     INTEGER::i,j,k,t,n,MinBlock,MaxBlock,body_id,bf_id,bc_id,n_bf
+@@ -924,8 +1181,8 @@
+   !-------------------------------------------------------------------------------------
+   SUBROUTINE BlockPickHdiv( Solver, BlockIndex, NoVar )
+     
+-    TYPE(Solver_t) :: Solver
+-    INTEGER :: BlockIndex(:)
++    TYPE(Solver_t), POINTER :: Solver
++    INTEGER, POINTER :: BlockIndex(:)
+     INTEGER :: Novar
+     
+     INTEGER :: i,j,n,nn,ne,nf,nb,nnis,neis,nfis,nbis
+@@ -998,8 +1255,8 @@
+   !-------------------------------------------------------------------------------------
+   SUBROUTINE BlockPickAV( Solver, BlockIndex, NoVar )
+     
+-    TYPE(Solver_t) :: Solver
+-    INTEGER :: BlockIndex(:)
++    TYPE(Solver_t), POINTER :: Solver
++    INTEGER, POINTER :: BlockIndex(:)
+     INTEGER :: Novar
+     
+     INTEGER :: i,j,n,nn,ne,nf,nb,ais,vis,pis,dofs
+@@ -1100,8 +1357,8 @@
+   !-------------------------------------------------------------------------------------
+   SUBROUTINE BlockPickReIm( Solver, BlockIndex, NoVar )
+     
+-    TYPE(Solver_t) :: Solver
+-    INTEGER :: BlockIndex(:)
++    TYPE(Solver_t), POINTER :: Solver
++    INTEGER, POINTER :: BlockIndex(:)
+     INTEGER :: Novar
+ 
+     INTEGER :: dofs
+@@ -1126,7 +1383,7 @@
+   SUBROUTINE BlockPickMatrixPerm( Solver, BlockIndex, NoVar, DoAddMatrix )
+ 
+     TYPE(Solver_t) :: Solver
+-    INTEGER :: BlockIndex(:)
++    INTEGER, POINTER :: BlockIndex(:)
+     INTEGER :: Novar
+     LOGICAL :: DoAddMatrix
+         
+@@ -2359,6 +2616,11 @@
+     
+     CALL Info('BlockPrecMatrix','Checking for tailored preconditioning matrices',Level=6)
+ 
++    ! A Schur diagonal is cached across applications of BlockMatrixPrec.  This
++    ! routine is the matrix/value setup boundary, so invalidate it here when
++    ! the block matrices are rebuilt (including a new timestep).
++    SchurDiagCacheValid = .FALSE.
++
+     Params => Solver % Values
+     SplitComplexHcurl = ListGetLogical( Params,'Block Split Complex Hcurl', GotIt ) 
+     
+@@ -2540,10 +2802,6 @@
+         IF (.NOT. ASSOCIATED(PMat % Values)) THEN
+           CALL Info('BlockPrecMatrix','Moving PrecValues to PrecMat!')
+           CALL CRS_CopyMatrixTopology( AMat, PMat )
+-          ! Only the topology is wanted here. CopyMatrixTopology also allocates and
+-          ! zeroes a value array of its own, which the assignment below replaces, so
+-          ! give that one back before losing the last pointer to it.
+-          DEALLOCATE( PMat % Values )
+         ELSE
+           ! Make a partial check that PrecMat has been derived from the right template:
+           IF (.NOT. ASSOCIATED(AMat % Rows, PMat % Rows)) &
+@@ -2561,9 +2819,8 @@
+   ! couples dofs at parallel interfaces. Assume that C := C_ab where a is
+   ! associated to A and b to B.
+   !------------------------------------------------------------------------
+-  FUNCTION CheckParallelCoupling( A, B, C ) RESULT ( Coupled )
+-    TYPE(Matrix_t), POINTER :: A, B
+-    TYPE(Matrix_t), TARGET :: C
++  FUNCTION CheckParallelCoupling( A, B, C ) RESULT ( Coupled ) 
++    TYPE(Matrix_t), POINTER :: A, B, C
+     LOGICAL :: Coupled
+     
+     LOGICAL :: Acoupled, Bcoupled
+@@ -2848,7 +3105,7 @@
+     REAL(KIND=dp) :: x(:)
+     INTEGER :: n
+     INTEGER, OPTIONAL :: npar
+-    TYPE(Matrix_t), TARGET, OPTIONAL :: A
++    TYPE(Matrix_t), POINTER, OPTIONAL :: A
+     REAL(KIND=dp) :: nrm
+ 
+     INTEGER :: i,m
+@@ -3775,19 +4032,22 @@
+     INTEGER :: ipar(*)
+ !---------------------------------------------------------------------------------
+     REAL(KIND=dp), POINTER :: rtmp(:),vtmp(:),xtmp(:),btmp(:),diagtmp(:),b(:),x(:), a_rhs_save(:)
++    REAL(KIND=dp), ALLOCATABLE :: d_v(:), d_bt(:), d_ku(:), d_y(:)
+     REAL(KIND=dp), POINTER CONTIG :: rhs_save(:)
+-    INTEGER :: i,j,k,l,n,m,NoVar,nc,kk,ll,istat
+-    TYPE(Solver_t), POINTER :: Solver, Solver_save, ASolver
++    INTEGER :: i,j,k,l,n,m,NoVar,nc,kk,ll,istat,d_nu,d_nl,q,unit
++    INTEGER :: SchurMaxIter, SchurRestart
++    TYPE(Solver_t), POINTER :: Solver, Solver_save, ASolver, KSchurSolver
+     INTEGER, POINTER :: Offset(:), BlockPerm(:),ParPerm(:)
+     TYPE(ValueList_t), POINTER :: Params
+     INTEGER, POINTER :: BlockOrder(:)
+-    TYPE(Matrix_t), POINTER :: A, Aij, mat_save
+-    TYPE(Variable_t), POINTER :: Var, Var_save
+-    REAL(KIND=dp) :: nrm
++    TYPE(Matrix_t), POINTER :: A, Aij, mat_save, ADiag
++    TYPE(Variable_t), POINTER :: Var, Var_save, KVar
++    REAL(KIND=dp) :: nrm, SchurTol
+     LOGICAL :: GotOrder, BlockGS, Found, NS, ScaleSystem, DoSum, &
+         IsComplex, BlockScaling, DoDiagScaling, DoPrecScaling, UsePrecMat, &
+-        Isolated, NoNestedScaling, DoAMGXmv, CalcLoads, BlockSch
+-    CHARACTER(:), ALLOCATABLE :: str
++        Isolated, NoNestedScaling, DoAMGXmv, CalcLoads, BlockSch, &
++        BlockLower, BlockFull, BlockSchurMF, SchurDiagnostic, SchurDiagnosticDirect
++    CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix
+     INTEGER(KIND=AddrInt) :: AddrFunc
+     EXTERNAL :: AddrFunc
+ 
+@@ -3823,6 +4083,45 @@
+ 
+     BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
+     BlockSch = ListGetLogical( Params,'Block Schur',Found)
++    BlockLower = ListGetLogical( Params,'Block Lower Triangular',Found)
++    BlockFull = ListGetLogical( Params,'Block Full Factorization',Found)
++    BlockSchurMF = ListGetLogical( Params,'Block Matrix-free Schur',Found)
++    SchurTol = ListGetCReal( Params,'Block Schur Inner Tolerance',Found, &
++        DefValue=1.0e-4_dp )
++    SchurMaxIter = ListGetInteger( Params,'Block Schur Max Iterations',Found, &
++        DefValue=30 )
++    SchurRestart = ListGetInteger( Params,'Block Schur Restart',Found, &
++        DefValue=MIN(30,SchurMaxIter) )
++
++    ! For a two-field saddle system, the lower factorization is
++    !
++    !   [ K  0 ] [ I  0 ]
++    !   [ B  S ] [ 0  I ]
++    !
++    ! with S = D - B K^-1 B^T.  The existing block Gauss-Seidel update
++    ! already implements the first two operations.  Keep this opt-in and
++    ! reject accidental use on multiphysics systems with another block count.
++    IF( BlockLower .OR. BlockFull ) THEN
++      IF( NoVar /= 2 ) CALL Fatal('BlockMatrixPrec', &
++          'Block triangular/factorized mode requires exactly two blocks')
++      BlockGS = .TRUE.
++      CALL Info('BlockMatrixPrec','Using opt-in block factorized path',Level=7)
++    END IF
++    IF( BlockSchurMF ) THEN
++      IF( NoVar /= 2 ) CALL Fatal('BlockMatrixPrec', &
++          'Matrix-free Schur mode requires exactly two blocks')
++      IF( isParallel ) CALL Fatal('BlockMatrixPrec', &
++          'Matrix-free Schur mode is currently one-rank only; use the explicit MPI gate')
++      IF( .NOT. SchurDiagCacheValid .OR. SchurDiagCacheN /= &
++          TotMatrix % Submatrix(2,1) % Mat % NumberOfRows ) THEN
++        IF( ALLOCATED(SchurDiagCache) ) DEALLOCATE(SchurDiagCache)
++        SchurDiagCacheN = TotMatrix % Submatrix(2,1) % Mat % NumberOfRows
++        ALLOCATE(SchurDiagCache(SchurDiagCacheN))
++        CALL BlockSchurPrepareDiagonal(SchurDiagCache)
++        SchurDiagCacheValid = .TRUE.
++        CALL Info('BlockMatrixPrec','Prepared reusable Schur diagonal preconditioner',Level=7)
++      END IF
++    END IF
+     
+     
+    
+@@ -3835,6 +4134,100 @@
+     IF( n /= Offset(NoVar+1) ) THEN
+       CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
+           //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
++    END IF
++
++    ! The existing ``Schur Operator 2 = 1`` path below is the matrix-free
++    ! action y = -B K^-1 B^T v.  In diagnostic mode, exercise that same
++    ! operation on deterministic vectors and persist the resulting vectors so
++    ! an independent Python/SuperLU check can compare action-by-action.
++    SchurDiagnostic = ListGetLogical( Params, 'Block Schur Diagnostic', Found )
++    SchurDiagnosticDirect = ListGetLogical( Params, &
++        'Block Schur Diagnostic Direct', Found )
++    IF( SchurDiagnostic .AND. .NOT. isParallel .AND. NoVar == 2 ) THEN
++      d_nu = Offset(2) - Offset(1)
++      d_nl = Offset(3) - Offset(2)
++      ALLOCATE( d_v(d_nl), d_bt(d_nu), d_ku(d_nu), d_y(d_nl), STAT=istat )
++      IF( istat /= 0 ) CALL Fatal('BlockMatrixPrec', &
++          'Memory allocation error for Schur diagnostic')
++
++      Aij => TotMatrix % Submatrix(1,2) % Mat
++      A => TotMatrix % Submatrix(1,1) % Mat
++      Var => TotMatrix % SubVector(1) % Var
++      IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++        ASolver => TotMatrix % SubVector(1) % Solver
++      ELSE
++        ASolver => Solver
++      END IF
++      IF( SchurDiagnosticDirect ) THEN
++        CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
++        CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
++        CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'superlu' )
++      END IF
++      SchurDiagnosticPrefix = ListGetString( Params, &
++          'Schur Diagnostic Prefix', Found )
++      IF( .NOT. Found ) SchurDiagnosticPrefix = 'schur_action'
++
++      IF( SchurDiagnosticDirect ) THEN
++        ! Keep one matrix object alive for the complete diagnostic.  Direct
++        ! solver backends may retain the matrix address between calls even
++        ! when numeric factorization is requested again.
++        ALLOCATE(ADiag)
++        ADiag % NumberOfRows = 0
++        CALL CRS_CopyMatrixTopology(A,ADiag)
++      END IF
++
++      DO q=1,4
++        SELECT CASE(q)
++        CASE(1)
++          d_v = 1.0_dp
++        CASE(2)
++          DO l=1,d_nl
++            d_v(l) = MERGE(1.0_dp,-1.0_dp,MOD(l,2)==1)
++          END DO
++        CASE(3)
++          DO l=1,d_nl
++            d_v(l) = SIN(0.017_dp*REAL(l,dp))
++          END DO
++        CASE DEFAULT
++          d_v = 0.0_dp
++          d_v(MIN(17,d_nl)) = 1.0_dp
++        END SELECT
++
++        CALL CRS_MatrixVectorMultiply(Aij,d_v,d_bt)
++        IF( SchurDiagnosticDirect ) THEN
++          ! Some direct backends overwrite the matrix values during numeric
++          ! factorization.  Give each deterministic RHS a pristine value
++          ! copy while reusing the CRS topology; this keeps the diagnostic
++          ! independent of backend-specific factorization ownership.
++          ADiag % Values = A % Values
++          CALL ListAddLogical( ASolver % Values, 'No Precondition Recompute', .FALSE. )
++          CALL SolveLinearSystem(ADiag,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
++        ELSE
++          CALL SolveLinearSystem(A,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
++        END IF
++        Aij => TotMatrix % Submatrix(2,1) % Mat
++        CALL CRS_MatrixVectorMultiply(Aij,d_ku,d_y)
++        d_y = -d_y
++
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_v'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_v(l)
++        END DO
++        CLOSE(unit)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_y'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_y(l)
++        END DO
++        CLOSE(unit)
++      END DO
++      IF( SchurDiagnosticDirect ) THEN
++        DEALLOCATE(ADiag % Values)
++        DEALLOCATE(ADiag)
++      END IF
++      DEALLOCATE(d_v,d_bt,d_ku,d_y)
++      CALL Info('BlockMatrixPrec','Wrote deterministic matrix-free Schur diagnostics',Level=7)
+     END IF
+     
+     ! Save the initial solver stuff
+@@ -4082,14 +4475,46 @@
+           CALL AMGXSolver( A, x, btmp, ASolver )
+           IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,A,btmp,x)
+         ELSE
+-          CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
++          ! The mortar block preconditioner has two deliberately different
++          ! inner solves. The primal block is large and only needs one AMG
++          ! cycle per outer application; inheriting the outer FlexGMRES
++          ! stopping rule would recursively run a full solve here. The
++          ! multiplier block is small enough to factor directly. Keep this
++          ! opt-in so existing block configurations retain their defaults.
++          IF( i == 2 .AND. BlockSchurMF ) THEN
++            ! Solve the true Schur equation with the matrix-free action.  The
++            ! existing Schur approximation is used only as its cheap inner
++            ! preconditioner; it is never substituted for S in this solve.
++            KVar => TotMatrix % SubVector(1) % Var
++            IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++              KSchurSolver => TotMatrix % SubVector(1) % Solver
++            ELSE
++              KSchurSolver => Solver
++            END IF
++            CALL BlockSchurMatrixFreeSolve( b, x, KSchurSolver, KVar, &
++                SchurDiagCache, SchurTol, SchurMaxIter, SchurRestart )
++          ELSE IF( i == 1 .AND. ListGetLogical( Params, &
++              'Block Nested Primal AMG', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Iterative Method', 'boomeramg' )
++            CALL ListAddString( ASolver % Values, 'Linear System Preconditioning', 'none' )
++            CALL ListAddInteger( ASolver % Values, 'Linear System Max Iterations', &
++                ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
++                Found, DefValue=1 ) )
++          ELSE IF( i == 2 .AND. ListGetLogical( Params, &
++              'Block Schur Direct Solver', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
++            CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'umfpack' )
++          END IF
++          IF( .NOT. (i == 2 .AND. BlockSchurMF) ) &
++              CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
+         END IF
+       END IF
+       
+       ! If this was a special preconditioning matrix then update the solution in the scaled system. 
+       IF( DoPrecScaling ) THEN
+-        ! This tentatively fixes the issues introduced scaling in May 2025 that made the outer iteration converge slower. 
+-        x(1:n) = x(1:n) / ( diagtmp(1:n) * Solver % Matrix % RhsScaling )
++        x(1:n) = x(1:n) / diagtmp(1:n)
+         DEALLOCATE( btmp, diagtmp )
+       ELSE IF( NoNestedScaling ) THEN
+         CALL ListAddLogical( Params,'Linear System Skip Scaling',.FALSE.)
+@@ -4194,6 +4619,44 @@
+       
+     END DO ! j=1,NoVar
+ 
++    ! Complete the right factor of the block LDU inverse.  The lower path
++    ! above has already produced
++    !   z_lambda = S_tilde^-1 (r_lambda - B z_u).
++    ! For the full approximate factorization apply the remaining correction
++    !   z_u <- z_u - K_tilde^-1 B^T z_lambda.
++    IF( BlockFull ) THEN
++      CALL Info('BlockMatrixPrec','Applying full factorization upper correction',Level=7)
++
++      Aij => TotMatrix % Submatrix(1,2) % Mat
++      IF( Aij % NumberOfRows > 0 ) THEN
++        CALL CRS_MatrixVectorMultiply(Aij, &
++            u(offset(2)+1:offset(3)), rtmp )
++
++        Var => TotMatrix % SubVector(1) % Var
++        IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++          ASolver => TotMatrix % SubVector(1) % Solver
++          A => ASolver % Matrix
++        ELSE
++          A => TotMatrix % Submatrix(1,1) % PrecMat
++          IF( A % NumberOfRows == 0 ) A => TotMatrix % Submatrix(1,1) % Mat
++          ASolver => Solver
++        END IF
++
++        ! Reuse the same cheap K action policy as the primal block solve.
++        IF( ListGetLogical( Params, 'Block Nested Primal AMG', Found ) ) THEN
++          CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
++          CALL ListAddString( ASolver % Values, 'Linear System Iterative Method', 'boomeramg' )
++          CALL ListAddString( ASolver % Values, 'Linear System Preconditioning', 'none' )
++          CALL ListAddInteger( ASolver % Values, 'Linear System Max Iterations', &
++              ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
++              Found, DefValue=1 ) )
++        END IF
++        CALL SolveLinearSystem( A, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
++        u(offset(1)+1:offset(2)) = u(offset(1)+1:offset(2)) - &
++            xtmp(1:offset(2)-offset(1))
++      END IF
++    END IF
++
+     IF (isParallel) DEALLOCATE(x,b)
+ 
+     CALL ListPopNameSpace('block:') ! block:
+@@ -4256,20 +4719,14 @@
+     MinIter = ListGetInteger( Params,'Linear System Min Iterations',GotIt)
+     LinTol = ListGetConstReal( Params,'Linear System Convergence Tolerance',GotIt)
+     BlockScaling = ListGetLogical( Params,'Block Scaling',GotIt)
+-    Relax = ListGetConstReal( Params,'Block Relaxation Factor',GotIt)
+-    IF(.NOT. GotIt) Relax = 1.0_dp
+-
++    
+     CALL ListPushNamespace('block:')
+ 
+     ! We don't want compute change externally
+     CALL ListAddNewLogical( Params,'Skip compute nonlinear change',.TRUE.)
+-
+-    j = 0
+-    DO i = 1, NoVar
+-      j = MAX( j, SIZE( TotMatrix % SubVector(i) % Var % Values ) )
+-    END DO
+-    ALLOCATE( dx(j) )
+-
++    
++    Relax = 1.0_dp
++    
+     DO iter = 1, LinIter
+ 
+       ! Store the iteration count
+@@ -4320,36 +4777,37 @@
+         Var => TotMatrix % SubVector(RowVar) % Var
+         Solver % Variable => Var
+         
+-        A => TotMatrix % Submatrix(RowVar,RowVar) % PrecMat
++        A => TotMatrix % Submatrix(i,i) % PrecMat
+         IF( A % NumberOfRows == 0 ) THEN
+-          A => TotMatrix % Submatrix(RowVar,RowVar) % Mat
++          A => TotMatrix % Submatrix(i,i) % Mat
+         ELSE
+-          CALL Info('BlockStandardIter','Using preconditioning block: '//I2S(RowVar),Level=8)
+-        END IF
+-
++          CALL Info('BlockStandardIter','Using preconditioning block: '//I2S(i),Level=8)
++        END IF
++        
+         !Solver % Matrix => A
+ 
+         ! Use the newly computed residual rather than original r.h.s. to solve the equation!!
+         rhs_save => A % rhs ! Solver % Matrix % RHS
+         A % RHS => b
+-
++        
+         ! Solving the subsystem
+         !-----------------------------------
++        ALLOCATE( dx( SIZE( Var % Values ) ) )
+         dx = 0.0_dp
+ 
+-        CALL ListPushNamespace('block '//i2s(11*RowVar)//':')
+-
+-        IF( BlockScaling ) CALL DoBlockMatrixScaling(.TRUE.,RowVar,RowVar,b)
+-
++        CALL ListPushNamespace('block '//i2s(11*RowVar)//':')          
++
++        IF( BlockScaling ) CALL DoBlockMatrixScaling(.TRUE.,i,i,b)
++              
+         !IF( ListGetLogical( Solver % Values,'Linear System Complex', Found ) ) A % Complex = .TRUE.
+ 
+         !ScaleSystem = ListGetLogical( Solver % Values,'block: Linear System Scaling', Found )
+         !IF(.NOT. Found) ScaleSystem = .TRUE.
+ 
+-
++        
+         CALL SolveLinearSystem( A, b, dx, Var % Norm, Var % DOFs, Solver )
+ 
+-        IF( BlockScaling ) CALL DoBlockMatrixScaling(.FALSE.,RowVar,RowVar,b)
++        IF( BlockScaling ) CALL DoBlockMatrixScaling(.FALSE.,i,i,b)
+ 
+         CALL ListPopNamespace()
+ 
+@@ -4358,9 +4816,9 @@
+         !Solver % Matrix => mat_save
+ 
+         IF( iter > 1 ) THEN
+-          Var % Values = Var % Values + Relax * dx(1:A % NumberOfRows)
++          Var % Values = Var % Values + Relax * dx
+         ELSE
+-          Var % Values = Var % Values + dx(1:A % NumberOfRows)
++          Var % Values = Var % Values + dx
+         END IF
+ 
+         dxnorm = CompNorm(dx,A % NumberOfRows, A=A)
+@@ -4371,13 +4829,13 @@
+ 
+         WRITE(Message,'(A,2ES12.3)') 'Block '//I2S(RowVar)//' norms: ',xnorm, dxnorm / xnorm
+         CALL Info('BlockStandardIter',Message,Level=5)
+-
++        
+         IF( InfoActive( 20 ) ) THEN
+-          PRINT *,'dx'//I2S(i)//':',SQRT( SUM(dx(1:A%NumberOfRows)**2) ), &
+-              MINVAL( dx(1:A%NumberOfRows) ), MAXVAL( dx(1:A%NumberOfRows) ), &
+-              SUM( dx(1:A%NumberOfRows) ), SUM( ABS( dx(1:A%NumberOfRows) ) )
+-        END IF
+-      
++          PRINT *,'dx'//I2S(i)//':',SQRT( SUM(dx**2) ), MINVAL( dx ), MAXVAL( dx ), SUM( dx ), SUM( ABS( dx ) )
++        END IF
++      
++        DEALLOCATE( dx )
++          
+         TotNorm = TotNorm + Var % Norm
+         MaxChange = MAX( MaxChange, Var % NonlinChange )        
+       END DO
+@@ -4391,8 +4849,6 @@
+       END IF
+       
+     END DO
+-    DEALLOCATE( dx )
+-
+     CALL ListPopNamespace('block:')
+ 
+     CALL ListAddLogical( Params,'No Precondition Recompute',.FALSE.)
+@@ -4558,14 +5014,15 @@
+       mvProc = AddrFunc(BlockMatrixVectorProd)       
+     END IF
+       
+-    xnorm = CompNorm(b,ndim)
+-    WRITE( Message,'(A,ES12.5)') 'Rhs norm at start: ',xnorm
+-    CALL Info(Caller,Message,Level=10)
+-    IF( xnorm < EPSILON( xnorm ) ) THEN
++    prevXnorm = CompNorm(b,ndim)
++    WRITE( Message,'(A,ES12.5)') 'Rhs norm at start: ',PrevXnorm
++    CALL Info(Caller,Message,Level=10)    
++    IF( PrevXNorm < EPSILON( PrevXNorm ) ) THEN
+       CALL Warn(Caller,"With zero'ish r.h.s. it does not make sense to call the solver!")
+       RETURN
+     END IF
+ 
++    
+     prevXnorm = CompNorm(x,ndim)
+     WRITE( Message,'(A,ES12.5)') 'Solution norm at start: ',PrevXnorm
+     CALL Info(Caller,Message,Level=10)
+@@ -4641,12 +5098,10 @@
+     IF( TotMatrix % GotBlockStruct ) THEN
+       SVar => CurrentModel % Solver % Variable
+       i = SIZE(SVar % Values)
+-      Svar % Values(TotMatrix % BlockPerm(1:i)) = x(1:i)
++      Svar % Values(TotMatrix % BlockPerm(1:i)) = x(1:i)      
+     ELSE IF (BlockAV ) THEN
+       i = SIZE(SolverVar % Values)
+       SolverVar % Values = x(1:i)
+-    ELSE
+-      i = offset(NoVar+1)
+     END IF
+ 
+     j = SIZE(x)
+@@ -5274,7 +5729,8 @@
+               CALL ParallelInitMatrix(Solver,Amat)
+             END IF
+             IF(ASSOCIATED(Amat % ParMatrix )) THEN
+-              CALL SetMatrixParEnv( Amat )
++              Amat % ParMatrix % ParEnv % ActiveComm = Amat % Comm
++              ParEnv => Amat % ParMatrix % ParEnv
+             END IF
+             !CALL SParIterActiveBarrier()
+           ELSE
+--- a/fem/src/SOLVER.KEYWORDS
++++ b/fem/src/SOLVER.KEYWORDS
+@@ -52,7 +52,6 @@
+ BC:Logical:         'Apply Conservation of Charge'
+ BC:Logical:         'Calculate Electric Force'
+ BC:Logical:         'Calculate Fluidic Force'
+-BC:Logical:         'Calculate Impedance'
+ BC:Logical:         'Circle Boundary'
+ BC:Logical:         'Contact Boundary'
+ BC:Logical:         'Current Density BC'
+@@ -104,7 +103,6 @@
+ BC:Logical:         'Slip Boundary'
+ BC:Logical:         'Smart Heater Boundary'
+ BC:Logical:         'Stride Projector'
+-BC:Logical:         'Unit Voltage'
+ BC:Logical:         'Wall Law'
+ BC:Logical:         'Wall Temperature'
+ BC:Logical:         'Periodic BC Concentration'
+@@ -911,10 +909,6 @@
+ Solver:Integer:     'Exec Interval'
+ Solver:Integer:     'Exec Intervals'
+ Solver:integer:     'exec intervals offset'
+-Solver:Integer:     'Adaptive Integration Order'
+-Solver:Integer:     'Adaptive Integration Points'
+-Solver:Integer:     'Boundary Relative Integration Order'
+-Solver:Integer:     'Bulk Relative Integration Order'
+ Solver:Integer:     'Extend Elastic Layers'
+ Solver:Integer:     'Extract Interval'
+ Solver:Integer:     'Fileindex Offset'
+@@ -973,8 +967,6 @@
+ Solver:Integer:     'Nonlinear System Norm Degree'
+ Solver:Integer:     'Nonlinear System Norm Dofs'
+ Solver:Integer:     'Number Of EigenModes'
+-Solver:Integer:     'Number of Integration Points'
+-Solver:Integer:     'Number of Nonhomogeneous Modes'
+ Solver:Integer:     'Number Of Particles'
+ Solver:Integer:     'Number of Eigenmodes Included'
+ Solver:Integer:     'Parasails MaxLevel'
+@@ -997,9 +989,6 @@
+ Solver:Integer:     'Show Norm Index'
+ solver:string:      'show norm name'
+ Solver:Integer:     'Slave Solvers'
+-Solver:Integer:     'Master Solver'
+-Solver:Integer:     'Circuit Solver'
+-Solver:String:      'Circuit Namespace'
+ Solver:Integer:     'Solid Solver Index'
+ Solver:Integer:     'Start GRPulay after iterations'
+ Solver:Integer:     'Stream Function First Node'
+@@ -1042,6 +1031,21 @@
+ Solver:Logical:     'Block Diagonal A'
+ Solver:Logical:     'Block Gauss-Seidel'
+ Solver:Logical:     'Block Matrix ReUse'
++Solver:Logical:     'Create Schur Matrix Approximation'
++Solver:Logical:     'No Explicit Constrained Matrix'
++Solver:Logical:     'Block Nested Primal AMG'
++Solver:Integer:     'Block Nested Primal Max Iterations'
++Solver:Logical:     'Block Schur Direct Solver'
++Solver:Logical:     'Block Lower Triangular'
++Solver:Logical:     'Block Full Factorization'
++Solver:Logical:     'Block Schur Diagnostic'
++Solver:Logical:     'Block Schur Diagnostic Direct'
++Solver:String:      'Schur Diagnostic Prefix'
++Solver:Logical:     'Block Matrix-free Schur'
++Solver:Real:        'Block Schur Inner Tolerance'
++Solver:Integer:     'Block Schur Max Iterations'
++Solver:Integer:     'Block Schur Restart'
++Solver:String:      'Block Schur Preconditioner'
+ Solver:Logical:     'Block Monolithic'
+ Solver:Logical:     'Block Nested System'
+ Solver:Logical:     'Block Preconditioner'
+@@ -1073,7 +1077,6 @@
+ Solver:Logical:     'Calculate Magnetic Flux'
+ Solver:Logical:     'Calculate Magnetic Vector Potential'
+ solver:logical:     'calculate relative permeability'
+-Solver:Logical:     'Adaptive Integration Split'
+ Solver:Logical:     'Calculate Moment'
+ Solver:Logical:     'Calculate Nodal Forces'
+ Solver:Logical:     'Calculate PAngle'
+@@ -1108,7 +1111,6 @@
+ Solver:Logical:     'Darwin Model'
+ Solver:Logical:     'Discontinuous Galerkin'
+ Solver:Logical:     'Displace Mesh'
+-Solver:Logical:     'Displace Mesh At Init'
+ Solver:Logical:     'Displaced Shape'
+ Solver:Logical:     'Div Discretization'
+ Solver:Logical:     'Drilling DOFs'
+@@ -1119,7 +1121,6 @@
+ Solver:Logical:     'Eigen System Compute Residuals'
+ Solver:Logical:     'Eigen System Damped'
+ Solver:Logical:     'Eigen System Use Identity'
+-Solver:Logical:     'Eigenvector Normalization by Power'
+ Solver:Logical:     'Elasticity Solver Linear'
+ Solver:Logical:     'Eliminate Negative'
+ Solver:Logical:     'ElmerPost Format'
+@@ -1138,7 +1139,6 @@
+ Solver:Logical:     'Gebhart Factors Solver Iterative'
+ Solver:Logical:     'Geometric Stiffness'
+ Solver:Logical:     'Gid Format'
+-Solver:Logical:     'Gradient Basis Functions'
+ Solver:Logical:     'Gradp Discretization'
+ Solver:Logical:     'Harmonic Analysis'
+ Solver:Logical:     'Harmonic Simulation'
+@@ -1163,9 +1163,7 @@
+ Solver:Logical:     'Linear System Symmetric ILU'
+ Solver:Logical:     'Linear System Symmetric'
+ Solver:Logical:     'Linear System Use HYPRE'
+-Solver:Logical:     'Pressure Stabilization'
+-Solver:String:      'AMGX Config'
+-Solver:Logical:     'AMGX Verify Gather'
++Solver:Logical:     'HYPRE GPU'
+ Solver:Logical:     'Linear System timing cumulative'
+ Solver:Logical:     'Linear System timing'
+ Solver:Logical:     'Linear System Componentwise Backward Error'
+@@ -1288,7 +1286,6 @@
+ Solver:Logical:     'Use Density'
+ Solver:Logical:     'Use Gauss Law'
+ Solver:Logical:     'Use Global Mass Matrix'
+-Solver:Logical:     'Use Potential'
+ Solver:Logical:     'Use Truncation'
+ Solver:Logical:     'Use Velocity Laplacian'
+ Solver:Logical:     'Utilize Previous Solution'
+@@ -1297,9 +1294,6 @@
+ Solver:Logical:     'Variable Output'
+ Solver:Logical:     'Vtu Time Collection'
+ Solver:Real:        'Adaptive Error Limit'
+-Solver:Real:        'Adaptive Integration Lower Limit'
+-Solver:Real:        'Adaptive Integration Split Limit'
+-Solver:Real:        'Adaptive Integration Upper Limit'
+ Solver:Real:        'Adaptive Max Change'
+ Solver:Real:        'Adaptive Max H'
+ Solver:Real:        'Adaptive Min H'
+@@ -1358,8 +1352,6 @@
+ Solver:Real:        'Neglected Gebhart Factor Fraction'
+ Solver:Real:        'Newmark Beta'
+ Solver:Real:        'Nonlinear System Convergence Tolerance'
+-Solver:Real:        'Pressure Stabilization Coefficient'
+-solver:real:        'nonlinear system divergence limit'
+ Solver:Real:        'Nonlinear System Linesearch Factor'
+ Solver:Real:        'Nonlinear System Linesearch Limit'
+ Solver:Real:        'Nonlinear System Max Norm'
+@@ -1405,7 +1397,6 @@
+ Solver:Real:        'Viewfactor factor tolerance'
+ Solver:Real:        'Viewfactor raytrace tolerance'
+ Solver:Real:        'Weights of Eigen States'
+-Solver:String:      'Adaptive Integration Variable'
+ Solver:String:      'Advection Variable'
+ Solver:String:      'Advection'
+ Solver:String:      'Capacitance Matrix Filename'
+@@ -1415,8 +1406,6 @@
+ Solver:String:      'Displacement Field Name'
+ Solver:String:      'Displacement Variable Name'
+ Solver:String:      'Eigen System Select'
+-Solver:String:      'Element Integration Points'
+-Solver:String:      'Element Relative Integration Order'
+ Solver:String:      'Equation'
+ Solver:String:      'Exec Solver'
+ Solver:String:      'Flow Model'
+@@ -1469,23 +1458,14 @@
+ Solver:Integer:     'Boomeramg num functions'
+ Solver:Integer:     'Feti projection solution group size'
+ Solver:Integer:     'Hypre gmres dimension'
+-Solver:Integer:     'Mumps permutation type'
+ Solver:Logical:     'Feti cpg projection iterative'
+-Solver:Logical:     'Feti dump system'
+-Solver:Logical:     'Feti fixing using l.c.'
+-Solver:Logical:     'Feti kernel rot-trans'
+ Solver:Logical:     'Feti preconditioning'
+-Solver:Logical:     'Feti use as preconditioner'
+ Solver:Logical:     'Hypre block diagonal'
+ Solver:Logical:     'Mumps solve singular'
+ Solver:Logical:     'Total feti'
+ Solver:Real:        'Boomeramg strong threshold'
+-Solver:Real:        'Feti fixing tolerance'
+-Solver:Real:        'Feti kernel tolerance'
+ Solver:Real:        'Mg cluster alpha'
+ Solver:Real:        'Mg smoother relaxation factor'
+-Solver:Real:        'Mumps null pivot fixation'
+-Solver:Real:        'Mumps null pivot threshold'
+ bc:logical:         'periodic bc use lagrange coefficient'
+ bc:logical:         'structure interface'
+ bc:real:            'bottom surface'
+@@ -1671,6 +1651,8 @@
+ solver:logical:      'calculate boundary fluxes'
+ solver:logical:      'linear system save'
+ solver:logical:      'linear system save skip zeros'
++solver:logical:      'linear system save continuous numbering'
++solver:string:       'linear system save prefix'
+ solver:logical:      'mortar bcs additive'
+ solver:logical:      'normalize coil current'
+ solver:logical:      'use unity conductivity'
+@@ -1862,18 +1844,10 @@
+ solver:file:         'openfoam file'
+ solver:file:         'restart file'
+ solver:integer:      'block solvers'
+-solver:integer:      'linear system dense dofs'
+ solver:logical:      'harmonic mode'
+-solver:logical:      'linear system block crs'
+-solver:logical:      'linear system mumps gathered solution'
+-solver:logical:      'linear system halve interface exchange'
+-solver:logical:      'linear system free scalar values'
+-solver:logical:      'linear system poison scalar values'
+ solver:logical:      'linear system block mode'
+ solver:logical:      'linear system solver disabled'
+ solver:logical:      'multicolour solver'
+-solver:logical:      'multicolour consistent'
+-solver:logical:      'multithreaded startup'
+ solver:logical:      'restart error continue'
+ solver:real:         'linear system namespace number'
+ solver:logical:      'linear system trialing'
+@@ -2007,16 +1981,7 @@
+ bc:integer:          'intersection bc'
+ bc:integer:          'intersection body'
+ bc:logical:          'radiator bc'
+-solver:logical:      'viewfactor closed form integration'
+-solver:logical:      'viewfactor shaft cull statistics'
+-solver:string:       'viewfactor shadowing'
+-solver:logical:      'viewfactor shaft cull'
+ solver:logical:      'viewfactor binary output'
+-solver:logical:      'viewfactor single precision'
+-solver:logical:      'viewfactor rigid mesh mapping'
+-solver:logical:      'viewfactor combine elements'
+-solver:logical:      'viewfactor mapping solver'
+-solver:logical:      'viewfactor use symmetry'
+ bc:logical:          'electric infinity bc'
+ solver:integer:      'number of controls'
+ solver:real:         'control node coordinates'
+@@ -2035,7 +2000,6 @@
+ solver:logical:      'radiosity model'
+ solver:logical:      'spectral model'
+ solver:real:         'spectral dt'
+-solver:real:         'radiosity newton relaxation factor'
+ solver:logical:      'viewfactor binary output'
+ bodyforce:real:      'radiator coordinates'
+ bodyforce:real:      'radiator temperature'
+@@ -2109,24 +2073,3 @@
+ solver:real:         'max initial coordinate 3'
+ solver:real:         'initial coordinate'
+ solver:real:         'initial velocity'
+-solver:logical:      'eigen system shift automatic'
+-solver:string:       'eigen system sorting'
+-bc:logical:          'port passive'
+-bc:integer:          'port index'
+-bc:logical:          'port ground'
+-simulation:integer:  'extruded bc layers'
+-simulation:logical:  'preserve baseline'
+-solver:integer:      'model dimension'
+-solver:logical:      'reference norm absolute'
+-run control:real:    'min parameter 1'
+-run control:real:    'max parameter 1'
+-run control:real:    'initial parameter 1'
+-solver:logical:      'Nonlinear System Aitken Relaxation'
+-solver:logical:      'Steady State Aitken Relaxation'
+-solver:integer:      'Aitken Relaxation Factor After Iterations'
+-solver:real:         'Aitken Relaxation Factor Relaxation'
+-solver:real:         'Aitken Relaxation Factor Minimum'
+-solver:real:         'Aitken Relaxation Factor Maximum'
+-solver:real:         'Aitken Relaxation Factor increase'
+-solver:real:         'Aitken Relaxation Factor decrease'
+-solver:integer:      'Aitken Relaxation Component'

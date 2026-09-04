@@ -3,8 +3,7 @@ diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
 +++ b/fem/src/BlockSolve.F90
 @@
          ELSE
-+          ! Opt-in mortar block inner solves: one AMG cycle for the large
-+          ! primal block and a direct factorization for the small Schur block.
++          ! Opt-in nested policies for the mortar block candidate.
 +          IF( i == 1 .AND. ListGetLogical( Params, &
 +              'Block Nested Primal AMG', Found ) ) THEN
 +            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
@@ -21,6 +20,48 @@ diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
 +          END IF
            CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
          END IF
+@@
+     BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
+     BlockSch = ListGetLogical( Params,'Block Schur',Found)
++    BlockLower = ListGetLogical( Params,'Block Lower Triangular',Found)
++    BlockFull = ListGetLogical( Params,'Block Full Factorization',Found)
++    IF( BlockLower .OR. BlockFull ) THEN
++      IF( NoVar /= 2 ) CALL Fatal('BlockMatrixPrec', &
++          'Block triangular/factorized mode requires exactly two blocks')
++      BlockGS = .TRUE.
++    END IF
+@@
+     END DO ! j=1,NoVar
++
++    IF( BlockFull ) THEN
++      ! Complete LDU^{-1}: z_u <- z_u - K_tilde^{-1} B^T z_lambda.
++      Aij => TotMatrix % Submatrix(1,2) % Mat
++      CALL CRS_MatrixVectorMultiply(Aij,u(offset(2)+1:offset(3)),rtmp)
++      Var => TotMatrix % SubVector(1) % Var
++      IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++        ASolver => TotMatrix % SubVector(1) % Solver
++        A => ASolver % Matrix
++      ELSE
++        A => TotMatrix % Submatrix(1,1) % Mat
++        ASolver => Solver
++      END IF
++      CALL SolveLinearSystem( A, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
++      u(offset(1)+1:offset(2)) = u(offset(1)+1:offset(2)) - &
++          xtmp(1:offset(2)-offset(1))
++    END IF
+@@
+     IF( n /= Offset(NoVar+1) ) THEN
+       CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
+           //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
+     END IF
++
++    ! Optional deterministic dumps for the existing Schur Operator 2 = 1
++    ! action y = -B K^{-1} B^T v.  The implementation writes four v/y
++    ! pairs for an independent SuperLU comparison.
++    SchurDiagnostic = ListGetLogical( Params, 'Block Schur Diagnostic', Found )
++    SchurDiagnosticDirect = ListGetLogical( Params, &
++        'Block Schur Diagnostic Direct', Found )
+@@
 diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
 --- a/fem/src/SOLVER.KEYWORDS
 +++ b/fem/src/SOLVER.KEYWORDS
@@ -29,3 +70,8 @@ diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
 +Solver:Logical:     'Block Nested Primal AMG'
 +Solver:Integer:     'Block Nested Primal Max Iterations'
 +Solver:Logical:     'Block Schur Direct Solver'
++Solver:Logical:     'Block Lower Triangular'
++Solver:Logical:     'Block Full Factorization'
++Solver:Logical:     'Block Schur Diagnostic'
++Solver:Logical:     'Block Schur Diagnostic Direct'
++Solver:String:      'Schur Diagnostic Prefix'

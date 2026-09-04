@@ -416,13 +416,21 @@ def solver1_block(
     elif linear_system in {
         "iterative_hypre_block_diag",
         "iterative_hypre_block_diag_gpu",
+        "iterative_hypre_block_lower",
+        "iterative_hypre_block_lower_gpu",
+        "iterative_hypre_block_full",
+        "iterative_hypre_block_full_gpu",
     }:
         # Keep the mortar projector attached to the primal matrix and let
         # Elmer's native block driver split [K B^T; B 0].  The block driver
-        # creates the diagonal Schur approximation B diag(K)^-1 B^T and
-        # recursively sends both diagonal blocks through this HYPRE setup.
-        # This is intentionally separate from the monolithic MGR path.
+        # creates the diagonal Schur approximation B diag(K)^-1 B^T.  In the
+        # lower/full variants that matrix is only an inner preconditioner:
+        # the true Schur action is applied matrix-free by BlockSolve.  This
+        # is intentionally separate from the monolithic MGR path.
         hypre_gpu = linear_system.endswith("_gpu")
+        block_lower = "block_lower" in linear_system or "block_full" in linear_system
+        block_full = "block_full" in linear_system
+        block_matrix_free_schur = block_lower or block_full
         lines += [
             "  Linear System Block Mode = True",
             "  Linear System Use Hypre = True",
@@ -436,11 +444,18 @@ def solver1_block(
             "  HYPRE GmRes Dimension = 100",
             f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
             "  Block Preconditioner = True",
-            "  Block Gauss-Seidel = False",
+            f"  Block Gauss-Seidel = {'True' if block_lower else 'False'}",
+            f"  Block Lower Triangular = {'True' if block_lower else 'False'}",
+            f"  Block Full Factorization = {'True' if block_full else 'False'}",
+            f"  Block Matrix-free Schur = Logical {'True' if block_matrix_free_schur else 'False'}",
             "  Block Matrix Reuse = True",
             "  Create Schur Matrix Approximation = True",
             "  Block Nested Primal AMG = True",
             "  Block Nested Primal Max Iterations = 1",
+            "  Block Schur Inner Tolerance = 1.0e-4",
+            "  Block Schur Max Iterations = 30",
+            "  Block Schur Restart = 30",
+            "  Block Schur Preconditioner = diagonal",
             "  Block Schur Direct Solver = True",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",
@@ -477,6 +492,13 @@ def solver1_block(
         ]
         if solver.get("matrix_dump_solution", False):
             lines.append("  Linear System Save Solution = Logical True")
+    if solver.get("block_schur_diagnostic", False):
+        lines += [
+            "  Block Schur Diagnostic = Logical True",
+            f'  Schur Diagnostic Prefix = String "{solver.get("block_schur_diagnostic_prefix", "schur_action")}"',
+        ]
+        if solver.get("block_schur_diagnostic_direct", False):
+            lines.append("  Block Schur Diagnostic Direct = Logical True")
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")
     if solver.get("no_explicit_constrained_matrix", False):
