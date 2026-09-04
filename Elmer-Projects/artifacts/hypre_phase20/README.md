@@ -12,3 +12,9 @@ CUDA/HIP runtime is available.  Missing runtime artifacts must be labelled
 The evaluator is `scripts/analysis/evaluate_solver_acceptance.py`.  It keeps
 absolute residual, backward error, constraint residual, relative residual,
 primal comparison, and physical TES parity as separate fields.
+
+`exact_schur_recomputed.json` and `exact_schur_acceptance.json` contain the
+rerun SuperLU oracle; its backward error is a real normwise value, not null.
+`runtime_status_20260905.json` records the four bounded attempts.  The
+installed Elmer binary lacks HYPRE, so those attempts are `NOT RUN` for solver
+comparison purposes and do not provide convergence evidence.

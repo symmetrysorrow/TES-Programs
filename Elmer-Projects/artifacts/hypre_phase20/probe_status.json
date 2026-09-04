@@ -7,21 +7,25 @@
     "case_p20_hypre_block_full_gpu_probe"
   ],
   "outer_max_iterations": 15,
+  "first_timestep_steps": 1,
+  "matrix_dump_default": false,
+  "runtime_status_artifact": "runtime_status_20260905.json",
   "runtime": {
-    "cpu_lower": "TIME_LIMIT_AFTER_SETUP_AND_MATRIX_DUMP",
-    "cpu_full": "NOT RUN",
-    "gpu_lower": "NOT RUN",
-    "gpu_full": "NOT RUN"
+    "cpu_lower": "NOT RUN: installed Elmer lacks HYPRE",
+    "cpu_full": "NOT RUN: installed Elmer lacks HYPRE",
+    "gpu_lower": "NOT RUN: installed Elmer lacks HYPRE",
+    "gpu_full": "NOT RUN: installed Elmer lacks HYPRE"
   },
   "production_ready": false,
   "observed": {
-    "cpu_lower": {
-      "wall_time_limit_seconds": 120,
-      "reached": ["Elmer startup", "HYPRE BoomerAMG setup", "matrix dump", "Schur diagnostic logging"],
+    "all_four_stock_runtime_attempts": {
+      "bounded_seconds_each": 30,
+      "exit_codes": [1, 1, 1, 1],
+      "failure_point": "solver setup",
+      "diagnostic": "Hypre requested but not compiled with!",
       "outer_convergence_metrics": "NOT AVAILABLE",
-      "probe_csv": "headers_only",
       "accepted_as_baseline": false
     }
   },
-  "note": "The bounded CPU run was stopped at the 120-second limit while writing the large matrix dump; no partial iterate was accepted. Generated cases and instrumentation are validated by unit tests."
+  "note": "The available binary cannot execute the HYPRE block cases. Generated SIFs, source patch contract, exact SuperLU oracle, and Python tests remain reproducible checks; no CPU/GPU convergence comparison is claimed."
 }

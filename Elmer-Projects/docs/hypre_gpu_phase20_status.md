@@ -1,102 +1,79 @@
-# Phase20 bounded block-Schur experiments
+# Phase20 bounded block-Schur measurement status
 
-Updated: 2026-09-04
+Updated: 2026-09-05
 
-Phase19 matrix-free Schur correctness is treated as a separate result from
-convergence and performance.  The same-binary K/Schur parity and short-Bt
-finite-tail regression remain PASS.  The lower CPU production attempt remains
-`INCOMPLETE` after about 2,700 seconds; its partial iterate is not a solution.
-The most likely direct cause is algorithmic cost: the inner matrix-free Schur
-GMRES repeatedly reaches its iteration limit while each action invokes a K
-solve.  Faster K actions on a GPU cannot remove that nested-Krylov cost.
+Phase20 now separates configuration integrity, numerical diagnostics, physical
+acceptance, and performance readiness. The four bounded peer cases are lower
+and full factorization on CPU and GPU, with the same mesh, restart, one-step
+workload, outer limit 15, and Schur settings `tol=1e-4`, `max=30`,
+`restart=30`.
 
-Lower and full are now peer candidates.  Phase20 always generates all four
-bounded combinations:
+| case | backend | factorization | generated timestep | matrix dump |
+|---|---|---|---:|---:|
+| `case_p20_hypre_block_lower_cpu_probe` | CPU | lower | exactly 1 | off |
+| `case_p20_hypre_block_lower_gpu_probe` | GPU | lower | exactly 1 | off |
+| `case_p20_hypre_block_full_cpu_probe` | CPU | full | exactly 1 | off |
+| `case_p20_hypre_block_full_gpu_probe` | GPU | full | exactly 1 | off |
 
-| case | backend | factorization | outer limit | Schur tolerance / max / restart |
-|---|---|---|---:|---|
-| `case_p20_hypre_block_lower_cpu_probe` | CPU | lower | 15 | `1e-4 / 30 / 30` |
-| `case_p20_hypre_block_lower_gpu_probe` | GPU | lower | 15 | `1e-4 / 30 / 30` |
-| `case_p20_hypre_block_full_cpu_probe` | CPU | full | 15 | `1e-4 / 30 / 30` |
-| `case_p20_hypre_block_full_gpu_probe` | GPU | full | 15 | `1e-4 / 30 / 30` |
+For Phase20, `matrix_dump_prefix` is retained only as a name. Matrix output
+requires the explicit `matrix_dump=true` opt-in; probe cases and the default
+parameter sweep set it to false. Legacy Phase19 dump cases retain their
+historical prefix behavior for compatibility.
 
-All four use the same mesh, restart, first timestep, and basic tolerances.
-The GPU cases are generated even on CPU-only hosts; a GPU runtime test is
-environment-dependent and must be recorded as `SKIP`/`NOT RUN`, not treated as
-a generator failure.
+## Measurement contract
 
-## Probe output
+The native implementation is in the reviewable patch
+`docs/hypre_gpu_phase20_probe.patch`. Its probe is opt-in and resets on a
+disabled lifecycle or a changed prefix. It uses monotonic `SYSTEM_CLOCK`
+wall time, not `CPU_TIME`, and writes versioned outer and Schur CSV schemas.
 
-Set `Block Schur Probe = Logical True` only in a diagnostic case.  The Phase20
-source instrumentation writes `<prefix>_outer.csv` and `<prefix>_schur.csv`.
-The rows contain outer application count, Schur solve count, inner iterations,
-initial/final residuals, tolerance/max-iteration status, K-action counts,
-wall time, and accumulated K/action time.  Solver-reported outer residuals
-remain separate because `BlockMatrixPrec` does not own the outer Krylov
-residual; the Elmer log or outer solver artifact supplies that value.
+The Schur rows record independent `reached_tolerance`, `hit_maxiter`,
+`breakdown`, and `nonfinite` fields. Outer residual/iteration fields are left
+missing when the hook does not own the outer Krylov state; no zero is used as
+a fabricated residual. K accounting has separate primal block solve,
+matrix-free Schur action, full upper correction, and setup/rebuild stages.
+Per-call timers are summed; cumulative timers use their final sample and are
+never summed again. GPU synchronization is reported missing until the
+backend supplies a synchronization hook.
 
-Summarize the files with:
+Use `scripts/analysis/summarize_block_schur_probe.py` to validate schemas and
+produce `INCOMPLETE` for missing physical measurements. It reports actual
+outer progress, K-action and wall-time normalizations, `log10` reductions,
+and workload signatures for peer matching.
 
-```text
-python scripts/analysis/summarize_block_schur_probe.py \
-  --outer-csv case_p20_hypre_block_lower_cpu_probe_outer.csv \
-  --schur-csv case_p20_hypre_block_lower_cpu_probe_schur.csv \
-  --output results/phase20_lower_cpu_probe.json
-```
+## Acceptance profiles
 
-The summary reports residual reduction per outer step, per K action, and per
-second.  The objective is total cost for useful outer progress, not the
-smallest possible inner residual.
+`scripts/analysis/evaluate_solver_acceptance.py` provides two profiles:
 
-## Parameter sweep
+- `diagnostic` can pass numerical correctness while keeping production
+  readiness false;
+- `production` additionally requires primal agreement and TES temperature
+  and current parity. Missing metrics are `INCOMPLETE`, never PASS.
 
-Generate the representative 16-case matrix (lower/full × CPU/GPU × four
-points), then render it with the normal case builder:
+Nonfinite values and breakdown are hard failures. The normwise backward error
+definition used by the exact oracle is
+`||A*x-b||2 / (||A||F*||x||2 + ||b||2)`. A relative residual above `1e-11`
+with absolute residual at or below `1e-14` is reported as a numerical-floor
+warning, not silently discarded.
 
-```text
-python scripts/prep/prepare_phase20_schur_sweep.py
-python sync_elmer_parameters.py elmer_project_hypre_gpu_phase20_sweep.json
-```
+## Runtime evidence
 
-The points are `(tol, max iterations, K AMG cycles)` =
-`(1e-2,5,1)`, `(1e-3,10,1)`, `(1e-4,20,1)`, `(1e-4,30,2)`.  Add `--all` for
-the complete 3×4×2 matrix per factorization/backend.
+The installed `ElmerSolver 26.1-devel` was tried against all four SIFs with a
+30-second per-case bound. Each exited during setup with
+`Hypre requested but not compiled with!`; these are capability results, not
+solver convergence results. Consequently no lower/full CPU/GPU comparison is
+claimed and production readiness remains false. See
+`artifacts/hypre_phase20/runtime_status_20260905.json` and the ignored runtime
+logs for the exact attempts.
 
-## Acceptance
+The independent exact SuperLU Schur oracle was rerun on the existing one-rank
+matrix/RHS/MUMPS artifacts. It records absolute residual
+`1.1384928931822508e-16`, relative residual `3.180826027618793e-11`, normwise
+backward error `6.844108235359397e-19`, constraint residual
+`1.1589146152036896e-24`, and primal agreement `2.2119885798515585e-6`.
+The numerical diagnostic passes; TES physical parity is still missing, so the
+acceptance artifact remains `INCOMPLETE` for production.
 
-`scripts/analysis/evaluate_solver_acceptance.py` evaluates the metrics
-separately.  Nonfinite values and breakdown are hard failures.  Production
-numerical gates are absolute original-system residual (`1e-12`), backward
-error (`1e-12`), constraint absolute residual (`1e-12`), and primal comparison
-against MUMPS (`1e-4` when available).  Relative residual remains a reported
-diagnostic.  If it exceeds `1e-11` while the absolute residual is at or below
-the `1e-14` numerical-floor warning level, it is explicitly reported as a
-floor warning rather than a sole hard failure.  Missing primary metrics are
-`INCOMPLETE`; they are never inferred as zero.
-
-Physical TES temperature/current parity is required for production promotion
-once those measurements are available.  A passing Python test or generated
-SIF proves configuration integrity only; it does not prove that an Elmer
-solver converges.
-
-## Explicit/reusable Schur prototype
-
-`scripts/analysis/compare_schur_strategies.py` records setup and solve time,
-Schur size, backward error, and the reuse boundary.  Its exact/ILU results
-build the factorization once and reuse it for all columns of `B^T` and the
-final primal action within one matrix/timestep.  The 2,898-DOF constraint
-block and approximately 67 MB dense Schur observation justify evaluating a
-frozen or sparse explicit Schur candidate.  Reuse across timesteps remains an
-experiment, not an assumption: matrix changes from nonlinear/timestep
-assembly must be checked before reusing a factorization.
-
-## Current Phase20 runtime status
-
-The four bounded SIFs and the representative sweep generator are implemented.
-The modified source compiles and links.  A CPU lower probe was attempted with
-a 120-second limit and reached Elmer startup, HYPRE setup, matrix dump, and
-Schur diagnostic logging, but did not finish the large mounted-workspace dump;
-it is recorded as `INCOMPLETE` with no convergence metrics and no accepted
-iterate.  Full CPU and both GPU probes remain `NOT RUN`.  The next runtime
-action is to avoid or relocate the large dump, then run all four probes under
-the same one-rank environment and compare their JSON summaries.
+The native source build is `NOT RUN`: this workspace contains the source
+patch but not an Elmer source tree/build configuration. The exact oracle and
+Python test suite are therefore the reproducible checks available here.

@@ -1,0 +1,54 @@
+{
+  "n_f": 84636,
+  "n_c": 2898,
+  "nnz": {
+    "A": 1447196,
+    "K": 1340068,
+    "B": 53564,
+    "Bt": 53564,
+    "D": 0
+  },
+  "strategies": [
+    {
+      "strategy": "exact",
+      "interface_contract": {
+        "apply_K_inverse": "q -> K^{-1}q",
+        "apply_schur": "x -> D*x - B*(K^{-1}*(Bt*x))",
+        "factorization": "setup once, then apply repeatedly",
+        "explicit_schur": "optional materialized D - B*K^{-1}*Bt for this diagnostic only"
+      },
+      "setup_seconds": 144.11161199999333,
+      "solve_seconds": 0.3961025000025984,
+      "reuse_scope": "same matrix / same timestep",
+      "reuse_boundaries": {
+        "reuse_within_timestep": true,
+        "rebuild_on_matrix_or_constraint_pattern_change": true,
+        "rebuild_on_nonlinear_or_timestep_assembly": "required unless matrix fingerprint matches"
+      },
+      "cache_key_fields": [
+        "matrix_fingerprint",
+        "constraint_pattern",
+        "backend",
+        "preconditioner_settings"
+      ],
+      "factorization_reused_for_schur_rhs": true,
+      "schur_shape": [
+        2898,
+        2898
+      ],
+      "schur_nnz": 6401844,
+      "schur_dense_bytes": 67187232,
+      "full_absolute_residual": 1.1384928931822508e-16,
+      "full_relative_residual": 3.180826027618793e-11,
+      "backward_error": 6.844108235359397e-19,
+      "backward_error_norm_definition": "normwise ||A*x-b||_2 / (||A||_F*||x||_2 + ||b||_2)",
+      "absolute_constraint_residual": 1.1589146152036896e-24,
+      "relative_constraint_residual": null,
+      "constraint_rhs_norm": 0.0,
+      "constraint_residual_scale": 1.1589146152036896e-24,
+      "relative_primal_agreement_with_mumps": 2.2119885798415585e-06,
+      "primal_norm": 45.752556991584285,
+      "multiplier_norm": 13.603439530736289
+    }
+  ]
+}

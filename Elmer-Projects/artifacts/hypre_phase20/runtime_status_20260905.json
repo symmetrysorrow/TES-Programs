@@ -1,0 +1,38 @@
+{
+  "status": "INCOMPLETE",
+  "executable": "C:\\Program Files\\Elmer 26.1-Release\\bin\\ElmerSolver.exe",
+  "executable_version": "26.1-devel Release, compiled 2026-01-23",
+  "timeout_policy_seconds": 30,
+  "cases": {
+    "case_p20_hypre_block_lower_cpu_probe": {
+      "status": "NOT RUN",
+      "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
+      "elapsed_seconds": 2.1,
+      "log": "runtime_cpu_lower_stock_20260905.log"
+    },
+    "case_p20_hypre_block_lower_gpu_probe": {
+      "status": "NOT RUN",
+      "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
+      "elapsed_seconds": 2.1,
+      "log": "runtime_case_p20_hypre_block_lower_gpu_probe_stock_20260905.log"
+    },
+    "case_p20_hypre_block_full_cpu_probe": {
+      "status": "NOT RUN",
+      "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
+      "elapsed_seconds": 1.0,
+      "log": "runtime_case_p20_hypre_block_full_cpu_probe_stock_20260905.log"
+    },
+    "case_p20_hypre_block_full_gpu_probe": {
+      "status": "NOT RUN",
+      "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
+      "elapsed_seconds": 1.0,
+      "log": "runtime_case_p20_hypre_block_full_gpu_probe_stock_20260905.log"
+    }
+  },
+  "native_source_build": {
+    "status": "NOT RUN",
+    "reason": "No Elmer source tree/build configuration is present in this workspace; the native implementation is carried as a reviewable patch."
+  },
+  "production_ready": false,
+  "note": "These are environment capability results, not solver convergence results. No CPU/GPU lower/full comparison is claimed."
+}

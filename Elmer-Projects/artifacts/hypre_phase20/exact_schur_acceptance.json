@@ -1,32 +1,41 @@
 {
   "status": "INCOMPLETE",
+  "profile_results": {
+    "diagnostic": "PASS",
+    "production": "INCOMPLETE"
+  },
   "production_ready": false,
-  "hard_fail_reasons": [],
+  "source": "exact_schur_recomputed.json",
+  "strategy": "exact_superlu_schur_oracle",
   "metrics": {
     "original_system_absolute_residual": 1.1384928931822508e-16,
     "original_system_relative_residual": 3.180826027618793e-11,
-    "constraint_absolute_residual": 1.1589146152036896e-24,
-    "backward_error": null,
-    "relative_primal_error_vs_MUMPS": 2.2119885798515586e-06
+    "absolute_constraint_residual": 1.1589146152036896e-24,
+    "backward_error": 6.844108235359397e-19,
+    "relative_primal_error_vs_MUMPS": 2.2119885798415585e-06,
+    "tes_temperature_difference": null,
+    "tes_current_difference": null
   },
-  "checks": {
-    "absolute_residual": true,
-    "constraint_absolute_residual": true,
-    "backward_error": false,
-    "primal_comparison": true
+  "norm_definitions": {
+    "backward_error": "normwise ||A*x-b||_2 / (||A||_F*||x||_2 + ||b||_2)",
+    "constraint_relative_residual": "not reported because ||g||=0; absolute constraint residual is primary"
   },
   "missing_primary_metrics": [
-    "backward_error"
+    "tes_temperature_difference",
+    "tes_current_difference"
   ],
   "relative_residual_warning": true,
   "relative_residual_is_numerical_floor_warning": true,
   "policy": {
     "absolute_residual_max": 1e-12,
+    "relative_residual_max": 1e-10,
     "backward_error_max": 1e-12,
     "constraint_absolute_residual_max": 1e-12,
-    "relative_primal_error_max": 0.0001,
+    "relative_primal_error_max": 1e-4,
+    "temperature_difference_max": 1e-3,
+    "current_difference_max": 1e-3,
     "relative_residual_warning": 1e-11,
     "numerical_floor": 1e-14
   },
-  "interpretation": "relative residual exceeded its diagnostic threshold, but the absolute residual is at the configured numerical floor; this is not a hard failure"
+  "interpretation": "The exact Schur oracle passes numerical diagnostic gates. Production promotion remains incomplete until TES temperature/current parity is measured."
 }

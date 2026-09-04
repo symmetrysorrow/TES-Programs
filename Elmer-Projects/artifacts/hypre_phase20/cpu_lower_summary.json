@@ -1,22 +1,96 @@
 {
+  "status": "INCOMPLETE",
+  "incomplete_reasons": [
+    "outer_csv:SCHEMA_ERROR",
+    "schur_csv:SCHEMA_ERROR"
+  ],
+  "invalid_residual_rows": [],
   "outer_rows": 0,
   "schur_solves": 0,
   "schur_iteration_counts": [],
-  "schur_reached_tolerance": 0,
-  "schur_hit_maxiter": 0,
+  "schur_reached_tolerance_csv": 0,
+  "schur_hit_maxiter_csv": 0,
+  "schur_hit_maxiter_log": 0,
+  "schur_hit_maxiter": false,
+  "schur_breakdown": 0,
+  "schur_nonfinite": 0,
   "schur_final_residual_min": null,
   "schur_final_residual_max": null,
+  "k_actions_by_stage": {
+    "primal_block_solve": null,
+    "matrix_free_schur_action": null,
+    "full_factorization_upper_correction": null,
+    "setup_rebuild": null,
+    "total": null
+  },
   "k_actions_total": null,
-  "k_actions_per_schur_solve": null,
+  "k_actions_per_actual_outer_iteration": null,
   "outer_first_residual": null,
   "outer_last_residual": null,
   "outer_residual_reduction": null,
+  "log10_reduction": null,
+  "log10_reduction_reason": "missing_or_invalid_residual",
+  "actual_outer_iterations": null,
+  "log10_reduction_per_outer_iteration": null,
+  "log10_reduction_per_k_action": null,
+  "log10_reduction_per_second": null,
   "elapsed_wall_seconds": null,
-  "residual_reduction_per_second": null,
-  "residual_reduction_per_k_action": null,
+  "elapsed_wall_seconds_cumulative_last": null,
+  "elapsed_wall_seconds_per_call_sum": null,
+  "k_apply_seconds_cumulative_last": null,
+  "k_apply_seconds_per_call_sum": null,
+  "schur_action_seconds_cumulative_last": null,
+  "timing_definition": {
+    "elapsed_wall_seconds": "last cumulative outer wall time; never a sum of cumulative samples",
+    "*_per_call_sum": "sum of rows explicitly named per_call",
+    "k_apply_seconds": "K solve/application inclusive time, excluding Schur vector algebra",
+    "schur_action_seconds": "matrix-free Schur action inclusive time, including its K actions"
+  },
+  "workload_signature": null,
+  "csv_schema": {
+    "outer": {
+      "state": "SCHEMA_ERROR",
+      "path": "case_p20_hypre_block_lower_cpu_probe_outer.csv",
+      "missing_columns": [
+        "preconditioner_application",
+        "solver_reported_iteration"
+      ],
+      "headers": [
+        "elapsed_wall_seconds",
+        "k_actions_per_outer_iteration",
+        "k_actions_total",
+        "k_apply_seconds",
+        "outer_iteration",
+        "outer_residual",
+        "schur_action_seconds",
+        "schur_solve_count"
+      ]
+    },
+    "schur": {
+      "state": "SCHEMA_ERROR",
+      "path": "case_p20_hypre_block_lower_cpu_probe_schur.csv",
+      "missing_columns": [
+        "breakdown",
+        "nonfinite"
+      ],
+      "headers": [
+        "elapsed_wall_seconds",
+        "final_residual",
+        "hit_maxiter",
+        "initial_residual",
+        "iterations",
+        "k_actions",
+        "k_apply_seconds",
+        "outer_iteration",
+        "reached_tolerance",
+        "schur_action_seconds",
+        "schur_solve"
+      ]
+    }
+  },
   "source": {
     "outer_csv": "case_p20_hypre_block_lower_cpu_probe_outer.csv",
     "schur_csv": "case_p20_hypre_block_lower_cpu_probe_schur.csv",
-    "log": "results\\phase20_lower_cpu_probe.log"
+    "log": "artifacts\\hypre_phase20\\runtime_cpu_lower_stock_20260905.log"
   }
 }
