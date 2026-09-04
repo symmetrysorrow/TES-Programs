@@ -1,0 +1,45 @@
+{
+  "n_f": 84636,
+  "n_c": 2898,
+  "operator": "D - B K^-1 B^T",
+  "k_solver": "independent SciPy SuperLU",
+  "vectors": [
+    {
+      "name": "all_ones",
+      "vector_relative_error": 0.0,
+      "action_relative_error": 1.0,
+      "exact_action_norm": 1.0604036522374582e-07,
+      "elmer_action_norm": 0.0,
+      "pass": false
+    },
+    {
+      "name": "alternating_sign",
+      "vector_relative_error": null,
+      "action_relative_error": null,
+      "exact_action_norm": 2.421675476956386e-09,
+      "elmer_action_norm": null,
+      "pass": false,
+      "failure": "missing Elmer diagnostic pair: case_p19_hypre_block_schur_diag_cpu_time5us_v2.dat, case_p19_hypre_block_schur_diag_cpu_time5us_y2.dat"
+    },
+    {
+      "name": "deterministic_sine",
+      "vector_relative_error": null,
+      "action_relative_error": null,
+      "exact_action_norm": 8.703234620000091e-09,
+      "elmer_action_norm": null,
+      "pass": false,
+      "failure": "missing Elmer diagnostic pair: case_p19_hypre_block_schur_diag_cpu_time5us_v3.dat, case_p19_hypre_block_schur_diag_cpu_time5us_y3.dat"
+    },
+    {
+      "name": "basis_like_17",
+      "vector_relative_error": null,
+      "action_relative_error": null,
+      "exact_action_norm": 3.9984886289360984e-11,
+      "elmer_action_norm": null,
+      "pass": false,
+      "failure": "missing Elmer diagnostic pair: case_p19_hypre_block_schur_diag_cpu_time5us_v4.dat, case_p19_hypre_block_schur_diag_cpu_time5us_y4.dat"
+    }
+  ],
+  "max_action_relative_error": 1.0,
+  "passed": false
+}

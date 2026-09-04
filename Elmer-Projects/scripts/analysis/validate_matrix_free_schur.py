@@ -73,16 +73,27 @@ def main() -> None:
     lu = splu(k.tocsc(), permc_spec="COLAMD")
 
     records: list[dict[str, object]] = []
+    action_errors: list[float] = []
     for number, (name, vector) in enumerate(deterministic_vectors(n_c), start=1):
         exact = d @ vector - b @ lu.solve(bt @ vector)
         v_path = Path(f"{args.elmer_prefix}_v{number}.dat")
         y_path = Path(f"{args.elmer_prefix}_y{number}.dat")
         if not v_path.exists() or not y_path.exists():
-            raise FileNotFoundError(f"missing Elmer diagnostic pair: {v_path}, {y_path}")
+            records.append({
+                "name": name,
+                "vector_relative_error": None,
+                "action_relative_error": None,
+                "exact_action_norm": float(np.linalg.norm(exact)),
+                "elmer_action_norm": None,
+                "pass": False,
+                "failure": f"missing Elmer diagnostic pair: {v_path}, {y_path}",
+            })
+            continue
         emitted_v = read_vector(v_path, n_c)
         emitted_y = read_vector(y_path, n_c)
         vector_error = np.linalg.norm(emitted_v - vector) / max(np.linalg.norm(vector), np.finfo(float).tiny)
         action_error = np.linalg.norm(emitted_y - exact) / max(np.linalg.norm(exact), np.finfo(float).tiny)
+        action_errors.append(float(action_error))
         records.append({
             "name": name,
             "vector_relative_error": float(vector_error),
@@ -98,7 +109,7 @@ def main() -> None:
         "operator": "D - B K^-1 B^T",
         "k_solver": "independent SciPy SuperLU",
         "vectors": records,
-        "max_action_relative_error": max(item["action_relative_error"] for item in records),
+        "max_action_relative_error": max(action_errors) if action_errors else None,
         "passed": all(item["pass"] for item in records),
     }
     encoded = json.dumps(result, indent=2)

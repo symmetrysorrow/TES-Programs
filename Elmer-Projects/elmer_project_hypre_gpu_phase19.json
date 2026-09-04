@@ -15512,12 +15512,13 @@
         "nonlinear_convergence_tolerance": 0.001,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_block_diag",
+        "linear_system": "iterative_hypre_block_lower",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p19_hypre_block_schur_diag_cpu_time5us",
         "no_explicit_constrained_matrix": true,
         "block_schur_diagnostic": true,
         "block_schur_diagnostic_direct": true,
+        "block_schur_diagnostic_only": true,
         "block_schur_diagnostic_prefix": "case_p19_hypre_block_schur_diag_cpu_time5us"
       },
       "comparison_time_grid": {
@@ -15568,7 +15569,7 @@
         "nonlinear_convergence_tolerance": 0.001,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_block_lower_cpu",
+        "linear_system": "iterative_hypre_block_lower",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p19_hypre_block_lower_cpu_time5us",
         "no_explicit_constrained_matrix": true
@@ -15674,7 +15675,7 @@
         "nonlinear_convergence_tolerance": 0.001,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "iterative_hypre_block_full_cpu",
+        "linear_system": "iterative_hypre_block_full",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p19_hypre_block_full_cpu_time5us",
         "no_explicit_constrained_matrix": true

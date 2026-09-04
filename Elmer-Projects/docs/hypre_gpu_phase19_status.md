@@ -14,11 +14,15 @@
   restart, mesh, source, and solver tolerances but disable the explicit mortar
   rows, so they test the ordinary SPD HYPRE path independently.
 
-The Elmer source tree under `tools/` is ignored by the project repository; the
-local build used the corresponding edits in `tools/elmer-hypre/src/fem/src/`
-(`SolveHypre.c`, `SParIterSolver.F90`, and `SOLVER.KEYWORDS`).  Those edits
-must be carried into the Elmer source tree or an upstream patch when packaging
-the change.
+The project checkout does not track the Elmer source tree under `tools/`.
+The local Elmer checkout is based on upstream
+`ELMER_BASE_SHA=5a8de867068be0568f09af40fb90fee300dfbede`
+(`ElmerCSC/elmerfem`, the parent of local commit `9916c3f05`).  The complete
+local-tree snapshot remains in
+`hypre_gpu_phase19_blocksolve_full.patch` and is not a production handoff
+patch.  The feature-only handoff is
+`hypre_gpu_phase19_schur_feature.patch`; it contains only the HYPRE/Mortar
+block feature, diagnostics, and required bridge changes.
 
 ## Reproducible checks
 

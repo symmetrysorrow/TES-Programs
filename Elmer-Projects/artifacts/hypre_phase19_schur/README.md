@@ -16,3 +16,7 @@ The matrix-free Elmer action validator is
 `*_vN.dat`/`*_yN.dat` files emitted by an Elmer diagnostic run.
 The current harness attempt is recorded in `matrix_free_diagnostic_status.json`;
 it emitted only the first pair before the surrounding one-step solve failed.
+The latest independent validator snapshot is
+`matrix_free_validation_latest.json`; it records 0/4 because only the legacy
+v1/y1 pair exists and that pair's action does not match the SuperLU oracle.
+It is an explicit failure snapshot, not an acceptance result.

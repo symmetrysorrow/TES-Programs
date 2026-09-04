@@ -32,10 +32,12 @@ primal agrees with it to `2.21e-6` relative.
 
 The exact-versus-approximate Schur diagnostic is in
 `results/schur_strategy_comparison.json`, with the ILU candidate in
-`results/schur_strategy_ilu.json`.  The exact setup is about 173 s and
-passes the algebraic gate; diagonal setup is about 1 s but leaves a full
-relative residual of about `1.99`; ILU setup is about 82 s and leaves a full
-relative residual of about `3.06`.  These are independent CPU reference
+`results/schur_strategy_ilu.json`.  The exact setup is about 173 s and is the
+correctness oracle: it reaches a near-machine-precision absolute residual but
+does not satisfy the strict `1e-11` normalized gate because `||b||` is small.
+Diagonal setup is about 1 s but leaves a full relative residual of about
+`1.99`; ILU setup is about 82 s and leaves a full relative residual of about
+`3.06`.  These are independent CPU reference
 experiments; the ILU case is a portable proxy for an approximate AMG action,
 not a claim that HYPRE used ILU.
 
@@ -60,19 +62,24 @@ stage is validated; it fails fast in MPI rather than reporting a misleading
 result. Matrix-free action validation is performed by
 `scripts/analysis/validate_matrix_free_schur.py` after an Elmer diagnostic
 run emits the four deterministic vector/action pairs.
-The current rebuilt diagnostic reached the direct K solve and emitted the
-first pair, then the surrounding one-step solve produced NaN before the
-remaining pairs were written; therefore no matrix-free action pass is
-claimed yet.
+The diagnostic now supports a diagnostic-only process exit, preserves all
+solver keywords it temporarily changes, writes the full four deterministic
+vector/action pairs, and fails fast at the first non-finite Schur stage.  The
+existing artifact predates this rerun and still records only one emitted pair;
+therefore no matrix-free action pass is claimed until the rebuilt executable
+has produced and independently validated all four pairs.
 
 ## Implementation
 
 The block candidate is opt-in. It sets one BoomerAMG cycle for the large
-primal block and carries the matrix-free Schur implementation in the ignored
-Elmer source tree. The complete generated upstream-to-local handoff patch is
-[hypre_gpu_phase19_blocksolve_full.patch](hypre_gpu_phase19_blocksolve_full.patch);
-the original `hypre_gpu_phase19_blocksolve.patch` is retained as the historical
-Phase19 fragment.
+primal block and carries the matrix-free Schur implementation in the local
+Elmer source tree. The complete generated upstream-to-local local-tree
+snapshot is [hypre_gpu_phase19_blocksolve_full.patch](hypre_gpu_phase19_blocksolve_full.patch);
+it is not the production handoff patch. The feature-only handoff patch with
+`ELMER_BASE_SHA` is
+[hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch).
+The original `hypre_gpu_phase19_blocksolve.patch` is retained as the
+historical Phase19 fragment.
 
 The HYPRE build helper now keeps non-default tags side-by-side.  HYPRE
 `v3.1.0` CUDA and Elmer builds complete after explicitly pointing CMake at the
@@ -94,6 +101,16 @@ No short transient is accepted yet: the available seven-step run was
 interrupted during the rejected MGR investigation.  MPI is not yet a result
 for this case because the mesh has no `partitioning.2` directory.  These are
 explicitly open validation gates, not successful production evidence.
+
+## Lower/full CPU one-step gate
+
+The rebuilt executable was not available in this environment.  The Elmer
+build reconfiguration stops during MPI C/C++/Fortran detection before a new
+`elmersolver` is produced, and direct compiler probing did not yield a usable
+replacement.  Consequently the revised CPU lower-triangular and full-
+factorization one-step cases have not been run; no lower/full residual or
+iteration result is claimed, and tuning, GPU, and MPI validation remain
+blocked behind that gate.
 
 ## Recommendation at this point
 

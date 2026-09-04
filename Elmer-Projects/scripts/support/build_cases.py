@@ -447,9 +447,9 @@ def solver1_block(
             f"  Block Gauss-Seidel = {'True' if block_lower else 'False'}",
             f"  Block Lower Triangular = {'True' if block_lower else 'False'}",
             f"  Block Full Factorization = {'True' if block_full else 'False'}",
-            f"  Block Matrix-free Schur = Logical {'True' if block_matrix_free_schur else 'False'}",
+            f"  Block Matrix-free Schur = {'True' if block_matrix_free_schur else 'False'}",
             "  Block Matrix Reuse = True",
-            "  Create Schur Matrix Approximation = True",
+            f"  Create Schur Matrix Approximation = {'True' if solver.get('create_schur_matrix_approximation', True) else 'False'}",
             "  Block Nested Primal AMG = True",
             "  Block Nested Primal Max Iterations = 1",
             "  Block Schur Inner Tolerance = 1.0e-4",
@@ -499,6 +499,8 @@ def solver1_block(
         ]
         if solver.get("block_schur_diagnostic_direct", False):
             lines.append("  Block Schur Diagnostic Direct = Logical True")
+        if solver.get("block_schur_diagnostic_only", False):
+            lines.append("  Block Schur Diagnostic Only = Logical True")
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")
     if solver.get("no_explicit_constrained_matrix", False):

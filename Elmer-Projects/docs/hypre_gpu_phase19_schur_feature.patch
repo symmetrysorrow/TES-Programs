@@ -1,0 +1,1061 @@
+# Feature-only HYPRE/Mortar block-solver patch
+# Base: ElmerCSC/elmerfem commit 5a8de867068be0568f09af40fb90fee300dfbede
+# Generated from the current local feature tree; unrelated CMake/UMFPACK,
+# module-migration, adaptive-integration, and historical local changes are omitted.
+
+diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
+index fd722cfde..24e5a1490 100644
+--- a/fem/src/BlockSolve.F90
++++ b/fem/src/BlockSolve.F90
+@@ -44,6 +44,8 @@ MODULE BlockSolve
+      MassMatrixAssembly, VectorValuesRange, LaplaceMatrixAssembly
+  USE MeshUtils, ONLY : SaveProjector   
+  USE DefUtils, ONLY : DefaultSolve, GetElementDOFs, GetElementNodes, GetLogical
++ USE Lists, ONLY : ListGetLogical, ListGetString, ListGetInteger, ListGetCReal, &
++     ListAddLogical, ListAddString, ListAddInteger, ListAddConstReal, ListRemove
+  
+  IMPLICIT NONE
+ 
+@@ -54,6 +56,13 @@ MODULE BlockSolve
+   TYPE(Solver_t), POINTER, SAVE :: SolverRef
+   TYPE(Variable_t), POINTER :: SolverVar => Null()
+   TYPE(Matrix_t), POINTER :: SolverMatrix => Null(), SaveMatrix
++  ! The diagonal Schur preconditioner is algebraic data attached to the
++  ! current block matrices.  Keep it across applications of the outer
++  ! preconditioner; BlockPrecMatrix invalidates it when the block values are
++  ! rebuilt (normally once per nonlinear/timestep setup).
++  REAL(KIND=dp), ALLOCATABLE, SAVE :: SchurDiagCache(:)
++  INTEGER, SAVE :: SchurDiagCacheN = 0
++  LOGICAL, SAVE :: SchurDiagCacheValid = .FALSE.
+ 
+ CONTAINS
+ 
+@@ -115,6 +124,376 @@ CONTAINS
+     
+   END FUNCTION CreateSchurApproximation
+ 
++
++  !------------------------------------------------------------------------------
++  !> Build the cheap diagonal of the existing diag(K)^-1 Schur approximation.
++  !>
++  !> This is deliberately a preconditioner for the matrix-free Schur solve,
++  !> not the Schur operator itself.  The latter is applied by
++  !> BlockSchurAction below and therefore never assembled as a dense matrix.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurPrepareDiagonal( DiagS, PreferExplicit )
++    REAL(KIND=dp), INTENT(out) :: DiagS(:)
++    LOGICAL, INTENT(in), OPTIONAL :: PreferExplicit
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D, SPrec
++    INTEGER :: i,j,colk,l,n,zero_count,negative_count,positive_count
++    LOGICAL :: HavePrec, HaveEntry
++    REAL(KIND=dp) :: val,min_abs,max_abs
++    CHARACTER(256) :: Message
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    n = B % NumberOfRows
++    IF( SIZE(DiagS) /= n ) CALL Fatal('BlockSchurPrepareDiagonal', &
++        'Incompatible Schur diagonal size')
++
++    ! Prefer the already-created sparse diag(K)^-1 Schur approximation.  This
++    ! preserves the existing topology and avoids any per-matvec construction.
++    SPrec => TotMatrix % Submatrix(2,2) % PrecMat
++    HavePrec = .FALSE.
++    IF( ASSOCIATED(SPrec) ) HavePrec = SPrec % NumberOfRows >= n
++    IF( PRESENT(PreferExplicit) ) THEN
++      IF( .NOT. PreferExplicit ) HavePrec = .FALSE.
++    END IF
++    DiagS = 0.0_dp
++    IF( HavePrec ) THEN
++      DO i=1,n
++        HaveEntry = .FALSE.
++        DO j=SPrec % Rows(i),SPrec % Rows(i+1)-1
++          IF( SPrec % Cols(j) == i ) THEN
++            DiagS(i) = SPrec % Values(j)
++            HaveEntry = .TRUE.
++            EXIT
++          END IF
++        END DO
++        IF( .NOT. HaveEntry ) HavePrec = .FALSE.
++      END DO
++    END IF
++
++    ! Fallback for configurations which intentionally skipped the explicit
++    ! Schur approximation.  Compute only its diagonal, O(nnz(B)+nnz(Bt)),
++    ! while retaining the exact matrix-free operator for all Krylov actions.
++    IF( .NOT. HavePrec ) THEN
++      DiagS = 0.0_dp
++      DO i=1,n
++        DO j=B % Rows(i),B % Rows(i+1)-1
++          colk = B % Cols(j)
++          IF( K % Diag(colk) <= 0 ) CYCLE
++          val = B % Values(j) / K % Values(K % Diag(colk))
++          DO l=Bt % Rows(colk),Bt % Rows(colk+1)-1
++            IF( Bt % Cols(l) == i ) THEN
++              DiagS(i) = DiagS(i) - val * Bt % Values(l)
++              EXIT
++            END IF
++          END DO
++        END DO
++        IF( ASSOCIATED(D) ) THEN
++          IF( D % NumberOfRows < i ) CYCLE
++          DO j=D % Rows(i),D % Rows(i+1)-1
++            IF( D % Cols(j) == i ) THEN
++              DiagS(i) = DiagS(i) + D % Values(j)
++              EXIT
++            END IF
++          END DO
++        END IF
++      END DO
++    END IF
++
++    ! Report the sign and scale before replacing unusable entries.  In
++    ! particular, a negative diagonal is expected for D - B K^-1 B^T and must
++    ! not be silently converted to its absolute value.
++    zero_count = 0
++    negative_count = 0
++    positive_count = 0
++    min_abs = HUGE(1.0_dp)
++    max_abs = 0.0_dp
++    DO i=1,n
++      IF( ABS(DiagS(i)) <= TINY(1.0_dp) ) THEN
++        zero_count = zero_count + 1
++      ELSE IF( DiagS(i) < 0.0_dp ) THEN
++        negative_count = negative_count + 1
++      ELSE
++        positive_count = positive_count + 1
++      END IF
++      min_abs = MIN(min_abs,ABS(DiagS(i)))
++      max_abs = MAX(max_abs,ABS(DiagS(i)))
++    END DO
++    IF( zero_count == n ) min_abs = 0.0_dp
++    WRITE(Message,'(A,I0,A,I0,A,I0)') 'Schur diagonal sign distribution: negative=', &
++        negative_count, ' positive=', positive_count, ' zero/near-zero=', zero_count
++    CALL Info('BlockSchurPrepareDiagonal',Message,Level=7)
++    WRITE(Message,'(A,ES12.5,A,ES12.5)') 'Schur diagonal abs range: min=',min_abs, &
++        ' max=',max_abs
++    CALL Info('BlockSchurPrepareDiagonal',Message,Level=7)
++
++    ! A singular/empty diagonal is not a usable preconditioner entry.  Use a
++    ! neutral value for that row; GMRES still sees the true matrix-free action.
++    DO i=1,n
++      IF( ABS(DiagS(i)) <= TINY(1.0_dp) ) DiagS(i) = 1.0_dp
++    END DO
++  END SUBROUTINE BlockSchurPrepareDiagonal
++
++
++  !------------------------------------------------------------------------------
++  !> Fail before a non-finite Schur stage can enter either Krylov iteration.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurCheckFinite(Stage, Values)
++    CHARACTER(LEN=*), INTENT(in) :: Stage
++    REAL(KIND=dp), INTENT(in) :: Values(:)
++    IF( ANY(Values /= Values) .OR. ANY(ABS(Values) > HUGE(1.0_dp)) ) THEN
++      CALL Fatal('BlockSchurAction','Non-finite value after '//TRIM(Stage))
++    END IF
++  END SUBROUTINE BlockSchurCheckFinite
++
++
++  SUBROUTINE BlockSchurCheckScalarFinite(Stage, Value)
++    CHARACTER(LEN=*), INTENT(in) :: Stage
++    REAL(KIND=dp), INTENT(in) :: Value
++    IF( Value /= Value .OR. ABS(Value) > HUGE(1.0_dp) ) THEN
++      CALL Fatal('BlockSchurMatrixFreeSolve','Non-finite Schur GMRES residual after '//TRIM(Stage))
++    END IF
++  END SUBROUTINE BlockSchurCheckScalarFinite
++
++
++  SUBROUTINE BlockSchurRestoreLogical(Values,Name,WasPresent,Value)
++    TYPE(ValueList_t), POINTER :: Values
++    CHARACTER(LEN=*), INTENT(in) :: Name
++    LOGICAL, INTENT(in) :: WasPresent,Value
++    IF( WasPresent ) THEN
++      CALL ListAddLogical(Values,Name,Value)
++    ELSE
++      CALL ListRemove(Values,Name)
++    END IF
++  END SUBROUTINE BlockSchurRestoreLogical
++
++
++  SUBROUTINE BlockSchurRestoreString(Values,Name,WasPresent,Value)
++    TYPE(ValueList_t), POINTER :: Values
++    CHARACTER(LEN=*), INTENT(in) :: Name
++    LOGICAL, INTENT(in) :: WasPresent
++    CHARACTER(LEN=*), INTENT(in) :: Value
++    IF( WasPresent ) THEN
++      CALL ListAddString(Values,Name,Value)
++    ELSE
++      CALL ListRemove(Values,Name)
++    END IF
++  END SUBROUTINE BlockSchurRestoreString
++
++
++  SUBROUTINE BlockSchurRestoreInteger(Values,Name,WasPresent,Value)
++    TYPE(ValueList_t), POINTER :: Values
++    CHARACTER(LEN=*), INTENT(in) :: Name
++    LOGICAL, INTENT(in) :: WasPresent
++    INTEGER, INTENT(in) :: Value
++    IF( WasPresent ) THEN
++      CALL ListAddInteger(Values,Name,Value)
++    ELSE
++      CALL ListRemove(Values,Name)
++    END IF
++  END SUBROUTINE BlockSchurRestoreInteger
++
++
++  SUBROUTINE BlockSchurRestoreReal(Values,Name,WasPresent,Value)
++    TYPE(ValueList_t), POINTER :: Values
++    CHARACTER(LEN=*), INTENT(in) :: Name
++    LOGICAL, INTENT(in) :: WasPresent
++    REAL(KIND=dp), INTENT(in) :: Value
++    IF( WasPresent ) THEN
++      CALL ListAddConstReal(Values,Name,Value)
++    ELSE
++      CALL ListRemove(Values,Name)
++    END IF
++  END SUBROUTINE BlockSchurRestoreReal
++
++
++  !------------------------------------------------------------------------------
++  !> Apply S = D - B K^-1 B^T without constructing S.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurAction( v, y, KSolver, KVar )
++    REAL(KIND=dp), INTENT(in) :: v(:)
++    REAL(KIND=dp), INTENT(out) :: y(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D
++    REAL(KIND=dp), ALLOCATABLE :: bt_v(:), k_u(:), b_k_u(:), d_v(:)
++    INTEGER :: nu,nc
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    nu = K % NumberOfRows
++    nc = B % NumberOfRows
++    IF( SIZE(v) /= nc .OR. SIZE(y) /= nc ) CALL Fatal('BlockSchurAction', &
++        'Incompatible Schur vector size')
++    ALLOCATE(bt_v(nu), k_u(nu), b_k_u(nc), d_v(nc))
++
++    CALL BlockSchurActionWork(v,y,KSolver,KVar,bt_v,k_u,b_k_u,d_v)
++    DEALLOCATE(bt_v,k_u,b_k_u,d_v)
++  END SUBROUTINE BlockSchurAction
++
++
++  ! Work-array form used by the inner Krylov solver.  Keeping these arrays
++  ! outside the matvec loop avoids allocator traffic for every Schur action.
++  SUBROUTINE BlockSchurActionWork( v, y, KSolver, KVar, bt_v, k_u, &
++      b_k_u, d_v )
++    REAL(KIND=dp), INTENT(in) :: v(:)
++    REAL(KIND=dp), INTENT(out) :: y(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    REAL(KIND=dp), INTENT(out) :: bt_v(:), k_u(:), b_k_u(:), d_v(:)
++    TYPE(Matrix_t), POINTER :: K, B, Bt, D
++    INTEGER :: nu,nc
++
++    K => TotMatrix % Submatrix(1,1) % Mat
++    B => TotMatrix % Submatrix(2,1) % Mat
++    Bt => TotMatrix % Submatrix(1,2) % Mat
++    D => TotMatrix % Submatrix(2,2) % Mat
++    nu = K % NumberOfRows
++    nc = B % NumberOfRows
++    IF( SIZE(v) /= nc .OR. SIZE(y) /= nc .OR. SIZE(bt_v) /= nu .OR. &
++        SIZE(k_u) /= nu .OR. SIZE(b_k_u) /= nc .OR. SIZE(d_v) /= nc ) &
++        CALL Fatal('BlockSchurActionWork','Incompatible Schur work size')
++    CALL CRS_MatrixVectorMultiply(Bt,v,bt_v)
++    CALL BlockSchurCheckFinite('Bt*v',bt_v)
++    k_u = 0.0_dp
++    ! The same Solver_t owns the already-configured BoomerAMG hierarchy.  The
++    ! no-recompute flag is essential: a Schur matvec must not rebuild AMG.
++    CALL SolveLinearSystem(K,bt_v,k_u,KVar % Norm,KVar % DOFs,KSolver)
++    CALL BlockSchurCheckFinite('K solve',k_u)
++    CALL CRS_MatrixVectorMultiply(B,k_u,b_k_u)
++    CALL BlockSchurCheckFinite('B*K^-1*Bt*v',b_k_u)
++    d_v = 0.0_dp
++    IF( ASSOCIATED(D) ) THEN
++      IF( D % NumberOfRows > 0 ) CALL CRS_MatrixVectorMultiply(D,v,d_v)
++    END IF
++    y = d_v - b_k_u
++    CALL BlockSchurCheckFinite('Schur output',y)
++  END SUBROUTINE BlockSchurActionWork
++
++
++  !------------------------------------------------------------------------------
++  !> Solve S x = rhs with restarted right-preconditioned GMRES.
++  !>
++  !> The Schur operator is matrix-free and each K action reuses the caller's
++  !> K Solver_t (BoomerAMG on CPU/CUDA/HIP).  The small diagonal extracted by
++  !> BlockSchurPrepareDiagonal is used only as the inner Schur preconditioner.
++  !------------------------------------------------------------------------------
++  SUBROUTINE BlockSchurMatrixFreeSolve( rhs, sol, KSolver, KVar, DiagS, &
++      SchurTol, SchurMaxIter, SchurRestart )
++    REAL(KIND=dp), INTENT(in) :: rhs(:), DiagS(:)
++    REAL(KIND=dp), INTENT(inout) :: sol(:)
++    TYPE(Solver_t), POINTER :: KSolver
++    TYPE(Variable_t), POINTER :: KVar
++    REAL(KIND=dp), INTENT(in) :: SchurTol
++    INTEGER, INTENT(in) :: SchurMaxIter, SchurRestart
++    REAL(KIND=dp), ALLOCATABLE :: r(:),w(:),z(:),v(:,:),zz(:,:),h(:,:), &
++        cs(:),sn(:),g(:),coef(:),ax(:),sbt(:),sku(:),sbku(:),sdv(:)
++    REAL(KIND=dp) :: beta,res,den,tmp
++    INTEGER :: n,m,i,j,k,iter,istat,nu
++    LOGICAL :: Found,OldNoPrec
++
++    n = SIZE(rhs)
++    IF( SIZE(sol) /= n .OR. SIZE(DiagS) /= n ) CALL Fatal( &
++        'BlockSchurMatrixFreeSolve','Incompatible Schur solve sizes')
++    IF( SchurMaxIter < 1 .OR. SchurRestart < 1 ) CALL Fatal( &
++        'BlockSchurMatrixFreeSolve','Schur iteration settings must be positive')
++    m = MIN(SchurMaxIter,SchurRestart)
++    nu = TotMatrix % Submatrix(1,1) % Mat % NumberOfRows
++    ALLOCATE(r(n),w(n),z(n),v(n,m+1),zz(n,m),h(m+1,m),cs(m),sn(m), &
++        g(m+1),coef(m),ax(n),sbt(nu),sku(nu), &
++        sbku(n),sdv(n),STAT=istat)
++    IF( istat /= 0 ) CALL Fatal('BlockSchurMatrixFreeSolve', &
++        'Allocation error for Schur GMRES work vectors')
++    CALL BlockSchurCheckFinite('Schur diagonal preconditioner',DiagS)
++
++    OldNoPrec = ListGetLogical(KSolver % Values,'No Precondition Recompute',Found)
++    CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',.TRUE.)
++    iter = 0
++    sol = 0.0_dp
++    CALL BlockSchurActionWork(sol,r,KSolver,KVar,sbt,sku,sbku,sdv)
++    r = rhs - r
++    CALL BlockSchurCheckFinite('Schur residual',r)
++    beta = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++    CALL BlockSchurCheckScalarFinite('initial residual',beta)
++    IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++        TINY(1.0_dp)) ) GOTO 900
++
++    DO WHILE( iter < SchurMaxIter )
++      beta = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++      CALL BlockSchurCheckScalarFinite('restart residual',beta)
++      IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++          TINY(1.0_dp)) ) EXIT
++      v = 0.0_dp; zz = 0.0_dp; h = 0.0_dp; cs = 0.0_dp; sn = 0.0_dp
++      g = 0.0_dp; g(1) = beta; v(:,1) = r / beta
++      k = 0
++      DO j=1,m
++        IF( iter >= SchurMaxIter ) EXIT
++        k = j; iter = iter + 1
++        z = v(:,j) / DiagS
++        CALL BlockSchurCheckFinite('preconditioned vector',z)
++        zz(:,j) = z
++        CALL BlockSchurActionWork(z,w,KSolver,KVar,sbt,sku,sbku,sdv)
++        DO i=1,j
++          h(i,j) = DOT_PRODUCT(v(:,i),w)
++          w = w - h(i,j)*v(:,i)
++        END DO
++        h(j+1,j) = SQRT(MAX(0.0_dp,DOT_PRODUCT(w,w)))
++        CALL BlockSchurCheckScalarFinite('Arnoldi residual',h(j+1,j))
++        IF( h(j+1,j) > TINY(1.0_dp) ) v(:,j+1) = w / h(j+1,j)
++        DO i=1,j-1
++          tmp = cs(i)*h(i,j) + sn(i)*h(i+1,j)
++          h(i+1,j) = -sn(i)*h(i,j) + cs(i)*h(i+1,j)
++          h(i,j) = tmp
++        END DO
++        den = SQRT(h(j,j)*h(j,j) + h(j+1,j)*h(j+1,j))
++        IF( den <= TINY(1.0_dp) ) THEN
++          cs(j) = 1.0_dp; sn(j) = 0.0_dp
++        ELSE
++          cs(j) = h(j,j)/den; sn(j) = h(j+1,j)/den
++        END IF
++        h(j,j) = cs(j)*h(j,j) + sn(j)*h(j+1,j)
++        h(j+1,j) = 0.0_dp
++        g(j+1) = -sn(j)*g(j); g(j) = cs(j)*g(j)
++        res = ABS(g(j+1))
++        CALL BlockSchurCheckScalarFinite('inner residual',res)
++        IF( res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++            TINY(1.0_dp)) ) EXIT
++      END DO
++      IF( k == 0 ) EXIT
++      coef = 0.0_dp
++      DO i=k,1,-1
++        coef(i) = g(i)
++        IF( i < k ) coef(i) = coef(i) - DOT_PRODUCT(h(i,i+1:k), &
++            coef(i+1:k))
++        IF( ABS(h(i,i)) <= TINY(1.0_dp) ) THEN
++          coef(i) = 0.0_dp
++        ELSE
++          coef(i) = coef(i) / h(i,i)
++        END IF
++      END DO
++      DO j=1,k
++        sol = sol + coef(j)*zz(:,j)
++      END DO
++      CALL BlockSchurActionWork(sol,ax,KSolver,KVar,sbt,sku,sbku,sdv)
++      r = rhs - ax
++      CALL BlockSchurCheckFinite('Schur residual',r)
++    END DO
++900 CONTINUE
++    CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',OldNoPrec)
++    res = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
++    CALL BlockSchurCheckScalarFinite('final residual',res)
++    WRITE(Message,'(A,I0,A,ES12.5)') 'Matrix-free Schur GMRES iterations: ', &
++        iter, ' residual: ', res
++    CALL Info('BlockSchurMatrixFreeSolve',Message,Level=7)
++    IF( res > SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
++        TINY(1.0_dp)) ) CALL Warn('BlockSchurMatrixFreeSolve', &
++        'Inner Schur GMRES reached its limit before tolerance')
++    DEALLOCATE(r,w,z,v,zz,h,cs,sn,g,coef,ax,sbt,sku,sbku,sdv)
++  END SUBROUTINE BlockSchurMatrixFreeSolve
++
+   
+   
+   !-----------------------------------------------------------------------------------
+@@ -2356,6 +2735,11 @@ CONTAINS
+     
+     CALL Info('BlockPrecMatrix','Checking for tailored preconditioning matrices',Level=6)
+ 
++    ! A Schur diagonal is cached across applications of BlockMatrixPrec.  This
++    ! routine is the matrix/value setup boundary, so invalidate it here when
++    ! the block matrices are rebuilt (including a new timestep).
++    SchurDiagCacheValid = .FALSE.
++
+     Params => Solver % Values
+     SplitComplexHcurl = ListGetLogical( Params,'Block Split Complex Hcurl', GotIt ) 
+     
+@@ -3767,19 +4151,31 @@ CONTAINS
+     INTEGER :: ipar(*)
+ !---------------------------------------------------------------------------------
+     REAL(KIND=dp), POINTER :: rtmp(:),vtmp(:),xtmp(:),btmp(:),diagtmp(:),b(:),x(:), a_rhs_save(:)
++    REAL(KIND=dp), ALLOCATABLE :: d_v(:), d_bt(:), d_ku(:), d_y(:), d_dv(:)
+     REAL(KIND=dp), POINTER CONTIG :: rhs_save(:)
+-    INTEGER :: i,j,k,l,n,m,NoVar,nc,kk,ll,istat
+-    TYPE(Solver_t), POINTER :: Solver, Solver_save, ASolver
++    INTEGER :: i,j,k,l,n,m,NoVar,nc,kk,ll,istat,d_nu,d_nl,q,unit
++    INTEGER :: SchurMaxIter, SchurRestart
++    TYPE(Solver_t), POINTER :: Solver, Solver_save, ASolver, KSchurSolver
+     INTEGER, POINTER :: Offset(:), BlockPerm(:),ParPerm(:)
+     TYPE(ValueList_t), POINTER :: Params
+     INTEGER, POINTER :: BlockOrder(:)
+-    TYPE(Matrix_t), POINTER :: A, Aij, mat_save
+-    TYPE(Variable_t), POINTER :: Var, Var_save
+-    REAL(KIND=dp) :: nrm
++    TYPE(Matrix_t), POINTER :: A, Aij, mat_save, ADiag
++    TYPE(Variable_t), POINTER :: Var, Var_save, KVar
++    REAL(KIND=dp) :: nrm, SchurTol
+     LOGICAL :: GotOrder, BlockGS, Found, NS, ScaleSystem, DoSum, &
+         IsComplex, BlockScaling, DoDiagScaling, DoPrecScaling, UsePrecMat, &
+-        Isolated, NoNestedScaling, DoAMGXmv, CalcLoads, BlockSch
+-    CHARACTER(:), ALLOCATABLE :: str
++        Isolated, NoNestedScaling, DoAMGXmv, CalcLoads, BlockSch, &
++        BlockLower, BlockFull, BlockSchurMF, CreateSchurApprox, &
++        SchurDiagnostic, SchurDiagnosticDirect, &
++        SchurDiagnosticOnly, &
++        DiagHadUseHypre, DiagHadSolver, DiagHadIterative, DiagHadPreconditioning, &
++        DiagHadDirect, DiagHadMaxIter, DiagHadTol, DiagHadNoPrec, DiagHadSkipScaling, &
++        DiagHadHypreGPU
++    LOGICAL :: DiagUseHypre, DiagNoPrec, DiagSkipScaling, DiagHypreGPU
++    INTEGER :: DiagMaxIter
++    REAL(KIND=dp) :: DiagTol
++    CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix, DiagSolver, &
++        DiagIterative, DiagPreconditioning, DiagDirect
+     INTEGER(KIND=AddrInt) :: AddrFunc
+     EXTERNAL :: AddrFunc
+ 
+@@ -3815,6 +4211,47 @@ CONTAINS
+ 
+     BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
+     BlockSch = ListGetLogical( Params,'Block Schur',Found)
++    BlockLower = ListGetLogical( Params,'Block Lower Triangular',Found)
++    BlockFull = ListGetLogical( Params,'Block Full Factorization',Found)
++    BlockSchurMF = ListGetLogical( Params,'Block Matrix-free Schur',Found)
++    CreateSchurApprox = ListGetLogical( Params, &
++        'Create Schur Matrix Approximation', Found, DefValue=.TRUE. )
++    SchurTol = ListGetCReal( Params,'Block Schur Inner Tolerance',Found, &
++        DefValue=1.0e-4_dp )
++    SchurMaxIter = ListGetInteger( Params,'Block Schur Max Iterations',Found, &
++        DefValue=30 )
++    SchurRestart = ListGetInteger( Params,'Block Schur Restart',Found, &
++        DefValue=MIN(30,SchurMaxIter) )
++
++    ! For a two-field saddle system, the lower factorization is
++    !
++    !   [ K  0 ] [ I  0 ]
++    !   [ B  S ] [ 0  I ]
++    !
++    ! with S = D - B K^-1 B^T.  The existing block Gauss-Seidel update
++    ! already implements the first two operations.  Keep this opt-in and
++    ! reject accidental use on multiphysics systems with another block count.
++    IF( BlockLower .OR. BlockFull ) THEN
++      IF( NoVar /= 2 ) CALL Fatal('BlockMatrixPrec', &
++          'Block triangular/factorized mode requires exactly two blocks')
++      BlockGS = .TRUE.
++      CALL Info('BlockMatrixPrec','Using opt-in block factorized path',Level=7)
++    END IF
++    IF( BlockSchurMF ) THEN
++      IF( NoVar /= 2 ) CALL Fatal('BlockMatrixPrec', &
++          'Matrix-free Schur mode requires exactly two blocks')
++      IF( isParallel ) CALL Fatal('BlockMatrixPrec', &
++          'Matrix-free Schur mode is currently one-rank only; use the explicit MPI gate')
++      IF( .NOT. SchurDiagCacheValid .OR. SchurDiagCacheN /= &
++          TotMatrix % Submatrix(2,1) % Mat % NumberOfRows ) THEN
++        IF( ALLOCATED(SchurDiagCache) ) DEALLOCATE(SchurDiagCache)
++        SchurDiagCacheN = TotMatrix % Submatrix(2,1) % Mat % NumberOfRows
++        ALLOCATE(SchurDiagCache(SchurDiagCacheN))
++        CALL BlockSchurPrepareDiagonal(SchurDiagCache,CreateSchurApprox)
++        SchurDiagCacheValid = .TRUE.
++        CALL Info('BlockMatrixPrec','Prepared reusable Schur diagonal preconditioner',Level=7)
++      END IF
++    END IF
+     
+     
+    
+@@ -3828,6 +4265,162 @@ CONTAINS
+       CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
+           //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
+     END IF
++
++    ! The existing ``Schur Operator 2 = 1`` path below is the matrix-free
++    ! action y = -B K^-1 B^T v.  In diagnostic mode, exercise that same
++    ! operation on deterministic vectors and persist the resulting vectors so
++    ! an independent Python/SuperLU check can compare action-by-action.
++    SchurDiagnostic = ListGetLogical( Params, 'Block Schur Diagnostic', Found )
++    SchurDiagnosticDirect = ListGetLogical( Params, &
++        'Block Schur Diagnostic Direct', Found )
++    SchurDiagnosticOnly = ListGetLogical( Params, &
++        'Block Schur Diagnostic Only', Found )
++    IF( SchurDiagnostic .AND. .NOT. isParallel .AND. NoVar == 2 ) THEN
++      d_nu = Offset(2) - Offset(1)
++      d_nl = Offset(3) - Offset(2)
++      ALLOCATE( d_v(d_nl), d_bt(d_nu), d_ku(d_nu), d_y(d_nl), d_dv(d_nl), STAT=istat )
++      IF( istat /= 0 ) CALL Fatal('BlockMatrixPrec', &
++          'Memory allocation error for Schur diagnostic')
++
++      Aij => TotMatrix % Submatrix(1,2) % Mat
++      A => TotMatrix % Submatrix(1,1) % Mat
++      Var => TotMatrix % SubVector(1) % Var
++      IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++        ASolver => TotMatrix % SubVector(1) % Solver
++      ELSE
++        ASolver => Solver
++      END IF
++      IF( SchurDiagnosticDirect ) THEN
++        ! The direct K solve is diagnostic-only.  Preserve the complete set
++        ! of solver keywords that this path can touch, including absent
++        ! entries, so the following production solve sees the original list.
++        DiagUseHypre = ListGetLogical(ASolver % Values, &
++            'Linear System Use Hypre',DiagHadUseHypre)
++        DiagSolver = ListGetString(ASolver % Values,'Linear System Solver', &
++            DiagHadSolver)
++        DiagIterative = ListGetString(ASolver % Values, &
++            'Linear System Iterative Method',DiagHadIterative)
++        DiagPreconditioning = ListGetString(ASolver % Values, &
++            'Linear System Preconditioning',DiagHadPreconditioning)
++        DiagDirect = ListGetString(ASolver % Values, &
++            'Linear System Direct Method',DiagHadDirect)
++        DiagMaxIter = ListGetInteger(ASolver % Values, &
++            'Linear System Max Iterations',DiagHadMaxIter)
++        DiagTol = ListGetCReal(ASolver % Values, &
++            'Linear System Convergence Tolerance',DiagHadTol)
++        DiagNoPrec = ListGetLogical(ASolver % Values, &
++            'No Precondition Recompute',DiagHadNoPrec)
++        DiagSkipScaling = ListGetLogical(ASolver % Values, &
++            'Linear System Skip Scaling',DiagHadSkipScaling)
++        DiagHypreGPU = ListGetLogical(ASolver % Values,'HYPRE GPU', &
++            DiagHadHypreGPU)
++        CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
++        CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
++        CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'superlu' )
++      END IF
++      SchurDiagnosticPrefix = ListGetString( Params, &
++          'Schur Diagnostic Prefix', Found )
++      IF( .NOT. Found ) SchurDiagnosticPrefix = 'schur_action'
++
++      IF( SchurDiagnosticDirect ) THEN
++        ! Keep one matrix object alive for the complete diagnostic.  Direct
++        ! solver backends may retain the matrix address between calls even
++        ! when numeric factorization is requested again.
++        ALLOCATE(ADiag)
++        ADiag % NumberOfRows = 0
++        CALL CRS_CopyMatrixTopology(A,ADiag)
++      END IF
++
++      DO q=1,4
++        SELECT CASE(q)
++        CASE(1)
++          d_v = 1.0_dp
++        CASE(2)
++          DO l=1,d_nl
++            d_v(l) = MERGE(1.0_dp,-1.0_dp,MOD(l,2)==1)
++          END DO
++        CASE(3)
++          DO l=1,d_nl
++            d_v(l) = SIN(0.017_dp*REAL(l,dp))
++          END DO
++        CASE DEFAULT
++          d_v = 0.0_dp
++          d_v(MIN(17,d_nl)) = 1.0_dp
++        END SELECT
++
++        CALL CRS_MatrixVectorMultiply(Aij,d_v,d_bt)
++        IF( SchurDiagnosticDirect ) THEN
++          ! Some direct backends overwrite the matrix values during numeric
++          ! factorization.  Give each deterministic RHS a pristine value
++          ! copy while reusing the CRS topology; this keeps the diagnostic
++          ! independent of backend-specific factorization ownership.
++          ADiag % Values = A % Values
++          CALL ListAddLogical( ASolver % Values, 'No Precondition Recompute', .FALSE. )
++          CALL SolveLinearSystem(ADiag,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
++        ELSE
++          CALL SolveLinearSystem(A,d_bt,d_ku,Var % Norm,Var % DOFs,ASolver)
++        END IF
++        Aij => TotMatrix % Submatrix(2,1) % Mat
++        CALL CRS_MatrixVectorMultiply(Aij,d_ku,d_y)
++        CALL BlockSchurCheckFinite('B*K^-1*Bt*v',d_y)
++        d_dv = 0.0_dp
++        Aij => TotMatrix % Submatrix(2,2) % Mat
++        IF( ASSOCIATED(Aij) .AND. Aij % NumberOfRows > 0 ) &
++            CALL CRS_MatrixVectorMultiply(Aij,d_v,d_dv)
++        CALL BlockSchurCheckFinite('D*v',d_dv)
++        d_y = d_dv - d_y
++        CALL BlockSchurCheckFinite('Schur output',d_y)
++
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_v'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_v(l)
++        END DO
++        CLOSE(unit)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_y'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_y(l)
++        END DO
++        CLOSE(unit)
++      END DO
++      IF( SchurDiagnosticDirect ) THEN
++        DEALLOCATE(ADiag % Values)
++        DEALLOCATE(ADiag)
++
++        ! Restore before returning to the ordinary block preconditioner.  In
++        ! particular, do not leave the diagnostic's direct/SuperLU settings
++        ! attached to the nested production Solver_t.
++        CALL BlockSchurRestoreLogical(ASolver % Values, &
++            'Linear System Use Hypre',DiagHadUseHypre,DiagUseHypre)
++        CALL BlockSchurRestoreString(ASolver % Values,'Linear System Solver', &
++            DiagHadSolver,DiagSolver)
++        CALL BlockSchurRestoreString(ASolver % Values, &
++            'Linear System Iterative Method',DiagHadIterative,DiagIterative)
++        CALL BlockSchurRestoreString(ASolver % Values, &
++            'Linear System Preconditioning',DiagHadPreconditioning, &
++            DiagPreconditioning)
++        CALL BlockSchurRestoreString(ASolver % Values, &
++            'Linear System Direct Method',DiagHadDirect,DiagDirect)
++        CALL BlockSchurRestoreInteger(ASolver % Values, &
++            'Linear System Max Iterations',DiagHadMaxIter,DiagMaxIter)
++        CALL BlockSchurRestoreReal(ASolver % Values, &
++            'Linear System Convergence Tolerance',DiagHadTol,DiagTol)
++        CALL BlockSchurRestoreLogical(ASolver % Values, &
++            'No Precondition Recompute',DiagHadNoPrec,DiagNoPrec)
++        CALL BlockSchurRestoreLogical(ASolver % Values, &
++            'Linear System Skip Scaling',DiagHadSkipScaling,DiagSkipScaling)
++        CALL BlockSchurRestoreLogical(ASolver % Values,'HYPRE GPU', &
++            DiagHadHypreGPU,DiagHypreGPU)
++      END IF
++      DEALLOCATE(d_v,d_bt,d_ku,d_y,d_dv)
++      CALL Info('BlockMatrixPrec','Wrote deterministic matrix-free Schur diagnostics',Level=7)
++      IF( SchurDiagnosticOnly ) THEN
++        CALL Info('BlockMatrixPrec', &
++            'Diagnostic-only mode completed; terminating before production solve',Level=7)
++        STOP 0
++      END IF
++    END IF
+     
+     ! Save the initial solver stuff
+     solver_save => Solver
+@@ -4074,7 +4667,40 @@ CONTAINS
+           CALL AMGXSolver( A, x, btmp, ASolver )
+           IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,A,btmp,x)
+         ELSE
+-          CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
++          ! The mortar block preconditioner has two deliberately different
++          ! inner solves. The primal block is large and only needs one AMG
++          ! cycle per outer application; inheriting the outer FlexGMRES
++          ! stopping rule would recursively run a full solve here. The
++          ! multiplier block is small enough to factor directly. Keep this
++          ! opt-in so existing block configurations retain their defaults.
++          IF( i == 2 .AND. BlockSchurMF ) THEN
++            ! Solve the true Schur equation with the matrix-free action.  The
++            ! existing Schur approximation is used only as its cheap inner
++            ! preconditioner; it is never substituted for S in this solve.
++            KVar => TotMatrix % SubVector(1) % Var
++            IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++              KSchurSolver => TotMatrix % SubVector(1) % Solver
++            ELSE
++              KSchurSolver => Solver
++            END IF
++            CALL BlockSchurMatrixFreeSolve( b, x, KSchurSolver, KVar, &
++                SchurDiagCache, SchurTol, SchurMaxIter, SchurRestart )
++          ELSE IF( i == 1 .AND. ListGetLogical( Params, &
++              'Block Nested Primal AMG', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Iterative Method', 'boomeramg' )
++            CALL ListAddString( ASolver % Values, 'Linear System Preconditioning', 'none' )
++            CALL ListAddInteger( ASolver % Values, 'Linear System Max Iterations', &
++                ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
++                Found, DefValue=1 ) )
++          ELSE IF( i == 2 .AND. ListGetLogical( Params, &
++              'Block Schur Direct Solver', Found ) ) THEN
++            CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .FALSE. )
++            CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
++            CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'umfpack' )
++          END IF
++          IF( .NOT. (i == 2 .AND. BlockSchurMF) ) &
++              CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
+         END IF
+       END IF
+       
+@@ -4185,6 +4811,44 @@ CONTAINS
+       
+     END DO ! j=1,NoVar
+ 
++    ! Complete the right factor of the block LDU inverse.  The lower path
++    ! above has already produced
++    !   z_lambda = S_tilde^-1 (r_lambda - B z_u).
++    ! For the full approximate factorization apply the remaining correction
++    !   z_u <- z_u - K_tilde^-1 B^T z_lambda.
++    IF( BlockFull ) THEN
++      CALL Info('BlockMatrixPrec','Applying full factorization upper correction',Level=7)
++
++      Aij => TotMatrix % Submatrix(1,2) % Mat
++      IF( Aij % NumberOfRows > 0 ) THEN
++        CALL CRS_MatrixVectorMultiply(Aij, &
++            u(offset(2)+1:offset(3)), rtmp )
++
++        Var => TotMatrix % SubVector(1) % Var
++        IF( ASSOCIATED( TotMatrix % Subvector(1) % Solver ) ) THEN
++          ASolver => TotMatrix % SubVector(1) % Solver
++          A => ASolver % Matrix
++        ELSE
++          A => TotMatrix % Submatrix(1,1) % PrecMat
++          IF( A % NumberOfRows == 0 ) A => TotMatrix % Submatrix(1,1) % Mat
++          ASolver => Solver
++        END IF
++
++        ! Reuse the same cheap K action policy as the primal block solve.
++        IF( ListGetLogical( Params, 'Block Nested Primal AMG', Found ) ) THEN
++          CALL ListAddLogical( ASolver % Values, 'Linear System Use Hypre', .TRUE. )
++          CALL ListAddString( ASolver % Values, 'Linear System Iterative Method', 'boomeramg' )
++          CALL ListAddString( ASolver % Values, 'Linear System Preconditioning', 'none' )
++          CALL ListAddInteger( ASolver % Values, 'Linear System Max Iterations', &
++              ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
++              Found, DefValue=1 ) )
++        END IF
++        CALL SolveLinearSystem( A, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
++        u(offset(1)+1:offset(2)) = u(offset(1)+1:offset(2)) - &
++            xtmp(1:offset(2)-offset(1))
++      END IF
++    END IF
++
+     IF (isParallel) DEALLOCATE(x,b)
+ 
+     CALL ListPopNameSpace('block:') ! block:
+diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
+index f2a0a7ff0..8d4518e3b 100644
+--- a/fem/src/SOLVER.KEYWORDS
++++ b/fem/src/SOLVER.KEYWORDS
+@@ -1031,6 +1031,22 @@ Solver:Logical:     'Block A-V System'
+ Solver:Logical:     'Block Diagonal A'
+ Solver:Logical:     'Block Gauss-Seidel'
+ Solver:Logical:     'Block Matrix ReUse'
++Solver:Logical:     'Create Schur Matrix Approximation'
++Solver:Logical:     'No Explicit Constrained Matrix'
++Solver:Logical:     'Block Nested Primal AMG'
++Solver:Integer:     'Block Nested Primal Max Iterations'
++Solver:Logical:     'Block Schur Direct Solver'
++Solver:Logical:     'Block Lower Triangular'
++Solver:Logical:     'Block Full Factorization'
++Solver:Logical:     'Block Schur Diagnostic'
++Solver:Logical:     'Block Schur Diagnostic Direct'
++Solver:Logical:     'Block Schur Diagnostic Only'
++Solver:String:      'Schur Diagnostic Prefix'
++Solver:Logical:     'Block Matrix-free Schur'
++Solver:Real:        'Block Schur Inner Tolerance'
++Solver:Integer:     'Block Schur Max Iterations'
++Solver:Integer:     'Block Schur Restart'
++Solver:String:      'Block Schur Preconditioner'
+ Solver:Logical:     'Block Monolithic'
+ Solver:Logical:     'Block Nested System'
+ Solver:Logical:     'Block Preconditioner'
+@@ -1148,6 +1164,7 @@ Solver:Logical:     'Linear System Scaling'
+ Solver:Logical:     'Linear System Symmetric ILU'
+ Solver:Logical:     'Linear System Symmetric'
+ Solver:Logical:     'Linear System Use HYPRE'
++Solver:Logical:     'HYPRE GPU'
+ Solver:Logical:     'Linear System timing cumulative'
+ Solver:Logical:     'Linear System timing'
+ Solver:Logical:     'Linear System Componentwise Backward Error'
+@@ -1635,6 +1652,8 @@ solver:logical:      'apply contact bcs'
+ solver:logical:      'calculate boundary fluxes'
+ solver:logical:      'linear system save'
+ solver:logical:      'linear system save skip zeros'
++solver:logical:      'linear system save continuous numbering'
++solver:string:       'linear system save prefix'
+ solver:logical:      'mortar bcs additive'
+ solver:logical:      'normalize coil current'
+ solver:logical:      'use unity conductivity'
+diff --git a/fem/src/SParIterSolver.F90 b/fem/src/SParIterSolver.F90
+index 10a938538..2a41f958c 100644
+--- a/fem/src/SParIterSolver.F90
++++ b/fem/src/SParIterSolver.F90
+@@ -927,6 +927,16 @@ END SUBROUTINE ZeroSplittedMatrix
+     hypre_dppara = 0.0_dp
+     hypre_intpara = 0
+ 
++    ! Keep GPU execution opt-in.  SolveHypre builds IJ objects from Elmer's
++    ! host CRS while HYPRE dispatches supported CUDA/HIP kernels.  The CPU
++    ! correctness case keeps this false and exercises the same stopping rules.
++    IF( ListGetLogical( Params, 'HYPRE GPU', Found ) ) hypre_intpara(19) = 1
++    ! For explicit mortar systems SolveWithLinearRestriction supplies the
++    ! local row range occupied by Lagrange-multiplier equations.  The C side
++    ! converts this range to an MGR C/F marker array.
++    hypre_intpara(13) = ListGetInteger( Params, 'HYPRE MGR CPoint Start', Found, DefValue = -1 )
++    hypre_intpara(14) = ListGetInteger( Params, 'HYPRE MGR CPoint Count', Found, DefValue = 0 )
++
+     hypre_sol = 0
+     hypre_pre = 0
+ 
+@@ -944,6 +954,7 @@ END SUBROUTINE ZeroSplittedMatrix
+     ! FlexGMRes    9    -   x
+     ! LGMRes       10   -   x
+     ! COGMRes      11   -   x
++    ! MGR          12   -   x
+     !---------------------------------------    
+ 
+     ! 1st round set the method
+@@ -997,6 +1008,8 @@ END SUBROUTINE ZeroSplittedMatrix
+         j = 10
+       ELSE IF( Method == 'cogmres' ) THEN
+         j = 11
++      ELSE IF( Method == 'mgr' ) THEN
++        j = 12
+       ELSE
+         CALL Fatal(Caller,'Invalid method for Hypre: '//TRIM(Method))
+       END IF
+@@ -1016,7 +1029,7 @@ END SUBROUTINE ZeroSplittedMatrix
+     END IF
+ 
+     ! Some methods cannot act as solvers!
+-    IF( ANY( hypre_sol == [0,4,5] ) ) THEN
++    IF( ANY( hypre_sol == [0,4,5,12] ) ) THEN
+       CALL Fatal(Caller,'Invalid solver for Hypre: '//TRIM(IterativeMethod))
+     END IF
+ 
+diff --git a/fem/src/SolveHypre.c b/fem/src/SolveHypre.c
+index 5628f72ca..3ee48e8dd 100644
+--- a/fem/src/SolveHypre.c
++++ b/fem/src/SolveHypre.c
+@@ -44,6 +44,8 @@
+ 
+ #ifdef HAVE_HYPRE
+ #include <math.h>
++#include <stdlib.h>
++#include <string.h>
+ #include "_hypre_utilities.h"
+ #include "HYPRE_krylov.h"
+ #include "HYPRE.h"
+@@ -60,7 +62,10 @@ typedef struct {
+   HYPRE_IJVector x,b;
+   
+   int hypre_method;
++  int hypre_use_gpu;
+   HYPRE_Solver solver, precond;
++  HYPRE_Solver mgr_fsolver;
++  int *mgr_marker;
+ 
+   /* AMS specific stuff */
+   HYPRE_IJMatrix G, Pi;
+@@ -107,7 +112,7 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+ 
+    int ilower, iupper;
+    int local_size, extra;
+-   int hypre_sol, hypre_pre;
++   int hypre_sol, hypre_pre, hypre_use_gpu;
+    MPI_Comm comm=MPI_Comm_f2c(*fcomm);
+    ElmerHypreContainer* Container;
+ 
+@@ -127,6 +132,9 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+    
+    int verbosity = *verbosityPtr, myverb;
+ 
++   /* HYPRE 3 requires an explicit initialization before any other call. */
++   HYPRE_Init();
++
+    /* which process number am I? */
+    MPI_Comm_rank(comm, &myid);
+ 
+@@ -143,6 +151,20 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+    local_size = *nrows;
+    hypre_sol = *hypre_method / 100;
+    hypre_pre = *hypre_method % 100;
++   hypre_use_gpu = hypre_intpara[18];
++
++   /* Keep IJ assembly in host memory; HYPRE's device execution policy then
++      dispatches supported kernels and performs internal staging as needed. */
++   HYPRE_SetMemoryLocation(HYPRE_MEMORY_HOST);
++   HYPRE_SetExecutionPolicy(hypre_use_gpu ? HYPRE_EXEC_DEVICE : HYPRE_EXEC_HOST);
++   if (hypre_use_gpu) {
++     /* Explicitly create the CUDA/HIP stream and bind HYPRE to the process's
++        already-selected device before any IJ allocation. */
++     HYPRE_DeviceInitialize();
++     if (myverb > 4) HYPRE_PrintDeviceInfo();
++   }
++   if (hypre_use_gpu && myverb > 4) fprintf(stdout,
++     "SolveHypre: HYPRE device mode requested; IJ host assembly with device kernels\n");
+ 
+    if(hypre_sol == 2 || hypre_pre == 2)  {
+      if (*ContainerPtr == NULL) {
+@@ -152,7 +174,8 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+    }
+    else {   
+      Container = (ElmerHypreContainer*)malloc(sizeof(ElmerHypreContainer));   
+-     *ContainerPtr=(int*)(Container);
++      *ContainerPtr=(int*)(Container);
++      memset(Container, 0, sizeof(ElmerHypreContainer));
+    }
+    
+    ilower =  1000000000;
+@@ -442,6 +465,69 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+      fprintf( stdout,"Hypre preconditioning method FSAI not compiled with!\n");
+      exit(EXIT_FAILURE);
+ #endif  
++   } else if ( hypre_pre == 12 ) {
++     int mgr_cstart = hypre_intpara[12];
++     int mgr_ccount = hypre_intpara[13];
++     HYPRE_Int mgr_num_cpoints[1] = {1};
++     HYPRE_Int mgr_cpoint_tags[1] = {1};
++     HYPRE_Int *mgr_tag_ptr[1] = {mgr_cpoint_tags};
++
++     if (mgr_cstart < 1 || mgr_ccount < 1 ||
++         mgr_cstart + mgr_ccount - 1 > local_size) {
++       fprintf(stderr,
++          "SolveHypre: invalid MGR C-point range start=%d count=%d local_rows=%d\n",
++          mgr_cstart, mgr_ccount, local_size);
++       exit(EXIT_FAILURE);
++     }
++     if (myverb > 8) fprintf(stdout,
++          "SolveHypre: creating MGR preconditioner (C rows %d..%d)\n",
++          mgr_cstart, mgr_cstart + mgr_ccount - 1);
++
++     Container->mgr_marker = (int *)malloc((size_t)local_size * sizeof(int));
++     if (!Container->mgr_marker) {
++       fprintf(stderr, "SolveHypre: MGR marker allocation failed\n");
++       exit(EXIT_FAILURE);
++     }
++     for (i = 0; i < local_size; i++) {
++       Container->mgr_marker[i] =
++          (i + 1 >= mgr_cstart && i + 1 < mgr_cstart + mgr_ccount) ? 1 : 0;
++     }
++
++     HYPRE_MGRCreate(&precond);
++     /* Tags 0/1 identify F/C points; block_size=2 avoids MGR's scalar
++        shortcut while point_marker_array supplies the actual local split. */
++     HYPRE_MGRSetCpointsByPointMarkerArray(precond, 2, 1,
++          mgr_num_cpoints, mgr_tag_ptr, Container->mgr_marker);
++     HYPRE_MGRSetNonCpointsToFpoints(precond, 1);
++     /* Use a dedicated BoomerAMG object for the F block.  MGR only consumes
++        HYPRE_MGRSetFSolver when the F-relaxation type is AMG (2); setting a
++        Jacobi relax type here silently bypasses the user solver. */
++     HYPRE_BoomerAMGCreate(&Container->mgr_fsolver);
++     HYPRE_BoomerAMGSetTol(Container->mgr_fsolver, 1.0e-4);
++     HYPRE_BoomerAMGSetMaxIter(Container->mgr_fsolver, 2);
++     HYPRE_BoomerAMGSetCoarsenType(Container->mgr_fsolver, 8);
++     HYPRE_BoomerAMGSetInterpType(Container->mgr_fsolver, 6);
++     HYPRE_BoomerAMGSetRelaxType(Container->mgr_fsolver, 18);
++     HYPRE_BoomerAMGSetNumSweeps(Container->mgr_fsolver, 1);
++     HYPRE_MGRSetFSolver(precond,
++          (HYPRE_PtrToParSolverFcn) HYPRE_BoomerAMGSolve,
++          (HYPRE_PtrToParSolverFcn) HYPRE_BoomerAMGSetup,
++          Container->mgr_fsolver);
++     HYPRE_MGRSetRelaxType(precond, 2);
++     HYPRE_MGRSetNumRelaxSweeps(precond, 2);
++     /* Match the GPU-capable BoomerAMG interpolation used by no-mortar. */
++     /* Approximate-inverse restriction is the first Schur-quality variant;
++        injection is retained in the history as the baseline. */
++     HYPRE_MGRSetRestrictType(precond, 3);
++     HYPRE_MGRSetNumRestrictSweeps(precond, 2);
++     HYPRE_MGRSetInterpType(precond, 2);
++     HYPRE_MGRSetNumInterpSweeps(precond, 2);
++     HYPRE_MGRSetMaxIter(precond, 1);
++     HYPRE_MGRSetTol(precond, 0.0);
++     i = (verbosity >= 6);
++     if (verbosity >= 10) i = 3;
++     HYPRE_MGRSetPrintLevel(precond, i);
++
+    } else if( hypre_pre != 0) {
+      fprintf( stdout,"Hypre preconditioning method %d not implemented\n",hypre_pre);
+      exit(EXIT_FAILURE);
+@@ -615,6 +701,9 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+      } else if ( hypre_pre == 4) { 
+        HYPRE_FlexGMRESSetPrecond(solver, (HYPRE_PtrToSolverFcn) HYPRE_ParaSailsSolve,
+ 			   (HYPRE_PtrToSolverFcn) HYPRE_ParaSailsSetup, precond);
++     } else if ( hypre_pre == 12) {
++       HYPRE_FlexGMRESSetPrecond(solver, (HYPRE_PtrToSolverFcn) HYPRE_MGRSolve,
++                                 (HYPRE_PtrToSolverFcn) HYPRE_MGRSetup, precond);
+      }
+      if (myverb > 12 ) fprintf(stdout,"SolveHypre: Setting up FlexGMRes linear system");
+      HYPRE_ParCSRFlexGMRESSetup(solver, parcsr_A, par_b, par_x);
+@@ -708,6 +797,7 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+    Container->ilower = ilower;
+    Container->iupper = iupper;     
+    Container->hypre_method = *hypre_method;
++   Container->hypre_use_gpu = hypre_use_gpu;
+    Container->A = A;
+    Container->b = b;
+    Container->x = x;
+@@ -924,10 +1010,8 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+ //     HYPRE_ParCSRFlexGMRESSetMaxIter(solver, *Rounds); /* max iterations */
+      HYPRE_ParCSRFlexGMRESSolve(Container->solver, parcsr_A, par_b, par_x);
+      
+-     if (myverb > 5 ) {
+-       HYPRE_FlexGMRESGetNumIterations(Container->solver, &num_iterations);
+-       HYPRE_FlexGMRESGetFinalRelativeResidualNorm(solver, &final_res_norm);
+-     }
++     HYPRE_FlexGMRESGetNumIterations(Container->solver, &num_iterations);
++     HYPRE_FlexGMRESGetFinalRelativeResidualNorm(solver, &final_res_norm);
+    }
+ 
+    else if ( hypre_sol == 10) {
+@@ -953,7 +1037,17 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+    
+    for( k=0,i=0; i<local_size; i++ )
+      if ( owner[i] ) rcols[k++] = globaldofs[i];
++
++   /* Never return a silently inaccurate Krylov iterate.  Elmer's generic
++      option is advisory in some nonlinear paths, so enforce the HYPRE
++      convergence contract at this boundary. */
++   if (hypre_sol == 9 && num_iterations >= *Rounds && final_res_norm > *TOL) {
++     fprintf(stderr, "SolveHypre: FlexGMRES failed to converge (%d iterations, relative residual %g; tolerance %g)\n",
++             num_iterations, final_res_norm, *TOL);
++     MPI_Abort(comm, 1);
++   }
+    
++   if (Container->hypre_use_gpu) HYPRE_IJVectorMigrate(x, HYPRE_MEMORY_HOST);
+    HYPRE_IJVectorGetValues(x, k, rcols, txvec );
+    
+    for( i=0,k=0; i<local_size; i++ )
+@@ -1012,6 +1106,9 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+      HYPRE_ILUDestroy(Container->precond);
+    } else if ( hypre_pre == 4 ) {
+      HYPRE_ParaSailsDestroy(Container->precond);
++   } else if ( hypre_pre == 12 ) {
++     HYPRE_MGRDestroy(Container->precond);
++     if (Container->mgr_fsolver) HYPRE_BoomerAMGDestroy(Container->mgr_fsolver);
+    }
+ 
+    
+@@ -1057,6 +1154,8 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+    if(Container->x) HYPRE_IJVectorDestroy(Container->x);
+    if(Container->b) HYPRE_IJVectorDestroy(Container->b);
+ 
++   if (Container->mgr_marker) free(Container->mgr_marker);
++
+    free(Container);
+    *ContainerPtr = NULL;
+ }

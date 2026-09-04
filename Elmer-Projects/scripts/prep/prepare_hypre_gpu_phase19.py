@@ -190,8 +190,10 @@ def main() -> None:
     schur_diag["iteration_series_file"] = f"{SCHUR_DIAG_CASE}_iterations.csv"
     schur_diag["output_file_path"] = f"../work/meshes/{schur_diag['mesh']}/{SCHUR_DIAG_CASE}.result"
     schur_diag["solver"] = dict(schur_diag["solver"])
+    schur_diag["solver"]["linear_system"] = "iterative_hypre_block_lower"
     schur_diag["solver"]["block_schur_diagnostic"] = True
     schur_diag["solver"]["block_schur_diagnostic_direct"] = True
+    schur_diag["solver"]["block_schur_diagnostic_only"] = True
     schur_diag["solver"]["block_schur_diagnostic_prefix"] = SCHUR_DIAG_CASE
     schur_diag["solver"]["nonlinear_max_iterations"] = 1
     schur_diag["solver"]["nonlinear_convergence_tolerance"] = 1e-3
@@ -213,7 +215,7 @@ def main() -> None:
         block["solver"] = dict(block["solver"])
         block["solver"]["linear_system"] = (
             f"iterative_hypre_block_{'full' if variant.startswith('full') else 'lower'}"
-            f"_{'gpu' if use_gpu else 'cpu'}"
+            + ("_gpu" if use_gpu else "")
         )
         block["timesteps"] = truncate(block["timesteps"], 1)
         block["output_intervals"] = [1]
