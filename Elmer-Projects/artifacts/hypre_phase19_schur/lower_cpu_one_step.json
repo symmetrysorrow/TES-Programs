@@ -1,0 +1,26 @@
+{
+  "case": "case_p19_hypre_block_lower_cpu_time5us",
+  "status": "INCOMPLETE",
+  "accepted_as_baseline": false,
+  "configuration": {
+    "outer": "FlexGMRES",
+    "block": "lower triangular",
+    "k": "HYPRE BoomerAMG, 1 cycle",
+    "schur": "matrix-free GMRES",
+    "schur_tolerance": 0.0001,
+    "schur_max_iterations": 30,
+    "schur_restart": 30
+  },
+  "observed_before_manual_stop": {
+    "inner_schur_solves_completed": 11,
+    "k_actions_observed": 367,
+    "inner_iteration_limit_warnings": 11,
+    "last_inner_reported_residual": 4.53571e-14,
+    "nonfinite_or_breakdown": false,
+    "outer_final_residual": null,
+    "original_system_residual": null,
+    "constraint_residual": null,
+    "wall_time_seconds_at_stop": 2700
+  },
+  "reason": "Outer solver had not terminated after approximately 45 minutes; no partial iterate was accepted as a production result."
+}

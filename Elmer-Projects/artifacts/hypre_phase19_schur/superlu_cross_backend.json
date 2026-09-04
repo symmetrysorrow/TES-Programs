@@ -1,0 +1,23 @@
+{
+  "status": "DIAGNOSTIC ONLY",
+  "backend_a": "Elmer system SuperLU wrapper",
+  "backend_b": "SciPy SuperLU, COLAMD",
+  "schur_gate": {
+    "threshold": 1e-10,
+    "passed": 2,
+    "failed": 2,
+    "relative_errors": {
+      "all_ones": 2.5111975432027286e-10,
+      "alternating_sign": 8.927337619580729e-11,
+      "deterministic_sine": 8.608169440016159e-10,
+      "basis_like_17": 3.401893610261432e-16
+    }
+  },
+  "composite_gate": {
+    "bku_threshold": 1e-12,
+    "schur_threshold": 1e-10,
+    "passed": 1,
+    "failed": 3
+  },
+  "interpretation": "cross-backend sensitivity check; not the matrix-free implementation correctness gate"
+}

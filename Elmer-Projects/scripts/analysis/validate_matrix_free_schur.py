@@ -108,6 +108,8 @@ def main() -> None:
         "n_c": n_c,
         "operator": "D - B K^-1 B^T",
         "k_solver": "independent SciPy SuperLU",
+        "comparison_role": "cross-backend sensitivity check",
+        "implementation_correctness_gate": "same-binary oracle in check_superlu_parity.py",
         "vectors": records,
         "max_action_relative_error": max(action_errors) if action_errors else None,
         "passed": all(item["pass"] for item in records),

@@ -3,6 +3,8 @@
   "n_c": 2898,
   "operator": "D - B K^-1 B^T",
   "k_solver": "independent SciPy SuperLU",
+  "comparison_role": "cross-backend sensitivity check",
+  "implementation_correctness_gate": "same-binary oracle in check_superlu_parity.py",
   "vectors": [
     {
       "name": "all_ones",

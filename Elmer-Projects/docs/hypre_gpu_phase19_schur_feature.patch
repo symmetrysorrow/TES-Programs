@@ -1,7 +1,7 @@
 # Feature-only HYPRE/Mortar block-solver patch
 # Base: ElmerCSC/elmerfem commit 5a8de867068be0568f09af40fb90fee300dfbede
 # Generated from the isolated feature tree; includes the portable diagnostic
-# and optional serial SuperLU gate used by the Phase19 independent check.
+# and optional serial SuperLU gate/oracle used by the Phase19 independent check.
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index faa8bee1cf714f7d4e2d3a6f1c54be5fa1dfcd73..0cffbf39d778362837bf5ab8d2f78e4d4c74a139 100644
@@ -60,7 +60,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
  
  CONTAINS
  
-@@ -115,6 +125,467 @@ CONTAINS
+@@ -115,6 +125,480 @@ CONTAINS
      
    END FUNCTION CreateSchurApproximation
  
@@ -122,6 +122,9 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +          colk = B % Cols(j)
 +          IF( K % Diag(colk) <= 0 ) CYCLE
 +          val = B % Values(j) / K % Values(K % Diag(colk))
++          ! A stored Bt can omit logical primal rows.  Such rows represent
++          ! an exact zero tail, not an addressable CRS row.
++          IF( colk > Bt % NumberOfRows ) CYCLE
 +          DO l=Bt % Rows(colk),Bt % Rows(colk+1)-1
 +            IF( Bt % Cols(l) == i ) THEN
 +              DiagS(i) = DiagS(i) - val * Bt % Values(l)
@@ -382,6 +385,11 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +    IF( SIZE(v) /= nc .OR. SIZE(y) /= nc .OR. SIZE(bt_v) /= nu .OR. &
 +        SIZE(k_u) /= nu .OR. SIZE(b_k_u) /= nc .OR. SIZE(d_v) /= nc ) &
 +        CALL Fatal('BlockSchurActionWork','Incompatible Schur work size')
++    ! CRS_MatrixVectorMultiply writes only the matrix's stored rows.  Bt may
++    ! have a shorter stored row dimension than the logical primal block, so
++    ! clear the complete logical output before applying it.  This also makes
++    ! repeated Schur matvecs independent of stale finite tail values.
++    bt_v = 0.0_dp
 +    CALL CRS_MatrixVectorMultiply(Bt,v,bt_v)
 +    CALL BlockSchurCheckFinite('Bt*v',bt_v)
 +    CALL BlockSchurReport('Bt*v',bt_v)
@@ -391,6 +399,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +    CALL SolveLinearSystem(K,bt_v,k_u,KVar % Norm,KVar % DOFs,KSolver)
 +    CALL BlockSchurCheckFinite('K solve',k_u)
 +    CALL BlockSchurReport('K solve',k_u)
++    b_k_u = 0.0_dp
 +    CALL CRS_MatrixVectorMultiply(B,k_u,b_k_u)
 +    CALL BlockSchurCheckFinite('B*K^-1*Bt*v',b_k_u)
 +    CALL BlockSchurReport('B*K^-1*Bt*v',b_k_u)
@@ -398,6 +407,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +    IF( ASSOCIATED(D) ) THEN
 +      IF( D % NumberOfRows > 0 ) CALL CRS_MatrixVectorMultiply(D,v,d_v)
 +    END IF
++    CALL BlockSchurCheckFinite('D*v',d_v)
 +    CALL BlockSchurReport('D*v',d_v)
 +    y = d_v - b_k_u
 +    CALL BlockSchurCheckFinite('Schur output',y)
@@ -424,7 +434,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +        cs(:),sn(:),g(:),coef(:),ax(:),sbt(:),sku(:),sbku(:),sdv(:)
 +    REAL(KIND=dp) :: beta,res,den,tmp
 +    INTEGER :: n,m,i,j,k,iter,istat,nu
-+    LOGICAL :: Found,OldNoPrec
++    LOGICAL :: Found,OldNoPrec,Breakdown
 +
 +    n = SIZE(rhs)
 +    IF( SIZE(sol) /= n .OR. SIZE(DiagS) /= n ) CALL Fatal( &
@@ -473,6 +483,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +        END DO
 +        h(j+1,j) = SQRT(MAX(0.0_dp,DOT_PRODUCT(w,w)))
 +        CALL BlockSchurCheckScalarFinite('Arnoldi residual',h(j+1,j))
++        Breakdown = h(j+1,j) <= TINY(1.0_dp)
 +        IF( h(j+1,j) > TINY(1.0_dp) ) v(:,j+1) = w / h(j+1,j)
 +        DO i=1,j-1
 +          tmp = cs(i)*h(i,j) + sn(i)*h(i+1,j)
@@ -492,6 +503,8 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +        CALL BlockSchurCheckScalarFinite('inner residual',res)
 +        IF( res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
 +            TINY(1.0_dp)) ) EXIT
++        IF( Breakdown ) CALL Fatal('BlockSchurMatrixFreeSolve', &
++            'Schur GMRES breakdown before reaching tolerance')
 +      END DO
 +      IF( k == 0 ) EXIT
 +      coef = 0.0_dp
@@ -888,7 +901,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
          END IF
        END IF
        
-@@ -4185,6 +4959,44 @@ CONTAINS
+@@ -4185,6 +4959,46 @@ CONTAINS
        
      END DO ! j=1,NoVar
  
@@ -902,6 +915,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +
 +      Aij => TotMatrix % Submatrix(1,2) % Mat
 +      IF( Aij % NumberOfRows > 0 ) THEN
++        rtmp = 0.0_dp
 +        CALL CRS_MatrixVectorMultiply(Aij, &
 +            u(offset(2)+1:offset(3)), rtmp )
 +
@@ -924,6 +938,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a
 +              ListGetInteger( Params, 'Block Nested Primal Max Iterations', &
 +              Found, DefValue=1 ) )
 +        END IF
++        xtmp = 0.0_dp
 +        CALL SolveLinearSystem( A, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
 +        u(offset(1)+1:offset(2)) = u(offset(1)+1:offset(2)) - &
 +            xtmp(1:offset(2)-offset(1))
@@ -948,7 +963,7 @@ index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..c44308e6a9ec09bdd17d8be210ddfbb7
  #SET_PROPERTY(SOURCE MaxwellAxiS.F90 PROPERTY
  #	COMPILE_DEFINITIONS FULL_INDUCTION)
  
-@@ -148,6 +152,16 @@ SET_TARGET_PROPERTIES(mpi_stubs
+@@ -148,6 +152,20 @@ SET_TARGET_PROPERTIES(mpi_stubs
  SET_TARGET_PROPERTIES(elmersolver
                        PROPERTIES LINKER_LANGUAGE Fortran)
  
@@ -960,6 +975,10 @@ index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..c44308e6a9ec09bdd17d8be210ddfbb7
 +  ADD_EXECUTABLE(BlockSchurSuperLUStandardTest SolveSuperLUStandardTest.c)
 +  TARGET_INCLUDE_DIRECTORIES(BlockSchurSuperLUStandardTest PRIVATE ${SUPERLU_INCLUDE_DIR})
 +  TARGET_LINK_LIBRARIES(BlockSchurSuperLUStandardTest elmersolver ${SUPERLU_LIBRARY})
++
++  ADD_EXECUTABLE(BlockSchurSuperLUOracle SolveSuperLUStandardOracle.c)
++  TARGET_INCLUDE_DIRECTORIES(BlockSchurSuperLUOracle PRIVATE ${SUPERLU_INCLUDE_DIR})
++  TARGET_LINK_LIBRARIES(BlockSchurSuperLUOracle elmersolver ${SUPERLU_LIBRARY})
 +ENDIF()
 +
  #We want MMG & Zoltan in the RPATH (if found), but given how many other 
@@ -1405,6 +1424,172 @@ index 0000000000000000000000000000000000000000..00000000000000000000000000000000
 +    free(next);
 +}
 +
+diff --git a/fem/src/SolveSuperLUStandardOracle.c b/fem/src/SolveSuperLUStandardOracle.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/fem/src/SolveSuperLUStandardOracle.c
+@@ -0,0 +1,159 @@
++/* File-based oracle using the exact block_schur_superlu_solve linked into
++ * elmersolver.  The input format is the diagnostic's one-based triplet file
++ * and indexed vector file; the output is an indexed solution vector. */
++
++#include <stdio.h>
++#include <stdlib.h>
++
++void block_schur_superlu_solve(int *n, int *nnz, double *values,
++                               int *cols, int *rows, double *rhs, int *info);
++
++typedef struct {
++    int row;
++    int col;
++    double value;
++} Triplet;
++
++static int read_triplets(const char *path, int *n, int *nnz,
++                         int **rows, int **cols, double **values)
++{
++    FILE *file = fopen(path, "r");
++    char line[4096];
++    int header_n = 0, header_m = 0, header_nnz = 0, count = 0;
++    Triplet *triplets = NULL;
++    int *row_counts = NULL, *cursor = NULL;
++
++    if (!file) return 1;
++    while (fgets(line, sizeof(line), file)) {
++        int row, col;
++        double value;
++        if (line[0] == '#') {
++            if (sscanf(line + 1, "%d %d %d", &header_n, &header_m,
++                       &header_nnz) != 3) {
++                fclose(file);
++                return 2;
++            }
++            continue;
++        }
++        if (sscanf(line, "%d %d %lf", &row, &col, &value) != 3) continue;
++        if (header_n <= 0 || header_m != header_n || header_nnz <= 0 ||
++            count >= header_nnz || row < 1 || row > header_n ||
++            col < 1 || col > header_m) {
++            fclose(file);
++            free(triplets);
++            return 3;
++        }
++        if (count == 0)
++            triplets = (Triplet *)malloc((size_t)header_nnz * sizeof(*triplets));
++        if (!triplets) {
++            fclose(file);
++            return 4;
++        }
++        triplets[count].row = row;
++        triplets[count].col = col;
++        triplets[count].value = value;
++        ++count;
++    }
++    fclose(file);
++    if (header_n <= 0 || header_m != header_n || header_nnz != count) {
++        free(triplets);
++        return 5;
++    }
++
++    *rows = (int *)malloc((size_t)(header_n + 1) * sizeof(**rows));
++    *cols = (int *)malloc((size_t)header_nnz * sizeof(**cols));
++    *values = (double *)malloc((size_t)header_nnz * sizeof(**values));
++    row_counts = (int *)calloc((size_t)header_n, sizeof(*row_counts));
++    cursor = (int *)malloc((size_t)header_n * sizeof(*cursor));
++    if (!*rows || !*cols || !*values || !row_counts || !cursor) {
++        free(triplets);
++        free(row_counts);
++        free(cursor);
++        free(*rows);
++        free(*cols);
++        free(*values);
++        *rows = NULL;
++        *cols = NULL;
++        *values = NULL;
++        return 6;
++    }
++    for (int i = 0; i < count; ++i) ++row_counts[triplets[i].row - 1];
++    (*rows)[0] = 1;
++    for (int i = 0; i < header_n; ++i) (*rows)[i + 1] = (*rows)[i] + row_counts[i];
++    for (int i = 0; i < header_n; ++i) cursor[i] = (*rows)[i] - 1;
++    for (int i = 0; i < count; ++i) {
++        int position = cursor[triplets[i].row - 1]++;
++        (*cols)[position] = triplets[i].col;
++        (*values)[position] = triplets[i].value;
++    }
++    free(triplets);
++    free(row_counts);
++    free(cursor);
++    *n = header_n;
++    *nnz = header_nnz;
++    return 0;
++}
++
++static int read_vector(const char *path, int n, double *vector)
++{
++    FILE *file = fopen(path, "r");
++    char line[4096];
++    int count = 0;
++    if (!file) return 1;
++    while (fgets(line, sizeof(line), file)) {
++        int index;
++        double value;
++        if (sscanf(line, "%d %lf", &index, &value) != 2) continue;
++        if (index < 1 || index > n) {
++            fclose(file);
++            return 2;
++        }
++        vector[index - 1] = value;
++        ++count;
++    }
++    fclose(file);
++    return count == n ? 0 : 3;
++}
++
++static int write_vector(const char *path, int n, const double *vector)
++{
++    FILE *file = fopen(path, "w");
++    if (!file) return 1;
++    for (int i = 0; i < n; ++i)
++        if (fprintf(file, "%d %.17g\\n", i + 1, vector[i]) < 0) {
++            fclose(file);
++            return 2;
++        }
++    fclose(file);
++    return 0;
++}
++
++int main(int argc, char **argv)
++{
++    int n = 0, nnz = 0, info = -1;
++    int *rows = NULL, *cols = NULL;
++    double *values = NULL, *rhs = NULL;
++    int result = 1;
++    if (argc != 4) {
++        fprintf(stderr, "usage: %s K.triplets rhs.dat solution.dat\\n", argv[0]);
++        return 2;
++    }
++    if (read_triplets(argv[1], &n, &nnz, &rows, &cols, &values) != 0) goto cleanup;
++    rhs = (double *)calloc((size_t)n, sizeof(*rhs));
++    if (!rhs || read_vector(argv[2], n, rhs) != 0) goto cleanup;
++    block_schur_superlu_solve(&n, &nnz, values, cols, rows, rhs, &info);
++    if (info != 0) {
++        fprintf(stderr, "block_schur_superlu_solve failed: info=%d\\n", info);
++        goto cleanup;
++    }
++    if (write_vector(argv[3], n, rhs) != 0) goto cleanup;
++    result = 0;
++
++cleanup:
++    free(rows);
++    free(cols);
++    free(values);
++    free(rhs);
++    return result;
++}
++
+
 diff --git a/fem/src/SolveSuperLUStandardTest.c b/fem/src/SolveSuperLUStandardTest.c
 new file mode 100644
 index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
@@ -1455,4 +1640,3 @@ index 0000000000000000000000000000000000000000..00000000000000000000000000000000
 +    return 0;
 +}
 +
-

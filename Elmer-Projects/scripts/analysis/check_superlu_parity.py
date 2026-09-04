@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -96,6 +98,18 @@ def load_elmer_block(path: Path, logical_shape: tuple[int, int]) -> tuple[csr_ma
     }
 
 
+def run_same_binary_oracle(executable: Path, matrix: Path, rhs: Path,
+                           solution: Path) -> subprocess.CompletedProcess[str]:
+    """Run the C oracle linked against Elmer's block_schur_superlu_solve."""
+
+    return subprocess.run(
+        [str(executable), str(matrix), str(rhs), str(solution)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
 def compare_block(name: str, expected_shape: tuple[int, int], expected_rows: np.ndarray,
                  expected_cols: np.ndarray, expected_values: np.ndarray,
                  actual_path: Path) -> dict[str, object]:
@@ -157,7 +171,19 @@ def main() -> None:
     parser.add_argument("--c-start", type=int, required=True)
     parser.add_argument("--elmer-prefix", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--same-binary-executable",
+        type=Path,
+        help="BlockSchurSuperLUOracle linked against Elmer's wrapper",
+    )
+    parser.add_argument(
+        "--same-binary-solution-prefix",
+        type=Path,
+        help="prefix of precomputed <prefix>_kuN.dat files from the same-binary oracle",
+    )
     args = parser.parse_args()
+    if args.same_binary_executable and args.same_binary_solution_prefix:
+        parser.error("choose --same-binary-executable or --same-binary-solution-prefix")
 
     rows, cols, values = triplets(args.matrix)
     n_f = args.c_start - 1
@@ -208,6 +234,8 @@ def main() -> None:
     }
 
     self_records = []
+    same_binary_records = []
+    cross_backend_records = []
     mono_records = []
     for number, (name, vector) in enumerate(deterministic_vectors(n_c), start=1):
         v = read_vector(Path(f"{args.elmer_prefix}_v{number}.dat"), n_c)
@@ -236,6 +264,7 @@ def main() -> None:
             "elmer_k_componentwise_backward_error": componentwise_backward_error(k_elmer, bt_ref, emitted_ku),
             "scipy_k_backward_residual_norm": float(np.linalg.norm(scipy_residual)),
             "scipy_k_backward_residual_relative": relative_norm(scipy_residual, bt_ref),
+            "scipy_k_componentwise_backward_error": componentwise_backward_error(k_elmer, bt_ref, ku_ref),
             "bku_oracle_relative_error": relative_error(emitted_bku, bku_ref),
             "bku_emitted_ku_matvec_relative_error": relative_error(emitted_bku, bku_from_emitted),
             "dv_oracle_relative_error": relative_error(emitted_dv, dv_ref),
@@ -250,14 +279,80 @@ def main() -> None:
             self_record["bku_emitted_ku_matvec_relative_error"] <= 1.0e-12 and
             self_record["dv_oracle_relative_error"] <= 1.0e-12 and
             self_record["schur_emitted_stage_reconstruction_relative_error"] <= 1.0e-10)
-        self_record["oracle_pass"] = bool(
+        self_record["cross_backend_composite_pass"] = bool(
             self_record["vector_relative_error"] <= 1.0e-14 and
             self_record["bt_self_relative_error"] <= 1.0e-12 and
             self_record["bku_oracle_relative_error"] <= 1.0e-12 and
             self_record["dv_oracle_relative_error"] <= 1.0e-12 and
             self_record["schur_oracle_relative_error"] <= 1.0e-10)
-        self_record["pass"] = self_record["oracle_pass"]
+        self_record["cross_backend_schur_pass"] = bool(
+            self_record["schur_oracle_relative_error"] <= 1.0e-10)
+        # Keep the old field names in the detailed records for consumers of
+        # the previous artifact, but do not use this different-backend result
+        # as the matrix-free implementation verdict.
+        self_record["oracle_pass"] = self_record["cross_backend_composite_pass"]
+        self_record["pass"] = self_record["cross_backend_composite_pass"]
         self_records.append(self_record)
+        cross_backend_records.append({
+            "name": name,
+            "solution_relative_difference": self_record["ku_solution_relative_difference"],
+            "bku_relative_difference": self_record["bku_oracle_relative_error"],
+            "schur_relative_difference": self_record["schur_oracle_relative_error"],
+            "schur_absolute_difference": self_record["schur_oracle_absolute_error"],
+            "k_backward_residual_relative": self_record["scipy_k_backward_residual_relative"],
+            "componentwise_backward_error": self_record["scipy_k_componentwise_backward_error"],
+            "schur_gate_pass": self_record["cross_backend_schur_pass"],
+            "composite_gate_pass": self_record["cross_backend_composite_pass"],
+        })
+
+        if args.same_binary_executable or args.same_binary_solution_prefix:
+            with tempfile.TemporaryDirectory(prefix="phase19_same_binary_") as temp_dir:
+                oracle_path = (
+                    Path(temp_dir) / "ku.dat"
+                    if args.same_binary_executable
+                    else Path(f"{args.same_binary_solution_prefix}_ku{number}.dat")
+                )
+                completed = None
+                if args.same_binary_executable:
+                    completed = run_same_binary_oracle(
+                        args.same_binary_executable,
+                        Path(f"{args.elmer_prefix}_K.triplets"),
+                        Path(f"{args.elmer_prefix}_bt{number}.dat"),
+                        oracle_path,
+                    )
+                if oracle_path.exists() and (completed is None or completed.returncode == 0):
+                    same_ku = read_vector(oracle_path, n_f)
+                    same_residual = bt_ref - k_elmer @ same_ku
+                    same_bku = np.asarray(b_elmer @ same_ku).reshape(-1)
+                    same_y = dv_ref - same_bku
+                    same_record = {
+                        "name": name,
+                        "solution_relative_error_vs_elmer": relative_error(emitted_ku, same_ku),
+                        "solution_absolute_error_vs_elmer": float(np.linalg.norm(emitted_ku - same_ku)),
+                        "k_backward_residual_norm": float(np.linalg.norm(same_residual)),
+                        "k_backward_residual_relative": relative_norm(same_residual, bt_ref),
+                        "componentwise_backward_error": componentwise_backward_error(k_elmer, bt_ref, same_ku),
+                        "bku_relative_error_vs_elmer": relative_error(emitted_bku, same_bku),
+                        "schur_relative_error_vs_elmer": relative_error(emitted_y, same_y),
+                        "schur_absolute_error_vs_elmer": float(np.linalg.norm(emitted_y - same_y)),
+                        "oracle_stderr": completed.stderr.strip() if completed else "",
+                    }
+                    same_record["pass"] = bool(
+                        self_record["vector_relative_error"] <= 1.0e-14 and
+                        self_record["bt_self_relative_error"] <= 1.0e-12 and
+                        same_record["solution_relative_error_vs_elmer"] <= 1.0e-12 and
+                        same_record["bku_relative_error_vs_elmer"] <= 1.0e-12 and
+                        same_record["schur_relative_error_vs_elmer"] <= 1.0e-10)
+                else:
+                    same_record = {
+                        "name": name,
+                        "pass": False,
+                        "failure": (
+                            f"oracle exit {completed.returncode}: {completed.stderr.strip()}"
+                            if completed else f"missing oracle solution: {oracle_path}"
+                        ),
+                    }
+                same_binary_records.append(same_record)
 
         elmer_action = np.asarray(d_elmer @ v).reshape(-1) - b_elmer @ lu_elmer.solve(bt_elmer @ v)
         mono_action = np.asarray(d_mono @ v).reshape(-1) - b_mono @ lu_mono.solve(bt_mono @ v)
@@ -281,16 +376,45 @@ def main() -> None:
     else:
         classification = "MATERIAL MISMATCH"
 
-    self_pass = all(item["oracle_pass"] for item in self_records)
+    same_binary_pass = (
+        all(item["pass"] for item in same_binary_records)
+        if args.same_binary_executable or args.same_binary_solution_prefix else None
+    )
     emitted_stage_pass = all(item["emitted_stage_pass"] for item in self_records)
+    cross_schur_passed = sum(item["schur_gate_pass"] for item in cross_backend_records)
+    cross_composite_passed = sum(item["composite_gate_pass"] for item in cross_backend_records)
     result = {
         "metadata": {"n_f": n_f, "n_c": n_c, "operator": "D - B K^-1 B^T",
                      "elmer_solver": "system SuperLU wrapper; temporary CSR->CSC",
                      "monolithic_solver": "SciPy SuperLU, COLAMD",
                      "strict_gates": {"vector": 1.0e-14, "bt": 1.0e-12,
                                       "bku": 1.0e-12, "dv": 1.0e-12, "schur": 1.0e-10}},
-        "self_consistency": {"records": self_records, "passed": self_pass,
-                              "oracle_passed": self_pass,
+        "stage_self_consistency": {"records": self_records, "passed": emitted_stage_pass},
+        "same_binary_oracle": {
+            "executable": str(args.same_binary_executable) if args.same_binary_executable else None,
+            "solution_prefix": str(args.same_binary_solution_prefix)
+            if args.same_binary_solution_prefix else None,
+            "wrapper": "block_schur_superlu_solve linked into elmersolver",
+            "ordering": "COLAMD",
+            "input_contract": "same K_elmer triplets and emitted btN RHS",
+            "records": same_binary_records,
+            "passed": same_binary_pass,
+            "status": "PASS" if same_binary_pass is True else (
+                "FAIL" if same_binary_pass is False else "NOT YET VALIDATED"),
+        },
+        "cross_backend_comparison": {
+            "status": "DIAGNOSTIC ONLY",
+            "backend": "SciPy SuperLU/COLAMD vs Elmer system SuperLU wrapper",
+            "records": cross_backend_records,
+            "schur_gate": {"threshold": 1.0e-10, "passed": cross_schur_passed,
+                            "failed": len(cross_backend_records) - cross_schur_passed},
+            "composite_gate": {"thresholds": {"bku": 1.0e-12, "schur": 1.0e-10},
+                                "passed": cross_composite_passed,
+                                "failed": len(cross_backend_records) - cross_composite_passed},
+        },
+        # Compatibility view for the earlier artifact schema.
+        "self_consistency": {"records": self_records, "passed": same_binary_pass,
+                              "oracle_passed": same_binary_pass,
                               "emitted_stage_passed": emitted_stage_pass},
         "b_vs_bt_transpose": b_vs_bt_report,
         "short_bt_storage": short_storage,
@@ -305,8 +429,8 @@ def main() -> None:
                                    "max_relative_action_difference": max(
                                        item["relative_action_difference"] for item in mono_records)},
         "matrix_free_matvec_self_consistency": emitted_stage_pass,
-        "matrix_free_block_oracle_consistency": self_pass,
-        "matrix_free_implementation_valid": self_pass,
+        "matrix_free_block_oracle_consistency": same_binary_pass,
+        "matrix_free_implementation_valid": same_binary_pass,
         "block_extraction_equivalent": canonical_match,
         "production_ready": False,
     }

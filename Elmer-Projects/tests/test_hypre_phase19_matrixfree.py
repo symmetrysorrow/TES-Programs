@@ -6,6 +6,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.support.build_cases import solver1_block
+from scripts.analysis.short_bt_regression import production_short_bt_action
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,3 +96,49 @@ def test_matrix_free_source_has_explicit_sign_and_reuse_guard():
     assert "BlockSchurMatrixFreeSolve" in source
     assert "No Precondition Recompute" in source
     assert "Block Matrix-free Schur" in source
+
+
+def test_short_bt_finite_stale_tail_is_zeroed():
+    result = production_short_bt_action()
+    assert result["stale_tail"] == [123.0, -456.0]
+    assert result["tail_after"] == [0.0, 0.0]
+    assert result["finite"] is True
+    assert result["pass"] is True
+
+
+def test_production_work_array_clears_short_bt_tail_before_matvec():
+    source_path = ROOT.parent / "tools" / "elmer-phase19-feature-gate" / "fem" / "src" / "BlockSolve.F90"
+    if not source_path.exists():
+        pytest.skip("feature-gate Elmer source tree is optional integration-test input")
+    lines = source_path.read_text().splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == "CALL CRS_MatrixVectorMultiply(Bt,v,bt_v)":
+            window = "\n".join(lines[max(0, index - 8):index])
+            assert "bt_v = 0.0_dp" in window
+            return
+    pytest.fail("production Bt matvec was not found")
+
+
+def test_short_bt_diagonal_fallback_treats_missing_rows_as_zero():
+    source_path = ROOT.parent / "tools" / "elmer-phase19-feature-gate" / "fem" / "src" / "BlockSolve.F90"
+    if not source_path.exists():
+        pytest.skip("feature-gate Elmer source tree is optional integration-test input")
+    source = source_path.read_text()
+    assert "IF( colk > Bt % NumberOfRows ) CYCLE" in source
+    assert "CALL BlockSchurCheckFinite('D*v',d_v)" in source
+    assert "Breakdown = h(j+1,j) <= TINY(1.0_dp)" in source
+    assert "Schur GMRES breakdown before reaching tolerance" in source
+
+
+def test_same_binary_oracle_is_linked_into_elmer_solver_target():
+    source_dir = ROOT.parent / "tools" / "elmer-phase19-feature-gate" / "fem" / "src"
+    cmake_path = source_dir / "CMakeLists.txt"
+    oracle_path = source_dir / "SolveSuperLUStandardOracle.c"
+    if not cmake_path.exists() or not oracle_path.exists():
+        pytest.skip("feature-gate Elmer source tree is optional integration-test input")
+    cmake = cmake_path.read_text()
+    oracle = oracle_path.read_text()
+    assert "ADD_EXECUTABLE(BlockSchurSuperLUOracle SolveSuperLUStandardOracle.c)" in cmake
+    assert "TARGET_LINK_LIBRARIES(BlockSchurSuperLUOracle elmersolver ${SUPERLU_LIBRARY})" in cmake
+    assert "block_schur_superlu_solve" in oracle
+    assert "usage:" in oracle

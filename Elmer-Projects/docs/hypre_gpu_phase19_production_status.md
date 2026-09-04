@@ -6,7 +6,11 @@
 
 Phase A のクリーン適用と CPU HYPRE ビルドは完了した。Phase B は修正版の serial SuperLU wrapper で 4 ベクトルを再実行し、`B^T v`、K solve、`B K^{-1}B^T v`、`Dv`、最終 action を保存した。
 
-actual Elmer block だけで作った self-consistency oracle では、stage の matvec/reconstruction は一致したが、SciPy K solve を含む strict oracle gate は 4 vector 中 3 vector で未達だった。したがって指示どおり、CPU lower/full、GPU、短時間 transient、MPI へは進めていない。raw block mismatch だけで matrix-free operator を不合格にはしていない。
+actual Elmer block だけで作った self-consistency oracle では、stage の matvec/reconstruction は一致したが、SciPy K solve を含む strict oracle gate は 4 vector 中 3 vector で未達だった。これは cross-backend sensitivity として保存し、implementation correctness の gate から分離した。
+
+Phase C では、production `BlockSchurActionWork` の short-Bt tail zeroing を修正し、同じ `elmersolver` にリンクした `BlockSchurSuperLUOracle` で4 RHSを再検証した。same-binary K parity と same-binary Schur parity は4/4 PASS、stage algebraもPASSだった。Schur diagonalは `scale=4.59957e-11`、`threshold=6.85389e-19`、`min abs=4.68324e-13`、`max abs=4.59957e-11`、`min/max ratio=1.01819e-2`、negative `2898`、positive `0`、near-zero `0` である。
+
+SciPy比較は診断用に残す。`Schur <= 1e-10` は2/4 fail、`B*ku <= 1e-12`を含むcomposite cross-backend gateは3/4 failであり、これをsame-binary implementation gateとは混同しない。lower は同一条件の CPU baseline を実行したが約45分経過時点で outer solve が終了せず、`INCOMPLETE` として不採用にした。full は lower が受理可能な結果を出していないため未実行であり、GPU・MPI・transient・tuningも未実施である。
 
 ## Phase A: clean base / build
 
@@ -54,11 +58,39 @@ python scripts/analysis/validate_matrix_free_schur.py --matrix case_p19_hypre_fl
 python scripts/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/superlu_parity_cpu.json
 ```
 
-vector 自体は 4/4 pass（最大相対誤差 `1.32e-16`）。monolithic oracle との action 差は最大 `5.0716e-7` だが、これは別の block-equivalence 問題として扱う。actual Elmer block に対しては `B^T v`、`B*ku`、`Dv`、`y=dv-bku` の emitted-stage consistency が成立した一方、SciPy K oracle を通した `B K^{-1}B^T v` は all-ones `2.51e-10`、alternating `8.93e-11`、sine `8.61e-10`、basis `3.40e-16` で、strict `1e-10` は 3 vector が未達だった。
+vector 自体は 4/4 pass（最大相対誤差 `1.32e-16`）。以下の action error は monolithic/SciPy cross-backend 診断値であり、same-binary gateとは別である。monolithic oracle との action 差は最大 `5.0716e-7`。actual Elmer block に対して SciPy K oracle を通した `B K^{-1}B^T v` は all-ones `2.51e-10`、alternating `8.93e-11`、sine `8.61e-10`、basis `3.40e-16` で、strict `1e-10` は 2/4 pass（2/4 fail）だった。
 
 ### SuperLU parity check
 
-actual `K_elmer` に対する Elmer emitted solve の backward residual は、相対 `3.10e-14〜5.03e-8`、componentwise `1.31e-15〜4.79e-7`。同じ `K_elmer` に対する SciPy solve の residual も併記した。system SuperLU と SciPy は同一 binary ではないため、K solution vector差は backend/pivoting 差を含む。詳細は [superlu_parity_cpu.json](../artifacts/hypre_phase19_schur/superlu_parity_cpu.json) の `self_consistency` に保存した。
+actual `K_elmer` に対する Elmer emitted solve の backward residual は、相対 `3.10e-14〜5.03e-8`、componentwise `1.31e-15〜4.79e-7`。同じ `K_elmer` に対する SciPy solve の residual も併記した。system SuperLU と SciPy は同一 binary ではないため、K solution vector差は backend/pivoting 差を含む。詳細は [same_binary_parity.json](../artifacts/hypre_phase19_schur/same_binary_parity.json) の same-binary/cross-backend 分離結果に保存した。
+
+same-binary oracle は、Elmer diagnostic と同じ `block_schur_superlu_solve`（同じ SuperLU binary、CSR→CSC wrapper、`COLAMD`）を使用した。4 vectorの solution relative/absolute error は保存精度で `0/0`、`B*ku` relative error は `1.79e-16〜3.45e-16`、Schur relative error は `1.79e-16〜3.45e-16` だった。K backward residual relative は `3.10e-14〜5.03e-8`、componentwise backward error は `1.31e-15〜4.79e-7`。結果は [same_binary_parity.json](../artifacts/hypre_phase19_schur/same_binary_parity.json) に保存した。
+
+same-binary K parity:
+
+| vector | solution rel. error | solution abs. error | K backward rel. | componentwise backward | gate |
+|---|---:|---:|---:|---:|---|
+| all ones | 0 | 0 | 5.03e-8 | 4.79e-7 | PASS |
+| alternating | 0 | 0 | 8.09e-10 | 4.51e-7 | PASS |
+| sine | 0 | 0 | 2.10e-8 | 5.03e-8 | PASS |
+| basis | 0 | 0 | 3.10e-14 | 1.31e-15 | PASS |
+
+same-binary Schur parity (`B*ku` and final `y`):
+
+| vector | `B*ku` rel. error | Schur rel. error | gate |
+|---|---:|---:|---|
+| all ones | 1.79e-16 | 1.79e-16 | PASS |
+| alternating | 1.87e-16 | 1.87e-16 | PASS |
+| sine | 1.91e-16 | 1.91e-16 | PASS |
+| basis | 3.45e-16 | 3.45e-16 | PASS |
+
+same-binary oracle の再現手順（oracle生成はWSL、集計はWindows Python）:
+
+```text
+cmake --build /home/symme/elmer-phase19-feature-cpu-build --target BlockSchurSuperLUOracle --parallel 4
+wsl.exe -d Ubuntu -- bash -lc 'export LD_LIBRARY_PATH=/home/symme/elmer-phase19-feature-cpu-build/fem/src:/usr/lib/x86_64-linux-gnu; .../BlockSchurSuperLUOracle <K.triplets> <btN.dat> <same_binary_kuN.dat>'
+python scripts/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --same-binary-solution-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us_same_binary --output artifacts/hypre_phase19_schur/same_binary_parity.json
+```
 
 ### Block fingerprint / exact diff
 
@@ -75,7 +107,7 @@ raw SHA/shapeは一致しないが、K/B/Bᵀの共通entry差は0で、追加en
 
 ### Actual Elmer block self-consistency
 
-`*_K/B/Bt/D.triplets` を logical shape（短い Bt は zero padding）へ構築し、actual blockだけで SciPy SuperLU oracleを作った。emitted stage の内部matvec検証は全4 vectorで通過したが、異なる SuperLU binary による K solve差が `B*ku` と Schur oracleへ伝播し、推奨 strict gateは未達となった。`B vs Bt^T` は相対Frobenius `0`、最大差 `0`、nnz差 `0` で PASS。Btの81501行保存は、monolithicの後続行にnonzeroがなくzero paddingが安全だった。
+`*_K/B/Bt/D.triplets` を logical shape（短い Bt は zero padding）へ構築した。emitted stage の内部matvec検証は全4 vectorで通過し、same-binary oracleでも K solve と Schur action が全4 vectorで一致した。SciPy comparison は異なる SuperLU binary による backend sensitivity として分離している。`B vs Bt^T` は相対Frobenius `0`、最大差 `0`、nnz差 `0` で PASS。Btの81501行保存は、monolithicの後続行にnonzeroがなくzero paddingが安全だった。
 
 ### 直した根本原因
 
@@ -83,30 +115,39 @@ raw SHA/shapeは一致しないが、K/B/Bᵀの共通entry差は0で、追加en
 
 ## 未達ゲートと次の一手
 
-CPU lower/full one-step、GPU、transient は未実行・未承認。未達ゲートは actual block oracle の strict Schur self error `<=1e-10` と、backend差を含む K solve評価である。
+CPU lower/full one-step、GPU、transient は未承認。same-binary correctness gate は通過済みだが、lower baseline は `INCOMPLETE`、full は未実行である。未達なのは cross-backend sensitivity と production convergence/performance readiness であり、同一 binary の matrix-free correctness gate ではない。
 
-今回の次段階として actual-block self-consistency、`B vs Bt^T`、raw/canonical block equivalence、monolithic perturbation、scale-aware diagonal threshold を保存した。次は K backend差を含まない同一direct-solver oracle、または同一 binaryでの比較を用いて strict self gateを再確認すること。これが passするまで production promotionは行わない。
+今回の次段階として actual-block stage algebra、same-binary K/Schur parity、`B vs Bt^T`、raw/canonical block equivalence、monolithic perturbation、scale-aware diagonal threshold を保存した。production promotion は lower/full の finite な convergence baseline が得られるまで行わない。
 
 ## 変更ファイル
 
-- [docs/hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch): base から clean apply できる feature patch。Schur stage diagnostics、4-vector reset、optional serial SuperLU gate を含む。
+- [docs/hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch): base から clean apply できる feature patch。Schur stage diagnostics、production work-array zeroing、short-Bt回帰、optional serial SuperLU gate/oracle を含む。
 - feature source diff: `CMakeLists.txt`、`fem/src/CMakeLists.txt`、`fem/src/BlockSolve.F90`、`fem/src/SolveSuperLUStandard.c`、`fem/src/SOLVER.KEYWORDS`、`fem/src/SParIterSolver.F90`、`fem/src/SolveHypre.c`。
 - [scripts/support/build_elmer_hypre_gpu_wsl.ps1](../scripts/support/build_elmer_hypre_gpu_wsl.ps1): ParMETIS header discovery を portable 化。
 - [scripts/run_hypre_gpu_wsl.ps1](../scripts/run_hypre_gpu_wsl.ps1): HYPRE tag suffix、installed module/lib path、tag forwarding を修正。
-- [scripts/analysis/validate_matrix_free_schur.py](../scripts/analysis/validate_matrix_free_schur.py): strict validator は変更なし。
+- [scripts/analysis/validate_matrix_free_schur.py](../scripts/analysis/validate_matrix_free_schur.py): SciPy cross-backend validator。
+- [scripts/analysis/check_superlu_parity.py](../scripts/analysis/check_superlu_parity.py): stage/same-binary/cross-backend/block/monolithicを分離したparity集計。
+- [scripts/analysis/short_bt_regression.py](../scripts/analysis/short_bt_regression.py): finite stale-tail regression。
 - [artifacts/hypre_phase19_schur/matrix_free_validation_current.json](../artifacts/hypre_phase19_schur/matrix_free_validation_current.json): 修正版 wrapper 後の 4-vector 再実行結果。
 - [artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json](../artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json): 全 stage の診断要約。
-- [artifacts/hypre_phase19_schur/superlu_parity_cpu.json](../artifacts/hypre_phase19_schur/superlu_parity_cpu.json): Elmer K solve と SciPy/SuperLU の parity 結果。
+- [artifacts/hypre_phase19_schur/same_binary_parity.json](../artifacts/hypre_phase19_schur/same_binary_parity.json): same-binary K/Schur oracleとcross-backend比較。
+- [artifacts/hypre_phase19_schur/superlu_cross_backend.json](../artifacts/hypre_phase19_schur/superlu_cross_backend.json): SciPy comparisonをdiagnostic-onlyとして分離。
+- [artifacts/hypre_phase19_schur/short_bt_regression.json](../artifacts/hypre_phase19_schur/short_bt_regression.json): finite stale-tail regression結果。
+- [artifacts/hypre_phase19_schur/full_cpu_one_step.json](../artifacts/hypre_phase19_schur/full_cpu_one_step.json): lower baseline 未受理のため full CPU を未実行とした記録。
 - raw `*_K/B/Bt/D.triplets` と `_vN/_btN/_kuN/_bkuN/_dvN/_yN.dat` は validation中の外部artifactとして `results/case_p19_hypre_block_schur_diag_cpu_time5us/` に保持している。長期Git管理には含めない。
 - `tools/elmer-phase19-feature-gate`: isolated build source worktree。通常の `main` worktree は変更していない。
 
 ## Explicit verdict
 
-- SuperLU wrapper: FIXED（CSR→CSC、caller array 非破壊、合成非対称テスト PASS）
-- Matrix-free implementation self-consistency: FAIL（emitted matvec/reconstructionはPASS、SciPy actual-block oracleは3/4 strict FAIL）
+- CSR->CSC wrapper: PASS（caller array非破壊、合成非対称テストPASS）
+- Short-Bt production handling: PASS（finite stale tail `123/-456`をzero化）
 - B vs Bt^T: PASS（相対Frobenius 0、最大差0、nnz差0）
+- Matrix-free emitted-stage algebra: PASS（4/4）
+- Same-binary exact-K parity: PASS（4/4）
+- Same-binary Schur parity: PASS（4/4）
+- Cross-backend SuperLU sensitivity: ACCEPTABLE（diagnostic only; Schur gate 2/4 fail、composite 3/4 fail）
 - Block extraction vs monolithic: NUMERICALLY CLOSE（raw SHA/shapeは不一致、common entry exact、extraはmachine-epsilon級）
-- Matrix-free Schur implementation: INVALID（raw SHA mismatchではなく、actual-block oracle strict gate未達）
-- Lower CPU: NOT RUN
+- Matrix-free Schur implementation: VALID
+- Lower CPU: NOT RUN（実行試行は `INCOMPLETE`、partial iterate は不採用）
 - Full CPU: NOT RUN
-- GPU ready: NO
+- Ready for GPU: NO

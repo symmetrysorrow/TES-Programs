@@ -1,0 +1,15 @@
+{
+  "case": "case_p19_hypre_block_full_cpu_time5us",
+  "status": "NOT RUN",
+  "accepted_as_baseline": false,
+  "configuration": {
+    "outer": "FlexGMRES",
+    "block": "full factorization",
+    "k": "HYPRE BoomerAMG, 1 cycle",
+    "schur": "matrix-free GMRES",
+    "schur_tolerance": 0.0001,
+    "schur_max_iterations": 30,
+    "schur_restart": 30
+  },
+  "reason": "Full CPU baseline is gated on an accepted finite lower CPU baseline; the lower attempt was INCOMPLETE and its partial iterate was not accepted."
+}

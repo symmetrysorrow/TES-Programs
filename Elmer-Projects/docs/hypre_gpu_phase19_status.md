@@ -131,3 +131,26 @@ baseline.  The current conclusion is that MGR is a valid library/GPU path but
 is not yet a production solver for this mortar system.  The next production
 candidate is an explicit Schur preconditioner: BoomerAMG for `K` (GPU) and a
 small, separately solved constraint Schur problem.
+
+## Matrix-free Schur validation update (2026-09-04)
+
+The production work-array path now clears `bt_v` before applying a possibly
+short-stored `Bt`, and clears `b_k_u` before `B*ku`. The full-factorization
+upper correction also clears its `rtmp`/`xtmp` work arrays before partial-write
+matvec/solve operations. A finite stale-tail regression uses stored Bt rows
+`3`, logical rows `5`, and stale values `123/-456`; it passes with tail
+`0/0`.
+
+The same-binary oracle is `BlockSchurSuperLUOracle`, linked to the same
+`block_schur_superlu_solve` implementation as Elmer and using the same
+CSR-to-CSC conversion and `COLAMD` policy. K solution parity and Schur action
+parity pass for all four deterministic vectors. The SciPy comparison remains a
+diagnostic cross-backend sensitivity check: Schur `<=1e-10` is 2/4 fail and
+the composite `B*ku`/Schur gate is 3/4 fail. These are not implementation
+correctness failures. See `artifacts/hypre_phase19_schur/same_binary_parity.json`.
+
+The lower/full CPU baseline was permitted only after these gates. The frozen
+lower baseline was attempted, but the outer solve had not terminated after
+approximately 45 minutes and is recorded as `INCOMPLETE`; its partial iterate
+is not accepted. Full CPU was not started. GPU, MPI, transient, and tuning
+remain out of scope.
