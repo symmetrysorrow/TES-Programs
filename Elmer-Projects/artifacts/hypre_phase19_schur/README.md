@@ -17,10 +17,17 @@ The matrix-free Elmer action validator is
 `matrix_free_validation_current.json` is the current four-vector result and
 is an explicit failure snapshot: vector parity passes, but the strict action
 gate does not (`max action relative error = 5.0716313e-7`).
-`superlu_parity_cpu.json` additionally records K backward residuals,
-componentwise backward errors, `B^T v`/`B K^-1 B^T v`/`Dv` stage parity, and
-raw SHA-256 fingerprints for K/B/Bt/D.  The diagnostic emits the corresponding
-`*_K|B|Bt|D.triplets` and `*_vN|btN|kuN|bkuN|dvN|yN.dat` files in the project
-root.  The raw block fingerprints mismatch for K/B/Bt; only D matches.
+`superlu_parity_cpu.json` separates `self_consistency`, `b_vs_bt_transpose`,
+`block_equivalence`, and `monolithic_comparison`.  It records K backward
+residuals, componentwise backward errors, stage parity, raw/canonical SHA-256
+fingerprints, Frobenius differences, and Schur action perturbations.  The
+diagnostic emits the corresponding `*_K|B|Bt|D.triplets` and
+`*_vN|btN|kuN|bkuN|dvN|yN.dat` files under
+`results/case_p19_hypre_block_schur_diag_cpu_time5us/`.  The raw block
+fingerprints mismatch for K/B/Bt, but the separate classification is
+`NUMERICALLY CLOSE`; only D is raw-exact.
+The emitted-stage matvec self-check passes, while the SciPy actual-block K
+oracle remains strict-fail because the system SuperLU and SciPy SuperLU
+backends differ.
 Lower/full CPU, GPU, MPI, and transient promotion tests were intentionally not
 run after this failed gate.

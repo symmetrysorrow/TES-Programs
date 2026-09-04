@@ -1,192 +1,327 @@
 {
-  "n_f": 84636,
-  "n_c": 2898,
-  "scipy_solver": "SuperLU via scipy.sparse.linalg.splu, COLAMD",
-  "elmer_solver": "system SuperLU emitted by the diagnostic",
-  "block_fingerprints": [
-    {
-      "name": "K",
-      "expected_shape": [
-        84636,
-        84636
-      ],
-      "actual_shape": [
-        84636,
-        84636
-      ],
-      "expected_nnz": 1340068,
-      "actual_nnz": 1449892,
-      "expected_sha256": "d23750b8b3079d88177c8c7ede9f34ce4d4112f9a4918764a744768070445dd6",
-      "actual_sha256": "18ae83856b952fcf814a1df608eca91fec5e08ffa74cb49c9c8c1caff77c5d3e",
-      "expected_canonical_sha256": "d23750b8b3079d88177c8c7ede9f34ce4d4112f9a4918764a744768070445dd6",
-      "actual_canonical_sha256_padded": "c60adfd78c59080cb3462e85cec559ebfd4a193b057daede2eb10e27ca2edcf9",
-      "missing_nonzero_entries": 0,
-      "extra_nonzero_entries": 746,
-      "extra_nonzero_max_abs": 1.1650021011619702e-16,
-      "extra_nonzero_l2": 8.340400725964746e-16,
-      "max_abs_value_difference": 0.0,
-      "max_relative_value_difference": 0.0,
-      "numerical_match_after_zero_pruning": false,
-      "match": false
-    },
-    {
-      "name": "B",
-      "expected_shape": [
-        2898,
-        84636
-      ],
-      "actual_shape": [
-        2898,
-        84636
-      ],
-      "expected_nnz": 53564,
-      "actual_nnz": 54440,
-      "expected_sha256": "87d432271eb908391f7a98bd1a8ae5a68c0722c6311ed22495c32f4bfa09698c",
-      "actual_sha256": "e12feb91457f0dca95a5622f672120284cc77f07e3d28d817be261b09abf9337",
-      "expected_canonical_sha256": "87d432271eb908391f7a98bd1a8ae5a68c0722c6311ed22495c32f4bfa09698c",
-      "actual_canonical_sha256_padded": "e12feb91457f0dca95a5622f672120284cc77f07e3d28d817be261b09abf9337",
-      "missing_nonzero_entries": 0,
-      "extra_nonzero_entries": 876,
-      "extra_nonzero_max_abs": 2.2192311406797403e-16,
-      "extra_nonzero_l2": 2.7290480938928246e-15,
-      "max_abs_value_difference": 0.0,
-      "max_relative_value_difference": 0.0,
-      "numerical_match_after_zero_pruning": false,
-      "match": false
-    },
-    {
-      "name": "Bt",
-      "expected_shape": [
-        84636,
-        2898
-      ],
-      "actual_shape": [
-        81501,
-        2898
-      ],
-      "expected_nnz": 53564,
-      "actual_nnz": 54440,
-      "expected_sha256": "2455570c48056689cda9842eae057d1d5b5d3a0b93a4a89864bc66dea79d5883",
-      "actual_sha256": "bdee538966e509eb09ca3272b34814d8a93b6f10d7f6e2d9695366b55a60cfae",
-      "expected_canonical_sha256": "2455570c48056689cda9842eae057d1d5b5d3a0b93a4a89864bc66dea79d5883",
-      "actual_canonical_sha256_padded": "78c6a5fa7613461b60490b72d4b9846fb0124c49200c574a24f37f1a6a526e0f",
-      "missing_nonzero_entries": 0,
-      "extra_nonzero_entries": 876,
-      "extra_nonzero_max_abs": 2.2192311406797403e-16,
-      "extra_nonzero_l2": 2.729048093892825e-15,
-      "max_abs_value_difference": 0.0,
-      "max_relative_value_difference": 0.0,
-      "numerical_match_after_zero_pruning": false,
-      "match": false
-    },
-    {
-      "name": "D",
-      "expected_shape": [
-        2898,
-        2898
-      ],
-      "actual_shape": [
-        2898,
-        2898
-      ],
-      "expected_nnz": 0,
-      "actual_nnz": 0,
-      "expected_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
-      "actual_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
-      "expected_canonical_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
-      "actual_canonical_sha256_padded": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
-      "missing_nonzero_entries": 0,
-      "extra_nonzero_entries": 0,
-      "extra_nonzero_max_abs": 0.0,
-      "extra_nonzero_l2": 0.0,
-      "max_abs_value_difference": 0.0,
-      "max_relative_value_difference": 0.0,
-      "numerical_match_after_zero_pruning": true,
-      "match": true
+  "metadata": {
+    "n_f": 84636,
+    "n_c": 2898,
+    "operator": "D - B K^-1 B^T",
+    "elmer_solver": "system SuperLU wrapper; temporary CSR->CSC",
+    "monolithic_solver": "SciPy SuperLU, COLAMD",
+    "strict_gates": {
+      "vector": 1e-14,
+      "bt": 1e-12,
+      "bku": 1e-12,
+      "dv": 1e-12,
+      "schur": 1e-10
     }
-  ],
-  "block_fingerprints_match": false,
-  "records": [
-    {
-      "name": "all_ones",
-      "ku_relative_error": 1.0623164986087315e-07,
-      "action_relative_error_vs_scipy": 2.7081607577107616e-07,
-      "action_relative_error_vs_elmer_ku": 2.2717267524755846e-07,
-      "elmer_backward_residual_norm": 3.179764872220414e-15,
-      "elmer_backward_residual_relative_to_rhs": 1.8492318062655923e-07,
-      "elmer_componentwise_backward_error": 4.785543241707145e-07,
-      "scipy_backward_residual_norm": 8.30012728943629e-16,
-      "scipy_backward_residual_relative_to_rhs": 4.827042248869355e-08,
-      "bt_v_relative_error": 1.7714389096319837e-07,
-      "b_ku_relative_error": 2.2717267524755846e-07,
-      "d_v_relative_error": 0.0,
-      "y_reconstruction_relative_error": 0.0,
-      "y_vs_explicit_relative_error": 2.2717267524755846e-07,
-      "stage_outputs_present": true,
-      "scipy_ku_norm": 832.3631100030361,
-      "elmer_ku_norm": 832.3631962391994,
-      "pass": false
-    },
-    {
-      "name": "alternating_sign",
-      "ku_relative_error": 5.735489233569618e-07,
-      "action_relative_error_vs_scipy": 5.071631288288578e-07,
-      "action_relative_error_vs_elmer_ku": 2.0103853192500423e-07,
-      "elmer_backward_residual_norm": 2.7560212285437544e-15,
-      "elmer_backward_residual_relative_to_rhs": 3.0875591161939555e-07,
-      "elmer_componentwise_backward_error": 5.885974781623913e-06,
-      "scipy_backward_residual_norm": 7.055620460590446e-18,
-      "scipy_backward_residual_relative_to_rhs": 7.904382247814306e-10,
-      "bt_v_relative_error": 3.087608581260824e-07,
-      "b_ku_relative_error": 2.0103853192500423e-07,
-      "d_v_relative_error": 0.0,
-      "y_reconstruction_relative_error": 0.0,
-      "y_vs_explicit_relative_error": 2.0103853192500423e-07,
-      "stage_outputs_present": true,
-      "scipy_ku_norm": 18.273270141373196,
-      "elmer_ku_norm": 18.273271094442254,
-      "pass": false
-    },
-    {
-      "name": "deterministic_sine",
-      "ku_relative_error": 1.6319378520239795e-07,
-      "action_relative_error_vs_scipy": 2.576228090041023e-07,
-      "action_relative_error_vs_elmer_ku": 1.708311470283697e-07,
-      "elmer_backward_residual_norm": 2.032764580801963e-15,
-      "elmer_backward_residual_relative_to_rhs": 1.7407440784496645e-07,
-      "elmer_componentwise_backward_error": 2.1672126246773503e-07,
-      "scipy_backward_residual_norm": 2.383567755323945e-16,
-      "scipy_backward_residual_relative_to_rhs": 2.041151983289077e-08,
-      "bt_v_relative_error": 1.7331077853795917e-07,
-      "b_ku_relative_error": 1.708311470283697e-07,
-      "d_v_relative_error": 0.0,
-      "y_reconstruction_relative_error": 0.0,
-      "y_vs_explicit_relative_error": 1.708311470283697e-07,
-      "stage_outputs_present": true,
-      "scipy_ku_norm": 53.40986993053594,
-      "elmer_ku_norm": 53.40987512002442,
-      "pass": false
-    },
-    {
-      "name": "basis_like_17",
-      "ku_relative_error": 2.2156095730749793e-12,
-      "action_relative_error_vs_scipy": 1.145096942049566e-09,
-      "action_relative_error_vs_elmer_ku": 1.1453616982674005e-09,
-      "elmer_backward_residual_norm": 1.1120032654186772e-20,
-      "elmer_backward_residual_relative_to_rhs": 7.793625329501661e-11,
-      "elmer_componentwise_backward_error": 3.92697616534097e-11,
-      "scipy_backward_residual_norm": 4.3847606507519494e-24,
-      "scipy_backward_residual_relative_to_rhs": 3.073118823858501e-14,
-      "bt_v_relative_error": 0.0,
-      "b_ku_relative_error": 1.1453616982674005e-09,
-      "d_v_relative_error": 0.0,
-      "y_reconstruction_relative_error": 0.0,
-      "y_vs_explicit_relative_error": 1.1453616982674005e-09,
-      "stage_outputs_present": true,
-      "scipy_ku_norm": 0.3065359254252997,
-      "elmer_ku_norm": 0.30653592542529473,
-      "pass": false
-    }
-  ],
-  "passed": false
+  },
+  "self_consistency": {
+    "records": [
+      {
+        "name": "all_ones",
+        "vector_relative_error": 0.0,
+        "bt_self_relative_error": 0.0,
+        "ku_solution_relative_difference": 1.5042790634116006e-10,
+        "elmer_k_backward_residual_norm": 8.655388105764148e-16,
+        "elmer_k_backward_residual_relative": 5.0336483654272554e-08,
+        "elmer_k_componentwise_backward_error": 4.785543241707145e-07,
+        "scipy_k_backward_residual_norm": 8.465369523774877e-16,
+        "scipy_k_backward_residual_relative": 4.9231407009593713e-08,
+        "bku_oracle_relative_error": 2.5111975432027286e-10,
+        "bku_emitted_ku_matvec_relative_error": 1.7932109774661436e-16,
+        "dv_oracle_relative_error": 0.0,
+        "schur_oracle_relative_error": 2.5111975432027286e-10,
+        "schur_oracle_absolute_error": 2.6628835089997672e-17,
+        "schur_emitted_stage_reconstruction_relative_error": 0.0,
+        "emitted_stage_pass": true,
+        "oracle_pass": false,
+        "pass": false
+      },
+      {
+        "name": "alternating_sign",
+        "vector_relative_error": 0.0,
+        "bt_self_relative_error": 0.0,
+        "ku_solution_relative_difference": 5.5632703522786777e-11,
+        "elmer_k_backward_residual_norm": 7.221215147064849e-18,
+        "elmer_k_backward_residual_relative": 8.089897387255337e-10,
+        "elmer_k_componentwise_backward_error": 4.5122495208515164e-07,
+        "scipy_k_backward_residual_norm": 7.144526054609946e-18,
+        "scipy_k_backward_residual_relative": 8.003982914961283e-10,
+        "bku_oracle_relative_error": 8.927337619580729e-11,
+        "bku_emitted_ku_matvec_relative_error": 1.872509705031702e-16,
+        "dv_oracle_relative_error": 0.0,
+        "schur_oracle_relative_error": 8.927337619580729e-11,
+        "schur_oracle_absolute_error": 2.161911605982252e-19,
+        "schur_emitted_stage_reconstruction_relative_error": 0.0,
+        "emitted_stage_pass": true,
+        "oracle_pass": false,
+        "pass": false
+      },
+      {
+        "name": "deterministic_sine",
+        "vector_relative_error": 1.3212464470511777e-16,
+        "bt_self_relative_error": 0.0,
+        "ku_solution_relative_difference": 6.596249067462628e-10,
+        "elmer_k_backward_residual_norm": 2.454106052098332e-16,
+        "elmer_k_backward_residual_relative": 2.1015569012681985e-08,
+        "elmer_k_componentwise_backward_error": 5.030121599010567e-08,
+        "scipy_k_backward_residual_norm": 2.3843874011419803e-16,
+        "scipy_k_backward_residual_relative": 2.041853812259819e-08,
+        "bku_oracle_relative_error": 8.608169440016159e-10,
+        "bku_emitted_ku_matvec_relative_error": 1.909858969792363e-16,
+        "dv_oracle_relative_error": 0.0,
+        "schur_oracle_relative_error": 8.608169440016159e-10,
+        "schur_oracle_absolute_error": 7.49189307453613e-18,
+        "schur_emitted_stage_reconstruction_relative_error": 0.0,
+        "emitted_stage_pass": true,
+        "oracle_pass": false,
+        "pass": false
+      },
+      {
+        "name": "basis_like_17",
+        "vector_relative_error": 0.0,
+        "bt_self_relative_error": 0.0,
+        "ku_solution_relative_difference": 8.37147267972848e-17,
+        "elmer_k_backward_residual_norm": 4.429494160733219e-24,
+        "elmer_k_backward_residual_relative": 3.104470909532123e-14,
+        "elmer_k_componentwise_backward_error": 1.3093246418228924e-15,
+        "scipy_k_backward_residual_norm": 4.294516372621669e-24,
+        "scipy_k_backward_residual_relative": 3.0098699006088075e-14,
+        "bku_oracle_relative_error": 3.401893610261432e-16,
+        "bku_emitted_ku_matvec_relative_error": 3.454499032647733e-16,
+        "dv_oracle_relative_error": 0.0,
+        "schur_oracle_relative_error": 3.401893610261432e-16,
+        "schur_oracle_absolute_error": 1.3602432918405682e-26,
+        "schur_emitted_stage_reconstruction_relative_error": 0.0,
+        "emitted_stage_pass": true,
+        "oracle_pass": true,
+        "pass": true
+      }
+    ],
+    "passed": false,
+    "oracle_passed": false,
+    "emitted_stage_passed": true
+  },
+  "b_vs_bt_transpose": {
+    "relative_frobenius_difference": 0.0,
+    "max_abs_difference": 0.0,
+    "nnz_difference": 0,
+    "pass": true
+  },
+  "short_bt_storage": {
+    "stored_bt_shape": [
+      81501,
+      2898
+    ],
+    "logical_bt_shape": [
+      84636,
+      2898
+    ],
+    "monolithic_nonzeros_in_rows_after_stored_bt": 0,
+    "zero_padding_required": true,
+    "zero_padding_is_safe_for_emitted_output": true
+  },
+  "block_equivalence": {
+    "blocks": [
+      {
+        "name": "K",
+        "expected_shape": [
+          84636,
+          84636
+        ],
+        "actual_storage_shape": [
+          84636,
+          84636
+        ],
+        "expected_stored_nnz": 1340068,
+        "actual_stored_nnz": 1449892,
+        "expected_raw_sha256": "d23750b8b3079d88177c8c7ede9f34ce4d4112f9a4918764a744768070445dd6",
+        "actual_raw_sha256": "18ae83856b952fcf814a1df608eca91fec5e08ffa74cb49c9c8c1caff77c5d3e",
+        "raw_match": false,
+        "expected_canonical_sha256": "d23750b8b3079d88177c8c7ede9f34ce4d4112f9a4918764a744768070445dd6",
+        "actual_canonical_sha256_padded": "c60adfd78c59080cb3462e85cec559ebfd4a193b057daede2eb10e27ca2edcf9",
+        "canonical_match": false,
+        "missing_nonzeros": 0,
+        "extra_nonzeros": 746,
+        "extra_max_abs": 1.1650021011619702e-16,
+        "extra_l2_norm": 8.340400725964746e-16,
+        "common_entry_max_abs_diff": 0.0,
+        "common_entry_max_relative_diff": 0.0,
+        "relative_frobenius_difference": 2.3932259100828117e-16
+      },
+      {
+        "name": "B",
+        "expected_shape": [
+          2898,
+          84636
+        ],
+        "actual_storage_shape": [
+          2898,
+          84636
+        ],
+        "expected_stored_nnz": 53564,
+        "actual_stored_nnz": 54440,
+        "expected_raw_sha256": "87d432271eb908391f7a98bd1a8ae5a68c0722c6311ed22495c32f4bfa09698c",
+        "actual_raw_sha256": "e12feb91457f0dca95a5622f672120284cc77f07e3d28d817be261b09abf9337",
+        "raw_match": false,
+        "expected_canonical_sha256": "87d432271eb908391f7a98bd1a8ae5a68c0722c6311ed22495c32f4bfa09698c",
+        "actual_canonical_sha256_padded": "e12feb91457f0dca95a5622f672120284cc77f07e3d28d817be261b09abf9337",
+        "canonical_match": false,
+        "missing_nonzeros": 0,
+        "extra_nonzeros": 876,
+        "extra_max_abs": 2.2192311406797403e-16,
+        "extra_l2_norm": 2.7290480938928246e-15,
+        "common_entry_max_abs_diff": 0.0,
+        "common_entry_max_relative_diff": 0.0,
+        "relative_frobenius_difference": 3.0229039304321455e-07
+      },
+      {
+        "name": "Bt",
+        "expected_shape": [
+          84636,
+          2898
+        ],
+        "actual_storage_shape": [
+          81501,
+          2898
+        ],
+        "expected_stored_nnz": 53564,
+        "actual_stored_nnz": 54440,
+        "expected_raw_sha256": "2455570c48056689cda9842eae057d1d5b5d3a0b93a4a89864bc66dea79d5883",
+        "actual_raw_sha256": "bdee538966e509eb09ca3272b34814d8a93b6f10d7f6e2d9695366b55a60cfae",
+        "raw_match": false,
+        "expected_canonical_sha256": "2455570c48056689cda9842eae057d1d5b5d3a0b93a4a89864bc66dea79d5883",
+        "actual_canonical_sha256_padded": "78c6a5fa7613461b60490b72d4b9846fb0124c49200c574a24f37f1a6a526e0f",
+        "canonical_match": false,
+        "missing_nonzeros": 0,
+        "extra_nonzeros": 876,
+        "extra_max_abs": 2.2192311406797403e-16,
+        "extra_l2_norm": 2.729048093892825e-15,
+        "common_entry_max_abs_diff": 0.0,
+        "common_entry_max_relative_diff": 0.0,
+        "relative_frobenius_difference": 3.022903930432145e-07
+      },
+      {
+        "name": "D",
+        "expected_shape": [
+          2898,
+          2898
+        ],
+        "actual_storage_shape": [
+          2898,
+          2898
+        ],
+        "expected_stored_nnz": 0,
+        "actual_stored_nnz": 0,
+        "expected_raw_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
+        "actual_raw_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
+        "raw_match": true,
+        "expected_canonical_sha256": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
+        "actual_canonical_sha256_padded": "2fccd65500e9deab286b5fb8a7d05338a2e90bee287404472fa83c2d4faa21e5",
+        "canonical_match": true,
+        "missing_nonzeros": 0,
+        "extra_nonzeros": 0,
+        "extra_max_abs": 0.0,
+        "extra_l2_norm": 0.0,
+        "common_entry_max_abs_diff": 0.0,
+        "common_entry_max_relative_diff": 0.0,
+        "relative_frobenius_difference": 0.0
+      }
+    ],
+    "raw_match": false,
+    "canonical_match": false,
+    "classification": "NUMERICALLY CLOSE",
+    "max_relative_frobenius_difference": 3.0229039304321455e-07,
+    "max_extra_abs": 2.2192311406797403e-16,
+    "elmer_block_metadata": [
+      {
+        "path": "results\\case_p19_hypre_block_schur_diag_cpu_time5us\\case_p19_hypre_block_schur_diag_cpu_time5us_K.triplets",
+        "storage_shape": [
+          84636,
+          84636
+        ],
+        "logical_shape": [
+          84636,
+          84636
+        ],
+        "stored_nnz": 1449892,
+        "stored_zero_entries": 109078
+      },
+      {
+        "path": "results\\case_p19_hypre_block_schur_diag_cpu_time5us\\case_p19_hypre_block_schur_diag_cpu_time5us_B.triplets",
+        "storage_shape": [
+          2898,
+          84636
+        ],
+        "logical_shape": [
+          2898,
+          84636
+        ],
+        "stored_nnz": 54440,
+        "stored_zero_entries": 0
+      },
+      {
+        "path": "results\\case_p19_hypre_block_schur_diag_cpu_time5us\\case_p19_hypre_block_schur_diag_cpu_time5us_Bt.triplets",
+        "storage_shape": [
+          81501,
+          2898
+        ],
+        "logical_shape": [
+          84636,
+          2898
+        ],
+        "stored_nnz": 54440,
+        "stored_zero_entries": 0
+      },
+      {
+        "path": "results\\case_p19_hypre_block_schur_diag_cpu_time5us\\case_p19_hypre_block_schur_diag_cpu_time5us_D.triplets",
+        "storage_shape": [
+          2898,
+          2898
+        ],
+        "logical_shape": [
+          2898,
+          2898
+        ],
+        "stored_nnz": 0,
+        "stored_zero_entries": 0
+      }
+    ]
+  },
+  "monolithic_comparison": {
+    "records": [
+      {
+        "name": "all_ones",
+        "elmer_block_action_norm": 1.0604038364913266e-07,
+        "monolithic_action_norm": 1.0604036522374582e-07,
+        "absolute_action_difference": 2.870563033159569e-14,
+        "relative_action_difference": 2.707047478667829e-07
+      },
+      {
+        "name": "alternating_sign",
+        "elmer_block_action_norm": 2.421675641840222e-09,
+        "monolithic_action_norm": 2.421675476956386e-09,
+        "absolute_action_difference": 1.2282170229314288e-15,
+        "relative_action_difference": 5.071765538440677e-07
+      },
+      {
+        "name": "deterministic_sine",
+        "elmer_block_action_norm": 8.703236067483897e-09,
+        "monolithic_action_norm": 8.703234620000091e-09,
+        "absolute_action_difference": 2.2376807564560345e-15,
+        "relative_action_difference": 2.571090926715717e-07
+      },
+      {
+        "name": "basis_like_17",
+        "elmer_block_action_norm": 3.9984886292079985e-11,
+        "monolithic_action_norm": 3.9984886289360984e-11,
+        "absolute_action_difference": 4.578657147723117e-20,
+        "relative_action_difference": 1.1450969535310115e-09
+      }
+    ],
+    "max_relative_action_difference": 5.071765538440677e-07
+  },
+  "matrix_free_matvec_self_consistency": true,
+  "matrix_free_block_oracle_consistency": false,
+  "matrix_free_implementation_valid": false,
+  "block_extraction_equivalent": false,
+  "production_ready": false
 }

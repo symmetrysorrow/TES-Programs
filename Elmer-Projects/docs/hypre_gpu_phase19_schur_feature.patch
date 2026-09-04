@@ -31,7 +31,7 @@ index faa8bee1cf714f7d4e2d3a6f1c54be5fa1dfcd73..0cffbf39d778362837bf5ab8d2f78e4d
  SET(USE_SYSTEM_ZOLTAN FALSE CACHE BOOL "Use system Zoltan library")
  
 diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
-index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f27074798 100644
+index fd722cfde0f90d5c08fe5079f64f6043849b0787..61319a45dc27545873d13fc91bf4ac4a206222af 100644
 --- a/fem/src/BlockSolve.F90
 +++ b/fem/src/BlockSolve.F90
 @@ -42,8 +42,11 @@ MODULE BlockSolve
@@ -60,7 +60,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
  
  CONTAINS
  
-@@ -115,6 +125,459 @@ CONTAINS
+@@ -115,6 +125,467 @@ CONTAINS
      
    END FUNCTION CreateSchurApproximation
  
@@ -78,7 +78,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
 +    TYPE(Matrix_t), POINTER :: K, B, Bt, D, SPrec
 +    INTEGER :: i,j,colk,l,n,zero_count,negative_count,positive_count
 +    LOGICAL :: HavePrec, HaveEntry
-+    REAL(KIND=dp) :: val,min_abs,max_abs
++    REAL(KIND=dp) :: val,min_abs,max_abs,scale,threshold,relative_floor,absolute_floor
 +    CHARACTER(256) :: Message
 +
 +    K => TotMatrix % Submatrix(1,1) % Mat
@@ -144,13 +144,17 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
 +    ! Report the sign and scale before replacing unusable entries.  In
 +    ! particular, a negative diagonal is expected for D - B K^-1 B^T and must
 +    ! not be silently converted to its absolute value.
++    scale = MAXVAL(ABS(DiagS))
++    relative_floor = SQRT(EPSILON(1.0_dp))
++    absolute_floor = 100.0_dp * TINY(1.0_dp)
++    threshold = MAX(absolute_floor,relative_floor*scale)
 +    zero_count = 0
 +    negative_count = 0
 +    positive_count = 0
 +    min_abs = HUGE(1.0_dp)
 +    max_abs = 0.0_dp
 +    DO i=1,n
-+      IF( ABS(DiagS(i)) <= TINY(1.0_dp) ) THEN
++      IF( ABS(DiagS(i)) <= threshold ) THEN
 +        zero_count = zero_count + 1
 +      ELSE IF( DiagS(i) < 0.0_dp ) THEN
 +        negative_count = negative_count + 1
@@ -167,11 +171,15 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
 +    WRITE(Message,'(A,ES12.5,A,ES12.5)') 'Schur diagonal abs range: min=',min_abs, &
 +        ' max=',max_abs
 +    CALL Info('BlockSchurPrepareDiagonal',Message,Level=7)
++    WRITE(Message,'(A,ES12.5,A,ES12.5,A,ES12.5)') &
++        'Schur diagonal scale=',scale,' threshold=',threshold, &
++        ' min/max ratio=',min_abs/MAX(max_abs,TINY(1.0_dp))
++    CALL Info('BlockSchurPrepareDiagonal',Message,Level=7)
 +
 +    ! A singular/empty diagonal is not a usable preconditioner entry.  Use a
 +    ! neutral value for that row; GMRES still sees the true matrix-free action.
 +    DO i=1,n
-+      IF( ABS(DiagS(i)) <= TINY(1.0_dp) ) DiagS(i) = 1.0_dp
++      IF( ABS(DiagS(i)) <= threshold ) DiagS(i) = 1.0_dp
 +    END DO
 +  END SUBROUTINE BlockSchurPrepareDiagonal
 +
@@ -520,7 +528,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
    
    
    !-----------------------------------------------------------------------------------
-@@ -2356,6 +2819,11 @@ CONTAINS
+@@ -2356,6 +2827,11 @@ CONTAINS
      
      CALL Info('BlockPrecMatrix','Checking for tailored preconditioning matrices',Level=6)
  
@@ -532,7 +540,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
      Params => Solver % Values
      SplitComplexHcurl = ListGetLogical( Params,'Block Split Complex Hcurl', GotIt ) 
      
-@@ -3767,19 +4235,31 @@ CONTAINS
+@@ -3767,19 +4243,31 @@ CONTAINS
      INTEGER :: ipar(*)
  !---------------------------------------------------------------------------------
      REAL(KIND=dp), POINTER :: rtmp(:),vtmp(:),xtmp(:),btmp(:),diagtmp(:),b(:),x(:), a_rhs_save(:)
@@ -571,7 +579,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
      INTEGER(KIND=AddrInt) :: AddrFunc
      EXTERNAL :: AddrFunc
  
-@@ -3815,6 +4295,47 @@ CONTAINS
+@@ -3815,6 +4303,47 @@ CONTAINS
  
      BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
      BlockSch = ListGetLogical( Params,'Block Schur',Found)
@@ -619,7 +627,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
      
      
     
-@@ -3828,6 +4349,218 @@ CONTAINS
+@@ -3828,6 +4357,218 @@ CONTAINS
        CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
            //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
      END IF
@@ -838,7 +846,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
      
      ! Save the initial solver stuff
      solver_save => Solver
-@@ -4074,7 +4807,40 @@ CONTAINS
+@@ -4074,7 +4815,40 @@ CONTAINS
            CALL AMGXSolver( A, x, btmp, ASolver )
            IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,A,btmp,x)
          ELSE
@@ -880,7 +888,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f
          END IF
        END IF
        
-@@ -4185,6 +4951,44 @@ CONTAINS
+@@ -4185,6 +4959,44 @@ CONTAINS
        
      END DO ! j=1,NoVar
  
