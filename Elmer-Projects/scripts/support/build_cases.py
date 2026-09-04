@@ -487,8 +487,16 @@ def solver1_block(
             "  Linear System Solver = Direct",
             "  Linear System Direct Method = Umfpack",
         ]
+    # Matrix dumps are an explicit diagnostic opt-in.  In particular, a
+    # prefix alone must not turn a bounded probe into a multi-gigabyte write
+    # on a mounted filesystem.  Probe/sweep cases carry an explicit false
+    # flag; legacy non-probe cases retain their historical prefix behavior.
     matrix_dump_prefix = solver.get("matrix_dump_prefix")
-    if matrix_dump_prefix:
+    matrix_dump_enabled = solver.get(
+        "matrix_dump",
+        bool(matrix_dump_prefix) and not solver.get("block_schur_probe", False),
+    )
+    if matrix_dump_enabled and matrix_dump_prefix:
         # Save the fully assembled collection matrix at the solver dispatch
         # point.  This is after mortar restriction/penalty/elimination, so a
         # MUMPS-vs-HYPRE comparison detects an algebraic mismatch rather than
@@ -515,6 +523,7 @@ def solver1_block(
         lines += [
             "  Block Schur Probe = Logical True",
             f'  Block Schur Probe Prefix = String "{solver.get("block_schur_probe_prefix", "block_schur_probe")}"',
+            f'  Block Schur Probe Lifecycle = String "{solver.get("block_schur_probe_lifecycle", "linear solve")}"',
         ]
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")

@@ -15784,6 +15784,7 @@
         "linear_system": "iterative_hypre_block_lower",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p20_hypre_block_lower_cpu_probe",
+        "matrix_dump": false,
         "no_explicit_constrained_matrix": true,
         "linear_system_max_iterations": 15,
         "linear_system_abort_not_converged": false,
@@ -15793,7 +15794,8 @@
         "block_schur_max_iterations": 30,
         "block_schur_restart": 30,
         "block_schur_probe": true,
-        "block_schur_probe_prefix": "case_p20_hypre_block_lower_cpu_probe"
+        "block_schur_probe_prefix": "case_p20_hypre_block_lower_cpu_probe",
+        "block_schur_probe_lifecycle": "linear solve"
       },
       "comparison_time_grid": {
         "mode": "Phase20 bounded convergence probe",
@@ -15848,6 +15850,7 @@
         "linear_system": "iterative_hypre_block_lower_gpu",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p20_hypre_block_lower_gpu_probe",
+        "matrix_dump": false,
         "no_explicit_constrained_matrix": true,
         "linear_system_max_iterations": 15,
         "linear_system_abort_not_converged": false,
@@ -15857,7 +15860,8 @@
         "block_schur_max_iterations": 30,
         "block_schur_restart": 30,
         "block_schur_probe": true,
-        "block_schur_probe_prefix": "case_p20_hypre_block_lower_gpu_probe"
+        "block_schur_probe_prefix": "case_p20_hypre_block_lower_gpu_probe",
+        "block_schur_probe_lifecycle": "linear solve"
       },
       "comparison_time_grid": {
         "mode": "Phase20 bounded convergence probe",
@@ -15912,6 +15916,7 @@
         "linear_system": "iterative_hypre_block_full",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p20_hypre_block_full_cpu_probe",
+        "matrix_dump": false,
         "no_explicit_constrained_matrix": true,
         "linear_system_max_iterations": 15,
         "linear_system_abort_not_converged": false,
@@ -15921,7 +15926,8 @@
         "block_schur_max_iterations": 30,
         "block_schur_restart": 30,
         "block_schur_probe": true,
-        "block_schur_probe_prefix": "case_p20_hypre_block_full_cpu_probe"
+        "block_schur_probe_prefix": "case_p20_hypre_block_full_cpu_probe",
+        "block_schur_probe_lifecycle": "linear solve"
       },
       "comparison_time_grid": {
         "mode": "Phase20 bounded convergence probe",
@@ -15976,6 +15982,7 @@
         "linear_system": "iterative_hypre_block_full_gpu",
         "eliminate_linear_constraints": false,
         "matrix_dump_prefix": "case_p20_hypre_block_full_gpu_probe",
+        "matrix_dump": false,
         "no_explicit_constrained_matrix": true,
         "linear_system_max_iterations": 15,
         "linear_system_abort_not_converged": false,
@@ -15985,7 +15992,8 @@
         "block_schur_max_iterations": 30,
         "block_schur_restart": 30,
         "block_schur_probe": true,
-        "block_schur_probe_prefix": "case_p20_hypre_block_full_gpu_probe"
+        "block_schur_probe_prefix": "case_p20_hypre_block_full_gpu_probe",
+        "block_schur_probe_lifecycle": "linear solve"
       },
       "comparison_time_grid": {
         "mode": "Phase20 bounded convergence probe",

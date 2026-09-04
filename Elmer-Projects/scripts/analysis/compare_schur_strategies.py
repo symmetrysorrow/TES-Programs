@@ -67,7 +67,8 @@ def solve_with_action(name: str, K: csr_matrix, B: csr_matrix,
     solve_seconds = time.perf_counter() - solve_start
 
     x = np.concatenate((u, lam))
-    full_abs = float(np.linalg.norm(A @ x - rhs))
+    residual = np.asarray(A @ x - rhs).reshape(-1)
+    full_abs = float(np.linalg.norm(residual))
     full_rel = full_abs / max(float(np.linalg.norm(rhs)), np.finfo(float).tiny)
     backward = full_abs / max(
         float(np.linalg.norm(A.data)) * float(np.linalg.norm(x))
@@ -81,12 +82,24 @@ def solve_with_action(name: str, K: csr_matrix, B: csr_matrix,
     s_bytes = int(S.nbytes)
     return {
         "strategy": name,
+        "interface_contract": {
+            "apply_K_inverse": "q -> K^{-1}q",
+            "apply_schur": "x -> D*x - B*(K^{-1}*(Bt*x))",
+            "factorization": "setup once, then apply repeatedly",
+            "explicit_schur": "optional materialized D - B*K^{-1}*Bt for this diagnostic only",
+        },
         "setup_seconds": setup_seconds,
         "solve_seconds": solve_seconds,
         # The factorization is intentionally built once, then reused for all
         # columns of B^T and the final primal action.  This is the prototype
         # reuse boundary for a production explicit/frozen Schur candidate.
         "reuse_scope": "same matrix / same timestep",
+        "reuse_boundaries": {
+            "reuse_within_timestep": True,
+            "rebuild_on_matrix_or_constraint_pattern_change": True,
+            "rebuild_on_nonlinear_or_timestep_assembly": "required unless matrix fingerprint matches",
+        },
+        "cache_key_fields": ["matrix_fingerprint", "constraint_pattern", "backend", "preconditioner_settings"],
         "factorization_reused_for_schur_rhs": True,
         "schur_shape": list(S.shape),
         "schur_nnz": int(np.count_nonzero(S)),
@@ -94,6 +107,7 @@ def solve_with_action(name: str, K: csr_matrix, B: csr_matrix,
         "full_absolute_residual": full_abs,
         "full_relative_residual": float(full_rel),
         "backward_error": float(backward),
+        "backward_error_norm_definition": "normwise ||A*x-b||_2 / (||A||_F*||x||_2 + ||b||_2)",
         "absolute_constraint_residual": constraint_abs,
         "relative_constraint_residual": (
             None if constraint_scale <= 1.0e-14 else float(constraint_abs / constraint_scale)

@@ -1,86 +1,231 @@
-"""Summarize machine-readable Phase20 block-Schur probe output.
+"""Validate and summarize Phase20 block-Schur probe CSVs.
 
-The native Phase20 source instrumentation writes one CSV row per outer block
-preconditioner application and one row per inner Schur solve.  This utility
-keeps the aggregation outside the hot loop and also accepts a log-only run,
-which is useful with older Phase19 binaries.
+The native probe records measurements, not inferred solver state.  In
+particular an unavailable outer residual stays unavailable; it is never
+converted to zero.  Cumulative timers are sampled at their last row while
+per-call timers are summed, so the two meanings cannot be double counted.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import math
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
-
+TRUE = {"true", "t", "1", "yes"}
+FALSE = {"false", "f", "0", "no"}
+OUTER_REQUIRED = {"outer_iteration", "preconditioner_application", "solver_reported_iteration"}
+SCHUR_REQUIRED = {"schur_solve", "iterations", "initial_residual", "final_residual", "reached_tolerance", "hit_maxiter", "breakdown", "nonfinite"}
 SCHUR_RE = re.compile(r"Matrix-free Schur GMRES iterations:\s*(\d+)\s+residual:\s*([0-9.Ee+-]+)")
 WARN_RE = re.compile(r"Inner Schur GMRES reached its limit")
 
 
+def _read_csv(path: Path | None, required: set[str]) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    if path is None:
+        return [], {"state": "NOT PROVIDED", "path": None}
+    if not path.exists():
+        return [], {"state": "MISSING", "path": str(path)}
+    try:
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            headers = set(reader.fieldnames or [])
+            if not headers:
+                return [], {"state": "EMPTY", "path": str(path)}
+            missing = sorted(required - headers)
+            rows = list(reader)
+    except (OSError, csv.Error) as exc:
+        return [], {"state": "READ_ERROR", "path": str(path), "error": str(exc)}
+    if missing:
+        return rows, {"state": "SCHEMA_ERROR", "path": str(path), "missing_columns": missing, "headers": sorted(headers)}
+    if not rows:
+        return [], {"state": "HEADER_ONLY", "path": str(path), "headers": sorted(headers)}
+    return rows, {"state": "OK", "path": str(path), "headers": sorted(headers)}
+
+
+def validate_csv_schema(path: Path, kind: str) -> dict[str, Any]:
+    """Return a machine-readable schema result without raising on bad output."""
+    required = OUTER_REQUIRED if kind == "outer" else SCHUR_REQUIRED
+    _, status = _read_csv(path, required)
+    return status
+
+
 def _float(row: dict[str, str], *names: str) -> float | None:
     for name in names:
-        if row.get(name, "") != "":
-            return float(row[name])
+        raw = row.get(name, "")
+        if raw not in (None, ""):
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                return None
     return None
 
 
-def summarize(outer_path: Path | None = None, schur_path: Path | None = None,
-              log_path: Path | None = None) -> dict[str, Any]:
-    outer: list[dict[str, str]] = []
-    schur: list[dict[str, str]] = []
-    if outer_path:
-        with outer_path.open(newline="", encoding="utf-8") as handle:
-            outer = list(csv.DictReader(handle))
-    if schur_path:
-        with schur_path.open(newline="", encoding="utf-8") as handle:
-            schur = list(csv.DictReader(handle))
+def _bool(row: dict[str, str], name: str) -> bool | None:
+    value = str(row.get(name, "")).strip().lower()
+    if value in TRUE:
+        return True
+    if value in FALSE:
+        return False
+    return None
 
-    log_solves: list[dict[str, Any]] = []
-    log_warnings = 0
-    if log_path:
+
+def _finite_nonnegative(value: float | None) -> bool:
+    return value is not None and math.isfinite(value) and value >= 0.0
+
+
+def _last(rows: Iterable[dict[str, str]], *names: str) -> float | None:
+    values = [_float(row, *names) for row in rows]
+    values = [value for value in values if value is not None]
+    return values[-1] if values else None
+
+
+def _sum(rows: Iterable[dict[str, str]], *names: str) -> float | None:
+    values = [_float(row, *names) for row in rows]
+    values = [value for value in values if value is not None]
+    return sum(values) if values else None
+
+
+def _k_stage_totals(rows: list[dict[str, str]]) -> dict[str, float | None]:
+    stages = {
+        "primal_block_solve": ("k_actions_primal_block_solve", "k_actions_primal"),
+        "matrix_free_schur_action": ("k_actions_matrix_free_schur", "k_actions_schur"),
+        "full_factorization_upper_correction": ("k_actions_full_upper_correction", "k_actions_upper_correction"),
+        "setup_rebuild": ("k_actions_setup_rebuild",),
+    }
+    result: dict[str, float | None] = {}
+    for label, names in stages.items():
+        result[label] = _sum(rows, *names)
+    explicit = _sum(rows, "k_actions_total", "k_actions")
+    if explicit is not None:
+        result["total"] = explicit
+    else:
+        values = [value for key, value in result.items() if key != "total" and value is not None]
+        result["total"] = sum(values) if values else None
+    return result
+
+
+def _log_reduction(initial: float | None, final: float | None) -> tuple[float | None, str | None]:
+    if not _finite_nonnegative(initial) or not _finite_nonnegative(final):
+        return None, "missing_or_invalid_residual"
+    if initial == 0.0:
+        return None, "zero_initial_residual"
+    if final == 0.0:
+        return None, "zero_final_residual"
+    return math.log10(initial / final), None
+
+
+def _workload_signature(rows: list[dict[str, str]]) -> str | None:
+    if not rows:
+        return None
+    fields = ("workload_id", "mesh_id", "timestep", "nonlinear_iteration", "rhs_id", "outer_limit", "linear_system_tolerance")
+    values = {field: rows[0].get(field, "") for field in fields if rows[0].get(field, "") != ""}
+    if not values:
+        return None
+    encoded = json.dumps(values, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def validate_same_workload(*summaries: dict[str, Any]) -> dict[str, Any]:
+    signatures = [summary.get("workload_signature") for summary in summaries]
+    available = all(signature is not None for signature in signatures)
+    return {"same_workload": available and len(set(signatures)) == 1, "status": "PASS" if available and len(set(signatures)) == 1 else "INCOMPLETE", "signatures": signatures}
+
+
+def summarize(outer_path: Path | None = None, schur_path: Path | None = None, log_path: Path | None = None) -> dict[str, Any]:
+    outer, outer_status = _read_csv(outer_path, OUTER_REQUIRED)
+    schur, schur_status = _read_csv(schur_path, SCHUR_REQUIRED)
+    log_solves: list[dict[str, str]] = []
+    log_hit_maxiter = 0
+    if log_path and log_path.exists():
         for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
             match = SCHUR_RE.search(line)
             if match:
-                log_solves.append({"iterations": int(match.group(1)), "final_residual": float(match.group(2))})
+                log_solves.append({"iterations": match.group(1), "initial_residual": "", "final_residual": match.group(2)})
             if WARN_RE.search(line):
-                log_warnings += 1
-
-    schur_rows = schur or log_solves
-    k_actions = [int(float(row["k_actions"])) for row in schur if row.get("k_actions")]
-    iterations = [int(float(row["iterations"])) for row in schur_rows if row.get("iterations") is not None]
-    finals = [_float(row, "final_residual", "schur_final_residual") for row in schur_rows]
-    finals = [value for value in finals if value is not None]
-    outer_residuals = [_float(row, "outer_residual", "solver_reported_residual") for row in outer]
-    outer_residuals = [value for value in outer_residuals if value is not None]
-    wall = [_float(row, "elapsed_wall_seconds", "wall_seconds") for row in outer]
-    wall = [value for value in wall if value is not None]
-
-    first_residual = outer_residuals[0] if outer_residuals else None
-    last_residual = outer_residuals[-1] if outer_residuals else None
-    elapsed = max(wall) if wall else None
-    reduction = (last_residual / first_residual) if first_residual and last_residual is not None else None
+                log_hit_maxiter += 1
+    schur_data = schur or log_solves
+    initial = _float(outer[0], "initial_residual") if outer else None
+    final = _float(outer[-1], "current_residual", "outer_residual", "solver_reported_residual") if outer else None
+    invalid_rows = []
+    for index, row in enumerate(outer + schur):
+        for field in ("initial_residual", "current_residual", "outer_residual", "solver_reported_residual", "final_residual"):
+            if row.get(field, "") != "":
+                value = _float(row, field)
+                if not _finite_nonnegative(value):
+                    invalid_rows.append({"row": index, "field": field, "value": row.get(field)})
+    log_reduction, log_reason = _log_reduction(initial, final)
+    outer_iterations = [int(value) for value in (_float(row, "solver_reported_iteration") for row in outer) if value is not None]
+    actual_outer = outer_iterations[-1] - outer_iterations[0] + 1 if len(outer_iterations) >= 2 else None
+    k = _k_stage_totals(schur)
+    elapsed_cumulative = _last(outer, "elapsed_wall_seconds_cumulative", "elapsed_wall_seconds")
+    elapsed_per_call = _sum(outer, "elapsed_wall_seconds_per_call")
+    k_time_cumulative = _last(schur, "k_apply_seconds_cumulative", "k_apply_seconds")
+    k_time_per_call = _sum(schur, "k_apply_seconds_per_call")
+    schur_time_cumulative = _last(schur, "schur_action_seconds_cumulative", "schur_action_seconds")
+    reduction_ratio = final / initial if _finite_nonnegative(initial) and _finite_nonnegative(final) and initial > 0 else None
+    incomplete_reasons = []
+    if outer_status["state"] != "OK":
+        incomplete_reasons.append(f"outer_csv:{outer_status['state']}")
+    if schur_status["state"] not in {"OK", "NOT PROVIDED", "MISSING"} and not log_solves:
+        incomplete_reasons.append(f"schur_csv:{schur_status['state']}")
+    if outer and final is None:
+        incomplete_reasons.append("outer_residual_missing")
+    if invalid_rows:
+        status = "FAIL"
+    elif incomplete_reasons or not outer:
+        status = "INCOMPLETE"
+    else:
+        status = "PASS"
+    per_outer = log_reduction / actual_outer if log_reduction is not None and actual_outer and actual_outer > 0 else None
+    per_k = log_reduction / k["total"] if log_reduction is not None and k["total"] and k["total"] > 0 else None
+    per_second = log_reduction / elapsed_cumulative if log_reduction is not None and elapsed_cumulative and elapsed_cumulative > 0 else None
     return {
+        "status": status,
+        "incomplete_reasons": incomplete_reasons,
+        "invalid_residual_rows": invalid_rows,
         "outer_rows": len(outer),
-        "schur_solves": len(schur_rows),
-        "schur_iteration_counts": iterations,
-        "schur_reached_tolerance": sum(str(row.get("reached_tolerance", "")).lower() in {"true", "t", "1"} for row in schur_rows),
-        "schur_hit_maxiter": sum(str(row.get("hit_maxiter", "")).lower() in {"true", "t", "1"} for row in schur_rows) or log_warnings,
-        "schur_final_residual_min": min(finals) if finals else None,
-        "schur_final_residual_max": max(finals) if finals else None,
-        "k_actions_total": sum(k_actions) if k_actions else None,
-        "k_actions_per_schur_solve": (sum(k_actions) / len(k_actions)) if k_actions else None,
-        "outer_first_residual": first_residual,
-        "outer_last_residual": last_residual,
-        "outer_residual_reduction": reduction,
-        "elapsed_wall_seconds": elapsed,
-        "residual_reduction_per_second": ((1.0 - reduction) / elapsed if reduction is not None and elapsed else None),
-        "residual_reduction_per_k_action": ((1.0 - reduction) / sum(k_actions) if reduction is not None and k_actions else None),
-        "source": {"outer_csv": str(outer_path) if outer_path else None,
-                   "schur_csv": str(schur_path) if schur_path else None,
-                   "log": str(log_path) if log_path else None},
+        "schur_solves": len(schur_data),
+        "schur_iteration_counts": [int(float(row["iterations"])) for row in schur_data if row.get("iterations", "") != ""],
+        "schur_reached_tolerance_csv": sum(_bool(row, "reached_tolerance") is True for row in schur),
+        "schur_hit_maxiter_csv": sum(_bool(row, "hit_maxiter") is True for row in schur),
+        "schur_hit_maxiter_log": log_hit_maxiter,
+        "schur_hit_maxiter": sum(_bool(row, "hit_maxiter") is True for row in schur) + log_hit_maxiter > 0,
+        "schur_breakdown": sum(_bool(row, "breakdown") is True for row in schur),
+        "schur_nonfinite": sum(_bool(row, "nonfinite") is True for row in schur),
+        "schur_final_residual_min": min((value for value in (_float(row, "final_residual") for row in schur_data) if value is not None), default=None),
+        "schur_final_residual_max": max((value for value in (_float(row, "final_residual") for row in schur_data) if value is not None), default=None),
+        "k_actions_by_stage": k,
+        "k_actions_total": k["total"],
+        "k_actions_per_actual_outer_iteration": k["total"] / actual_outer if k["total"] is not None and actual_outer else None,
+        "outer_first_residual": initial,
+        "outer_last_residual": final,
+        "outer_residual_reduction": reduction_ratio,
+        "log10_reduction": log_reduction,
+        "log10_reduction_reason": log_reason,
+        "actual_outer_iterations": actual_outer,
+        "log10_reduction_per_outer_iteration": per_outer,
+        "log10_reduction_per_k_action": per_k,
+        "log10_reduction_per_second": per_second,
+        "elapsed_wall_seconds": elapsed_cumulative,
+        "elapsed_wall_seconds_cumulative_last": elapsed_cumulative,
+        "elapsed_wall_seconds_per_call_sum": elapsed_per_call,
+        "k_apply_seconds_cumulative_last": k_time_cumulative,
+        "k_apply_seconds_per_call_sum": k_time_per_call,
+        "schur_action_seconds_cumulative_last": schur_time_cumulative,
+        "timing_definition": {
+            "elapsed_wall_seconds": "last cumulative outer wall time; never a sum of cumulative samples",
+            "*_per_call_sum": "sum of rows explicitly named per_call",
+            "k_apply_seconds": "K solve/application inclusive time, excluding Schur vector algebra",
+            "schur_action_seconds": "matrix-free Schur action inclusive time, including its K actions",
+        },
+        "workload_signature": _workload_signature(outer or schur),
+        "csv_schema": {"outer": outer_status, "schur": schur_status},
+        "source": {"outer_csv": str(outer_path) if outer_path else None, "schur_csv": str(schur_path) if schur_path else None, "log": str(log_path) if log_path else None},
     }
 
 
@@ -95,9 +240,9 @@ def main() -> int:
         parser.error("at least one of --outer-csv, --schur-csv, or --log is required")
     result = summarize(args.outer_csv, args.schur_csv, args.log)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(result, indent=2))
-    return 0
+    args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    print(json.dumps(result, indent=2, allow_nan=False))
+    return 0 if result["status"] != "FAIL" else 1
 
 
 if __name__ == "__main__":

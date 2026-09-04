@@ -109,13 +109,9 @@ Solver 1
   BoomerAMG Cycle Type = 1
   BoomerAMG Num Functions = 1
   BoomerAMG Strong Threshold = 0.25
-  Linear System Save = True
-  Linear System Save Slot = String "linear solve"
-  Linear System Save Prefix = String "case_p20_hypre_block_lower_gpu_probe"
-  Linear System Save Continuous Numbering = True
-  Linear System Save Skip Zeros = True
   Block Schur Probe = Logical True
   Block Schur Probe Prefix = String "case_p20_hypre_block_lower_gpu_probe"
+  Block Schur Probe Lifecycle = String "linear solve"
   No Explicit Constrained Matrix = True
   Apply Mortar BCs = True
   Steady State Convergence Tolerance = 1e-09

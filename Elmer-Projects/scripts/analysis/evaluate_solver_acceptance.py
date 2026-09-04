@@ -1,9 +1,4 @@
-"""Evaluate Phase19/20 solver metrics with separate numerical and physical gates.
-
-The evaluator intentionally does not make a small right-hand-side relative
-residual the sole production criterion.  It accepts either a metrics JSON
-object on stdin/file or a JSON artifact produced by a solver comparison.
-"""
+"""Evaluate diagnostic and production acceptance profiles independently."""
 
 from __future__ import annotations
 
@@ -13,12 +8,14 @@ import math
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_POLICY = {
     "absolute_residual_max": 1.0e-12,
+    "relative_residual_max": 1.0e-10,
     "backward_error_max": 1.0e-12,
     "constraint_absolute_residual_max": 1.0e-12,
     "relative_primal_error_max": 1.0e-4,
+    "temperature_difference_max": 1.0e-3,
+    "current_difference_max": 1.0e-3,
     "relative_residual_warning": 1.0e-11,
     "numerical_floor": 1.0e-14,
 }
@@ -32,20 +29,33 @@ def _first(data: dict[str, Any], *names: str) -> Any:
 
 
 def _finite(value: Any) -> bool:
-    return value is not None and math.isfinite(float(value))
+    try:
+        return value is not None and math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
 
 
-def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None) -> dict[str, Any]:
+def _status(ok: bool, missing: bool = False) -> str:
+    return "PASS" if ok else "INCOMPLETE" if missing else "FAIL"
+
+
+def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None,
+             *, profile: str = "diagnostic") -> dict[str, Any]:
+    if profile not in {"diagnostic", "production"}:
+        raise ValueError("profile must be 'diagnostic' or 'production'")
     limits = dict(DEFAULT_POLICY)
     if policy:
         limits.update(policy)
-
     absolute = _first(metrics, "original_system_absolute_residual", "full_absolute_residual")
     relative = _first(metrics, "original_system_relative_residual", "full_relative_residual")
     constraint = _first(metrics, "constraint_absolute_residual", "absolute_constraint_residual")
     backward = _first(metrics, "backward_error", "original_system_backward_error")
     primal = _first(metrics, "relative_primal_error_vs_MUMPS", "relative_primal_agreement_with_mumps")
-
+    temperature = _first(metrics, "tes_temperature_difference", "temperature_difference")
+    current = _first(metrics, "tes_current_difference", "current_difference")
+    constrained = bool(metrics.get("constrained", metrics.get("mortar", True)))
+    no_mortar = bool(metrics.get("no_mortar", False))
+    constraint_required = bool(metrics.get("constraint_metric_required", constrained and not no_mortar))
     nonfinite = bool(metrics.get("nonfinite", False) or metrics.get("nonfinite_or_breakdown", False))
     breakdown = bool(metrics.get("breakdown", False))
     hard_fail_reasons: list[str] = []
@@ -53,59 +63,64 @@ def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None) ->
         hard_fail_reasons.append("nonfinite")
     if breakdown:
         hard_fail_reasons.append("breakdown")
-    for label, value in (("absolute residual", absolute), ("constraint residual", constraint),
-                         ("backward error", backward), ("primal comparison", primal)):
+    values = {"absolute_residual": absolute, "relative_residual": relative, "constraint_residual": constraint,
+              "backward_error": backward, "primal_comparison": primal, "tes_temperature_difference": temperature,
+              "tes_current_difference": current}
+    for label, value in values.items():
         if value is not None and not _finite(value):
             hard_fail_reasons.append(f"nonfinite {label}")
+        elif value is not None and float(value) < 0.0:
+            hard_fail_reasons.append(f"negative {label}")
 
     numerical_checks = {
-        "absolute_residual": absolute is not None and _finite(absolute)
-        and float(absolute) <= limits["absolute_residual_max"],
-        "constraint_absolute_residual": constraint is not None and _finite(constraint)
-        and float(constraint) <= limits["constraint_absolute_residual_max"],
-        "backward_error": backward is not None and _finite(backward)
-        and float(backward) <= limits["backward_error_max"],
+        "absolute_residual": _finite(absolute) and float(absolute) <= limits["absolute_residual_max"],
+        "relative_residual": _finite(relative) and float(relative) <= limits["relative_residual_max"],
+        "backward_error": _finite(backward) and float(backward) <= limits["backward_error_max"],
+        "constraint_absolute_residual": (not constraint_required) or (_finite(constraint) and float(constraint) <= limits["constraint_absolute_residual_max"]),
     }
-    # A missing backward error is a diagnostic limitation, not a fabricated
-    # zero.  Callers can require it with require_complete=True.
-    missing_primary = [name for name, value in (
-        ("absolute_residual", absolute), ("constraint_absolute_residual", constraint),
-        ("backward_error", backward),
-    ) if value is None]
-    primal_check = primal is None or float(primal) <= limits["relative_primal_error_max"]
-    floor_warning = (
-        _finite(absolute) and _finite(relative)
-        and float(absolute) <= limits["numerical_floor"]
-        and float(relative) > limits["relative_residual_warning"]
-    )
+    numerical_missing = [name for name, value in (("absolute_residual", absolute), ("relative_residual", relative), ("backward_error", backward)) if value is None]
+    if constraint_required and constraint is None:
+        numerical_missing.append("constraint_absolute_residual")
+    physical_checks = {
+        "primal_comparison": _finite(primal) and float(primal) <= limits["relative_primal_error_max"],
+        "tes_temperature_difference": _finite(temperature) and float(temperature) <= limits["temperature_difference_max"],
+        "tes_current_difference": _finite(current) and float(current) <= limits["current_difference_max"],
+    }
+    physical_missing = [name for name, value in (("primal_comparison", primal), ("tes_temperature_difference", temperature), ("tes_current_difference", current)) if value is None]
+    floor_warning = _finite(absolute) and _finite(relative) and float(absolute) <= limits["numerical_floor"] and float(relative) > limits["relative_residual_warning"]
     relative_warning = _finite(relative) and float(relative) > limits["relative_residual_warning"]
-
-    complete = not missing_primary
-    numerical_pass = all(numerical_checks.values()) and primal_check
-    production_ready = not hard_fail_reasons and complete and numerical_pass
+    implementation_ok = not hard_fail_reasons
+    numerical_ok = all(numerical_checks.values()) and not numerical_missing
+    physical_ok = all(physical_checks.values()) and not physical_missing
+    numerical_status = _status(numerical_ok, bool(numerical_missing))
+    physical_status = _status(physical_ok, bool(physical_missing))
+    if profile == "diagnostic":
+        production_ready = False
+        overall = "FAIL" if hard_fail_reasons else "INCOMPLETE" if numerical_missing else "PASS"
+    else:
+        production_ready = implementation_ok and numerical_ok and physical_ok
+        overall = (
+            "FAIL" if hard_fail_reasons or (not numerical_ok and not numerical_missing)
+            or (not physical_ok and not physical_missing)
+            else "INCOMPLETE" if not production_ready else "PASS"
+        )
     return {
-        "status": "PASS" if production_ready else "FAIL" if hard_fail_reasons or (complete and not numerical_pass) else "INCOMPLETE",
+        "profile": profile,
+        "status": overall,
         "production_ready": production_ready,
-        "hard_fail_reasons": hard_fail_reasons,
-        "metrics": {
-            "original_system_absolute_residual": absolute,
-            "original_system_relative_residual": relative,
-            "constraint_absolute_residual": constraint,
-            "backward_error": backward,
-            "relative_primal_error_vs_MUMPS": primal,
-        },
-        "checks": numerical_checks | {"primal_comparison": primal_check},
-        "missing_primary_metrics": missing_primary,
+        "implementation_correctness": {"status": "FAIL" if hard_fail_reasons else "PASS", "hard_fail_reasons": hard_fail_reasons},
+        "numerical_convergence": {"status": numerical_status, "checks": numerical_checks, "missing_metrics": numerical_missing},
+        "physical_acceptance": {"status": physical_status, "checks": physical_checks, "missing_metrics": physical_missing},
+        "performance_readiness": {"status": "PASS" if _finite(metrics.get("elapsed_wall_seconds")) and _finite(metrics.get("k_actions_total")) else "INCOMPLETE"},
+        "gpu_acceleration": {"status": str(metrics.get("gpu_acceleration_status", "NOT RUN")), "speedup": metrics.get("gpu_speedup")},
+        "constraint_metric_required": constraint_required,
+        "no_mortar_constraint_exemption": no_mortar and not constraint_required,
+        "metrics": values,
+        "backward_error_norm_definition": metrics.get("backward_error_norm_definition", "componentwise max: |b-Ax|/(|A||x|+|b|), denominator elementwise"),
         "relative_residual_warning": relative_warning,
         "relative_residual_is_numerical_floor_warning": floor_warning,
         "policy": limits,
-        "interpretation": (
-            "relative residual exceeded its diagnostic threshold, but the absolute residual "
-            "is at the configured numerical floor; this is not a hard failure"
-            if floor_warning else
-            "relative residual is diagnostic only; production readiness is determined by "
-            "complete absolute/backward/constraint and primal checks"
-        ),
+        "interpretation": "relative residual is diagnostic; numerical-floor warning does not override absolute/backward gates" if floor_warning else "profiles keep numerical convergence, physical acceptance, and performance separate",
     }
 
 
@@ -113,16 +128,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--profile", choices=("diagnostic", "production"), default="diagnostic")
     parser.add_argument("--require-complete", action="store_true")
     args = parser.parse_args()
-    payload = json.loads(args.input.read_text(encoding="utf-8"))
-    result = evaluate(payload)
-    if args.require_complete and result["missing_primary_metrics"] and result["status"] == "INCOMPLETE":
+    result = evaluate(json.loads(args.input.read_text(encoding="utf-8")), profile=args.profile)
+    if args.require_complete and result["status"] == "INCOMPLETE":
         result["status"] = "FAIL"
-        result["hard_fail_reasons"].append("missing primary metrics")
+        result["implementation_correctness"]["hard_fail_reasons"].append("missing metrics")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(result, indent=2))
+    args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    print(json.dumps(result, indent=2, allow_nan=False))
     return 0 if result["status"] != "FAIL" else 1
 
 
