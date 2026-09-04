@@ -3,9 +3,6 @@
 # Generated from the isolated feature tree; includes the portable diagnostic
 # and optional serial SuperLU gate used by the Phase19 independent check.
 
-warning: in the working copy of 'CMakeLists.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'fem/src/BlockSolve.F90', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'fem/src/CMakeLists.txt', LF will be replaced by CRLF the next time Git touches it
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index faa8bee1cf714f7d4e2d3a6f1c54be5fa1dfcd73..0cffbf39d778362837bf5ab8d2f78e4d4c74a139 100644
 --- a/CMakeLists.txt
@@ -34,7 +31,7 @@ index faa8bee1cf714f7d4e2d3a6f1c54be5fa1dfcd73..0cffbf39d778362837bf5ab8d2f78e4d
  SET(USE_SYSTEM_ZOLTAN FALSE CACHE BOOL "Use system Zoltan library")
  
 diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
-index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f43819edf 100644
+index fd722cfde0f90d5c08fe5079f64f6043849b0787..95e7163b7183631828a078ef31c7de1f27074798 100644
 --- a/fem/src/BlockSolve.F90
 +++ b/fem/src/BlockSolve.F90
 @@ -42,8 +42,11 @@ MODULE BlockSolve
@@ -63,7 +60,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
  
  CONTAINS
  
-@@ -115,6 +125,434 @@ CONTAINS
+@@ -115,6 +125,459 @@ CONTAINS
      
    END FUNCTION CreateSchurApproximation
  
@@ -216,6 +213,31 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
 +        ' nonzero=',nonzero,' finite=',finite
 +    CALL Info('BlockSchurDiagnostic',Report,Level=5)
 +  END SUBROUTINE BlockSchurReport
++
++
++  ! Write a deterministic CRS triplet stream for independent block comparison.
++  ! The first line records the stored matrix shape; rows and columns remain
++  ! one-based, matching Elmer's CRS convention.
++  SUBROUTINE BlockSchurWriteMatrix(Path, A, NCol, NRow)
++    CHARACTER(LEN=*), INTENT(in) :: Path
++    TYPE(Matrix_t), POINTER :: A
++    INTEGER, INTENT(in) :: NCol,NRow
++    INTEGER :: i,j,unit,nnz,nwrite
++
++    IF( .NOT. ASSOCIATED(A) ) RETURN
++    nwrite = MIN(A % NumberOfRows,NRow)
++    nnz = 0
++    IF( nwrite > 0 ) nnz = A % Rows(nwrite+1) - 1
++    OPEN(NEWUNIT=unit,FILE=TRIM(Path),STATUS='REPLACE',ACTION='WRITE')
++    WRITE(unit,'(A,1X,I0,1X,I0,1X,I0)') '#',NRow, &
++        NCol,nnz
++    DO i=1,nwrite
++      DO j=A % Rows(i),A % Rows(i+1)-1
++        WRITE(unit,'(I0,1X,I0,1X,ES25.16E3)') i,A % Cols(j),A % Values(j)
++      END DO
++    END DO
++    CLOSE(unit)
++  END SUBROUTINE BlockSchurWriteMatrix
 +
 +
 +  SUBROUTINE BlockSchurSuperLUSolve(A, Rhs, Sol, InfoCode)
@@ -498,7 +520,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
    
    
    !-----------------------------------------------------------------------------------
-@@ -2356,6 +2794,11 @@ CONTAINS
+@@ -2356,6 +2819,11 @@ CONTAINS
      
      CALL Info('BlockPrecMatrix','Checking for tailored preconditioning matrices',Level=6)
  
@@ -510,7 +532,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
      Params => Solver % Values
      SplitComplexHcurl = ListGetLogical( Params,'Block Split Complex Hcurl', GotIt ) 
      
-@@ -3767,19 +4210,31 @@ CONTAINS
+@@ -3767,19 +4235,31 @@ CONTAINS
      INTEGER :: ipar(*)
  !---------------------------------------------------------------------------------
      REAL(KIND=dp), POINTER :: rtmp(:),vtmp(:),xtmp(:),btmp(:),diagtmp(:),b(:),x(:), a_rhs_save(:)
@@ -549,7 +571,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
      INTEGER(KIND=AddrInt) :: AddrFunc
      EXTERNAL :: AddrFunc
  
-@@ -3815,6 +4270,47 @@ CONTAINS
+@@ -3815,6 +4295,47 @@ CONTAINS
  
      BlockGS = ListGetLogical( Params,'Block Gauss-Seidel',Found)
      BlockSch = ListGetLogical( Params,'Block Schur',Found)
@@ -597,7 +619,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
      
      
     
-@@ -3828,6 +4324,190 @@ CONTAINS
+@@ -3828,6 +4349,218 @@ CONTAINS
        CALL Warn('BlockMatrixPrec','There is a mismatch between sizes: '&
            //I2S(n)//' vs. '//I2S(Offset(NoVar+1)))
      END IF
@@ -673,6 +695,16 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
 +          ' B rows='//I2S(TotMatrix % Submatrix(2,1) % Mat % NumberOfRows)// &
 +          ' D rows='//I2S(TotMatrix % Submatrix(2,2) % Mat % NumberOfRows),Level=5)
 +
++      CALL BlockSchurWriteMatrix(TRIM(SchurDiagnosticPrefix)//'_K.triplets', &
++          TotMatrix % Submatrix(1,1) % Mat,d_nu,d_nu)
++      CALL BlockSchurWriteMatrix(TRIM(SchurDiagnosticPrefix)//'_B.triplets', &
++          TotMatrix % Submatrix(2,1) % Mat,d_nu,d_nl)
++      CALL BlockSchurWriteMatrix(TRIM(SchurDiagnosticPrefix)//'_Bt.triplets', &
++          TotMatrix % Submatrix(1,2) % Mat,d_nl, &
++          TotMatrix % Submatrix(1,2) % Mat % NumberOfRows)
++      CALL BlockSchurWriteMatrix(TRIM(SchurDiagnosticPrefix)//'_D.triplets', &
++          TotMatrix % Submatrix(2,2) % Mat,d_nl,d_nl)
++
 +      DO q=1,4
 +        SELECT CASE(q)
 +        CASE(1)
@@ -719,12 +751,24 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
 +        CALL BlockSchurCheckFinite('B*K^-1*Bt*v',d_y)
 +        CALL BlockSchurReport('q='//I2S(q)//' B*K^-1*Bt*v',d_y)
 +        CALL BlockSchurCheckFinite('B*K^-1*Bt*v',d_y)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_bku'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_y(l)
++        END DO
++        CLOSE(unit)
 +        d_dv = 0.0_dp
 +        Aij => TotMatrix % Submatrix(2,2) % Mat
 +        IF( ASSOCIATED(Aij) .AND. Aij % NumberOfRows > 0 ) &
 +            CALL CRS_MatrixVectorMultiply(Aij,d_v,d_dv)
 +        CALL BlockSchurCheckFinite('D*v',d_dv)
 +        CALL BlockSchurReport('q='//I2S(q)//' D*v',d_dv)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_dv'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nl
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_dv(l)
++        END DO
++        CLOSE(unit)
 +        d_y = d_dv - d_y
 +        CALL BlockSchurCheckFinite('Schur output',d_y)
 +        CALL BlockSchurReport('q='//I2S(q)//' Schur output',d_y)
@@ -733,6 +777,12 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
 +            STATUS='REPLACE',ACTION='WRITE')
 +        DO l=1,d_nl
 +          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_v(l)
++        END DO
++        CLOSE(unit)
++        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_bt'//I2S(q)//'.dat', &
++            STATUS='REPLACE',ACTION='WRITE')
++        DO l=1,d_nu
++          WRITE(unit,'(I0,1X,ES25.16E3)') l,d_bt(l)
 +        END DO
 +        CLOSE(unit)
 +        OPEN(NEWUNIT=unit,FILE=TRIM(SchurDiagnosticPrefix)//'_y'//I2S(q)//'.dat', &
@@ -788,7 +838,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
      
      ! Save the initial solver stuff
      solver_save => Solver
-@@ -4074,7 +4754,40 @@ CONTAINS
+@@ -4074,7 +4807,40 @@ CONTAINS
            CALL AMGXSolver( A, x, btmp, ASolver )
            IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,A,btmp,x)
          ELSE
@@ -830,7 +880,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
          END IF
        END IF
        
-@@ -4185,6 +4898,44 @@ CONTAINS
+@@ -4185,6 +4951,44 @@ CONTAINS
        
      END DO ! j=1,NoVar
  
@@ -876,7 +926,7 @@ index fd722cfde0f90d5c08fe5079f64f6043849b0787..3419061fe50c5d4816eadfe96156f55f
  
      CALL ListPopNameSpace('block:') ! block:
 diff --git a/fem/src/CMakeLists.txt b/fem/src/CMakeLists.txt
-index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..57e8d844853135932e48804caf157177b2edf186 100644
+index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..c44308e6a9ec09bdd17d8be210ddfbb7c439e512 100644
 --- a/fem/src/CMakeLists.txt
 +++ b/fem/src/CMakeLists.txt
 @@ -45,6 +45,10 @@ SET(solverlib_SOURCES AddrFunc.F90 NavierStokes.F90 NavierStokesGeneral.F90
@@ -890,7 +940,7 @@ index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..57e8d844853135932e48804caf157177
  #SET_PROPERTY(SOURCE MaxwellAxiS.F90 PROPERTY
  #	COMPILE_DEFINITIONS FULL_INDUCTION)
  
-@@ -148,6 +152,12 @@ SET_TARGET_PROPERTIES(mpi_stubs
+@@ -148,6 +152,16 @@ SET_TARGET_PROPERTIES(mpi_stubs
  SET_TARGET_PROPERTIES(elmersolver
                        PROPERTIES LINKER_LANGUAGE Fortran)
  
@@ -898,6 +948,10 @@ index 0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce..57e8d844853135932e48804caf157177
 +  TARGET_COMPILE_DEFINITIONS(elmersolver PRIVATE HAVE_SUPERLU_SERIAL)
 +  TARGET_INCLUDE_DIRECTORIES(elmersolver PRIVATE ${SUPERLU_INCLUDE_DIR})
 +  TARGET_LINK_LIBRARIES(elmersolver ${SUPERLU_LIBRARY})
++
++  ADD_EXECUTABLE(BlockSchurSuperLUStandardTest SolveSuperLUStandardTest.c)
++  TARGET_INCLUDE_DIRECTORIES(BlockSchurSuperLUStandardTest PRIVATE ${SUPERLU_INCLUDE_DIR})
++  TARGET_LINK_LIBRARIES(BlockSchurSuperLUStandardTest elmersolver ${SUPERLU_LIBRARY})
 +ENDIF()
 +
  #We want MMG & Zoltan in the RPATH (if found), but given how many other 
@@ -1208,54 +1262,189 @@ index 5628f72ca6b07ad2afa1a87e502627aeded9408c..a252c1a5cdb419d791ffe42cae1446ab
  }
 diff --git a/fem/src/SolveSuperLUStandard.c b/fem/src/SolveSuperLUStandard.c
 new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
 --- /dev/null
 +++ b/fem/src/SolveSuperLUStandard.c
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,131 @@
 +/* Minimal serial SuperLU wrapper used by the matrix-free Schur diagnostic. */
 +
++#include <stdio.h>
 +#include <stdlib.h>
++#include <string.h>
 +#include <superlu/slu_ddefs.h>
 +
-+void block_schur_superlu_solve(int *n, int *nnz, double *values,
-+                               int *rowind, int *colptr, double *rhs,
++void block_schur_superlu_solve(int *n, int *nnz, double *csr_values,
++                               int *csr_cols, int *csr_rows, double *rhs,
 +                               int *info)
 +{
 +    SuperMatrix A, B, L, U;
 +    superlu_options_t options;
 +    SuperLUStat_t stat;
-+    int *perm_c = NULL;
-+    int *perm_r = NULL;
-+    int i;
++    int_t *perm_c = NULL;
++    int_t *perm_r = NULL;
++    int_t *csc_rowind = NULL;
++    int_t *csc_colptr = NULL;
++    int_t *next = NULL;
++    int_t row, p, col, q;
++    int have_a = 0, have_b = 0, have_l = 0, have_u = 0, have_stat = 0;
 +
++    if (info == NULL) return;
 +    *info = -1;
-+    perm_c = (int *) malloc((size_t) *n * sizeof(int));
-+    perm_r = (int *) malloc((size_t) *n * sizeof(int));
-+    if (perm_c == NULL || perm_r == NULL) goto cleanup;
++    if (n == NULL || nnz == NULL || csr_values == NULL || csr_cols == NULL ||
++        csr_rows == NULL || rhs == NULL || *n <= 0 || *nnz <= 0) {
++        *info = -10;
++        return;
++    }
 +
-+    /* Elmer's CRS indices are one-based; SuperLU expects zero-based CSC. */
-+    for (i = 0; i < *nnz; ++i) --rowind[i];
-+    for (i = 0; i <= *n; ++i) --colptr[i];
++    /* Elmer supplies one-based CSR.  Build an independent zero-based CSC
++       representation; neither the caller's values nor its index arrays are
++       modified. */
++    if (csr_rows[0] != 1 || csr_rows[*n] != *nnz + 1) {
++        fprintf(stderr, "block_schur_superlu_solve: invalid CSR row bounds\n");
++        *info = -11;
++        goto cleanup;
++    }
++    for (row = 0; row < *n; ++row) {
++        if (csr_rows[row] < 1 || csr_rows[row] > csr_rows[row + 1] ||
++            csr_rows[row + 1] > *nnz + 1) {
++            fprintf(stderr, "block_schur_superlu_solve: invalid CSR row range\n");
++            *info = -12;
++            goto cleanup;
++        }
++        for (p = csr_rows[row] - 1; p < csr_rows[row + 1] - 1; ++p) {
++            if (csr_cols[p] < 1 || csr_cols[p] > *n) {
++                fprintf(stderr, "block_schur_superlu_solve: CSR column out of range\n");
++                *info = -13;
++                goto cleanup;
++            }
++        }
++    }
 +
-+    dCreate_CompCol_Matrix(&A, *n, *n, *nnz, values, rowind, colptr,
-+                           SLU_NC, SLU_D, SLU_GE);
++    perm_c = (int_t *) malloc((size_t) *n * sizeof(*perm_c));
++    perm_r = (int_t *) malloc((size_t) *n * sizeof(*perm_r));
++    csc_colptr = (int_t *) calloc((size_t) *n + 1, sizeof(*csc_colptr));
++    next = (int_t *) malloc((size_t) *n * sizeof(*next));
++    csc_rowind = (int_t *) malloc((size_t) *nnz * sizeof(*csc_rowind));
++    double *csc_values = (double *) malloc((size_t) *nnz * sizeof(*csc_values));
++    if (perm_c == NULL || perm_r == NULL || csc_colptr == NULL || next == NULL ||
++        csc_rowind == NULL || csc_values == NULL) {
++        free(csc_values);
++        goto cleanup;
++    }
++
++    for (p = 0; p < *nnz; ++p) ++csc_colptr[csr_cols[p]];
++    for (col = 0; col < *n; ++col) csc_colptr[col + 1] += csc_colptr[col];
++    if (csc_colptr[0] != 0 || csc_colptr[*n] != *nnz) {
++        fprintf(stderr, "block_schur_superlu_solve: invalid CSC column bounds\n");
++        free(csc_values);
++        *info = -14;
++        goto cleanup;
++    }
++    memcpy(next, csc_colptr, (size_t) *n * sizeof(*next));
++    for (row = 0; row < *n; ++row) {
++        for (p = csr_rows[row] - 1; p < csr_rows[row + 1] - 1; ++p) {
++            col = csr_cols[p] - 1;
++            q = next[col]++;
++            csc_rowind[q] = row;
++            csc_values[q] = csr_values[p];
++        }
++    }
++    for (col = 0; col < *n; ++col) {
++        if (csc_colptr[col] > csc_colptr[col + 1]) {
++            fprintf(stderr, "block_schur_superlu_solve: invalid CSC pointer order\n");
++            free(csc_values);
++            *info = -15;
++            goto cleanup;
++        }
++    }
++
++    dCreate_CompCol_Matrix(&A, *n, *n, *nnz, csc_values, csc_rowind,
++                           csc_colptr, SLU_NC, SLU_D, SLU_GE);
++    have_a = 1;
 +    dCreate_Dense_Matrix(&B, *n, 1, rhs, *n, SLU_DN, SLU_D, SLU_GE);
++    have_b = 1;
 +    set_default_options(&options);
 +    options.ColPerm = COLAMD;
 +    StatInit(&stat);
++    have_stat = 1;
 +    dgssv(&options, &A, perm_c, perm_r, &L, &U, &B, &stat, info);
++    if (*info == 0) {
++        have_l = 1;
++        have_u = 1;
++    }
 +    StatFree(&stat);
++    have_stat = 0;
 +    Destroy_SuperMatrix_Store(&A);
-+    Destroy_SuperNode_Matrix(&L);
-+    Destroy_CompCol_Matrix(&U);
++    have_a = 0;
 +    Destroy_SuperMatrix_Store(&B);
-+
-+    for (i = 0; i < *nnz; ++i) ++rowind[i];
-+    for (i = 0; i <= *n; ++i) ++colptr[i];
++    have_b = 0;
++    Destroy_SuperNode_Matrix(&L);
++    have_l = 0;
++    Destroy_CompCol_Matrix(&U);
++    have_u = 0;
++    free(csc_values);
 +
 +cleanup:
++    if (have_stat) StatFree(&stat);
++    if (have_a) Destroy_SuperMatrix_Store(&A);
++    if (have_b) Destroy_SuperMatrix_Store(&B);
++    if (have_l) Destroy_SuperNode_Matrix(&L);
++    if (have_u) Destroy_CompCol_Matrix(&U);
 +    free(perm_c);
 +    free(perm_r);
++    free(csc_rowind);
++    free(csc_colptr);
++    free(next);
 +}
 +
+diff --git a/fem/src/SolveSuperLUStandardTest.c b/fem/src/SolveSuperLUStandardTest.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/fem/src/SolveSuperLUStandardTest.c
+@@ -0,0 +1,44 @@
++#include <math.h>
++#include <stdio.h>
++
++void block_schur_superlu_solve(int *n, int *nnz, double *values,
++                               int *cols, int *rows, double *rhs, int *info);
++
++int main(void)
++{
++    /* Non-symmetric Elmer-style one-based CSR matrix:
++         K = [4 1 0; 2 5 3; 0 6 7].
++       The expected solution is x=[1,2,3].  Passing CSR directly as CSC would
++       solve a different transpose/permuted problem and fail the K residual. */
++    int n = 3, nnz = 7, info = -1;
++    int rows[4] = {1, 3, 6, 8};
++    int cols[7] = {1, 2, 1, 2, 3, 2, 3};
++    double values[7] = {4.0, 1.0, 2.0, 5.0, 3.0, 6.0, 7.0};
++    double rhs[3] = {6.0, 21.0, 33.0};
++    const double expected[3] = {1.0, 2.0, 3.0};
++    double k_res2 = 0.0, kt_res2 = 0.0;
++
++    block_schur_superlu_solve(&n, &nnz, values, cols, rows, rhs, &info);
++    if (info != 0) {
++        fprintf(stderr, "SuperLU synthetic test: info=%d\n", info);
++        return 1;
++    }
++    k_res2 += pow(4.0 * rhs[0] + rhs[1] - 6.0, 2);
++    k_res2 += pow(2.0 * rhs[0] + 5.0 * rhs[1] + 3.0 * rhs[2] - 21.0, 2);
++    k_res2 += pow(6.0 * rhs[1] + 7.0 * rhs[2] - 33.0, 2);
++    kt_res2 += pow(4.0 * rhs[0] + 2.0 * rhs[1] - 6.0, 2);
++    kt_res2 += pow(rhs[0] + 5.0 * rhs[1] + 6.0 * rhs[2] - 21.0, 2);
++    kt_res2 += pow(3.0 * rhs[1] + 7.0 * rhs[2] - 33.0, 2);
++    if (sqrt(k_res2) > 1.0e-12 || sqrt(kt_res2) < 1.0e-6) {
++        fprintf(stderr, "SuperLU synthetic test: K residual=%.17g K^T residual=%.17g\n",
++                sqrt(k_res2), sqrt(kt_res2));
++        return 1;
++    }
++    for (int i = 0; i < n; ++i) {
++        if (fabs(rhs[i] - expected[i]) > 1.0e-12) return 1;
++    }
++    printf("SuperLU synthetic CSR->CSC test: PASS K_residual=%.17g K^T_residual=%.17g\n",
++           sqrt(k_res2), sqrt(kt_res2));
++    return 0;
++}
 +
 

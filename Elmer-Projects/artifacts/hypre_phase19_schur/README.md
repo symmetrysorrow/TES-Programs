@@ -14,9 +14,13 @@ is an oracle, and the MGR result reached its iteration limit above the gate.
 The matrix-free Elmer action validator is
 `scripts/analysis/validate_matrix_free_schur.py`; it requires the four
 `*_vN.dat`/`*_yN.dat` files emitted by an Elmer diagnostic run.
-The current harness attempt is recorded in `matrix_free_diagnostic_status.json`;
-it emitted only the first pair before the surrounding one-step solve failed.
-The latest independent validator snapshot is
-`matrix_free_validation_latest.json`; it records 0/4 because only the legacy
-v1/y1 pair exists and that pair's action does not match the SuperLU oracle.
-It is an explicit failure snapshot, not an acceptance result.
+`matrix_free_validation_current.json` is the current four-vector result and
+is an explicit failure snapshot: vector parity passes, but the strict action
+gate does not (`max action relative error = 5.0716313e-7`).
+`superlu_parity_cpu.json` additionally records K backward residuals,
+componentwise backward errors, `B^T v`/`B K^-1 B^T v`/`Dv` stage parity, and
+raw SHA-256 fingerprints for K/B/Bt/D.  The diagnostic emits the corresponding
+`*_K|B|Bt|D.triplets` and `*_vN|btN|kuN|bkuN|dvN|yN.dat` files in the project
+root.  The raw block fingerprints mismatch for K/B/Bt; only D matches.
+Lower/full CPU, GPU, MPI, and transient promotion tests were intentionally not
+run after this failed gate.
