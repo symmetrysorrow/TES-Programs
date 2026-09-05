@@ -1,0 +1,76 @@
+{
+  "case_status": "blocked_unresolved_physics_parameters",
+  "source_commit": "26806c78cba15f8a8467c2e465a30be286255887",
+  "experiment_path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "independently_observed": {
+    "date": {
+      "value": "2024-12-06",
+      "source": "experiment directory name"
+    },
+    "bath_setpoint_label_K": {
+      "value": 0.215,
+      "source": "experiment directory name: 215mK",
+      "confidence": "medium",
+      "note": "A directory label is not treated as a measured TES temperature or T_c."
+    },
+    "bias_setpoint_label_A": {
+      "value": 0.0014,
+      "source": "experiment directory name: 1400uA1400uA",
+      "confidence": "medium",
+      "note": "This is an instrument/setpoint label, not an independently calibrated TES current."
+    },
+    "readout_rate_Hz": {
+      "value": 500000.0,
+      "source": "PulseConfig.json Readout.Rate and Setting.txt"
+    },
+    "readout_samples": {
+      "value": 100000,
+      "source": "PulseConfig.json Readout.Sample and Setting.txt"
+    },
+    "analysis_cutoff_Hz": {
+      "value": 10000.0,
+      "source": "PulseConfig.json Analysis.CutoffFrequency"
+    },
+    "fft_bin_width_Hz": {
+      "value": 5.0,
+      "source": "derived from Readout.Rate / Readout.Sample"
+    },
+    "channel": {
+      "value": "CH0",
+      "source": "CH0_noise and CH0_pulse directory names"
+    }
+  },
+  "parameter_status": {
+    "T_c": {"value": null, "status": "unresolved", "required_for": ["operating point", "loop gain", "noise transfer"]},
+    "T_bath": {"value": null, "status": "unresolved_for_simulation", "label_candidate_K": 0.215},
+    "tes_current_A": {"value": null, "status": "unresolved", "label_candidate_A": 0.0014},
+    "R": {"value": null, "status": "unresolved"},
+    "R_l": {"value": null, "status": "unresolved"},
+    "alpha": {"value": null, "status": "unresolved"},
+    "beta": {"value": null, "status": "unresolved"},
+    "L": {"value": null, "status": "unresolved"},
+    "n": {"value": null, "status": "unresolved"},
+    "C_abs": {"value": null, "status": "unresolved"},
+    "C_tes": {"value": null, "status": "unresolved"},
+    "G_abs-abs": {"value": null, "status": "unresolved"},
+    "G_abs-tes": {"value": null, "status": "unresolved"},
+    "G_tes-bath": {"value": null, "status": "unresolved"},
+    "n_abs": {"value": null, "status": "unresolved"},
+    "readout_calibration_A_per_V": {"value": null, "status": "unresolved"},
+    "bias_impedance_vs_frequency": {"value": null, "status": "unresolved"},
+    "hardware_analog_bessel": {"value": null, "status": "not independently documented for this acquisition"}
+  },
+  "repository_candidates_not_accepted_as_target_values": [
+    {"path": "PoST_Simulations/input.json", "reason": "generic nominal operating point; explicitly not this target case"},
+    {"path": "Analyze_Experimental_Data/tes_analysis/iv.py", "reason": "interactive/general IV workflow; no target dataset binding; R_SH=3.8e-3 is not target evidence"},
+    {"path": "getpara/IV_matome.py", "reason": "generic IV workflow; R_SH=3.9e-3 is not target evidence"},
+    {"path": "getpara/thermalconductivity.py", "reason": "generic external data path and fitted thermal model; no target calibration file"},
+    {"path": "Elmer-Projects", "reason": "other simulation cases, not an exact target acquisition provenance source"}
+  ],
+  "prohibited_inference": [
+    "Do not fit any physical parameter to modelnoise.txt or residuals.",
+    "Do not infer calibration from the 1 kHz normalization.",
+    "Do not promote the 1400uA directory label to TES current.",
+    "Do not use a residual-derived white, pole-zero, Lorentzian, or hanging component."
+  ]
+}

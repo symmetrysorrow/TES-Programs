@@ -1,0 +1,8 @@
+--- fem/src/BlockSolve.F90
++++ fem/src/BlockSolve.F90
+@@ -850,1 +850,1 @@
+-        WRITE(istat,'(A,A,A,I0,A,I0,A,I0,A,ES24.16E3,A,ES24.16E3,'// &
++        WRITE(istat,'(A,A,A,A,A,I0,A,I0,A,I0,A,ES24.16E3,A,ES24.16E3,'// &
+@@ -877,1 +877,1 @@
+-    DEALLOCATE(r,w,z,v,zz,h,cs,sn,g,coef,ax,sbt,sku,sbku,sdv)
++    DEALLOCATE(r,w,z,v,zz,h,cs,sn,g,coef,ax,sbt,sku,sbku,sdv,update)

@@ -1,0 +1,15 @@
+{
+  "run": "cpu_lower_contract_baseline",
+  "mapping": "outer residual n follows Schur solves 2n-1 and 2n in this one-rank run; outer 16 is a repeated residual with no new Schur pair",
+  "outer_residuals": [[1, 3.969e-05], [2, 6.744e-05], [3, 6.174e-05], [4, 4.916e-05], [5, 4.247e-05], [6, 4.27e-05], [7, 4.492e-05], [8, 9.095e-05], [9, 5.812e-05], [10, 2.217e-04], [11, 2.11e-04], [12, 5.682e-04], [13, 1.844e-03], [14, 4.673e-04], [15, 1.71e-04], [16, 1.71e-04]],
+  "bad_region": [
+    {"outer_iteration": 9, "schur_solves": [17, 18], "inner_final_residuals": [8.895849633654362e-13, 3.8152708069181144e-14], "outer_residual": 5.812e-05},
+    {"outer_iteration": 10, "schur_solves": [19, 20], "inner_final_residuals": [1.6952488698090947e-12, 1.386990363048353e-13], "outer_residual": 2.217e-04},
+    {"outer_iteration": 11, "schur_solves": [21, 22], "inner_final_residuals": [2.634271179482294e-13, 1.0018199304842967e-13], "outer_residual": 2.11e-04},
+    {"outer_iteration": 12, "schur_solves": [23, 24], "inner_final_residuals": [2.14374880115633e-13, 2.5546470091800356e-13], "outer_residual": 5.682e-04},
+    {"outer_iteration": 13, "schur_solves": [25, 26], "inner_final_residuals": [2.1785106145780756e-11, 8.104886454540786e-13], "outer_residual": 1.844e-03},
+    {"outer_iteration": 14, "schur_solves": [27, 28], "inner_final_residuals": [7.264648758188529e-10, 2.0073722432241046e-13], "outer_residual": 4.673e-04},
+    {"outer_iteration": 15, "schur_solves": [29, 30], "inner_final_residuals": [4.0474982188760254e-11, 8.446478823226589e-14], "outer_residual": 1.71e-04}
+  ],
+  "conclusion": "The largest outer spike at iteration 13 is preceded by anomalously large true Schur residuals at solves 25 and 26, and the following outer steps contain even larger Schur residuals at solves 27 and 29. Every solve still stopped by maxiter, so the trace distinguishes a steadily decreasing Arnoldi estimate from insufficient relative threshold attainment."
+}

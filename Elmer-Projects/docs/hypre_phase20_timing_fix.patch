@@ -1,0 +1,18 @@
+--- fem/src/BlockSolve.F90
++++ fem/src/BlockSolve.F90
+@@ -75,1 +75,2 @@
+   REAL(KIND=dp), SAVE :: BlockProbeKSchurSeconds = 0.0_dp
++  REAL(KIND=dp), SAVE :: BlockProbeSchurActionSeconds = 0.0_dp
+@@ -177,1 +178,2 @@
+     BlockProbeKSchurSeconds = 0.0_dp
++    BlockProbeSchurActionSeconds = 0.0_dp
+@@ -205,1 +206,1 @@
+-          BlockProbeKSchurSeconds,',','missing',',','missing',',','missing',',','missing'
++          BlockProbeSchurActionSeconds,',','missing',',','missing',',','missing',',','missing'
+@@ -843,2 +844,3 @@
+       schur_finish = BlockProbeNow()
++      BlockProbeSchurActionSeconds = BlockProbeSchurActionSeconds + MAX(0.0_dp,action_seconds)
+       hit_maxiter = iter >= SchurMaxIter .AND. .NOT.reached_tolerance .AND. &
+@@ -866,1 +868,1 @@
+-            MAX(0.0_dp,action_seconds),',',BlockProbeKSchurSeconds,',','missing'
++            MAX(0.0_dp,action_seconds),',',BlockProbeSchurActionSeconds,',','missing'

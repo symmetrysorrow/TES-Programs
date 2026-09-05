@@ -1002,6 +1002,143 @@ def _retag_contact_surfaces_multi(
     _replace_surface_group("abs__zmin_free", face_bases["abs"] + 6, sorted(free_faces))
 
 
+def _retag_conformal_shared_node_interfaces(
+    *,
+    sides: list[str],
+    spec,
+    stycast_boxes: dict[str, Box],
+    face_bases: dict[str, int],
+) -> None:
+    """Publish the exact contact patches used by the shared-node route.
+
+    The historical ``conformal_mortar_interfaces`` experiment left the
+    temporary membrane zone groups in ``mesh.names`` and retained whole TES /
+    absorber faces.  That is harmless while a Mortar projector selects the
+    patch, but it makes a topology diagnostic ambiguous and can hide a
+    non-conforming contact.  The independent shared-node route therefore
+    retags only the actual patches after all OCC imprints have completed.
+
+    No 3-D fragment is performed here.  The contact film is split in 2-D
+    before extrusion and the absorber/membrane footprints are imprinted in
+    their face planes.  ``_before_mesh_generate`` separately pairs the
+    resulting CAD faces for identical surface meshing.
+    """
+    volume_groups = _physical_groups_by_name(3)
+
+    def body_faces(body: str, z_target: float, z_tol: float = 5.0e-7) -> list[int]:
+        return _find_body_faces_at_z(
+            set(volume_groups[body][1]), z_target, z_tol=z_tol
+        )
+
+    def face_area_matches(face: int, target: float) -> bool:
+        area = _surface_area(face)
+        return abs(area - target) <= 1.0e-6 * max(area, target)
+
+    abs_box = _find_box(spec, "abs")
+    all_abs_contact: list[int] = []
+    for suffix in sides:
+        tes_name = f"TES{suffix}"
+        sty_name = f"Stycast{suffix}"
+        membrane_name = f"Membrane_SiNx{suffix}"
+        tes_box = _find_box(spec, tes_name)
+        stycast = stycast_boxes[suffix]
+        disc_area = pi * (float(stycast.dx) / 2.0) ** 2
+
+        # The membrane imprint may split the square into a central disc and
+        # a ring.  The contact patch is the union of every top face wholly
+        # contained in the TES footprint, not just one temporary OCC face.
+        membrane_top = body_faces(membrane_name, tes_box.zmin)
+        contact_membrane: list[int] = []
+        free_membrane: list[int] = []
+        for face in membrane_top:
+            bbox = gmsh.model.getBoundingBox(2, face)
+            inside = (
+                bbox[0] >= tes_box.xmin - 5.0e-7
+                and bbox[3] <= tes_box.xmax + 5.0e-7
+                and bbox[1] >= tes_box.ymin - 5.0e-7
+                and bbox[4] <= tes_box.ymax + 5.0e-7
+            )
+            (contact_membrane if inside else free_membrane).append(face)
+        if not contact_membrane:
+            raise RuntimeError(f"{membrane_name} contact patch was not found")
+        membrane_base = face_bases[membrane_name]
+        _replace_surface_group(
+            f"{membrane_name}__zmax", membrane_base + 5, sorted(contact_membrane)
+        )
+        _replace_surface_group(
+            f"{membrane_name}__zmax_free", membrane_base + 6, sorted(free_membrane)
+        )
+
+        # The pre-extruded TES film is split into a disc and a free ring.
+        # TES is only 0.16 um thick; a generic OCC face tolerance of 0.5 um
+        # would select both z faces and could publish the bottom disc as the
+        # TES--Stycast top contact.
+        tes_top = body_faces(tes_name, tes_box.zmax, min(tes_box.dz / 3.0, 1.0e-9))
+        tes_contact_candidates = [
+            face for face in tes_top if face_area_matches(face, disc_area)
+        ]
+        # The OCC split can expose the same circular contact as two
+        # coincident parent-facing entities.  A physical patch must contain
+        # one copy; retaining both would double the diagnostic area and make
+        # the Elmer boundary group look non-conformal even though the volume
+        # mesh has only one TES film.
+        tes_contact = tes_contact_candidates[:1]
+        tes_free = [face for face in tes_top if face not in tes_contact]
+        if not tes_contact:
+            raise RuntimeError(
+                f"{tes_name} contact disc was not found among "
+                f"{[(face, _surface_area(face)) for face in tes_top]}"
+            )
+        tes_base = face_bases[tes_name]
+        _replace_surface_group(f"{tes_name}__zmax", tes_base + 5, sorted(tes_contact))
+        _replace_surface_group(f"{tes_name}__zmax_free", tes_base + 6, sorted(tes_free))
+
+        sty_bottom = body_faces(sty_name, stycast.zmin)
+        sty_top = body_faces(sty_name, stycast.zmax)
+        if not sty_bottom or not sty_top:
+            raise RuntimeError(f"{sty_name} contact faces were not found")
+        sty_base = face_bases[sty_name]
+        _replace_surface_group(f"{sty_name}__zmin", sty_base + 4, sty_bottom)
+        _replace_surface_group(f"{sty_name}__zmax", sty_base + 5, sty_top)
+
+        abs_bottom = body_faces("abs", abs_box.zmin, 1.0e-6)
+        abs_contact = [face for face in abs_bottom if face_area_matches(face, disc_area)]
+        if not abs_contact:
+            raise RuntimeError(
+                f"abs contact disc for {sty_name} was not found among "
+                f"{[(face, _surface_area(face)) for face in abs_bottom]}"
+            )
+        all_abs_contact.extend(abs_contact)
+
+    abs_base = face_bases["abs"]
+    all_abs_contact = sorted(set(all_abs_contact))
+    abs_bottom = body_faces("abs", abs_box.zmin, 1.0e-6)
+    _replace_surface_group("abs__zmin", abs_base + 4, all_abs_contact)
+    _replace_surface_group(
+        "abs__zmin_free",
+        abs_base + 6,
+        [face for face in abs_bottom if face not in all_abs_contact],
+    )
+    temporary_groups = []
+    for suffix in sides:
+        prefix = f"Membrane_SiNx{suffix}"
+        temporary_groups.extend(
+            [
+                f"{prefix}_contact__zmin",
+                f"{prefix}_contact__zmax",
+                f"{prefix}_free_left__zmin",
+                f"{prefix}_free_left__zmax",
+                f"{prefix}_free_right__zmin",
+                f"{prefix}_free_right__zmax",
+                f"{prefix}_free_bottom__zmin",
+                f"{prefix}_free_bottom__zmax",
+                f"{prefix}_free_top__zmin",
+                f"{prefix}_free_top__zmax",
+            ]
+        )
+    _remove_surface_groups_by_name(temporary_groups)
+
+
 def _identify_contact_surface_groups() -> dict[str, list[int]]:
     surface_groups = _physical_groups_by_name(2)
     contacts: dict[str, list[int]] = {}
@@ -1323,8 +1460,18 @@ def build(write_mesh: bool = True) -> None:
     conformal_mortar_interfaces = bool(
         elmer_overrides.get("conformal_mortar_interfaces", False)
     )
+    conformal_shared_node_interfaces = bool(
+        elmer_overrides.get("conformal_shared_node_interfaces", False)
+    )
+    if conformal_shared_node_interfaces and conformal_mortar_interfaces:
+        raise ValueError(
+            "conformal_shared_node_interfaces and conformal_mortar_interfaces "
+            "are mutually exclusive"
+        )
     builder = TesGmshBuilder(spec=spec, verbose=False)
-    if fragment_mortar_interfaces and (len(sides) > 1 or conformal_mortar_interfaces):
+    if fragment_mortar_interfaces and (
+        len(sides) > 1 or conformal_mortar_interfaces or conformal_shared_node_interfaces
+    ):
         # Multi-side (dual_tes) contact refinement, all BEFORE meshing, with
         # each side's real Stycast position/radius. The single_pixel path
         # keeps the legacy post-builder calls below untouched for
@@ -1357,7 +1504,7 @@ def build(write_mesh: bool = True) -> None:
                 ],
             }
         ]
-        if conformal_mortar_interfaces:
+        if conformal_mortar_interfaces or conformal_shared_node_interfaces:
             for suffix in sides:
                 tes_box = _find_box(spec, f"TES{suffix}")
                 stycast = stycast_boxes[suffix]
@@ -1374,6 +1521,10 @@ def build(write_mesh: bool = True) -> None:
                         ],
                     }
                 )
+            # This name is retained internally because the face-pairing hook
+            # predates the independent shared-node experiment.  It means
+            # "merge the generated contact-face nodes" here; no Mortar BC is
+            # emitted by this geometry generator.
             builder.merge_mortar_interfaces = True
             builder.conformal_contact_pairs = []
             for suffix in sides:
@@ -1419,6 +1570,26 @@ def build(write_mesh: bool = True) -> None:
                         f"Periodic contact meshing lost material volume {body_name!r}"
                     )
                 _replace_volume_group(body_name, physical_tag, body_tags)
+        if conformal_shared_node_interfaces:
+            for body_name, physical_tag in expected_tags.items():
+                body_tags = sorted(set(builder.group_entities.get(body_name, [])))
+                if not body_tags:
+                    body_boxes = [
+                        box for box in spec.boxes
+                        if body_name_of(box) == body_name
+                    ]
+                    body_tags = _find_volume_tags_for_boxes(body_boxes)
+                if not body_tags:
+                    raise RuntimeError(
+                        f"Shared-node contact meshing lost material volume {body_name!r}"
+                    )
+                _replace_volume_group(body_name, physical_tag, body_tags)
+            _retag_conformal_shared_node_interfaces(
+                sides=sides,
+                spec=spec,
+                stycast_boxes=stycast_boxes,
+                face_bases=face_bases,
+            )
         if conformal_shared_interfaces:
             # OCC fragmentation changes entity tags. Re-register every material
             # group from its semantic source boxes before writing the mesh.
@@ -1433,7 +1604,11 @@ def build(write_mesh: bool = True) -> None:
                         f"Conformal fragmentation lost material volume {body_name!r}"
                     )
                 _replace_volume_group(body_name, physical_tag, body_tags)
-        if not conformal_shared_interfaces and not conformal_mortar_interfaces:
+        if (
+            not conformal_shared_interfaces
+            and not conformal_mortar_interfaces
+            and not conformal_shared_node_interfaces
+        ):
             if len(sides) == 1:
                 _fragment_mortar_interfaces(fragment_mortar_interfaces)
             for suffix in sides:

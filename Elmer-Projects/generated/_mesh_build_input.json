@@ -1,9 +1,9 @@
 {
   "mesh": {
-    "mesh_min": 4.5e-05,
-    "mesh_max": 9e-05,
-    "mesh_min_mode": "fixed",
-    "mesh_max_mode": "fixed"
+    "mesh_min": 0.016666666666666666,
+    "mesh_max": 0.016666666666666666,
+    "mesh_min_mode": "auto",
+    "mesh_max_mode": "auto"
   },
   "meshes": {
     "mesh_shifted_merged": {
@@ -271,7 +271,7 @@
           "mesh_singlepixel_conformal_gpu"
         ]
       },
-      "notes": "All-tetra 3x single-pixel mesh with the three thermal contact faces periodically copied before ElmerGrid node merging, so no mortar is needed."
+      "notes": "Independent all-tetra 3x shared-node experiment.  The three contact footprints are imprinted and face meshes are paired before ElmerGrid node merging; this route must pass the post-conversion connectivity gate."
     },
     "mesh_singlepixel_conformal_gpu_fine": {
       "geometry": "single_pixel",
@@ -294,7 +294,7 @@
           "mesh_singlepixel_conformal_gpu_fine"
         ]
       },
-      "notes": "Fine conformal GPU mesh targeting production-v2-like spatial resolution; three former mortar interfaces use shared nodes."
+      "notes": "Fine shared-node contact mesh targeting production-v2-like spatial resolution; generated independently from the Mortar production path."
     }
   },
   "parameter_expressions": {
@@ -1436,7 +1436,8 @@
     "stycast_dz": 2e-05,
     "fragment_mortar_interfaces": true,
     "conformal_shared_interfaces": false,
-    "conformal_mortar_interfaces": true
+    "conformal_mortar_interfaces": false,
+    "conformal_shared_node_interfaces": true
   },
   "cases": {
     "case_tes_shunt_internal": {
@@ -31038,12 +31039,86 @@
         "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-08,
-        "linear_system": "mumps"
+        "linear_system": "direct"
       },
       "state_file": "work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_gpu.state",
       "series_file": "case_tes_steady_singlepixel_conformal_gpu_series.csv",
       "iteration_series_file": "case_tes_steady_singlepixel_conformal_gpu_iterations.csv",
       "output_file_path": "../work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_gpu.result"
+    },
+    "case_tes_steady_singlepixel_conformal_mortar_reference": {
+      "template": "steady",
+      "mesh": "mesh_refined_3x",
+      "heat_source": "circuit_inner",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "apply_mortar_bcs": true,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-06,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-06,
+        "linear_system": "direct"
+      },
+      "state_file": "work/meshes/mesh_refined_3x/case_tes_steady_singlepixel_conformal_mortar_reference.state",
+      "series_file": "case_tes_steady_singlepixel_conformal_mortar_reference_series.csv",
+      "iteration_series_file": "case_tes_steady_singlepixel_conformal_mortar_reference_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_refined_3x/case_tes_steady_singlepixel_conformal_mortar_reference.result"
+    },
+    "case_tes_steady_singlepixel_conformal_hypre_cpu": {
+      "template": "steady",
+      "mesh": "mesh_singlepixel_conformal_gpu",
+      "heat_source": "circuit_inner",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "apply_mortar_bcs": false,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "state_file": "work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_hypre_cpu.state",
+      "series_file": "case_tes_steady_singlepixel_conformal_hypre_cpu_series.csv",
+      "iteration_series_file": "case_tes_steady_singlepixel_conformal_hypre_cpu_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_hypre_cpu.result"
+    },
+    "case_tes_steady_singlepixel_conformal_hypre_gpu": {
+      "template": "steady",
+      "mesh": "mesh_singlepixel_conformal_gpu",
+      "heat_source": "circuit_inner",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "apply_mortar_bcs": false,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "state_file": "work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_hypre_gpu.state",
+      "series_file": "case_tes_steady_singlepixel_conformal_hypre_gpu_series.csv",
+      "iteration_series_file": "case_tes_steady_singlepixel_conformal_hypre_gpu_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_singlepixel_conformal_gpu/case_tes_steady_singlepixel_conformal_hypre_gpu.result"
     },
     "case_tes_pulse_singlepixel_conformal_gpu_original_timegrid": {
       "template": "pulse",
@@ -32097,7 +32172,7 @@
         "nonlinear_convergence_tolerance": 3e-07,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps"
+        "linear_system": "direct"
       },
       "comparison_time_grid": {
         "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
@@ -32174,7 +32249,7 @@
         "nonlinear_convergence_tolerance": 3e-07,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps"
+        "linear_system": "direct"
       },
       "comparison_time_grid": {
         "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
@@ -32204,7 +32279,7 @@
         "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-08,
-        "linear_system": "mumps"
+        "linear_system": "direct"
       },
       "state_file": "work/meshes/mesh_singlepixel_conformal_gpu_fine/case_tes_steady_singlepixel_conformal_gpu_fine.state",
       "series_file": "case_tes_steady_singlepixel_conformal_gpu_fine_series.csv",
@@ -32278,7 +32353,7 @@
         "nonlinear_convergence_tolerance": 3e-07,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps"
+        "linear_system": "direct"
       },
       "comparison_time_grid": {
         "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",

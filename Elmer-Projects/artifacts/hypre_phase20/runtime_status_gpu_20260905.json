@@ -47,6 +47,17 @@
   ],
   "artifacts": {
     "no_mortar_parity": "gpu_correctness_20260905/no_mortar_solution_parity.json",
-    "phase20_lower_history": "gpu_correctness_20260905/phase20_lower_outer_history.json"
+    "phase20_lower_history": "gpu_correctness_20260905/phase20_lower_outer_history.json",
+    "cpu_inner_contract_summary": "cpu_lower_contract_baseline_summary.json",
+    "cpu_outer_inner_alignment": "cpu_lower_outer_inner_alignment_20260905.json",
+    "cpu_tuning_comparison": "cpu_lower_tuning_comparison_20260905.json"
+  },
+  "inner_schur_contract": {
+    "stopping_test": "absolute_residual <= configured_tolerance * max(rhs_norm, tiny)",
+    "baseline_all_30_hit_maxiter": true,
+    "baseline_reached_tolerance": 0,
+    "maxiter60_reached_tolerance": 0,
+    "maxiter60_gpu_retest_allowed": false,
+    "next_cpu_only_parameter": "Block Nested Primal Max Iterations"
   }
 }

@@ -1,0 +1,81 @@
+{
+  "status": "blocked_unresolved_physics_parameters",
+  "comparison_kind": "target_case_no_added_noise",
+  "absolute_comparison_allowed": false,
+  "reason": "No independently sourced target operating point and readout calibration are available.",
+  "experiment_path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "case_input": "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/input.json",
+  "source_files": [
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/PulseConfig.json",
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt",
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/CH0_noise/rawdata"
+  ],
+  "acquisition": {
+    "rate_Hz": 500000.0,
+    "samples": 100000,
+    "cutoff_Hz": 10000.0,
+    "fft_bin_width_Hz": 5.0,
+    "channel": "CH0",
+    "accepted_records": 345,
+    "experimental_units": "raw CH0 voltage ASD units per sqrt(Hz); no target voltage-to-current calibration applied"
+  },
+  "normalization": "experimental and simulation columns would be normalized independently to the 1 kHz bin; this is shape-only and is not calibration evidence",
+  "points": [
+    {
+      "frequency_Hz": 10.0,
+      "experimental_asd_native_units": 0.0007398768597378235,
+      "experimental_normalized_to_1kHz": 46.62104870647514,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 100.0,
+      "experimental_asd_native_units": 6.450295797882944e-05,
+      "experimental_normalized_to_1kHz": 4.064454112956487,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 1000.0,
+      "experimental_asd_native_units": 1.5870017519255478e-05,
+      "experimental_normalized_to_1kHz": 1.0,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 3000.0,
+      "experimental_asd_native_units": 1.3661775437959488e-05,
+      "experimental_normalized_to_1kHz": 0.8608544648034147,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 5000.0,
+      "experimental_asd_native_units": 1.0540628122526652e-05,
+      "experimental_normalized_to_1kHz": 0.6641850338058828,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 7000.0,
+      "experimental_asd_native_units": 7.257676681138382e-06,
+      "experimental_normalized_to_1kHz": 0.45732001696485,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    },
+    {
+      "frequency_Hz": 10000.0,
+      "experimental_asd_native_units": 3.4008740933960542e-06,
+      "experimental_normalized_to_1kHz": 0.21429554751717766,
+      "simulation_asd_native_units": null,
+      "simulation_normalized_to_1kHz": null,
+      "simulation_over_experiment": null
+    }
+  ]
+}

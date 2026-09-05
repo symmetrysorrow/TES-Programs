@@ -36,3 +36,17 @@ pattern, and performance readiness remains `NO`. The outer Krylov state is not
 owned by the instrumentation hook; the captured HUTI history is recorded in
 `gpu_correctness_20260905/phase20_lower_outer_history.json` rather than being
 fabricated in the hook.
+
+The CPU-only Phase20 lower contract run adds
+`cpu_lower_contract_baseline_schur_trace.csv`, which records 960 rows across 30
+Schur solves: 30 initial rows, 900 Arnoldi estimates, and 30 true-residual
+rows. Every solve has an explicit RHS-scaled threshold and
+`stopping_reason=maxiter`; the trace summary is
+`cpu_lower_contract_baseline_summary.json`. The outer/inner correspondence is
+in `cpu_lower_outer_inner_alignment_20260905.json`.
+
+The only tuning experiment in this continuation changed CPU lower
+`Block Schur Max Iterations` from 30 to 60, leaving restart unchanged. It did
+not produce outer convergence: all 30 solves still hit the cap. The comparison
+is `cpu_lower_tuning_comparison_20260905.json`; no GPU retest or performance
+measurement was started.

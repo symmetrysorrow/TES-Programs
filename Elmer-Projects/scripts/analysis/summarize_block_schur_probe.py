@@ -21,6 +21,7 @@ TRUE = {"true", "t", "1", "yes"}
 FALSE = {"false", "f", "0", "no"}
 OUTER_REQUIRED = {"outer_iteration", "preconditioner_application", "solver_reported_iteration"}
 SCHUR_REQUIRED = {"schur_solve", "iterations", "initial_residual", "final_residual", "reached_tolerance", "hit_maxiter", "breakdown", "nonfinite"}
+TRACE_REQUIRED = {"preconditioner_application", "schur_solve", "inner_iteration", "residual_kind", "residual", "initial_residual", "residual_over_initial", "configured_tolerance", "rhs_norm", "convergence_threshold", "stopping_reason"}
 SCHUR_RE = re.compile(r"Matrix-free Schur GMRES iterations:\s*(\d+)\s+residual:\s*([0-9.Ee+-]+)")
 WARN_RE = re.compile(r"Inner Schur GMRES reached its limit")
 
@@ -52,6 +53,80 @@ def validate_csv_schema(path: Path, kind: str) -> dict[str, Any]:
     required = OUTER_REQUIRED if kind == "outer" else SCHUR_REQUIRED
     _, status = _read_csv(path, required)
     return status
+
+
+def summarize_trace(path: Path | None) -> dict[str, Any]:
+    """Validate the per-inner-iteration Schur contract emitted by phase20-v3."""
+    rows, status = _read_csv(path, TRACE_REQUIRED)
+    if path is None:
+        return {"status": "NOT PROVIDED", "csv_schema": status}
+    if status["state"] != "OK":
+        return {"status": "INCOMPLETE", "csv_schema": status, "contract_violations": []}
+    invalid_rows: list[dict[str, Any]] = []
+    contract_violations: list[dict[str, Any]] = []
+    for index, row in enumerate(rows):
+        for field in ("residual", "initial_residual", "residual_over_initial",
+                      "configured_tolerance", "rhs_norm", "convergence_threshold"):
+            value = _float(row, field)
+            if not _finite_nonnegative(value):
+                invalid_rows.append({"row": index, "field": field, "value": row.get(field)})
+        residual = _float(row, "residual")
+        initial = _float(row, "initial_residual")
+        ratio = _float(row, "residual_over_initial")
+        if residual is not None and initial is not None and ratio is not None:
+            expected = residual / max(abs(initial), 1.0e-300)
+            if not math.isclose(ratio, expected, rel_tol=1.0e-8, abs_tol=1.0e-14):
+                contract_violations.append({"row": index, "kind": "residual_ratio", "expected": expected, "actual": ratio})
+        tolerance = _float(row, "configured_tolerance")
+        rhs_norm = _float(row, "rhs_norm")
+        threshold = _float(row, "convergence_threshold")
+        if tolerance is not None and rhs_norm is not None and threshold is not None:
+            expected = tolerance * max(rhs_norm, 1.0e-300)
+            if not math.isclose(threshold, expected, rel_tol=1.0e-8, abs_tol=1.0e-300):
+                contract_violations.append({"row": index, "kind": "threshold", "expected": expected, "actual": threshold})
+    grouped: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        grouped.setdefault(row.get("schur_solve", ""), []).append(row)
+    trajectories: list[dict[str, Any]] = []
+    for solve, solve_rows in grouped.items():
+        finals = [row for row in solve_rows if row.get("residual_kind") == "true_residual"]
+        initials = [row for row in solve_rows if row.get("residual_kind") == "initial"]
+        estimates = [row for row in solve_rows if row.get("residual_kind") == "arnoldi_estimate"]
+        if len(finals) != 1 or len(initials) != 1:
+            contract_violations.append({"schur_solve": solve, "kind": "initial_or_final_row_count", "initial": len(initials), "final": len(finals)})
+        final = finals[-1] if finals else {}
+        trajectories.append({
+            "preconditioner_application": int(float(final.get("preconditioner_application", solve or 0))),
+            "schur_solve": int(float(solve or 0)),
+            "inner_iterations": [int(float(row["inner_iteration"])) for row in estimates],
+            "estimated_residuals": [float(row["residual"]) for row in estimates],
+            "final_residual": _float(final, "residual"),
+            "initial_residual": _float(final, "initial_residual"),
+            "rhs_norm": _float(final, "rhs_norm"),
+            "convergence_threshold": _float(final, "convergence_threshold"),
+            "final_residual_over_initial": _float(final, "residual_over_initial"),
+            "stopping_reason": final.get("stopping_reason", ""),
+        })
+    stopping = {}
+    for row in rows:
+        reason = row.get("stopping_reason", "")
+        stopping[reason] = stopping.get(reason, 0) + 1
+    final_rows = [row for row in rows if row.get("residual_kind") == "true_residual"]
+    status_value = "FAIL" if invalid_rows or contract_violations else ("PASS" if final_rows else "INCOMPLETE")
+    return {
+        "status": status_value,
+        "csv_schema": status,
+        "trace_rows": len(rows),
+        "schur_solves": len(grouped),
+        "initial_rows": sum(row.get("residual_kind") == "initial" for row in rows),
+        "arnoldi_rows": sum(row.get("residual_kind") == "arnoldi_estimate" for row in rows),
+        "final_rows": len(final_rows),
+        "stopping_reasons": stopping,
+        "invalid_rows": invalid_rows,
+        "contract_violations": contract_violations,
+        "trajectories": sorted(trajectories, key=lambda item: item["schur_solve"]),
+        "source": str(path),
+    }
 
 
 def _float(row: dict[str, str], *names: str) -> float | None:
@@ -130,7 +205,7 @@ def _workload_signature(rows: list[dict[str, str]]) -> str | None:
     if not rows:
         return None
     # Strategy, backend, case name, and probe prefix are not workload identity.
-    fields = ("mesh_id", "restart_id", "restart_file", "timestep", "nonlinear_iteration",
+    fields = ("workload_id", "mesh_id", "restart_id", "restart_file", "timestep", "nonlinear_iteration",
               "rhs_id", "matrix_fingerprint", "outer_limit", "outer_tolerance",
               "linear_system_tolerance", "schur_tolerance", "schur_max_iterations",
               "schur_restart")
@@ -150,9 +225,10 @@ def validate_same_workload(*summaries: dict[str, Any]) -> dict[str, Any]:
     return {"same_workload": available and len(set(signatures)) == 1, "status": "PASS" if available and len(set(signatures)) == 1 else "INCOMPLETE", "signatures": signatures}
 
 
-def summarize(outer_path: Path | None = None, schur_path: Path | None = None, log_path: Path | None = None) -> dict[str, Any]:
+def summarize(outer_path: Path | None = None, schur_path: Path | None = None, log_path: Path | None = None, trace_path: Path | None = None) -> dict[str, Any]:
     outer, outer_status = _read_csv(outer_path, OUTER_REQUIRED)
     schur, schur_status = _read_csv(schur_path, SCHUR_REQUIRED)
+    trace = summarize_trace(trace_path) if trace_path is not None else None
     log_solves: list[dict[str, str]] = []
     log_hit_maxiter = 0
     if log_path and log_path.exists():
@@ -228,7 +304,7 @@ def summarize(outer_path: Path | None = None, schur_path: Path | None = None, lo
         incomplete_reasons.append("outer_iteration_missing")
     if duplicate_outer_iterations or skipped_outer_iterations or nonmonotonic_outer_iterations:
         incomplete_reasons.append("outer_iteration_sequence_invalid")
-    if invalid_rows or invalid_timing_rows or cumulative_violations or k["total_mismatch"]:
+    if invalid_rows or invalid_timing_rows or cumulative_violations or k["total_mismatch"] or (trace and trace["status"] == "FAIL"):
         status = "FAIL"
     elif incomplete_reasons or not outer:
         status = "INCOMPLETE"
@@ -286,7 +362,8 @@ def summarize(outer_path: Path | None = None, schur_path: Path | None = None, lo
         },
         "workload_signature": _workload_signature(outer or schur),
         "csv_schema": {"outer": outer_status, "schur": schur_status},
-        "source": {"outer_csv": str(outer_path) if outer_path else None, "schur_csv": str(schur_path) if schur_path else None, "log": str(log_path) if log_path else None},
+        "schur_trace": trace,
+        "source": {"outer_csv": str(outer_path) if outer_path else None, "schur_csv": str(schur_path) if schur_path else None, "schur_trace_csv": str(trace_path) if trace_path else None, "log": str(log_path) if log_path else None},
     }
 
 
@@ -294,12 +371,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--outer-csv", type=Path)
     parser.add_argument("--schur-csv", type=Path)
+    parser.add_argument("--trace-csv", type=Path)
     parser.add_argument("--log", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    if not any((args.outer_csv, args.schur_csv, args.log)):
+    if not any((args.outer_csv, args.schur_csv, args.trace_csv, args.log)):
         parser.error("at least one of --outer-csv, --schur-csv, or --log is required")
-    result = summarize(args.outer_csv, args.schur_csv, args.log)
+    result = summarize(args.outer_csv, args.schur_csv, args.log, args.trace_csv)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2, allow_nan=False))

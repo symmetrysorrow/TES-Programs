@@ -34,6 +34,13 @@ struct Input {
     int state_count() const { return hanging ? n_abs + 6 : n_abs + 4; }
 };
 
+struct Derived {
+    double current;
+    double tau_el;
+    double loop_gain;
+    double tau_i;
+};
+
 Input read_input(const std::string& path) {
     std::ifstream file(path);
     if (!file) throw std::runtime_error("cannot open input JSON: " + path);
@@ -62,6 +69,15 @@ Input read_input(const std::string& path) {
     };
 }
 
+Derived derive_linearization(const Input& in) {
+    const double current = std::sqrt((in.g_tes_bath * in.t_c * (1 - std::pow(in.t_bath / in.t_c, in.exponent))) /
+                                     (in.exponent * in.resistance));
+    const double tau_el = in.inductance / (in.load_resistance + in.resistance * (1 + in.beta));
+    const double loop_gain = (in.alpha * current * current * in.resistance) / (in.g_tes_bath * in.t_c);
+    const double tau_i = in.c_tes / ((1 - loop_gain) * in.g_tes_bath);
+    return {current, tau_el, loop_gain, tau_i};
+}
+
 std::vector<double> linspace(double start, double stop, int count) {
     if (count < 1) return {};
     if (count == 1) return {start};
@@ -78,11 +94,11 @@ Eigen::MatrixXd make_matrix(const Input& in) {
     const int size = in.state_count();
     const double c_abs = in.c_abs / n;
     const double g_abs_abs = in.g_abs_abs * (n - 1);
-    const double current = std::sqrt((in.g_tes_bath * in.t_c * (1 - std::pow(in.t_bath / in.t_c, in.exponent))) /
-                                     (in.exponent * in.resistance));
-    const double t_el = in.inductance / (in.load_resistance + in.resistance * (1 + in.beta));
-    const double loop_gain = (in.alpha * current * current * in.resistance) / (in.g_tes_bath * in.t_c);
-    const double t_i = in.c_tes / ((1 - loop_gain) * in.g_tes_bath);
+    const Derived derived = derive_linearization(in);
+    const double current = derived.current;
+    const double t_el = derived.tau_el;
+    const double loop_gain = derived.loop_gain;
+    const double t_i = derived.tau_i;
 
     Eigen::MatrixXd a = Eigen::MatrixXd::Zero(size, size);
     a(0, 0) = 1 / t_el;
@@ -130,6 +146,31 @@ Eigen::MatrixXd make_matrix(const Input& in) {
     a(current2, tes2) = loop_gain * in.g_tes_bath / (current * in.inductance);
     a(current2, current2) = 1 / t_el;
     return -a;
+}
+
+LinearizationSummary inspect_linearization_impl(const std::string& input_json_path) {
+    const Input in = read_input(input_json_path);
+    const Derived derived = derive_linearization(in);
+    const double electrical_diag = -1.0 / derived.tau_el;
+    const double electrical_thermal = -derived.loop_gain * in.g_tes_bath /
+                                      (derived.current * in.inductance);
+    const double thermal_electrical = derived.current * in.resistance * (2 + in.beta) / in.c_tes;
+    const double tes_boundary_rate = in.g_abs_tes / in.c_tes;
+    const double intrinsic_thermal_diag = -1.0 / derived.tau_i;
+    const double thermal_diag = intrinsic_thermal_diag - tes_boundary_rate;
+    return {
+        derived.current,
+        derived.tau_el,
+        derived.loop_gain,
+        derived.tau_i,
+        in.g_abs_tes,
+        tes_boundary_rate,
+        intrinsic_thermal_diag,
+        in.n_abs,
+        in.hanging,
+        {electrical_diag, electrical_thermal, thermal_electrical, thermal_diag},
+        {electrical_diag, electrical_thermal, thermal_electrical, thermal_diag}
+    };
 }
 
 void write_array(std::ostream& out, const std::vector<double>& values) {
@@ -201,6 +242,10 @@ TemporaryDirectory make_temporary_directory(const std::string& output_path) {
     throw std::runtime_error("cannot create temporary directory for pulse output");
 }
 }  // namespace
+
+LinearizationSummary inspect_linearization(const std::string& input_json_path) {
+    return inspect_linearization_impl(input_json_path);
+}
 
 std::vector<Pulse> generate_pulses(const std::string& input_json_path, const std::vector<int>& positions) {
     const Input in = read_input(input_json_path);

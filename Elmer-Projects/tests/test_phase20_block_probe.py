@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.analysis.evaluate_solver_acceptance import evaluate
-from scripts.analysis.summarize_block_schur_probe import summarize, validate_same_workload
+from scripts.analysis.summarize_block_schur_probe import summarize, summarize_trace, validate_same_workload
 from scripts.prep.prepare_phase20_schur_sweep import build
 from scripts.support.build_cases import solver1_block
 
@@ -44,6 +44,9 @@ def test_phase20_probe_cases_are_peer_cpu_gpu_lower_full_cases() -> None:
     assert len({cases[name]["mesh"] for name in names}) == 1
     assert len({tuple(cases[name]["timesteps"][0]) for name in names}) == 1
     assert len({cases[name]["restart_file_path"] for name in names}) == 1
+    assert cases["case_p20_hypre_block_lower_cpu_probe"]["solver"]["block_schur_probe_workload_id"] == cases["case_p20_hypre_block_lower_gpu_probe"]["solver"]["block_schur_probe_workload_id"]
+    assert cases["case_p20_hypre_block_full_cpu_probe"]["solver"]["block_schur_probe_workload_id"] == cases["case_p20_hypre_block_full_gpu_probe"]["solver"]["block_schur_probe_workload_id"]
+    assert cases["case_p20_hypre_block_lower_cpu_probe"]["solver"]["block_schur_probe_workload_id"] != cases["case_p20_hypre_block_full_cpu_probe"]["solver"]["block_schur_probe_workload_id"]
     for name in names:
         solver = cases[name]["solver"]
         assert solver["linear_system_max_iterations"] == 15
@@ -54,6 +57,7 @@ def test_phase20_probe_cases_are_peer_cpu_gpu_lower_full_cases() -> None:
         sif = "\n".join(solver1_block(solver))
         assert "Linear System Save = True" not in sif
         assert "Block Schur Probe = Logical True" in sif
+        assert "Block Schur Probe Workload ID" in sif
         assert "HYPRE GPU = " + ("True" if "gpu" in name else "False") in sif
     assert "Block Schur Probe" not in "\n".join(
         solver1_block(cases["case_p19_hypre_block_lower_cpu_time5us"]["solver"])
@@ -258,6 +262,37 @@ def test_probe_summary_rejects_nonmonotonic_time_and_outer_sequence(tmp_path: Pa
     assert "outer_iteration_sequence_invalid" in result["incomplete_reasons"]
 
 
+def test_inner_schur_trace_contract_and_stopping_reason(tmp_path: Path) -> None:
+    trace = tmp_path / "schur_trace.csv"
+    fields = [
+        "probe_version", "workload_id", "preconditioner_application", "schur_solve",
+        "inner_iteration", "residual_kind", "residual", "initial_residual",
+        "residual_over_initial", "configured_tolerance", "rhs_norm",
+        "convergence_threshold", "solution_norm", "update_norm", "k_actions_total",
+        "stopping_reason",
+    ]
+    rows = [
+        {"probe_version": "phase20-v3", "workload_id": "peer", "preconditioner_application": "7", "schur_solve": "7", "inner_iteration": "0", "residual_kind": "initial", "residual": "1.0", "initial_residual": "1.0", "residual_over_initial": "1.0", "configured_tolerance": "1e-4", "rhs_norm": "1.0", "convergence_threshold": "1e-4", "solution_norm": "0.0", "update_norm": "0.0", "k_actions_total": "1", "stopping_reason": "initial"},
+        {"probe_version": "phase20-v3", "workload_id": "peer", "preconditioner_application": "7", "schur_solve": "7", "inner_iteration": "1", "residual_kind": "arnoldi_estimate", "residual": "1e-2", "initial_residual": "1.0", "residual_over_initial": "1e-2", "configured_tolerance": "1e-4", "rhs_norm": "1.0", "convergence_threshold": "1e-4", "solution_norm": "0.5", "update_norm": "0.5", "k_actions_total": "2", "stopping_reason": "iteration"},
+        {"probe_version": "phase20-v3", "workload_id": "peer", "preconditioner_application": "7", "schur_solve": "7", "inner_iteration": "2", "residual_kind": "true_residual", "residual": "2e-3", "initial_residual": "1.0", "residual_over_initial": "2e-3", "configured_tolerance": "1e-4", "rhs_norm": "1.0", "convergence_threshold": "1e-4", "solution_norm": "0.6", "update_norm": "0.1", "k_actions_total": "3", "stopping_reason": "maxiter"},
+    ]
+    with trace.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    result = summarize_trace(trace)
+    assert result["status"] == "PASS"
+    assert result["stopping_reasons"]["maxiter"] == 1
+    assert result["trajectories"][0]["final_residual_over_initial"] == 2e-3
+
+    rows[-1]["convergence_threshold"] = "2e-4"
+    with trace.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    assert summarize_trace(trace)["status"] == "FAIL"
+
+
 def test_default_sweep_is_strictly_one_step_and_dump_free(tmp_path: Path) -> None:
     source = ROOT / "elmer_project_hypre_gpu_phase19.json"
     output = tmp_path / "sweep.json"
@@ -285,6 +320,25 @@ def test_native_patch_has_real_timing_lifecycle_and_full_k_contract() -> None:
     assert "IOSTAT=io_status" in patch
     assert "Outer solver state is not owned by this hook" in patch
     assert "OuterNo,',0,'" not in patch
+    timing_fix = (ROOT / "docs/hypre_phase20_timing_fix.patch").read_text()
+    assert "BlockProbeSchurActionSeconds" in timing_fix
+    assert "BlockProbeKSchurSeconds" in timing_fix
+    contract = (ROOT / "docs/hypre_phase20_inner_contract.patch").read_text()
+    assert "convergence_threshold" in contract
+    assert "stopping_reason" in contract
+    assert "_schur_trace.csv" in contract
+
+
+def test_exit_code_artifacts_have_one_source_of_truth() -> None:
+    artifact_dir = ROOT / "artifacts/hypre_phase20/gpu_correctness_20260905"
+    parity_path = artifact_dir / "no_mortar_solution_parity.json"
+    cpu_path = artifact_dir / "no_mortar_cpu.exitcode"
+    gpu_path = artifact_dir / "no_mortar_gpu.exitcode"
+    if not all(path.exists() for path in (parity_path, cpu_path, gpu_path)):
+        return
+    parity = json.loads(parity_path.read_text())
+    assert parity["process_exit_code"]["cpu"] == int(cpu_path.read_text().strip())
+    assert parity["process_exit_code"]["gpu"] == int(gpu_path.read_text().strip())
 
 
 def test_native_patch_is_git_parseable_against_clean_baseline() -> None:

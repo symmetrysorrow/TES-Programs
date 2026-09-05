@@ -479,9 +479,12 @@ normalized five-state CH0 ASD divided by the rebuilt experimental ASD; the
 common digital Bessel response cancels in this ratio below the diagnostic
 cutoff.
 
-The generated artifacts are committed under
-`PoST_Simulations/diagnostics/noise_comparison_nominal_20260905/`:
-`comparison.csv`, `comparison.png`, and `model_audit.json`.
+The generated CSV/PNG under
+`PoST_Simulations/diagnostics/noise_comparison_nominal_20260905/` are local
+diagnostics, not committed artifacts: `.gitignore` excludes `*.csv` and the
+PoST-specific ignore excludes `*.png`. The versioned target-case summary is
+instead under
+`PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/`.
 
 | Frequency | Experiment normalized | Simulation normalized | Simulation / experiment |
 | ---: | ---: | ---: | ---: |

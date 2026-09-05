@@ -1,0 +1,37 @@
+--- fem/src/BlockSolve.F90
++++ fem/src/BlockSolve.F90
+@@ -142,1 +142,1 @@
+-      WRITE(unit,'(A)') 'probe_version,workload_id,outer_iteration,schur_solve,'// &
++      WRITE(unit,'(A)') 'probe_version,workload_id,outer_iteration,preconditioner_application,schur_solve,'// &
+@@ -727,2 +727,4 @@
+     sol = 0.0_dp
++    update_norm = 0.0_dp
++    solution_norm = 0.0_dp
+     ALLOCATE(update(n),STAT=istat)
+@@ -784,2 +786,1 @@
+-        IF( res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+-            TINY(1.0_dp)) ) EXIT
++        IF( res <= convergence_threshold ) EXIT
+@@ -820,2 +821,1 @@
+-    reached_tolerance = res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+-        TINY(1.0_dp))
++    reached_tolerance = res <= convergence_threshold
+@@ -854,3 +855,2 @@
+-            'phase20-v2,',TRIM(BlockSchurProbePrefix),',',BlockProbeOuter,',', &
+-            'phase20-v3,',TRIM(BlockSchurProbeWorkloadID),',','',',', &
++            'phase20-v3,',TRIM(BlockSchurProbeWorkloadID),',','',',',BlockProbeOuter,',', &
+             probe_schur,',',iter,',',initial_residual,',',res,',', &
+@@ -876,2 +877,1 @@
+-    IF( res > SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+-        TINY(1.0_dp)) ) CALL Warn('BlockSchurMatrixFreeSolve', &
++    IF( res > convergence_threshold ) CALL Warn('BlockSchurMatrixFreeSolve', &
+@@ -4593,7 +4593,7 @@
+-    IF( .NOT. BlockSchurProbeActive ) THEN
+-      BlockSchurProbeInitialized = .FALSE.
+-      BlockSchurProbeActiveKey = ''
+     ProbeWorkloadID = ListGetString(Params,'Block Schur Probe Workload ID',Found)
+     IF( .NOT. Found ) ProbeWorkloadID = 'unknown'
+     BlockSchurProbeWorkloadID = TRIM(ProbeWorkloadID)
++    IF( .NOT. BlockSchurProbeActive ) THEN
++      BlockSchurProbeInitialized = .FALSE.
++      BlockSchurProbeActiveKey = ''

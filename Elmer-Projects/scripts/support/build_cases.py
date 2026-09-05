@@ -405,7 +405,6 @@ def solver1_block(
             f"  Linear System Abort Not Converged = {'True' if hypre_abort else 'False'}",
             f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 1)}",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",
             "  BoomerAMG Num Sweeps = 1",
@@ -416,6 +415,11 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+        if hypre_gpu or not solver.get("omit_hypre_gpu_when_false", False):
+            lines.insert(
+                lines.index("  BoomerAMG Relax Type = 18"),
+                f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            )
     elif linear_system in {
         "iterative_hypre_block_diag",
         "iterative_hypre_block_diag_gpu",
@@ -452,7 +456,6 @@ def solver1_block(
             f"  Linear System Abort Not Converged = {'True' if block_abort else 'False'}",
             f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 1)}",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
             "  Block Preconditioner = True",
             f"  Block Gauss-Seidel = {'True' if block_lower else 'False'}",
             f"  Block Lower Triangular = {'True' if block_lower else 'False'}",
@@ -477,6 +480,11 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+        if hypre_gpu or not solver.get("omit_hypre_gpu_when_false", False):
+            lines.insert(
+                lines.index("  Block Preconditioner = True"),
+                f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            )
     elif linear_system == "mumps":
         lines += [
             "  Linear System Solver = Direct",
@@ -523,6 +531,7 @@ def solver1_block(
         lines += [
             "  Block Schur Probe = Logical True",
             f'  Block Schur Probe Prefix = String "{solver.get("block_schur_probe_prefix", "block_schur_probe")}"',
+            f'  Block Schur Probe Workload ID = String "{solver.get("block_schur_probe_workload_id", "unknown")}"',
             f'  Block Schur Probe Lifecycle = String "{solver.get("block_schur_probe_lifecycle", "linear solve")}"',
         ]
     if solver.get("eliminate_linear_constraints", False):

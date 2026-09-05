@@ -1,0 +1,158 @@
+--- fem/src/BlockSolve.F90
++++ fem/src/BlockSolve.F90
+@@ -70,3 +70,4 @@
+   REAL(KIND=dp), SAVE :: BlockProbeKSetupSeconds = 0.0_dp
+   CHARACTER(LEN=512), SAVE :: BlockSchurProbePrefix = 'block_schur_probe'
++  CHARACTER(LEN=512), SAVE :: BlockSchurProbeWorkloadID = 'unknown'
+   LOGICAL, SAVE :: BlockProbeClockInitialized = .FALSE.
+@@ -145,4 +146,16 @@
+     ELSE
+       CALL Warn('BlockSchurProbe','cannot append Schur CSV')
+     END IF
++    OPEN(NEWUNIT=unit,FILE=TRIM(BlockSchurProbePrefix)//'_schur_trace.csv', &
++        STATUS='REPLACE',ACTION='WRITE',IOSTAT=ios)
++    IF( ios == 0 ) THEN
++      WRITE(unit,'(A)') 'probe_version,workload_id,preconditioner_application,'// &
++          'schur_solve,inner_iteration,residual_kind,residual,initial_residual,'// &
++          'residual_over_initial,configured_tolerance,rhs_norm,'// &
++          'convergence_threshold,solution_norm,update_norm,k_actions_total,'// &
++          'stopping_reason'
++      CLOSE(unit)
++    ELSE
++      CALL Warn('BlockSchurProbe','cannot create Schur trace CSV')
++    END IF
+     BlockProbeOuter = 0
+@@ -196,4 +210,4 @@
+           'A,A,A,A,A,A,A,A)',IOSTAT=ios) &
+-          'phase20-v2,',TRIM(BlockSchurProbePrefix),',','',',',OuterNo,',', &
++          'phase20-v3,',TRIM(BlockSchurProbeWorkloadID),',','',',',OuterNo,',', &
+           '',',','',',','',',','',',', &
+           BlockProbeSchur-SchurBefore,',',BlockProbeKActions-KBefore,',', &
+@@ -213,3 +227,30 @@
+   END SUBROUTINE BlockSchurProbeWriteOuter
+ 
++  SUBROUTINE BlockSchurProbeWriteTrace( Preconditioner, SchurSolve, InnerIteration, &
++      ResidualKind, Residual, InitialResidual, ConfiguredTolerance, RhsNorm, &
++      Threshold, SolutionNorm, UpdateNorm, KActions, StopReason )
++    INTEGER, INTENT(in) :: Preconditioner, SchurSolve, InnerIteration, KActions
++    CHARACTER(LEN=*), INTENT(in) :: ResidualKind, StopReason
++    REAL(KIND=dp), INTENT(in) :: Residual, InitialResidual, ConfiguredTolerance, &
++        RhsNorm, Threshold, SolutionNorm, UpdateNorm
++    INTEGER :: unit, ios
++    REAL(KIND=dp) :: ratio
++    ratio = Residual / MAX(ABS(InitialResidual),TINY(1.0_dp))
++    OPEN(NEWUNIT=unit,FILE=TRIM(BlockSchurProbePrefix)//'_schur_trace.csv', &
++        STATUS='UNKNOWN',POSITION='APPEND',ACTION='WRITE',IOSTAT=ios)
++    IF( ios == 0 ) THEN
++      WRITE(unit,'(A,",",A,",",I0,",",I0,",",I0,",",A,",", &
++          ES24.16E3,",",ES24.16E3,",",ES24.16E3,",",ES24.16E3,",", &
++          ES24.16E3,",",ES24.16E3,",",ES24.16E3,",",ES24.16E3,",", &
++          I0,",",A)',IOSTAT=ios) &
++          'phase20-v3',TRIM(BlockSchurProbeWorkloadID),Preconditioner,SchurSolve, &
++          InnerIteration,TRIM(ResidualKind),Residual,InitialResidual,ratio, &
++          ConfiguredTolerance,RhsNorm,Threshold,SolutionNorm,UpdateNorm,KActions, &
++          TRIM(StopReason)
++      CLOSE(unit)
++    ELSE
++      CALL Warn('BlockSchurProbe','cannot append Schur trace CSV')
++    END IF
++  END SUBROUTINE BlockSchurProbeWriteTrace
++
+ ! Create matrix S=P((diag(A))^-1)Q
+@@ -643,7 +683,9 @@
+     REAL(KIND=dp) :: beta,res,den,tmp,schur_start,schur_finish, &
+         action_start,action_finish,initial_residual,action_seconds, &
+-        k_seconds_before
++        k_seconds_before,rhs_norm,convergence_threshold,solution_norm, &
++        update_norm
+     INTEGER :: n,m,i,j,k,iter,istat,nu,probe_schur,k_before, &
+         k_primal_before,k_schur_before,k_upper_before,k_setup_before,io_status
+     LOGICAL :: Found,OldNoPrec,Breakdown,probe,reached_tolerance,hit_maxiter,nonfinite
+-    CHARACTER(256) :: probe_message
++    CHARACTER(256) :: probe_message,stop_reason
++    REAL(KIND=dp), ALLOCATABLE :: update(:)
+@@ -671,4 +716,6 @@
+     CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',.TRUE.)
+     iter = 0
+     sol = 0.0_dp
++    ALLOCATE(update(n),STAT=istat)
++    IF( istat /= 0 ) CALL Fatal('BlockSchurMatrixFreeSolve','Allocation error for Schur update')
+     action_start = BlockProbeNow()
+@@ -682,4 +729,8 @@
+     initial_residual = beta
++    rhs_norm = SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs)))
++    convergence_threshold = SchurTol * MAX(rhs_norm,TINY(1.0_dp))
+     CALL BlockSchurCheckScalarFinite('initial residual',beta)
+-    IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+-        TINY(1.0_dp)) ) GOTO 900
++    IF( probe ) CALL BlockSchurProbeWriteTrace(BlockProbeOuter,probe_schur,0, &
++        'initial',beta,initial_residual,SchurTol,rhs_norm,convergence_threshold, &
++        SQRT(MAX(0.0_dp,DOT_PRODUCT(sol,sol))),0.0_dp,BlockProbeKActions,'initial')
++    IF( beta <= convergence_threshold ) GOTO 900
+@@ -691,4 +742,3 @@
+       beta = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
+       CALL BlockSchurCheckScalarFinite('restart residual',beta)
+-      IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+-          TINY(1.0_dp)) ) EXIT
++      IF( beta <= convergence_threshold ) EXIT
+@@ -747,5 +798,9 @@
+         g(j+1) = -sn(j)*g(j); g(j) = cs(j)*g(j)
+         res = ABS(g(j+1))
+         CALL BlockSchurCheckScalarFinite('inner residual',res)
++        IF( probe ) CALL BlockSchurProbeWriteTrace(BlockProbeOuter,probe_schur,iter, &
++            'arnoldi_estimate',res,initial_residual,SchurTol,rhs_norm, &
++            convergence_threshold,SQRT(MAX(0.0_dp,DOT_PRODUCT(sol,sol))), &
++            0.0_dp,BlockProbeKActions,'iteration')
+         IF( res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+             TINY(1.0_dp)) ) EXIT
+@@ -763,2 +819,3 @@
+       coef = 0.0_dp
++      update = 0.0_dp
+       DO i=k,1,-1
+@@ -777,4 +841,7 @@
+       END DO
+       DO j=1,k
+-        sol = sol + coef(j)*zz(:,j)
++        update = update + coef(j)*zz(:,j)
+       END DO
++      sol = sol + update
++      update_norm = SQRT(MAX(0.0_dp,DOT_PRODUCT(update,update)))
++      solution_norm = SQRT(MAX(0.0_dp,DOT_PRODUCT(sol,sol)))
+@@ -807,3 +889,22 @@
+     reached_tolerance = res <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
+         TINY(1.0_dp))
++    IF( nonfinite ) THEN
++      stop_reason = 'nonfinite'
++    ELSE IF( reached_tolerance ) THEN
++      IF( iter == 0 ) THEN
++        stop_reason = 'initial_tolerance'
++      ELSE
++        stop_reason = 'tolerance'
++      END IF
++    ELSE IF( Breakdown ) THEN
++      stop_reason = 'breakdown'
++    ELSE IF( iter >= SchurMaxIter ) THEN
++      stop_reason = 'maxiter'
++    ELSE
++      stop_reason = 'iteration_limit'
++    END IF
++    IF( probe ) CALL BlockSchurProbeWriteTrace(BlockProbeOuter,probe_schur,iter, &
++        'true_residual',res,initial_residual,SchurTol,rhs_norm,convergence_threshold, &
++        SQRT(MAX(0.0_dp,DOT_PRODUCT(sol,sol))),update_norm,BlockProbeKActions, &
++        TRIM(stop_reason))
+     IF( probe ) THEN
+@@ -824,3 +921,4 @@
+             'phase20-v2,',TRIM(BlockSchurProbePrefix),',',BlockProbeOuter,',', &
+-            probe_schur,',',iter,',',initial_residual,',',res,',', &
++            'phase20-v3,',TRIM(BlockSchurProbeWorkloadID),',','',',', &
++            probe_schur,',',iter,',',initial_residual,',',res,',', &
+             reached_tolerance,',',hit_maxiter,',',Breakdown,',',nonfinite,',', &
+@@ -1005,2 +1103,2 @@
+     CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix, ProbeLifecycle, &
+-        DiagSolver, DiagIterative, DiagPreconditioning, DiagDirect
++        DiagSolver, DiagIterative, DiagPreconditioning, DiagDirect, ProbeWorkloadID
+@@ -1035,1 +1134,4 @@
+     IF( .NOT. Found ) SchurDiagnosticPrefix = 'block_schur_probe'
++    ProbeWorkloadID = ListGetString(Params,'Block Schur Probe Workload ID',Found)
++    IF( .NOT. Found ) ProbeWorkloadID = 'unknown'
++    BlockSchurProbeWorkloadID = TRIM(ProbeWorkloadID)

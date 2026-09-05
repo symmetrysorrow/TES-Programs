@@ -166,3 +166,43 @@ while all recorded inner Schur solves hit `maxiter=30`. This classifies the
 remaining failure as a shared block-Schur/outer convergence issue, not a
 GPU-specific migration or kernel-correctness issue. No performance comparison
 has been started.
+
+## Inner Schur convergence contract (2026-09-05)
+
+The source-level stopping test is:
+
+`||r|| <= Block Schur Inner Tolerance * max(||rhs||, tiny)`
+
+where the implementation uses the absolute Euclidean residual `||r||`, scaled
+by the RHS norm; it is not an unscaled absolute tolerance and not an
+initial-residual ratio test. The new opt-in `phase20-v3` trace records the RHS
+norm, computed threshold, every Arnoldi residual estimate, the recomputed true
+residual, residual/initial ratio, update/solution norms, K-action count, and
+stopping reason. The CPU lower baseline trace is
+`artifacts/hypre_phase20/cpu_lower_contract_baseline_schur_trace.csv`, with the
+machine summary in `cpu_lower_contract_baseline_summary.json`.
+
+All 30 baseline Schur solves decreased their Arnoldi residual estimates but
+ended with `stopping_reason=maxiter`; none reached the configured threshold.
+For example, solve 1 had `rhs_norm=9.0279e-12`, threshold `9.0279e-16`, and
+true final residual `6.1192e-14`. Thus the previous apparent contradiction
+(`~1e-14` final residual and `hit_maxiter`) is explained by a relative-to-RHS
+threshold that was still unmet.
+
+The outer/inner alignment is recorded in
+`artifacts/hypre_phase20/cpu_lower_outer_inner_alignment_20260905.json`.
+Outer residual 13 (`1.844e-3`) follows Schur solves 25/26, whose true residuals
+were `2.1785e-11` and `8.1049e-13`; the subsequent outer steps include solve 27
+at `7.2646e-10` and solve 29 at `4.0475e-11`.
+
+The first CPU-only tuning experiment changed only `Block Schur Max Iterations`
+from 30 to 60, leaving restart at 30. It reduced the worst final inner
+residual from `7.2646e-10` to `2.5168e-13`, but all 30 solves still hit the new
+cap and the outer residual remained non-monotone. Therefore maxiter increase
+alone is not sufficient and this setting has not been propagated to GPU. The
+comparison is in `artifacts/hypre_phase20/cpu_lower_tuning_comparison_20260905.json`.
+
+The probe also now assigns a configured physical workload ID shared by CPU/GPU
+peers instead of using the case prefix, and separates full Schur-action
+cumulative time from K-in-Schur cumulative time. No performance conclusion is
+drawn from these runs.
