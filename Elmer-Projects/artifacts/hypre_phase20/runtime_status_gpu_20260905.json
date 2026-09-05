@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-05",
+  "branch": "phase20-native-probe-integration",
+  "status": "GPU_RUNTIME_ESTABLISHED_CORRECTNESS_FAILED",
+  "gpu": {
+    "device": "NVIDIA GeForce RTX 3060 Ti",
+    "actual_cuda_kernel_execution": true,
+    "evidence": [
+      "nsys_phase20_lower_gpu_migrated2_20260905.nsys-rep",
+      "nsys_phase20_full_gpu_migrated_20260905.nsys-rep"
+    ]
+  },
+  "hypre": {
+    "cuda_enabled": true,
+    "config_header": "HYPRE_USING_CUDA=1; HYPRE_USING_GPU=1",
+    "evidence": "hypre_cuda_build_evidence_20260905.txt"
+  },
+  "elmer": {
+    "mpi": true,
+    "linked_hypre": "/mnt/d/Github/TES-Programs/tools/hypre-cuda-install/lib/libHYPRE.so.300",
+    "evidence": "elmer_phase20_gpu_link_evidence_20260905.txt"
+  },
+  "gates": {
+    "minimal_independent_gpu_smoke": "NO_CONVERGENCE_MPI_ABORT",
+    "phase20_lower_gpu_runtime": "PASS_RUNTIME",
+    "phase20_full_gpu_runtime": "PASS_RUNTIME",
+    "numerical_correctness": "FAIL",
+    "performance_ready": "NO"
+  },
+  "correctness_notes": [
+    "Both lower/full runs reached ALL DONE and had finite matrix-free Schur residuals.",
+    "Both runs reported outer linear iteration did not converge to tolerance.",
+    "CPU/GPU physical solution parity has not been established."
+  ],
+  "performance_blockers": [
+    "outer convergence failure",
+    "CPU/GPU numerical parity missing",
+    "probe timing semantics and explicit GPU synchronization contract not yet finalized"
+  ]
+}

@@ -95,6 +95,46 @@ Both probes recorded 30 Schur iterations/maxiter hits per row and no
 breakdown/nonfinite flags. The native `BlockMatrixPrec` hook does not own the
 outer Krylov state, so outer solver iteration/residual fields are explicitly
 empty; the summaries are therefore `INCOMPLETE` for outer convergence, never
-a fabricated PASS. GPU is `CAPABILITY MISSING`: the host exposes an NVIDIA
-device, but the linked HYPRE library is CPU-only and no CUDA/HIP HYPRE build
-was available.
+a fabricated PASS. The GPU capability statement above is historical; the
+current CUDA-HYPRE continuation is recorded below.
+
+## Current GPU continuation (2026-09-05)
+
+Gate 0 and Gate 0.5 are established with a separate CUDA HYPRE and MPI Elmer
+install. Build/link evidence is recorded in
+`artifacts/hypre_phase20/hypre_cuda_build_evidence_20260905.txt` and
+`artifacts/hypre_phase20/elmer_phase20_gpu_link_evidence_20260905.txt`.
+The CUDA HYPRE cache enables CUDA, cuBLAS, cuSPARSE, cuSOLVER, cuRAND, CUDA
+streams, and MPI; `HYPRE_config.h` contains `HYPRE_USING_CUDA 1` and
+`HYPRE_USING_GPU 1`. Runtime `ldd` resolves `libHYPRE.so.300` from
+`tools/hypre-cuda-install`.
+
+The first GPU attempt only set HYPRE's default execution policy while leaving
+IJ objects in host memory. Nsight showed allocations but no CUDA kernels,
+which proved CPU fallback. The fix assembles on host and explicitly migrates
+matrices/vectors to `HYPRE_MEMORY_DEVICE` before setup/solve; the reviewable
+change is `docs/hypre_gpu_phase20_runtime_migration.patch`.
+
+Definitive runtime evidence:
+
+- lower: `nsys_phase20_lower_gpu_migrated2_20260905.nsys-rep` records 105,913
+  `cudaLaunchKernel` calls, CUDA memory copies, and `ALL DONE`;
+- full: `nsys_phase20_full_gpu_migrated_20260905.nsys-rep` records 108,197
+  `cudaLaunchKernel` calls, CUDA memory copies, and `ALL DONE`;
+- plain runtime logs are the corresponding lower/full
+  `runtime_case_p20_hypre_block_*_gpu_cuda_migrated_20260905.log` files.
+
+The lower/full runs are runtime-complete, but not correctness-pass runs:
+both record `IterSolve: Linear iteration did not converge to tolerance`.
+Their matrix-free Schur residuals are finite (`7.86825E-14` lower and
+`2.21059E-12` full), with no breakdown/nonfinite indication in the logs. The
+independent P19 FlexGMRES/BoomerAMG smoke reached the CUDA path but failed its
+2000-step convergence contract and ended in `MPI_ABORT`; it is not a smoke
+PASS.
+
+Current gate summary: actual GPU backend YES; CUDA HYPRE YES; Elmer linked to
+CUDA HYPRE YES; minimal independent smoke NO; Phase20 lower runtime YES;
+Phase20 full runtime YES; numerical correctness FAIL pending outer
+convergence and CPU/GPU solution parity; performance readiness NO. Timing
+semantics, explicit GPU synchronization accounting, and performance comparison
+remain deferred until correctness is resolved.

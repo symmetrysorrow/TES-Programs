@@ -16,10 +16,16 @@ primal comparison, and physical TES parity as separate fields.
 
 `exact_schur_recomputed.json` and `exact_schur_acceptance.json` contain the
 rerun SuperLU oracle; its backward error is a real normwise value, not null.
-`runtime_status_20260905.json` records the four bounded attempts. The
-installed Elmer binary lacks HYPRE, so those attempts are `CAPABILITY MISSING`
-for solver comparison purposes and do not provide convergence evidence. A
-separate native source worktree was built with both CPU/SuperLU and HYPRE/MPI
-configurations. The native HYPRE binary completed the bounded lower/full CPU
-probes; GPU remains capability-missing and outer Krylov residuals are not
-owned by the instrumentation hook, so the overall artifact stays `INCOMPLETE`.
+The historical `runtime_status_20260905.json` records the pre-CUDA-HYPRE
+capability result. The current CUDA-HYPRE evidence is in
+`hypre_cuda_build_evidence_20260905.txt`,
+`elmer_phase20_gpu_link_evidence_20260905.txt`, and the lower/full Nsight
+reports `nsys_phase20_lower_gpu_migrated2_20260905.nsys-rep` and
+`nsys_phase20_full_gpu_migrated_20260905.nsys-rep`.
+
+Those reports contain real CUDA kernel launches and memory transfers, and both
+Phase20 lower/full runs reached `ALL DONE`. Both nevertheless reported outer
+linear non-convergence, while the independent P19 smoke ended in
+`MPI_ABORT`; therefore correctness is `FAIL` and performance readiness remains
+`NO`. The outer Krylov state is not owned by the instrumentation hook, so
+missing outer fields remain missing rather than being fabricated.

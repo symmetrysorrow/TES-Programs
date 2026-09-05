@@ -1,0 +1,45 @@
+--- fem/src/SolveHypre.c
++++ fem/src/SolveHypre.c
+@@ -156,4 +156,5 @@
+-   /* Keep IJ assembly in host memory; HYPRE's device execution policy then
+-      dispatches supported kernels and performs internal staging as needed. */
++   /* Assemble IJ objects on the host. HYPRE selects execution from each
++      object's memory location; leaving objects in HOST memory while setting
++      only the default execution policy silently falls back to CPU. */
+    HYPRE_SetMemoryLocation(HYPRE_MEMORY_HOST);
+-   HYPRE_SetExecutionPolicy(hypre_use_gpu ? HYPRE_EXEC_DEVICE : HYPRE_EXEC_HOST);
++   HYPRE_SetExecutionPolicy(HYPRE_EXEC_HOST);
+@@ -166,2 +166,2 @@
+    if (hypre_use_gpu && myverb > 4) fprintf(stdout,
+-     "SolveHypre: HYPRE device mode requested; IJ host assembly with device kernels\n");
++     "SolveHypre: HYPRE GPU requested; host IJ assembly will be migrated to device memory\n");
+@@ -294,1 +294,10 @@
+   }
++
++   if (hypre_use_gpu) {
++     HYPRE_IJMatrixMigrate(A, HYPRE_MEMORY_DEVICE);
++     if (Atilde != A) HYPRE_IJMatrixMigrate(Atilde, HYPRE_MEMORY_DEVICE);
++     HYPRE_SetMemoryLocation(HYPRE_MEMORY_DEVICE);
++     HYPRE_SetExecutionPolicy(HYPRE_EXEC_DEVICE);
++     if (myverb > 4) fprintf(stdout,
++       "SolveHypre: migrated HYPRE IJ matrices to device memory\n");
++   }
+@@ -926,2 +926,7 @@
+   hypre_sol = Container->hypre_method / 100;
+   hypre_pre = Container->hypre_method % 100;
++
++   /* RHS/solution values arrive from Elmer in host memory. Build IJ vectors
++      on host, then migrate assembled vectors before the HYPRE solve. */
++   HYPRE_SetMemoryLocation(HYPRE_MEMORY_HOST);
++   HYPRE_SetExecutionPolicy(HYPRE_EXEC_HOST);
+@@ -957,2 +957,10 @@
+   HYPRE_IJVectorAssemble(x);
++   if (Container->hypre_use_gpu) {
++     HYPRE_IJVectorMigrate(b, HYPRE_MEMORY_DEVICE);
++     HYPRE_IJVectorMigrate(x, HYPRE_MEMORY_DEVICE);
++     HYPRE_SetMemoryLocation(HYPRE_MEMORY_DEVICE);
++     HYPRE_SetExecutionPolicy(HYPRE_EXEC_DEVICE);
++     if (myverb > 4) fprintf(stdout,
++       "SolveHypre: migrated HYPRE IJ vectors to device memory\n");
++   }
+   HYPRE_IJVectorGetObject(x, (void **) &par_x);
