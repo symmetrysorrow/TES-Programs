@@ -70,6 +70,7 @@ Eigen::MatrixXd make_matrix(const Input& in) {
     a(0, 0) = 1 / t_el;
     a(0, 1) = loop_gain * in.g_tes_bath / (current * in.inductance);
     a(1, 0) = -current * in.resistance * (2 + in.beta) / in.c_tes;
+<<<<<<< Updated upstream
     a(1, 1) = 1 / t_i + in.g_abs_tes / in.c_tes;
     a(1, 2) = -in.g_abs_tes / in.c_tes;
     a(2, 1) = -in.g_abs_tes / c_abs;
@@ -87,6 +88,93 @@ Eigen::MatrixXd make_matrix(const Input& in) {
     return -a;
 }
 
+=======
+    const int abs_start = in.absorber_start();
+    const int tes2 = in.tes2_temperature();
+    const int current2 = in.tes2_current();
+    const double gh = in.hanging ? in.g_tes_hanging : 0.0;
+    const double ch = in.hanging ? in.c_tes_hanging : 1.0;
+    if (in.hanging) {
+        a(1, 1) = 1 / t_i + in.g_abs_tes / in.c_tes + gh / in.c_tes;
+        a(1, 2) = -gh / in.c_tes;
+        a(1, abs_start) = -in.g_abs_tes / in.c_tes;
+        a(2, 1) = -gh / ch;
+        a(2, 2) = gh / ch;
+    } else {
+        a(1, 1) = 1 / t_i + in.g_abs_tes / in.c_tes;
+        a(1, 2) = -in.g_abs_tes / in.c_tes;
+    }
+    a(abs_start, abs_start) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
+    a(abs_start, 1) = -in.g_abs_tes / c_abs;
+    if (n > 1) a(abs_start, abs_start + 1) = -g_abs_abs / c_abs;
+    for (int i = abs_start + 1; i < abs_start + n - 1; ++i) {
+        a(i, i - 1) = -g_abs_abs / c_abs;
+        a(i, i) = 2 * g_abs_abs / c_abs;
+        a(i, i + 1) = -g_abs_abs / c_abs;
+    }
+    const int abs_last = abs_start + n - 1;
+    if (n > 1) a(abs_last, abs_last - 1) = -g_abs_abs / c_abs;
+    a(abs_last, abs_last) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
+    a(abs_last, tes2) = -in.g_abs_tes / c_abs;
+    a(tes2, abs_last) = -in.g_abs_tes / in.c_tes;
+    if (in.hanging) {
+        const int hanging2 = in.tes2_hanging();
+        a(tes2, tes2) = 1 / t_i + in.g_abs_tes / in.c_tes + gh / in.c_tes;
+        a(tes2, hanging2) = -gh / in.c_tes;
+        a(tes2, current2) = -current * in.resistance * (2 + in.beta) / in.c_tes;
+        a(hanging2, tes2) = -gh / ch;
+        a(hanging2, hanging2) = gh / ch;
+    } else {
+        a(tes2, tes2) = 1 / t_i + in.g_abs_tes / in.c_tes;
+        a(tes2, current2) = -current * in.resistance * (2 + in.beta) / in.c_tes;
+    }
+    a(current2, tes2) = loop_gain * in.g_tes_bath / (current * in.inductance);
+    a(current2, current2) = 1 / t_el;
+    return -a;
+}
+
+LinearizationSummary inspect_linearization_impl(const std::string& input_json_path) {
+    const Input in = read_input(input_json_path, false);
+    const Derived derived = derive_linearization(in);
+    const Eigen::MatrixXd actual = make_matrix(in);
+    const double tes_boundary_rate = in.g_abs_tes / in.c_tes;
+    const double tes_hanging_rate = in.hanging ? in.g_tes_hanging / in.c_tes : 0.0;
+    const double intrinsic_thermal_diag = -1.0 / derived.tau_i;
+    const int tes2 = in.tes2_temperature();
+    const int current2 = in.tes2_current();
+    std::vector<double> tes1_block = {
+        actual(0, 0), actual(0, 1), actual(1, 0), actual(1, 1),
+    };
+    std::vector<double> tes2_block = {
+        actual(current2, current2), actual(current2, tes2),
+        actual(tes2, current2), actual(tes2, tes2),
+    };
+    std::vector<double> tes1_hanging_row;
+    std::vector<double> tes2_hanging_row;
+    if (in.hanging) {
+        tes1_hanging_row = {actual(2, 1), actual(2, 2)};
+        const int hanging2 = in.tes2_hanging();
+        tes2_hanging_row = {actual(hanging2, tes2), actual(hanging2, hanging2)};
+    }
+    return {
+        derived.current,
+        derived.tau_el,
+        derived.loop_gain,
+        derived.tau_i,
+        in.g_abs_tes,
+        tes_boundary_rate,
+        tes_hanging_rate,
+        intrinsic_thermal_diag,
+        in.n_abs,
+        in.hanging,
+        std::move(tes1_block),
+        std::move(tes2_block),
+        std::move(tes1_hanging_row),
+        std::move(tes2_hanging_row),
+    };
+}
+
+>>>>>>> Stashed changes
 void write_array(std::ostream& out, const std::vector<double>& values) {
     out << '[';
     for (std::size_t i = 0; i < values.size(); ++i) { if (i) out << ','; out << values[i]; }

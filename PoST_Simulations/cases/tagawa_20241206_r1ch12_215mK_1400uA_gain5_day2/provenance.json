@@ -1,0 +1,119 @@
+{
+  "case_status": "blocked_unresolved_physics_parameters",
+  "source_commit": "95fab67b51f71e97bb47e01e998c1019ff3a1dc9",
+  "experiment_path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "detector_channel_linkage": {
+    "result": "likely_but_unproven",
+    "audit_file": "detector_channel_linkage.json",
+    "iv_candidate_admissible_for_target": false,
+    "reason": "Same-day room1/ch1 naming is suggestive, but no explicit detector/channel/DAQ linkage is present in the existing metadata."
+  },
+  "independently_observed": {
+    "date": {
+      "value": "2024-12-06",
+      "source": "experiment directory name"
+    },
+    "bath_setpoint_label_K": {
+      "value": 0.215,
+      "source": "experiment directory name: 215mK",
+      "confidence": "medium",
+      "note": "A directory label is not treated as a measured TES temperature or T_c."
+    },
+    "bias_setpoint_label_A": {
+      "value": 0.0014,
+      "source": "experiment directory name: 1400uA1400uA",
+      "confidence": "medium",
+      "note": "This is an instrument/setpoint label, not an independently calibrated TES current."
+    },
+    "readout_rate_Hz": {
+      "value": 500000.0,
+      "source": "PulseConfig.json Readout.Rate and Setting.txt"
+    },
+    "readout_samples": {
+      "value": 100000,
+      "source": "PulseConfig.json Readout.Sample and Setting.txt"
+    },
+    "analysis_cutoff_Hz": {
+      "value": 10000.0,
+      "source": "PulseConfig.json Analysis.CutoffFrequency"
+    },
+    "fft_bin_width_Hz": {
+      "value": 5.0,
+      "source": "derived from Readout.Rate / Readout.Sample"
+    },
+    "channel": {
+      "value": "CH0",
+      "source": "CH0_noise and CH0_pulse directory names"
+    }
+  },
+  "candidate_sources": [
+    {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/PulseConfig.json", "source_location": "Readout and Analysis objects", "applicable_to_target": true, "accepted_for": ["rate", "samples", "cutoff"]},
+    {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt", "source_location": "Rate, Samples/Channels, Pretrigger_Samples, Threshold", "applicable_to_target": true, "accepted_for": ["acquisition metadata"]},
+    {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/setting.xml", "source_location": "Hardware Config and Log Config clusters", "applicable_to_target": true, "accepted_for": ["DAQ channel, rate, samples, folder/setpoint labels"]},
+    {"source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt", "source_location": "IV_215mK calibration grid and 1400 uA row", "applicable_to_target": false, "accepted_for": ["bath setpoint meaning", "TES current candidate only"], "notes": "No encoded linkage proves this IV channel is the target r1ch12 detector."},
+    {"source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.json", "source_location": "Config/main settings", "applicable_to_target": false, "accepted_for": ["campaign context only"], "notes": "Adjacent-day repeat; no target physics calibration."},
+    {"source_class": "same_detector_other_run", "source_file": "G:/tagawa/20240222_ROOM1_CH1_106mK_0uA_gain10_AC", "source_location": "frequency response files 1 Hz-100 kHz", "applicable_to_target": false, "accepted_for": [], "notes": "Possible circuit/impedance context; date, bias and gain differ."},
+    {"source_class": "generic_code_default", "source_file": "getpara/IV_matome.py; Analyze_Experimental_Data/tes_analysis/iv.py", "source_location": "R_SH constants and IV derivation", "applicable_to_target": false, "accepted_for": [], "notes": "3.9 mOhm/3.8 mOhm constants are not target proof."},
+    {"source_class": "simulation_assumption", "source_file": "PoST_Simulations/input.json; Elmer-Projects", "source_location": "simulation parameter/case files", "applicable_to_target": false, "accepted_for": [], "notes": "Generic or unrelated simulation values; never copied into target case."}
+  ],
+  "recovered_observables": {
+    "bias_source_current_setpoint_A": {
+      "value": 0.0014,
+      "unit": "A",
+      "status": "setpoint_only",
+      "source_class": "exact_target_run",
+      "source_file": "experiment directory name",
+      "source_location": "r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+      "derivation": "1400 uA directory label",
+      "confidence": "medium",
+      "applicable_to_target": true,
+      "notes": "Not TES branch current."
+    },
+    "tes_current_candidate_A": {
+      "value": 0.000251847592058536,
+      "unit": "A",
+      "status": "independently_derived",
+      "source_class": "same_detector_same_campaign",
+      "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
+      "source_location": "row 2 at I_bias=1400 uA; first 10 points for superconducting slope",
+      "derivation": "eta=1/slope(V_out[0:10] versus I_bias[0:10]); I_TES=eta*V_out(1400 uA)",
+      "confidence": "medium",
+      "applicable_to_target": false,
+      "notes": "Same-day campaign candidate; linkage to r1ch12 target channel is not encoded in the file. Do not copy into input until linkage is confirmed."
+    }
+  },
+  "parameter_status": {
+    "T_c": {"value": null, "unit": "K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Blocks operating point and noise transfer."},
+    "T_bath": {"value": 0.215, "unit": "K", "status": "setpoint_only", "source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt; target directory name", "source_location": "IV_215mK filename and target folder label", "derivation": "Campaign setpoint label; not a thermometer trace", "confidence": "medium", "applicable_to_target": true, "notes": "Meaning promoted to bath setpoint only, not measured TES temperature."},
+    "R": {"value": null, "unit": "ohm", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "An 17.7798 mOhm candidate requires generic R_SH=3.9 mOhm and is rejected."},
+    "R_l": {"value": null, "unit": "ohm", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Bias/load impedance not target-specific."},
+    "alpha": {"value": null, "unit": "1", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Needs R(T,I) transition slope or impedance."},
+    "beta": {"value": null, "unit": "1", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Needs current dependence of R or impedance."},
+    "L": {"value": null, "unit": "H", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "No target circuit inductance record."},
+    "n": {"value": null, "unit": "1", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Thermal-law exponent requires thermal/DC data."},
+    "C_abs": {"value": null, "unit": "J/K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Pulse time response alone is degenerate with conductances."},
+    "C_tes": {"value": null, "unit": "J/K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Pulse time response alone is degenerate with G and loop gain."},
+    "G_abs-abs": {"value": null, "unit": "W/K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Requires distributed thermal or impedance constraints."},
+    "G_abs-tes": {"value": null, "unit": "W/K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Requires thermal transfer/impedance constraints."},
+    "G_tes-bath": {"value": null, "unit": "W/K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Together with T_c, T_bath, n and R sets Joule power."},
+    "n_abs": {"value": null, "unit": "count", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Needed by C++ pulse generation, not reduced noise."},
+    "E": {"value": null, "unit": "keV", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Not needed for reduced intrinsic noise or linearization."},
+    "readout_calibration_A_per_V": {"value": null, "unit": "A/V", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Blocks absolute comparison only."},
+    "readout_gain_transfer": {"value": null, "unit": "transfer", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Absolute comparison also requires an independently established CH0/readout gain or frequency transfer."},
+    "bias_impedance_vs_frequency": {"value": null, "unit": "ohm", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Blocks circuit/readout audit."},
+    "hardware_analog_bessel": {"value": null, "unit": "configuration", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Do not infer from residual roll-off."}
+  },
+  "repository_candidates_not_accepted_as_target_values": [
+    {"path": "PoST_Simulations/input.json", "reason": "generic nominal operating point; explicitly not this target case"},
+    {"path": "Analyze_Experimental_Data/tes_analysis/iv.py", "reason": "interactive/general IV workflow; no target dataset binding; R_SH=3.8e-3 is not target evidence"},
+    {"path": "getpara/IV_matome.py", "reason": "generic IV workflow; R_SH=3.9e-3 is not target evidence"},
+    {"path": "getpara/thermalconductivity.py", "reason": "generic external data path and fitted thermal model; no target calibration file"},
+    {"path": "Elmer-Projects", "reason": "other simulation cases, not an exact target acquisition provenance source"}
+  ],
+  "prohibited_inference": [
+    "Do not fit any physical parameter to modelnoise.txt or residuals.",
+    "Do not infer calibration from the 1 kHz normalization.",
+    "Do not promote the 1400uA directory label to TES current.",
+    "Do not use a residual-derived white, pole-zero, Lorentzian, or hanging component."
+  ]
+}

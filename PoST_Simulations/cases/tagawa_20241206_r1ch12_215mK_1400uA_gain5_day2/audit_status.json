@@ -1,0 +1,255 @@
+{
+  "status": "blocked",
+  "runnable": false,
+  "case_dir": "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+  "source_commit": "95fab67b51f71e97bb47e01e998c1019ff3a1dc9",
+  "capabilities": {
+    "operating_point_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional"
+      },
+      "blocking_reason": "TES bath-power equilibrium cannot be evaluated."
+    },
+    "python_stability_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional"
+      },
+      "blocking_reason": "Jacobian/stability requires the full reduced electrothermal parameter set."
+    },
+    "reduced_noise_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "rate",
+        "samples"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional",
+        "rate": "independent_ready",
+        "samples": "independent_ready"
+      },
+      "blocking_reason": "MakeNoise() requires the reduced electrothermal set and FFT rate/sample settings."
+    },
+    "cpp_parity_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "n_abs"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "n_abs"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional"
+      },
+      "blocking_reason": "C++ linearization inspection additionally requires n_abs; E is not required."
+    },
+    "normalized_comparison_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "rate",
+        "samples",
+        "target CH0 raw records"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional",
+        "rate": "independent_ready",
+        "samples": "independent_ready",
+        "target CH0 raw records": "independent_ready"
+      },
+      "blocking_reason": "A physical reduced spectrum and target acquisition grid are required; calibration is not required.",
+      "normalization_is_not_calibration_evidence": true
+    },
+    "absolute_comparison_ready": {
+      "ready": false,
+      "conditionally_ready": false,
+      "required_parameters": [
+        "CH0 voltage/current calibration",
+        "readout gain/transfer",
+        "T_c",
+        "T_bath",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "rate",
+        "samples"
+      ],
+      "missing_parameters": [
+        "T_c",
+        "R",
+        "G_tes-bath",
+        "n",
+        "C_abs",
+        "C_tes",
+        "G_abs-abs",
+        "G_abs-tes",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "readout_calibration_A_per_V",
+        "readout_gain_transfer"
+      ],
+      "inadmissible_parameters": [],
+      "provenance_status": {
+        "T_bath": "conditional",
+        "rate": "independent_ready",
+        "samples": "independent_ready",
+        "target CH0 raw records": "independent_ready",
+        "readout_calibration_A_per_V": "not_admissible",
+        "readout_gain_transfer": "not_admissible"
+      },
+      "blocking_reason": "Absolute ASD comparison requires independently established CH0 calibration and readout gain."
+    }
+  },
+  "noise_semantics": {
+    "tes_johnson": "enabled physical source",
+    "load_johnson": "enabled physical source",
+    "tes_bath_tfn": "enabled physical source",
+    "tes_absorber_tfn": "enabled physical source",
+    "post_filter_white_asd_A_rtHz": 0.0,
+    "readout_white_asd_A_rtHz": 0.0,
+    "tes_resistance_fluctuation_model": "none",
+    "tes_internal_model": "none"
+  },
+  "generic_input_used": false
+}

@@ -1,0 +1,46 @@
+{
+  "target": {
+    "path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+    "detector_label": "r1ch12",
+    "requested_channel": "CH0",
+    "daq_mapping": "PXI2Slot2/ai0:1",
+    "evidence": [
+      "setting.xml Hardware Config contains PXI2Slot2/ai0:1",
+      "target acquisition stores paired CH0 and CH1 records",
+      "target folder creation time is 2024-12-06 13:25:14"
+    ]
+  },
+  "candidate": {
+    "path": "G:/tagawa/20241206/room1-ch1-iv3",
+    "detector_label": "room1-ch1",
+    "iv_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
+    "record_channel": "CH1",
+    "evidence": [
+      "same-day folder naming is consistent with the room1/ch1 portion of r1ch12",
+      "IV acquisition records are timestamped 2024-12-06 12:34-12:45",
+      "only IV_215mK is present in this campaign folder"
+    ]
+  },
+  "linkage_result": "likely_but_unproven",
+  "reason": "The IV folder has no setting.xml, DAQ channel string, hardware channel mapping, detector serial, or acquisition log that maps it to target PXI2Slot2/ai0 or target CH0. The shared date and naming convention are suggestive but do not prove detector/channel identity.",
+  "iv_candidate_admissible_for_target": false,
+  "required_for_confirmed": [
+    "target-linked IV/calibration metadata or DAQ mapping",
+    "detector identity/serial linkage",
+    "explicit mapping from room1-ch1-iv3 CH1 to target CH0"
+  ],
+  "same_day_multi_temperature": {
+    "status": "unavailable",
+    "files_found": ["G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt"],
+    "temperature_labels_K": [0.215],
+    "note": "No second bath-temperature IV, temperature sweep, RT, or thermal-law record was found under G:/tagawa/20241206."
+  },
+  "r_sh_provenance": {
+    "status": "unresolved",
+    "target_campaign_circuit_config": null,
+    "target_campaign_bom": null,
+    "target_campaign_instrument_setting": null,
+    "rejected_generic_values_ohm": [0.0038, 0.0039],
+    "note": "The same-day files contain IV data but no shunt specification; the generic code constants are not promoted."
+  }
+}

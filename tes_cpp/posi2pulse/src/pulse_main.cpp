@@ -5,6 +5,50 @@
 #include <sstream>
 
 int main(int argc, char** argv) {
+<<<<<<< Updated upstream
+=======
+    if (argc == 3 && std::string(argv[1]) == "--dump-linearization") {
+        try {
+            const tes_cpp::LinearizationSummary summary = tes_cpp::inspect_linearization(argv[2]);
+            std::cout << std::setprecision(17)
+                      << "{\"current_A\":" << summary.current_A
+                      << ",\"tau_el_s\":" << summary.tau_el_s
+                      << ",\"loop_gain\":" << summary.loop_gain
+                      << ",\"tau_i_s\":" << summary.tau_i_s
+                      << ",\"g_abs_tes_W_per_K\":" << summary.g_abs_tes_W_per_K
+                      << ",\"tes_boundary_rate_per_s\":" << summary.tes_boundary_rate_per_s
+                      << ",\"tes_hanging_rate_per_s\":" << summary.tes_hanging_rate_per_s
+                      << ",\"tes_intrinsic_thermal_diag_per_s\":" << summary.tes_intrinsic_thermal_diag_per_s
+                      << ",\"n_abs\":" << summary.n_abs
+                      << ",\"hanging\":" << (summary.hanging ? "true" : "false")
+                      << ",\"tes1_time_block\":[";
+            for (std::size_t i = 0; i < summary.tes1_time_block.size(); ++i) {
+                if (i) std::cout << ',';
+                std::cout << summary.tes1_time_block[i];
+            }
+            std::cout << "],\"tes2_time_block\":[";
+            for (std::size_t i = 0; i < summary.tes2_time_block.size(); ++i) {
+                if (i) std::cout << ',';
+                std::cout << summary.tes2_time_block[i];
+            }
+            std::cout << "],\"tes1_hanging_row\":[";
+            for (std::size_t i = 0; i < summary.tes1_hanging_row.size(); ++i) {
+                if (i) std::cout << ',';
+                std::cout << summary.tes1_hanging_row[i];
+            }
+            std::cout << "],\"tes2_hanging_row\":[";
+            for (std::size_t i = 0; i < summary.tes2_hanging_row.size(); ++i) {
+                if (i) std::cout << ',';
+                std::cout << summary.tes2_hanging_row[i];
+            }
+            std::cout << "]}\n";
+            return 0;
+        } catch (const std::exception& error) {
+            std::cerr << "posi2pulse: " << error.what() << '\n';
+            return 1;
+        }
+    }
+>>>>>>> Stashed changes
     if ((argc != 5 && argc != 7) || std::string(argv[3]) != "--positions" ||
         (argc == 7 && std::string(argv[5]) != "--threads")) {
         std::cerr << "Usage: posi2pulse <input.json> <pulses.json> --positions 1,2,3 [--threads N]\n";
