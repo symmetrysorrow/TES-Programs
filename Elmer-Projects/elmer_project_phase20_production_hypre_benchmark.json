@@ -295,117 +295,6 @@
         ]
       },
       "notes": "Fine shared-node contact mesh targeting production-v2-like spatial resolution; generated independently from the Mortar production path."
-    },
-    "mesh_physical_parity_conformal": {
-      "geometry": "single_pixel",
-      "dir": "mesh_physical_parity_conformal",
-      "recipe": {
-        "generator": "generate_project_geometry.py",
-        "mesh_overrides": {
-          "mesh_min": 0.016666666666666666,
-          "mesh_max": 0.016666666666666666
-        },
-        "elmergrid_args": [
-          "14",
-          "2",
-          "gmsh/project.msh",
-          "-merge",
-          "1e-10",
-          "-out",
-          "mesh_physical_parity_conformal"
-        ]
-      },
-      "notes": "Same-geometry physical-parity control mesh (conformal); generated from the same project parameters and mesh recipe as its paired route."
-    },
-    "mesh_stycast_convergence_coarse": {
-      "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_coarse",
-      "recipe": {
-        "generator": "generate_project_geometry.py",
-        "mesh_overrides": {
-          "mesh_min": 4.5e-05,
-          "mesh_max": 9e-05,
-          "mesh_min_mode": "fixed",
-          "mesh_max_mode": "fixed"
-        },
-        "elmergrid_args": [
-          "14",
-          "2",
-          "gmsh/project.msh",
-          "-merge",
-          "1e-10",
-          "-out",
-          "mesh_stycast_convergence_coarse"
-        ]
-      },
-      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=4.5e-05 m, h_max=9e-05 m."
-    },
-    "mesh_stycast_convergence_medium": {
-      "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_medium",
-      "recipe": {
-        "generator": "generate_project_geometry.py",
-        "mesh_overrides": {
-          "mesh_min": 3e-05,
-          "mesh_max": 6e-05,
-          "mesh_min_mode": "fixed",
-          "mesh_max_mode": "fixed"
-        },
-        "elmergrid_args": [
-          "14",
-          "2",
-          "gmsh/project.msh",
-          "-merge",
-          "1e-10",
-          "-out",
-          "mesh_stycast_convergence_medium"
-        ]
-      },
-      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=3e-05 m, h_max=6e-05 m."
-    },
-    "mesh_stycast_convergence_fine": {
-      "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_fine",
-      "recipe": {
-        "generator": "generate_project_geometry.py",
-        "mesh_overrides": {
-          "mesh_min": 2.25e-05,
-          "mesh_max": 4.5e-05,
-          "mesh_min_mode": "fixed",
-          "mesh_max_mode": "fixed"
-        },
-        "elmergrid_args": [
-          "14",
-          "2",
-          "gmsh/project.msh",
-          "-merge",
-          "1e-10",
-          "-out",
-          "mesh_stycast_convergence_fine"
-        ]
-      },
-      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=2.25e-05 m, h_max=4.5e-05 m."
-    },
-    "mesh_physical_parity_mortar": {
-      "geometry": "single_pixel",
-      "dir": "mesh_physical_parity_mortar",
-      "recipe": {
-        "generator": "generate_project_geometry.py",
-        "mesh_overrides": {
-          "mesh_min": 0.016666666666666666,
-          "mesh_max": 0.016666666666666666
-        },
-        "elmergrid_args": [
-          "14",
-          "2",
-          "gmsh/project.msh",
-          "-merge",
-          "1e-10",
-          "-out",
-          "mesh_physical_parity_conformal"
-        ]
-      },
-      "notes": "Same-geometry physical-parity control mesh (conformal); generated from the same project parameters and mesh recipe as its paired route."
     }
   },
   "parameter_expressions": {
@@ -1266,460 +1155,59 @@
     "mortar_control_interfaces": false
   },
   "cases": {
-    "case_heat_flux_control_mesh_physical_parity_conformal": {
+    "case_phase20_production_hypre_cpu": {
       "template": "steady",
-      "mesh": "mesh_physical_parity_conformal",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
+      "mesh": "mesh_singlepixel_conformal_gpu_fine",
+      "heat_source": "circuit_parallel",
+      "initial_temperature": "T_0",
       "output_result": true,
       "vtu": false,
       "steady_state_max_iterations": 1,
       "output_intervals": 1,
       "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_mesh_physical_parity_conformal_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
       "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 2000,
+        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
       },
-      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_heat_flux_control_mesh_physical_parity_conformal.result",
-      "notes": "Electrical-free steady conduction control with nonzero vertical flux."
+      "state_file": "work/meshes/mesh_singlepixel_conformal_gpu_fine/case_phase20_production_hypre_cpu.state",
+      "series_file": "case_phase20_production_hypre_cpu_series.csv",
+      "iteration_series_file": "case_phase20_production_hypre_cpu_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_singlepixel_conformal_gpu_fine/case_phase20_production_hypre_cpu.result",
+      "parallel_circuit_iterations": 1
     },
-    "case_heat_flux_control_coarse": {
+    "case_phase20_production_hypre_gpu": {
       "template": "steady",
-      "mesh": "mesh_stycast_convergence_coarse",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
+      "mesh": "mesh_singlepixel_conformal_gpu_fine",
+      "heat_source": "circuit_parallel",
+      "initial_temperature": "T_0",
       "output_result": true,
       "vtu": false,
       "steady_state_max_iterations": 1,
       "output_intervals": 1,
       "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_coarse_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
       "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
+        "linear_system_max_iterations": 2000,
+        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
       },
-      "output_file_path": "../work/meshes/mesh_stycast_convergence_coarse/case_heat_flux_control_coarse.result",
-      "notes": "Electrical-free steady conduction control with nonzero vertical flux."
-    },
-    "case_heat_flux_control_medium": {
-      "template": "steady",
-      "mesh": "mesh_stycast_convergence_medium",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": false,
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_medium_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
-      },
-      "output_file_path": "../work/meshes/mesh_stycast_convergence_medium/case_heat_flux_control_medium.result",
-      "notes": "Electrical-free steady conduction control with nonzero vertical flux."
-    },
-    "case_heat_flux_control_fine": {
-      "template": "steady",
-      "mesh": "mesh_stycast_convergence_fine",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": false,
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_fine_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
-      },
-      "output_file_path": "../work/meshes/mesh_stycast_convergence_fine/case_heat_flux_control_fine.result",
-      "notes": "Electrical-free steady conduction control with nonzero vertical flux."
-    },
-    "case_heat_flux_control_medium_hypre": {
-      "template": "steady",
-      "mesh": "mesh_stycast_convergence_medium",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": false,
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_medium_hypre_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "iterative_hypre_boomeramg",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-10,
-        "linear_system_abort_not_converged": true
-      },
-      "output_file_path": "../work/meshes/mesh_stycast_convergence_medium/case_heat_flux_control_medium_hypre.result",
-      "notes": "Electrical-free fixed-k control using HYPRE CPU."
-    },
-    "case_heat_flux_control_fine_hypre": {
-      "template": "steady",
-      "mesh": "mesh_stycast_convergence_fine",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": false,
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_fine_hypre_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "iterative_hypre_boomeramg",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-10,
-        "linear_system_abort_not_converged": true
-      },
-      "output_file_path": "../work/meshes/mesh_stycast_convergence_fine/case_heat_flux_control_fine_hypre.result",
-      "notes": "Electrical-free steady conduction control; HYPRE CPU fallback because direct UMFPACK factorization is not tractable at the fine level."
-    },
-    "case_heat_flux_control_native_probe": {
-      "template": "steady",
-      "mesh": "mesh_physical_parity_conformal",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": "after_simulation",
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": false,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_native_probe_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
-      },
-      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_heat_flux_control_native_probe.result",
-      "notes": "Native Elmer FluxSolver probe on the source-free control case.",
-      "native_flux_solver": true
-    },
-    "case_heat_flux_control_mortar": {
-      "template": "steady",
-      "mesh": "mesh_physical_parity_mortar",
-      "heat_source": "none",
-      "initial_temperature": "T_bath",
-      "output_result": true,
-      "vtu": false,
-      "steady_state_max_iterations": 1,
-      "output_intervals": 1,
-      "apply_mortar_bcs": true,
-      "fixed_membrane_conductivity_temperature": "T_bath",
-      "calculate_loads": true,
-      "calculate_boundary_fluxes": true,
-      "boundary_masks": {
-        "bath": "reaction_bath",
-        "abs__zmax": "reaction_hot"
-      },
-      "fixed_temperature_boundaries": [
-        {
-          "boundary": "abs__zmax",
-          "name": "controlled hot boundary",
-          "temperature": "0.16",
-          "mask": "reaction_hot"
-        }
-      ],
-      "save_scalars": {
-        "filename": "case_heat_flux_control_mortar_boundary_reactions.dat",
-        "entries": [
-          {
-            "mask": "reaction_hot"
-          },
-          {
-            "mask": "reaction_bath"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_hot"
-          },
-          {
-            "variable": "Temperature",
-            "operator": "diffusive flux",
-            "mask": "reaction_bath"
-          }
-        ]
-      },
-      "solver": {
-        "nonlinear_max_iterations": 1,
-        "nonlinear_convergence_tolerance": 1e-10,
-        "nonlinear_relaxation_factor": 1.0,
-        "steady_state_convergence_tolerance": 1e-10,
-        "linear_system": "direct"
-      },
-      "output_file_path": "../work/meshes/mesh_physical_parity_mortar/case_heat_flux_control_mortar.result",
-      "notes": "Mortar global-reaction control against the conformal route."
+      "state_file": "work/meshes/mesh_singlepixel_conformal_gpu_fine/case_phase20_production_hypre_gpu.state",
+      "series_file": "case_phase20_production_hypre_gpu_series.csv",
+      "iteration_series_file": "case_phase20_production_hypre_gpu_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_singlepixel_conformal_gpu_fine/case_phase20_production_hypre_gpu.result",
+      "parallel_circuit_iterations": 1
     }
   }
 }

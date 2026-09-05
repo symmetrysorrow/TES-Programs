@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "blocker": "CLOSED_AS_CG_FLUX_RECONSTRUCTION_LIMITATION",
+  "readiness": "READY_FOR_PRODUCTION_TRANSIENT",
+  "gates": {
+    "weak_form_global_energy_balance": "PASS",
+    "thermal_conductance_mesh_convergence": "PASS",
+    "medium_direct_hypre_cpu_parity": "PASS",
+    "mortar_conformal_global_reaction_parity": "PASS"
+  },
+  "raw_elemental_interface_flux": {
+    "status": "DIAGNOSTIC_ONLY",
+    "decision": "excluded from hard acceptance because it is a piecewise-linear CG gradient reconstruction at a shared-node material jump"
+  },
+  "next_step": "production HYPRE CPU/GPU benchmark completed; proceed to production transient only after normal runtime review"
+}

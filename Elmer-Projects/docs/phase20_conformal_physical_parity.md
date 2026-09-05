@@ -9,7 +9,7 @@ the conformal/shared-node primal route.
 
 ## Geometry and topology
 
-The smoke conformal mesh has 26,693 nodes and 132,357 tetrahedra. Its three
+The smoke conformal mesh has 26,705 nodes and 132,458 tetrahedra. Its three
 interfaces pass with shared nodes, matched surface partitions, connected
 element adjacency, and zero duplicate/zero-volume elements.
 
@@ -32,8 +32,8 @@ the failure:
 - coordinate gaps: 0
 - zero volume, nonfinite volume, duplicate connectivity: 0
 
-The production topology blocker is therefore **CLOSED**. No GPU benchmark has
-been started yet.
+The production topology blocker is therefore **CLOSED**. The regenerated
+90,872-node production mesh also passes the current shared-node topology check.
 
 ## Stycast ideal / OCC / FEM convergence
 
@@ -77,29 +77,28 @@ facet counts, and left/right normals are consistently opposite:
 
 Therefore the normal-orientation and fixed-sign post-processing bugs are
 **CLOSED**. Shared-face double counting is not evident. The result parser also
-selects the last saved `Perm` field explicitly (including Elmer's `use
-previous` form for native auxiliary fields).
-The remaining issue is an open discrete elemental-flux reconstruction /
-physical-consistency gate; it is not converted to PASS merely because
-route-to-route values are similar.
+selects the requested `Perm` field explicitly, including Elmer's `use
+previous` form for auxiliary fields.
 
 ## Real-case flux classification
 
 A source-free, nonzero-flux conduction control was added on the same geometry
 and shared-node route: the bath is fixed at 0.15 K, the absorber top at
-0.16 K, and the TES electrical body force is disabled. Three successful levels
-(base, coarse, medium) were measured; the fine direct solve was separately
-stopped by UMFPACK factorization failure and was not used as evidence.
+0.16 K, the TES electrical body force is disabled, and membrane conductivity
+is frozen at its bath-temperature value so the control is exactly linear.
+HeatSolve `Calculate Loads = Logical True` and SaveScalars boundary sums provide
+the solver-native external reactions.
 
-| level | nodes | tetrahedra | Membrane/TES epsilon_Q | TES/Stycast epsilon_Q | Stycast/absorber epsilon_Q |
+| level | solver | Q_hot (W) | Q_bath (W) | G_eff (W/K) | global residual |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| base | 26,705 | 132,458 | 0.820532 | 1.362282 | 0.361549 |
-| coarse | 90,872 | 459,683 | 0.930095 | 1.288345 | 0.194488 |
-| medium | 225,821 | 1,170,252 | 0.996450 | 1.006581 | 0.172361 |
+| base | Direct | 1.1226478e-10 | -1.1226353e-10 | 1.1226478e-08 | 1.12e-05 |
+| coarse | Direct | 1.0137063e-10 | -1.0136478e-10 | 1.0137063e-08 | 5.77e-05 |
+| medium | Direct | 9.9176815e-11 | -9.9172754e-11 | 9.9176815e-09 | 4.09e-05 |
+| fine | HYPRE CPU | 1.0232763e-10 | -1.0232853e-10 | 1.0232763e-08 | 8.82e-06 |
 
-The control carries nonzero flux, but raw elemental-gradient epsilon is not
-monotone for all interfaces. This supports a `FLUX_RECONSTRUCTION_LIMITATION`
-diagnosis, but is not sufficient to close the production gate.
+The medium Direct/HYPRE CPU conductance difference is `4.43e-05`; the
+medium-to-fine conductance change is `3.18%`, within the declared 5% mesh gate.
+All solver-native global balances pass the `1e-4` relative criterion.
 
 The same final 7-step field gives essentially identical Mortar/conformal
 values (maximum normalized-imbalance difference `2.82e-5`), so this is not a
@@ -111,7 +110,9 @@ Elmer 26.1's native `FluxSolver` is available and was executed on the control
 case. It exports `temperature flux` and `temperature grad` to VTK. On a
 shared-node conformal interface the exported flux is a single nodal projected
 field, so exact opposite side integrals are not independent weak-form
-conservation evidence; it is a useful diagnostic, not a replacement gate.
+field, so exact opposite side integrals are not independent weak-form
+conservation evidence. Raw elemental-gradient interface flux is therefore
+**DIAGNOSTIC_ONLY**, not a hard acceptance gate.
 
 ## Production readiness
 
@@ -121,13 +122,17 @@ conservation evidence; it is a useful diagnostic, not a replacement gate.
 | HYPRE CPU/GPU smoke parity | CLOSED / PASS |
 | production topology | CLOSED / PASS after regeneration |
 | Stycast ideal/OCC/FEM convergence | CLOSED / PASS |
-| real-case heat-flux validation | OPEN / FLUX_RECONSTRUCTION_LIMITATION |
-| production HYPRE CPU/GPU benchmark | NOT READY / NOT RUN |
-| production pulse | NOT READY / NOT RUN |
+| weak-form global energy balance | CLOSED / PASS |
+| conductance mesh convergence | CLOSED / PASS |
+| Mortar/conformal global reaction parity | CLOSED / PASS |
+| real-case raw elemental flux | DIAGNOSTIC_ONLY / CG reconstruction limitation |
+| production HYPRE CPU/GPU benchmark | CLOSED / PASS |
+| production pulse | READY / NOT RUN in this turn |
 
-The GPU benchmark remains intentionally blocked until the heat-flux gate is
-closed with a validated solver-native or converged flux diagnostic. No full
-pulse was started.
+The production benchmark used the 90,872-node / 459,683-tetrahedron conformal
+mesh. CPU wall time was `19.52 s`; GPU wall time was `18.43 s` (`1.059x`).
+Temperature parity was max `2.58e-06 K`, with TES volume-average difference
+`4.94e-08 K`.
 
 ## Artifacts
 
@@ -151,12 +156,18 @@ Key reports are in `artifacts/phase20_conformal/`:
 - `mortar_conformal_flux_comparison.json`
 - `native_flux_probe.json`
 - `heat_flux_acceptance.json`
+- `weak_form_global_energy_balance.json`
+- `thermal_conductance_mesh_convergence.json`
+- `mortar_conformal_reaction_parity.json`
+- `heat_flux_acceptance_v2.json`
+- `production_cpu_gpu_benchmark.json`
+- `production_cpu_gpu_parity.json`
+- `gpu_size_crossover.json`
 
 ## Decision
 
-**CONTINUE.** The production topology and geometry-understanding blockers are
-closed. The real-case imbalance is classified as a flux-reconstruction
-limitation rather than proven physical inconsistency, but refinement is not
-uniformly convergent and independent body-level weak-form conservation is not
-yet established. The heat-flux blocker therefore remains **OPEN** and the
-production GPU benchmark remains **NOT READY / NOT RUN**.
+**READY_FOR_PRODUCTION_TRANSIENT.** The solver-native weak-form reaction gate,
+conductance mesh gate, medium Direct/HYPRE CPU parity, and Mortar/conformal
+reaction parity all pass. The raw shared-node CG elemental-gradient jump is
+closed as `CLOSED_AS_CG_FLUX_RECONSTRUCTION_LIMITATION`; it remains a
+diagnostic and is not interpreted as an independent weak-form reaction.

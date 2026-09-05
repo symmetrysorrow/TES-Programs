@@ -1,0 +1,40 @@
+{
+  "gate": "THERMAL_CONDUCTANCE_MESH_CONVERGENCE",
+  "observable": "solver-native hot boundary reaction / 0.01 K",
+  "levels": [
+    {
+      "label": "base",
+      "solver": "Direct/UMFPACK",
+      "effective_conductance_W_per_K": 1.122647815651e-08,
+      "global_energy_balance_relative_residual": 1.1162920218807788e-05
+    },
+    {
+      "label": "coarse",
+      "solver": "Direct/UMFPACK",
+      "effective_conductance_W_per_K": 1.013706278231e-08,
+      "global_energy_balance_relative_residual": 5.768653431063776e-05
+    },
+    {
+      "label": "medium_direct",
+      "solver": "Direct/UMFPACK",
+      "effective_conductance_W_per_K": 9.91768154652e-09,
+      "global_energy_balance_relative_residual": 4.0949039459871315e-05
+    },
+    {
+      "label": "medium_hypre_cpu",
+      "solver": "HYPRE CPU BiCGStab/BoomerAMG",
+      "effective_conductance_W_per_K": 9.917241882997e-09,
+      "global_energy_balance_relative_residual": 3.477306009701361e-05
+    },
+    {
+      "label": "fine_hypre_cpu",
+      "solver": "HYPRE CPU BiCGStab/BoomerAMG",
+      "effective_conductance_W_per_K": 1.023276315176e-08,
+      "global_energy_balance_relative_residual": 8.815634976668028e-06
+    }
+  ],
+  "medium_to_fine_relative_change": 0.0317696836465331,
+  "tolerance_relative": 0.05,
+  "status": "PASS",
+  "note": "Base/coarse/medium/fine are reported; raw elemental interface flux is diagnostic only."
+}

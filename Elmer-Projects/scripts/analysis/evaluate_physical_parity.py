@@ -33,18 +33,34 @@ def result_values(path: Path, field_index: int = -1) -> dict[int, float]:
     permutations = [i for i, line in enumerate(lines) if line.startswith("Perm:")]
     if not permutations:
         raise ValueError(f"result file has no Perm field: {path}")
-    index = permutations[field_index]
-    count = int(lines[index].split()[1])
-    # Elmer writes ``node_index, internal_permutation``.  Values are emitted
-    # in node-index order, so the first column identifies the mesh node; the
-    # second column is only the internal storage permutation.
-    permutation = [int(lines[index + 1 + i].split()[0]) for i in range(count)]
-    start = index + 1 + count
+    selected = field_index if field_index >= 0 else len(permutations) + field_index
+    if selected < 0 or selected >= len(permutations):
+        raise IndexError(f"result field index out of range: {field_index}")
+    permutation: list[int] | None = None
+    index = permutations[selected]
+    start = 0
+    for number, perm_index in enumerate(permutations):
+        tokens = lines[perm_index].split()
+        if len(tokens) >= 2 and tokens[1].lower() == "use":
+            if permutation is None:
+                raise ValueError(f"first result field cannot use previous permutation: {path}")
+            count = len(permutation)
+            value_start = perm_index + 1
+        else:
+            count = int(tokens[1])
+            # Elmer writes ``node_index, internal_permutation``.  Values are
+            # emitted in node-index order, so the first column identifies the
+            # mesh node; the second column is only internal storage permutation.
+            permutation = [int(lines[perm_index + 1 + i].split()[0]) for i in range(count)]
+            value_start = perm_index + 1 + count
+        if number == selected:
+            start = value_start
+            break
     values = [
         float(lines[start + i].replace("D", "E"))
-        for i in range(count)
+        for i in range(len(permutation or []))
     ]
-    return {permutation[position]: values[position] for position in range(count)}
+    return {permutation[position]: values[position] for position in range(len(values))}
 
 
 def result_field_times(path: Path) -> list[float | None]:

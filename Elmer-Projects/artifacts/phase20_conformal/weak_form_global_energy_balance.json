@@ -1,0 +1,138 @@
+{
+  "gate": "WEAK_FORM_GLOBAL_ENERGY_BALANCE",
+  "control": "fixed membrane conductivity at T_bath; hot=0.16 K; bath=0.15 K",
+  "levels": [
+    {
+      "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+      "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_mesh_physical_parity_conformal_boundary_reactions.dat",
+      "hot_reaction_W": 1.122647815651e-10,
+      "bath_reaction_W": -1.122635283623e-10,
+      "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+      "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+      "global_energy_balance_residual_W": 1.2532027999930945e-15,
+      "global_energy_balance_relative_residual": 1.1162920218807788e-05,
+      "delta_T_K": 0.01,
+      "effective_conductance_W_per_K": 1.122647815651e-08,
+      "hot_diffusive_flux_W": null,
+      "bath_diffusive_flux_W": null,
+      "diffusive_flux_columns": {
+        "hot": null,
+        "bath": null
+      },
+      "tolerance_relative": 0.0001,
+      "status": "PASS",
+      "label": "base",
+      "solver": "Direct/UMFPACK",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+      "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+      "tes_temperature_volume_average_K": 0.15555577368350848
+    },
+    {
+      "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+      "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_coarse_boundary_reactions.dat",
+      "hot_reaction_W": 1.013706278231e-10,
+      "bath_reaction_W": -1.013647801029e-10,
+      "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+      "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+      "global_energy_balance_residual_W": 5.847720200008149e-15,
+      "global_energy_balance_relative_residual": 5.768653431063776e-05,
+      "delta_T_K": 0.01,
+      "effective_conductance_W_per_K": 1.013706278231e-08,
+      "hot_diffusive_flux_W": null,
+      "bath_diffusive_flux_W": null,
+      "diffusive_flux_columns": {
+        "hot": null,
+        "bath": null
+      },
+      "tolerance_relative": 0.0001,
+      "status": "PASS",
+      "label": "coarse",
+      "solver": "Direct/UMFPACK",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_coarse",
+      "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_coarse\\case_heat_flux_control_coarse.result",
+      "tes_temperature_volume_average_K": 0.1560832314465255
+    },
+    {
+      "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+      "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_medium_boundary_reactions.dat",
+      "hot_reaction_W": 9.91768154652e-11,
+      "bath_reaction_W": -9.917275426987e-11,
+      "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+      "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+      "global_energy_balance_residual_W": 4.06119532998885e-15,
+      "global_energy_balance_relative_residual": 4.0949039459871315e-05,
+      "delta_T_K": 0.01,
+      "effective_conductance_W_per_K": 9.91768154652e-09,
+      "hot_diffusive_flux_W": 5.900797509208e-09,
+      "bath_diffusive_flux_W": -2.004447443259e-07,
+      "diffusive_flux_columns": {
+        "hot": "diffusive flux: temperature over bc 2",
+        "bath": "diffusive flux: temperature over bc 1"
+      },
+      "tolerance_relative": 0.0001,
+      "status": "PASS",
+      "label": "medium_direct",
+      "solver": "Direct/UMFPACK",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium",
+      "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium\\case_heat_flux_control_medium.result",
+      "tes_temperature_volume_average_K": 0.15619090740509745
+    },
+    {
+      "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+      "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_medium_hypre_bicgstab_boundary_reactions.dat",
+      "hot_reaction_W": 9.917241882997e-11,
+      "bath_reaction_W": -9.917586747837e-11,
+      "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+      "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+      "global_energy_balance_residual_W": -3.4486483999988175e-15,
+      "global_energy_balance_relative_residual": 3.477306009701361e-05,
+      "delta_T_K": 0.01,
+      "effective_conductance_W_per_K": 9.917241882997e-09,
+      "hot_diffusive_flux_W": 5.900535919244e-09,
+      "bath_diffusive_flux_W": -2.004510375166e-07,
+      "diffusive_flux_columns": {
+        "hot": "diffusive flux: temperature over bc 2",
+        "bath": "diffusive flux: temperature over bc 1"
+      },
+      "tolerance_relative": 0.0001,
+      "status": "PASS",
+      "label": "medium_hypre_cpu",
+      "solver": "HYPRE CPU BiCGStab/BoomerAMG",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium",
+      "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium\\case_heat_flux_control_medium_hypre_bicgstab.result",
+      "tes_temperature_volume_average_K": 0.1561910762287788
+    },
+    {
+      "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+      "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_fine_hypre_boundary_reactions.dat",
+      "hot_reaction_W": 1.023276315176e-10,
+      "bath_reaction_W": -1.023285336086e-10,
+      "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+      "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+      "global_energy_balance_residual_W": -9.02090999991124e-16,
+      "global_energy_balance_relative_residual": 8.815634976668028e-06,
+      "delta_T_K": 0.01,
+      "effective_conductance_W_per_K": 1.023276315176e-08,
+      "hot_diffusive_flux_W": 6.090604182802e-09,
+      "bath_diffusive_flux_W": -2.071121071066e-07,
+      "diffusive_flux_columns": {
+        "hot": "diffusive flux: temperature over bc 2",
+        "bath": "diffusive flux: temperature over bc 1"
+      },
+      "tolerance_relative": 0.0001,
+      "status": "PASS",
+      "label": "fine_hypre_cpu",
+      "solver": "HYPRE CPU BiCGStab/BoomerAMG",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine",
+      "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine\\case_heat_flux_control_fine_hypre.result",
+      "tes_temperature_volume_average_K": 0.15607771411938165
+    }
+  ],
+  "medium_direct_vs_hypre_cpu": {
+    "conductance_relative_difference": 4.433128054559532e-05,
+    "tes_temperature_relative_difference": 1.0808803416750834e-06,
+    "tolerance_relative": 0.001,
+    "status": "PASS"
+  },
+  "status": "PASS"
+}

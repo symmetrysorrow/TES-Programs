@@ -1,0 +1,55 @@
+{
+  "gate": "MORTAR_CONFORMAL_GLOBAL_REACTION_PARITY",
+  "conformal": {
+    "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+    "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_mesh_physical_parity_conformal_boundary_reactions.dat",
+    "hot_reaction_W": 1.122647815651e-10,
+    "bath_reaction_W": -1.122635283623e-10,
+    "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+    "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+    "global_energy_balance_residual_W": 1.2532027999930945e-15,
+    "global_energy_balance_relative_residual": 1.1162920218807788e-05,
+    "delta_T_K": 0.01,
+    "effective_conductance_W_per_K": 1.122647815651e-08,
+    "hot_diffusive_flux_W": null,
+    "bath_diffusive_flux_W": null,
+    "diffusive_flux_columns": {
+      "hot": null,
+      "bath": null
+    },
+    "tolerance_relative": 0.0001,
+    "status": "PASS",
+    "label": "base",
+    "solver": "Direct/UMFPACK",
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+    "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+    "tes_temperature_volume_average_K": 0.15555577368350848
+  },
+  "mortar": {
+    "source": "Elmer HeatSolve Calculate Loads + SaveScalars boundary sum",
+    "save_scalars_file": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\case_heat_flux_control_mortar_boundary_reactions.dat",
+    "hot_reaction_W": 1.122633357932e-10,
+    "bath_reaction_W": -1.122646876284e-10,
+    "hot_column": "boundary sum: temperature loads over bc reaction_hot",
+    "bath_column": "boundary sum: temperature loads over bc reaction_bath",
+    "global_energy_balance_residual_W": -1.3518352000102106e-15,
+    "global_energy_balance_relative_residual": 1.2041499678730964e-05,
+    "delta_T_K": 0.01,
+    "effective_conductance_W_per_K": 1.122633357932e-08,
+    "hot_diffusive_flux_W": 6.67733179024e-09,
+    "bath_diffusive_flux_W": -2.273945037913e-07,
+    "diffusive_flux_columns": {
+      "hot": "diffusive flux: temperature over bc 2",
+      "bath": "diffusive flux: temperature over bc 1"
+    },
+    "tolerance_relative": 0.0001,
+    "status": "PASS",
+    "label": "mortar",
+    "solver": "Direct/UMFPACK + native Mortar BC",
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_mortar"
+  },
+  "conductance_relative_difference": 1.2878231978374899e-05,
+  "tolerance_relative": 0.001,
+  "status": "PASS",
+  "raw_interface_flux_status": "DIAGNOSTIC_ONLY"
+}

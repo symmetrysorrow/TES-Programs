@@ -32,6 +32,7 @@ from scripts.support.vendored.dimensioned_expression import (
     dimension_name_of,
     evaluate_dimensioned_expression,
 )
+from scripts.support.vendored.expression import evaluate_expression
 
 # Upstream unit tables use keV as the energy base unit.
 KEV_TO_JOULE = 1.602176634e-16
@@ -149,7 +150,11 @@ def matc_guarded_membrane_expr(model: dict) -> str:
     return guarded.replace("**", "^")
 
 
-def materials_block(model: dict) -> list[str]:
+def materials_block(
+    model: dict,
+    *,
+    fixed_membrane_conductivity_temperature: Any | None = None,
+) -> list[str]:
     materials = model["materials"]
     lines: list[str] = []
     order = [
@@ -172,13 +177,31 @@ def materials_block(model: dict) -> list[str]:
             "",
         ]
     membrane = materials["Membrane"]
+    membrane_k_expression = str(membrane["k"]["expression"])
+    if fixed_membrane_conductivity_temperature is None:
+        membrane_k_lines = [
+            "  Heat Conductivity = Variable Temperature",
+            f'    Real MATC "{matc_guarded_membrane_expr(model)}"',
+        ]
+    else:
+        reference_temperature = eval_si(
+            fixed_membrane_conductivity_temperature, model["parameters"]
+        )
+        values = {name: float(value) for name, value in model["parameters"].items()}
+        values["T"] = reference_temperature
+        fixed_membrane_k = float(
+            evaluate_expression(membrane_k_expression, variables=values)
+        )
+        membrane_k_lines = [
+            "  ! Linear-control override: k_membrane frozen at the reference temperature",
+            f"  Heat Conductivity = {fmt(fixed_membrane_k)}",
+        ]
     lines += [
         "Material 7",
         '  Name = "Membrane"',
         f"  Density = {fmt(membrane['rho']['nominal'])}",
         f"  Heat Capacity = {fmt(membrane['cp']['nominal'])}",
-        "  Heat Conductivity = Variable Temperature",
-        f'    Real MATC "{matc_guarded_membrane_expr(model)}"',
+        *membrane_k_lines,
         "End",
         "",
     ]
@@ -306,6 +329,7 @@ def solver1_block(
     tes_body_id: int | None = None,
     inner_circuit_step_commit: bool = False,
     calculate_loads: bool = False,
+    calculate_boundary_fluxes: bool = False,
     lumped_mass: bool = False,
     transient_restart: bool = False,
     apply_mortar_bcs: bool = True,
@@ -319,7 +343,9 @@ def solver1_block(
         "  Variable DOFs = 1",
     ]
     if calculate_loads:
-        lines.append("  Calculate Loads = True")
+        lines.append("  Calculate Loads = Logical True")
+    if calculate_boundary_fluxes:
+        lines.append("  Calculate Boundary Fluxes = Logical True")
     if comment:
         lines.append(f"! {comment}")
     if inner_circuit:
@@ -368,10 +394,10 @@ def solver1_block(
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = BiCGStab",
             "  Linear System Preconditioning = BoomerAMG",
-            "  Linear System Max Iterations = 1000",
-            "  Linear System Convergence Tolerance = 1.0e-10",
-            "  Linear System Abort Not Converged = True",
-            "  Linear System Residual Output = 20",
+            f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 1000)}",
+            f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
+            f"  Linear System Abort Not Converged = {'True' if solver.get('linear_system_abort_not_converged', True) else 'False'}",
+            f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 20)}",
             "  BoomerAMG Relax Type = 3",
             "  BoomerAMG Coarsen Type = 0",
             "  BoomerAMG Num Sweeps = 1",
@@ -611,6 +637,40 @@ def native_flux_solver_block(solver_index: int = 2) -> list[str]:
     ]
 
 
+def save_scalars_solver_block(
+    save_scalars: dict[str, Any], *, solver_index: int = 2
+) -> list[str]:
+    """Save solver-native scalar reactions for named boundary masks.
+
+    The heat solver computes the weak-form nodal ``Temperature Loads`` when
+    ``Calculate Loads`` is enabled.  SaveScalars' boundary-sum operator then
+    reduces those loads on each explicitly masked Dirichlet boundary.  This
+    avoids interpreting raw tetrahedron gradients as a boundary reaction.
+    """
+    entries = list(save_scalars.get("entries", []))
+    if not entries:
+        raise ValueError("save_scalars.entries must not be empty")
+    lines = [
+        f"Solver {solver_index}",
+        "  Exec Solver = After Simulation",
+        "  Equation = SaveScalars",
+        '  Procedure = "SaveData" "SaveScalars"',
+        f'  Filename = "{save_scalars.get("filename", "boundary_reactions.dat")}"',
+    ]
+    for index, entry in enumerate(entries, start=1):
+        variable = entry.get("variable", "Temperature Loads")
+        operator = entry.get("operator", "boundary sum")
+        if operator == "boundary sum" and variable != "Temperature Loads":
+            raise ValueError("boundary-sum reaction entries must use Temperature Loads")
+        lines += [
+            f"  Variable {index} = {variable}",
+            f"  Operator {index} = {operator}",
+            f"  Mask Name {index} = {entry['mask']}",
+        ]
+    lines.append("End")
+    return lines
+
+
 # Body Force name for a dual-TES side's circuit instance (TESTransientHeatSourceL/R
 # in tes_transient_heat_source.f90). Natural per-side extension of the
 # single-instance HEAT_SOURCES["circuit_implicit"] label.
@@ -790,6 +850,7 @@ def bodies_and_bcs(
     reverse_stycast_abs: bool = False,
     apply_mortar_bcs: bool = True,
     fixed_temperature_boundaries: list[dict[str, Any]] | None = None,
+    boundary_masks: dict[str, str] | None = None,
 ) -> list[str]:
     bodies = resolve_bodies(mesh_names)
     # TES-role bodies get Body Force 1..N (ascending target id, i.e. one per
@@ -816,15 +877,18 @@ def bodies_and_bcs(
             lines.append(f"  Body Force = {pulse_body_force}")
         lines += ["  Initial Condition = 1", "End", ""]
 
-    bc_blocks: list[list[str]] = [
-        [
-            "Boundary Condition 1",
-            _target_boundaries_line(resolve_bath_boundaries(mesh_names)),
-            '  Name = "bath on SiO2_2__zmin"',
-            "  Temperature = __T_BATH__",
-            "End",
-        ]
+    masks = boundary_masks or {}
+    bath_block = [
+        "Boundary Condition 1",
+        _target_boundaries_line(resolve_bath_boundaries(mesh_names)),
+        '  Name = "bath on SiO2_2__zmin"',
+        "  Temperature = __T_BATH__",
+        "End",
     ]
+    bath_mask = masks.get("bath")
+    if bath_mask:
+        bath_block.insert(-1, f"  {bath_mask} = Logical True")
+    bc_blocks: list[list[str]] = [bath_block]
     bc_number = 2
     for fixed in fixed_temperature_boundaries or []:
         boundary_name = str(fixed["boundary"])
@@ -844,6 +908,9 @@ def bodies_and_bcs(
                 "End",
             ]
         )
+        fixed_mask = fixed.get("mask") or masks.get(boundary_name)
+        if fixed_mask:
+            bc_blocks[-1].insert(-1, f"  {fixed_mask} = Logical True")
         bc_number += 1
     master_bc_of: dict[int, int] = {}
     mortar_pairs = resolve_mortar_pairs(
@@ -1146,6 +1213,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 solver_index=heat_index,
                 equation_name=f"Heat Equation Coupling {coupling_iter + 1}",
                 calculate_loads=bool(spec.get("calculate_loads")),
+                calculate_boundary_fluxes=bool(spec.get("calculate_boundary_fluxes")),
                 lumped_mass=bool(spec.get("lumped_mass")),
                 transient_restart=bool(spec.get("transient_restart")),
                 apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
@@ -1161,6 +1229,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             tes_body_id=tes_body_id,
             inner_circuit_step_commit=bool(spec.get("inner_circuit_step_commit")),
             calculate_loads=bool(spec.get("calculate_loads")),
+            calculate_boundary_fluxes=bool(spec.get("calculate_boundary_fluxes")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
@@ -1171,6 +1240,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         lines += solver1_block(
             spec["solver"],
             calculate_loads=bool(spec.get("calculate_loads")),
+            calculate_boundary_fluxes=bool(spec.get("calculate_boundary_fluxes")),
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
@@ -1178,30 +1248,54 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         )
         lines.append("")
 
+    next_solver_index = 2
+    auxiliary_solver_indices: list[int] = []
     if native_flux:
-        lines += native_flux_solver_block(solver_index=2)
+        lines += native_flux_solver_block(solver_index=next_solver_index)
         lines.append("")
+        auxiliary_solver_indices.append(next_solver_index)
+        next_solver_index += 1
+    save_scalars = spec.get("save_scalars")
+    if save_scalars:
+        lines += save_scalars_solver_block(
+            save_scalars, solver_index=next_solver_index
+        )
+        lines.append("")
+        auxiliary_solver_indices.append(next_solver_index)
+        next_solver_index += 1
     vtu_default = "after_simulation" if template == "steady" else "after_timestep"
     vtu_spec = spec.get("vtu", vtu_default)
     if vtu_spec:
-        lines += vtu_solver_block(case_name, vtu_spec, solver_index=3 if native_flux else 2)
+        lines += vtu_solver_block(case_name, vtu_spec, solver_index=next_solver_index)
         lines.append("")
+        auxiliary_solver_indices.append(next_solver_index)
+        next_solver_index += 1
     if heat_source == "circuit_implicit":
-        # Solver 1 = Heat Equation always (the `else` branch below); Solver 2
-        # = Result Output if vtu_spec, else this is 2.
-        finalize_index = 3 if vtu_spec else 2
+        finalize_index = next_solver_index
         lines += tes_circuit_finalize_block(solver_index=finalize_index)
         lines.append("")
+        auxiliary_solver_indices.append(finalize_index)
+        next_solver_index += 1
     if heat_source == "circuit_parallel":
         active = " ".join(str(i) for i in range(1, 2 * parallel_circuit_iterations + 1))
         lines += ["Equation 1", '  Name = "Heat"', f"  Active Solvers({2 * parallel_circuit_iterations}) = {active}", "End", ""]
     else:
-        if native_flux:
-            lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(2) = 1 2", "End", ""]
-        else:
-            lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
+        active_solvers = [1, *auxiliary_solver_indices]
+        active_text = " ".join(str(index) for index in active_solvers)
+        lines += [
+            "Equation 1",
+            '  Name = "Heat"',
+            f"  Active Solvers({len(active_solvers)}) = {active_text}",
+            "End",
+            "",
+        ]
 
-    lines += materials_block(model)
+    lines += materials_block(
+        model,
+        fixed_membrane_conductivity_temperature=spec.get(
+            "fixed_membrane_conductivity_temperature"
+        ),
+    )
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)
     body_lines = bodies_and_bcs(
         mesh_names,
@@ -1210,6 +1304,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         reverse_stycast_abs=bool(spec.get("reverse_stycast_abs_mortar", False)),
         apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
         fixed_temperature_boundaries=spec.get("fixed_temperature_boundaries"),
+        boundary_masks=spec.get("boundary_masks"),
     )
     body_lines = [
         line.replace("__T_BATH__", fmt(params["T_bath"])) for line in body_lines

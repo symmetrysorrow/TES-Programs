@@ -40,6 +40,8 @@ Solver 1
   Procedure = "HeatSolve" "HeatSolver"
   Variable = Temperature
   Variable DOFs = 1
+  Calculate Loads = Logical True
+  Calculate Boundary Fluxes = Logical True
   Nonlinear System Max Iterations = 1
   Nonlinear System Convergence Tolerance = 1e-10
   Nonlinear System Relaxation Factor = 1.0
@@ -49,9 +51,28 @@ Solver 1
   Steady State Convergence Tolerance = 1e-10
 End
 
+Solver 2
+  Exec Solver = After Simulation
+  Equation = SaveScalars
+  Procedure = "SaveData" "SaveScalars"
+  Filename = "case_heat_flux_control_medium_boundary_reactions.dat"
+  Variable 1 = Temperature Loads
+  Operator 1 = boundary sum
+  Mask Name 1 = reaction_hot
+  Variable 2 = Temperature Loads
+  Operator 2 = boundary sum
+  Mask Name 2 = reaction_bath
+  Variable 3 = Temperature
+  Operator 3 = diffusive flux
+  Mask Name 3 = reaction_hot
+  Variable 4 = Temperature
+  Operator 4 = diffusive flux
+  Mask Name 4 = reaction_bath
+End
+
 Equation 1
   Name = "Heat"
-  Active Solvers(1) = 1
+  Active Solvers(2) = 1 2
 End
 
 Material 1
@@ -100,8 +121,8 @@ Material 7
   Name = "Membrane"
   Density = 2387
   Heat Capacity = 9.819999999999999e-06
-  Heat Conductivity = Variable Temperature
-    Real MATC "(7.854e-06)*(0.5*((tx+1.0e-12)+abs(tx-1.0e-12)))^(4.252-1)*0.4*((0.0007)-(0.0005))/(8*((1e-06)+(1.5e-05)+(1e-06))*(0.0005))"
+  ! Linear-control override: k_membrane frozen at the reference temperature
+  Heat Conductivity = 1.93339568802869e-05
 End
 
 Body 1
@@ -188,10 +209,12 @@ Boundary Condition 1
   Target Boundaries(1) = 1804
   Name = "bath on SiO2_2__zmin"
   Temperature = 0.15
+  reaction_bath = Logical True
 End
 
 Boundary Condition 2
   Target Boundaries(1) = 1005
   Name = "controlled hot boundary"
   Temperature = 0.16
+  reaction_hot = Logical True
 End

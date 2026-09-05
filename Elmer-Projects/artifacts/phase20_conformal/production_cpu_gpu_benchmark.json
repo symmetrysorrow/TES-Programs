@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+  "node_count": 90872,
+  "tetrahedron_count": 459683,
+  "topology_gate": "PASS",
+  "cpu": {
+    "solve_times_s": [
+      3.57841,
+      0.127311,
+      0.0444481,
+      0.00421405
+    ],
+    "linear_solve_total_s": 3.75438315,
+    "wall_seconds": 19.52,
+    "all_done": true,
+    "gpu_device_migration": false
+  },
+  "gpu": {
+    "solve_times_s": [
+      2.54291,
+      0.045526,
+      0.025785,
+      0.00199413
+    ],
+    "linear_solve_total_s": 2.61621513,
+    "wall_seconds": 18.43,
+    "all_done": true,
+    "gpu_device_migration": true
+  },
+  "gpu_wall_speedup": 1.059142702116115,
+  "benchmark_definition": "identical production-size conformal shared-node steady HYPRE control; circuit_parallel one coupling iteration"
+}
