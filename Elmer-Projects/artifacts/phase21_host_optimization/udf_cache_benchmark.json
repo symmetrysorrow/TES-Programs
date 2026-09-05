@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "comparison": [
+    {
+      "backend": "cpu",
+      "baseline_case": "case_phase20_perf_transient_cpu_50step",
+      "optimized_case": "case_phase21_host_transient_cpu_50step",
+      "baseline_wall_s": 205.496273,
+      "optimized_wall_s": 210.370956,
+      "wall_speedup": 0.9768281558790843,
+      "baseline_circuit_cpu_s": 0,
+      "optimized_circuit_cpu_s": 0.305326
+    }
+  ],
+  "physics_gate": "must compare TES T/current/resistance/power and absorber temperature before accepting speedup",
+  "baseline_provenance": "Phase20 50-step logs were captured before the cache revision"
+}

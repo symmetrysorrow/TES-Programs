@@ -1217,7 +1217,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 # older external solver retains its historical convention.
                 '  "TES Body ID" = Integer 2',
                 f'  "TES Circuit Relaxation" = Real {fmt_real(circuit_relaxation)}',
-                f'  "TES Write Series" = Logical {"True" if coupling_iter == parallel_circuit_iterations - 1 else "False"}',
+                f'  "TES Write Series" = Logical {"True" if spec.get("write_series", True) and coupling_iter == parallel_circuit_iterations - 1 else "False"}',
+                f'  "TES Write Iteration Series" = Logical {"True" if spec.get("write_iteration_series", spec.get("write_series", True)) and coupling_iter == parallel_circuit_iterations - 1 else "False"}',
                 "  Exec Solver = Always",
                 "End",
                 "",
@@ -1262,7 +1263,15 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         )
         lines.append("")
 
-    next_solver_index = 2
+    # circuit_parallel consumes two solver slots per coupling iteration
+    # (circuit pre-solver + HeatSolve).  Auxiliary output/flux solvers must
+    # start after those slots; using 2 here would silently replace HeatSolve
+    # when VTU output is enabled and produce an invalidly fast benchmark.
+    next_solver_index = (
+        2 * parallel_circuit_iterations + 1
+        if heat_source == "circuit_parallel"
+        else 2
+    )
     auxiliary_solver_indices: list[int] = []
     if native_flux:
         lines += native_flux_solver_block(solver_index=next_solver_index)

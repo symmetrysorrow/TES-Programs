@@ -1,0 +1,24 @@
+{
+  "status": "RECORDED",
+  "probes": {
+    "case_phase21_host_transient_gpu_7step": {
+      "all_done": false,
+      "wall_seconds": 6.744431,
+      "failure_lines": [
+        "CUDA ERROR (code = 100, no CUDA-capable device is detected) at /mnt/d/Github/TES-Programs/tools/hypre-cuda-src/src/utilities/general.c:228",
+        "CUDA ERROR (code = 100, no CUDA-capable device is detected) at /mnt/d/Github/TES-Programs/tools/hypre-cuda-src/src/utilities/general.c:102",
+        "CUDA ERROR (code = 100, no CUDA-capable device is detected) at /mnt/d/Github/TES-Programs/tools/hypre-cuda-src/src/utilities/general.c:166",
+        "CUDA ERROR (code = 100, no CUDA-capable device is detected) at /mnt/d/Github/TES-Programs/tools/hypre-cuda-src/src/utilities/general.c:171",
+        "CUDA ERROR (code = 100, no CUDA-capable device is detected) at /mnt/d/Github/TES-Programs/tools/hypre-cuda-src/src/utilities/device_utils.c:453"
+      ]
+    },
+    "case_phase21_conformal_cpu_steady": {
+      "all_done": false,
+      "wall_seconds": 18.264036,
+      "failure_lines": [
+        "SolveHypre: FlexGMRES failed to converge (5000 iterations, relative residual 1.87946e-08; tolerance 1e-08)"
+      ]
+    }
+  },
+  "policy": "failed GPU/device or convergence probes remain blockers; they are not replaced by relaxed tolerances or synthetic timings"
+}

@@ -26,6 +26,22 @@ MODULE TESCircuitModule
     REAL(KIND=dp) :: Omega = 0.5_dp
     REAL(KIND=dp) :: OmegaCap = 0.5_dp
     REAL(KIND=dp) :: LastDt = -1.0_dp
+    LOGICAL :: ParametersInitialized = .FALSE.
+    LOGICAL :: HasSeriesFile = .FALSE.
+    LOGICAL :: HasStateFile = .FALSE.
+    LOGICAL :: SteadyMode = .FALSE.
+    REAL(KIND=dp) :: BiasCurrent = 0.0_dp
+    REAL(KIND=dp) :: ShuntResistance = 0.0_dp
+    REAL(KIND=dp) :: Inductance = 0.0_dp
+    REAL(KIND=dp) :: R0 = 0.0_dp
+    REAL(KIND=dp) :: RMin = 0.0_dp
+    REAL(KIND=dp) :: Alpha = 0.0_dp
+    REAL(KIND=dp) :: Beta = 0.0_dp
+    REAL(KIND=dp) :: I0 = 0.0_dp
+    REAL(KIND=dp) :: T0 = 0.0_dp
+    REAL(KIND=dp) :: Volume = 0.0_dp
+    CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile = ''
+    CHARACTER(LEN=MAX_NAME_LEN) :: StateFile = ''
   END TYPE CircuitState
 
   TYPE(CircuitState), SAVE :: States(3)
@@ -100,34 +116,55 @@ CONTAINS
 
     TimeStep = GetTimeStep()
     NonlinIter = GetNonlinIter()
-    SteadyMode = .FALSE.
-    SimulationType = ListGetString(Model % Simulation, 'Simulation Type', Found)
-    IF (Found) SteadyMode = (SimulationType(1:6) == 'steady')
+    IF (.NOT. St % ParametersInitialized) THEN
+      SteadyMode = .FALSE.
+      SimulationType = ListGetString(Model % Simulation, 'Simulation Type', Found)
+      IF (Found) SteadyMode = (SimulationType(1:6) == 'steady')
 
-    ! All constants are required: silent fallback defaults are a bug source
-    ! (redesign plan, Phase 1). Generated case SIFs always provide them.
-    I_BIAS = GetConstReal(Model % Constants, KeyPrefix // 'Bias Current', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Bias Current is required')
-    R_SH = GetConstReal(Model % Constants, KeyPrefix // 'Shunt Resistance', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Shunt Resistance is required')
-    L_TES = GetConstReal(Model % Constants, KeyPrefix // 'Inductance', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Inductance is required')
-    R0 = GetConstReal(Model % Constants, KeyPrefix // 'R0', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'R0 is required')
-    R_MIN = GetConstReal(Model % Constants, KeyPrefix // 'Rmin', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Rmin is required')
-    ALPHA = GetConstReal(Model % Constants, KeyPrefix // 'Alpha', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Alpha is required')
-    BETA = GetConstReal(Model % Constants, KeyPrefix // 'Beta', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Beta is required')
-    I0 = GetConstReal(Model % Constants, KeyPrefix // 'I0', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'I0 is required')
-    T0 = GetConstReal(Model % Constants, KeyPrefix // 'T0', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'T0 is required')
-    TES_VOLUME = GetConstReal(Model % Constants, KeyPrefix // 'Volume', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Volume is required')
-    SeriesFile = ListGetString(Model % Constants, KeyPrefix // 'Series File', Found)
-    IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Series File is required')
+      ! All constants are required: silent fallback defaults are a bug source
+      ! (redesign plan, Phase 1). Generated case SIFs always provide them.
+      St % BiasCurrent = GetConstReal(Model % Constants, KeyPrefix // 'Bias Current', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Bias Current is required')
+      St % ShuntResistance = GetConstReal(Model % Constants, KeyPrefix // 'Shunt Resistance', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Shunt Resistance is required')
+      St % Inductance = GetConstReal(Model % Constants, KeyPrefix // 'Inductance', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Inductance is required')
+      St % R0 = GetConstReal(Model % Constants, KeyPrefix // 'R0', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'R0 is required')
+      St % RMin = GetConstReal(Model % Constants, KeyPrefix // 'Rmin', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Rmin is required')
+      St % Alpha = GetConstReal(Model % Constants, KeyPrefix // 'Alpha', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Alpha is required')
+      St % Beta = GetConstReal(Model % Constants, KeyPrefix // 'Beta', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Beta is required')
+      St % I0 = GetConstReal(Model % Constants, KeyPrefix // 'I0', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'I0 is required')
+      St % T0 = GetConstReal(Model % Constants, KeyPrefix // 'T0', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'T0 is required')
+      St % Volume = GetConstReal(Model % Constants, KeyPrefix // 'Volume', Found)
+      IF (.NOT. Found) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Volume is required')
+      St % SeriesFile = ListGetString(Model % Constants, KeyPrefix // 'Series File', St % HasSeriesFile)
+      IF (.NOT. St % HasSeriesFile) CALL Fatal(Tag, 'Constants: ' // KeyPrefix // 'Series File is required')
+      St % StateFile = ListGetString(Model % Constants, KeyPrefix // 'State File', St % HasStateFile)
+      St % SteadyMode = SteadyMode
+      St % ParametersInitialized = .TRUE.
+      CALL Info(Tag, 'cached TES circuit constants and integration metadata', Level=4)
+    END IF
+
+    I_BIAS = St % BiasCurrent
+    R_SH = St % ShuntResistance
+    L_TES = St % Inductance
+    R0 = St % R0
+    R_MIN = St % RMin
+    ALPHA = St % Alpha
+    BETA = St % Beta
+    I0 = St % I0
+    T0 = St % T0
+    TES_VOLUME = St % Volume
+    SeriesFile = St % SeriesFile
+    FoundState = St % HasStateFile
+    StateFile = St % StateFile
+    SteadyMode = St % SteadyMode
 
     ! Optional: persisted circuit state (dual-TES cases only; see
     ! docs/dual_tes_plan.md). Absent for every single-pixel case, which keeps
@@ -514,69 +551,97 @@ FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSour
   REAL(KIND=dp) :: Y0
   REAL(KIND=dp) :: Z0
   REAL(KIND=dp) :: DISCRETE_NORM
+  INTEGER :: TimeStep
+  REAL(KIND=dp), SAVE :: CachedEnergy = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedStartTime = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedDuration = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedTransitionZone = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedSigmaSquared = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedPulseRadiusSquared = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedCenterX = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedCenterY = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedCenterZ = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedDiscreteNorm = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedTemporalScale = 0.0_dp
+  INTEGER, SAVE :: CachedPulseShape = -1
+  INTEGER, SAVE :: CachedPulseTimeStep = -1
+  LOGICAL, SAVE :: PulseParametersInitialized = .FALSE.
   INTEGER :: PULSE_SHAPE
   LOGICAL :: Found
 
   HeatSource = 0.0_dp
 
+  IF (.NOT. PulseParametersInitialized) THEN
+    ! Constants, pulse geometry, and the discrete FE normalization are
+    ! immutable for a run.  This callback is entered once per absorber
+    ! element/node assembly evaluation, so repeatedly looking them up was a
+    ! measurable host-side cost rather than useful physics.
+    CachedEnergy = GetConstReal(Model % Constants, 'Pulse Energy', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Energy is required')
+    CachedStartTime = GetConstReal(Model % Constants, 'Pulse Start Time', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Start Time is required')
+    CachedDuration = GetConstReal(Model % Constants, 'Pulse Duration', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Duration is required')
+    CachedTransitionZone = GetConstReal(Model % Constants, 'Pulse Transition Zone', Found)
+    IF (.NOT. Found) CachedTransitionZone = 0.0_dp
+    IF (CachedTransitionZone < 0.0_dp) THEN
+      CALL Fatal('AbsorberWindowPulseHeatSource', 'Pulse Transition Zone must be non-negative')
+    END IF
+    SIGMA = GetConstReal(Model % Constants, 'Pulse Sigma', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Sigma is required')
+    CachedSigmaSquared = SIGMA * SIGMA
+    CachedPulseShape = NINT(GetConstReal(Model % Constants, 'Pulse Shape', Found))
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Shape is required')
+    PULSE_RADIUS = GetConstReal(Model % Constants, 'Pulse Radius', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Radius is required')
+    CachedPulseRadiusSquared = PULSE_RADIUS * PULSE_RADIUS
+    CachedCenterX = GetConstReal(Model % Constants, 'Pulse Center X', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center X is required')
+    CachedCenterY = GetConstReal(Model % Constants, 'Pulse Center Y', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center Y is required')
+    CachedCenterZ = GetConstReal(Model % Constants, 'Pulse Center Z', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center Z is required')
+    ! FE integral of the nodal-sampled Gaussian over the absorber mesh.
+    CachedDiscreteNorm = GetConstReal(Model % Constants, 'Pulse Discrete Norm', Found)
+    IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Discrete Norm is required')
+    PulseParametersInitialized = .TRUE.
+    CALL Info('AbsorberWindowPulseHeatSource', 'cached pulse constants and spatial normalization', Level=4)
+  END IF
+
   Dt = GetTimeStepSize()
   IF (Dt <= 0.0_dp) RETURN
-
-  ! All constants are required; the case builder provides them (center and
-  ! discrete norm are computed from the mesh at build time).
-  ENERGY = GetConstReal(Model % Constants, 'Pulse Energy', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Energy is required')
-  START_TIME = GetConstReal(Model % Constants, 'Pulse Start Time', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Start Time is required')
-  DURATION = GetConstReal(Model % Constants, 'Pulse Duration', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Duration is required')
-  TRANSITION_ZONE = GetConstReal(Model % Constants, 'Pulse Transition Zone', Found)
-  IF (.NOT. Found) TRANSITION_ZONE = 0.0_dp
-  IF (TRANSITION_ZONE < 0.0_dp) THEN
-    CALL Fatal('AbsorberWindowPulseHeatSource', 'Pulse Transition Zone must be non-negative')
+  TimeStep = GetTimeStep()
+  IF (TimeStep /= CachedPulseTimeStep) THEN
+    ! Temporal rectangular pulse.  The exact interval integral is evaluated
+    ! once per timestep; all later callback entries reuse this scale.
+    TimeNow = GetTime()
+    TimePrev = TimeNow - Dt
+    IF (CachedTransitionZone > 0.0_dp) THEN
+      TimeIntegral = SmoothStepIntegral(TimeNow - CachedStartTime, 0.5_dp*CachedTransitionZone) - &
+                     SmoothStepIntegral(TimePrev - CachedStartTime, 0.5_dp*CachedTransitionZone) - &
+                     SmoothStepIntegral(TimeNow - CachedStartTime - CachedDuration, 0.5_dp*CachedTransitionZone) + &
+                     SmoothStepIntegral(TimePrev - CachedStartTime - CachedDuration, 0.5_dp*CachedTransitionZone)
+    ELSE
+      TimeIntegral = MIN(TimeNow, CachedStartTime + CachedDuration) - MAX(TimePrev, CachedStartTime)
+    END IF
+    IF (TimeIntegral > 0.0_dp) THEN
+      CachedTemporalScale = CachedEnergy * (TimeIntegral/CachedDuration) / &
+        (CachedDiscreteNorm * Dt)
+    ELSE
+      CachedTemporalScale = 0.0_dp
+    END IF
+    CachedPulseTimeStep = TimeStep
   END IF
-  SIGMA = GetConstReal(Model % Constants, 'Pulse Sigma', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Sigma is required')
-  PULSE_SHAPE = NINT(GetConstReal(Model % Constants, 'Pulse Shape', Found))
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Shape is required')
-  PULSE_RADIUS = GetConstReal(Model % Constants, 'Pulse Radius', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Radius is required')
-  X0 = GetConstReal(Model % Constants, 'Pulse Center X', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center X is required')
-  Y0 = GetConstReal(Model % Constants, 'Pulse Center Y', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center Y is required')
-  Z0 = GetConstReal(Model % Constants, 'Pulse Center Z', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Center Z is required')
-  ! FE integral of the nodal-sampled Gaussian over the absorber mesh;
-  ! normalizing with it deposits exactly ENERGY regardless of how coarsely
-  ! the mesh resolves the spatial profile.
-  DISCRETE_NORM = GetConstReal(Model % Constants, 'Pulse Discrete Norm', Found)
-  IF (.NOT. Found) CALL Fatal('AbsorberWindowPulseHeatSource', 'Constants: Pulse Discrete Norm is required')
+  IF (CachedTemporalScale <= 0.0_dp) RETURN
 
-  ! Temporal rectangular pulse.  With a positive transition zone this uses
-  ! COMSOL's flc2hs C2 step (a fifth-degree polynomial), centered at each
-  ! rectangle edge.  The exact interval integral is used so that ENERGY is
-  ! preserved for any timestep staging, including steps that cross an edge.
-  TimeNow = GetTime()
-  TimePrev = TimeNow - Dt
-  IF (TRANSITION_ZONE > 0.0_dp) THEN
-    TimeIntegral = SmoothStepIntegral(TimeNow - START_TIME, 0.5_dp*TRANSITION_ZONE) - &
-                   SmoothStepIntegral(TimePrev - START_TIME, 0.5_dp*TRANSITION_ZONE) - &
-                   SmoothStepIntegral(TimeNow - START_TIME - DURATION, 0.5_dp*TRANSITION_ZONE) + &
-                   SmoothStepIntegral(TimePrev - START_TIME - DURATION, 0.5_dp*TRANSITION_ZONE)
-  ELSE
-    TimeIntegral = MIN(TimeNow, START_TIME + DURATION) - MAX(TimePrev, START_TIME)
-  END IF
-  IF (TimeIntegral <= 0.0_dp) RETURN
-
-  RadiusSquared = (Model % Nodes % x(Node)-X0)**2 + &
-                  (Model % Nodes % y(Node)-Y0)**2 + &
-                  (Model % Nodes % z(Node)-Z0)**2
-  SELECT CASE (PULSE_SHAPE)
+  RadiusSquared = (Model % Nodes % x(Node)-CachedCenterX)**2 + &
+                  (Model % Nodes % y(Node)-CachedCenterY)**2 + &
+                  (Model % Nodes % z(Node)-CachedCenterZ)**2
+  SELECT CASE (CachedPulseShape)
   CASE (0)
-    HeatSource = EXP(-RadiusSquared/(2.0_dp*SIGMA**2))
+    HeatSource = EXP(-RadiusSquared/(2.0_dp*CachedSigmaSquared))
   CASE (1)
-    IF (RadiusSquared <= PULSE_RADIUS**2) THEN
+    IF (RadiusSquared <= CachedPulseRadiusSquared) THEN
       HeatSource = 1.0_dp
     ELSE
       HeatSource = 0.0_dp
@@ -584,7 +649,7 @@ FUNCTION AbsorberWindowPulseHeatSource(Model, Node, Temperature) RESULT(HeatSour
   CASE DEFAULT
     CALL Fatal('AbsorberWindowPulseHeatSource', 'Pulse Shape must be 0 (Gaussian) or 1 (uniform sphere)')
   END SELECT
-  HeatSource = ENERGY * (TimeIntegral/DURATION) * HeatSource / (DISCRETE_NORM * Dt)
+  HeatSource = CachedTemporalScale * HeatSource
 
 CONTAINS
 

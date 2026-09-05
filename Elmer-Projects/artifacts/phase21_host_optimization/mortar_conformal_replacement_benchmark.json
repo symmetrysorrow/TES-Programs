@@ -1,0 +1,27 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "definition": {
+    "window": [
+      "steady",
+      "one-step",
+      "7-step"
+    ],
+    "same_geometry": "physical-parity single-pixel geometry",
+    "same_time_grid": "shared pulse grid from the physical-parity project",
+    "mortar": "validated CPU Mortar control",
+    "conformal_cpu": "conformal shared-node CPU HYPRE",
+    "conformal_gpu": "conformal shared-node GPU HYPRE"
+  },
+  "speedup_formulas": {
+    "S_conformalCPU": "t_MortarCPU / t_conformalCPU",
+    "S_GPU": "t_conformalCPU / t_conformalGPU",
+    "S_total": "t_MortarCPU / t_conformalGPU"
+  },
+  "runs": [],
+  "historical_non_strict_reference": {
+    "status": "NOT_STRICTLY_COMPARABLE",
+    "historical_cpu_mortar_solver_real_s": 35.55,
+    "reason": "The retained Mortar reference uses a different mesh/runtime and is not an apples-to-apples production transient. A common-mesh Mortar transient is required before claiming replacement speedup."
+  },
+  "reason": "Phase21 common-window Mortar and conformal cases are prepared but require execution on the paired physical-parity meshes."
+}

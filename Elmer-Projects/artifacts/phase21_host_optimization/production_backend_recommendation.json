@@ -1,0 +1,16 @@
+{
+  "status": "PROVISIONAL",
+  "classification": "CPU_CONFORMAL_BEST",
+  "backend_policy": {
+    "small_medium": "conformal CPU HYPRE unless a measured case-specific result overrides this",
+    "large_fine": "conformal GPU HYPRE only when the transient wall benchmark is >1.0x",
+    "50_step_priority": true
+  },
+  "phase21_50step_choice": {
+    "backend": "cpu",
+    "reason": "CPU 50-step measured; GPU optimized rerun is unavailable because WSL has no CUDA-capable device"
+  },
+  "previous_phase20_classification": "GPU_SOLVER_EFFECTIVE_BUT_HOST_BOUND",
+  "strict_mortar_replacement_gate": "pending",
+  "note": "Production transient GPU acceleration is not claimed until the optimized 50-step and common Mortar window both pass."
+}

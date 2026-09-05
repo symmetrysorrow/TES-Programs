@@ -199,6 +199,14 @@ def runtime_environment(
     env = os.environ.copy()
     env["ELMER_HOME"] = str(prefix)
     env["PATH"] = os.pathsep.join([*parts, env.get("PATH", "")])
+    # Linux/WSL solver builds may keep HYPRE/CUDA or a matching Elmer UDF
+    # runtime outside the solver prefix.  PATH is sufficient for executables
+    # but not for the dynamic loader; make the explicit runtime-bin option
+    # reproducible instead of relying on a shell-local LD_LIBRARY_PATH.
+    if runtime_bin:
+        env["LD_LIBRARY_PATH"] = os.pathsep.join(
+            [str(Path(runtime_bin).resolve()), env.get("LD_LIBRARY_PATH", "")]
+        )
     return env, solver, prefix
 
 

@@ -1,0 +1,1799 @@
+{
+  "status": "PASS",
+  "schema_version": "phase21.1",
+  "clock_policy": {
+    "wall": "WALL_SECONDS / MAIN Elapsed time",
+    "native_solver": "HYPRE setup and solution timers",
+    "udf": "Fortran CPU_TIME markers",
+    "assembly": "HeatSolve reported CPU counter; never added to wall categories"
+  },
+  "runs": [
+    {
+      "case": "case_phase20_perf_transient_cpu_50step",
+      "backend": "cpu",
+      "phase": "phase20_baseline",
+      "steps": 50,
+      "wall_seconds": 205.496273,
+      "categories": {
+        "element_matrix_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "HeatSolve assembly CPU counter is reported separately"
+        },
+        "mass_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "conductivity_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "rhs_source_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "tes_circuit_evaluation": {
+          "seconds": 0,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "tes_temperature_integration": {
+          "seconds": 0,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "absorber_pulse_integration": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "cache_marker_only",
+          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
+        },
+        "hypre_ij_fill_update": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup"
+        },
+        "host_device_transfer": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup_for_gpu"
+        },
+        "boomeramg_setup": {
+          "seconds": 19.098444999999998,
+          "percentage": 9.293815756940758,
+          "clock": "native_wall_timer"
+        },
+        "krylov_solve": {
+          "seconds": 1.70633474,
+          "percentage": 0.8303482662189208,
+          "clock": "native_wall_timer"
+        },
+        "result_series_output": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+        },
+        "miscellaneous_host_residual": {
+          "seconds": 184.69149326000002,
+          "percentage": 89.87583597684032,
+          "clock": "wall_residual",
+          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+        }
+      },
+      "step_wall_seconds": [
+        9.4,
+        3.0,
+        3.0,
+        5.4,
+        5.399999999999999,
+        5.300000000000001,
+        5.5,
+        2.8999999999999986,
+        3.200000000000003,
+        5.299999999999997,
+        5.399999999999999,
+        5.600000000000001
+      ],
+      "step_rows": [
+        {
+          "time_step": 1,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.573401,
+          "hypre_solve_s": 0.007741930000000001,
+          "assembly_reported_cpu_s": 15.11,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 2,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 9.4,
+          "wall_seconds_marker_delta": 9.4,
+          "hypre_setup_s": 0.272971,
+          "hypre_solve_s": 0.003721,
+          "assembly_reported_cpu_s": 6.81,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 3,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 12.4,
+          "wall_seconds_marker_delta": 3.0,
+          "hypre_setup_s": 0.268682,
+          "hypre_solve_s": 0.003093,
+          "assembly_reported_cpu_s": 6.67,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 4,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 15.4,
+          "wall_seconds_marker_delta": 3.0,
+          "hypre_setup_s": 0.546429,
+          "hypre_solve_s": 0.0266941,
+          "assembly_reported_cpu_s": 13.09,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 5,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 20.8,
+          "wall_seconds_marker_delta": 5.4,
+          "hypre_setup_s": 0.563601,
+          "hypre_solve_s": 0.04014396,
+          "assembly_reported_cpu_s": 13.06,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 6,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 26.2,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.5261750000000001,
+          "hypre_solve_s": 0.03800985,
+          "assembly_reported_cpu_s": 13.06,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 7,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 31.5,
+          "wall_seconds_marker_delta": 5.300000000000001,
+          "hypre_setup_s": 0.535676,
+          "hypre_solve_s": 0.03696232,
+          "assembly_reported_cpu_s": 13.33,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 8,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 37.0,
+          "wall_seconds_marker_delta": 5.5,
+          "hypre_setup_s": 0.264701,
+          "hypre_solve_s": 0.0346229,
+          "assembly_reported_cpu_s": 6.66,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 9,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 39.9,
+          "wall_seconds_marker_delta": 2.8999999999999986,
+          "hypre_setup_s": 0.261037,
+          "hypre_solve_s": 0.0356948,
+          "assembly_reported_cpu_s": 7.12,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 10,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 43.1,
+          "wall_seconds_marker_delta": 3.200000000000003,
+          "hypre_setup_s": 0.5229820000000001,
+          "hypre_solve_s": 0.037494929999999996,
+          "assembly_reported_cpu_s": 13.12,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 11,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 48.4,
+          "wall_seconds_marker_delta": 5.299999999999997,
+          "hypre_setup_s": 0.531129,
+          "hypre_solve_s": 0.03827497,
+          "assembly_reported_cpu_s": 13.14,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 12,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 53.8,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.540539,
+          "hypre_solve_s": 0.036958189999999995,
+          "assembly_reported_cpu_s": 13.53,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 13,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 59.4,
+          "wall_seconds_marker_delta": 5.600000000000001,
+          "hypre_setup_s": 0.535544,
+          "hypre_solve_s": 0.050643230000000004,
+          "assembly_reported_cpu_s": 13.12,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 14,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.534126,
+          "hypre_solve_s": 0.04204202,
+          "assembly_reported_cpu_s": 13.2,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 15,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.531291,
+          "hypre_solve_s": 0.059446080000000005,
+          "assembly_reported_cpu_s": 13.24,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 16,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.526932,
+          "hypre_solve_s": 0.05844498,
+          "assembly_reported_cpu_s": 13.23,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 17,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.528859,
+          "hypre_solve_s": 0.06109715,
+          "assembly_reported_cpu_s": 13.55,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 18,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.531335,
+          "hypre_solve_s": 0.06052784,
+          "assembly_reported_cpu_s": 13.14,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 19,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.542079,
+          "hypre_solve_s": 0.05825086,
+          "assembly_reported_cpu_s": 13.24,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 20,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5452410000000001,
+          "hypre_solve_s": 0.05321903,
+          "assembly_reported_cpu_s": 13.21,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 21,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.525485,
+          "hypre_solve_s": 0.05013204,
+          "assembly_reported_cpu_s": 13.27,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 22,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.543156,
+          "hypre_solve_s": 0.05134181,
+          "assembly_reported_cpu_s": 13.38,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 23,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.530002,
+          "hypre_solve_s": 0.05059909,
+          "assembly_reported_cpu_s": 13.09,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 24,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5413159999999999,
+          "hypre_solve_s": 0.06685300999999999,
+          "assembly_reported_cpu_s": 13.23,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 25,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.54309,
+          "hypre_solve_s": 0.05791595,
+          "assembly_reported_cpu_s": 13.12,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 26,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264859,
+          "hypre_solve_s": 0.0480981,
+          "assembly_reported_cpu_s": 6.67,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 27,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.270305,
+          "hypre_solve_s": 0.0435381,
+          "assembly_reported_cpu_s": 6.72,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 28,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.280186,
+          "hypre_solve_s": 0.0404589,
+          "assembly_reported_cpu_s": 6.54,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 29,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.282259,
+          "hypre_solve_s": 0.03425,
+          "assembly_reported_cpu_s": 6.68,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 30,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.266392,
+          "hypre_solve_s": 0.027729,
+          "assembly_reported_cpu_s": 6.84,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 31,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.259524,
+          "hypre_solve_s": 0.0272129,
+          "assembly_reported_cpu_s": 6.54,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 32,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.259051,
+          "hypre_solve_s": 0.0226309,
+          "assembly_reported_cpu_s": 6.66,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 33,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.280199,
+          "hypre_solve_s": 0.0224619,
+          "assembly_reported_cpu_s": 6.73,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 34,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.27853,
+          "hypre_solve_s": 0.022274,
+          "assembly_reported_cpu_s": 6.78,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 35,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.265745,
+          "hypre_solve_s": 0.0213699,
+          "assembly_reported_cpu_s": 6.77,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 36,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.271869,
+          "hypre_solve_s": 0.021657,
+          "assembly_reported_cpu_s": 6.57,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 37,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.267384,
+          "hypre_solve_s": 0.0243609,
+          "assembly_reported_cpu_s": 6.63,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 38,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.266221,
+          "hypre_solve_s": 0.021122,
+          "assembly_reported_cpu_s": 6.72,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 39,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.266012,
+          "hypre_solve_s": 0.02159,
+          "assembly_reported_cpu_s": 6.7,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 40,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.281559,
+          "hypre_solve_s": 0.0215082,
+          "assembly_reported_cpu_s": 6.47,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 41,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.267293,
+          "hypre_solve_s": 0.0228381,
+          "assembly_reported_cpu_s": 6.66,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 42,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.269108,
+          "hypre_solve_s": 0.0226381,
+          "assembly_reported_cpu_s": 6.81,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 43,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.272461,
+          "hypre_solve_s": 0.0217369,
+          "assembly_reported_cpu_s": 6.82,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 44,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.254658,
+          "hypre_solve_s": 0.023777,
+          "assembly_reported_cpu_s": 6.67,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 45,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.265727,
+          "hypre_solve_s": 0.0241849,
+          "assembly_reported_cpu_s": 6.47,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 46,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.265574,
+          "hypre_solve_s": 0.022054,
+          "assembly_reported_cpu_s": 6.77,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 47,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.26307,
+          "hypre_solve_s": 0.0226691,
+          "assembly_reported_cpu_s": 6.63,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 48,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.268725,
+          "hypre_solve_s": 0.0217919,
+          "assembly_reported_cpu_s": 6.61,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 49,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.271713,
+          "hypre_solve_s": 0.0226099,
+          "assembly_reported_cpu_s": 6.65,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 50,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.274242,
+          "hypre_solve_s": 0.021848,
+          "assembly_reported_cpu_s": 6.77,
+          "circuit_profile_cpu_s": 0
+        }
+      ],
+      "reported_heat_assembly_cpu_s": 6.77
+    },
+    {
+      "case": "case_phase21_host_transient_cpu_50step",
+      "backend": "cpu",
+      "phase": "phase21_cached",
+      "steps": 50,
+      "wall_seconds": 210.370956,
+      "categories": {
+        "element_matrix_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "HeatSolve assembly CPU counter is reported separately"
+        },
+        "mass_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "conductivity_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "rhs_source_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "tes_circuit_evaluation": {
+          "seconds": 0.305326,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "tes_temperature_integration": {
+          "seconds": 0.001115,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "absorber_pulse_integration": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "cache_marker_only",
+          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
+        },
+        "hypre_ij_fill_update": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup"
+        },
+        "host_device_transfer": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup_for_gpu"
+        },
+        "boomeramg_setup": {
+          "seconds": 19.060628,
+          "percentage": 9.060484566129936,
+          "clock": "native_wall_timer"
+        },
+        "krylov_solve": {
+          "seconds": 1.71950576,
+          "percentage": 0.8173684203821369,
+          "clock": "native_wall_timer"
+        },
+        "result_series_output": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+        },
+        "miscellaneous_host_residual": {
+          "seconds": 189.59082224,
+          "percentage": 90.12214701348792,
+          "clock": "wall_residual",
+          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+        }
+      },
+      "step_wall_seconds": [
+        10.7,
+        3.1000000000000014,
+        3.099999999999998,
+        5.600000000000001,
+        5.399999999999999,
+        5.600000000000001,
+        5.399999999999999,
+        3.0,
+        3.1000000000000014,
+        5.399999999999999,
+        5.5
+      ],
+      "step_rows": [
+        {
+          "time_step": 1,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.6308929999999999,
+          "hypre_solve_s": 0.007586000000000001,
+          "assembly_reported_cpu_s": 18.49,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 2,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 10.7,
+          "wall_seconds_marker_delta": 10.7,
+          "hypre_setup_s": 0.275716,
+          "hypre_solve_s": 0.00298715,
+          "assembly_reported_cpu_s": 7.25,
+          "circuit_profile_cpu_s": 0.008327
+        },
+        {
+          "time_step": 3,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 13.8,
+          "wall_seconds_marker_delta": 3.1000000000000014,
+          "hypre_setup_s": 0.283937,
+          "hypre_solve_s": 0.00314879,
+          "assembly_reported_cpu_s": 7.04,
+          "circuit_profile_cpu_s": 0.008508
+        },
+        {
+          "time_step": 4,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 16.9,
+          "wall_seconds_marker_delta": 3.099999999999998,
+          "hypre_setup_s": 0.523374,
+          "hypre_solve_s": 0.02623702,
+          "assembly_reported_cpu_s": 13.74,
+          "circuit_profile_cpu_s": 0.008379
+        },
+        {
+          "time_step": 5,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 22.5,
+          "wall_seconds_marker_delta": 5.600000000000001,
+          "hypre_setup_s": 0.5185820000000001,
+          "hypre_solve_s": 0.03781508,
+          "assembly_reported_cpu_s": 13.36,
+          "circuit_profile_cpu_s": 0.000333
+        },
+        {
+          "time_step": 6,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 27.9,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.527489,
+          "hypre_solve_s": 0.040753170000000005,
+          "assembly_reported_cpu_s": 13.6,
+          "circuit_profile_cpu_s": 0.008372
+        },
+        {
+          "time_step": 7,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 33.5,
+          "wall_seconds_marker_delta": 5.600000000000001,
+          "hypre_setup_s": 0.54264,
+          "hypre_solve_s": 0.03795216,
+          "assembly_reported_cpu_s": 13.3,
+          "circuit_profile_cpu_s": 0.008359
+        },
+        {
+          "time_step": 8,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 38.9,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.265495,
+          "hypre_solve_s": 0.034385,
+          "assembly_reported_cpu_s": 6.79,
+          "circuit_profile_cpu_s": 0.008351
+        },
+        {
+          "time_step": 9,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 41.9,
+          "wall_seconds_marker_delta": 3.0,
+          "hypre_setup_s": 0.266679,
+          "hypre_solve_s": 0.0375581,
+          "assembly_reported_cpu_s": 6.87,
+          "circuit_profile_cpu_s": 0.000347
+        },
+        {
+          "time_step": 10,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 45.0,
+          "wall_seconds_marker_delta": 3.1000000000000014,
+          "hypre_setup_s": 0.534941,
+          "hypre_solve_s": 0.04003815,
+          "assembly_reported_cpu_s": 13.25,
+          "circuit_profile_cpu_s": 0.008316
+        },
+        {
+          "time_step": 11,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 50.4,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.523316,
+          "hypre_solve_s": 0.03835682,
+          "assembly_reported_cpu_s": 13.27,
+          "circuit_profile_cpu_s": 0.008319
+        },
+        {
+          "time_step": 12,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 55.9,
+          "wall_seconds_marker_delta": 5.5,
+          "hypre_setup_s": 0.5274909999999999,
+          "hypre_solve_s": 0.03750921,
+          "assembly_reported_cpu_s": 13.61,
+          "circuit_profile_cpu_s": 0.008364
+        },
+        {
+          "time_step": 13,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5199750000000001,
+          "hypre_solve_s": 0.039924190000000005,
+          "assembly_reported_cpu_s": 13.5,
+          "circuit_profile_cpu_s": 0.008347
+        },
+        {
+          "time_step": 14,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.529643,
+          "hypre_solve_s": 0.040366900000000004,
+          "assembly_reported_cpu_s": 13.57,
+          "circuit_profile_cpu_s": 0.00834
+        },
+        {
+          "time_step": 15,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5249250000000001,
+          "hypre_solve_s": 0.05840299,
+          "assembly_reported_cpu_s": 13.26,
+          "circuit_profile_cpu_s": 0.000327
+        },
+        {
+          "time_step": 16,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.539833,
+          "hypre_solve_s": 0.06119417,
+          "assembly_reported_cpu_s": 13.51,
+          "circuit_profile_cpu_s": 0.008318
+        },
+        {
+          "time_step": 17,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.535273,
+          "hypre_solve_s": 0.0592101,
+          "assembly_reported_cpu_s": 13.43,
+          "circuit_profile_cpu_s": 0.008343
+        },
+        {
+          "time_step": 18,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5345230000000001,
+          "hypre_solve_s": 0.05787683,
+          "assembly_reported_cpu_s": 13.61,
+          "circuit_profile_cpu_s": 0.00834
+        },
+        {
+          "time_step": 19,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.549219,
+          "hypre_solve_s": 0.05989098,
+          "assembly_reported_cpu_s": 13.49,
+          "circuit_profile_cpu_s": 0.000309
+        },
+        {
+          "time_step": 20,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.54109,
+          "hypre_solve_s": 0.05301809,
+          "assembly_reported_cpu_s": 13.19,
+          "circuit_profile_cpu_s": 0.008308
+        },
+        {
+          "time_step": 21,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.519027,
+          "hypre_solve_s": 0.05325292,
+          "assembly_reported_cpu_s": 13.29,
+          "circuit_profile_cpu_s": 0.008339
+        },
+        {
+          "time_step": 22,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.534658,
+          "hypre_solve_s": 0.056325919999999995,
+          "assembly_reported_cpu_s": 13.5,
+          "circuit_profile_cpu_s": 0.008248
+        },
+        {
+          "time_step": 23,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.549225,
+          "hypre_solve_s": 0.05409931,
+          "assembly_reported_cpu_s": 13.34,
+          "circuit_profile_cpu_s": 0.000314
+        },
+        {
+          "time_step": 24,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.5337620000000001,
+          "hypre_solve_s": 0.06361506,
+          "assembly_reported_cpu_s": 13.73,
+          "circuit_profile_cpu_s": 0.00848
+        },
+        {
+          "time_step": 25,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.52729,
+          "hypre_solve_s": 0.060512050000000005,
+          "assembly_reported_cpu_s": 13.95,
+          "circuit_profile_cpu_s": 0.008386
+        },
+        {
+          "time_step": 26,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.263108,
+          "hypre_solve_s": 0.0482159,
+          "assembly_reported_cpu_s": 6.78,
+          "circuit_profile_cpu_s": 0.000319
+        },
+        {
+          "time_step": 27,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.273002,
+          "hypre_solve_s": 0.0396309,
+          "assembly_reported_cpu_s": 6.76,
+          "circuit_profile_cpu_s": 0.008342
+        },
+        {
+          "time_step": 28,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.26433,
+          "hypre_solve_s": 0.041661,
+          "assembly_reported_cpu_s": 6.9,
+          "circuit_profile_cpu_s": 0.008317
+        },
+        {
+          "time_step": 29,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.272184,
+          "hypre_solve_s": 0.035284,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0.008508
+        },
+        {
+          "time_step": 30,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.278883,
+          "hypre_solve_s": 0.0326972,
+          "assembly_reported_cpu_s": 7.15,
+          "circuit_profile_cpu_s": 0.008359
+        },
+        {
+          "time_step": 31,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.27023,
+          "hypre_solve_s": 0.0290551,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0.008387
+        },
+        {
+          "time_step": 32,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.272257,
+          "hypre_solve_s": 0.022253,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0.008386
+        },
+        {
+          "time_step": 33,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264284,
+          "hypre_solve_s": 0.0222301,
+          "assembly_reported_cpu_s": 6.82,
+          "circuit_profile_cpu_s": 0.000327
+        },
+        {
+          "time_step": 34,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.293358,
+          "hypre_solve_s": 0.0241771,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0.008406
+        },
+        {
+          "time_step": 35,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.262422,
+          "hypre_solve_s": 0.0214789,
+          "assembly_reported_cpu_s": 6.71,
+          "circuit_profile_cpu_s": 0.00035
+        },
+        {
+          "time_step": 36,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.265846,
+          "hypre_solve_s": 0.0238099,
+          "assembly_reported_cpu_s": 6.72,
+          "circuit_profile_cpu_s": 0.008315
+        },
+        {
+          "time_step": 37,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.272535,
+          "hypre_solve_s": 0.0212212,
+          "assembly_reported_cpu_s": 7.11,
+          "circuit_profile_cpu_s": 0.008307
+        },
+        {
+          "time_step": 38,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.259685,
+          "hypre_solve_s": 0.02123,
+          "assembly_reported_cpu_s": 7.23,
+          "circuit_profile_cpu_s": 0.008398
+        },
+        {
+          "time_step": 39,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.258965,
+          "hypre_solve_s": 0.023742,
+          "assembly_reported_cpu_s": 6.81,
+          "circuit_profile_cpu_s": 0.008419
+        },
+        {
+          "time_step": 40,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.26525,
+          "hypre_solve_s": 0.02212,
+          "assembly_reported_cpu_s": 6.71,
+          "circuit_profile_cpu_s": 0.008355
+        },
+        {
+          "time_step": 41,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.271393,
+          "hypre_solve_s": 0.0221231,
+          "assembly_reported_cpu_s": 6.92,
+          "circuit_profile_cpu_s": 0.008323
+        },
+        {
+          "time_step": 42,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264261,
+          "hypre_solve_s": 0.0245571,
+          "assembly_reported_cpu_s": 6.69,
+          "circuit_profile_cpu_s": 0.000334
+        },
+        {
+          "time_step": 43,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.26404,
+          "hypre_solve_s": 0.021517,
+          "assembly_reported_cpu_s": 6.91,
+          "circuit_profile_cpu_s": 0.00031
+        },
+        {
+          "time_step": 44,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.265092,
+          "hypre_solve_s": 0.021385,
+          "assembly_reported_cpu_s": 6.73,
+          "circuit_profile_cpu_s": 0.008381
+        },
+        {
+          "time_step": 45,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264904,
+          "hypre_solve_s": 0.021564,
+          "assembly_reported_cpu_s": 7.07,
+          "circuit_profile_cpu_s": 0.008362
+        },
+        {
+          "time_step": 46,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.27618,
+          "hypre_solve_s": 0.0239041,
+          "assembly_reported_cpu_s": 6.91,
+          "circuit_profile_cpu_s": 0.008346
+        },
+        {
+          "time_step": 47,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.268798,
+          "hypre_solve_s": 0.0208941,
+          "assembly_reported_cpu_s": 6.73,
+          "circuit_profile_cpu_s": 0.000367
+        },
+        {
+          "time_step": 48,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264904,
+          "hypre_solve_s": 0.0212958,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0.000338
+        },
+        {
+          "time_step": 49,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.264936,
+          "hypre_solve_s": 0.026211,
+          "assembly_reported_cpu_s": 6.79,
+          "circuit_profile_cpu_s": 0.00034
+        },
+        {
+          "time_step": 50,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.260785,
+          "hypre_solve_s": 0.0252321,
+          "assembly_reported_cpu_s": 6.97,
+          "circuit_profile_cpu_s": 0.008356
+        }
+      ],
+      "reported_heat_assembly_cpu_s": 6.97
+    },
+    {
+      "case": "case_phase20_perf_transient_gpu_50step",
+      "backend": "gpu",
+      "phase": "phase20_baseline",
+      "steps": 50,
+      "wall_seconds": 213.585148,
+      "categories": {
+        "element_matrix_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "HeatSolve assembly CPU counter is reported separately"
+        },
+        "mass_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "conductivity_matrix_contribution": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "rhs_source_assembly": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented"
+        },
+        "tes_circuit_evaluation": {
+          "seconds": 0,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "tes_temperature_integration": {
+          "seconds": 0,
+          "percentage": null,
+          "clock": "UDF_CPU_TIME"
+        },
+        "absorber_pulse_integration": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "cache_marker_only",
+          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
+        },
+        "hypre_ij_fill_update": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup"
+        },
+        "host_device_transfer": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "included_in_hypre_setup_for_gpu"
+        },
+        "boomeramg_setup": {
+          "seconds": 26.574209,
+          "percentage": 12.441974195696416,
+          "clock": "native_wall_timer"
+        },
+        "krylov_solve": {
+          "seconds": 1.44924341,
+          "percentage": 0.6785319220791514,
+          "clock": "native_wall_timer"
+        },
+        "result_series_output": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_independently_timed",
+          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+        },
+        "miscellaneous_host_residual": {
+          "seconds": 185.56169559,
+          "percentage": 86.87949388222444,
+          "clock": "wall_residual",
+          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+        }
+      },
+      "step_wall_seconds": [
+        9.1,
+        2.9000000000000004,
+        3.3000000000000007,
+        5.399999999999999,
+        5.900000000000002,
+        5.699999999999996,
+        5.600000000000001,
+        3.200000000000003,
+        3.1000000000000014,
+        5.899999999999999,
+        5.699999999999996
+      ],
+      "step_rows": [
+        {
+          "time_step": 1,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.911519,
+          "hypre_solve_s": 0.00783801,
+          "assembly_reported_cpu_s": 14.99,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 2,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 9.1,
+          "wall_seconds_marker_delta": 9.1,
+          "hypre_setup_s": 0.211726,
+          "hypre_solve_s": 0.00238919,
+          "assembly_reported_cpu_s": 6.87,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 3,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 12.0,
+          "wall_seconds_marker_delta": 2.9000000000000004,
+          "hypre_setup_s": 0.465003,
+          "hypre_solve_s": 0.00503492,
+          "assembly_reported_cpu_s": 6.89,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 4,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 15.3,
+          "wall_seconds_marker_delta": 3.3000000000000007,
+          "hypre_setup_s": 0.606245,
+          "hypre_solve_s": 0.013236,
+          "assembly_reported_cpu_s": 13.06,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 5,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 20.7,
+          "wall_seconds_marker_delta": 5.399999999999999,
+          "hypre_setup_s": 0.877936,
+          "hypre_solve_s": 0.10545086,
+          "assembly_reported_cpu_s": 13.48,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 6,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 26.6,
+          "wall_seconds_marker_delta": 5.900000000000002,
+          "hypre_setup_s": 0.7112780000000001,
+          "hypre_solve_s": 0.03732206,
+          "assembly_reported_cpu_s": 13.26,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 7,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 32.3,
+          "wall_seconds_marker_delta": 5.699999999999996,
+          "hypre_setup_s": 0.72007,
+          "hypre_solve_s": 0.01797893,
+          "assembly_reported_cpu_s": 13.41,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 8,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 37.9,
+          "wall_seconds_marker_delta": 5.600000000000001,
+          "hypre_setup_s": 0.392234,
+          "hypre_solve_s": 0.043323,
+          "assembly_reported_cpu_s": 6.76,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 9,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 41.1,
+          "wall_seconds_marker_delta": 3.200000000000003,
+          "hypre_setup_s": 0.457917,
+          "hypre_solve_s": 0.0431938,
+          "assembly_reported_cpu_s": 6.64,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 10,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 44.2,
+          "wall_seconds_marker_delta": 3.1000000000000014,
+          "hypre_setup_s": 0.854275,
+          "hypre_solve_s": 0.04147978,
+          "assembly_reported_cpu_s": 13.43,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 11,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 50.1,
+          "wall_seconds_marker_delta": 5.899999999999999,
+          "hypre_setup_s": 0.65132,
+          "hypre_solve_s": 0.044311979999999994,
+          "assembly_reported_cpu_s": 13.61,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 12,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": 55.8,
+          "wall_seconds_marker_delta": 5.699999999999996,
+          "hypre_setup_s": 0.553974,
+          "hypre_solve_s": 0.020000959999999998,
+          "assembly_reported_cpu_s": 13.24,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 13,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.637802,
+          "hypre_solve_s": 0.01846505,
+          "assembly_reported_cpu_s": 13.33,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 14,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.75545,
+          "hypre_solve_s": 0.04814072,
+          "assembly_reported_cpu_s": 13.3,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 15,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.829221,
+          "hypre_solve_s": 0.07302495,
+          "assembly_reported_cpu_s": 13.26,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 16,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.7562409999999999,
+          "hypre_solve_s": 0.028500079999999997,
+          "assembly_reported_cpu_s": 13.17,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 17,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.648404,
+          "hypre_solve_s": 0.029004779999999997,
+          "assembly_reported_cpu_s": 13.64,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 18,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.822858,
+          "hypre_solve_s": 0.065804,
+          "assembly_reported_cpu_s": 13.33,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 19,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.677233,
+          "hypre_solve_s": 0.04576705,
+          "assembly_reported_cpu_s": 13.3,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 20,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.930172,
+          "hypre_solve_s": 0.06692601000000001,
+          "assembly_reported_cpu_s": 13.35,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 21,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.69423,
+          "hypre_solve_s": 0.02189114,
+          "assembly_reported_cpu_s": 13.13,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 22,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.885321,
+          "hypre_solve_s": 0.12410903000000001,
+          "assembly_reported_cpu_s": 13.84,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 23,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.767865,
+          "hypre_solve_s": 0.02244525,
+          "assembly_reported_cpu_s": 13.53,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 24,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.7770459999999999,
+          "hypre_solve_s": 0.07172607,
+          "assembly_reported_cpu_s": 13.55,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 25,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.686835,
+          "hypre_solve_s": 0.050437920000000004,
+          "assembly_reported_cpu_s": 13.06,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 26,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.469518,
+          "hypre_solve_s": 0.0234799,
+          "assembly_reported_cpu_s": 6.81,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 27,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.352861,
+          "hypre_solve_s": 0.048084,
+          "assembly_reported_cpu_s": 6.55,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 28,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.423889,
+          "hypre_solve_s": 0.0184319,
+          "assembly_reported_cpu_s": 6.83,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 29,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.292636,
+          "hypre_solve_s": 0.0275671,
+          "assembly_reported_cpu_s": 6.5,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 30,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.401187,
+          "hypre_solve_s": 0.0132539,
+          "assembly_reported_cpu_s": 6.69,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 31,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.280735,
+          "hypre_solve_s": 0.0188551,
+          "assembly_reported_cpu_s": 6.7,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 32,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.401916,
+          "hypre_solve_s": 0.00977516,
+          "assembly_reported_cpu_s": 6.8,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 33,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.282895,
+          "hypre_solve_s": 0.0159049,
+          "assembly_reported_cpu_s": 6.46,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 34,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.393235,
+          "hypre_solve_s": 0.00750613,
+          "assembly_reported_cpu_s": 6.62,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 35,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.299763,
+          "hypre_solve_s": 0.0139968,
+          "assembly_reported_cpu_s": 6.58,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 36,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.401419,
+          "hypre_solve_s": 0.007725,
+          "assembly_reported_cpu_s": 6.74,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 37,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.278413,
+          "hypre_solve_s": 0.0154071,
+          "assembly_reported_cpu_s": 6.66,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 38,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.413804,
+          "hypre_solve_s": 0.00769281,
+          "assembly_reported_cpu_s": 6.92,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 39,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.290627,
+          "hypre_solve_s": 0.013665,
+          "assembly_reported_cpu_s": 6.45,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 40,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.499493,
+          "hypre_solve_s": 0.01682,
+          "assembly_reported_cpu_s": 6.91,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 41,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.369811,
+          "hypre_solve_s": 0.00763702,
+          "assembly_reported_cpu_s": 6.59,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 42,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.347788,
+          "hypre_solve_s": 0.0234849,
+          "assembly_reported_cpu_s": 6.78,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 43,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.368943,
+          "hypre_solve_s": 0.0071559,
+          "assembly_reported_cpu_s": 6.86,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 44,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.352386,
+          "hypre_solve_s": 0.0217578,
+          "assembly_reported_cpu_s": 6.62,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 45,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.446133,
+          "hypre_solve_s": 0.0073092,
+          "assembly_reported_cpu_s": 6.78,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 46,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.30185,
+          "hypre_solve_s": 0.0136211,
+          "assembly_reported_cpu_s": 6.49,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 47,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.396297,
+          "hypre_solve_s": 0.00796485,
+          "assembly_reported_cpu_s": 6.67,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 48,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.282342,
+          "hypre_solve_s": 0.0153911,
+          "assembly_reported_cpu_s": 6.88,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 49,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.473192,
+          "hypre_solve_s": 0.0217731,
+          "assembly_reported_cpu_s": 6.74,
+          "circuit_profile_cpu_s": 0
+        },
+        {
+          "time_step": 50,
+          "time_step_count": 50,
+          "wall_seconds_marker_cumulative": null,
+          "wall_seconds_marker_delta": null,
+          "hypre_setup_s": 0.470901,
+          "hypre_solve_s": 0.0171821,
+          "assembly_reported_cpu_s": 6.66,
+          "circuit_profile_cpu_s": 0
+        }
+      ],
+      "reported_heat_assembly_cpu_s": 6.66
+    }
+  ],
+  "limitations": [
+    "Element/mass/conductivity/RHS subterms require a HeatSolver instrumentation build; current report preserves them as not_independently_timed.",
+    "HYPRE setup currently includes IJ construction and GPU migration in the native integration timer."
+  ]
+}

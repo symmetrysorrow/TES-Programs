@@ -23,7 +23,74 @@ MODULE TESParallelCircuitModule
   REAL(KIND=dp), SAVE :: CircuitOmega = 0.5_dp
   REAL(KIND=dp), SAVE :: CircuitOmegaCap = 0.5_dp
   REAL(KIND=dp), SAVE :: CircuitLastDt = 0.0_dp
+  LOGICAL, SAVE :: CircuitParametersInitialized = .FALSE.
+  REAL(KIND=dp), SAVE :: CachedBiasCurrent = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedShuntResistance = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedR0 = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedRMin = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedAlpha = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedBeta = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedI0 = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedT0 = 0.0_dp
+  REAL(KIND=dp), SAVE :: CachedInductance = 0.0_dp
+  CHARACTER(LEN=MAX_NAME_LEN), SAVE :: CachedSeriesFile = ''
+  CHARACTER(LEN=MAX_NAME_LEN), SAVE :: CachedStateFile = ''
+  LOGICAL, SAVE :: CachedFoundSeries = .FALSE.
+  LOGICAL, SAVE :: CachedFoundState = .FALSE.
+  INTEGER, SAVE :: CachedBody = -1
+  INTEGER, SAVE :: CachedMeshElementCount = -1
+  INTEGER, SAVE :: CachedElementCount = 0
+  INTEGER, SAVE :: CachedNodeCount = 0
+  INTEGER, ALLOCATABLE, SAVE :: CachedElementOffsets(:)
+  INTEGER, ALLOCATABLE, SAVE :: CachedNodeIndexes(:)
 CONTAINS
+
+  SUBROUTINE EnsureTESIntegrationCache(Model, body)
+    TYPE(Model_t) :: Model
+    INTEGER :: body
+    TYPE(Element_t), POINTER :: Element
+    INTEGER :: t, i, n, count, total
+
+    IF (CachedBody == body .AND. &
+        CachedMeshElementCount == Model % Mesh % NumberOfBulkElements .AND. &
+        CachedElementCount > 0) RETURN
+
+    IF (ALLOCATED(CachedElementOffsets)) DEALLOCATE(CachedElementOffsets)
+    IF (ALLOCATED(CachedNodeIndexes)) DEALLOCATE(CachedNodeIndexes)
+    count = 0
+    total = 0
+    DO t = 1, Model % Mesh % NumberOfBulkElements
+      Element => Model % Mesh % Elements(t)
+      IF (Element % BodyId /= body) CYCLE
+      n = GetElementNOFNodes(Element)
+      IF (n <= 0) CYCLE
+      count = count + 1
+      total = total + n
+    END DO
+    IF (count <= 0) CALL Fatal('TESParallelCircuitSolver', 'No TES elements found')
+
+    ALLOCATE(CachedElementOffsets(count + 1))
+    ALLOCATE(CachedNodeIndexes(total))
+    count = 0
+    total = 0
+    DO t = 1, Model % Mesh % NumberOfBulkElements
+      Element => Model % Mesh % Elements(t)
+      IF (Element % BodyId /= body) CYCLE
+      n = GetElementNOFNodes(Element)
+      IF (n <= 0) CYCLE
+      count = count + 1
+      CachedElementOffsets(count) = total + 1
+      DO i = 1, n
+        total = total + 1
+        CachedNodeIndexes(total) = Element % NodeIndexes(i)
+      END DO
+    END DO
+    CachedElementOffsets(count + 1) = total + 1
+    CachedBody = body
+    CachedMeshElementCount = Model % Mesh % NumberOfBulkElements
+    CachedElementCount = count
+    CachedNodeCount = total
+  END SUBROUTINE EnsureTESIntegrationCache
 
   SUBROUTINE TESParallelCircuitSolverCore(Model, Solver, dt, TransientSimulation)
     TYPE(Model_t) :: Model
@@ -33,7 +100,9 @@ CONTAINS
     TYPE(Element_t), POINTER :: Element
     TYPE(Variable_t), POINTER :: TemperatureVariable
     INTEGER :: t, i, n, body, localCount, p, IoStatus, TimeStep, NonlinIter
-    LOGICAL :: Found, FoundSeries, FoundState, FoundIterationSeries, WriteSeries
+    INTEGER :: k, firstNode, lastNode
+    LOGICAL :: Found, FoundSeries, FoundState, FoundIterationSeries
+    LOGICAL :: WriteSeries, WriteIterationSeries
     CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile, StateFile, IterationSeriesFile
     INTEGER :: IterationUnit
     REAL(KIND=dp) :: localSum, globalSum, globalCount, localT
@@ -41,37 +110,58 @@ CONTAINS
     REAL(KIND=dp) :: A, B, C, Discriminant, RawPower, DtLocal, Residual, Denominator
     REAL(KIND=dp) :: StateTemperature, StateCurrent, StateResistance, StatePower, StatePrevious
     REAL(KIND=dp) :: StateLoaded
+    REAL(KIND=dp) :: ProfileStart, ProfileAfterAverage, ProfileEnd
+    CHARACTER(LEN=256) :: ProfileMessage
 
     CALL Info('TESParallelCircuitSolver', 'entered nonlinear pre-solver', Level=4)
     TemperatureVariable => VariableGet(Model % Mesh % Variables, 'Temperature')
     IF (.NOT. ASSOCIATED(TemperatureVariable)) CALL Fatal('TESParallelCircuitSolver', 'Temperature variable not found')
     CALL Info('TESParallelCircuitSolver', 'temperature variable found', Level=4)
 
-    I_BIAS = GetConstReal(Model % Constants, 'TES Bias Current', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Bias Current is required')
-    R_SH = GetConstReal(Model % Constants, 'TES Shunt Resistance', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Shunt Resistance is required')
-    R0 = GetConstReal(Model % Constants, 'TES R0', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES R0 is required')
-    R_MIN = GetConstReal(Model % Constants, 'TES Rmin', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Rmin is required')
-    ALPHA = GetConstReal(Model % Constants, 'TES Alpha', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Alpha is required')
-    BETA = GetConstReal(Model % Constants, 'TES Beta', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Beta is required')
-    I0 = GetConstReal(Model % Constants, 'TES I0', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES I0 is required')
-    T0 = GetConstReal(Model % Constants, 'TES T0', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES T0 is required')
-    L_TES = GetConstReal(Model % Constants, 'TES Inductance', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Inductance is required')
-    SeriesFile = ListGetString(Model % Constants, 'TES Series File', FoundSeries)
+    IF (.NOT. CircuitParametersInitialized) THEN
+      CachedBiasCurrent = GetConstReal(Model % Constants, 'TES Bias Current', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Bias Current is required')
+      CachedShuntResistance = GetConstReal(Model % Constants, 'TES Shunt Resistance', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Shunt Resistance is required')
+      CachedR0 = GetConstReal(Model % Constants, 'TES R0', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES R0 is required')
+      CachedRMin = GetConstReal(Model % Constants, 'TES Rmin', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Rmin is required')
+      CachedAlpha = GetConstReal(Model % Constants, 'TES Alpha', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Alpha is required')
+      CachedBeta = GetConstReal(Model % Constants, 'TES Beta', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Beta is required')
+      CachedI0 = GetConstReal(Model % Constants, 'TES I0', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES I0 is required')
+      CachedT0 = GetConstReal(Model % Constants, 'TES T0', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES T0 is required')
+      CachedInductance = GetConstReal(Model % Constants, 'TES Inductance', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Inductance is required')
+      CachedSeriesFile = ListGetString(Model % Constants, 'TES Series File', CachedFoundSeries)
+      CachedStateFile = ListGetString(Model % Constants, 'TES State File', CachedFoundState)
+      CircuitParametersInitialized = .TRUE.
+      CALL Info('TESParallelCircuitSolver', 'cached TES constants and series paths', Level=4)
+    END IF
+    I_BIAS = CachedBiasCurrent
+    R_SH = CachedShuntResistance
+    R0 = CachedR0
+    R_MIN = CachedRMin
+    ALPHA = CachedAlpha
+    BETA = CachedBeta
+    I0 = CachedI0
+    T0 = CachedT0
+    L_TES = CachedInductance
+    SeriesFile = CachedSeriesFile
+    FoundSeries = CachedFoundSeries
+    StateFile = CachedStateFile
+    FoundState = CachedFoundState
     IterationSeriesFile = ListGetString(Model % Constants, 'TES Iteration Series File', FoundIterationSeries)
-    StateFile = ListGetString(Model % Constants, 'TES State File', FoundState)
     body = ListGetInteger(GetSolverParams(), 'TES Body ID', Found)
     IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Body ID is required')
     WriteSeries = GetLogical(GetSolverParams(), 'TES Write Series', Found)
     IF (.NOT. Found) WriteSeries = .TRUE.
+    WriteIterationSeries = GetLogical(GetSolverParams(), 'TES Write Iteration Series', Found)
+    IF (.NOT. Found) WriteIterationSeries = WriteSeries
     TimeStep = GetTimeStep()
     NonlinIter = GetNonlinIter()
     CALL Info('TESParallelCircuitSolver', 'parameters loaded', Level=4)
@@ -81,16 +171,17 @@ CONTAINS
       ' found=' // MERGE('T', 'F', FoundIterationSeries), Level=4)
 
     ! These two collectives are always first, on every rank and every call.
+    CALL CPU_TIME(ProfileStart)
+    CALL EnsureTESIntegrationCache(Model, body)
     localSum = 0.0_dp
     localCount = 0
-    DO t = 1, Model % Mesh % NumberOfBulkElements
-      Element => Model % Mesh % Elements(t)
-      IF (Element % BodyId /= body) CYCLE
-      n = GetElementNOFNodes(Element)
-      IF (n <= 0) CYCLE
+    DO k = 1, CachedElementCount
+      firstNode = CachedElementOffsets(k)
+      lastNode = CachedElementOffsets(k + 1) - 1
+      n = lastNode - firstNode + 1
       localT = 0.0_dp
-      DO i = 1, n
-        p = TemperatureVariable % Perm(Element % NodeIndexes(i))
+      DO i = firstNode, lastNode
+        p = TemperatureVariable % Perm(CachedNodeIndexes(i))
         IF (p > 0) localT = localT + TemperatureVariable % Values(p)
       END DO
       localSum = localSum + localT / REAL(n, dp)
@@ -100,6 +191,7 @@ CONTAINS
     globalCount = ParallelReduction(REAL(localCount, dp))
     IF (globalCount <= 0.0_dp) CALL Fatal('TESParallelCircuitSolver', 'No TES elements found')
     localT = globalSum / globalCount
+    CALL CPU_TIME(ProfileAfterAverage)
     CALL Info('TESParallelCircuitSolver', 'TES temperature reduced', Level=4)
 
     IF (.NOT. CircuitInitialized) THEN
@@ -173,7 +265,7 @@ CONTAINS
           CLOSE(97)
         END IF
       END IF
-      IF (WriteSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
+      IF (WriteIterationSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
         IterationUnit = 96
         IF (.NOT. IterationSeriesStarted) THEN
           OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
@@ -290,7 +382,7 @@ CONTAINS
         CLOSE(97)
       END IF
     END IF
-    IF (WriteSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
+    IF (WriteIterationSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
       IterationUnit = 96
       IF (.NOT. IterationSeriesStarted) THEN
         OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
@@ -311,6 +403,16 @@ CONTAINS
         IterationSeriesStarted = .TRUE.
       END IF
     END IF
+    CALL CPU_TIME(ProfileEnd)
+    IF (ParEnv % MyPE == 0) THEN
+      WRITE(ProfileMessage,'(A,I0,A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,I0,A,I0)') &
+        'step=', TimeStep, ' iter=', NonlinIter, &
+        ' integration_cpu_s=', ProfileAfterAverage-ProfileStart, &
+        ' circuit_output_cpu_s=', ProfileEnd-ProfileAfterAverage, &
+        ' total_cpu_s=', ProfileEnd-ProfileStart, &
+        ' cached_elements=', CachedElementCount, ' cached_nodes=', CachedNodeCount
+      CALL Info('TESParallelCircuitProfile', TRIM(ProfileMessage), Level=4)
+    END IF
   END SUBROUTINE TESParallelCircuitSolverCore
 
   FUNCTION TESParallelHeatSourceCore(Model, Node, Temperature) RESULT(HeatSource)
@@ -318,8 +420,14 @@ CONTAINS
     INTEGER :: Node
     REAL(KIND=dp) :: Temperature, HeatSource, Volume, Power
     LOGICAL :: Found
-    Volume = GetConstReal(Model % Constants, 'TES Volume', Found)
-    IF (.NOT. Found) CALL Fatal('TESParallelHeatSource', 'TES Volume is required')
+    REAL(KIND=dp), SAVE :: CachedVolume = 0.0_dp
+    LOGICAL, SAVE :: VolumeInitialized = .FALSE.
+    IF (.NOT. VolumeInitialized) THEN
+      CachedVolume = GetConstReal(Model % Constants, 'TES Volume', Found)
+      IF (.NOT. Found) CALL Fatal('TESParallelHeatSource', 'TES Volume is required')
+      VolumeInitialized = .TRUE.
+    END IF
+    Volume = CachedVolume
     ! No MPI calls are allowed in this assembly callback.  The intrinsic
     ! HeatSolve circuit hook publishes its collective, rank-consistent power
     ! through Model constants; do not use this module's private state here.

@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "definition": "production 7-step, one output class removed at a time; full_io enables VTU",
+  "runs": [
+    {
+      "backend": "cpu",
+      "modes": {
+        "full_io": {
+          "case": "case_phase21_io_cpu_full_io",
+          "wall_seconds": 42.896248,
+          "outputs": [
+            "case_phase21_io_cpu_full_io_iterations.csv",
+            "case_phase21_io_cpu_full_io_series.csv"
+          ],
+          "speedup_vs_full_io": 1.0
+        },
+        "no_vtu": {
+          "case": "case_phase21_io_cpu_no_vtu",
+          "wall_seconds": 39.80131,
+          "outputs": [
+            "case_phase21_io_cpu_no_vtu_iterations.csv",
+            "case_phase21_io_cpu_no_vtu_series.csv"
+          ],
+          "speedup_vs_full_io": 1.0777597018791591
+        },
+        "no_result": {
+          "case": "case_phase21_io_cpu_no_result",
+          "wall_seconds": 36.00032,
+          "outputs": [
+            "case_phase21_io_cpu_no_result_iterations.csv",
+            "case_phase21_io_cpu_no_result_series.csv"
+          ],
+          "speedup_vs_full_io": 1.191551852872419
+        },
+        "no_series_csv": {
+          "case": "case_phase21_io_cpu_no_series_csv",
+          "wall_seconds": 40.969,
+          "outputs": [],
+          "speedup_vs_full_io": 1.047041616832239
+        }
+      }
+    }
+  ],
+  "policy": "only full_io/no_vtu with preserved validation outputs may be used for production speedup claims"
+}
