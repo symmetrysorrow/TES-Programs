@@ -1,0 +1,47 @@
+{
+  "stage": "A",
+  "stage_name": "noise_blind_physics_construction",
+  "freeze_status": "frozen",
+  "generation_method": "fixed_seed_log_uniform_reference_factors_then_noise_blind_pulse_gate",
+  "seed": 20260905,
+  "sample_count": 96,
+  "source_commit": "51fc02702484373af829528238a0e91be1384b7f",
+  "parameter_ranges_frozen_before_comparison": true,
+  "experimental_spectrum_read": false,
+  "experimental_noise_path_read": false,
+  "inputs": {
+    "rt": [
+      "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv",
+      "G:/tagawa/20241202/room1-ch1-rt/output/RT_20uA.csv"
+    ],
+    "multi_temperature_iv": [
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt"
+    ],
+    "same_day_iv_candidate": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
+    "pulse": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/CH0_pulse/rawdata",
+    "pulse_audit": "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/target_pulse_pole_audit.json",
+    "generic_reference": "D:/Github/TES-Programs/PoST_Simulations/input.json"
+  },
+  "strict_target_input": {
+    "path": "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/input.json",
+    "exists_at_generation": true,
+    "modified": false,
+    "note": "Target input is an unresolved capability manifest; no target physics value was populated or changed."
+  },
+  "outputs": [
+    "target_pulse_pole_audit.json",
+    "proxy_parameter_envelope.json",
+    "proxy_scenarios.json",
+    "pulse_combination_constraints.json"
+  ],
+  "prohibited_in_stage_A": [
+    "experimental spectrum",
+    "noise likelihood",
+    "residual fit",
+    "parameter optimizer using noise"
+  ],
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}

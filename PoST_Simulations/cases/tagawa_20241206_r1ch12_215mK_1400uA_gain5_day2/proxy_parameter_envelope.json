@@ -89,9 +89,60 @@
       "allowed_for_proxy_sweep": false,
       "allowed_for_strict_target": false
     },
-    "alpha": {
+    "beta": {
       "range": null,
-      "nominal": 71.4,
+      "nominal": 1.6,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "L": {
+      "range": null,
+      "nominal": 1e-10,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "G_abs-abs": {
+      "range": null,
+      "nominal": 1.5e-07,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "G_abs-tes": {
+      "range": null,
+      "nominal": 8.2e-09,
       "unit": "SI_or_dimensionless",
       "source": [
         "D:/Github/TES-Programs/PoST_Simulations/input.json"
@@ -109,57 +160,6 @@
     "C_tes": {
       "range": null,
       "nominal": 7.9e-12,
-      "unit": "SI_or_dimensionless",
-      "source": [
-        "D:/Github/TES-Programs/PoST_Simulations/input.json"
-      ],
-      "source_class": "simulation_reference_only",
-      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
-      "confidence": "none_for_target",
-      "correlations": [
-        "multi-parameter electrothermal degeneracy"
-      ],
-      "allowed_for_proxy_sweep": false,
-      "allowed_for_strict_target": false,
-      "allowed_for_sensitivity_reference": true
-    },
-    "C_abs": {
-      "range": null,
-      "nominal": 7.9e-10,
-      "unit": "SI_or_dimensionless",
-      "source": [
-        "D:/Github/TES-Programs/PoST_Simulations/input.json"
-      ],
-      "source_class": "simulation_reference_only",
-      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
-      "confidence": "none_for_target",
-      "correlations": [
-        "multi-parameter electrothermal degeneracy"
-      ],
-      "allowed_for_proxy_sweep": false,
-      "allowed_for_strict_target": false,
-      "allowed_for_sensitivity_reference": true
-    },
-    "R_l": {
-      "range": null,
-      "nominal": 0.0039,
-      "unit": "SI_or_dimensionless",
-      "source": [
-        "D:/Github/TES-Programs/PoST_Simulations/input.json"
-      ],
-      "source_class": "simulation_reference_only",
-      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
-      "confidence": "none_for_target",
-      "correlations": [
-        "multi-parameter electrothermal degeneracy"
-      ],
-      "allowed_for_proxy_sweep": false,
-      "allowed_for_strict_target": false,
-      "allowed_for_sensitivity_reference": true
-    },
-    "beta": {
-      "range": null,
-      "nominal": 1.6,
       "unit": "SI_or_dimensionless",
       "source": [
         "D:/Github/TES-Programs/PoST_Simulations/input.json"
@@ -208,9 +208,9 @@
       "allowed_for_strict_target": false,
       "allowed_for_sensitivity_reference": true
     },
-    "L": {
+    "C_abs": {
       "range": null,
-      "nominal": 1e-10,
+      "nominal": 7.9e-10,
       "unit": "SI_or_dimensionless",
       "source": [
         "D:/Github/TES-Programs/PoST_Simulations/input.json"
@@ -225,9 +225,9 @@
       "allowed_for_strict_target": false,
       "allowed_for_sensitivity_reference": true
     },
-    "G_abs-tes": {
+    "alpha": {
       "range": null,
-      "nominal": 8.2e-09,
+      "nominal": 71.4,
       "unit": "SI_or_dimensionless",
       "source": [
         "D:/Github/TES-Programs/PoST_Simulations/input.json"
@@ -242,9 +242,9 @@
       "allowed_for_strict_target": false,
       "allowed_for_sensitivity_reference": true
     },
-    "G_abs-abs": {
+    "R_l": {
       "range": null,
-      "nominal": 1.5e-07,
+      "nominal": 0.0039,
       "unit": "SI_or_dimensionless",
       "source": [
         "D:/Github/TES-Programs/PoST_Simulations/input.json"

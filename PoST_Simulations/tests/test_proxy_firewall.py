@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import ast
 import json
+import sys
 from pathlib import Path
+
+import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +15,7 @@ CASE = ROOT / "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_
 STAGE_A = ROOT / "PoST_Simulations/subScript/build_proxy_envelope.py"
 STAGE_B = ROOT / "PoST_Simulations/subScript/run_noise_blind_ensemble.py"
 COMPARE = ROOT / "PoST_Simulations/subScript/compare_proxy_ensemble_to_experiment.py"
+PULSE_AUDIT = ROOT / "PoST_Simulations/subScript/target_pulse_pole_audit.py"
 
 
 def _load(name: str) -> dict:
@@ -86,3 +90,34 @@ def test_pre_post_semantics_and_strict_conclusion_are_preserved():
     assert len(summary["rows"]) == len(summary["post_analysis"]["rows"]) == 7
     assert "Bessel" in summary["post_analysis"]["filter"]
     assert _load("provenance.json")["existing_data_search"]["conclusion"] == "C_frozen"
+
+
+def test_post_factor_matches_production_bessel_helper_numerically():
+    sys.path.insert(0, str(ROOT / "PoST_Simulations/subScript"))
+    sys.path.insert(0, str(ROOT / "PoST_Simulations"))
+    import compare_proxy_ensemble_to_experiment as comparison
+    from lib import general
+
+    expected = general.BesselMagnitudeResponse(comparison.FREQUENCIES, 500000.0, 10000.0, passes=2)
+    np.testing.assert_allclose(comparison._post_factor(), expected, rtol=0.0, atol=1e-14)
+
+
+def test_proxy_uses_eight_independent_sources_and_production_flink():
+    envelope = _load("proxy_parameter_envelope.json")
+    params = envelope["sensitivity_reference"]
+    sys.path.insert(0, str(ROOT / "PoST_Simulations/subScript"))
+    import proxy_physics
+
+    components, metadata = proxy_physics.noise_components(params, np.array([10.0, 1000.0]))
+    assert components.shape == (2, 8)
+    assert metadata["F_LINK"] == 0.9
+    assert len(metadata["source_names"]) == 8
+
+
+def test_pulse_audit_is_noise_blind_and_stationarity_result_is_conservative():
+    source = PULSE_AUDIT.read_text(encoding="utf-8")
+    assert "CH0_noise" not in source and "CH1_noise" not in source
+    audit = _load("target_pulse_pole_audit.json")
+    assert audit["noise_records_read"] is False
+    stationarity = _load("low_frequency_stationarity_audit.json")
+    assert stationarity["classification"] in {"stationary_detector_like", "stationary_channel_specific", "inconclusive"}

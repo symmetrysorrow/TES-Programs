@@ -1,8 +1,6 @@
 """Pure helpers shared by experimental noise-analysis entry points."""
 
 import numpy as np
-<<<<<<< Updated upstream
-=======
 from scipy import signal
 
 
@@ -93,7 +91,6 @@ def estimate_one_sided_asd(
         window_power_gain,
     )
     return asd, accepted
->>>>>>> Stashed changes
 
 
 def accepted_noise_indices(

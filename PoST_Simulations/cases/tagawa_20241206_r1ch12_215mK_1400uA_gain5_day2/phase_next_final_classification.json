@@ -1,0 +1,110 @@
+{
+  "stage": "phase_next_final_classification",
+  "classification": "R5",
+  "classification_status": "provisional_due_to_inconclusive_low_frequency_coherence",
+  "interpretation": "Pulse-constrained full physical source ensemble covers 1\u201310 kHz but not the 10\u2013100 Hz anchors; the low-frequency audit is not drift-like, yet its frequency-dependent coherence is inconclusive, so an independent readout/circuit contribution remains required before any added TES source is considered.",
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified",
+  "evidence": {
+    "pulse_consistent_scenario_count": 79,
+    "pulse_selected_slow_poles": {
+      "CH0": {
+        "time_constant_s": 0.06877978899371456,
+        "frequency_Hz": 2.313978356438978,
+        "model_order": 3
+      },
+      "CH1": {
+        "time_constant_s": 0.15995291491379446,
+        "frequency_Hz": 0.9950112080024975,
+        "model_order": 3
+      }
+    },
+    "low_frequency_rows": [
+      {
+        "frequency_Hz": 10.0,
+        "experimental_pre_analysis_normalized": 46.156196536257895,
+        "proxy_min": 1.0022095782777347,
+        "proxy_q05": 1.024870033290489,
+        "proxy_median": 1.2679700174482844,
+        "proxy_q95": 1.912779637892716,
+        "proxy_max": 2.4536446785769646,
+        "classification": "outside_sampled_envelope"
+      },
+      {
+        "frequency_Hz": 100.0,
+        "experimental_pre_analysis_normalized": 4.0243259068646395,
+        "proxy_min": 1.0064634840520694,
+        "proxy_q05": 1.0298783949596255,
+        "proxy_median": 1.265332091280097,
+        "proxy_q95": 1.8851078771008165,
+        "proxy_max": 2.3568799545224453,
+        "classification": "outside_sampled_envelope"
+      }
+    ],
+    "kilohertz_rows": [
+      {
+        "frequency_Hz": 1000.0,
+        "experimental_pre_analysis_normalized": 1.0,
+        "proxy_min": 1.0,
+        "proxy_q05": 1.0,
+        "proxy_median": 1.0,
+        "proxy_q95": 1.0,
+        "proxy_max": 1.0,
+        "classification": "inside_sampled_q05_q95"
+      },
+      {
+        "frequency_Hz": 3000.0,
+        "experimental_pre_analysis_normalized": 0.9356576676273981,
+        "proxy_min": 0.5036799242241733,
+        "proxy_q05": 0.5258093070606411,
+        "proxy_median": 0.6345028220381627,
+        "proxy_q95": 0.8323172669193136,
+        "proxy_max": 0.9520153021259017,
+        "classification": "inside_sampled_min_max"
+      },
+      {
+        "frequency_Hz": 5000.0,
+        "experimental_pre_analysis_normalized": 0.8625524183725526,
+        "proxy_min": 0.4050262594657194,
+        "proxy_q05": 0.41271338727562273,
+        "proxy_median": 0.5141763707502337,
+        "proxy_q95": 0.7094839009897849,
+        "proxy_max": 0.8751879577107035,
+        "classification": "inside_sampled_min_max"
+      },
+      {
+        "frequency_Hz": 7000.0,
+        "experimental_pre_analysis_normalized": 0.7827241692134552,
+        "proxy_min": 0.3463244505446304,
+        "proxy_q05": 0.3667593396699617,
+        "proxy_median": 0.4637194980089147,
+        "proxy_q95": 0.6946276670099328,
+        "proxy_max": 0.791025498784272,
+        "classification": "inside_sampled_min_max"
+      },
+      {
+        "frequency_Hz": 10000.0,
+        "experimental_pre_analysis_normalized": 0.6364832111684274,
+        "proxy_min": 0.300632349040486,
+        "proxy_q05": 0.31823867042796916,
+        "proxy_median": 0.4358040493091457,
+        "proxy_q95": 0.6784987343715615,
+        "proxy_max": 0.6979519568311481,
+        "classification": "inside_sampled_q05_q95"
+      }
+    ],
+    "stationarity_classification": "inconclusive",
+    "coherence_10_to_100_Hz_median": 0.42600711084502046,
+    "coherence_10_to_100_Hz_range": [
+      0.09031450906893124,
+      0.9395996185586993
+    ],
+    "common_accepted_records": 345
+  },
+  "prohibitions_respected": [
+    "no noise residual fitting",
+    "no parameter optimizer",
+    "no extra noise source added",
+    "no hanging state added",
+    "no target physical case promoted from proxy"
+  ]
+}

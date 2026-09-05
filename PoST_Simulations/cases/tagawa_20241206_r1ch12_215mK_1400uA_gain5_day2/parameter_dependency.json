@@ -1,0 +1,17 @@
+{
+  "source_commit": "51fc02702484373af8295c5832d456ec69",
+  "dependency_graph": {
+    "operating_point": {"requires": ["T_c", "T_bath", "R", "G_tes-bath", "n"], "unlocks": ["operating_point_ready"]},
+    "stability": {"requires": ["operating_point", "C_abs", "C_tes", "G_abs-abs", "G_abs-tes", "R_l", "alpha", "beta", "L"], "unlocks": ["python_stability_ready"]},
+    "reduced_intrinsic_noise": {"requires": ["stability", "rate", "samples"], "unlocks": ["reduced_noise_ready"]},
+    "cpp_tes_block_parity": {"requires": ["stability", "n_abs"], "excludes": ["E"], "unlocks": ["cpp_parity_ready"]},
+    "normalized_shape": {"requires": ["reduced_intrinsic_noise", "target raw records", "rate", "samples"], "excludes": ["absolute calibration"], "unlocks": ["normalized_comparison_ready"]},
+    "absolute_asd": {"requires": ["normalized_shape", "readout_calibration_A_per_V", "readout gain/transfer"], "unlocks": ["absolute_comparison_ready"]}
+  },
+  "minimum_next_information_priority": [
+    {"priority": 1, "information": "T_c plus target-linked T_bath, R and G_tes-bath", "opens": ["operating_point_ready"]},
+    {"priority": 2, "information": "alpha, beta, L, C_tes, C_abs, G_abs-tes, G_abs-abs and target R_l", "opens": ["python_stability_ready", "cpp_parity_ready"]},
+    {"priority": 3, "information": "target-linked n_abs and pulse/geometry metadata", "opens": ["cpp pulse generation; not reduced noise"]},
+    {"priority": 4, "information": "independent CH0 voltage/current and readout gain transfer", "opens": ["absolute_comparison_ready"]}
+  ]
+}

@@ -1,12 +1,11 @@
 #include "tes_cpp/pulse.hpp"
 
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
 int main(int argc, char** argv) {
-<<<<<<< Updated upstream
-=======
     if (argc == 3 && std::string(argv[1]) == "--dump-linearization") {
         try {
             const tes_cpp::LinearizationSummary summary = tes_cpp::inspect_linearization(argv[2]);
@@ -48,7 +47,6 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
->>>>>>> Stashed changes
     if ((argc != 5 && argc != 7) || std::string(argv[3]) != "--positions" ||
         (argc == 7 && std::string(argv[5]) != "--threads")) {
         std::cerr << "Usage: posi2pulse <input.json> <pulses.json> --positions 1,2,3 [--threads N]\n";

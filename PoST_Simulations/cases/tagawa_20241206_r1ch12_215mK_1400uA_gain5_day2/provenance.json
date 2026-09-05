@@ -1,6 +1,6 @@
 {
   "case_status": "blocked_unresolved_physics_parameters",
-  "source_commit": "95fab67b51f71e97bb47e01e998c1019ff3a1dc9",
+  "source_commit": "51fc02702484373af8295c5832d456ec69",
   "experiment_path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
   "detector_channel_linkage": {
     "result": "likely_but_unproven",
@@ -33,6 +33,15 @@
       "experiment_read_after_ensemble": true,
       "range_adjustment_performed": false,
       "best_member_used_as_estimate": false
+    },
+    "phase_next": {
+      "production_parity_helper": "PoST_Simulations/lib/tes_noise_model.py",
+      "pulse_audit": "target_pulse_pole_audit.json",
+      "pulse_consistent_scenario_count": 79,
+      "stationarity_audit": "low_frequency_stationarity_audit.json",
+      "stationarity_classification": "inconclusive",
+      "final_classification": "R5 provisional",
+      "final_report": "phase_next_final_classification.md"
     },
     "target_input_modified": false,
     "source_class_policy": "3-8 are proxies/references only and never target truth"

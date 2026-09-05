@@ -1,0 +1,267 @@
+{
+  "stage": "A_pulse_audit",
+  "noise_spectrum_read": false,
+  "noise_records_read": false,
+  "target_root": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "sample_rate_Hz": 500000.0,
+  "channels": {
+    "CH0": {
+      "channel": "CH0",
+      "source_directory": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/CH0_pulse/rawdata",
+      "source_kind": "raw .dat pulse records only; no experimental noise records opened",
+      "records_found": 300,
+      "records_valid": 180,
+      "records_rejected": 120,
+      "feature_quantiles": {
+        "peak_time_s": {
+          "q05": 0.01004,
+          "q50": 0.010113,
+          "q95": 0.14130729999999994
+        },
+        "amplitude_raw": {
+          "q05": 0.02005444011496985,
+          "q50": 0.10433038280793705,
+          "q95": 0.39357582400083035
+        },
+        "baseline_std_raw": {
+          "q05": 0.001563919542466162,
+          "q50": 0.0016983501968112417,
+          "q95": 0.004444375113301883
+        },
+        "rise_20_to_90_s": {
+          "q05": 2.2e-05,
+          "q50": 5e-05,
+          "q95": 0.1072609999999999
+        },
+        "decay_90_to_10_s": {
+          "q05": 0.0012758000000000001,
+          "q50": 0.001731,
+          "q95": 0.10566709999999993
+        }
+      },
+      "decay_model_fit": {
+        "train_records": 125,
+        "heldout_records": 55,
+        "fit_window_s": 0.08,
+        "downsample_step_samples": 10,
+        "models": {
+          "1": {
+            "order": 1,
+            "aic": -51298.80855601363,
+            "bic": -51279.92640709333,
+            "rss": 0.010757495636222497,
+            "residual_lag1_correlation": 0.9498294604297943,
+            "amplitudes": [
+              0.08481861626122332
+            ],
+            "time_constants_s": [
+              0.0009754512878146774
+            ],
+            "offset": 0.004891309785910249,
+            "parameters": [
+              0.08481861626122332,
+              0.0009754512878146774,
+              0.004891309785910249
+            ],
+            "holdout_rss": 0.027179090816367244,
+            "holdout_rmse": 0.002606678481150257,
+            "holdout_residual_lag1_correlation": 0.8923239186491687
+          },
+          "2": {
+            "order": 2,
+            "aic": -58992.42151894577,
+            "bic": -58960.95127074526,
+            "rss": 0.0015701945664354702,
+            "residual_lag1_correlation": 0.6573055088143357,
+            "amplitudes": [
+              0.08566296266658241,
+              0.007063021760188961
+            ],
+            "time_constants_s": [
+              0.000785023371217086,
+              0.037958385670037946
+            ],
+            "offset": 0.002140058692675565,
+            "parameters": [
+              0.08566296266658241,
+              0.007063021760188961,
+              0.000785023371217086,
+              0.037958385670037946,
+              0.002140058692675565
+            ],
+            "holdout_rss": 0.022569911786134034,
+            "holdout_rmse": 0.002375390061975824,
+            "holdout_residual_lag1_correlation": 0.7171019250994094
+          },
+          "3": {
+            "order": 3,
+            "aic": -60684.81132740541,
+            "bic": -60640.7529799247,
+            "rss": 0.0010274726892532465,
+            "residual_lag1_correlation": 0.4817759182576711,
+            "amplitudes": [
+              0.04342742093274852,
+              0.04949053009452695,
+              0.007918118627213222
+            ],
+            "time_constants_s": [
+              0.0003735525110301435,
+              0.0011740734300687708,
+              0.06877978899371456
+            ],
+            "offset": 0.00031452007113736216,
+            "parameters": [
+              0.04342742093274852,
+              0.04949053009452695,
+              0.007918118627213222,
+              0.0003735525110301435,
+              0.0011740734300687708,
+              0.06877978899371456,
+              0.00031452007113736216
+            ],
+            "holdout_rss": 0.02180697425781924,
+            "holdout_rmse": 0.0023348969066009765,
+            "holdout_residual_lag1_correlation": 0.6277972653761368
+          }
+        },
+        "selection_rule": "lowest held-out RSS among one/two/three exponential decay models"
+      },
+      "selected_slow_pole": {
+        "time_constant_s": 0.06877978899371456,
+        "frequency_Hz": 2.313978356438978,
+        "model_order": 3
+      },
+      "record_wise_pulse_constraints": "descriptive time-domain constraints only; no physical parameter fit"
+    },
+    "CH1": {
+      "channel": "CH1",
+      "source_directory": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/CH1_pulse/rawdata",
+      "source_kind": "raw .dat pulse records only; no experimental noise records opened",
+      "records_found": 300,
+      "records_valid": 177,
+      "records_rejected": 123,
+      "feature_quantiles": {
+        "peak_time_s": {
+          "q05": 0.010032,
+          "q50": 0.0101,
+          "q95": 0.08913799999999998
+        },
+        "amplitude_raw": {
+          "q05": 0.057140710673186906,
+          "q50": 0.1469984870483081,
+          "q95": 0.3716325579643644
+        },
+        "baseline_std_raw": {
+          "q05": 0.004546899883540305,
+          "q50": 0.005095302025945761,
+          "q95": 0.006719287374144511
+        },
+        "rise_20_to_90_s": {
+          "q05": 2.16e-05,
+          "q50": 5.2e-05,
+          "q95": 0.05376799999999993
+        },
+        "decay_90_to_10_s": {
+          "q05": 0.000712,
+          "q50": 0.00119,
+          "q95": 0.0016403999999999987
+        }
+      },
+      "decay_model_fit": {
+        "train_records": 123,
+        "heldout_records": 54,
+        "fit_window_s": 0.08,
+        "downsample_step_samples": 10,
+        "models": {
+          "1": {
+            "order": 1,
+            "aic": -57205.09095010443,
+            "bic": -57186.208801184126,
+            "rss": 0.002457223813455928,
+            "residual_lag1_correlation": 0.5583939622252242,
+            "amplitudes": [
+              0.13209815709924727
+            ],
+            "time_constants_s": [
+              0.0006401023340790904
+            ],
+            "offset": 0.001529433705451952,
+            "parameters": [
+              0.13209815709924727,
+              0.0006401023340790904,
+              0.001529433705451952
+            ],
+            "holdout_rss": 0.008046941378179788,
+            "holdout_rmse": 0.0014183565646708684,
+            "holdout_residual_lag1_correlation": 0.5890108669138142
+          },
+          "2": {
+            "order": 2,
+            "aic": -58113.814729308164,
+            "bic": -58082.344481107655,
+            "rss": 0.001955901547500454,
+            "residual_lag1_correlation": 0.44397509732715434,
+            "amplitudes": [
+              0.13180813192132626,
+              0.0017917836476190722
+            ],
+            "time_constants_s": [
+              0.0006149601588363566,
+              0.013952141463571061
+            ],
+            "offset": 0.001261508692689076,
+            "parameters": [
+              0.13180813192132626,
+              0.0017917836476190722,
+              0.0006149601588363566,
+              0.013952141463571061,
+              0.001261508692689076
+            ],
+            "holdout_rss": 0.0069127804429239235,
+            "holdout_rmse": 0.0013146083487985997,
+            "holdout_residual_lag1_correlation": 0.5215074622235485
+          },
+          "3": {
+            "order": 3,
+            "aic": -58255.07253279879,
+            "bic": -58211.014185318076,
+            "rss": 0.0018861482485818758,
+            "residual_lag1_correlation": 0.4222187159528925,
+            "amplitudes": [
+              0.12941248275198117,
+              0.004311360767378071,
+              0.0021533977976116035
+            ],
+            "time_constants_s": [
+              0.0005911879179606308,
+              0.002652103432634763,
+              0.15995291491379446
+            ],
+            "offset": -0.00020767075059469086,
+            "parameters": [
+              0.12941248275198117,
+              0.004311360767378071,
+              0.0021533977976116035,
+              0.0005911879179606308,
+              0.002652103432634763,
+              0.15995291491379446,
+              -0.00020767075059469086
+            ],
+            "holdout_rss": 0.006783643633649646,
+            "holdout_rmse": 0.0013022714419092555,
+            "holdout_residual_lag1_correlation": 0.5133858869968051
+          }
+        },
+        "selection_rule": "lowest held-out RSS among one/two/three exponential decay models"
+      },
+      "selected_slow_pole": {
+        "time_constant_s": 0.15995291491379446,
+        "frequency_Hz": 0.9950112080024975,
+        "model_order": 3
+      },
+      "record_wise_pulse_constraints": "descriptive time-domain constraints only; no physical parameter fit"
+    }
+  },
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified",
+  "interpretation": "Pulse poles constrain observable time-domain combinations; they do not identify alpha, beta, C, G, L, or the target internal TES model individually."
+}

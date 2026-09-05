@@ -1,0 +1,23 @@
+{
+  "status": "pulse_constrained_scenario_gate",
+  "source_class": "target_confirmed",
+  "source_audit": "PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/target_pulse_pole_audit.json",
+  "selected_slow_poles": {
+    "CH0": {
+      "time_constant_s": 0.06877978899371456,
+      "frequency_Hz": 2.313978356438978,
+      "model_order": 3
+    },
+    "CH1": {
+      "time_constant_s": 0.15995291491379446,
+      "frequency_Hz": 0.9950112080024975,
+      "model_order": 3
+    }
+  },
+  "scenario_slow_pole_time_constant_range_s": [
+    0.03438989449685728,
+    0.3199058298275889
+  ],
+  "gate_rule": "production five-state slowest stable pole must lie in the combined CH0/CH1 pulse slow-pole band expanded by a fixed factor of two",
+  "individual_parameter_fit": false
+}

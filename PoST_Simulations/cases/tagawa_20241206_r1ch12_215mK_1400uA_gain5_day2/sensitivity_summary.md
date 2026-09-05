@@ -1,21 +1,22 @@
-# Noise-blind model sensitivity reference
+# Noise-blind target-like sensitivity
 
-This is a deterministic simulation-reference-only study. It is not a target parameter estimate and uses no experimental spectrum.
+This is a deterministic sensitivity study around `median_of_pulse_consistent_scenarios`. It is not a target parameter estimate and uses no experimental spectrum.
+A separate generic 0.5x–2x reference sensitivity is stored in `reference_sensitivity_summary.json` and is not used for the physical envelope.
 
 | parameter | 10-100 Hz | 100-1000 Hz | 1-3 kHz | 3-10 kHz |
 |---|---:|---:|---:|---:|
-| T_c | 2.94 | 1.429 | 1.205 | 3.865 |
-| T_bath | 2.939 | 1.429 | 1.198 | 3.85 |
-| R | 0.04373 | 0.02142 | 0.009162 | 0.01892 |
-| R_l | 0.04373 | 0.02142 | 0.009162 | 0.01893 |
-| alpha | 0.04984 | 0.02334 | 0.1687 | 0.4865 |
-| beta | 0.06812 | 0.033 | 0.04866 | 0.149 |
-| L | 5.983e-06 | 2.954e-06 | 1.634e-06 | 3.66e-06 |
-| n | 0.01025 | 0.004988 | 0.003951 | 0.01286 |
-| C_tes | 0.4081 | 0.2009 | 0.08112 | 0.2967 |
-| C_abs | 0.002141 | 0.0001335 | 5.055e-05 | 0.0001062 |
-| G_tes-bath | 0.3207 | 0.1579 | 0.07232 | 0.2575 |
-| G_abs-tes | 0.08719 | 0.04196 | 0.008535 | 0.03809 |
-| G_abs-abs | 0.002383 | 0.001147 | 0.0002333 | 0.001041 |
+| T_c | 1.042 | 0.5142 | 0.2879 | 0.2954 |
+| T_bath | 1.041 | 0.5138 | 0.2879 | 0.2952 |
+| R | 0.08794 | 0.04341 | 0.04673 | 0.1064 |
+| R_l | 0.08795 | 0.04341 | 0.04673 | 0.1064 |
+| alpha | 0.1868 | 0.09206 | 0.01143 | 0.2614 |
+| beta | 0.1226 | 0.06046 | 0.02486 | 0.05399 |
+| L | 1.554e-05 | 7.707e-06 | 8.589e-06 | 2.017e-05 |
+| n | 0.0513 | 0.02532 | 0.01434 | 0.01442 |
+| C_tes | 0.3524 | 0.1746 | 0.07938 | 0.1301 |
+| C_abs | 0.001308 | 3.952e-05 | 2.757e-05 | 6.212e-05 |
+| G_tes-bath | 0.3119 | 0.1547 | 0.0737 | 0.1073 |
+| G_abs-tes | 0.04079 | 0.01942 | 0.00553 | 0.02566 |
+| G_abs-abs | 0.001099 | 0.0005234 | 0.000149 | 0.0006916 |
 
 Interpretation: values are finite-difference shape sensitivities around the generic nominal reference. They do not establish target provenance.

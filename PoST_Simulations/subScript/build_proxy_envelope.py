@@ -12,9 +12,13 @@ import csv
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from proxy_physics import linear_modes
 
 
 CASE_NAME = "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2"
@@ -139,7 +143,21 @@ def _iv_summary() -> dict:
     }
 
 
-def _pulse_constraints() -> dict:
+def _pulse_constraints(output_dir: Path) -> dict:
+    audit_path = output_dir / "target_pulse_pole_audit.json"
+    if audit_path.exists():
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        selected = {channel: row["selected_slow_pole"] for channel, row in audit["channels"].items()}
+        taus = [float(row["time_constant_s"]) for row in selected.values()]
+        return {
+            "status": "pulse_constrained_scenario_gate",
+            "source_class": "target_confirmed",
+            "source_audit": audit_path.as_posix(),
+            "selected_slow_poles": selected,
+            "scenario_slow_pole_time_constant_range_s": [min(taus) * 0.5, max(taus) * 2.0],
+            "gate_rule": "production five-state slowest stable pole must lie in the combined CH0/CH1 pulse slow-pole band expanded by a fixed factor of two",
+            "individual_parameter_fit": False,
+        }
     root = TARGET_PATH / "CH0_pulse/rawdata"
     files = sorted(root.glob("CH0_*.dat"), key=lambda p: int(p.stem.split("_")[1]))[:30]
     waveforms = []
@@ -210,7 +228,7 @@ def _parameter_envelope(rt: dict, iv: dict, generic: dict) -> dict:
     }
 
 
-def _scenarios(envelope: dict, generic: dict, count: int, seed: int) -> dict:
+def _scenarios(envelope: dict, generic: dict, constraints: dict, count: int, seed: int) -> dict:
     rng = np.random.default_rng(seed)
     tc_low, tc_high = envelope["parameters"]["T_c"]["range"]
     r_low, r_high = envelope["parameters"]["R"]["range"]
@@ -224,8 +242,13 @@ def _scenarios(envelope: dict, generic: dict, count: int, seed: int) -> dict:
             factor = float(np.exp(rng.uniform(np.log(0.5), np.log(2.0))))
             factors[name] = factor
             params[name] = float(generic[name]) * factor
-        records.append({"scenario_id": f"proxy_{index:04d}", "scenario_class": "conditional_proxy_plus_simulation_reference_only", "seed": seed, "parameters": params, "factor_from_generic_reference": factors, "source_class_by_parameter": {"T_c": "nearby_run_proxy", "T_bath": "target_setpoint", "R": "same_campaign_unlinked_proxy", "R_SH": "generic_code_reference", **{name: "simulation_reference_only" for name in vary}}, "strict_target_allowed": False, "parameter_range_frozen_before_comparison": True})
-    return {"stage": "A", "freeze_status": "frozen", "generation_method": "fixed_seed_log_uniform_reference_factors", "seed": seed, "sample_count": count, "noise_spectrum_read": False, "scenarios": records}
+        modes = linear_modes(params)
+        slow_tau = modes[0]["time_constant_s"] if modes else None
+        low, high = constraints["scenario_slow_pole_time_constant_range_s"]
+        pulse_consistent = bool(slow_tau is not None and low <= slow_tau <= high)
+        records.append({"scenario_id": f"proxy_{index:04d}", "scenario_class": "pulse_constrained_proxy_plus_simulation_reference_only" if pulse_consistent else "reference_sensitivity_only_outside_pulse_gate", "seed": seed, "parameters": params, "factor_from_generic_reference": factors, "source_class_by_parameter": {"T_c": "nearby_run_proxy", "T_bath": "target_setpoint", "R": "same_campaign_unlinked_proxy", "R_SH": "generic_code_reference", **{name: "simulation_reference_only" for name in vary}}, "pulse_consistency": {"accepted": pulse_consistent, "slowest_model_time_constant_s": slow_tau, "allowed_range_s": [low, high]}, "strict_target_allowed": False, "parameter_range_frozen_before_comparison": True})
+    pulse_rows = [row for row in records if row["pulse_consistency"]["accepted"]]
+    return {"stage": "A", "freeze_status": "frozen", "generation_method": "fixed_seed_log_uniform_reference_factors_then_noise_blind_pulse_gate", "seed": seed, "sample_count": count, "noise_spectrum_read": False, "pulse_audit_used": True, "pulse_consistent_count": len(pulse_rows), "scenarios": records, "pulse_consistent_scenarios": pulse_rows, "reference_sensitivity_scenarios": {"count": count, "purpose": "generic 0.5x-2x reference sensitivity only; never included in the physical noise envelope"}}
 
 
 def main() -> None:
@@ -239,8 +262,8 @@ def main() -> None:
     iv = _iv_summary()
     generic = _generic_reference()
     envelope = _parameter_envelope(rt, iv, generic)
-    scenarios = _scenarios(envelope, generic, args.count, args.seed)
-    constraints = _pulse_constraints()
+    constraints = _pulse_constraints(args.output_dir)
+    scenarios = _scenarios(envelope, generic, constraints, args.count, args.seed)
     _dump(args.output_dir / "proxy_parameter_envelope.json", envelope)
     _dump(args.output_dir / "proxy_scenarios.json", scenarios)
     _dump(args.output_dir / "pulse_combination_constraints.json", constraints)
@@ -259,9 +282,9 @@ def main() -> None:
         "parameter_ranges_frozen_before_comparison": True,
         "experimental_spectrum_read": False,
         "experimental_noise_path_read": False,
-        "inputs": {"rt": [path.as_posix() for path in RT_FILES], "multi_temperature_iv": [path.as_posix() for path in IV_FILES], "same_day_iv_candidate": TARGET_IV.as_posix(), "pulse": (TARGET_PATH / "CH0_pulse/rawdata").as_posix(), "generic_reference": GENERIC_INPUT.as_posix()},
-        "strict_target_input": {"path": (args.output_dir / "input.json").as_posix(), "exists_at_generation": False, "modified": False, "note": "Current main checkout has no case input.json; no strict target input was created or changed."},
-        "outputs": ["proxy_parameter_envelope.json", "proxy_scenarios.json", "pulse_combination_constraints.json"],
+        "inputs": {"rt": [path.as_posix() for path in RT_FILES], "multi_temperature_iv": [path.as_posix() for path in IV_FILES], "same_day_iv_candidate": TARGET_IV.as_posix(), "pulse": (TARGET_PATH / "CH0_pulse/rawdata").as_posix(), "pulse_audit": (args.output_dir / "target_pulse_pole_audit.json").as_posix(), "generic_reference": GENERIC_INPUT.as_posix()},
+        "strict_target_input": {"path": (args.output_dir / "input.json").as_posix(), "exists_at_generation": (args.output_dir / "input.json").exists(), "modified": False, "note": "Target input is an unresolved capability manifest; no target physics value was populated or changed."},
+        "outputs": ["target_pulse_pole_audit.json", "proxy_parameter_envelope.json", "proxy_scenarios.json", "pulse_combination_constraints.json"],
         "prohibited_in_stage_A": ["experimental spectrum", "noise likelihood", "residual fit", "parameter optimizer using noise"],
         "strict_target_conclusion": "C — exact target physical case remains unidentified",
     }

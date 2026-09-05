@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
-from scipy import signal
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import general
 
 
 FREQUENCIES = np.array([10.0, 100.0, 1000.0, 3000.0, 5000.0, 7000.0, 10000.0])
@@ -23,10 +26,10 @@ def _dump(path: Path, value: dict) -> None:
 
 
 def _classification(value: float, low: float, q05: float, q95: float, high: float) -> str:
-    if low <= value <= high:
-        return "inside_sampled_min_max"
     if q05 <= value <= q95:
         return "inside_sampled_q05_q95"
+    if low <= value <= high:
+        return "inside_sampled_min_max"
     return "outside_sampled_envelope"
 
 
@@ -48,9 +51,7 @@ def _compare(exp: dict, envelope: dict) -> tuple[dict, dict]:
 
 
 def _post_factor() -> np.ndarray:
-    b, a = signal.butter(2, 10000.0, btype="low", fs=500000.0)
-    _, response = signal.freqz(b, a, worN=2.0 * np.pi * FREQUENCIES / 500000.0)
-    return np.abs(response) ** 2
+    return general.BesselMagnitudeResponse(FREQUENCIES, 500000.0, 10000.0, passes=2)
 
 
 def _plot(output_dir: Path, exp: dict, envelope: dict, post: bool = False) -> None:

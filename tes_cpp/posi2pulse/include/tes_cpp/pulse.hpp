@@ -13,8 +13,6 @@ struct Pulse {
     std::vector<double> ch1;
 };
 
-<<<<<<< Updated upstream
-=======
 // Derived TES linearization values used by the pulse solver.  Matrix entries
 // are the time-domain A convention (dx/dt = A x), not the frequency-domain
 // M(omega) = -A + i*omega*I convention used by the Python noise solver.
@@ -38,7 +36,6 @@ struct LinearizationSummary {
 
 LinearizationSummary inspect_linearization(const std::string& input_json_path);
 
->>>>>>> Stashed changes
 // Positions are one-based absorber-block indices: 1 <= position <= n_abs.
 std::vector<Pulse> generate_pulses(
     const std::string& input_json_path,

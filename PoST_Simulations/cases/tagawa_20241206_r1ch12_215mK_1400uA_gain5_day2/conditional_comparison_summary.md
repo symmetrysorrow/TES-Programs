@@ -10,13 +10,13 @@ The Stage-A range was frozen before this comparison. Sampled q05/q95 are descrip
 
 | Hz | experiment | proxy min | proxy q05 | proxy q50 | proxy q95 | proxy max | status |
 |---:|---:|---:|---:|---:|---:|---:|---|
-| 10 | 46.1562 | 0.999258 | 1.02361 | 1.23326 | 1.70886 | 2.12984 | outside_sampled_envelope |
-| 100 | 4.02433 | 1.00608 | 1.02978 | 1.23352 | 1.68924 | 2.05604 | outside_sampled_envelope |
-| 1000 | 1 | 1 | 1 | 1 | 1 | 1 | inside_sampled_min_max |
-| 3000 | 0.935658 | 0.541824 | 0.590047 | 0.696302 | 0.840284 | 0.954697 | inside_sampled_min_max |
-| 5000 | 0.862552 | 0.430532 | 0.477168 | 0.598108 | 0.80256 | 0.882456 | inside_sampled_min_max |
-| 7000 | 0.782724 | 0.391046 | 0.421822 | 0.556263 | 0.790852 | 0.806565 | inside_sampled_min_max |
-| 10000 | 0.636483 | 0.348106 | 0.389138 | 0.515133 | 0.785704 | 0.803826 | inside_sampled_min_max |
+| 10 | 46.1562 | 1.00221 | 1.02487 | 1.26797 | 1.91278 | 2.45364 | outside_sampled_envelope |
+| 100 | 4.02433 | 1.00646 | 1.02988 | 1.26533 | 1.88511 | 2.35688 | outside_sampled_envelope |
+| 1000 | 1 | 1 | 1 | 1 | 1 | 1 | inside_sampled_q05_q95 |
+| 3000 | 0.935658 | 0.50368 | 0.525809 | 0.634503 | 0.832317 | 0.952015 | inside_sampled_min_max |
+| 5000 | 0.862552 | 0.405026 | 0.412713 | 0.514176 | 0.709484 | 0.875188 | inside_sampled_min_max |
+| 7000 | 0.782724 | 0.346324 | 0.366759 | 0.463719 | 0.694628 | 0.791025 | inside_sampled_min_max |
+| 10000 | 0.636483 | 0.300632 | 0.318239 | 0.435804 | 0.678499 | 0.697952 | inside_sampled_q05_q95 |
 
 ## Band diagnostics
 

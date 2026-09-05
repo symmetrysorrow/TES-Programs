@@ -29,6 +29,7 @@ INPUT = ROOT / "PoST_Simulations" / "input.json"
 EXE_CANDIDATES = (
     ROOT / "tes_cpp" / "build" / "posi2pulse" / "Release" / "posi2pulse.exe",
     ROOT / "tes_cpp" / "build-release" / "posi2pulse.exe",
+    ROOT / "tes_cpp" / "posi2pulse" / "build-win-release" / "Release" / "posi2pulse.exe",
 )
 
 

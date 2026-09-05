@@ -33,6 +33,9 @@ if str(_tes_cpp_python) not in sys.path:
     sys.path.insert(0, str(_tes_cpp_python))
 
 from lib import general
+from lib.tes_noise_model import noise_components as shared_tes_noise_components
+from lib.tes_noise_model import linearized_matrix as shared_tes_linearized_matrix
+from lib.tes_noise_model import operating_point as shared_tes_operating_point
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
 from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
@@ -1254,6 +1257,32 @@ def MakeNoise():
     transfer_ch1 = np.asarray(
         transfer_ch1
     )
+
+
+def tes_operating_point(parameters):
+    """Return the canonical five-state TES operating point for tests/tools."""
+    return shared_tes_operating_point(parameters)
+
+
+def tes_linearized_time_matrix(parameters):
+    """Return the time-domain A matrix used by the pulse solver."""
+    return -np.real(shared_tes_linearized_matrix(parameters, 0.0))
+
+    # Keep the production writer on the same pure implementation used by the
+    # noise-blind proxy.  The legacy local equations above are retained for
+    # compatibility with old interactive diagnostics; all persisted arrays
+    # below are replaced by the canonical shared result.
+    shared_noise = shared_tes_noise_components(para, frequency)
+    frequency = shared_noise["frequencies_Hz"]
+    transfer_ch0 = shared_noise["transfer_ch0"]
+    transfer_ch1 = shared_noise["transfer_ch1"]
+    asd_ch0_components = shared_noise["components_ch0"]
+    asd_ch1_components = shared_noise["components_ch1"]
+    noise_total_ch0 = shared_noise["total_ch0"]
+    noise_total_ch1 = shared_noise["total_ch1"]
+    cross_psd = shared_noise["cross_psd"]
+    noise_sum = shared_noise["sum_asd"]
+    noise_diff = shared_noise["diff_asd"]
 
     # --------------------------------------------------------
     # Individual source ASD
