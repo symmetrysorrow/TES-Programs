@@ -36,6 +36,30 @@ def test_excess_johnson_validation_and_default():
             simulation.tes_johnson_voltage_asd(*args)
 
 
+def test_constant_johnson_hook_preserves_scalar_and_frequency_independent_values():
+    parameters = {"T_c": 0.1, "R": 0.01, "beta": 1.6, "excess_johnson_M": 0.25}
+    scalar = simulation.tes_johnson_voltage_asd(
+        parameters["T_c"], parameters["R"], parameters["beta"], 0.25
+    )
+    assert simulation.resolve_tes_johnson_model(parameters) == "constant_M"
+    assert simulation.resolve_tes_johnson_voltage_asd(parameters) == scalar
+    np.testing.assert_array_equal(
+        simulation.resolve_tes_johnson_voltage_asd(
+            parameters, np.array([0.0, 1.0, 1000.0])
+        ),
+        np.full(3, scalar),
+    )
+
+
+def test_resistance_fluctuation_validation_rejects_nonphysical_parameters():
+    for updates in (
+        {"tes_resistance_fluctuation_model": "lorentzian", "resistance_fluctuation_M0": -1.0, "resistance_fluctuation_tau_s": 1e-5},
+        {"tes_resistance_fluctuation_model": "lorentzian", "resistance_fluctuation_M0": 1.0, "resistance_fluctuation_tau_s": 0.0},
+    ):
+        with pytest.raises(ValueError):
+            simulation.resolve_resistance_fluctuation_model(updates)
+
+
 def test_asd_to_time_and_back_preserves_one_sided_asd():
     sample = 1024
     rate = 1024.0

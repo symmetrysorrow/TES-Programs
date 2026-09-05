@@ -118,6 +118,113 @@ def resolve_excess_johnson_M(parameters):
     return value
 
 
+def resolve_tes_johnson_model(parameters):
+    """Resolve the TES Johnson model without selecting a new physics law.
+
+    The only implemented model is the historical frequency-independent
+    excess factor ``M``.  Keeping this selection separate from the ASD
+    calculation gives the noise matrix a single, auditable extension point
+    for a future frequency-dependent model supplied with an independently
+    motivated formula.
+    """
+    value = parameters.get("tes_johnson_model", "constant_M")
+    if value is None:
+        value = "constant_M"
+    normalized = str(value).strip().lower()
+    aliases = {
+        "constant": "constant_M",
+        "constant_m": "constant_M",
+        "frequency_independent": "constant_M",
+        "none": "constant_M",
+    }
+    normalized = aliases.get(normalized, normalized)
+    if normalized != "constant_M":
+        raise ValueError(
+            "tes_johnson_model currently supports only 'constant_M'"
+        )
+    return normalized
+
+
+def resolve_tes_johnson_voltage_asd(parameters, frequency=None):
+    """Return the configured TES Johnson ASD, with a future frequency hook.
+
+    For the current constant-M model, a scalar is returned when ``frequency``
+    is omitted and an array with the same shape as ``frequency`` is returned
+    otherwise.  The scalar path intentionally calls the existing function
+    directly, preserving the historical numerical operation order.
+    """
+    resolve_tes_johnson_model(parameters)
+    value = tes_johnson_voltage_asd(
+        parameters["T_c"],
+        parameters["R"],
+        parameters["beta"],
+        resolve_excess_johnson_M(parameters),
+    )
+    if frequency is None:
+        return value
+    frequency = np.asarray(frequency, dtype=float)
+    if np.any(~np.isfinite(frequency)) or np.any(frequency < 0.0):
+        raise ValueError("frequency must be finite and non-negative")
+    return np.full(frequency.shape, value, dtype=float)
+
+
+def resolve_resistance_fluctuation_model(parameters):
+    """Validate the optional TES resistance-fluctuation noise model."""
+    value = parameters.get("tes_resistance_fluctuation_model", "none")
+    if value is None:
+        value = "none"
+    normalized = str(value).strip().lower()
+    if normalized not in {"none", "lorentzian"}:
+        raise ValueError(
+            "tes_resistance_fluctuation_model must be 'none' or 'lorentzian'"
+        )
+    if normalized == "lorentzian":
+        try:
+            m0 = float(parameters["resistance_fluctuation_M0"])
+            tau = float(parameters["resistance_fluctuation_tau_s"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "lorentzian resistance fluctuation requires "
+                "resistance_fluctuation_M0 and resistance_fluctuation_tau_s"
+            ) from exc
+        if not np.isfinite(m0) or m0 < 0.0:
+            raise ValueError("resistance_fluctuation_M0 must be finite and non-negative")
+        if not np.isfinite(tau) or tau <= 0.0:
+            raise ValueError("resistance_fluctuation_tau_s must be finite and positive")
+    return normalized
+
+
+def resistance_fluctuation_voltage_asd(
+    temperature,
+    resistance,
+    beta,
+    frequency,
+    m0,
+    tau_s,
+):
+    """Independent TES resistance-fluctuation voltage ASD.
+
+    The Lorentzian factor is applied to the standard (M=0) TES Johnson ASD;
+    this source is separate from the existing mixed-down Johnson source.
+    """
+    frequency = np.asarray(frequency, dtype=float)
+    if np.any(~np.isfinite(frequency)) or np.any(frequency < 0.0):
+        raise ValueError("frequency must be finite and non-negative")
+    m0 = float(m0)
+    tau_s = float(tau_s)
+    if not np.isfinite(m0) or m0 < 0.0:
+        raise ValueError("m0 must be finite and non-negative")
+    if not np.isfinite(tau_s) or tau_s <= 0.0:
+        raise ValueError("tau_s must be finite and positive")
+    e_j0 = tes_johnson_voltage_asd(
+        temperature,
+        resistance,
+        beta,
+        0.0,
+    )
+    return e_j0 * m0 / np.sqrt(1.0 + (2.0 * np.pi * frequency * tau_s) ** 2)
+
+
 def tes_johnson_voltage_asd(temperature, resistance, beta, excess_johnson_M=0.0):
     """TES Johnson voltage ASD in V/sqrt(Hz).
 
@@ -802,6 +909,13 @@ def MakeNoise():
         "C_abs"
     ]
 
+    internal_model = str(
+        para.get("tes_internal_model", "none")
+    ).strip().lower()
+    if internal_model not in {"none", "hanging"}:
+        raise ValueError("tes_internal_model must be 'none' or 'hanging'")
+    hanging_requested = internal_model == "hanging"
+
     C_tes = para[
         "C_tes"
     ]
@@ -817,6 +931,22 @@ def MakeNoise():
     G_tes_bath = para[
         "G_tes-bath"
     ]
+
+    if hanging_requested:
+        if "C_tes_hanging" not in para or "G_tes-hanging" not in para:
+            raise ValueError(
+                "hanging model requires C_tes_hanging and G_tes-hanging"
+            )
+        C_tes_hanging = float(para["C_tes_hanging"])
+        G_tes_hanging = float(para["G_tes-hanging"])
+        if not np.isfinite(C_tes_hanging) or C_tes_hanging <= 0:
+            raise ValueError("C_tes_hanging must be finite and positive")
+        if not np.isfinite(G_tes_hanging) or G_tes_hanging < 0:
+            raise ValueError("G_tes-hanging must be finite and non-negative")
+    else:
+        C_tes_hanging = 0.0
+        G_tes_hanging = 0.0
+    hanging = hanging_requested and G_tes_hanging > 0.0
 
     R = para[
         "R"
@@ -843,6 +973,18 @@ def MakeNoise():
     ]
 
     excess_johnson_M = resolve_excess_johnson_M(para)
+    tes_johnson_model = resolve_tes_johnson_model(para)
+    resistance_fluctuation_model = resolve_resistance_fluctuation_model(para)
+    if resistance_fluctuation_model == "lorentzian":
+        resistance_fluctuation_M0 = float(
+            para["resistance_fluctuation_M0"]
+        )
+        resistance_fluctuation_tau_s = float(
+            para["resistance_fluctuation_tau_s"]
+        )
+    else:
+        resistance_fluctuation_M0 = 0.0
+        resistance_fluctuation_tau_s = 0.0
 
     L = para[
         "L"
@@ -970,10 +1112,17 @@ def MakeNoise():
         * ptfn_Flink
     )
 
+    ptfn_hanging = (
+        np.sqrt(4 * k_b * T_c**2 * G_tes_hanging)
+        if hanging
+        else 0.0
+    )
+
     # --------------------------------------------------------
     # Johnson noise amplitudes
     # --------------------------------------------------------
 
+    # Keep the scalar constant-M path identical to the historical source.
     enj = tes_johnson_voltage_asd(
         T_c,
         R,
@@ -1000,6 +1149,20 @@ def MakeNoise():
         "johnson_load2",
         "johnson_tes2",
     ]
+    if hanging:
+        source_names.extend(
+            [
+                "phonon_tes1_hanging",
+                "phonon_tes2_hanging",
+            ]
+        )
+    if resistance_fluctuation_model == "lorentzian":
+        source_names.extend(
+            [
+                "resistance_fluctuation_tes1",
+                "resistance_fluctuation_tes2",
+            ]
+        )
 
     # --------------------------------------------------------
     # Noise source matrix
@@ -1009,9 +1172,10 @@ def MakeNoise():
 
     def matrix_N():
 
+        state_count = 7 if hanging else 5
         X = np.zeros(
             (
-                5,
+                state_count,
                 len(source_names),
             ),
             dtype=np.complex128,
@@ -1050,46 +1214,75 @@ def MakeNoise():
             / C_tes
         )
 
-        X[2, 3] = (
+        X[3 if hanging else 2, 3] = (
             -ptfn_eff
             / C_abs
         )
 
         # Absorber-TES2 effective TFN
-        X[2, 4] = (
+        X[3 if hanging else 2, 4] = (
             -ptfn_eff
             / C_abs
         )
 
-        X[3, 4] = (
+        X[4 if hanging else 3, 4] = (
             +ptfn_eff
             / C_tes
         )
 
         # TES2-bath TFN
-        X[3, 5] = (
+        X[4 if hanging else 3, 5] = (
             ptfn_tes_bath
             / C_tes
         )
 
         # Load2 Johnson noise
-        X[4, 6] = (
+        X[6 if hanging else 4, 6] = (
             enj_R
             / L
         )
 
         # TES2 Johnson noise
-        X[4, 7] = (
+        X[6 if hanging else 4, 7] = (
             -enj
             / L
         )
 
-        X[3, 7] = (
+        X[4 if hanging else 3, 7] = (
             I
             * enj
             / C_tes
         )
 
+        if hanging:
+            X[1, 8] = +ptfn_hanging / C_tes
+            X[2, 8] = -ptfn_hanging / C_tes_hanging
+            X[4, 9] = +ptfn_hanging / C_tes
+            X[5, 9] = -ptfn_hanging / C_tes_hanging
+
+        if resistance_fluctuation_model == "lorentzian":
+            # Frequency-dependent columns are filled by matrix_N_at_frequency.
+            pass
+
+        return X
+
+    def matrix_N_at_frequency(frequency_hz):
+        X = matrix_N()
+        if resistance_fluctuation_model == "lorentzian":
+            correction = resistance_fluctuation_voltage_asd(
+                T_c,
+                R,
+                b,
+                frequency_hz,
+                resistance_fluctuation_M0,
+                resistance_fluctuation_tau_s,
+            )
+            idx1 = 10 if hanging else 8
+            idx2 = idx1 + 1
+            X[0, idx1] = -correction / L
+            X[1, idx1] = I * correction / C_tes
+            X[6 if hanging else 4, idx2] = -correction / L
+            X[4 if hanging else 3, idx2] = I * correction / C_tes
         return X
 
     # --------------------------------------------------------
@@ -1099,6 +1292,35 @@ def MakeNoise():
     def matrix_M(
         omega,
     ):
+
+        if hanging:
+            X = np.zeros((7, 7), dtype=np.complex128)
+            X[0, 0] = 1 / t_el + 1j * omega
+            X[0, 1] = L_I * G_tes_bath / (I * L)
+            X[1, 0] = -I * R * (2 + b) / C_tes
+            X[1, 1] = (
+                1 / t_I + G_eff / C_tes
+                + G_tes_hanging / C_tes + 1j * omega
+            )
+            X[1, 2] = -G_tes_hanging / C_tes
+            X[1, 3] = -G_eff / C_tes
+            X[2, 1] = -G_tes_hanging / C_tes_hanging
+            X[2, 2] = G_tes_hanging / C_tes_hanging + 1j * omega
+            X[3, 1] = -G_eff / C_abs
+            X[3, 3] = 2 * G_eff / C_abs + 1j * omega
+            X[3, 4] = -G_eff / C_abs
+            X[4, 3] = -G_eff / C_tes
+            X[4, 4] = (
+                1 / t_I + G_eff / C_tes
+                + G_tes_hanging / C_tes + 1j * omega
+            )
+            X[4, 5] = -G_tes_hanging / C_tes
+            X[4, 6] = -I * R * (2 + b) / C_tes
+            X[5, 4] = -G_tes_hanging / C_tes_hanging
+            X[5, 5] = G_tes_hanging / C_tes_hanging + 1j * omega
+            X[6, 4] = L_I * G_tes_bath / (I * L)
+            X[6, 6] = 1 / t_el + 1j * omega
+            return X
 
         X = np.zeros(
             (
@@ -1234,7 +1456,11 @@ def MakeNoise():
 
         H = np.linalg.solve(
             matrix_M(omg),
-            N,
+            (
+                matrix_N_at_frequency(omg / (2.0 * math.pi))
+                if resistance_fluctuation_model == "lorentzian"
+                else N
+            ),
         )
 
         transfer_ch0.append(
@@ -1242,7 +1468,7 @@ def MakeNoise():
         )
 
         transfer_ch1.append(
-            H[4, :]
+            H[6 if hanging else 4, :]
         )
 
     # Shape:
@@ -1362,11 +1588,29 @@ def MakeNoise():
         f.attrs[
             "noise_model"
         ] = (
-            "five_state_effective_conductance"
+            "seven_state_hanging_tes"
+            if hanging
+            else "five_state_effective_conductance"
         )
+
+        f.attrs["state_count"] = 7 if hanging else 5
+        f.attrs["tes_internal_model"] = "hanging" if hanging else "none"
+        f.attrs["source_names"] = json.dumps(source_names)
+        if hanging:
+            f.attrs["C_tes_hanging_J_per_K"] = C_tes_hanging
+            f.attrs["G_tes_hanging_W_per_K"] = G_tes_hanging
 
         f.attrs["excess_johnson_M"] = excess_johnson_M
         f.attrs["johnson_model"] = "standard_tes_johnson_with_excess_factor"
+        f.attrs["tes_johnson_model"] = tes_johnson_model
+        f.attrs["johnson_model_implemented"] = (
+            "standard_tes_johnson_with_excess_factor"
+        )
+        f.attrs["johnson_frequency_dependent"] = False
+        f.attrs["tes_resistance_fluctuation_model"] = resistance_fluctuation_model
+        if resistance_fluctuation_model == "lorentzian":
+            f.attrs["resistance_fluctuation_M0"] = resistance_fluctuation_M0
+            f.attrs["resistance_fluctuation_tau_s"] = resistance_fluctuation_tau_s
         f.attrs["johnson_formula"] = (
             "S_V_J = 4*k_B*T*R*(1+2*beta)*(1+M^2)"
         )
