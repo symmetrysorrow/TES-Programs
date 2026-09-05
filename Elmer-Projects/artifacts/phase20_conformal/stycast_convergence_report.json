@@ -1,7 +1,45 @@
 {
-  "project": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\elmer_project_physical_parity_conformal.json",
-  "definition": "498 um analytic Stycast cylinder; conformal shared-node meshes",
+  "status": "PASS",
+  "ideal_reference": "498 um analytic cylinder",
   "levels": [
+    {
+      "label": "coarse",
+      "ideal_volume_m3": 3.895637722304414e-12,
+      "gmsh_pre_elmer_volume_m3": 3.854152298150885e-12,
+      "elmer_fem_volume_m3": 3.854152298147841e-12,
+      "gmsh_element_count": 901,
+      "elmer_element_count": 901,
+      "occ_kernel_volume_m3": 3.8956377223044176e-12,
+      "gmsh_vs_ideal_relative_error": -0.010649199723065971,
+      "elmer_vs_ideal_relative_error": -0.010649199723847298,
+      "elmer_vs_gmsh_relative_error": -7.897368668368485e-13
+    },
+    {
+      "label": "medium",
+      "ideal_volume_m3": 3.895637722304414e-12,
+      "gmsh_pre_elmer_volume_m3": 3.877385381479452e-12,
+      "elmer_fem_volume_m3": 3.87738538148171e-12,
+      "gmsh_element_count": 1849,
+      "elmer_element_count": 1849,
+      "occ_kernel_volume_m3": 3.8956377223044176e-12,
+      "gmsh_vs_ideal_relative_error": -0.004685328083886963,
+      "elmer_vs_ideal_relative_error": -0.0046853280833073965,
+      "elmer_vs_gmsh_relative_error": 5.822952318331266e-13
+    },
+    {
+      "label": "fine",
+      "ideal_volume_m3": 3.895637722304414e-12,
+      "gmsh_pre_elmer_volume_m3": 3.8852591256384476e-12,
+      "elmer_fem_volume_m3": 3.8852591256377714e-12,
+      "gmsh_element_count": 3065,
+      "elmer_element_count": 3065,
+      "occ_kernel_volume_m3": 3.8956377223044176e-12,
+      "gmsh_vs_ideal_relative_error": -0.002664158580903008,
+      "elmer_vs_ideal_relative_error": -0.002664158581076567,
+      "elmer_vs_gmsh_relative_error": -1.7402268257280322e-13
+    }
+  ],
+  "mesh_surface_and_quality": [
     {
       "label": "coarse",
       "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_coarse",
@@ -114,6 +152,10 @@
       }
     }
   ],
-  "status": "REPORT_ONLY",
-  "note": "Production acceptance still requires a monotone convergence decision and a production-size run."
+  "checks": {
+    "monotone_gmsh_to_ideal_error": true,
+    "elmer_to_gmsh_volume_preservation": true,
+    "max_abs_elmer_vs_gmsh_relative_error": 7.897368668368485e-13
+  },
+  "interpretation": "OCC kernel volume equals the ideal cylinder; the remaining error is polygonal Gmsh discretization and decreases monotonically. ElmerGrid preserves the pre-Elmer Gmsh volume."
 }

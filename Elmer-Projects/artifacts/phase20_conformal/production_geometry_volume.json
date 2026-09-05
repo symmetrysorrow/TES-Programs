@@ -1,0 +1,108 @@
+{
+  "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+  "gmsh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\gmsh\\project.msh",
+  "definition": "Gmsh pre-ElmerGrid tetra integration is used as the CAD-discretized proxy; exact OCC kernel volume is not emitted by the current generator.",
+  "bodies": {
+    "abs": {
+      "ideal_volume_m3": 7e-10,
+      "gmsh_pre_elmer_volume_m3": 6.999999999999987e-10,
+      "elmer_fem_volume_m3": 6.999999999999997e-10,
+      "gmsh_element_count": 6809,
+      "elmer_element_count": 6809,
+      "gmsh_vs_ideal_relative_error": -1.7725298840422022e-15,
+      "elmer_vs_ideal_relative_error": -4.4313247101055055e-16,
+      "elmer_vs_gmsh_relative_error": 1.3293974130316541e-15
+    },
+    "TES": {
+      "ideal_volume_m3": 4e-14,
+      "gmsh_pre_elmer_volume_m3": 3.999999999999966e-14,
+      "elmer_fem_volume_m3": 3.9999999999999634e-14,
+      "gmsh_element_count": 1615,
+      "elmer_element_count": 1615,
+      "gmsh_vs_ideal_relative_error": -8.519697776386927e-15,
+      "elmer_vs_ideal_relative_error": -9.150786500563737e-15,
+      "elmer_vs_gmsh_relative_error": -6.310887241768149e-16
+    },
+    "Stycast": {
+      "ideal_volume_m3": 3.895637722304414e-12,
+      "gmsh_pre_elmer_volume_m3": 3.854152298150885e-12,
+      "elmer_fem_volume_m3": 3.854152298147841e-12,
+      "gmsh_element_count": 901,
+      "elmer_element_count": 901,
+      "gmsh_vs_ideal_relative_error": -0.010649199723065971,
+      "elmer_vs_ideal_relative_error": -0.010649199723847298,
+      "elmer_vs_gmsh_relative_error": -7.897368668368485e-13
+    },
+    "SiO2_1": {
+      "ideal_volume_m3": 1.8e-11,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 1.8000000000001395e-11,
+      "gmsh_element_count": null,
+      "elmer_element_count": 66032,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 7.754818242684634e-14,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "Si_1": {
+      "ideal_volume_m3": 2.6265e-10,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 2.626500000000156e-10,
+      "gmsh_element_count": null,
+      "elmer_element_count": 68190,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 5.924742156350212e-14,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "SiNx": {
+      "ideal_volume_m3": 1.751e-11,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 1.7510000000001696e-11,
+      "gmsh_element_count": null,
+      "elmer_element_count": 68949,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 9.687986810892426e-14,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "Si_2": {
+      "ideal_volume_m3": 6.1285e-09,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 6.128500000000037e-09,
+      "gmsh_element_count": null,
+      "elmer_element_count": 172849,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 6.0737745883799046e-15,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "SiO2_2": {
+      "ideal_volume_m3": 3.502e-11,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 3.5020000000003347e-11,
+      "gmsh_element_count": null,
+      "elmer_element_count": 68301,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 9.558813653413861e-14,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "Membrane_Si1": {
+      "ideal_volume_m3": 7.349999999999999e-12,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 7.350000000000007e-12,
+      "gmsh_element_count": null,
+      "elmer_element_count": 2405,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 1.0990388665936274e-15,
+      "elmer_vs_gmsh_relative_error": null
+    },
+    "Membrane_SiNx": {
+      "ideal_volume_m3": 4.899999999999999e-13,
+      "gmsh_pre_elmer_volume_m3": null,
+      "elmer_fem_volume_m3": 4.9e-13,
+      "gmsh_element_count": null,
+      "elmer_element_count": 3632,
+      "gmsh_vs_ideal_relative_error": null,
+      "elmer_vs_ideal_relative_error": 2.0606978748630516e-16,
+      "elmer_vs_gmsh_relative_error": null
+    }
+  },
+  "status": "REPORT_ONLY"
+}

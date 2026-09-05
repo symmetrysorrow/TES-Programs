@@ -1,0 +1,38 @@
+{
+  "synthetic_constant_flux_self_test": "PASS",
+  "post_processing_classification": {
+    "normal_orientation_bug": "CLOSED",
+    "fixed_sign_convention_bug": "CLOSED",
+    "shared_face_double_counting": "NOT_EVIDENT",
+    "surface_area_or_facet_coverage_bug": "NOT_EVIDENT",
+    "discrete_flux_reconstruction_or_physical_consistency": "OPEN"
+  },
+  "interface_checks": {
+    "Membrane_TES": {
+      "normal_orientation_self_consistent": true,
+      "equal_facet_count": true,
+      "equal_surface_area": true,
+      "temperature_mean_difference_K": 0.0,
+      "normalized_imbalance": 0.9545461824165636,
+      "status": "FAIL"
+    },
+    "TES_Stycast": {
+      "normal_orientation_self_consistent": true,
+      "equal_facet_count": true,
+      "equal_surface_area": true,
+      "temperature_mean_difference_K": 0.0,
+      "normalized_imbalance": 1.0009920871600757,
+      "status": "FAIL"
+    },
+    "Stycast_absorber": {
+      "normal_orientation_self_consistent": true,
+      "equal_facet_count": true,
+      "equal_surface_area": true,
+      "temperature_mean_difference_K": 0.0,
+      "normalized_imbalance": 0.15799630189143823,
+      "status": "NOT_INFORMATIVE"
+    }
+  },
+  "topology_gate_at_source_mesh": "PASS",
+  "conclusion": "Synthetic and orientation checks pass, but the real-case integrated elemental fluxes remain imbalanced. This is not converted to PASS; the remaining blocker is a discrete flux reconstruction / physical-consistency issue requiring higher-order or solver-native flux validation."
+}

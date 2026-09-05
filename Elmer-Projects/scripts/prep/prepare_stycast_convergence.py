@@ -15,23 +15,25 @@ def main() -> int:
     project = json.loads(SOURCE.read_text(encoding="utf-8"))
     base = copy.deepcopy(project["meshes"]["mesh_physical_parity_conformal"])
     levels = {
-        "mesh_stycast_convergence_base": 1.0 / 60_000.0,
-        "mesh_stycast_convergence_2x": 1.0 / 120_000.0,
-        "mesh_stycast_convergence_4x": 1.0 / 240_000.0,
+        "mesh_stycast_convergence_coarse": (45.0e-6, 90.0e-6),
+        "mesh_stycast_convergence_medium": (30.0e-6, 60.0e-6),
+        "mesh_stycast_convergence_fine": (22.5e-6, 45.0e-6),
     }
-    for name, h in levels.items():
+    for name, (h_min, h_max) in levels.items():
         entry = copy.deepcopy(base)
         entry["dir"] = name
         entry["recipe"]["mesh_overrides"] = {
-            "mesh_min": h,
-            "mesh_max": h,
+            "mesh_min": h_min,
+            "mesh_max": h_max,
+            "mesh_min_mode": "fixed",
+            "mesh_max_mode": "fixed",
         }
         args = list(entry["recipe"]["elmergrid_args"])
         args[args.index("-out") + 1] = name
         entry["recipe"]["elmergrid_args"] = args
         entry["notes"] = (
             "Conformal shared-node Stycast volume convergence level; "
-            f"uniform target h={h:.12g} m."
+            f"fixed target h_min={h_min:.12g} m, h_max={h_max:.12g} m."
         )
         project["meshes"][name] = entry
     project["cases"] = {}

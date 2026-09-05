@@ -1,0 +1,220 @@
+{
+  "classification": "The old production candidate combined semantic retagging and contact partition failures; regeneration from the current generator fixes both.",
+  "reports": {
+    "smoke_pass": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+      "status": "PASS",
+      "node_count": 26693,
+      "volume_element_count": 132357,
+      "mesh_quality": {
+        "tetrahedra": 132357,
+        "min_abs_tet_volume_m3": 1.6092208332073113e-20,
+        "max_abs_tet_volume_m3": 2.024639938277721e-12,
+        "zero_volume_elements": 0,
+        "nonfinite_volume_elements": 0,
+        "duplicate_volume_connectivity": 0,
+        "status": "PASS"
+      },
+      "interfaces": [
+        {
+          "interface": "Membrane_TES",
+          "shared_nodes": 79,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 132,
+          "right_surface_elements": 132,
+          "matched_surface_elements": 132,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        },
+        {
+          "interface": "TES_Stycast",
+          "shared_nodes": 51,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 81,
+          "right_surface_elements": 81,
+          "matched_surface_elements": 81,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        },
+        {
+          "interface": "Stycast_absorber",
+          "shared_nodes": 22,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 32,
+          "right_surface_elements": 32,
+          "matched_surface_elements": 32,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        }
+      ]
+    },
+    "old_production_failure": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "status": "FAIL",
+      "node_count": 90872,
+      "volume_element_count": 459683,
+      "mesh_quality": {
+        "tetrahedra": 459683,
+        "min_abs_tet_volume_m3": 1.4203773603652818e-21,
+        "max_abs_tet_volume_m3": 3.8466284078461715e-13,
+        "zero_volume_elements": 0,
+        "nonfinite_volume_elements": 0,
+        "duplicate_volume_connectivity": 0,
+        "status": "PASS"
+      },
+      "interfaces": [
+        {
+          "interface": "Membrane_TES",
+          "shared_nodes": 0,
+          "left_only_nodes": 0,
+          "right_only_nodes": 205,
+          "left_surface_elements": 0,
+          "right_surface_elements": 360,
+          "matched_surface_elements": 0,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": false,
+          "status": "FAIL",
+          "failure_reasons": [
+            "left_surface_missing",
+            "node_id_sets_differ",
+            "surface_partition_differs"
+          ],
+          "failure_categories": [
+            "RETAGGING_ERROR",
+            "NODE_MERGE_FAILURE",
+            "CONTACT_PARTITION_MISMATCH",
+            "SURFACE_MESH_MISMATCH"
+          ]
+        },
+        {
+          "interface": "TES_Stycast",
+          "shared_nodes": 139,
+          "left_only_nodes": 66,
+          "right_only_nodes": 0,
+          "left_surface_elements": 360,
+          "right_surface_elements": 241,
+          "matched_surface_elements": 241,
+          "max_coordinate_gap_m": 0.00010644355829753919,
+          "connected_element_adjacency": true,
+          "status": "FAIL",
+          "failure_reasons": [
+            "node_id_sets_differ",
+            "surface_partition_differs",
+            "coordinate_gap_exceeds_tolerance"
+          ],
+          "failure_categories": [
+            "NODE_MERGE_FAILURE",
+            "CONTACT_PARTITION_MISMATCH",
+            "SURFACE_MESH_MISMATCH",
+            "CONTACT_AREA_MISMATCH"
+          ]
+        },
+        {
+          "interface": "Stycast_absorber",
+          "shared_nodes": 114,
+          "left_only_nodes": 0,
+          "right_only_nodes": 154,
+          "left_surface_elements": 208,
+          "right_surface_elements": 486,
+          "matched_surface_elements": 208,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "FAIL",
+          "failure_reasons": [
+            "node_id_sets_differ",
+            "surface_partition_differs"
+          ],
+          "failure_categories": [
+            "NODE_MERGE_FAILURE",
+            "CONTACT_PARTITION_MISMATCH",
+            "SURFACE_MESH_MISMATCH"
+          ]
+        }
+      ]
+    },
+    "regenerated_production": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "status": "PASS",
+      "node_count": 90872,
+      "volume_element_count": 459683,
+      "mesh_quality": {
+        "tetrahedra": 459683,
+        "min_abs_tet_volume_m3": 1.4203773603652818e-21,
+        "max_abs_tet_volume_m3": 3.8466284078461715e-13,
+        "zero_volume_elements": 0,
+        "nonfinite_volume_elements": 0,
+        "duplicate_volume_connectivity": 0,
+        "status": "PASS"
+      },
+      "interfaces": [
+        {
+          "interface": "Membrane_TES",
+          "shared_nodes": 205,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 360,
+          "right_surface_elements": 360,
+          "matched_surface_elements": 360,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        },
+        {
+          "interface": "TES_Stycast",
+          "shared_nodes": 139,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 241,
+          "right_surface_elements": 241,
+          "matched_surface_elements": 241,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        },
+        {
+          "interface": "Stycast_absorber",
+          "shared_nodes": 114,
+          "left_only_nodes": 0,
+          "right_only_nodes": 0,
+          "left_surface_elements": 208,
+          "right_surface_elements": 208,
+          "matched_surface_elements": 208,
+          "max_coordinate_gap_m": 0.0,
+          "connected_element_adjacency": true,
+          "status": "PASS",
+          "failure_reasons": [],
+          "failure_categories": [
+            "PASS"
+          ]
+        }
+      ]
+    }
+  },
+  "production_topology_gate": "PASS"
+}

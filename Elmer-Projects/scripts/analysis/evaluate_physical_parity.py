@@ -221,9 +221,9 @@ def determinant(matrix: list[list[float]]) -> float:
     )
 
 
-def gradient_z(
+def tetra_gradient(
     points: list[tuple[float, float, float]], temperatures: list[float]
-) -> float | None:
+) -> tuple[float, float, float] | None:
     origin = points[0]
     matrix = [
         [points[i][axis] - origin[axis] for axis in range(3)]
@@ -233,10 +233,59 @@ def gradient_z(
     det = determinant(matrix)
     if abs(det) < 1.0e-40:
         return None
-    z_matrix = [row[:] for row in matrix]
-    for index in range(3):
-        z_matrix[index][2] = rhs[index]
-    return determinant(z_matrix) / det
+    gradient = []
+    for axis in range(3):
+        component_matrix = [row[:] for row in matrix]
+        for index in range(3):
+            component_matrix[index][axis] = rhs[index]
+        gradient.append(determinant(component_matrix) / det)
+    return tuple(gradient)
+
+
+def oriented_face_flux(
+    points: list[tuple[float, float, float]],
+    temperatures: list[float],
+    face_indices: tuple[int, int, int],
+    conductivity_value: float,
+) -> dict[str, float | tuple[float, float, float]] | None:
+    """Return outward elemental heat flux for one tetrahedral face.
+
+    The face ordering in ``mesh.boundary`` is not trusted.  The cross product
+    is oriented using the parent tetrahedron centroid, so reversing the input
+    face node order cannot change the outward flux sign.
+    """
+    gradient = tetra_gradient(points, temperatures)
+    if gradient is None:
+        return None
+    a, b, c = (points[index] for index in face_indices)
+    ab = tuple(b[index] - a[index] for index in range(3))
+    ac = tuple(c[index] - a[index] for index in range(3))
+    raw_normal = (
+        ab[1] * ac[2] - ab[2] * ac[1],
+        ab[2] * ac[0] - ab[0] * ac[2],
+        ab[0] * ac[1] - ab[1] * ac[0],
+    )
+    raw_norm = math.sqrt(sum(value * value for value in raw_normal))
+    if raw_norm == 0.0:
+        return None
+    face_centroid = tuple((a[index] + b[index] + c[index]) / 3.0 for index in range(3))
+    tetra_centroid = tuple(sum(point[index] for point in points) / 4.0 for index in range(3))
+    outward_test = sum(
+        raw_normal[index] * (face_centroid[index] - tetra_centroid[index])
+        for index in range(3)
+    )
+    sign = 1.0 if outward_test >= 0.0 else -1.0
+    normal = tuple(sign * value / raw_norm for value in raw_normal)
+    area = 0.5 * raw_norm
+    heat_flux_vector = tuple(-conductivity_value * value for value in gradient)
+    integrated_flux = sum(heat_flux_vector[index] * normal[index] for index in range(3)) * area
+    return {
+        "integrated_flux_W": integrated_flux,
+        "area_m2": area,
+        "normal": normal,
+        "gradient": gradient,
+        "conductivity_W_mK": conductivity_value,
+    }
 
 
 def conductivity(body: str, temperature: float, parameters: dict) -> float:
@@ -264,7 +313,12 @@ def conductivity(body: str, temperature: float, parameters: dict) -> float:
     }.get(body, 1.0)
 
 
-def heat_flux_consistency(mesh: Path, result: Path, project: Path) -> dict[str, dict[str, float | str]]:
+def heat_flux_consistency(
+    mesh: Path,
+    result: Path,
+    project: Path,
+    field_metadata: dict[str, object] | None = None,
+) -> dict[str, dict[str, object]]:
     bodies, _, nodes, elements, _, faces, parents = mesh_data(mesh)
     values = result_values(result)
     model = reconcile_project(json.loads(project.read_text(encoding="utf-8")))
@@ -272,28 +326,66 @@ def heat_flux_consistency(mesh: Path, result: Path, project: Path) -> dict[str, 
     reverse = {value: key for key, value in bodies.items()}
     report: dict[str, dict[str, float | str]] = {}
     for left, right, label, left_body, right_body, left_sign, right_sign in PAIR_DEFS:
-        fluxes: list[float] = []
-        for surface, body_name, sign in (
-            (left, left_body, left_sign),
-            (right, right_body, right_sign),
+        side_reports: list[dict[str, object]] = []
+        for surface, body_name in (
+            (left, left_body),
+            (right, right_body),
         ):
             total = 0.0
+            area_total = 0.0
+            facet_count = 0
+            skipped_facets = 0
+            conductivities: list[float] = []
+            normals: list[tuple[float, float, float]] = []
+            surface_temperatures: list[float] = []
             for face, parent in zip(
                 faces[surface], parents[surface]
             ):
                 if parent not in elements:
+                    skipped_facets += 1
                     continue
                 body_id, conn = elements[parent]
                 actual_body = reverse.get(body_id, body_name)
                 points = [nodes[node] for node in conn]
                 temps = [values[node] for node in conn]
-                dz = gradient_z(points, temps)
-                if dz is None:
+                surface_temperatures.extend(values[node] for node in face)
+                face_indices = tuple(conn.index(node) for node in face)
+                flux = oriented_face_flux(
+                    points,
+                    temps,
+                    face_indices,
+                    conductivity(actual_body, sum(temps) / 4.0, parameters),
+                )
+                if flux is None:
+                    skipped_facets += 1
                     continue
-                face_area = triangle_area([nodes[node] for node in face])
-                total += -conductivity(actual_body, sum(temps) / 4.0, parameters) * dz * sign * face_area
-            fluxes.append(total)
-        q_left, q_right = fluxes
+                total += float(flux["integrated_flux_W"])
+                area_total += float(flux["area_m2"])
+                facet_count += 1
+                conductivities.append(float(flux["conductivity_W_mK"]))
+                normals.append(flux["normal"])
+            side_reports.append(
+                {
+                    "integrated_outward_flux_W": total,
+                    "surface_area_m2": area_total,
+                    "facet_count": facet_count,
+                    "skipped_facets": skipped_facets,
+                    "conductivity_min_W_mK": min(conductivities, default=math.nan),
+                    "conductivity_max_W_mK": max(conductivities, default=math.nan),
+                    "conductivity_mean_W_mK": sum(conductivities) / len(conductivities) if conductivities else math.nan,
+                    "surface_temperature_min_K": min(surface_temperatures, default=math.nan),
+                    "surface_temperature_max_K": max(surface_temperatures, default=math.nan),
+                    "surface_temperature_mean_K": sum(surface_temperatures) / len(surface_temperatures) if surface_temperatures else math.nan,
+                    "outward_normal_mean": tuple(
+                        sum(normal[index] for normal in normals) / len(normals)
+                        for index in range(3)
+                    ) if normals else (math.nan, math.nan, math.nan),
+                    "outward_normal_z_positive_facets": sum(normal[2] > 0.0 for normal in normals),
+                    "outward_normal_z_negative_facets": sum(normal[2] < 0.0 for normal in normals),
+                }
+            )
+        q_left = float(side_reports[0]["integrated_outward_flux_W"])
+        q_right = float(side_reports[1]["integrated_outward_flux_W"])
         denominator = max(abs(q_left), abs(q_right), 1.0e-30)
         imbalance = abs(q_left + q_right) / denominator
         magnitude = max(abs(q_left), abs(q_right))
@@ -303,8 +395,18 @@ def heat_flux_consistency(mesh: Path, result: Path, project: Path) -> dict[str, 
             else ("PASS" if imbalance <= 1.0e-3 else "FAIL")
         )
         report[label] = {
+            "sign_convention": "Each face flux is q=-k*grad(T) dot n_outward; opposite body outward normals should give q_left + q_right = 0.",
+            "source_result": str(result.resolve()),
+            "field_metadata": field_metadata or {"field": "last saved result field", "time_step": None, "nonlinear_iter": None},
+            "left": side_reports[0],
+            "right": side_reports[1],
             "left_outward_flux_W": q_left,
             "right_outward_flux_W": q_right,
+            "absolute_imbalance_W": abs(q_left + q_right),
+            "surface_mean_temperature_difference_K": abs(
+                float(side_reports[0]["surface_temperature_mean_K"])
+                - float(side_reports[1]["surface_temperature_mean_K"])
+            ),
             "normalized_imbalance": imbalance,
             "status": status,
         }
@@ -331,6 +433,21 @@ def parse_series(path: Path | None) -> dict[str, float] | None:
                 result[name] = float(row[key])
                 break
     return result or None
+
+
+def series_metadata(path: Path | None) -> dict[str, object]:
+    if path is None or not path.exists():
+        return {"field": "last saved result field", "time_step": None, "nonlinear_iter": None}
+    rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+    if not rows:
+        return {"field": "last saved result field", "time_step": None, "nonlinear_iter": None}
+    row = rows[-1]
+    return {
+        "field": "last saved result field",
+        "time_s": float(row["time_s"]) if row.get("time_s") else None,
+        "time_step": int(float(row["time_step"])) if row.get("time_step") else None,
+        "nonlinear_iter": int(float(row["nonlinear_iter"])) if row.get("nonlinear_iter") else None,
+    }
 
 
 def compare_routes(mortar: dict, conformal: dict) -> dict:
@@ -409,8 +526,8 @@ def main() -> int:
             "status": "PASS" if args.mortar_series and args.conformal_series else "NOT_AVAILABLE",
         },
         "heat_flux_consistency": {
-            "mortar": heat_flux_consistency(args.mortar_mesh, args.mortar_result, args.project),
-            "conformal": heat_flux_consistency(args.conformal_mesh, args.conformal_result, args.project),
+            "mortar": heat_flux_consistency(args.mortar_mesh, args.mortar_result, args.project, series_metadata(args.mortar_series)),
+            "conformal": heat_flux_consistency(args.conformal_mesh, args.conformal_result, args.project, series_metadata(args.conformal_series)),
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

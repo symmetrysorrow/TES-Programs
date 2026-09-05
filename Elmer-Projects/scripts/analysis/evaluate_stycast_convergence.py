@@ -47,7 +47,8 @@ def main() -> int:
                 },
             }
         )
-    rows.sort(key=lambda row: row["label"])
+    order = {"coarse": 0, "medium": 1, "fine": 2}
+    rows.sort(key=lambda row: order.get(row["label"], 99))
     report = {
         "project": str(args.project.resolve()),
         "definition": "498 um analytic Stycast cylinder; conformal shared-node meshes",

@@ -1,128 +1,120 @@
 # Phase20 conformal / Mortar physical parity
 
-## Scope and worktree
+## Scope
 
-This validation is on branch `phase20-conformal-physical-parity`, in the
-separate worktree `D:/github/TES-Programs/Elmer-Projects-physical-parity`,
-based on `origin/main` `8dd95cbd`. The earlier native-probe worktree was not
-modified.
+This is the clean branch `phase20-conformal-physical-parity-latest`, based on
+current `origin/main` `d04102b4`. The native-probe branch remains untouched.
+The existing Mortar + Block-Schur route is the control; this branch validates
+the conformal/shared-node primal route.
 
-The existing Mortar + Block-Schur route remains the control. The new route is
-conformal/shared-node, with the same physical mesh generated once and a
-Mortar control mesh derived from it by duplicating only interface node IDs.
+## Geometry and topology
 
-## Mesh and topology
+The smoke conformal mesh has 26,693 nodes and 132,357 tetrahedra. Its three
+interfaces pass with shared nodes, matched surface partitions, connected
+element adjacency, and zero duplicate/zero-volume elements.
 
-The conformal parity mesh has 26,693 nodes and 132,357 tetrahedra. The control
-mesh duplicates 79 Membrane/TES, 51 TES/Stycast, and 22 Stycast/absorber
-interface node IDs. Coordinates, element geometry, body volumes, and contact
-facets are otherwise preserved. The post-ElmerGrid conformal topology gate
-passes on all three interfaces with zero-volume count zero.
+The previously available 90,872-node production candidate was not valid for
+the current branch. Its failure was classified as:
 
-The common mesh still under-resolves the literal 498 um Stycast cylinder:
+- Membrane/TES: missing semantic left surface (`RETAGGING_ERROR`) plus node
+  and partition mismatch
+- TES/Stycast: node merge, contact partition, surface mesh, and coordinate-gap
+  mismatch
+- Stycast/absorber: node merge and surface partition mismatch
 
-- analytic volume: `3.8956377223e-12 m3`
-- mesh volume: `3.7613195524e-12 m3`
-- relative error: `-3.447912%`
-- TES/Stycast contact area error: `-1.812701%`
-- Stycast/absorber contact area error: `-6.451072%`
+Regenerating the same production-size recipe with the current generator fixes
+the failure:
 
-The convergence artifact records a regenerated base and nominal 2x level. They
-are byte-identical in the resulting mesh despite different target values, so
-they do not constitute a valid convergence series. Enabling contact-local
-refinement at the requested scale caused the current Gmsh run to exit with a
-native failure. This gate remains open.
+- 90,872 nodes / 459,683 tetrahedra
+- Membrane/TES: 205 shared nodes, 360/360 matched facets
+- TES/Stycast: 139 shared nodes, 241/241 matched facets
+- Stycast/absorber: 114 shared nodes, 208/208 matched facets
+- coordinate gaps: 0
+- zero volume, nonfinite volume, duplicate connectivity: 0
 
-## Electrical output and parity
+The production topology blocker is therefore **CLOSED**. No GPU benchmark has
+been started yet.
 
-The direct custom HeatSolve route is required for the fully coupled inner
-circuit. The stock HYPRE CPU/GPU installation does not contain that custom
-hook, so HYPRE cases use the portable external `circuit_parallel` UDF with one
-external circuit update per solve. `run.py` now normalizes solver iteration CSV
-or state output to the canonical schema:
+## Stycast ideal / OCC / FEM convergence
 
-`time_s,time_step,nonlinear_iter,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W,bias_current_A,shunt_resistance_ohm`
+The OCC BREP kernel volume for the Stycast cylinder is
+`3.8956377223044e-12 m3`, equal to the ideal 498 um cylinder. The remaining
+error is polygonal Gmsh discretization, not an OCC boolean-volume mismatch.
+ElmerGrid preserves the pre-Elmer Gmsh volume to below `8e-13` relative error.
 
-Canonical output is now present for steady, 1-step, 7-step, and HYPRE CPU/GPU
-cases. The comparison artifact reports PASS for all four comparisons:
+| level | nodes | tetrahedra | Gmsh/FEM Stycast volume error vs ideal |
+| --- | ---: | ---: | ---: |
+| coarse | 90,872 | 459,683 | -1.064920% |
+| medium | 225,821 | 1,170,252 | -0.468533% |
+| fine | 382,507 | 1,978,314 | -0.266416% |
 
-- steady Mortar/conformal: max relative T/I/R/P =
-  `3.72e-6 / 1.24e-4 / 1.69e-4 / 7.83e-5`
-- 1-step Mortar/conformal: `3.20e-6 / 1.02e-4 / 2.42e-4 / 3.81e-5`
-- 7-step Mortar/conformal: `8.70e-6 / 2.84e-4 / 4.37e-4 / 1.42e-4`
-- HYPRE CPU/GPU at 1e-7: `1.83e-7 / 7.49e-6 / 9.37e-6 / 2.24e-7`
+The three-level geometry convergence gate is **PASS**: the error decreases
+monotonically and Elmer FEM preserves the Gmsh volume. This closes the earlier
+“unknown Stycast geometry difference” blocker, although the ideal-cylinder
+error is still reported rather than hidden.
 
-The nonzero 7-step pulse is electrically reproducible. Its Mortar-control
-current amplitude is `4.08187e-6 A` (2.166% of baseline); the conformal
-waveform differs by at most `5.47e-8 A`.
+## Electrical and thermal route results
 
-## Thermal continuity and heat flow
+Canonical electrical series output is present for steady, 1-step, 7-step, and
+HYPRE CPU/GPU cases. Existing electrical parity remains PASS, including the
+nonzero 7-step pulse. HYPRE CPU/GPU scalar and vector parity also remains PASS.
 
-Temperature continuity passes: conformal shared-node jumps are exactly zero,
-and Mortar nearest-coordinate jumps are at the 1e-11 K or lower scale in the
-7-step result.
+Temperature continuity remains PASS: conformal shared-node jumps are zero and
+Mortar nearest-coordinate jumps are at approximately the 1e-11 K scale.
 
-The current tetrahedral z-gradient heat-flux evaluator does not pass a
-conservation gate on the nonzero pulse:
+The heat-flux checker was corrected to use the full tetrahedral 3D temperature
+gradient and an outward normal derived from the parent tetrahedron centroid;
+input triangle ordering is no longer trusted. A synthetic two-material
+constant-flux test passes, including conductivity mismatch and reversed face
+ordering. On the real 7-step result, all three interfaces have equal area and
+facet counts, and left/right normals are consistently opposite:
 
-| interface | flux estimate | status |
-| --- | --- | --- |
-| Membrane/TES | `qL=-1.22618e-10 W`, `qR=2.69764e-9 W`, imbalance `0.954546` | FAIL |
-| TES/Stycast | `qL=7.32324e-10 W`, `qR=7.26530e-13 W`, imbalance `1.000992` | FAIL |
-| Stycast/absorber | magnitude below `1e-12 W` | NOT_INFORMATIVE |
+| interface | normalized imbalance | status |
+| --- | ---: | --- |
+| Membrane/TES | 0.954546 | FAIL |
+| TES/Stycast | 1.000992 | FAIL |
+| Stycast/absorber | 0.157996, below informative flux scale | NOT_INFORMATIVE |
 
-These are reported as failures, not converted into a pass by route similarity.
-The estimator may need a finite-element boundary-flux implementation, but
-until that is independently validated the heat-flow gate remains blocking.
+Therefore the normal-orientation and fixed-sign post-processing bugs are
+**CLOSED**. Shared-face double counting is not evident. The remaining issue is
+an open discrete elemental-flux reconstruction / physical-consistency gate;
+it is not converted to PASS merely because route-to-route values are similar.
 
-## HYPRE CPU/GPU
+## Production readiness
 
-On the 26,693-node parity mesh, the current external-circuit HYPRE runs all
-finish with three nonlinear iterations at 1e-7:
+| gate | status |
+| --- | --- |
+| electrical parity | CLOSED / PASS |
+| HYPRE CPU/GPU smoke parity | CLOSED / PASS |
+| production topology | CLOSED / PASS after regeneration |
+| Stycast ideal/OCC/FEM convergence | CLOSED / PASS |
+| real-case heat-flux validation | OPEN / FAIL |
+| production HYPRE CPU/GPU benchmark | NOT READY / NOT RUN |
+| production pulse | NOT READY / NOT RUN |
 
-| run | HYPRE solve-time sum | total wall | result |
-| --- | ---: | ---: | --- |
-| CPU | `0.265716 s` | `4.19 s` | ALL DONE |
-| GPU | `0.600553 s` | `4.36 s` | ALL DONE; GPU migration messages |
+The GPU benchmark remains intentionally blocked until the heat-flux gate is
+closed with a validated solver-native or converged flux diagnostic. No full
+pulse was started.
 
-Vector parity is `max_abs=5.65e-6`, relative L2 `1.05e-6`. This mesh is too
-small to claim GPU benefit; GPU is slightly slower. The current tolerance
-sweep at 1e-6, 1e-7, and 1e-8 completes, but the 1e-8 result is only
-comparable within the revised external-circuit route, not with the earlier
-inactive-inner-circuit run.
-
-## Production-size gates
-
-An available 90,872-node / 459,683-tetra production candidate was checked
-against the current branch. It fails the shared-node checker: the
-Membrane/TES left surface is missing, TES/Stycast node IDs and coordinates do
-not match, and Stycast/absorber partitioning differs. It is therefore not
-used for benchmarking. No production-size CPU/GPU benchmark or production
-pulse waveform is claimed; both are recorded as `NOT_RUN` with follow-up
-requirements in the machine-readable artifacts.
-
-## Artifacts and decision
+## Artifacts
 
 Key reports are in `artifacts/phase20_conformal/`:
 
+- `heat_flux_diagnosis.json`
+- `seven_step_physical_parity_flux_oriented.json`
+- `production_topology_diagnosis.json`
+- `production_current_conformal_interfaces.json`
+- `production_geometry_volume.json`
+- `stycast_convergence_report.json`
+- `stycast_geometry_coarse.json`
+- `stycast_geometry_medium.json`
+- `stycast_geometry_fine.json`
 - `electrical_parity.json`
-- `seven_step_physical_parity_nonzero.json`
-- `pulse_waveform_parity.json`
-- `stycast_mesh_convergence.json`
-- `hypre_tolerance_study.json`
-- `production_candidate_conformal_interfaces.json`
 - `production_benchmark.json`
 - `production_pulse_waveform.json`
-- `mortar_control_provenance.json`
-
-Focused tests cover the electrical-series normalizer and conformal/Mortar
-parity. Unrelated legacy failures involving absent hybrid-prism and old
-HeatSolve inputs were not expanded in this phase.
 
 ## Decision
 
-**CONTINUE.** Do not PROMOTE. The conformal/shared-node implementation and
-electrical/HYPRE route are technically viable, but production acceptance is
-blocked by the heat-flux conservation failure, missing valid Stycast
-convergence, and the invalid production candidate. The existing Mortar route
-remains the fallback until those gates are closed.
+**CONTINUE.** The production topology and geometry-understanding blockers are
+closed. The conformal route is not yet ready for production GPU benchmarking
+because the real-case heat-flux correctness gate remains open.

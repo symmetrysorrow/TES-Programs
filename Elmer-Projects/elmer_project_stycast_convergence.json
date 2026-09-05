@@ -317,14 +317,16 @@
       },
       "notes": "Same-geometry physical-parity control mesh (conformal); generated from the same project parameters and mesh recipe as its paired route."
     },
-    "mesh_stycast_convergence_base": {
+    "mesh_stycast_convergence_coarse": {
       "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_base",
+      "dir": "mesh_stycast_convergence_coarse",
       "recipe": {
         "generator": "generate_project_geometry.py",
         "mesh_overrides": {
-          "mesh_min": 1.6666666666666667e-05,
-          "mesh_max": 1.6666666666666667e-05
+          "mesh_min": 4.5e-05,
+          "mesh_max": 9e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed"
         },
         "elmergrid_args": [
           "14",
@@ -333,19 +335,21 @@
           "-merge",
           "1e-10",
           "-out",
-          "mesh_stycast_convergence_base"
+          "mesh_stycast_convergence_coarse"
         ]
       },
-      "notes": "Conformal shared-node Stycast volume convergence level; uniform target h=1.66666666667e-05 m."
+      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=4.5e-05 m, h_max=9e-05 m."
     },
-    "mesh_stycast_convergence_2x": {
+    "mesh_stycast_convergence_medium": {
       "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_2x",
+      "dir": "mesh_stycast_convergence_medium",
       "recipe": {
         "generator": "generate_project_geometry.py",
         "mesh_overrides": {
-          "mesh_min": 8.333333333333334e-06,
-          "mesh_max": 8.333333333333334e-06
+          "mesh_min": 3e-05,
+          "mesh_max": 6e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed"
         },
         "elmergrid_args": [
           "14",
@@ -354,19 +358,21 @@
           "-merge",
           "1e-10",
           "-out",
-          "mesh_stycast_convergence_2x"
+          "mesh_stycast_convergence_medium"
         ]
       },
-      "notes": "Conformal shared-node Stycast volume convergence level; uniform target h=8.33333333333e-06 m."
+      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=3e-05 m, h_max=6e-05 m."
     },
-    "mesh_stycast_convergence_4x": {
+    "mesh_stycast_convergence_fine": {
       "geometry": "single_pixel",
-      "dir": "mesh_stycast_convergence_4x",
+      "dir": "mesh_stycast_convergence_fine",
       "recipe": {
         "generator": "generate_project_geometry.py",
         "mesh_overrides": {
-          "mesh_min": 4.166666666666667e-06,
-          "mesh_max": 4.166666666666667e-06
+          "mesh_min": 2.25e-05,
+          "mesh_max": 4.5e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed"
         },
         "elmergrid_args": [
           "14",
@@ -375,10 +381,10 @@
           "-merge",
           "1e-10",
           "-out",
-          "mesh_stycast_convergence_4x"
+          "mesh_stycast_convergence_fine"
         ]
       },
-      "notes": "Conformal shared-node Stycast volume convergence level; uniform target h=4.16666666667e-06 m."
+      "notes": "Conformal shared-node Stycast volume convergence level; fixed target h_min=2.25e-05 m, h_max=4.5e-05 m."
     }
   },
   "parameter_expressions": {
