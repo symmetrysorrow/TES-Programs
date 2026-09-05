@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
                       << ",\"tau_i_s\":" << summary.tau_i_s
                       << ",\"g_abs_tes_W_per_K\":" << summary.g_abs_tes_W_per_K
                       << ",\"tes_boundary_rate_per_s\":" << summary.tes_boundary_rate_per_s
+                      << ",\"tes_hanging_rate_per_s\":" << summary.tes_hanging_rate_per_s
                       << ",\"tes_intrinsic_thermal_diag_per_s\":" << summary.tes_intrinsic_thermal_diag_per_s
                       << ",\"n_abs\":" << summary.n_abs
                       << ",\"hanging\":" << (summary.hanging ? "true" : "false")

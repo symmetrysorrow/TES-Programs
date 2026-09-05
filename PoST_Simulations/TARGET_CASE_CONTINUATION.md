@@ -10,12 +10,16 @@ cutoff, and therefore `df=5 Hz`. The directory name provides the `215mK`,
 calibrated TES current, or output calibration.
 
 The repository and target-folder audit found no exact target source for `T_c`,
-`T_bath` as a measured TES operating temperature, TES `I/R`, `alpha/beta`,
-`L`, `n`, the heat capacities/conductances, `n_abs`, or the CH0
-voltage-to-current calibration. Generic `PoST_Simulations/input.json`,
-`R_SH` constants in general IV scripts, and unrelated Elmer cases are listed
-as rejected candidates in the case `provenance.json`; none is used as target
-input.
+TES `R`, `alpha/beta`, `L`, `n`, the heat capacities/conductances, `n_abs`, or
+the CH0 voltage-to-current calibration. A same-day campaign file,
+`G:\\tagawa\\20241206\\room1-ch1-iv3\\calibration\\IV_215mK.txt`, does recover
+the bath-setpoint meaning and provides a conditional TES-current candidate:
+the existing superconducting-slope derivation gives `eta=100.725337 uA/V`
+and `I_TES=251.847592 uA` at the 1400 uA bias row. The channel linkage is not
+encoded, so this remains provenance-only and is not copied into `input.json`.
+Generic `PoST_Simulations/input.json`, `R_SH` constants in general IV scripts,
+and unrelated Elmer cases are listed as rejected candidates in the case
+`provenance.json`; none is used as target input.
 
 Consequently the target no-added-noise comparison is saved as a transparent
 blocked table in
@@ -31,11 +35,38 @@ is reported separately because the C++ distributed model uses `G_abs-tes`,
 whereas the Python five-state reduction uses `G_eff`; that documented model
 reduction is not silently treated as a calibration mismatch.
 
-## Final judgment
+The generic fixture parity result is passing for operating current, `tau_el`,
+loop gain, `tau_i`, `dI/dI`, `dI/dT`, `dT/dI`, intrinsic TES thermal diagonal,
+boundary term, sign convention, and left/right symmetry. The target parity test
+is conditionally enabled by `cpp_parity_ready` and therefore does not run while
+the target input contains unresolved values. No target operating-point or
+stability eigenvalue is reported.
 
-Primary judgment: **6 — current information is insufficient to identify the
-cause**. Ranked next are **1 — noise-source provenance/definition mismatch**
-(including the now-corrected estimator path and possible unit/ASD provenance),
-**2 — operating-point inconsistency**, and **5 — readout/bias transfer
-omission**. No residual fit, 1 kHz normalization, or empirical noise term is
-used to choose among them.
+The target report is explicitly post-analysis: `experimental_post_analysis_asd`
+and `experimental_post_analysis_normalized` are based on the 10 kHz digital
+Bessel `filtfilt` path. `experimental_pre_analysis_asd` is null because inverse
+filtering in the stopband is not safe. The target normalized no-added-noise
+comparison is consequently not available yet; the physical source semantics
+are preserved in `input.json` (TES Johnson, load Johnson, TES-bath TFN, and
+TES-absorber TFN enabled; only empirical/residual/hanging terms disabled).
+
+## Readiness and final judgment
+
+| Capability | Ready | Blocking information |
+| --- | --- | --- |
+| Operating point | No | `T_c`, target TES `R`, `G_tes-bath`, `n` |
+| Python stability | No | operating point plus thermal/electrical parameters |
+| Reduced intrinsic noise | No | stability set plus FFT settings (FFT settings are known) |
+| C++ TES parity | No for target | same set plus `n_abs`; `E` is not required |
+| Normalized post-analysis comparison | No | physical reduced-noise input; calibration is not required |
+| Absolute ASD comparison | No | normalized comparison plus independent CH0/readout calibration |
+
+Final classification: **C — existing information is insufficient to construct
+the target physical case**. The work has nevertheless reached the partial
+provenance stage described by B: acquisition settings, bath-setpoint meaning,
+and a conditional same-campaign TES-current candidate were recovered. The
+minimum next information is prioritized in `parameter_dependency.json`:
+first target-linked `T_c`, `R`, `G_tes-bath`, and thermal-law `n`; next the
+remaining electrothermal/circuit values; calibration is only needed for the
+absolute comparison. No residual fit, 1 kHz normalization, empirical noise
+term, or arbitrary filter is used.

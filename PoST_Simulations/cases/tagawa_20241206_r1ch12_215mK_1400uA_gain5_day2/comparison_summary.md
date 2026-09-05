@@ -1,10 +1,11 @@
 # Target comparison record
 
-Status: **blocked — no target simulation is reported**.
+Status: **blocked — no target simulation is reported**. This is the
+**post-analysis** spectrum; the pre-analysis spectrum is not back-calculated.
 
-The experimental values below are recomputed from the target `CH0_noise/rawdata` with the shared production estimator (345 accepted records) on its native 5 Hz grid (`500000 / 100000`). They remain in raw CH0 voltage ASD units because no target voltage-to-current calibration is available. The requested comparison disables all added simulation noise (white/readout, TES resistance fluctuation, and hanging component), but no independently sourced target operating point is available. Therefore simulation ASD, normalized simulation ASD, and simulation/experiment are `—`; filling them from the generic input or from a residual would invalidate the comparison.
+The experimental values below are recomputed from the target `CH0_noise/rawdata` with the shared production estimator (345 accepted records) on its native 5 Hz grid (`500000 / 100000`). They remain in raw CH0 voltage ASD units because no target voltage-to-current calibration is available. The requested intrinsic-physical-noise comparison keeps TES Johnson, load Johnson, TES-bath TFN, and TES-absorber TFN enabled, while empirical white/readout floors, residual sources/poles, Lorentzian resistance fluctuation, and hanging TES are disabled. However, no independently sourced target operating point is available. Therefore simulation ASD, normalized simulation ASD, and simulation/experiment are `—`; filling them from the generic input or from a residual would invalidate the comparison.
 
-| Frequency | Experimental ASD (native units) | Experiment / 1 kHz | Simulation ASD | Simulation / 1 kHz | Sim / exp |
+| Frequency | Experimental post-analysis ASD (raw V/√Hz) | Experimental post-analysis / 1 kHz | Simulation post-analysis ASD | Simulation post-analysis / 1 kHz | Sim / exp |
 | ---: | ---: | ---: | ---: | ---: | ---: |
 | 10 Hz | 7.3987686e-4 | 46.6210487 | — | — | — |
 | 100 Hz | 6.4502958e-5 | 4.06445411 | — | — | — |

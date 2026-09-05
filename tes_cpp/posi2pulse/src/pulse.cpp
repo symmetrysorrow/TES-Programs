@@ -41,7 +41,7 @@ struct Derived {
     double tau_i;
 };
 
-Input read_input(const std::string& path) {
+Input read_input(const std::string& path, bool require_energy = true) {
     std::ifstream file(path);
     if (!file) throw std::runtime_error("cannot open input JSON: " + path);
     nlohmann::json j;
@@ -58,13 +58,14 @@ Input read_input(const std::string& path) {
     if (hanging && (c_hanging <= 0.0 || g_hanging < 0.0)) {
         throw std::runtime_error("hanging model requires C_tes_hanging > 0 and G_tes-hanging >= 0");
     }
+    const double energy = require_energy ? j.at("E").get<double>() : 0.0;
     return {
         j.at("C_abs").get<double>(), j.at("C_tes").get<double>(),
         j.at("G_abs-abs").get<double>(), j.at("G_abs-tes").get<double>(), j.at("G_tes-bath").get<double>(),
         c_hanging, g_hanging,
         j.at("R").get<double>(), j.at("R_l").get<double>(), j.at("T_c").get<double>(), j.at("T_bath").get<double>(),
         j.at("alpha").get<double>(), j.at("beta").get<double>(), j.at("L").get<double>(), j.at("n").get<double>(),
-        j.at("E").get<double>(), j.at("rate").get<double>(), j.at("samples").get<double>(), j.at("n_abs").get<int>(),
+        energy, j.at("rate").get<double>(), j.at("samples").get<double>(), j.at("n_abs").get<int>(),
         hanging && g_hanging > 0.0
     };
 }
@@ -149,15 +150,16 @@ Eigen::MatrixXd make_matrix(const Input& in) {
 }
 
 LinearizationSummary inspect_linearization_impl(const std::string& input_json_path) {
-    const Input in = read_input(input_json_path);
+    const Input in = read_input(input_json_path, false);
     const Derived derived = derive_linearization(in);
     const double electrical_diag = -1.0 / derived.tau_el;
     const double electrical_thermal = -derived.loop_gain * in.g_tes_bath /
                                       (derived.current * in.inductance);
     const double thermal_electrical = derived.current * in.resistance * (2 + in.beta) / in.c_tes;
     const double tes_boundary_rate = in.g_abs_tes / in.c_tes;
+    const double tes_hanging_rate = in.hanging ? in.g_tes_hanging / in.c_tes : 0.0;
     const double intrinsic_thermal_diag = -1.0 / derived.tau_i;
-    const double thermal_diag = intrinsic_thermal_diag - tes_boundary_rate;
+    const double thermal_diag = intrinsic_thermal_diag - tes_boundary_rate - tes_hanging_rate;
     return {
         derived.current,
         derived.tau_el,
@@ -165,6 +167,7 @@ LinearizationSummary inspect_linearization_impl(const std::string& input_json_pa
         derived.tau_i,
         in.g_abs_tes,
         tes_boundary_rate,
+        tes_hanging_rate,
         intrinsic_thermal_diag,
         in.n_abs,
         in.hanging,

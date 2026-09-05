@@ -59,16 +59,17 @@ def build_report(experiment_path: Path, case_dir: Path) -> dict:
         rows.append(
             {
                 "frequency_Hz": float(frequencies[index]),
-                "experimental_asd_native_units": experimental,
-                "experimental_normalized_to_1kHz": experimental / reference,
-                "simulation_asd_native_units": None,
-                "simulation_normalized_to_1kHz": None,
+                "experimental_post_analysis_asd": experimental,
+                "experimental_post_analysis_normalized": experimental / reference,
+                "experimental_pre_analysis_asd": None,
+                "simulation_post_analysis_asd": None,
+                "simulation_post_analysis_normalized": None,
                 "simulation_over_experiment": None,
             }
         )
     return {
         "status": "blocked_unresolved_physics_parameters",
-        "comparison_kind": "target_case_no_added_noise",
+        "comparison_kind": "target_case_intrinsic_physical_noise_only",
         "absolute_comparison_allowed": False,
         "reason": "No independently sourced target operating point and readout calibration are available.",
         "experiment_path": experiment_path.as_posix(),
@@ -87,7 +88,13 @@ def build_report(experiment_path: Path, case_dir: Path) -> dict:
             "accepted_records": int(accepted_records),
             "experimental_units": "raw CH0 voltage ASD units per sqrt(Hz); no target voltage-to-current calibration applied",
         },
-        "normalization": "experimental and simulation columns would be normalized independently to the 1 kHz bin; this is shape-only and is not calibration evidence",
+        "normalization": "experimental and simulation post-analysis columns would be normalized independently to the 1 kHz bin; this is shape-only and is not calibration evidence",
+        "spectrum_semantics": {
+            "experimental_post_analysis_asd": "shared estimator after per-record mean removal, 10 kHz digital Bessel filtfilt, Hann power average, and one-sided ASD normalization",
+            "experimental_pre_analysis_asd": None,
+            "pre_analysis_status": "not reconstructed; inverse filtering near the stopband is intentionally not performed",
+            "simulation_post_analysis_asd": "would include intrinsic TES Johnson, load Johnson, TES-bath TFN and TES-absorber TFN, with empirical white/readout floors set to zero",
+        },
         "points": rows,
     }
 

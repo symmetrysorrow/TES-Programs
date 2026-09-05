@@ -23,6 +23,7 @@ struct LinearizationSummary {
     double tau_i_s{};
     double g_abs_tes_W_per_K{};
     double tes_boundary_rate_per_s{};
+    double tes_hanging_rate_per_s{};
     double tes_intrinsic_thermal_diag_per_s{};
     int n_abs{};
     bool hanging{};
