@@ -1,0 +1,939 @@
+{
+  "status": "PASS",
+  "measurement_contract": {
+    "wall": "external WALL_SECONDS marker",
+    "solver_real": "Elmer SOLVER TOTAL TIME(CPU,REAL) real clock",
+    "assembly": "HeatSolve cumulative reported CPU clock; not added to wall clock",
+    "hypre_setup": "SolveHypre setup timer, includes IJ construction/migration/AMG setup in current binary",
+    "hypre_solve": "SolveHypre solution timer"
+  },
+  "wall_time_breakdown": [
+    {
+      "case": "case_phase20_perf_small_cpu_r1",
+      "size": "small",
+      "backend": "cpu",
+      "repeat": 1,
+      "wall_seconds": 5.007922,
+      "solver_real_seconds": 4.63,
+      "outside_solver_wall_s": 0.37792199999999987,
+      "hypre_setup_total_s": 0.471034,
+      "hypre_solution_total_s": 0.444333792,
+      "host_solver_remainder_s": 3.7146322079999994,
+      "reported_heat_assembly_cpu_s": 7.73,
+      "reported_heat_solve_cpu_s": 2.51,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_small_gpu_r1",
+      "size": "small",
+      "backend": "gpu",
+      "repeat": 1,
+      "wall_seconds": 6.306003,
+      "solver_real_seconds": 5.85,
+      "outside_solver_wall_s": 0.45600299999999994,
+      "hypre_setup_total_s": 1.047124,
+      "hypre_solution_total_s": 1.1023841,
+      "host_solver_remainder_s": 3.7004918999999994,
+      "reported_heat_assembly_cpu_s": 7.7,
+      "reported_heat_solve_cpu_s": 5.47,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_cpu_r1",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 1,
+      "wall_seconds": 17.846794,
+      "solver_real_seconds": 16.47,
+      "outside_solver_wall_s": 1.3767940000000003,
+      "hypre_setup_total_s": 1.124084,
+      "hypre_solution_total_s": 3.50346095,
+      "host_solver_remainder_s": 11.842455049999998,
+      "reported_heat_assembly_cpu_s": 25.79,
+      "reported_heat_solve_cpu_s": 13.58,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_cpu_r2",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 2,
+      "wall_seconds": 17.376116,
+      "solver_real_seconds": 16.4,
+      "outside_solver_wall_s": 0.9761160000000011,
+      "hypre_setup_total_s": 1.096606,
+      "hypre_solution_total_s": 3.43437918,
+      "host_solver_remainder_s": 11.869014819999999,
+      "reported_heat_assembly_cpu_s": 25.94,
+      "reported_heat_solve_cpu_s": 13.26,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_cpu_r3",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 3,
+      "wall_seconds": 17.100848,
+      "solver_real_seconds": 16.13,
+      "outside_solver_wall_s": 0.9708480000000002,
+      "hypre_setup_total_s": 1.121229,
+      "hypre_solution_total_s": 3.41914112,
+      "host_solver_remainder_s": 11.58962988,
+      "reported_heat_assembly_cpu_s": 25.4,
+      "reported_heat_solve_cpu_s": 13.32,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_gpu_r1",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 1,
+      "wall_seconds": 18.192116,
+      "solver_real_seconds": 16.8,
+      "outside_solver_wall_s": 1.392115999999998,
+      "hypre_setup_total_s": 1.895217,
+      "hypre_solution_total_s": 2.67442089,
+      "host_solver_remainder_s": 12.23036211,
+      "reported_heat_assembly_cpu_s": 25.25,
+      "reported_heat_solve_cpu_s": 12.27,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_gpu_r2",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 2,
+      "wall_seconds": 16.915926,
+      "solver_real_seconds": 15.88,
+      "outside_solver_wall_s": 1.0359259999999981,
+      "hypre_setup_total_s": 1.6064129999999999,
+      "hypre_solution_total_s": 2.64773624,
+      "host_solver_remainder_s": 11.62585076,
+      "reported_heat_assembly_cpu_s": 25.68,
+      "reported_heat_solve_cpu_s": 11.49,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_production_gpu_r3",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 3,
+      "wall_seconds": 16.934742,
+      "solver_real_seconds": 15.91,
+      "outside_solver_wall_s": 1.0247419999999998,
+      "hypre_setup_total_s": 1.657515,
+      "hypre_solution_total_s": 2.7080678700000003,
+      "host_solver_remainder_s": 11.54441713,
+      "reported_heat_assembly_cpu_s": 25.46,
+      "reported_heat_solve_cpu_s": 11.74,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_medium_cpu_r1",
+      "size": "medium",
+      "backend": "cpu",
+      "repeat": 1,
+      "wall_seconds": 40.321586,
+      "solver_real_seconds": 39.35,
+      "outside_solver_wall_s": 0.9715860000000021,
+      "hypre_setup_total_s": 2.685788,
+      "hypre_solution_total_s": 8.5232178,
+      "host_solver_remainder_s": 28.1409942,
+      "reported_heat_assembly_cpu_s": 62.26,
+      "reported_heat_solve_cpu_s": 33.25,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_medium_gpu_r1",
+      "size": "medium",
+      "backend": "gpu",
+      "repeat": 1,
+      "wall_seconds": 35.056787,
+      "solver_real_seconds": 34.03,
+      "outside_solver_wall_s": 1.0267869999999988,
+      "hypre_setup_total_s": 2.611167,
+      "hypre_solution_total_s": 2.93628309,
+      "host_solver_remainder_s": 28.48254991,
+      "reported_heat_assembly_cpu_s": 62.29,
+      "reported_heat_solve_cpu_s": 15.42,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_fine_cpu_r1",
+      "size": "fine",
+      "backend": "cpu",
+      "repeat": 1,
+      "wall_seconds": 71.669422,
+      "solver_real_seconds": 70.64,
+      "outside_solver_wall_s": 1.0294219999999967,
+      "hypre_setup_total_s": 4.26748,
+      "hypre_solution_total_s": 18.0148699,
+      "host_solver_remainder_s": 48.357650099999994,
+      "reported_heat_assembly_cpu_s": 106.47,
+      "reported_heat_solve_cpu_s": 66.61,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    },
+    {
+      "case": "case_phase20_perf_fine_gpu_r1",
+      "size": "fine",
+      "backend": "gpu",
+      "repeat": 1,
+      "wall_seconds": 56.103552,
+      "solver_real_seconds": 55.02,
+      "outside_solver_wall_s": 1.0835519999999974,
+      "hypre_setup_total_s": 2.795966,
+      "hypre_solution_total_s": 3.8638730199999998,
+      "host_solver_remainder_s": 48.36016098,
+      "reported_heat_assembly_cpu_s": 107.0,
+      "reported_heat_solve_cpu_s": 18.69,
+      "unmeasured_components": [
+        "HYPRE IJ construction versus device migration are included in native setup timer",
+        "TES circuit/UDF and result I/O are not independently timestamped by current runtime"
+      ]
+    }
+  ],
+  "crossover": [
+    {
+      "size": "small",
+      "node_count": 26705,
+      "tetrahedron_count": 132458,
+      "cpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 5.007922,
+          "median": 5.007922,
+          "minimum": 5.007922,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 0.444333792,
+          "median": 0.444333792,
+          "minimum": 0.444333792,
+          "stdev": 0.0
+        }
+      },
+      "gpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 6.306003,
+          "median": 6.306003,
+          "minimum": 6.306003,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 1.1023841,
+          "median": 1.1023841,
+          "minimum": 1.1023841,
+          "stdev": 0.0
+        }
+      },
+      "gpu_wall_speedup_median": 0.7941515409999013,
+      "gpu_linear_speedup_median": 0.4030662198411606,
+      "result_parity": {
+        "status": "PASS",
+        "common_nodes": 26705,
+        "temperature_max_abs_difference_K": 1.8880159418088738e-06,
+        "temperature_rms_difference_K": 8.149638523967476e-08,
+        "cpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_phase20_perf_small_cpu_r1.result",
+        "gpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_phase20_perf_small_gpu_r1.result"
+      }
+    },
+    {
+      "size": "production",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "cpu": {
+        "wall_s": {
+          "count": 3,
+          "first": 17.846794,
+          "median": 17.376116,
+          "minimum": 17.100848,
+          "stdev": 0.3772147236486578
+        },
+        "linear_solve_s": {
+          "count": 3,
+          "first": 3.50346095,
+          "median": 3.43437918,
+          "minimum": 3.41914112,
+          "stdev": 0.044933883188015646
+        }
+      },
+      "gpu": {
+        "wall_s": {
+          "count": 3,
+          "first": 18.192116,
+          "median": 16.934742,
+          "minimum": 16.915926,
+          "stdev": 0.7314374356739834
+        },
+        "linear_solve_s": {
+          "count": 3,
+          "first": 2.67442089,
+          "median": 2.67442089,
+          "minimum": 2.64773624,
+          "stdev": 0.030232695841863704
+        }
+      },
+      "gpu_wall_speedup_median": 1.0260632255277347,
+      "gpu_linear_speedup_median": 1.284158074311183,
+      "result_parity": {
+        "status": "PASS",
+        "common_nodes": 90872,
+        "temperature_max_abs_difference_K": 2.5757459055364418e-06,
+        "temperature_rms_difference_K": 8.599881932890421e-08,
+        "cpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine\\case_phase20_perf_production_cpu_r1.result",
+        "gpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine\\case_phase20_perf_production_gpu_r1.result"
+      }
+    },
+    {
+      "size": "medium",
+      "node_count": 225821,
+      "tetrahedron_count": 1170252,
+      "cpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 40.321586,
+          "median": 40.321586,
+          "minimum": 40.321586,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 8.5232178,
+          "median": 8.5232178,
+          "minimum": 8.5232178,
+          "stdev": 0.0
+        }
+      },
+      "gpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 35.056787,
+          "median": 35.056787,
+          "minimum": 35.056787,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 2.93628309,
+          "median": 2.93628309,
+          "minimum": 2.93628309,
+          "stdev": 0.0
+        }
+      },
+      "gpu_wall_speedup_median": 1.1501791650215978,
+      "gpu_linear_speedup_median": 2.902723456408966,
+      "result_parity": {
+        "status": "PASS",
+        "common_nodes": 225821,
+        "temperature_max_abs_difference_K": 2.1770316286084945e-06,
+        "temperature_rms_difference_K": 3.122725531652304e-08,
+        "cpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium\\case_phase20_perf_medium_cpu_r1.result",
+        "gpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium\\case_phase20_perf_medium_gpu_r1.result"
+      }
+    },
+    {
+      "size": "fine",
+      "node_count": 382507,
+      "tetrahedron_count": 1978314,
+      "cpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 71.669422,
+          "median": 71.669422,
+          "minimum": 71.669422,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 18.0148699,
+          "median": 18.0148699,
+          "minimum": 18.0148699,
+          "stdev": 0.0
+        }
+      },
+      "gpu": {
+        "wall_s": {
+          "count": 1,
+          "first": 56.103552,
+          "median": 56.103552,
+          "minimum": 56.103552,
+          "stdev": 0.0
+        },
+        "linear_solve_s": {
+          "count": 1,
+          "first": 3.8638730199999998,
+          "median": 3.8638730199999998,
+          "minimum": 3.8638730199999998,
+          "stdev": 0.0
+        }
+      },
+      "gpu_wall_speedup_median": 1.2774489215941265,
+      "gpu_linear_speedup_median": 4.662386627809006,
+      "result_parity": {
+        "status": "PASS",
+        "common_nodes": 382507,
+        "temperature_max_abs_difference_K": 8.995697675096004e-07,
+        "temperature_rms_difference_K": 1.8144327245173645e-08,
+        "cpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine\\case_phase20_perf_fine_cpu_r1.result",
+        "gpu_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine\\case_phase20_perf_fine_gpu_r1.result"
+      }
+    }
+  ],
+  "raw_runs": [
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_small_cpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 5.007922,
+      "solver_cpu_seconds": 12.84,
+      "solver_real_seconds": 4.63,
+      "hypre_solution_times_s": [
+        0.418736,
+        0.0204048,
+        0.00435805,
+        0.000834942
+      ],
+      "hypre_solution_total_s": 0.444333792,
+      "hypre_setup_times_s": [
+        0.127852,
+        0.115162,
+        0.114004,
+        0.114016
+      ],
+      "hypre_setup_total_s": 0.471034,
+      "hypre_required_iterations": [
+        156,
+        11,
+        2,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 7.73,
+      "reported_heat_solve_cpu_s": 2.51,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_small_cpu_r1",
+      "size": "small",
+      "backend": "cpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+      "node_count": 26705,
+      "tetrahedron_count": 132458,
+      "outside_solver_wall_s": 0.37792199999999987
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_small_gpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 6.306003,
+      "solver_cpu_seconds": 15.74,
+      "solver_real_seconds": 5.85,
+      "hypre_solution_times_s": [
+        1.06844,
+        0.0275211,
+        0.00478101,
+        0.00164199
+      ],
+      "hypre_solution_total_s": 1.1023841,
+      "hypre_setup_times_s": [
+        0.619005,
+        0.149758,
+        0.135664,
+        0.142697
+      ],
+      "hypre_setup_total_s": 1.047124,
+      "hypre_required_iterations": [
+        164,
+        9,
+        2,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 7.7,
+      "reported_heat_solve_cpu_s": 5.47,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_small_gpu_r1",
+      "size": "small",
+      "backend": "gpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+      "node_count": 26705,
+      "tetrahedron_count": 132458,
+      "outside_solver_wall_s": 0.45600299999999994
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_cpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 17.846794,
+      "solver_cpu_seconds": 46.94,
+      "solver_real_seconds": 16.47,
+      "hypre_solution_times_s": [
+        3.33688,
+        0.120565,
+        0.043102,
+        0.00291395
+      ],
+      "hypre_solution_total_s": 3.50346095,
+      "hypre_setup_times_s": [
+        0.294876,
+        0.277318,
+        0.274557,
+        0.277333
+      ],
+      "hypre_setup_total_s": 1.124084,
+      "hypre_required_iterations": [
+        324,
+        17,
+        6,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.79,
+      "reported_heat_solve_cpu_s": 13.58,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_cpu_r1",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 1.3767940000000003
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_cpu_r2\\solver.log",
+      "all_done": true,
+      "wall_seconds": 17.376116,
+      "solver_cpu_seconds": 46.86,
+      "solver_real_seconds": 16.4,
+      "hypre_solution_times_s": [
+        3.27446,
+        0.116203,
+        0.040179,
+        0.00353718
+      ],
+      "hypre_solution_total_s": 3.43437918,
+      "hypre_setup_times_s": [
+        0.284592,
+        0.27625,
+        0.268594,
+        0.26717
+      ],
+      "hypre_setup_total_s": 1.096606,
+      "hypre_required_iterations": [
+        324,
+        17,
+        6,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.94,
+      "reported_heat_solve_cpu_s": 13.26,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_cpu_r2",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 2,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 0.9761160000000011
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_cpu_r3\\solver.log",
+      "all_done": true,
+      "wall_seconds": 17.100848,
+      "solver_cpu_seconds": 46.21,
+      "solver_real_seconds": 16.13,
+      "hypre_solution_times_s": [
+        3.2561,
+        0.118252,
+        0.0410171,
+        0.00377202
+      ],
+      "hypre_solution_total_s": 3.41914112,
+      "hypre_setup_times_s": [
+        0.307678,
+        0.26745,
+        0.271111,
+        0.27499
+      ],
+      "hypre_setup_total_s": 1.121229,
+      "hypre_required_iterations": [
+        324,
+        17,
+        6,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.4,
+      "reported_heat_solve_cpu_s": 13.32,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_cpu_r3",
+      "size": "production",
+      "backend": "cpu",
+      "repeat": 3,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 0.9708480000000002
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_gpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 18.192116,
+      "solver_cpu_seconds": 45.07,
+      "solver_real_seconds": 16.8,
+      "hypre_solution_times_s": [
+        2.59645,
+        0.044558,
+        0.0292048,
+        0.00420809
+      ],
+      "hypre_solution_total_s": 2.67442089,
+      "hypre_setup_times_s": [
+        0.77742,
+        0.248104,
+        0.351452,
+        0.518241
+      ],
+      "hypre_setup_total_s": 1.895217,
+      "hypre_required_iterations": [
+        354,
+        14,
+        3,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.25,
+      "reported_heat_solve_cpu_s": 12.27,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_gpu_r1",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 1.392115999999998
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_gpu_r2\\solver.log",
+      "all_done": true,
+      "wall_seconds": 16.915926,
+      "solver_cpu_seconds": 44.52,
+      "solver_real_seconds": 15.88,
+      "hypre_solution_times_s": [
+        2.5747,
+        0.0456491,
+        0.025074,
+        0.00231314
+      ],
+      "hypre_solution_total_s": 2.64773624,
+      "hypre_setup_times_s": [
+        0.642087,
+        0.253413,
+        0.330255,
+        0.380658
+      ],
+      "hypre_setup_total_s": 1.6064129999999999,
+      "hypre_required_iterations": [
+        354,
+        14,
+        3,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.68,
+      "reported_heat_solve_cpu_s": 11.49,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_gpu_r2",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 2,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 1.0359259999999981
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_production_gpu_r3\\solver.log",
+      "all_done": true,
+      "wall_seconds": 16.934742,
+      "solver_cpu_seconds": 44.51,
+      "solver_real_seconds": 15.91,
+      "hypre_solution_times_s": [
+        2.63505,
+        0.0458329,
+        0.0249219,
+        0.00226307
+      ],
+      "hypre_solution_total_s": 2.7080678700000003,
+      "hypre_setup_times_s": [
+        0.663652,
+        0.237456,
+        0.356708,
+        0.399699
+      ],
+      "hypre_setup_total_s": 1.657515,
+      "hypre_required_iterations": [
+        354,
+        14,
+        3,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 25.46,
+      "reported_heat_solve_cpu_s": 11.74,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_production_gpu_r3",
+      "size": "production",
+      "backend": "gpu",
+      "repeat": 3,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "node_count": 90872,
+      "tetrahedron_count": 459683,
+      "outside_solver_wall_s": 1.0247419999999998
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_medium_cpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 40.321586,
+      "solver_cpu_seconds": 113.53,
+      "solver_real_seconds": 39.35,
+      "hypre_solution_times_s": [
+        8.16755,
+        0.258358,
+        0.0880079,
+        0.0093019
+      ],
+      "hypre_solution_total_s": 8.5232178,
+      "hypre_setup_times_s": [
+        0.684411,
+        0.671342,
+        0.652104,
+        0.677931
+      ],
+      "hypre_setup_total_s": 2.685788,
+      "hypre_required_iterations": [
+        312,
+        14,
+        4,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 62.26,
+      "reported_heat_solve_cpu_s": 33.25,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_medium_cpu_r1",
+      "size": "medium",
+      "backend": "cpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium",
+      "node_count": 225821,
+      "tetrahedron_count": 1170252,
+      "outside_solver_wall_s": 0.9715860000000021
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_medium_gpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 35.056787,
+      "solver_cpu_seconds": 96.54,
+      "solver_real_seconds": 34.03,
+      "hypre_solution_times_s": [
+        2.73244,
+        0.185569,
+        0.0138252,
+        0.00444889
+      ],
+      "hypre_solution_total_s": 2.93628309,
+      "hypre_setup_times_s": [
+        0.773363,
+        0.680648,
+        0.563042,
+        0.594114
+      ],
+      "hypre_setup_total_s": 2.611167,
+      "hypre_required_iterations": [
+        327,
+        13,
+        3,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 62.29,
+      "reported_heat_solve_cpu_s": 15.42,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_medium_gpu_r1",
+      "size": "medium",
+      "backend": "gpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium",
+      "node_count": 225821,
+      "tetrahedron_count": 1170252,
+      "outside_solver_wall_s": 1.0267869999999988
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_fine_cpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 71.669422,
+      "solver_cpu_seconds": 204.33,
+      "solver_real_seconds": 70.64,
+      "hypre_solution_times_s": [
+        17.2864,
+        0.510189,
+        0.169659,
+        0.0486219
+      ],
+      "hypre_solution_total_s": 18.0148699,
+      "hypre_setup_times_s": [
+        1.06841,
+        1.13488,
+        1.01481,
+        1.04938
+      ],
+      "hypre_setup_total_s": 4.26748,
+      "hypre_required_iterations": [
+        391,
+        17,
+        5,
+        1
+      ],
+      "reported_heat_assembly_cpu_s": 106.47,
+      "reported_heat_solve_cpu_s": 66.61,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_fine_cpu_r1",
+      "size": "fine",
+      "backend": "cpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine",
+      "node_count": 382507,
+      "tetrahedron_count": 1978314,
+      "outside_solver_wall_s": 1.0294219999999967
+    },
+    {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase20_perf_fine_gpu_r1\\solver.log",
+      "all_done": true,
+      "wall_seconds": 56.103552,
+      "solver_cpu_seconds": 156.66,
+      "solver_real_seconds": 55.02,
+      "hypre_solution_times_s": [
+        3.76497,
+        0.072233,
+        0.0204411,
+        0.00622892
+      ],
+      "hypre_solution_total_s": 3.8638730199999998,
+      "hypre_setup_times_s": [
+        0.850467,
+        0.70023,
+        0.611754,
+        0.633515
+      ],
+      "hypre_setup_total_s": 2.795966,
+      "hypre_required_iterations": [
+        376,
+        15,
+        4,
+        0
+      ],
+      "reported_heat_assembly_cpu_s": 107.0,
+      "reported_heat_solve_cpu_s": 18.69,
+      "gpu_requested": true,
+      "gpu_matrix_migration_logged": true,
+      "gpu_vector_migration_logged": true,
+      "setup_timer_logged": true,
+      "case": "case_phase20_perf_fine_gpu_r1",
+      "size": "fine",
+      "backend": "gpu",
+      "repeat": 1,
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_fine",
+      "node_count": 382507,
+      "tetrahedron_count": 1978314,
+      "outside_solver_wall_s": 1.0835519999999974
+    }
+  ],
+  "cpu_mortar_reference": {
+    "status": "AVAILABLE",
+    "source": "D:\\github\\TES-Programs\\Elmer-Projects\\results\\case_tes_steady_singlepixel_conformal_mortar_reference\\solver.log",
+    "timing": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_steady_singlepixel_conformal_mortar_reference\\solver.log",
+      "all_done": true,
+      "wall_seconds": null,
+      "solver_cpu_seconds": 35.55,
+      "solver_real_seconds": 35.55,
+      "hypre_solution_times_s": [],
+      "hypre_solution_total_s": 0,
+      "hypre_setup_times_s": [],
+      "hypre_setup_total_s": 0,
+      "hypre_required_iterations": [],
+      "reported_heat_assembly_cpu_s": 9.06,
+      "reported_heat_solve_cpu_s": 23.32,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": false
+    },
+    "comparison_note": "Historical validated CPU Mortar run; mesh/time-grid provenance must be checked before using replacement speedup as a strict apples-to-apples claim."
+  },
+  "limitations": [
+    "Separate H2D migration and BoomerAMG setup timers require a rebuilt SolveHypre integration; current setup timer is the conservative combined bucket.",
+    "GPU utilization requires an Nsight Systems summary when the profiler run is available."
+  ]
+}

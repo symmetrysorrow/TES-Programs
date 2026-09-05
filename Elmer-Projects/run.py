@@ -24,6 +24,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -684,6 +685,7 @@ def run_case(
         else runtime_sif
     )
     print(f"[{case_name}] ElmerSolver {display_sif} (log: {log_path.relative_to(ROOT)})")
+    wall_started = time.perf_counter()
     with log_path.open("w", encoding="utf-8") as log:
         command = [str(solver_path), str(runtime_sif)]
         if mpi_procs > 1:
@@ -765,12 +767,16 @@ def run_case(
         )
         if (out_dir / series).exists() and series not in collected:
             collected.append(series)
+    wall_seconds = time.perf_counter() - wall_started
+    with log_path.open("a", encoding="utf-8") as log:
+        log.write(f"WALL_SECONDS {wall_seconds:.6f}\n")
     result_file = result_file_of(model, case_name)
 
     manifest = {
         "case": case_name,
         "started": started,
         "finished": finished,
+        "wall_seconds": wall_seconds,
         "exit_code": proc.returncode,
         "inputs_sha256": inputs,
         "preexisting_restart_inputs_sha256": preexisting_inputs,

@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "measurement": "nvidia-smi dmon synchronized with one production 90872-node GPU HYPRE steady run",
+  "samples": 30,
+  "sm_utilization_percent": {
+    "mean": 11.5,
+    "max": 74.0
+  },
+  "memory_controller_utilization_percent": {
+    "mean": 22.1,
+    "max": 53.0
+  },
+  "power_w": {
+    "mean": 25.4,
+    "max": 56.0
+  },
+  "interpretation": "GPU activity is bursty and low on average because FEM assembly and host-side integration dominate; the HYPRE solve produces the observed short utilization bursts.",
+  "nsight_systems": {
+    "status": "NOT_AVAILABLE",
+    "reason": "nsys profile under this WSL runtime did not finalize within the run session and was stopped; no .nsys-rep was retained."
+  }
+}

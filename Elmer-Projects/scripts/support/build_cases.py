@@ -398,6 +398,13 @@ def solver1_block(
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
             f"  Linear System Abort Not Converged = {'True' if solver.get('linear_system_abort_not_converged', True) else 'False'}",
             f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 20)}",
+            *(
+                [
+                    f"  Linear System Refactorize = {'True' if solver['linear_system_refactorize'] else 'False'}"
+                ]
+                if "linear_system_refactorize" in solver
+                else []
+            ),
             "  BoomerAMG Relax Type = 3",
             "  BoomerAMG Coarsen Type = 0",
             "  BoomerAMG Num Sweeps = 1",
@@ -430,6 +437,13 @@ def solver1_block(
             f"  Linear System Convergence Tolerance = {fmt_real(hypre_tolerance) if hypre_tolerance is not None else '1.0e-11'}",
             f"  Linear System Abort Not Converged = {'True' if hypre_abort else 'False'}",
             f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 1)}",
+            *(
+                [
+                    f"  Linear System Refactorize = {'True' if solver['linear_system_refactorize'] else 'False'}"
+                ]
+                if "linear_system_refactorize" in solver
+                else []
+            ),
             "  HYPRE GmRes Dimension = 100",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",

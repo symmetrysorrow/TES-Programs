@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "classification": "GPU_SOLVER_EFFECTIVE_BUT_HOST_BOUND",
+  "speedups": {
+    "production_wall_median": 1.0260632255277347,
+    "production_linear_median": 1.284158074311183,
+    "medium_wall": 1.1501791650215978,
+    "fine_wall": 1.2774489215941265,
+    "transient_7step_wall": 1.0018356791993734,
+    "transient_50step_wall": 0.9621281017161362
+  },
+  "cpu_mortar_reference": {
+    "status": "AVAILABLE",
+    "source": "D:\\github\\TES-Programs\\Elmer-Projects\\results\\case_tes_steady_singlepixel_conformal_mortar_reference\\solver.log",
+    "timing": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_steady_singlepixel_conformal_mortar_reference\\solver.log",
+      "all_done": true,
+      "wall_seconds": null,
+      "solver_cpu_seconds": 35.55,
+      "solver_real_seconds": 35.55,
+      "hypre_solution_times_s": [],
+      "hypre_solution_total_s": 0,
+      "hypre_setup_times_s": [],
+      "hypre_setup_total_s": 0,
+      "hypre_required_iterations": [],
+      "reported_heat_assembly_cpu_s": 9.06,
+      "reported_heat_solve_cpu_s": 23.32,
+      "gpu_requested": false,
+      "gpu_matrix_migration_logged": false,
+      "gpu_vector_migration_logged": false,
+      "setup_timer_logged": false
+    },
+    "comparison_note": "Historical validated CPU Mortar run; mesh/time-grid provenance must be checked before using replacement speedup as a strict apples-to-apples claim."
+  },
+  "cpu_mortar_to_conformal_gpu": {
+    "status": "NOT_STRICTLY_COMPARABLE",
+    "historical_cpu_mortar_solver_real_s": 35.55,
+    "reason": "The retained Mortar reference uses a different mesh/runtime and is not an apples-to-apples production transient. A common-mesh Mortar transient is required before claiming replacement speedup."
+  },
+  "limiting_component": "host-side assembly/circuit/integration remainder plus repeated HYPRE setup; GPU HYPRE solve is effective but is not the dominant wall bucket at 90k transient scale.",
+  "recommended_next_optimization": "Implement a correctness-guarded matrix-update/preconditioner reuse path (SolveHypre3-equivalent) or parallelize host FEM assembly; do not enable unconditional No Precondition Recompute for the temperature-dependent matrix.",
+  "gpu_utilization_artifact": "gpu_utilization_summary.json"
+}
