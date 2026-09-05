@@ -74,6 +74,27 @@ backward error `6.844108235359397e-19`, constraint residual
 The numerical diagnostic passes; TES physical parity is still missing, so the
 acceptance artifact remains `INCOMPLETE` for production.
 
-The native source build is `NOT RUN`: this workspace contains the source
-patch but not an Elmer source tree/build configuration. The exact oracle and
-Python test suite are therefore the reproducible checks available here.
+The native source implementation was applied to a clean Elmer source worktree
+and built successfully under WSL. A non-MPI CPU build with
+`WITH_SuperLU=TRUE` linked `ElmerSolver`; an HYPRE-enabled MPI build with
+`WITH_Hypre=TRUE`, `/usr/include/hypre`, and `libHYPRE.so` linked
+`ElmerSolver_mpi`. The reviewable patch was regenerated from that source diff
+and passes `git apply --check` against the clean baseline.
+
+The stock Windows install is `CAPABILITY MISSING` because it lacks HYPRE. A
+HYPRE-enabled native MPI binary was then built and executed against the
+existing one-rank mesh/restart. Both CPU probes completed with `ALL DONE` in
+under the 240-second bound:
+
+| probe | outer rows | Schur rows | K actions | upper correction | wall seconds |
+|---|---:|---:|---:|---:|---:|
+| lower CPU | 30 | 30 | 991 | 0 | 36.664 |
+| full CPU | 30 | 30 | 1021 | 30 | 40.227 |
+
+Both probes recorded 30 Schur iterations/maxiter hits per row and no
+breakdown/nonfinite flags. The native `BlockMatrixPrec` hook does not own the
+outer Krylov state, so outer solver iteration/residual fields are explicitly
+empty; the summaries are therefore `INCOMPLETE` for outer convergence, never
+a fabricated PASS. GPU is `CAPABILITY MISSING`: the host exposes an NVIDIA
+device, but the linked HYPRE library is CPU-only and no CUDA/HIP HYPRE build
+was available.

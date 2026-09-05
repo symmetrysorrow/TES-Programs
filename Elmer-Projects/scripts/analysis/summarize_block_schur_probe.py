@@ -90,7 +90,7 @@ def _sum(rows: Iterable[dict[str, str]], *names: str) -> float | None:
     return sum(values) if values else None
 
 
-def _k_stage_totals(rows: list[dict[str, str]]) -> dict[str, float | None]:
+def _k_stage_totals(rows: list[dict[str, str]]) -> dict[str, Any]:
     stages = {
         "primal_block_solve": ("k_actions_primal_block_solve", "k_actions_primal"),
         "matrix_free_schur_action": ("k_actions_matrix_free_schur", "k_actions_schur"),
@@ -101,11 +101,18 @@ def _k_stage_totals(rows: list[dict[str, str]]) -> dict[str, float | None]:
     for label, names in stages.items():
         result[label] = _sum(rows, *names)
     explicit = _sum(rows, "k_actions_total", "k_actions")
+    stage_values = [result[key] for key in stages]
+    mismatch = False
+    if explicit is not None and all(value is not None for value in stage_values):
+        mismatch = not math.isclose(explicit, sum(stage_values), rel_tol=1.0e-9, abs_tol=1.0e-12)
     if explicit is not None:
         result["total"] = explicit
     else:
-        values = [value for key, value in result.items() if key != "total" and value is not None]
+        values = [value for key, value in result.items()
+                  if key not in {"total", "total_mismatch", "stage_sum"} and value is not None]
         result["total"] = sum(values) if values else None
+    result["total_mismatch"] = mismatch
+    result["stage_sum"] = sum(stage_values) if all(value is not None for value in stage_values) else None
     return result
 
 
@@ -122,8 +129,15 @@ def _log_reduction(initial: float | None, final: float | None) -> tuple[float | 
 def _workload_signature(rows: list[dict[str, str]]) -> str | None:
     if not rows:
         return None
-    fields = ("workload_id", "mesh_id", "timestep", "nonlinear_iteration", "rhs_id", "outer_limit", "linear_system_tolerance")
+    # Strategy, backend, case name, and probe prefix are not workload identity.
+    fields = ("mesh_id", "restart_id", "restart_file", "timestep", "nonlinear_iteration",
+              "rhs_id", "matrix_fingerprint", "outer_limit", "outer_tolerance",
+              "linear_system_tolerance", "schur_tolerance", "schur_max_iterations",
+              "schur_restart")
     values = {field: rows[0].get(field, "") for field in fields if rows[0].get(field, "") != ""}
+    if not values and rows[0].get("workload_id", ""):
+        # Legacy fixtures only. Native output should provide canonical fields.
+        values = {"legacy_workload_id": rows[0]["workload_id"]}
     if not values:
         return None
     encoded = json.dumps(values, sort_keys=True, separators=(",", ":")).encode()
@@ -152,30 +166,69 @@ def summarize(outer_path: Path | None = None, schur_path: Path | None = None, lo
     initial = _float(outer[0], "initial_residual") if outer else None
     final = _float(outer[-1], "current_residual", "outer_residual", "solver_reported_residual") if outer else None
     invalid_rows = []
+    invalid_timing_rows = []
     for index, row in enumerate(outer + schur):
         for field in ("initial_residual", "current_residual", "outer_residual", "solver_reported_residual", "final_residual"):
             if row.get(field, "") != "":
                 value = _float(row, field)
                 if not _finite_nonnegative(value):
                     invalid_rows.append({"row": index, "field": field, "value": row.get(field)})
+        for field in ("elapsed_wall_seconds_cumulative", "elapsed_wall_seconds_per_call",
+                      "elapsed_wall_seconds", "k_apply_seconds_cumulative", "k_apply_seconds_per_call",
+                      "schur_action_seconds_cumulative", "schur_action_seconds_per_call"):
+            if row.get(field, "") != "":
+                value = _float(row, field)
+                if not _finite_nonnegative(value):
+                    invalid_timing_rows.append({"row": index, "field": field, "value": row.get(field)})
     log_reduction, log_reason = _log_reduction(initial, final)
     outer_iterations = [int(value) for value in (_float(row, "solver_reported_iteration") for row in outer) if value is not None]
-    actual_outer = outer_iterations[-1] - outer_iterations[0] + 1 if len(outer_iterations) >= 2 else None
-    k = _k_stage_totals(schur)
+    unique_outer_iterations = list(dict.fromkeys(outer_iterations))
+    duplicate_outer_iterations = sorted({value for value in outer_iterations if outer_iterations.count(value) > 1})
+    nonmonotonic_outer_iterations = any(b <= a for a, b in zip(outer_iterations, outer_iterations[1:]))
+    sorted_outer_iterations = sorted(unique_outer_iterations)
+    skipped_outer_iterations = [value for a, b in zip(sorted_outer_iterations, sorted_outer_iterations[1:])
+                                for value in range(a + 1, b)]
+    actual_outer = len(unique_outer_iterations) if unique_outer_iterations else None
+    counter_rows = outer if any(row.get("k_actions_total", "") != "" for row in outer) else schur
+    k = _k_stage_totals(counter_rows)
     elapsed_cumulative = _last(outer, "elapsed_wall_seconds_cumulative", "elapsed_wall_seconds")
     elapsed_per_call = _sum(outer, "elapsed_wall_seconds_per_call")
     k_time_cumulative = _last(schur, "k_apply_seconds_cumulative", "k_apply_seconds")
     k_time_per_call = _sum(schur, "k_apply_seconds_per_call")
     schur_time_cumulative = _last(schur, "schur_action_seconds_cumulative", "schur_action_seconds")
+    cumulative_violations = []
+    for label, rows, field in (
+        ("outer_elapsed", outer, "elapsed_wall_seconds_cumulative"),
+        ("schur_elapsed", schur, "elapsed_wall_seconds_cumulative"),
+        ("k_apply", schur, "k_apply_seconds_cumulative"),
+        ("schur_action", schur, "schur_action_seconds_cumulative"),
+    ):
+        previous = None
+        for index, row in enumerate(rows):
+            value = _float(row, field)
+            if value is None:
+                continue
+            if previous is not None and value < previous:
+                cumulative_violations.append({"series": label, "row": index,
+                                              "previous": previous, "value": value})
+            previous = value
     reduction_ratio = final / initial if _finite_nonnegative(initial) and _finite_nonnegative(final) and initial > 0 else None
     incomplete_reasons = []
     if outer_status["state"] != "OK":
         incomplete_reasons.append(f"outer_csv:{outer_status['state']}")
-    if schur_status["state"] not in {"OK", "NOT PROVIDED", "MISSING"} and not log_solves:
+    if schur_path is not None and schur_status["state"] != "OK" and not log_solves:
         incomplete_reasons.append(f"schur_csv:{schur_status['state']}")
     if outer and final is None:
         incomplete_reasons.append("outer_residual_missing")
-    if invalid_rows:
+    if outer and any(_float(row, "initial_residual") is None for row in outer):
+        incomplete_reasons.append("outer_initial_residual_missing")
+    if schur and any(_float(row, "initial_residual") is None for row in schur):
+        incomplete_reasons.append("schur_initial_residual_missing")
+    if outer and not outer_iterations:
+        incomplete_reasons.append("outer_iteration_missing")
+    if duplicate_outer_iterations or skipped_outer_iterations or nonmonotonic_outer_iterations:
+        incomplete_reasons.append("outer_iteration_sequence_invalid")
+    if invalid_rows or invalid_timing_rows or cumulative_violations or k["total_mismatch"]:
         status = "FAIL"
     elif incomplete_reasons or not outer:
         status = "INCOMPLETE"
@@ -188,13 +241,16 @@ def summarize(outer_path: Path | None = None, schur_path: Path | None = None, lo
         "status": status,
         "incomplete_reasons": incomplete_reasons,
         "invalid_residual_rows": invalid_rows,
+        "invalid_timing_rows": invalid_timing_rows,
+        "cumulative_timing_violations": cumulative_violations,
         "outer_rows": len(outer),
         "schur_solves": len(schur_data),
         "schur_iteration_counts": [int(float(row["iterations"])) for row in schur_data if row.get("iterations", "") != ""],
         "schur_reached_tolerance_csv": sum(_bool(row, "reached_tolerance") is True for row in schur),
         "schur_hit_maxiter_csv": sum(_bool(row, "hit_maxiter") is True for row in schur),
         "schur_hit_maxiter_log": log_hit_maxiter,
-        "schur_hit_maxiter": sum(_bool(row, "hit_maxiter") is True for row in schur) + log_hit_maxiter > 0,
+        "schur_hit_maxiter": (sum(_bool(row, "hit_maxiter") is True for row in schur)
+                              if schur else log_hit_maxiter) > 0,
         "schur_breakdown": sum(_bool(row, "breakdown") is True for row in schur),
         "schur_nonfinite": sum(_bool(row, "nonfinite") is True for row in schur),
         "schur_final_residual_min": min((value for value in (_float(row, "final_residual") for row in schur_data) if value is not None), default=None),
@@ -208,6 +264,11 @@ def summarize(outer_path: Path | None = None, schur_path: Path | None = None, lo
         "log10_reduction": log_reduction,
         "log10_reduction_reason": log_reason,
         "actual_outer_iterations": actual_outer,
+        "unique_outer_iterations": unique_outer_iterations,
+        "duplicate_outer_iterations": duplicate_outer_iterations,
+        "skipped_outer_iterations": skipped_outer_iterations,
+        "nonmonotonic_outer_iterations": nonmonotonic_outer_iterations,
+        "k_stage_total_mismatch": k["total_mismatch"],
         "log10_reduction_per_outer_iteration": per_outer,
         "log10_reduction_per_k_action": per_k,
         "log10_reduction_per_second": per_second,

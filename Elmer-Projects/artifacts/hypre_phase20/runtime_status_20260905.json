@@ -5,34 +5,90 @@
   "timeout_policy_seconds": 30,
   "cases": {
     "case_p20_hypre_block_lower_cpu_probe": {
-      "status": "NOT RUN",
+      "status": "CAPABILITY MISSING",
       "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
       "elapsed_seconds": 2.1,
       "log": "runtime_cpu_lower_stock_20260905.log"
     },
     "case_p20_hypre_block_lower_gpu_probe": {
-      "status": "NOT RUN",
+      "status": "CAPABILITY MISSING",
       "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
       "elapsed_seconds": 2.1,
       "log": "runtime_case_p20_hypre_block_lower_gpu_probe_stock_20260905.log"
     },
     "case_p20_hypre_block_full_cpu_probe": {
-      "status": "NOT RUN",
+      "status": "CAPABILITY MISSING",
       "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
       "elapsed_seconds": 1.0,
       "log": "runtime_case_p20_hypre_block_full_cpu_probe_stock_20260905.log"
     },
     "case_p20_hypre_block_full_gpu_probe": {
-      "status": "NOT RUN",
+      "status": "CAPABILITY MISSING",
       "reason": "The installed binary does not include HYPRE; direct run exited 1 at solver setup.",
       "elapsed_seconds": 1.0,
       "log": "runtime_case_p20_hypre_block_full_gpu_probe_stock_20260905.log"
     }
   },
   "native_source_build": {
-    "status": "NOT RUN",
-    "reason": "No Elmer source tree/build configuration is present in this workspace; the native implementation is carried as a reviewable patch."
+    "status": "PASS",
+    "workspace": "/home/symme/elmer-phase20-native-integration",
+    "cpu_superlu": {
+      "status": "PASS",
+      "target": "ElmerSolver",
+      "with_mpi": false,
+      "with_hypre": false
+    },
+    "hypre_mpi": {
+      "status": "PASS",
+      "target": "ElmerSolver_mpi",
+      "with_mpi": true,
+      "with_hypre": true,
+      "hypre_include": "/usr/include/hypre",
+      "hypre_library": "/usr/lib/x86_64-linux-gnu/libHYPRE.so"
+    }
+  },
+  "native_runtime": {
+    "status": "INCOMPLETE",
+    "executable": "/home/symme/elmer-phase20-native-integration/build-hypre-mpi/fem/src/ElmerSolver_mpi",
+    "environment": "WSL Ubuntu; HYPRE CPU library; one MPI rank",
+    "timeout_seconds_each": 240,
+    "lower_cpu": {
+      "status": "PASS",
+      "exit_code": 0,
+      "solver_all_done": true,
+      "outer_rows": 30,
+      "schur_rows": 30,
+      "schur_iterations": 30,
+      "schur_hit_maxiter": 30,
+      "k_actions_total": 991,
+      "k_actions_by_stage": {"primal_block_solve": 30, "matrix_free_schur_action": 960,
+                              "full_factorization_upper_correction": 0, "setup_rebuild": 1},
+      "elapsed_wall_seconds": 36.664,
+      "k_apply_seconds": 36.664,
+      "schur_action_seconds": 35.458,
+      "summary": "cpu_lower_native_summary.json",
+      "log": "runtime_case_p20_hypre_block_lower_cpu_native_20260905.log"
+    },
+    "full_cpu": {
+      "status": "PASS",
+      "exit_code": 0,
+      "solver_all_done": true,
+      "outer_rows": 30,
+      "schur_rows": 30,
+      "schur_iterations": 30,
+      "schur_hit_maxiter": 30,
+      "k_actions_total": 1021,
+      "k_actions_by_stage": {"primal_block_solve": 30, "matrix_free_schur_action": 960,
+                              "full_factorization_upper_correction": 30, "setup_rebuild": 1},
+      "elapsed_wall_seconds": 40.227,
+      "k_apply_seconds": 40.201,
+      "schur_action_seconds": 37.815,
+      "summary": "cpu_full_native_summary.json",
+      "log": "runtime_case_p20_hypre_block_full_cpu_native_20260905.log"
+    },
+    "outer_residual_status": "INCOMPLETE: BlockMatrixPrec does not own the outer Krylov state; native outer residual/solver iteration fields are empty",
+    "gpu": {"status": "CAPABILITY MISSING", "reason": "WSL exposes an NVIDIA device, but the linked system libHYPRE is CPU-only; no CUDA/HIP HYPRE build was available for a valid GPU probe"}
   },
   "production_ready": false,
-  "note": "These are environment capability results, not solver convergence results. No CPU/GPU lower/full comparison is claimed."
+  "note": "Native HYPRE CPU lower/full runs are valid bounded instrumentation evidence. The summaries remain INCOMPLETE only because the hook cannot report outer Krylov residuals; production readiness remains false without physical TES parity."
 }

@@ -1,14 +1,13 @@
 diff --git a/fem/src/BlockSolve.F90 b/fem/src/BlockSolve.F90
-index c7a84a104..7b1471989 100644
+index c7a84a104..572b75727 100644
 --- a/fem/src/BlockSolve.F90
 +++ b/fem/src/BlockSolve.F90
-@@ -54,6 +54,17 @@ MODULE BlockSolve
+@@ -54,6 +54,29 @@ MODULE BlockSolve
  
    LOGICAL, PRIVATE :: isParallel=.FALSE.
  
-+  ! Phase20 probe counters are opt-in.  They deliberately live outside the
-+  ! matrix-free hot loop's I/O path: one row is written per Schur solve and
-+  ! one row per outer block-preconditioner application.
++  ! Phase20 probe counters are opt-in and reset at the configured lifecycle
++  ! boundary.  Each K action is classified at its actual solve site.
 +  LOGICAL, SAVE :: BlockSchurProbeActive = .FALSE.
 +  LOGICAL, SAVE :: BlockSchurProbeInitialized = .FALSE.
 +  CHARACTER(LEN=512), SAVE :: BlockSchurProbeActiveKey = ''
@@ -25,21 +24,41 @@ index c7a84a104..7b1471989 100644
 +  REAL(KIND=dp), SAVE :: BlockProbeKUpperSeconds = 0.0_dp
 +  REAL(KIND=dp), SAVE :: BlockProbeKSetupSeconds = 0.0_dp
 +  CHARACTER(LEN=512), SAVE :: BlockSchurProbePrefix = 'block_schur_probe'
++  LOGICAL, SAVE :: BlockProbeClockInitialized = .FALSE.
++  INTEGER, SAVE :: BlockProbeClockLastCount = 0
++  INTEGER, SAVE :: BlockProbeClockLastRate = 0
++  INTEGER(KIND=8), SAVE :: BlockProbeClockTicks = 0_8
 +
-  TYPE(Solver_t), POINTER, SAVE :: SolverRef
+   TYPE(Solver_t), POINTER, SAVE :: SolverRef
    TYPE(Variable_t), POINTER :: SolverVar => Null()
    TYPE(Matrix_t), POINTER :: SolverMatrix => Null(), SaveMatrix
-@@ -67,6 +78,53 @@ MODULE BlockSolve
+@@ -67,6 +90,116 @@ MODULE BlockSolve
  
  CONTAINS
-
+ 
 +  REAL(KIND=dp) FUNCTION BlockProbeNow()
 +    INTEGER :: count, rate, count_max
++    INTEGER(KIND=8) :: delta, modulus
 +    CALL SYSTEM_CLOCK(count, rate, count_max)
 +    IF( rate <= 0 ) THEN
 +      BlockProbeNow = 0.0_dp
++    ELSE IF( .NOT. BlockProbeClockInitialized .OR. &
++        BlockProbeClockLastRate /= rate ) THEN
++      BlockProbeClockInitialized = .TRUE.
++      BlockProbeClockLastCount = count
++      BlockProbeClockLastRate = rate
++      BlockProbeClockTicks = 0_8
++      BlockProbeNow = 0.0_dp
 +    ELSE
-+      BlockProbeNow = REAL(count,dp) / REAL(rate,dp)
++      delta = INT(count,KIND=8) - INT(BlockProbeClockLastCount,KIND=8)
++      IF( delta < 0 ) THEN
++        modulus = INT(count_max,KIND=8) + 1_8
++        IF( modulus > 0_8 ) delta = delta + modulus
++      END IF
++      IF( delta < 0 ) delta = 0_8
++      BlockProbeClockTicks = BlockProbeClockTicks + delta
++      BlockProbeClockLastCount = count
++      BlockProbeNow = REAL(BlockProbeClockTicks,dp) / REAL(rate,dp)
 +    END IF
 +  END FUNCTION BlockProbeNow
 +
@@ -50,8 +69,8 @@ index c7a84a104..7b1471989 100644
 +    OPEN(NEWUNIT=unit,FILE=TRIM(BlockSchurProbePrefix)//'_outer.csv', &
 +        STATUS='REPLACE',ACTION='WRITE',IOSTAT=ios)
 +    IF( ios == 0 ) THEN
-+      WRITE(unit,'(A)') 'probe_version,workload_id,preconditioner_application,'// &
-+          'solver_reported_iteration,initial_residual,current_residual,'// &
++      WRITE(unit,'(A)') 'probe_version,workload_id,outer_iteration,'// &
++          'preconditioner_application,solver_reported_iteration,initial_residual,current_residual,'// &
 +          'solver_reported_residual,schur_solve_count,k_actions_total,'// &
 +          'k_actions_primal_block_solve,k_actions_matrix_free_schur,'// &
 +          'k_actions_full_upper_correction,k_actions_setup_rebuild,'// &
@@ -60,7 +79,7 @@ index c7a84a104..7b1471989 100644
 +          'reached_tolerance,hit_maxiter,breakdown,nonfinite'
 +      CLOSE(unit)
 +    ELSE
-+      CALL Warn('BlockSchurProbe','cannot create outer CSV: '//TRIM(BlockSchurProbePrefix)//'_outer.csv')
++      CALL Warn('BlockSchurProbe','cannot create outer CSV')
 +    END IF
 +    OPEN(NEWUNIT=unit,FILE=TRIM(BlockSchurProbePrefix)//'_schur.csv', &
 +        STATUS='REPLACE',ACTION='WRITE',IOSTAT=ios)
@@ -76,7 +95,7 @@ index c7a84a104..7b1471989 100644
 +          'gpu_synchronized'
 +      CLOSE(unit)
 +    ELSE
-+      CALL Warn('BlockSchurProbe','cannot create Schur CSV: '//TRIM(BlockSchurProbePrefix)//'_schur.csv')
++      CALL Warn('BlockSchurProbe','cannot create Schur CSV')
 +    END IF
 +    BlockProbeOuter = 0
 +    BlockProbeSchur = 0
@@ -84,41 +103,43 @@ index c7a84a104..7b1471989 100644
 +    BlockProbeKSchur = 0
 +    BlockProbeKUpper = 0
 +    BlockProbeKSetup = 0
++    BlockProbeKActions = 0
 +    BlockProbeKSeconds = 0.0_dp
 +    BlockProbeKPrimalSeconds = 0.0_dp
 +    BlockProbeKSchurSeconds = 0.0_dp
 +    BlockProbeKUpperSeconds = 0.0_dp
 +    BlockProbeKSetupSeconds = 0.0_dp
++    BlockProbeClockInitialized = .FALSE.
++    BlockProbeClockTicks = 0_8
 +    BlockSchurProbeInitialized = .TRUE.
 +  END SUBROUTINE BlockSchurProbeInitialize
 +
 +  SUBROUTINE BlockSchurProbeWriteOuter( OuterNo, SchurBefore, KBefore, &
 +      PrimalBefore, SchurKBefore, UpperBefore, SetupBefore, &
-+      StartSeconds, ActionSeconds )
++      StartSeconds )
 +    INTEGER, INTENT(in) :: OuterNo, SchurBefore, KBefore, PrimalBefore, &
 +        SchurKBefore, UpperBefore, SetupBefore
-+    REAL(KIND=dp), INTENT(in) :: StartSeconds, ActionSeconds
++    REAL(KIND=dp), INTENT(in) :: StartSeconds
 +    INTEGER :: unit, ios
-+    REAL(KIND=dp) :: now, elapsed
-+    now = BlockProbeNow()
-+    elapsed = MAX(0.0_dp,now-StartSeconds)
++    REAL(KIND=dp) :: elapsed
++    elapsed = MAX(0.0_dp,BlockProbeNow()-StartSeconds)
 +    OPEN(NEWUNIT=unit,FILE=TRIM(BlockSchurProbePrefix)//'_outer.csv', &
 +        STATUS='UNKNOWN',POSITION='APPEND',ACTION='WRITE',IOSTAT=ios)
 +    IF( ios == 0 ) THEN
-+      ! Solver iteration/residuals are not available at this hook.  Emit empty
-+      ! fields so a summarizer reports them as missing, never as zero.
-+      WRITE(unit,'(A,A,A,I0,A,A,A,A,A,A,A,A,I0,A,I0,A,I0,A,I0,A,I0,'// &
-+          'ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,A,A,A,A)',IOSTAT=ios) &
-+          'phase20-v2,',TRIM(BlockSchurProbePrefix),',',OuterNo,',', &
++      ! Outer solver state is not owned by this hook.  Keep those fields empty.
++      WRITE(unit,'(A,A,A,A,A,I0,A,A,A,A,A,A,A,A,A,I0,A,I0,A,I0,A,I0,A,I0,A,I0,'// &
++          'A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,'// &
++          'A,A,A,A,A,A,A,A)',IOSTAT=ios) &
++          'phase20-v2,',TRIM(BlockSchurProbePrefix),',','',',',OuterNo,',', &
 +          '',',','',',','',',','',',', &
 +          BlockProbeSchur-SchurBefore,',',BlockProbeKActions-KBefore,',', &
-+          BlockProbeKPrimal-PrimalBefore,',', &
-+          BlockProbeKSchur-SchurKBefore,',', &
++          BlockProbeKPrimal-PrimalBefore,',',BlockProbeKSchur-SchurKBefore,',', &
 +          BlockProbeKUpper-UpperBefore,',',BlockProbeKSetup-SetupBefore,',', &
-+          BlockProbeKSeconds,',',elapsed,',', &
-+          BlockProbeKSeconds,',',BlockProbeKSchurSeconds,',', &
-+          'missing',',','missing',',','missing',',','missing'
-+      IF( ios /= 0 ) CALL Warn('BlockSchurProbe','cannot write outer CSV row')
++          BlockProbeKSeconds,',',elapsed,',',BlockProbeKSeconds,',', &
++          BlockProbeKSchurSeconds,',','missing',',','missing',',','missing',',','missing'
++      IF( ios /= 0 ) THEN
++        CALL Warn('BlockSchurProbe','cannot write outer CSV row, IOSTAT='//I2S(ios))
++      END IF
 +      CLOSE(unit)
 +    ELSE
 +      CALL Warn('BlockSchurProbe','cannot append outer CSV')
@@ -128,7 +149,7 @@ index c7a84a104..7b1471989 100644
  ! Create matrix S=P((diag(A))^-1)Q
    !------------------------------------------------------------------------  
    FUNCTION CreateSchurApproximation(A,P,Q) RESULT ( S ) 
-@@ -436,6 +494,7 @@ CONTAINS
+@@ -436,6 +569,7 @@ CONTAINS
      REAL(KIND=dp), INTENT(out) :: bt_v(:), k_u(:), b_k_u(:), d_v(:)
      TYPE(Matrix_t), POINTER :: K, B, Bt, D
      INTEGER :: nu,nc
@@ -136,7 +157,7 @@ index c7a84a104..7b1471989 100644
  
      K => TotMatrix % Submatrix(1,1) % Mat
      B => TotMatrix % Submatrix(2,1) % Mat
-@@ -457,7 +516,13 @@ CONTAINS
+@@ -457,7 +591,15 @@ CONTAINS
      k_u = 0.0_dp
      ! The same Solver_t owns the already-configured BoomerAMG hierarchy.  The
      ! no-recompute flag is essential: a Schur matvec must not rebuild AMG.
@@ -152,7 +173,7 @@ index c7a84a104..7b1471989 100644
      CALL BlockSchurCheckFinite('K solve',k_u)
      CALL BlockSchurReport('K solve',k_u)
      b_k_u = 0.0_dp
-@@ -493,9 +558,11 @@ CONTAINS
+@@ -493,9 +635,13 @@ CONTAINS
      INTEGER, INTENT(in) :: SchurMaxIter, SchurRestart
      REAL(KIND=dp), ALLOCATABLE :: r(:),w(:),z(:),v(:,:),zz(:,:),h(:,:), &
          cs(:),sn(:),g(:),coef(:),ax(:),sbt(:),sku(:),sbku(:),sdv(:)
@@ -165,10 +186,11 @@ index c7a84a104..7b1471989 100644
 +    INTEGER :: n,m,i,j,k,iter,istat,nu,probe_schur,k_before, &
 +        k_primal_before,k_schur_before,k_upper_before,k_setup_before,io_status
 +    LOGICAL :: Found,OldNoPrec,Breakdown,probe,reached_tolerance,hit_maxiter,nonfinite
++    CHARACTER(256) :: probe_message
  
      n = SIZE(rhs)
      IF( SIZE(sol) /= n .OR. SIZE(DiagS) /= n ) CALL Fatal( &
-@@ -503,6 +570,15 @@ CONTAINS
+@@ -503,6 +649,21 @@ CONTAINS
      IF( SchurMaxIter < 1 .OR. SchurRestart < 1 ) CALL Fatal( &
          'BlockSchurMatrixFreeSolve','Schur iteration settings must be positive')
      m = MIN(SchurMaxIter,SchurRestart)
@@ -190,7 +212,7 @@ index c7a84a104..7b1471989 100644
      nu = TotMatrix % Submatrix(1,1) % Mat % NumberOfRows
      ALLOCATE(r(n),w(n),z(n),v(n,m+1),zz(n,m),h(m+1,m),cs(m),sn(m), &
          g(m+1),coef(m),ax(n),sbt(nu),sku(nu), &
-@@ -515,10 +591,14 @@ CONTAINS
+@@ -515,10 +676,14 @@ CONTAINS
      CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',.TRUE.)
      iter = 0
      sol = 0.0_dp
@@ -205,7 +227,7 @@ index c7a84a104..7b1471989 100644
      CALL BlockSchurCheckScalarFinite('initial residual',beta)
      IF( beta <= SchurTol * MAX(SQRT(MAX(0.0_dp,DOT_PRODUCT(rhs,rhs))), &
          TINY(1.0_dp)) ) GOTO 900
-@@ -537,7 +617,10 @@ CONTAINS
+@@ -537,7 +702,10 @@ CONTAINS
          z = v(:,j) / DiagS
          CALL BlockSchurCheckFinite('preconditioned vector',z)
          zz(:,j) = z
@@ -216,7 +238,7 @@ index c7a84a104..7b1471989 100644
          DO i=1,j
            h(i,j) = DOT_PRODUCT(v(:,i),w)
            w = w - h(i,j)*v(:,i)
-@@ -582,7 +665,10 @@ CONTAINS
+@@ -582,7 +750,10 @@ CONTAINS
        DO j=1,k
          sol = sol + coef(j)*zz(:,j)
        END DO
@@ -227,10 +249,10 @@ index c7a84a104..7b1471989 100644
        r = rhs - ax
        CALL BlockSchurCheckFinite('Schur residual',r)
      END DO
-@@ -590,6 +676,20 @@ CONTAINS
+@@ -590,6 +761,40 @@ CONTAINS
      CALL ListAddLogical(KSolver % Values,'No Precondition Recompute',OldNoPrec)
      res = SQRT(MAX(0.0_dp,DOT_PRODUCT(r,r)))
-+     CALL BlockSchurCheckScalarFinite('final residual',res)
+     CALL BlockSchurCheckScalarFinite('final residual',res)
 +    nonfinite = .NOT.(initial_residual == initial_residual .AND. &
 +        res == res .AND. ABS(initial_residual) < HUGE(initial_residual) .AND. &
 +        ABS(res) < HUGE(res))
@@ -245,20 +267,21 @@ index c7a84a104..7b1471989 100644
 +      IF( io_status == 0 ) THEN
 +        WRITE(istat,'(A,A,A,I0,A,I0,A,I0,A,ES24.16E3,A,ES24.16E3,'// &
 +            'A,L1,A,L1,A,L1,A,L1,A,I0,A,I0,A,I0,A,I0,A,I0,'// &
-+            'ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,'// &
++            'A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,ES24.16E3,A,'// &
 +            'ES24.16E3,A,ES24.16E3,A,A)',IOSTAT=io_status) &
 +            'phase20-v2,',TRIM(BlockSchurProbePrefix),',',BlockProbeOuter,',', &
 +            probe_schur,',',iter,',',initial_residual,',',res,',', &
 +            reached_tolerance,',',hit_maxiter,',',Breakdown,',',nonfinite,',', &
-+            BlockProbeKActions-k_before,',', &
-+            BlockProbeKPrimal-k_primal_before,',', &
-+            BlockProbeKSchur-k_schur_before,',', &
-+            BlockProbeKUpper-k_upper_before,',', &
++            BlockProbeKActions-k_before,',',BlockProbeKPrimal-k_primal_before,',', &
++            BlockProbeKSchur-k_schur_before,',',BlockProbeKUpper-k_upper_before,',', &
 +            BlockProbeKSetup-k_setup_before,',', &
 +            MAX(0.0_dp,schur_finish-schur_start),',',schur_finish,',', &
 +            MAX(0.0_dp,BlockProbeKSeconds-k_seconds_before),',',BlockProbeKSeconds,',', &
 +            MAX(0.0_dp,action_seconds),',',BlockProbeKSchurSeconds,',','missing'
-+        IF( io_status /= 0 ) CALL Warn('BlockSchurProbe','cannot write Schur CSV row')
++        IF( io_status /= 0 ) THEN
++          WRITE(probe_message,'(A,I0)') 'cannot write Schur CSV row, IOSTAT=',io_status
++          CALL Warn('BlockSchurProbe',TRIM(probe_message))
++        END IF
 +        CLOSE(istat)
 +      ELSE
 +        CALL Warn('BlockSchurProbe','cannot append Schur CSV')
@@ -267,125 +290,159 @@ index c7a84a104..7b1471989 100644
      WRITE(Message,'(A,I0,A,ES12.5)') 'Matrix-free Schur GMRES iterations: ', &
          iter, ' residual: ', res
      CALL Info('BlockSchurMatrixFreeSolve',Message,Level=7)
-@@ -3421,7 +3521,8 @@ CONTAINS
-         A => BlockMatrix % SubMatrix( NoRow, NoCol ) % Mat
-         IF( A % NumberOfRows == 0 ) CYCLE
- 
--        CALL CRS_MatrixVectorMultiply( A, x, rtmp)              
-+        rtmp = 0.0_dp
-+        CALL CRS_MatrixVectorMultiply( A, x, rtmp)
-         rhs(1:n) = rhs(1:n) - rtmp(1:n) 
-       END DO
- 
-@@ -3435,7 +3536,8 @@ CONTAINS
-       x => Var % Values
-       A => BlockMatrix % SubMatrix( NoRow, NoCol ) % Mat
-       IF( A % NumberOfRows > 0 ) THEN
--        CALL CRS_MatrixVectorMultiply( A, x, rtmp)              
-+        rtmp = 0.0_dp
-+        CALL CRS_MatrixVectorMultiply( A, x, rtmp)
-         rhs(1:n) = rhs(1:n) - rtmp(1:n)
-       END IF
-       
-@@ -4266,7 +4368,7 @@ CONTAINS
+@@ -4266,7 +4471,10 @@ CONTAINS
      INTEGER, POINTER :: BlockOrder(:)
      TYPE(Matrix_t), POINTER :: A, Aij, mat_save, ADiag
      TYPE(Variable_t), POINTER :: Var, Var_save, KVar
 -    REAL(KIND=dp) :: nrm, SchurTol
-+    REAL(KIND=dp) :: nrm, SchurTol, probe_outer_start, probe_k_seconds
++    REAL(KIND=dp) :: nrm, SchurTol, probe_outer_start
++    REAL(KIND=dp) :: block_start, block_finish, setup_start, setup_finish
++    INTEGER :: probe_schur_before, probe_k_before, probe_primal_before, &
++        probe_schur_k_before, probe_upper_before, probe_setup_before
      LOGICAL :: GotOrder, BlockGS, Found, NS, ScaleSystem, DoSum, &
          IsComplex, BlockScaling, DoDiagScaling, DoPrecScaling, UsePrecMat, &
          Isolated, NoNestedScaling, DoAMGXmv, CalcLoads, BlockSch, &
-@@ -4282,6 +4384,7 @@ CONTAINS
-     CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix, DiagSolver, &
-         DiagIterative, DiagPreconditioning, DiagDirect
+@@ -4279,8 +4487,8 @@ CONTAINS
+     LOGICAL :: DiagUseHypre, DiagNoPrec, DiagSkipScaling, DiagHypreGPU
+     INTEGER :: DiagMaxIter
+     REAL(KIND=dp) :: DiagTol
+-    CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix, DiagSolver, &
+-        DiagIterative, DiagPreconditioning, DiagDirect
++    CHARACTER(:), ALLOCATABLE :: str, SchurDiagnosticPrefix, ProbeLifecycle, &
++        DiagSolver, DiagIterative, DiagPreconditioning, DiagDirect
      INTEGER(KIND=AddrInt) :: AddrFunc
-+    INTEGER :: probe_schur_before, probe_k_before, probe_primal_before, &
-+        probe_schur_k_before, probe_upper_before, probe_setup_before
      EXTERNAL :: AddrFunc
  
-     CALL Info('BlockMatrixPrec','Starting block matrix preconditioning',Level=8)
-@@ -4299,6 +4402,20 @@ CONTAINS
+@@ -4299,6 +4507,34 @@ CONTAINS
      Solver => CurrentModel % Solver
      Params => Solver % Values
  
++    ! The probe is deliberately owned by the real block preconditioner.  A
++    ! prefix identifies one workload; the lifecycle controls whether rows
++    ! accumulate over a solve or are reset for every preconditioner call.
 +    BlockSchurProbeActive = ListGetLogical(Params,'Block Schur Probe',Found)
++    ProbeLifecycle = ListGetString(Params,'Block Schur Probe Lifecycle',Found)
++    IF( .NOT. Found ) ProbeLifecycle = 'linear solve'
++    SchurDiagnosticPrefix = ListGetString(Params,'Block Schur Probe Prefix',Found)
++    IF( .NOT. Found ) SchurDiagnosticPrefix = 'block_schur_probe'
 +    IF( .NOT. BlockSchurProbeActive ) THEN
-+      ! A new solve with probing disabled starts a fresh lifecycle.  This also
-+      ! prevents counters from leaking into a later enabled solve.
 +      BlockSchurProbeInitialized = .FALSE.
 +      BlockSchurProbeActiveKey = ''
-+    ELSE
-+      SchurDiagnosticPrefix = ListGetString(Params,'Block Schur Probe Prefix',Found)
-+      IF( .NOT. Found ) SchurDiagnosticPrefix = 'block_schur_probe'
-+      IF( .NOT. BlockSchurProbeInitialized .OR. &
-+          TRIM(BlockSchurProbeActiveKey) /= TRIM(SchurDiagnosticPrefix) ) THEN
-+        CALL BlockSchurProbeInitialize(SchurDiagnosticPrefix)
-+        BlockSchurProbeActiveKey = TRIM(SchurDiagnosticPrefix)
-+      END IF
++    ELSE IF( .NOT. BlockSchurProbeInitialized .OR. &
++        TRIM(BlockSchurProbeActiveKey) /= TRIM(SchurDiagnosticPrefix) .OR. &
++        TRIM(ProbeLifecycle) == 'preconditioner application' ) THEN
++      CALL BlockSchurProbeInitialize(SchurDiagnosticPrefix)
++      BlockSchurProbeActiveKey = TRIM(SchurDiagnosticPrefix)
 +    END IF
 +    IF( BlockSchurProbeActive ) THEN
 +      BlockProbeOuter = BlockProbeOuter + 1
++      probe_outer_start = BlockProbeNow()
 +      probe_schur_before = BlockProbeSchur
 +      probe_k_before = BlockProbeKActions
-+      probe_k_seconds = BlockProbeKSeconds
 +      probe_primal_before = BlockProbeKPrimal
 +      probe_schur_k_before = BlockProbeKSchur
 +      probe_upper_before = BlockProbeKUpper
 +      probe_setup_before = BlockProbeKSetup
-+      probe_outer_start = BlockProbeNow()
 +    END IF
 +
      NoVar = TotMatrix % NoVar
      Solver => TotMatrix % Solver
  
-@@ -4778,8 +4895,10 @@ CONTAINS
-           b => v(offset(i)+1:offset(i+1))
-         END IF
-         IF(DoAMGXMV) THEN
-+          rtmp = 0.0_dp
-           CALL AMGXMatrixVectorMultiply(Aij,b,rtmp,SolverRef )
+@@ -4349,11 +4585,20 @@ CONTAINS
+           'Matrix-free Schur mode is currently one-rank only; use the explicit MPI gate')
+       IF( .NOT. SchurDiagCacheValid .OR. SchurDiagCacheN /= &
+           TotMatrix % Submatrix(2,1) % Mat % NumberOfRows ) THEN
++        IF( BlockSchurProbeActive ) setup_start = BlockProbeNow()
+         IF( ALLOCATED(SchurDiagCache) ) DEALLOCATE(SchurDiagCache)
+         SchurDiagCacheN = TotMatrix % Submatrix(2,1) % Mat % NumberOfRows
+         ALLOCATE(SchurDiagCache(SchurDiagCacheN))
+         CALL BlockSchurPrepareDiagonal(SchurDiagCache,CreateSchurApprox)
+         SchurDiagCacheValid = .TRUE.
++        IF( BlockSchurProbeActive ) THEN
++          setup_finish = BlockProbeNow()
++          BlockProbeKActions = BlockProbeKActions + 1
++          BlockProbeKSetup = BlockProbeKSetup + 1
++          BlockProbeKSeconds = BlockProbeKSeconds + MAX(0.0_dp,setup_finish-setup_start)
++          BlockProbeKSetupSeconds = BlockProbeKSetupSeconds + &
++              MAX(0.0_dp,setup_finish-setup_start)
++        END IF
+         CALL Info('BlockMatrixPrec','Prepared reusable Schur diagonal preconditioner',Level=7)
+       END IF
+     END IF
+@@ -4795,7 +5040,16 @@ CONTAINS
+           CALL AMGXSolver( Aij, xtmp, btmp, ASolver )
+           IF( ScaleSystem ) CALL BackScaleLinearSystem(ASolver,Aij,btmp,xtmp)
          ELSE
-+          rtmp = 0.0_dp
-           CALL CRS_MatrixVectorMultiply(Aij,b,rtmp )
++          IF( BlockSchurProbeActive ) block_start = BlockProbeNow()
+           CALL SolveLinearSystem( Aij, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
++          IF( BlockSchurProbeActive ) THEN
++            block_finish = BlockProbeNow()
++            BlockProbeKActions = BlockProbeKActions + 1
++            BlockProbeKSchur = BlockProbeKSchur + 1
++            BlockProbeKSeconds = BlockProbeKSeconds + MAX(0.0_dp,block_finish-block_start)
++            BlockProbeKSchurSeconds = BlockProbeKSchurSeconds + &
++                MAX(0.0_dp,block_finish-block_start)
++          END IF
          END IF
          
-@@ -4954,8 +5073,10 @@ CONTAINS
-           ELSE
-             Aij => TotMatrix % Submatrix(k,i) % Mat            
-             IF(DoAMGXMV) THEN
-+              rtmp = 0.0_dp
-               CALL AMGXMatrixVectorMultiply(Aij, x, rtmp, SolverRef )
-             ELSE
-+              rtmp = 0.0_dp
-               CALL CRS_MatrixVectorMultiply(Aij,x,rtmp )
-             END IF
+         ! x = -P u 
+@@ -4860,8 +5114,18 @@ CONTAINS
+             CALL ListAddString( ASolver % Values, 'Linear System Solver', 'direct' )
+             CALL ListAddString( ASolver % Values, 'Linear System Direct Method', 'umfpack' )
            END IF
-@@ -5039,7 +5160,11 @@ CONTAINS
-       WRITE( Message,'(A,ES12.5)') 'U fin norm: ',nrm
+-          IF( .NOT. (i == 2 .AND. BlockSchurMF) ) &
+-              CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
++          IF( .NOT. (i == 2 .AND. BlockSchurMF) ) THEN
++            IF( BlockSchurProbeActive .AND. i == 1 ) block_start = BlockProbeNow()
++            CALL SolveLinearSystem( A, btmp, x, Var % Norm, Var % DOFs, ASolver )
++            IF( BlockSchurProbeActive .AND. i == 1 ) THEN
++              block_finish = BlockProbeNow()
++              BlockProbeKActions = BlockProbeKActions + 1
++              BlockProbeKPrimal = BlockProbeKPrimal + 1
++              BlockProbeKSeconds = BlockProbeKSeconds + MAX(0.0_dp,block_finish-block_start)
++              BlockProbeKPrimalSeconds = BlockProbeKPrimalSeconds + &
++                  MAX(0.0_dp,block_finish-block_start)
++            END IF
++          END IF
+         END IF
+       END IF
+       
+@@ -5006,7 +5270,16 @@ CONTAINS
+               Found, DefValue=1 ) )
+         END IF
+         xtmp = 0.0_dp
++        IF( BlockSchurProbeActive ) block_start = BlockProbeNow()
+         CALL SolveLinearSystem( A, rtmp, xtmp, Var % Norm, Var % DOFs, ASolver )
++        IF( BlockSchurProbeActive ) THEN
++          block_finish = BlockProbeNow()
++          BlockProbeKActions = BlockProbeKActions + 1
++          BlockProbeKUpper = BlockProbeKUpper + 1
++          BlockProbeKSeconds = BlockProbeKSeconds + MAX(0.0_dp,block_finish-block_start)
++          BlockProbeKUpperSeconds = BlockProbeKUpperSeconds + &
++              MAX(0.0_dp,block_finish-block_start)
++        END IF
+         u(offset(1)+1:offset(2)) = u(offset(1)+1:offset(2)) - &
+             xtmp(1:offset(2)-offset(1))
+       END IF
+@@ -5040,6 +5313,10 @@ CONTAINS
        CALL Info('BlockMatrixPrec',Message,Level=10)
      END IF
--      
-+
-+    IF( BlockSchurProbeActive ) CALL BlockSchurProbeWriteOuter( &
-+        BlockProbeOuter, probe_schur_before, probe_k_before, &
-+        probe_primal_before, probe_schur_k_before, probe_upper_before, &
-+        probe_setup_before, probe_outer_start, &
-+        BlockProbeKSeconds-probe_k_seconds )
-+
+       
++    IF( BlockSchurProbeActive ) CALL BlockSchurProbeWriteOuter( BlockProbeOuter, &
++        probe_schur_before, probe_k_before, probe_primal_before, &
++        probe_schur_k_before, probe_upper_before, probe_setup_before, &
++        probe_outer_start )
      CALL Info('BlockMatrixPrec','Finished block matrix preconditioning',Level=8)
      
    END SUBROUTINE BlockMatrixPrec
 diff --git a/fem/src/SOLVER.KEYWORDS b/fem/src/SOLVER.KEYWORDS
-index 8d4518e3b..0b5def485 100644
+index 8d4518e3b..1ce2303b4 100644
 --- a/fem/src/SOLVER.KEYWORDS
 +++ b/fem/src/SOLVER.KEYWORDS
-@@ -1042,6 +1042,8 @@ Solver:Logical:     'Block Schur Diagnostic'
+@@ -1042,6 +1042,7 @@ Solver:Logical:     'Block Schur Diagnostic'
  Solver:Logical:     'Block Schur Diagnostic Direct'
  Solver:Logical:     'Block Schur Diagnostic Only'
  Solver:String:      'Schur Diagnostic Prefix'
-+Solver:Logical:     'Block Schur Probe'
-+Solver:String:      'Block Schur Probe Prefix'
 +Solver:String:      'Block Schur Probe Lifecycle'
  Solver:Logical:     'Block Matrix-free Schur'
  Solver:Real:        'Block Schur Inner Tolerance'

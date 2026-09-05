@@ -4,6 +4,7 @@ import csv
 import json
 import math
 from pathlib import Path
+import subprocess
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -87,6 +88,21 @@ def test_acceptance_nonfinite_or_breakdown_is_hard_failure() -> None:
     result = evaluate({"full_absolute_residual": float("nan"), "breakdown": True})
     assert result["status"] == "FAIL"
     assert "breakdown" in result["implementation_correctness"]["hard_fail_reasons"]
+
+
+def test_acceptance_rejects_threshold_failures_and_invalid_timing() -> None:
+    bad_numerics = evaluate({**_peer_metrics(), "full_relative_residual": 1.0e-3})
+    assert bad_numerics["status"] == "FAIL"
+    assert bad_numerics["numerical_convergence"]["status"] == "FAIL"
+
+    bad_production = evaluate({**_peer_metrics(), "tes_current_difference": None,
+                               "full_absolute_residual": 1.0e-3}, profile="production")
+    assert bad_production["status"] == "FAIL"
+
+    bad_timing = evaluate({**_peer_metrics(), "elapsed_wall_seconds": -1.0})
+    assert bad_timing["status"] == "FAIL"
+    assert bad_timing["performance_readiness"]["status"] == "FAIL"
+    assert "elapsed_wall_seconds" in bad_timing["performance_readiness"]["invalid_metrics"]
 
 
 def _write_probe_csvs(tmp_path: Path, *, missing_outer_residual: bool = False) -> tuple[Path, Path]:
@@ -209,6 +225,39 @@ def test_probe_summary_workload_matching_is_explicit(tmp_path: Path) -> None:
     assert validate_same_workload(first, altered)["status"] == "INCOMPLETE"
 
 
+def test_probe_summary_rejects_missing_schur_and_bad_counter_contract(tmp_path: Path) -> None:
+    outer, schur = _write_probe_csvs(tmp_path)
+    missing_schur = summarize(outer, tmp_path / "does-not-exist.csv")
+    assert missing_schur["status"] == "INCOMPLETE"
+    assert "schur_csv:MISSING" in missing_schur["incomplete_reasons"]
+
+    rows = list(csv.DictReader(outer.open(newline="", encoding="utf-8")))
+    rows[0]["k_actions_total"] = "7"
+    with outer.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    mismatch = summarize(outer, schur)
+    assert mismatch["status"] == "FAIL"
+    assert mismatch["k_stage_total_mismatch"] is True
+
+
+def test_probe_summary_rejects_nonmonotonic_time_and_outer_sequence(tmp_path: Path) -> None:
+    outer, schur = _write_probe_csvs(tmp_path)
+    outer_rows = list(csv.DictReader(outer.open(newline="", encoding="utf-8")))
+    outer_rows[1]["elapsed_wall_seconds_cumulative"] = "1.0"
+    outer_rows[1]["solver_reported_iteration"] = "3"
+    with outer.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(outer_rows[0]))
+        writer.writeheader()
+        writer.writerows(outer_rows)
+    result = summarize(outer, schur)
+    assert result["status"] == "FAIL"
+    assert result["cumulative_timing_violations"]
+    assert result["skipped_outer_iterations"] == [2]
+    assert "outer_iteration_sequence_invalid" in result["incomplete_reasons"]
+
+
 def test_default_sweep_is_strictly_one_step_and_dump_free(tmp_path: Path) -> None:
     source = ROOT / "elmer_project_hypre_gpu_phase19.json"
     output = tmp_path / "sweep.json"
@@ -234,5 +283,20 @@ def test_native_patch_has_real_timing_lifecycle_and_full_k_contract() -> None:
     assert "k_actions_full_upper_correction" in patch
     assert "k_actions_setup_rebuild" in patch
     assert "IOSTAT=io_status" in patch
-    assert "Solver iteration/residuals are not available" in patch
+    assert "Outer solver state is not owned by this hook" in patch
     assert "OuterNo,',0,'" not in patch
+
+
+def test_native_patch_is_git_parseable_against_clean_baseline() -> None:
+    baseline = Path(r"D:\Github\TES-Programs\tools\elmer-phase20-patch-base")
+    if not (baseline / ".git").exists():
+        return
+    result = subprocess.run(
+        ["git", "apply", "--numstat", "--check", str(ROOT / "docs/hypre_gpu_phase20_probe.patch")],
+        cwd=baseline,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "BlockSolve.F90" in result.stdout

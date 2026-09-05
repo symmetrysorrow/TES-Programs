@@ -72,6 +72,17 @@ def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None,
         elif value is not None and float(value) < 0.0:
             hard_fail_reasons.append(f"negative {label}")
 
+    timing_fields = ("elapsed_wall_seconds", "elapsed_wall_seconds_cumulative",
+                     "elapsed_wall_seconds_per_call_sum", "k_apply_seconds",
+                     "k_apply_seconds_cumulative_last", "k_apply_seconds_per_call_sum",
+                     "schur_action_seconds_cumulative_last", "k_actions_total")
+    invalid_timing = []
+    for field in timing_fields:
+        value = metrics.get(field)
+        if value is not None and (not _finite(value) or float(value) < 0.0):
+            invalid_timing.append(field)
+            hard_fail_reasons.append(f"invalid performance metric {field}")
+
     numerical_checks = {
         "absolute_residual": _finite(absolute) and float(absolute) <= limits["absolute_residual_max"],
         "relative_residual": _finite(relative) and float(relative) <= limits["relative_residual_max"],
@@ -94,9 +105,13 @@ def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None,
     physical_ok = all(physical_checks.values()) and not physical_missing
     numerical_status = _status(numerical_ok, bool(numerical_missing))
     physical_status = _status(physical_ok, bool(physical_missing))
+    performance_values_present = [metrics.get(field) for field in timing_fields]
+    performance_missing = not any(value is not None for value in performance_values_present)
+    performance_status = "FAIL" if invalid_timing else "INCOMPLETE" if performance_missing else "PASS"
     if profile == "diagnostic":
         production_ready = False
-        overall = "FAIL" if hard_fail_reasons else "INCOMPLETE" if numerical_missing else "PASS"
+        overall = ("FAIL" if hard_fail_reasons or (not numerical_ok and not numerical_missing)
+                   else "INCOMPLETE" if numerical_missing else "PASS")
     else:
         production_ready = implementation_ok and numerical_ok and physical_ok
         overall = (
@@ -111,7 +126,7 @@ def evaluate(metrics: dict[str, Any], policy: dict[str, float] | None = None,
         "implementation_correctness": {"status": "FAIL" if hard_fail_reasons else "PASS", "hard_fail_reasons": hard_fail_reasons},
         "numerical_convergence": {"status": numerical_status, "checks": numerical_checks, "missing_metrics": numerical_missing},
         "physical_acceptance": {"status": physical_status, "checks": physical_checks, "missing_metrics": physical_missing},
-        "performance_readiness": {"status": "PASS" if _finite(metrics.get("elapsed_wall_seconds")) and _finite(metrics.get("k_actions_total")) else "INCOMPLETE"},
+        "performance_readiness": {"status": performance_status, "invalid_metrics": invalid_timing},
         "gpu_acceleration": {"status": str(metrics.get("gpu_acceleration_status", "NOT RUN")), "speedup": metrics.get("gpu_speedup")},
         "constraint_metric_required": constraint_required,
         "no_mortar_constraint_exemption": no_mortar and not constraint_required,
@@ -135,6 +150,10 @@ def main() -> int:
     if args.require_complete and result["status"] == "INCOMPLETE":
         result["status"] = "FAIL"
         result["implementation_correctness"]["hard_fail_reasons"].append("missing metrics")
+        result["implementation_correctness"]["status"] = "FAIL"
+        for category in ("numerical_convergence", "physical_acceptance", "performance_readiness"):
+            if result[category]["status"] == "INCOMPLETE":
+                result[category]["status"] = "FAIL"
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2, allow_nan=False))
