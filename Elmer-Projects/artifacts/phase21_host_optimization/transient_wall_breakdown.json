@@ -1,11 +1,14 @@
 {
   "status": "PASS",
-  "schema_version": "phase21.1",
+  "schema_version": "phase22.1",
   "clock_policy": {
-    "wall": "WALL_SECONDS / MAIN Elapsed time",
-    "native_solver": "HYPRE setup and solution timers",
-    "udf": "Fortran CPU_TIME markers",
-    "assembly": "HeatSolve reported CPU counter; never added to wall categories"
+    "total_wall": "run.py time.perf_counter from solver launch through output collection",
+    "solver_wall": "run.py time.perf_counter around the solver process",
+    "process_cpu": "child process user+system CPU where resource.RUSAGE_CHILDREN exists",
+    "thread_cpu": "launcher thread time.thread_time; never mixed into wall breakdown",
+    "native_solver": "HYPRE setup and Krylov timers",
+    "udf_wall": "Fortran SYSTEM_CLOCK markers; UDF CPU_TIME markers remain a separate profile",
+    "assembly_wall": "reserved for HeatSolveWallBreakdown native marker"
   },
   "runs": [
     {
@@ -14,75 +17,51 @@
       "phase": "phase20_baseline",
       "steps": 50,
       "wall_seconds": 205.496273,
+      "solver_wall_seconds": null,
+      "output_io_wall_seconds": null,
+      "cpu_profile": {
+        "solver_reported_cpu_seconds": 584.53,
+        "launcher_child_process_cpu_seconds": null,
+        "launcher_thread_cpu_seconds": null,
+        "assembly_reported_cpu_seconds": 6.77
+      },
+      "wall_breakdown_sum_seconds": 205.496273,
+      "wall_breakdown_residual_seconds": 0.0,
+      "wall_breakdown_non_overlapping": true,
       "categories": {
-        "element_matrix_assembly": {
+        "assembly_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "HeatSolve assembly CPU counter is reported separately"
+          "clock": "not_instrumented",
+          "source": "native HeatSolve wall marker; subcomponents are reported in assembly_profile"
         },
-        "mass_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "conductivity_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "rhs_source_assembly": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "tes_circuit_evaluation": {
-          "seconds": 0,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "tes_temperature_integration": {
-          "seconds": 0,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "absorber_pulse_integration": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "cache_marker_only",
-          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
-        },
-        "hypre_ij_fill_update": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup"
-        },
-        "host_device_transfer": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup_for_gpu"
-        },
-        "boomeramg_setup": {
+        "hypre_setup_wall": {
           "seconds": 19.098444999999998,
           "percentage": 9.293815756940758,
           "clock": "native_wall_timer"
         },
-        "krylov_solve": {
+        "hypre_krylov_wall": {
           "seconds": 1.70633474,
           "percentage": 0.8303482662189208,
           "clock": "native_wall_timer"
         },
-        "result_series_output": {
+        "circuit_udf_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+          "clock": "not_instrumented",
+          "source": "UDF profile wall timer; CPU profile remains separate"
         },
-        "miscellaneous_host_residual": {
+        "output_io_wall": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented",
+          "source": "post-solver output collection only"
+        },
+        "unclassified_wall": {
           "seconds": 184.69149326000002,
           "percentage": 89.87583597684032,
           "clock": "wall_residual",
-          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+          "source": "includes assembly until native HeatSolve marker is available, MPI synchronization, and other uninstrumented work"
         }
       },
       "step_wall_seconds": [
@@ -609,75 +588,51 @@
       "phase": "phase21_cached",
       "steps": 50,
       "wall_seconds": 210.370956,
+      "solver_wall_seconds": null,
+      "output_io_wall_seconds": null,
+      "cpu_profile": {
+        "solver_reported_cpu_seconds": 598.55,
+        "launcher_child_process_cpu_seconds": null,
+        "launcher_thread_cpu_seconds": null,
+        "assembly_reported_cpu_seconds": 6.97
+      },
+      "wall_breakdown_sum_seconds": 210.370956,
+      "wall_breakdown_residual_seconds": 0.0,
+      "wall_breakdown_non_overlapping": true,
       "categories": {
-        "element_matrix_assembly": {
+        "assembly_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "HeatSolve assembly CPU counter is reported separately"
+          "clock": "not_instrumented",
+          "source": "native HeatSolve wall marker; subcomponents are reported in assembly_profile"
         },
-        "mass_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "conductivity_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "rhs_source_assembly": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "tes_circuit_evaluation": {
-          "seconds": 0.305326,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "tes_temperature_integration": {
-          "seconds": 0.001115,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "absorber_pulse_integration": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "cache_marker_only",
-          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
-        },
-        "hypre_ij_fill_update": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup"
-        },
-        "host_device_transfer": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup_for_gpu"
-        },
-        "boomeramg_setup": {
+        "hypre_setup_wall": {
           "seconds": 19.060628,
           "percentage": 9.060484566129936,
           "clock": "native_wall_timer"
         },
-        "krylov_solve": {
+        "hypre_krylov_wall": {
           "seconds": 1.71950576,
           "percentage": 0.8173684203821369,
           "clock": "native_wall_timer"
         },
-        "result_series_output": {
+        "circuit_udf_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+          "clock": "not_instrumented",
+          "source": "UDF profile wall timer; CPU profile remains separate"
         },
-        "miscellaneous_host_residual": {
+        "output_io_wall": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented",
+          "source": "post-solver output collection only"
+        },
+        "unclassified_wall": {
           "seconds": 189.59082224,
           "percentage": 90.12214701348792,
           "clock": "wall_residual",
-          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+          "source": "includes assembly until native HeatSolve marker is available, MPI synchronization, and other uninstrumented work"
         }
       },
       "step_wall_seconds": [
@@ -1203,75 +1158,51 @@
       "phase": "phase20_baseline",
       "steps": 50,
       "wall_seconds": 213.585148,
+      "solver_wall_seconds": null,
+      "output_io_wall_seconds": null,
+      "cpu_profile": {
+        "solver_reported_cpu_seconds": 607.03,
+        "launcher_child_process_cpu_seconds": null,
+        "launcher_thread_cpu_seconds": null,
+        "assembly_reported_cpu_seconds": 6.66
+      },
+      "wall_breakdown_sum_seconds": 213.585148,
+      "wall_breakdown_residual_seconds": 0.0,
+      "wall_breakdown_non_overlapping": true,
       "categories": {
-        "element_matrix_assembly": {
+        "assembly_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "HeatSolve assembly CPU counter is reported separately"
+          "clock": "not_instrumented",
+          "source": "native HeatSolve wall marker; subcomponents are reported in assembly_profile"
         },
-        "mass_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "conductivity_matrix_contribution": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "rhs_source_assembly": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "not_instrumented"
-        },
-        "tes_circuit_evaluation": {
-          "seconds": 0,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "tes_temperature_integration": {
-          "seconds": 0,
-          "percentage": null,
-          "clock": "UDF_CPU_TIME"
-        },
-        "absorber_pulse_integration": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "cache_marker_only",
-          "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver"
-        },
-        "hypre_ij_fill_update": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup"
-        },
-        "host_device_transfer": {
-          "seconds": null,
-          "percentage": null,
-          "clock": "included_in_hypre_setup_for_gpu"
-        },
-        "boomeramg_setup": {
+        "hypre_setup_wall": {
           "seconds": 26.574209,
           "percentage": 12.441974195696416,
           "clock": "native_wall_timer"
         },
-        "krylov_solve": {
+        "hypre_krylov_wall": {
           "seconds": 1.44924341,
           "percentage": 0.6785319220791514,
           "clock": "native_wall_timer"
         },
-        "result_series_output": {
+        "circuit_udf_wall": {
           "seconds": null,
           "percentage": null,
-          "clock": "not_independently_timed",
-          "source": "run.py collects output after solver exit; solver-side file time is not exposed"
+          "clock": "not_instrumented",
+          "source": "UDF profile wall timer; CPU profile remains separate"
         },
-        "miscellaneous_host_residual": {
+        "output_io_wall": {
+          "seconds": null,
+          "percentage": null,
+          "clock": "not_instrumented",
+          "source": "post-solver output collection only"
+        },
+        "unclassified_wall": {
           "seconds": 185.56169559,
           "percentage": 86.87949388222444,
           "clock": "wall_residual",
-          "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero"
+          "source": "includes assembly until native HeatSolve marker is available, MPI synchronization, and other uninstrumented work"
         }
       },
       "step_wall_seconds": [
@@ -1793,7 +1724,8 @@
     }
   ],
   "limitations": [
-    "Element/mass/conductivity/RHS subterms require a HeatSolver instrumentation build; current report preserves them as not_independently_timed.",
-    "HYPRE setup currently includes IJ construction and GPU migration in the native integration timer."
+    "When the rebuilt HeatSolve marker is present, assembly_wall is a top-level non-overlapping bucket; its local/global subterms are a nested diagnostic and must not be added again to the top-level sum.",
+    "HYPRE setup currently includes IJ construction and GPU migration in the native integration timer.",
+    "The category sum is non-overlapping by construction; unavailable categories are not imputed from CPU counters."
   ]
 }

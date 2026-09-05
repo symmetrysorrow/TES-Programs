@@ -111,6 +111,8 @@ CONTAINS
     REAL(KIND=dp) :: StateTemperature, StateCurrent, StateResistance, StatePower, StatePrevious
     REAL(KIND=dp) :: StateLoaded
     REAL(KIND=dp) :: ProfileStart, ProfileAfterAverage, ProfileEnd
+    INTEGER :: ProfileWallStart, ProfileWallAfterAverage, ProfileWallEnd, ProfileWallRate
+    REAL(KIND=dp) :: ProfileIntegrationWall, ProfileCircuitOutputWall, ProfileTotalWall
     CHARACTER(LEN=256) :: ProfileMessage
 
     CALL Info('TESParallelCircuitSolver', 'entered nonlinear pre-solver', Level=4)
@@ -172,6 +174,7 @@ CONTAINS
 
     ! These two collectives are always first, on every rank and every call.
     CALL CPU_TIME(ProfileStart)
+    CALL SYSTEM_CLOCK(ProfileWallStart, ProfileWallRate)
     CALL EnsureTESIntegrationCache(Model, body)
     localSum = 0.0_dp
     localCount = 0
@@ -192,6 +195,7 @@ CONTAINS
     IF (globalCount <= 0.0_dp) CALL Fatal('TESParallelCircuitSolver', 'No TES elements found')
     localT = globalSum / globalCount
     CALL CPU_TIME(ProfileAfterAverage)
+    CALL SYSTEM_CLOCK(ProfileWallAfterAverage)
     CALL Info('TESParallelCircuitSolver', 'TES temperature reduced', Level=4)
 
     IF (.NOT. CircuitInitialized) THEN
@@ -404,12 +408,25 @@ CONTAINS
       END IF
     END IF
     CALL CPU_TIME(ProfileEnd)
+    CALL SYSTEM_CLOCK(ProfileWallEnd)
+    IF (ProfileWallRate > 0) THEN
+      ProfileIntegrationWall = REAL(ProfileWallAfterAverage - ProfileWallStart, dp) / REAL(ProfileWallRate, dp)
+      ProfileCircuitOutputWall = REAL(ProfileWallEnd - ProfileWallAfterAverage, dp) / REAL(ProfileWallRate, dp)
+      ProfileTotalWall = REAL(ProfileWallEnd - ProfileWallStart, dp) / REAL(ProfileWallRate, dp)
+    ELSE
+      ProfileIntegrationWall = -1.0_dp
+      ProfileCircuitOutputWall = -1.0_dp
+      ProfileTotalWall = -1.0_dp
+    END IF
     IF (ParEnv % MyPE == 0) THEN
-      WRITE(ProfileMessage,'(A,I0,A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,I0,A,I0)') &
+      WRITE(ProfileMessage,'(A,I0,A,I0,A,ES12.5,A,ES12.5,A,ES12.5,A,ES12.5,A,ES12.5,A,ES12.5,A,I0,A,I0)') &
         'step=', TimeStep, ' iter=', NonlinIter, &
         ' integration_cpu_s=', ProfileAfterAverage-ProfileStart, &
         ' circuit_output_cpu_s=', ProfileEnd-ProfileAfterAverage, &
         ' total_cpu_s=', ProfileEnd-ProfileStart, &
+        ' integration_wall_s=', ProfileIntegrationWall, &
+        ' circuit_output_wall_s=', ProfileCircuitOutputWall, &
+        ' total_wall_s=', ProfileTotalWall, &
         ' cached_elements=', CachedElementCount, ' cached_nodes=', CachedNodeCount
       CALL Info('TESParallelCircuitProfile', TRIM(ProfileMessage), Level=4)
     END IF

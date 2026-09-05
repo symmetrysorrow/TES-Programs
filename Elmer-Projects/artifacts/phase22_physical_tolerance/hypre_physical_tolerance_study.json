@@ -1,0 +1,471 @@
+{
+  "status": "PASS",
+  "study": "common Mortar direct reference versus conformal CPU HYPRE tolerance sweep",
+  "reference": {
+    "case_steady": "case_phase21_mortar_steady",
+    "case_transient": "case_phase21_mortar_7step",
+    "mesh": "mesh_physical_parity_mortar"
+  },
+  "candidate_mesh": "mesh_physical_parity_conformal",
+  "tolerances": [
+    "1e-6",
+    "1e-7",
+    "1e-8"
+  ],
+  "runs": [
+    {
+      "tolerance": 1e-06,
+      "steady": {
+        "reference_case": "case_phase21_mortar_steady",
+        "candidate_case": "case_tes_steady_physical_parity_conformal_hypre_1em06",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_steady\\solver.log",
+          "wall_seconds": 6.426643,
+          "solver_cpu_seconds": 14.01,
+          "solver_real_seconds": 5.65,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em06\\solver.log",
+          "wall_seconds": 5.077691,
+          "solver_cpu_seconds": 10.22,
+          "solver_real_seconds": 4.34,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15000004898021338,
+          "candidate": 0.1685698622482849,
+          "absolute_difference_K": 0.018569813268071528
+        },
+        "absorber_temperature_K": {
+          "reference": 0.15000004898291197,
+          "candidate": 0.16857005811364403,
+          "absolute_difference_K": 0.018570009130732062
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 1,
+            "tes_current_drop_peak_A": 0.0,
+            "tes_temperature_rise_peak_K": 0.0,
+            "tes_power_peak_W": 3.199023057218163e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.019263999776167107,
+          "rms_difference_K": 0.0032646251938479778
+        }
+      },
+      "transient_7step": {
+        "reference_case": "case_phase21_mortar_7step",
+        "candidate_case": "case_tes_transient_physical_parity_conformal_hypre_1em06_7step",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_7step\\solver.log",
+          "wall_seconds": 20.213332,
+          "solver_cpu_seconds": 55.06,
+          "solver_real_seconds": 19.21,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_transient_physical_parity_conformal_hypre_1em06_7step\\solver.log",
+          "wall_seconds": 11.166637,
+          "solver_cpu_seconds": 27.64,
+          "solver_real_seconds": 10.42,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15013162064112368,
+          "candidate": 0.16856989248813237,
+          "absolute_difference_K": 0.01843827184700869
+        },
+        "absorber_temperature_K": {
+          "reference": 0.1509240590017243,
+          "candidate": 0.16947669244853222,
+          "absolute_difference_K": 0.018552633446807937
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 7,
+            "tes_current_drop_peak_A": 6.582887586816313e-10,
+            "tes_temperature_rise_peak_K": 1.9003275453233215e-08,
+            "tes_power_peak_W": 3.1991933740625863e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.01910165297529523,
+          "rms_difference_K": 0.003252236866277651
+        }
+      },
+      "candidate_total_wall_seconds": 16.244328,
+      "physical_gate": {
+        "mortar_temperature_field_max_abs_K": 0.019263999776167107,
+        "mortar_absorber_temperature_max_abs_K": 0.018570009130732062,
+        "field_tolerance_K": 1e-05,
+        "absorber_tolerance_K": 1e-05,
+        "status": "FAIL_ROUTE_DISCREPANCY_OR_INCOMPLETE_REFERENCE",
+        "note": "physical error gate; solver residual is not used as the acceptance criterion"
+      },
+      "solver_accuracy_gate": {
+        "reference_tolerance": 1e-08,
+        "max_abs_temperature_error_K": 0.00012686444777629258,
+        "tolerance_K": 3e-05,
+        "status": "INCOMPLETE",
+        "note": "isolates algebraic tolerance error from the common Mortar-versus-conformal route/mesh offset"
+      }
+    },
+    {
+      "tolerance": 1e-07,
+      "steady": {
+        "reference_case": "case_phase21_mortar_steady",
+        "candidate_case": "case_tes_steady_physical_parity_conformal_hypre_1em07",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_steady\\solver.log",
+          "wall_seconds": 6.426643,
+          "solver_cpu_seconds": 14.01,
+          "solver_real_seconds": 5.65,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em07\\solver.log",
+          "wall_seconds": 3.810976,
+          "solver_cpu_seconds": 9.61,
+          "solver_real_seconds": 3.49,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15000004898021338,
+          "candidate": 0.16856960077660776,
+          "absolute_difference_K": 0.018569551796394385
+        },
+        "absorber_temperature_K": {
+          "reference": 0.15000004898291197,
+          "candidate": 0.1685700685809081,
+          "absolute_difference_K": 0.018570019597996118
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 1,
+            "tes_current_drop_peak_A": 0.0,
+            "tes_temperature_rise_peak_K": 0.0,
+            "tes_power_peak_W": 3.199023057218163e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.01923558390274474,
+          "rms_difference_K": 0.003265521570804297
+        }
+      },
+      "transient_7step": {
+        "reference_case": "case_phase21_mortar_7step",
+        "candidate_case": "case_tes_transient_physical_parity_conformal_hypre_1em07_7step",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_7step\\solver.log",
+          "wall_seconds": 20.213332,
+          "solver_cpu_seconds": 55.06,
+          "solver_real_seconds": 19.21,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_transient_physical_parity_conformal_hypre_1em07_7step\\solver.log",
+          "wall_seconds": 9.999099,
+          "solver_cpu_seconds": 27.23,
+          "solver_real_seconds": 9.63,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15013162064112368,
+          "candidate": 0.16856962888336915,
+          "absolute_difference_K": 0.01843800824224548
+        },
+        "absorber_temperature_K": {
+          "reference": 0.1509240590017243,
+          "candidate": 0.16949256584854247,
+          "absolute_difference_K": 0.018568506846818184
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 7,
+            "tes_current_drop_peak_A": 6.112546090759809e-10,
+            "tes_temperature_rise_peak_K": 1.7645008065780843e-08,
+            "tes_power_peak_W": 3.1993625185424273e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.01910180420454785,
+          "rms_difference_K": 0.003253467743222274
+        }
+      },
+      "candidate_total_wall_seconds": 13.810075,
+      "physical_gate": {
+        "mortar_temperature_field_max_abs_K": 0.01923558390274474,
+        "mortar_absorber_temperature_max_abs_K": 0.018570019597996118,
+        "field_tolerance_K": 1e-05,
+        "absorber_tolerance_K": 1e-05,
+        "status": "FAIL_ROUTE_DISCREPANCY_OR_INCOMPLETE_REFERENCE",
+        "note": "physical error gate; solver residual is not used as the acceptance criterion"
+      },
+      "solver_accuracy_gate": {
+        "reference_tolerance": 1e-08,
+        "max_abs_temperature_error_K": 2.5194143671636304e-05,
+        "tolerance_K": 3e-05,
+        "status": "PASS",
+        "note": "isolates algebraic tolerance error from the common Mortar-versus-conformal route/mesh offset"
+      }
+    },
+    {
+      "tolerance": 1e-08,
+      "steady": {
+        "reference_case": "case_phase21_mortar_steady",
+        "candidate_case": "case_tes_steady_physical_parity_conformal_hypre_1em08",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_steady\\solver.log",
+          "wall_seconds": 6.426643,
+          "solver_cpu_seconds": 14.01,
+          "solver_real_seconds": 5.65,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em08\\solver.log",
+          "wall_seconds": 4.605552,
+          "solver_cpu_seconds": 12.08,
+          "solver_real_seconds": 4.3,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15000004898021338,
+          "candidate": 0.1685686381234457,
+          "absolute_difference_K": 0.01856858914323231
+        },
+        "absorber_temperature_K": {
+          "reference": 0.15000004898291197,
+          "candidate": 0.16856979817489326,
+          "absolute_difference_K": 0.01856974919198129
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 1,
+            "tes_current_drop_peak_A": 0.0,
+            "tes_temperature_rise_peak_K": 0.0,
+            "tes_power_peak_W": 3.199023057218163e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.0192332836234701,
+          "rms_difference_K": 0.003265416433600005
+        }
+      },
+      "transient_7step": {
+        "reference_case": "case_phase21_mortar_7step",
+        "candidate_case": "case_tes_transient_physical_parity_conformal_hypre_1em08_7step",
+        "reference_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_7step\\solver.log",
+          "wall_seconds": 20.213332,
+          "solver_cpu_seconds": 55.06,
+          "solver_real_seconds": 19.21,
+          "max_hypre_iterations": null
+        },
+        "candidate_timing": {
+          "status": "DONE",
+          "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_tes_transient_physical_parity_conformal_hypre_1em08_7step\\solver.log",
+          "wall_seconds": 10.156113,
+          "solver_cpu_seconds": 27.64,
+          "solver_real_seconds": 9.78,
+          "max_hypre_iterations": null
+        },
+        "tes_volume_average_temperature_K": {
+          "reference": 0.15013162064112368,
+          "candidate": 0.16856866252799352,
+          "absolute_difference_K": 0.018437041886869843
+        },
+        "absorber_temperature_K": {
+          "reference": 0.1509240590017243,
+          "candidate": 0.16949331900478276,
+          "absolute_difference_K": 0.018569260003058474
+        },
+        "electrical_observables": {
+          "tes_temperature_K": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_current_A": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_resistance_ohm": {
+            "status": "REFERENCE_UNAVAILABLE"
+          },
+          "tes_power_W": {
+            "status": "REFERENCE_UNAVAILABLE"
+          }
+        },
+        "pulse_metrics": {
+          "reference": {
+            "status": "REFERENCE_UNAVAILABLE",
+            "sample_count": 0
+          },
+          "candidate": {
+            "status": "DONE",
+            "sample_count": 7,
+            "tes_current_drop_peak_A": 4.961159426526175e-10,
+            "tes_temperature_rise_peak_K": 1.4319866403766923e-08,
+            "tes_power_peak_W": 3.1999667720899607e-10
+          },
+          "comparison_status": "REFERENCE_UNAVAILABLE"
+        },
+        "full_temperature_field": {
+          "status": "DONE",
+          "common_coordinates": 26705,
+          "candidate_coordinates_without_reference": 0,
+          "max_abs_difference_K": 0.019099844320762782,
+          "rms_difference_K": 0.003253421838121243
+        }
+      },
+      "candidate_total_wall_seconds": 14.761665,
+      "physical_gate": {
+        "mortar_temperature_field_max_abs_K": 0.0192332836234701,
+        "mortar_absorber_temperature_max_abs_K": 0.01856974919198129,
+        "field_tolerance_K": 1e-05,
+        "absorber_tolerance_K": 1e-05,
+        "status": "FAIL_ROUTE_DISCREPANCY_OR_INCOMPLETE_REFERENCE",
+        "note": "physical error gate; solver residual is not used as the acceptance criterion"
+      },
+      "solver_accuracy_gate": {
+        "reference_tolerance": 1e-08,
+        "max_abs_temperature_error_K": 0.0,
+        "tolerance_K": 3e-05,
+        "status": "PASS",
+        "note": "isolates algebraic tolerance error from the common Mortar-versus-conformal route/mesh offset"
+      }
+    }
+  ],
+  "production_tolerance": {
+    "status": "SELECTED_PROVISIONAL",
+    "tolerance": 1e-07,
+    "reason": "lowest measured wall time among tolerances whose error relative to the 1e-8 conformal physical reference passes; common Mortar route offset remains a separate unresolved gate"
+  },
+  "requirement_provenance": "The 3e-5 K conformal solver-error gate is a provisional study threshold because no application-level physical-error budget was supplied; the Mortar route comparison remains reported independently at the stricter 1e-5 K diagnostic threshold.",
+  "unavailable_policy": "Missing Mortar electrical/pulse series remain REFERENCE_UNAVAILABLE and do not become a pass by proxy."
+}

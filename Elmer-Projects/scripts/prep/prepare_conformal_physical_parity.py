@@ -132,6 +132,29 @@ def _project(
                 }
             )
             project["cases"][hypre_name] = hypre
+            for steps in (1, 7):
+                pulse_name = (
+                    f"case_tes_transient_physical_parity_conformal_hypre_{token}_{steps}step"
+                )
+                pulse = copy.deepcopy(
+                    project["cases"][
+                        f"case_tes_transient_physical_parity_conformal_{steps}step"
+                    ]
+                )
+                pulse["restart_from"] = hypre_name
+                pulse["restart_file_path"] = (
+                    f"../work/meshes/{mesh_name}/{hypre_name}.result"
+                )
+                pulse["state_file"] = f"work/meshes/{mesh_name}/{pulse_name}.state"
+                pulse["series_file"] = f"{pulse_name}_series.csv"
+                pulse["iteration_series_file"] = f"{pulse_name}_iterations.csv"
+                pulse["output_file_path"] = (
+                    f"../work/meshes/{mesh_name}/{pulse_name}.result"
+                )
+                pulse["heat_source"] = "circuit_parallel"
+                pulse["parallel_circuit_iterations"] = 1
+                pulse["solver"] = dict(hypre["solver"])
+                project["cases"][pulse_name] = pulse
             if tolerance == 1.0e-7:
                 gpu_name = hypre_name + "_gpu"
                 gpu = copy.deepcopy(hypre)

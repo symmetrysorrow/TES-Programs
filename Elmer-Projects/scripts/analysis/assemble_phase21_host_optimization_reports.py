@@ -47,6 +47,42 @@ def parse_log(path: Path) -> dict:
             rf"HeatSolve: iter:\s*\d+ Assembly: \(s\)\s*{FLOAT}\s+{FLOAT}", text
         )
     ]
+    heat_wall_breakdown = []
+    heat_wall_re = re.compile(
+        rf"HeatSolveWallBreakdown:\s*step=(?P<step>\d+)\s+iter=(?P<iter>\d+)"
+        rf"\s+total_wall_s=\s*(?P<total>{FLOAT})"
+        rf"\s+element_traversal_wall_s=\s*(?P<traversal>{FLOAT})"
+        rf"\s+local_fem_wall_s=\s*(?P<local>{FLOAT})"
+        rf"\s+local_stiffness_wall_s=\s*(?P<stiffness>{FLOAT})"
+        rf"\s+local_mass_wall_s=\s*(?P<mass>{FLOAT})"
+        rf"\s+nonlinear_material_wall_s=\s*(?P<material>{FLOAT})"
+        rf"\s+global_insertion_wall_s=\s*(?P<global>{FLOAT})"
+        rf"\s+rhs_assembly_wall_s=\s*(?P<rhs>{FLOAT})"
+        rf"\s+matrix_conversion_wall_s=\s*(?P<conversion>{FLOAT})"
+        rf"\s+boundary_assembly_wall_s=\s*(?P<boundary>{FLOAT})"
+    )
+    for match in heat_wall_re.finditer(text):
+        heat_wall_breakdown.append(
+            {
+                "time_step": int(match.group("step")),
+                "nonlinear_iter": int(match.group("iter")),
+                **{
+                    key: float(match.group(name))
+                    for key, name in (
+                        ("total_wall_s", "total"),
+                        ("element_traversal_wall_s", "traversal"),
+                        ("local_fem_wall_s", "local"),
+                        ("local_stiffness_wall_s", "stiffness"),
+                        ("local_mass_wall_s", "mass"),
+                        ("nonlinear_material_wall_s", "material"),
+                        ("global_insertion_wall_s", "global"),
+                        ("rhs_assembly_wall_s", "rhs"),
+                        ("matrix_conversion_wall_s", "conversion"),
+                        ("boundary_assembly_wall_s", "boundary"),
+                    )
+                },
+            }
+        )
     solve = [
         (float(step), float(total))
         for step, total in re.findall(
@@ -59,7 +95,10 @@ def parse_log(path: Path) -> dict:
     profile_re = re.compile(
         rf"TESParallelCircuitProfile:\s*step=(\d+)\s+iter=(\d+)"
         rf"\s+integration_cpu_s=\s*{FLOAT}\s+circuit_output_cpu_s=\s*{FLOAT}"
-        rf"\s+total_cpu_s=\s*{FLOAT}\s+cached_elements=\s*(\d+)\s+cached_nodes=\s*(\d+)"
+        rf"\s+total_cpu_s=\s*{FLOAT}"
+        rf"(?:\s+integration_wall_s=\s*{FLOAT}\s+circuit_output_wall_s=\s*{FLOAT}"
+        rf"\s+total_wall_s=\s*{FLOAT})?"
+        rf"\s+cached_elements=\s*(\d+)\s+cached_nodes=\s*(\d+)"
     )
     for match in profile_re.finditer(text):
         profile.append(
@@ -69,8 +108,11 @@ def parse_log(path: Path) -> dict:
                 "integration_cpu_s": float(match.group(3)),
                 "circuit_and_output_cpu_s": float(match.group(4)),
                 "total_cpu_s": float(match.group(5)),
-                "cached_elements": int(match.group(6)),
-                "cached_nodes": int(match.group(7)),
+                "integration_wall_s": float(match.group(6)) if match.group(6) else None,
+                "circuit_and_output_wall_s": float(match.group(7)) if match.group(7) else None,
+                "total_wall_s": float(match.group(8)) if match.group(8) else None,
+                "cached_elements": int(match.group(9)),
+                "cached_nodes": int(match.group(10)),
             }
         )
     step_rows = []
@@ -120,6 +162,11 @@ def parse_log(path: Path) -> dict:
         "log": str(path.resolve()),
         "all_done": "MAIN: *** Elmer Solver: ALL DONE ***" in text,
         "wall_seconds": float(wall.group(1)) if wall else manifest_data.get("wall_seconds"),
+        "solver_wall_seconds": manifest_data.get("solver_wall_seconds"),
+        "output_io_wall_seconds": manifest_data.get("output_io_wall_seconds"),
+        "process_cpu_seconds": manifest_data.get("process_cpu_seconds"),
+        "thread_cpu_seconds": manifest_data.get("thread_cpu_seconds"),
+        "clock_policy": manifest_data.get("clock_policy", {}),
         "solver_cpu_seconds": float(solver_total.group(1)) if solver_total else None,
         "solver_real_seconds": float(solver_total.group(2)) if solver_total else None,
         "hypre_setup_total_s": sum(setup),
@@ -127,6 +174,7 @@ def parse_log(path: Path) -> dict:
         "hypre_setup_count": len(setup),
         "hypre_solution_count": len(hypre_solve),
         "assembly_reported_cpu_s": assembly[-1][1] if assembly else None,
+        "heat_wall_breakdown": heat_wall_breakdown,
         "solve_reported_cpu_s": solve[-1][1] if solve else None,
         "circuit_profile": profile,
         "time_steps": step_rows,
@@ -176,8 +224,29 @@ def transient_wall_breakdown() -> dict:
                 for row in parsed["time_steps"]
                 if row["wall_seconds_marker_delta"] is not None
             ]
-            measured_wall = parsed["hypre_setup_total_s"] + parsed["hypre_solution_total_s"]
             wall = parsed["wall_seconds"]
+            udf_wall_values = [
+                item["total_wall_s"] for item in parsed["circuit_profile"]
+                if item.get("total_wall_s") is not None
+            ]
+            measured_categories = {
+                "assembly_wall": sum(row["total_wall_s"] for row in parsed["heat_wall_breakdown"]),
+                "hypre_setup_wall": parsed["hypre_setup_total_s"],
+                "hypre_krylov_wall": parsed["hypre_solution_total_s"],
+                "circuit_udf_wall": sum(udf_wall_values) if udf_wall_values else None,
+                "output_io_wall": parsed.get("output_io_wall_seconds"),
+            }
+            known_wall = sum(value for value in measured_categories.values() if value is not None)
+            unclassified_wall = max(wall - known_wall, 0.0) if wall is not None else None
+
+            def wall_category(seconds: float | None, clock: str, source: str = "") -> dict:
+                return {
+                    "seconds": seconds,
+                    "percentage": seconds / wall * 100.0 if seconds is not None and wall else None,
+                    "clock": clock,
+                    **({"source": source} if source else {}),
+                }
+
             rows.append(
                 {
                     "case": name,
@@ -185,64 +254,43 @@ def transient_wall_breakdown() -> dict:
                     "phase": phase,
                     "steps": parsed["time_step_markers"],
                     "wall_seconds": wall,
+                    "solver_wall_seconds": parsed.get("solver_wall_seconds"),
+                    "output_io_wall_seconds": parsed.get("output_io_wall_seconds"),
+                    "cpu_profile": {
+                        "solver_reported_cpu_seconds": parsed.get("solver_cpu_seconds"),
+                        "launcher_child_process_cpu_seconds": parsed.get("process_cpu_seconds"),
+                        "launcher_thread_cpu_seconds": parsed.get("thread_cpu_seconds"),
+                        "assembly_reported_cpu_seconds": parsed.get("assembly_reported_cpu_s"),
+                    },
+                    "wall_breakdown_sum_seconds": known_wall + (unclassified_wall or 0.0),
+                    "wall_breakdown_residual_seconds": (
+                        wall - (known_wall + (unclassified_wall or 0.0))
+                        if wall is not None else None
+                    ),
+                    "wall_breakdown_non_overlapping": True,
                     "categories": {
-                        "element_matrix_assembly": {
-                            "seconds": None,
-                            "percentage": None,
-                            "clock": "not_independently_timed",
-                            "source": "HeatSolve assembly CPU counter is reported separately",
-                        },
-                        "mass_matrix_contribution": {"seconds": None, "percentage": None, "clock": "not_instrumented"},
-                        "conductivity_matrix_contribution": {"seconds": None, "percentage": None, "clock": "not_instrumented"},
-                        "rhs_source_assembly": {"seconds": None, "percentage": None, "clock": "not_instrumented"},
-                        "tes_circuit_evaluation": {
-                            "seconds": sum(item["total_cpu_s"] for item in parsed["circuit_profile"]),
-                            "percentage": None,
-                            "clock": "UDF_CPU_TIME",
-                        },
-                        "tes_temperature_integration": {
-                            "seconds": sum(item["integration_cpu_s"] for item in parsed["circuit_profile"]),
-                            "percentage": None,
-                            "clock": "UDF_CPU_TIME",
-                        },
-                        "absorber_pulse_integration": {
-                            "seconds": None,
-                            "percentage": None,
-                            "clock": "cache_marker_only",
-                            "source": "pulse temporal factor is cached per timestep; callback wall timer is not yet in HeatSolver",
-                        },
-                        "hypre_ij_fill_update": {
-                            "seconds": None,
-                            "percentage": None,
-                            "clock": "included_in_hypre_setup",
-                        },
-                        "host_device_transfer": {
-                            "seconds": None,
-                            "percentage": None,
-                            "clock": "included_in_hypre_setup_for_gpu",
-                        },
-                        "boomeramg_setup": {
-                            "seconds": parsed["hypre_setup_total_s"],
-                            "percentage": parsed["hypre_setup_total_s"] / wall * 100.0 if wall else None,
-                            "clock": "native_wall_timer",
-                        },
-                        "krylov_solve": {
-                            "seconds": parsed["hypre_solution_total_s"],
-                            "percentage": parsed["hypre_solution_total_s"] / wall * 100.0 if wall else None,
-                            "clock": "native_wall_timer",
-                        },
-                        "result_series_output": {
-                            "seconds": None,
-                            "percentage": None,
-                            "clock": "not_independently_timed",
-                            "source": "run.py collects output after solver exit; solver-side file time is not exposed",
-                        },
-                        "miscellaneous_host_residual": {
-                            "seconds": max(wall - measured_wall, 0.0) if wall else None,
-                            "percentage": max(wall - measured_wall, 0.0) / wall * 100.0 if wall else None,
-                            "clock": "wall_residual",
-                            "note": "contains FEM assembly, circuit, output, MPI synchronization, and other host work; not a hidden zero",
-                        },
+                        "assembly_wall": wall_category(
+                            measured_categories["assembly_wall"] or None,
+                            "HeatSolve_RealTime" if parsed["heat_wall_breakdown"] else "not_instrumented",
+                            "native HeatSolve wall marker; subcomponents are reported in assembly_profile",
+                        ),
+                        "hypre_setup_wall": wall_category(parsed["hypre_setup_total_s"], "native_wall_timer"),
+                        "hypre_krylov_wall": wall_category(parsed["hypre_solution_total_s"], "native_wall_timer"),
+                        "circuit_udf_wall": wall_category(
+                            measured_categories["circuit_udf_wall"],
+                            "UDF_SYSTEM_CLOCK" if udf_wall_values else "not_instrumented",
+                            "UDF profile wall timer; CPU profile remains separate",
+                        ),
+                        "output_io_wall": wall_category(
+                            measured_categories["output_io_wall"],
+                            "launcher_perf_counter" if measured_categories["output_io_wall"] is not None else "not_instrumented",
+                            "post-solver output collection only",
+                        ),
+                        "unclassified_wall": wall_category(
+                            unclassified_wall,
+                            "wall_residual",
+                            "includes assembly until native HeatSolve marker is available, MPI synchronization, and other uninstrumented work",
+                        ),
                     },
                     "step_wall_seconds": step_wall,
                     "step_rows": parsed["time_steps"],
@@ -251,17 +299,21 @@ def transient_wall_breakdown() -> dict:
             )
     return {
         "status": "PASS" if rows else "NOT_RUN",
-        "schema_version": "phase21.1",
+        "schema_version": "phase22.1",
         "clock_policy": {
-            "wall": "WALL_SECONDS / MAIN Elapsed time",
-            "native_solver": "HYPRE setup and solution timers",
-            "udf": "Fortran CPU_TIME markers",
-            "assembly": "HeatSolve reported CPU counter; never added to wall categories",
+            "total_wall": "run.py time.perf_counter from solver launch through output collection",
+            "solver_wall": "run.py time.perf_counter around the solver process",
+            "process_cpu": "child process user+system CPU where resource.RUSAGE_CHILDREN exists",
+            "thread_cpu": "launcher thread time.thread_time; never mixed into wall breakdown",
+            "native_solver": "HYPRE setup and Krylov timers",
+            "udf_wall": "Fortran SYSTEM_CLOCK markers; UDF CPU_TIME markers remain a separate profile",
+            "assembly_wall": "reserved for HeatSolveWallBreakdown native marker",
         },
         "runs": rows,
         "limitations": [
-            "Element/mass/conductivity/RHS subterms require a HeatSolver instrumentation build; current report preserves them as not_independently_timed.",
+            "When the rebuilt HeatSolve marker is present, assembly_wall is a top-level non-overlapping bucket; its local/global subterms are a nested diagnostic and must not be added again to the top-level sum.",
             "HYPRE setup currently includes IJ construction and GPU migration in the native integration timer.",
+            "The category sum is non-overlapping by construction; unavailable categories are not imputed from CPU counters.",
         ],
     }
 
@@ -282,6 +334,7 @@ def assembly_profile() -> dict:
                         "phase": "phase21_cached" if "phase21" in name else "phase20_baseline",
                         "reported_heat_assembly_cpu_s": parsed["assembly_reported_cpu_s"],
                         "reported_heat_solve_cpu_s": parsed["solve_reported_cpu_s"],
+                        "wall_clock_breakdown": parsed["heat_wall_breakdown"],
                         "per_step": parsed["time_steps"],
                     }
                 )
@@ -314,6 +367,17 @@ def assembly_profile() -> dict:
                 "AMG hierarchy reuse",
             ],
             "reason": "matrix split needs native HeatSolver evidence and must preserve temperature-dependent coefficients",
+        },
+        "wall_subcomponent_policy": {
+            "local_fem_calculation": "DiffuseConvective(Gen)Compose wall timer",
+            "global_sparse_insertion": "DefaultUpdateEquations wall timer",
+            "mass_contribution": "DefaultUpdateMass/Default1stOrderTime wall timer",
+            "element_traversal": "bulk residual after measured local/mass/global calls",
+            "local_stiffness_formation": "not independently separable in Compose; nested diagnostic only",
+            "nonlinear_material_evaluation": "not independently separable in stock HeatSolve; remains in traversal residual",
+            "rhs_assembly": "included in global insertion until a lower-level RHS hook is added",
+            "matrix_format_conversion": "not independently timed; remains in assembly residual",
+            "boundary_assembly": "boundary loop wall timer",
         },
     }
 
@@ -519,35 +583,94 @@ def io_benchmark() -> dict:
 
 def replacement_benchmark() -> dict:
     # The strict common-mesh Mortar runs are prepared separately because the
-    # global interface override differs between the two project JSONs.
+    # global interface override differs between the two project JSONs.  Keep a
+    # state row for every planned case: a partial benchmark is evidence, not
+    # an empty PREPARED_NOT_RUN placeholder.
     historical = PHASE20_ARTIFACT_ROOT / "phase20_performance_acceptance.json"
     historical_data = json.loads(historical.read_text(encoding="utf-8")) if historical.exists() else {}
     windows = {"steady": "steady", "1step": "1step", "7step": "7step"}
+    case_states = []
+
+    def state_for(case: str, backend: str, blocked_by: str | None = None) -> dict:
+        parsed = available(case)
+        if parsed is not None:
+            log_text = Path(parsed["log"]).read_text(encoding="utf-8", errors="replace")
+            if parsed["all_done"]:
+                status = "DONE"
+            elif "failed to converge" in log_text.lower() or "not converged" in log_text.lower():
+                status = "FAILED_NONCONVERGENCE"
+            else:
+                status = "NOT_RUN"
+            details = {
+                "all_done": parsed["all_done"],
+                "wall_seconds": parsed["wall_seconds"],
+                "log": parsed["log"],
+            }
+            if status == "FAILED_NONCONVERGENCE":
+                failures = [line.strip() for line in log_text.splitlines() if "converge" in line.lower() or "residual" in line.lower()]
+                details["failure_tail"] = failures[-5:]
+        else:
+            status = "BLOCKED_NO_CUDA" if backend == "gpu" and gpu_runtime_blocked() else "NOT_RUN"
+            details = {"all_done": False, "wall_seconds": None}
+            if blocked_by:
+                details["blocked_by"] = blocked_by
+        return {"case": case, "backend": backend, "status": status, **details}
+
+    def gpu_runtime_blocked() -> bool:
+        for candidate in RESULT_ROOT.glob("*/solver.log"):
+            try:
+                text = candidate.read_text(encoding="utf-8", errors="replace").lower()
+            except OSError:
+                continue
+            if "no cuda-capable device" in text or "cuda error code=100" in text:
+                return True
+        return False
+
+    for suffix in windows.values():
+        case_states.append(state_for(f"case_phase21_mortar_{suffix}", "mortar"))
+    cpu_steady = "case_phase21_conformal_cpu_steady"
+    cpu_steady_state = state_for(cpu_steady, "cpu")
+    case_states.append(cpu_steady_state)
+    for suffix in ("1step", "7step"):
+        case_states.append(state_for(f"case_phase21_conformal_cpu_{suffix}", "cpu", cpu_steady))
+    for suffix in windows.values():
+        case_states.append(state_for(f"case_phase21_conformal_gpu_{suffix}", "gpu", "CUDA runtime unavailable"))
+
     measured = []
     for window, suffix in windows.items():
         mortar = available(f"case_phase21_mortar_{suffix}")
         cpu = available(f"case_phase21_conformal_cpu_{suffix}")
         gpu = available(f"case_phase21_conformal_gpu_{suffix}")
-        if not (mortar and cpu and gpu):
+        if not (mortar and cpu):
             continue
         mortar_t = mortar["wall_seconds"] or mortar["solver_real_seconds"]
         cpu_t = cpu["wall_seconds"] or cpu["solver_real_seconds"]
-        gpu_t = gpu["wall_seconds"] or gpu["solver_real_seconds"]
+        gpu_t = (gpu["wall_seconds"] or gpu["solver_real_seconds"]) if gpu else None
         measured.append(
             {
                 "window": window,
+                "status": "DONE" if gpu_t else "BLOCKED_NO_CUDA",
                 "mortar_cpu_s": mortar_t,
                 "conformal_cpu_s": cpu_t,
                 "conformal_gpu_s": gpu_t,
-                "S_conformalCPU": mortar_t / cpu_t if cpu_t else None,
-                "S_GPU": cpu_t / gpu_t if gpu_t else None,
+                "S_algorithmic": mortar_t / cpu_t if cpu_t else None,
+                "S_gpu": cpu_t / gpu_t if gpu_t else None,
                 "S_total": mortar_t / gpu_t if gpu_t else None,
                 "timing_source": "WALL_SECONDS when available, otherwise solver real clock",
-                "field_gate": "pending parser integration for TES/absorber observables",
+                "field_gate": "physical-reference comparison is recorded separately; replacement speedup requires validated observables",
             }
         )
+    done_count = sum(row["status"] == "DONE" for row in case_states)
+    failed_count = sum(row["status"].startswith("FAILED") for row in case_states)
+    blocked_count = sum(row["status"].startswith("BLOCKED") for row in case_states)
     return {
-        "status": "PASS" if measured else "PREPARED_NOT_RUN",
+        "status": "DONE" if all(row["status"] == "DONE" for row in case_states) else "PARTIAL",
+        "case_state_counts": {
+            "DONE": done_count,
+            "FAILED_NONCONVERGENCE": failed_count,
+            "BLOCKED_NO_CUDA": blocked_count,
+            "NOT_RUN": len(case_states) - done_count - failed_count - blocked_count,
+        },
         "definition": {
             "window": ["steady", "one-step", "7-step"],
             "same_geometry": "physical-parity single-pixel geometry",
@@ -557,13 +680,24 @@ def replacement_benchmark() -> dict:
             "conformal_gpu": "conformal shared-node GPU HYPRE",
         },
         "speedup_formulas": {
-            "S_conformalCPU": "t_MortarCPU / t_conformalCPU",
-            "S_GPU": "t_conformalCPU / t_conformalGPU",
+            "S_algorithmic": "t_MortarCPU / t_ConformalCPU",
+            "S_gpu": "t_ConformalCPU / t_ConformalGPU",
             "S_total": "t_MortarCPU / t_conformalGPU",
         },
+        "tolerance_policy": {
+            "production_candidate": 1.0e-7,
+            "strict_reference": 1.0e-8,
+            "selection_artifact": "artifacts/phase22_physical_tolerance/hypre_physical_tolerance_study.json",
+            "status": "PROVISIONAL",
+        },
+        "physical_reference_gate": {
+            "status": "INCOMPLETE",
+            "reason": "retained Mortar run has no machine-readable TES electrical/pulse series and shows a route/mesh temperature offset; CPU timing is retained but not declared a validated physical replacement",
+        },
+        "case_states": case_states,
         "runs": measured,
         "historical_non_strict_reference": historical_data.get("cpu_mortar_to_conformal_gpu"),
-        "reason": None if measured else "Phase21 common-window Mortar and conformal cases are prepared but require execution on the paired physical-parity meshes.",
+        "reason": "GPU cases are BLOCKED_NO_CUDA; Mortar and conformal CPU timing results are retained, while the physical replacement gate remains incomplete.",
     }
 
 
@@ -589,9 +723,11 @@ def backend_recommendation(fine: dict, cache: dict) -> dict:
     if fine_rows and all(row["gpu_wall_speedup"] > 1.0 for row in fine_rows):
         classification = "GPU_EFFECTIVE_AT_LARGE_SCALE"
     elif production_backend == "cpu":
-        classification = "CPU_CONFORMAL_BEST"
+        # A CPU run without a GPU runtime comparison is a measured CPU
+        # datapoint, not a final backend verdict.
+        classification = "GPU_VERDICT_PENDING_RUNTIME"
     else:
-        classification = "ARCHITECTURE_LIMITED"
+        classification = "GPU_VERDICT_PENDING_RUNTIME"
     return {
         "status": "PROVISIONAL",
         "classification": classification,
@@ -603,7 +739,8 @@ def backend_recommendation(fine: dict, cache: dict) -> dict:
         "phase21_50step_choice": {"backend": production_backend, "reason": production_reason},
         "previous_phase20_classification": previous.get("classification"),
         "strict_mortar_replacement_gate": "pending",
-        "note": "Production transient GPU acceleration is not claimed until the optimized 50-step and common Mortar window both pass.",
+        "optimization_classification": "SAFE_OPTIMIZATION_WITH_NO_MEASURED_SPEEDUP",
+        "note": "The UDF immutable-data cache remains enabled and physics-exact, but its wall speedup is not claimed. GPU verdict remains pending because the optimized GPU rerun and common replacement GPU case are blocked by CUDA availability.",
     }
 
 
@@ -625,9 +762,31 @@ def runtime_blockers() -> dict:
                     if "failed" in line.lower() or "no cuda-capable" in line.lower()
                 ][-5:],
             }
+    planned_gpu_runs = [
+        "case_phase21_host_transient_gpu_50step",
+        "case_phase21_fine_transient_gpu_7step",
+        "case_phase21_conformal_gpu_7step",
+    ]
+    cuda_blocked = any(
+        "no cuda-capable device" in line.lower()
+        for probe in probes.values()
+        for line in probe.get("failure_lines", [])
+    )
+    for case in planned_gpu_runs:
+        parsed = available(case)
+        probes.setdefault(
+            case,
+            {
+                "all_done": parsed["all_done"] if parsed else False,
+                "wall_seconds": parsed["wall_seconds"] if parsed else None,
+                "status": "DONE" if parsed and parsed["all_done"] else ("BLOCKED_NO_CUDA" if cuda_blocked else "NOT_RUN"),
+                "failure_lines": [],
+            },
+        )
     return {
         "status": "RECORDED",
         "probes": probes,
+        "gpu_recovery_first_runs": planned_gpu_runs,
         "policy": "failed GPU/device or convergence probes remain blockers; they are not replaced by relaxed tolerances or synthetic timings",
     }
 

@@ -17,9 +17,10 @@ The TES UDF now caches immutable run data:
   factor once per timestep in `tes_transient_heat_source.f90`.
 
 The parallel circuit UDF emits `TESParallelCircuitProfile` markers containing
-the cached element/node counts and CPU-time buckets. The implementation does
-not change the electrical equations, nonlinear relaxation, pulse energy, or
-temperature field.
+the cached element/node counts, CPU-time buckets, and (after rebuilding the
+UDF) `SYSTEM_CLOCK` wall buckets. The implementation does not change the
+electrical equations, nonlinear relaxation, pulse energy, or temperature
+field. Its classification is `SAFE_OPTIMIZATION_WITH_NO_MEASURED_SPEEDUP`.
 
 ## Measurement results
 
@@ -33,7 +34,8 @@ The measured CPU wall time was `205.50 s` for the Phase20 baseline and
 `210.37 s` for the single Phase21 run (`0.977x`). This is not an optimization
 claim; it shows that the cache alone does not overcome the host-side
 assembly/solver architecture and run-to-run noise. The new report therefore
-classifies the result provisionally as `ARCHITECTURE_LIMITED`.
+leaves the backend verdict as `GPU_VERDICT_PENDING_RUNTIME`; the cache is not
+reported as a wall-speedup.
 
 CPU I/O matrix, production 7-step:
 
@@ -50,11 +52,28 @@ prepared but were not rerun because the current WSL session reports
 `no CUDA-capable device is detected`; Phase20 GPU results remain the last
 validated GPU measurements.
 
-The common physical-parity Mortar reference was prepared and its CPU steady
-and 7-step runs completed. The conformal CPU HYPRE steady solve did not reach
-`1e-8` even after 5,000 FlexGMRES iterations, so no strict Mortar replacement
-speedup is reported. The failure is retained as a gate rather than replaced
-with a looser tolerance.
+The common replacement artifact now retains per-case states. Mortar steady,
+1-step, and 7-step are `DONE`; conformal CPU steady, 1-step, and 7-step are
+`DONE` with the provisional `1e-7` HYPRE tolerance; all conformal GPU cases are
+`BLOCKED_NO_CUDA`. It reports `S_algorithmic` for completed CPU windows and
+leaves `S_gpu`/`S_total` null until a GPU runtime is available.
+
+The Phase22 tolerance sweep completed conformal CPU steady and 7-step cases at
+`1e-6`, `1e-7`, and `1e-8`. The common Mortar field offset is about
+`1.91e-2 K`; this is much larger than the within-conformal tolerance error and
+is therefore retained as a separate route/mesh/reference gate. Electrical and
+pulse-series comparison is explicitly `REFERENCE_UNAVAILABLE` because the
+retained Mortar run emitted no machine-readable TES series. Thus `1e-7` is a
+provisional common-replacement candidate, not a final physical-accuracy
+verdict.
+
+The wall report separates total solver wall, output/I/O wall, HYPRE setup,
+HYPRE Krylov, UDF wall (when the rebuilt UDF marker is present), and an
+unclassified residual. HeatSolve native instrumentation is staged in the
+Phase22 native integration source; the installed solver must be rebuilt before
+its `HeatSolveWallBreakdown` and local-FEM/global-insertion markers populate
+production artifacts. CPU_TIME values remain a separate CPU profile and are
+never added to the wall breakdown.
 
 ## Artifacts
 
@@ -66,6 +85,7 @@ See [transient_wall_breakdown.json](../artifacts/phase21_host_optimization/trans
 [io_overhead_benchmark.json](../artifacts/phase21_host_optimization/io_overhead_benchmark.json),
 [mortar_conformal_replacement_benchmark.json](../artifacts/phase21_host_optimization/mortar_conformal_replacement_benchmark.json),
 and [production_backend_recommendation.json](../artifacts/phase21_host_optimization/production_backend_recommendation.json).
+The tolerance study is [hypre_physical_tolerance_study.json](../artifacts/phase22_physical_tolerance/hypre_physical_tolerance_study.json).
 
 The canonical preparation commands are:
 
@@ -73,4 +93,5 @@ The canonical preparation commands are:
 python scripts/prep/prepare_phase21_host_optimization.py
 python scripts/prep/prepare_phase21_mortar_conformal_replacement.py
 python scripts/analysis/assemble_phase21_host_optimization_reports.py
+python scripts/analysis/assemble_phase22_physical_tolerance.py
 ```

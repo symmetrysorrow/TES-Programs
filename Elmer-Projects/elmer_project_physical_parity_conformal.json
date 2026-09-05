@@ -1351,6 +1351,140 @@
       "notes": "Same-geometry direct physical-parity control (conformal).",
       "parallel_circuit_iterations": 1
     },
+    "case_tes_transient_physical_parity_conformal_hypre_1em06_1step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em06",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em06_1step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-06,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em06_1step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em06.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em06_1step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em06_1step.result",
+      "apply_mortar_bcs": false,
+      "parallel_circuit_iterations": 1
+    },
+    "case_tes_transient_physical_parity_conformal_hypre_1em06_7step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em06",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em06_7step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ],
+        [
+          "1.0763402469664702e-06[s]",
+          1
+        ],
+        [
+          "2.152680493932939e-06[s]",
+          1
+        ],
+        [
+          "4.3053609878658798e-06[s]",
+          1
+        ],
+        [
+          "8.6107219757317613e-06[s]",
+          1
+        ],
+        [
+          "1.7221443951463516e-05[s]",
+          1
+        ],
+        [
+          "3.4442887902927038e-05[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-06,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em06_7step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em06.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em06_7step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em06_7step.result",
+      "apply_mortar_bcs": false,
+      "parallel_circuit_iterations": 1
+    },
     "case_tes_steady_physical_parity_conformal_hypre_1em07": {
       "template": "steady",
       "mesh": "mesh_physical_parity_conformal",
@@ -1377,6 +1511,140 @@
       "iteration_series_file": "case_tes_steady_physical_parity_conformal_hypre_1em07_iterations.csv",
       "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em07.result",
       "notes": "Same-geometry direct physical-parity control (conformal).",
+      "parallel_circuit_iterations": 1
+    },
+    "case_tes_transient_physical_parity_conformal_hypre_1em07_1step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em07",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em07_1step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em07_1step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em07.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em07_1step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em07_1step.result",
+      "apply_mortar_bcs": false,
+      "parallel_circuit_iterations": 1
+    },
+    "case_tes_transient_physical_parity_conformal_hypre_1em07_7step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em07",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em07_7step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ],
+        [
+          "1.0763402469664702e-06[s]",
+          1
+        ],
+        [
+          "2.152680493932939e-06[s]",
+          1
+        ],
+        [
+          "4.3053609878658798e-06[s]",
+          1
+        ],
+        [
+          "8.6107219757317613e-06[s]",
+          1
+        ],
+        [
+          "1.7221443951463516e-05[s]",
+          1
+        ],
+        [
+          "3.4442887902927038e-05[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em07_7step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em07.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em07_7step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em07_7step.result",
+      "apply_mortar_bcs": false,
       "parallel_circuit_iterations": 1
     },
     "case_tes_steady_physical_parity_conformal_hypre_1em07_gpu": {
@@ -1433,6 +1701,140 @@
       "iteration_series_file": "case_tes_steady_physical_parity_conformal_hypre_1em08_iterations.csv",
       "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em08.result",
       "notes": "Same-geometry direct physical-parity control (conformal).",
+      "parallel_circuit_iterations": 1
+    },
+    "case_tes_transient_physical_parity_conformal_hypre_1em08_1step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em08",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em08_1step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em08_1step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em08.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em08_1step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em08_1step.result",
+      "apply_mortar_bcs": false,
+      "parallel_circuit_iterations": 1
+    },
+    "case_tes_transient_physical_parity_conformal_hypre_1em08_7step": {
+      "template": "pulse",
+      "mesh": "mesh_physical_parity_conformal",
+      "restart_from": "case_tes_steady_physical_parity_conformal_hypre_1em08",
+      "restart_time": 0.02,
+      "series_file": "case_tes_transient_physical_parity_conformal_hypre_1em08_7step_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "1.4763402469664699e-06[s]",
+          1
+        ],
+        [
+          "1.0763402469664702e-06[s]",
+          1
+        ],
+        [
+          "2.152680493932939e-06[s]",
+          1
+        ],
+        [
+          "4.3053609878658798e-06[s]",
+          1
+        ],
+        [
+          "8.6107219757317613e-06[s]",
+          1
+        ],
+        [
+          "1.7221443951463516e-05[s]",
+          1
+        ],
+        [
+          "3.4442887902927038e-05[s]",
+          1
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_abort_not_converged": true,
+        "omit_hypre_gpu_when_false": true
+      },
+      "comparison_time_grid": {
+        "source_case": "case_tes_mpi_comsol_grid_full_uniform_continuous",
+        "source_project": "elmer_project_comsol_timegrid.json",
+        "description": "Conformal GPU mesh with the original COMSOL time grid."
+      },
+      "heat_source": "circuit_parallel",
+      "iteration_series_file": "case_tes_transient_physical_parity_conformal_hypre_1em08_7step_iterations.csv",
+      "output_result": true,
+      "restart_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_steady_physical_parity_conformal_hypre_1em08.result",
+      "state_file": "work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em08_7step.state",
+      "output_file_path": "../work/meshes/mesh_physical_parity_conformal/case_tes_transient_physical_parity_conformal_hypre_1em08_7step.result",
+      "apply_mortar_bcs": false,
       "parallel_circuit_iterations": 1
     }
   }

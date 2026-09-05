@@ -1,5 +1,11 @@
 {
-  "status": "PREPARED_NOT_RUN",
+  "status": "PARTIAL",
+  "case_state_counts": {
+    "DONE": 6,
+    "FAILED_NONCONVERGENCE": 0,
+    "BLOCKED_NO_CUDA": 3,
+    "NOT_RUN": 0
+  },
   "definition": {
     "window": [
       "steady",
@@ -13,15 +19,136 @@
     "conformal_gpu": "conformal shared-node GPU HYPRE"
   },
   "speedup_formulas": {
-    "S_conformalCPU": "t_MortarCPU / t_conformalCPU",
-    "S_GPU": "t_conformalCPU / t_conformalGPU",
+    "S_algorithmic": "t_MortarCPU / t_ConformalCPU",
+    "S_gpu": "t_ConformalCPU / t_ConformalGPU",
     "S_total": "t_MortarCPU / t_conformalGPU"
   },
-  "runs": [],
+  "tolerance_policy": {
+    "production_candidate": 1e-07,
+    "strict_reference": 1e-08,
+    "selection_artifact": "artifacts/phase22_physical_tolerance/hypre_physical_tolerance_study.json",
+    "status": "PROVISIONAL"
+  },
+  "physical_reference_gate": {
+    "status": "INCOMPLETE",
+    "reason": "retained Mortar run has no machine-readable TES electrical/pulse series and shows a route/mesh temperature offset; CPU timing is retained but not declared a validated physical replacement"
+  },
+  "case_states": [
+    {
+      "case": "case_phase21_mortar_steady",
+      "backend": "mortar",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 6.426643,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_steady\\solver.log"
+    },
+    {
+      "case": "case_phase21_mortar_1step",
+      "backend": "mortar",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 5.831588,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_1step\\solver.log"
+    },
+    {
+      "case": "case_phase21_mortar_7step",
+      "backend": "mortar",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 20.213332,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_mortar_7step\\solver.log"
+    },
+    {
+      "case": "case_phase21_conformal_cpu_steady",
+      "backend": "cpu",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 5.498036,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_conformal_cpu_steady\\solver.log"
+    },
+    {
+      "case": "case_phase21_conformal_cpu_1step",
+      "backend": "cpu",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 3.452208,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_conformal_cpu_1step\\solver.log"
+    },
+    {
+      "case": "case_phase21_conformal_cpu_7step",
+      "backend": "cpu",
+      "status": "DONE",
+      "all_done": true,
+      "wall_seconds": 11.409329,
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\results\\case_phase21_conformal_cpu_7step\\solver.log"
+    },
+    {
+      "case": "case_phase21_conformal_gpu_steady",
+      "backend": "gpu",
+      "status": "BLOCKED_NO_CUDA",
+      "all_done": false,
+      "wall_seconds": null,
+      "blocked_by": "CUDA runtime unavailable"
+    },
+    {
+      "case": "case_phase21_conformal_gpu_1step",
+      "backend": "gpu",
+      "status": "BLOCKED_NO_CUDA",
+      "all_done": false,
+      "wall_seconds": null,
+      "blocked_by": "CUDA runtime unavailable"
+    },
+    {
+      "case": "case_phase21_conformal_gpu_7step",
+      "backend": "gpu",
+      "status": "BLOCKED_NO_CUDA",
+      "all_done": false,
+      "wall_seconds": null,
+      "blocked_by": "CUDA runtime unavailable"
+    }
+  ],
+  "runs": [
+    {
+      "window": "steady",
+      "status": "BLOCKED_NO_CUDA",
+      "mortar_cpu_s": 6.426643,
+      "conformal_cpu_s": 5.498036,
+      "conformal_gpu_s": null,
+      "S_algorithmic": 1.1688979482855333,
+      "S_gpu": null,
+      "S_total": null,
+      "timing_source": "WALL_SECONDS when available, otherwise solver real clock",
+      "field_gate": "physical-reference comparison is recorded separately; replacement speedup requires validated observables"
+    },
+    {
+      "window": "1step",
+      "status": "BLOCKED_NO_CUDA",
+      "mortar_cpu_s": 5.831588,
+      "conformal_cpu_s": 3.452208,
+      "conformal_gpu_s": null,
+      "S_algorithmic": 1.6892342523973063,
+      "S_gpu": null,
+      "S_total": null,
+      "timing_source": "WALL_SECONDS when available, otherwise solver real clock",
+      "field_gate": "physical-reference comparison is recorded separately; replacement speedup requires validated observables"
+    },
+    {
+      "window": "7step",
+      "status": "BLOCKED_NO_CUDA",
+      "mortar_cpu_s": 20.213332,
+      "conformal_cpu_s": 11.409329,
+      "conformal_gpu_s": null,
+      "S_algorithmic": 1.7716494984060853,
+      "S_gpu": null,
+      "S_total": null,
+      "timing_source": "WALL_SECONDS when available, otherwise solver real clock",
+      "field_gate": "physical-reference comparison is recorded separately; replacement speedup requires validated observables"
+    }
+  ],
   "historical_non_strict_reference": {
     "status": "NOT_STRICTLY_COMPARABLE",
     "historical_cpu_mortar_solver_real_s": 35.55,
     "reason": "The retained Mortar reference uses a different mesh/runtime and is not an apples-to-apples production transient. A common-mesh Mortar transient is required before claiming replacement speedup."
   },
-  "reason": "Phase21 common-window Mortar and conformal cases are prepared but require execution on the paired physical-parity meshes."
+  "reason": "GPU cases are BLOCKED_NO_CUDA; Mortar and conformal CPU timing results are retained, while the physical replacement gate remains incomplete."
 }

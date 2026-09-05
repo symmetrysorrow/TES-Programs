@@ -45,8 +45,17 @@ def hypre_solver(base: dict, *, gpu: bool) -> dict:
                 if gpu
                 else "iterative_hypre_flexgmres_boomeramg"
             ),
-            "linear_system_max_iterations": 5000,
-            "linear_system_convergence_tolerance": 1.0e-8,
+            # The tolerance study showed that the common conformal case
+            # reaches the provisional physical gate with the normal 1000
+            # iteration budget.  Keep this benchmark aligned with that
+            # production candidate; a 5000-iteration-only failure must not
+            # masquerade as a physics verdict.
+            "linear_system_max_iterations": 1000,
+            # 1e-7 is the provisional common-replacement candidate: the
+            # physical study retains 1e-8 as the strict reference, while the
+            # common conformal route stagnates just above 1e-8 in this native
+            # build.  The artifact keeps that distinction explicit.
+            "linear_system_convergence_tolerance": 1.0e-7,
             "linear_system_abort_not_converged": True,
             "linear_system_residual_output": 6,
             "omit_hypre_gpu_when_false": True,
@@ -111,6 +120,9 @@ def main() -> int:
         "role": "conformal shared-node CPU/GPU replacement candidate",
         "common_windows": ["steady", "1step", "7step"],
         "mortar_project": str(MORTAR_OUTPUT.name),
+        "provisional_production_tolerance": 1.0e-7,
+        "strict_reference_tolerance": 1.0e-8,
+        "tolerance_policy": "physical-error study selects the production candidate; strict 1e-8 remains a reference and is not silently substituted after common-route nonconvergence",
     }
     CONFORMAL_OUTPUT.write_text(json.dumps(conformal, indent=2) + "\n", encoding="utf-8")
     print(MORTAR_OUTPUT)

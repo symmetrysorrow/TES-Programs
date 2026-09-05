@@ -28,6 +28,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+try:
+    import resource
+except ImportError:  # pragma: no cover - Windows does not expose getrusage
+    resource = None
+
 ROOT = Path(__file__).resolve().parent
 ELMERSOLVER = r"C:\Program Files\Elmer 26.1-Release\bin\ElmerSolver.exe"
 
@@ -180,6 +185,19 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def child_process_cpu_seconds() -> float | None:
+    """Return cumulative child CPU time where the platform exposes it.
+
+    This is intentionally kept separate from perf-counter wall time and from
+    the launcher's thread CPU clock.  On Windows the solver's native log is
+    the authoritative CPU-time source, so the field remains unavailable.
+    """
+    if resource is None:
+        return None
+    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return float(usage.ru_utime + usage.ru_stime)
 
 
 def runtime_environment(
@@ -694,6 +712,9 @@ def run_case(
     )
     print(f"[{case_name}] ElmerSolver {display_sif} (log: {log_path.relative_to(ROOT)})")
     wall_started = time.perf_counter()
+    solver_wall_started = wall_started
+    process_cpu_before = child_process_cpu_seconds()
+    thread_cpu_started = time.thread_time()
     with log_path.open("w", encoding="utf-8") as log:
         command = [str(solver_path), str(runtime_sif)]
         if mpi_procs > 1:
@@ -705,6 +726,9 @@ def run_case(
             stderr=subprocess.STDOUT,
             env=env,
         )
+    solver_wall_seconds = time.perf_counter() - solver_wall_started
+    process_cpu_after = child_process_cpu_seconds()
+    launcher_thread_cpu_seconds = time.thread_time() - thread_cpu_started
     finished = datetime.now().isoformat(timespec="seconds")
 
     log_text = log_path.read_text(encoding="utf-8", errors="replace")
@@ -733,6 +757,7 @@ def run_case(
         fatal.append(f"solver process exited with code {proc.returncode}")
     completed = reported_done and proc.returncode == 0 and not fatal
 
+    output_io_started = time.perf_counter()
     collected: list[str] = []
     electrical_series_source = "not_available"
     for pattern in (f"{case_name}_t*.vtu", f"{case_name}*.pvtu", f"{case_name}.ep"):
@@ -775,9 +800,20 @@ def run_case(
         )
         if (out_dir / series).exists() and series not in collected:
             collected.append(series)
+    output_io_wall_seconds = time.perf_counter() - output_io_started
     wall_seconds = time.perf_counter() - wall_started
+    child_cpu_seconds = (
+        process_cpu_after - process_cpu_before
+        if process_cpu_before is not None and process_cpu_after is not None
+        else None
+    )
     with log_path.open("a", encoding="utf-8") as log:
         log.write(f"WALL_SECONDS {wall_seconds:.6f}\n")
+        log.write(f"SOLVER_WALL_SECONDS {solver_wall_seconds:.6f}\n")
+        log.write(f"OUTPUT_IO_WALL_SECONDS {output_io_wall_seconds:.6f}\n")
+        if child_cpu_seconds is not None:
+            log.write(f"PROCESS_CPU_SECONDS {child_cpu_seconds:.6f}\n")
+        log.write(f"THREAD_CPU_SECONDS {launcher_thread_cpu_seconds:.6f}\n")
     result_file = result_file_of(model, case_name)
 
     manifest = {
@@ -785,6 +821,15 @@ def run_case(
         "started": started,
         "finished": finished,
         "wall_seconds": wall_seconds,
+        "solver_wall_seconds": solver_wall_seconds,
+        "output_io_wall_seconds": output_io_wall_seconds,
+        "process_cpu_seconds": child_cpu_seconds,
+        "thread_cpu_seconds": launcher_thread_cpu_seconds,
+        "clock_policy": {
+            "wall": "time.perf_counter around solver plus output collection",
+            "process_cpu": "resource.RUSAGE_CHILDREN user+system CPU for the solver child where available",
+            "thread_cpu": "launcher thread time.thread_time; not a substitute for solver CPU",
+        },
         "exit_code": proc.returncode,
         "inputs_sha256": inputs,
         "preexisting_restart_inputs_sha256": preexisting_inputs,

@@ -22,6 +22,7 @@
       "phase": "phase21_cached",
       "reported_heat_assembly_cpu_s": 6.97,
       "reported_heat_solve_cpu_s": 0.8,
+      "wall_clock_breakdown": [],
       "per_step": [
         {
           "time_step": 1,
@@ -531,6 +532,7 @@
       "phase": "phase20_baseline",
       "reported_heat_assembly_cpu_s": 6.77,
       "reported_heat_solve_cpu_s": 0.84,
+      "wall_clock_breakdown": [],
       "per_step": [
         {
           "time_step": 1,
@@ -1040,6 +1042,7 @@
       "phase": "phase20_baseline",
       "reported_heat_assembly_cpu_s": 6.66,
       "reported_heat_solve_cpu_s": 1.39,
+      "wall_clock_breakdown": [],
       "per_step": [
         {
           "time_step": 1,
@@ -1555,5 +1558,16 @@
       "AMG hierarchy reuse"
     ],
     "reason": "matrix split needs native HeatSolver evidence and must preserve temperature-dependent coefficients"
+  },
+  "wall_subcomponent_policy": {
+    "local_fem_calculation": "DiffuseConvective(Gen)Compose wall timer",
+    "global_sparse_insertion": "DefaultUpdateEquations wall timer",
+    "mass_contribution": "DefaultUpdateMass/Default1stOrderTime wall timer",
+    "element_traversal": "bulk residual after measured local/mass/global calls",
+    "local_stiffness_formation": "not independently separable in Compose; nested diagnostic only",
+    "nonlinear_material_evaluation": "not independently separable in stock HeatSolve; remains in traversal residual",
+    "rhs_assembly": "included in global insertion until a lower-level RHS hook is added",
+    "matrix_format_conversion": "not independently timed; remains in assembly residual",
+    "boundary_assembly": "boundary loop wall timer"
   }
 }

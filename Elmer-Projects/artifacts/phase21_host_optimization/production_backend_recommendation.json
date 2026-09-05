@@ -1,6 +1,6 @@
 {
   "status": "PROVISIONAL",
-  "classification": "CPU_CONFORMAL_BEST",
+  "classification": "GPU_VERDICT_PENDING_RUNTIME",
   "backend_policy": {
     "small_medium": "conformal CPU HYPRE unless a measured case-specific result overrides this",
     "large_fine": "conformal GPU HYPRE only when the transient wall benchmark is >1.0x",
@@ -12,5 +12,6 @@
   },
   "previous_phase20_classification": "GPU_SOLVER_EFFECTIVE_BUT_HOST_BOUND",
   "strict_mortar_replacement_gate": "pending",
-  "note": "Production transient GPU acceleration is not claimed until the optimized 50-step and common Mortar window both pass."
+  "optimization_classification": "SAFE_OPTIMIZATION_WITH_NO_MEASURED_SPEEDUP",
+  "note": "The UDF immutable-data cache remains enabled and physics-exact, but its wall speedup is not claimed. GPU verdict remains pending because the optimized GPU rerun and common replacement GPU case are blocked by CUDA availability."
 }

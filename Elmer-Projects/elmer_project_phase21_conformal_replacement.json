@@ -1192,8 +1192,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-08,
         "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1239,8 +1239,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
         "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1322,8 +1322,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
         "linear_system": "iterative_hypre_flexgmres_boomeramg",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1358,8 +1358,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-08,
         "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1405,8 +1405,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
         "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1488,8 +1488,8 @@
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
         "linear_system": "iterative_hypre_flexgmres_boomeramg_gpu",
-        "linear_system_max_iterations": 5000,
-        "linear_system_convergence_tolerance": 1e-08,
+        "linear_system_max_iterations": 1000,
+        "linear_system_convergence_tolerance": 1e-07,
         "linear_system_abort_not_converged": true,
         "linear_system_residual_output": 6,
         "omit_hypre_gpu_when_false": true
@@ -1517,6 +1517,9 @@
       "1step",
       "7step"
     ],
-    "mortar_project": "elmer_project_phase21_mortar_replacement.json"
+    "mortar_project": "elmer_project_phase21_mortar_replacement.json",
+    "provisional_production_tolerance": 1e-07,
+    "strict_reference_tolerance": 1e-08,
+    "tolerance_policy": "physical-error study selects the production candidate; strict 1e-8 remains a reference and is not silently substituted after common-route nonconvergence"
   }
 }
