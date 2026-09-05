@@ -71,14 +71,47 @@ facet counts, and left/right normals are consistently opposite:
 
 | interface | normalized imbalance | status |
 | --- | ---: | --- |
-| Membrane/TES | 0.954546 | FAIL |
-| TES/Stycast | 1.000992 | FAIL |
-| Stycast/absorber | 0.157996, below informative flux scale | NOT_INFORMATIVE |
+| Membrane/TES | 0.954091 | FAIL |
+| TES/Stycast | 1.020766 | FAIL |
+| Stycast/absorber | 0.382821 | FAIL |
 
 Therefore the normal-orientation and fixed-sign post-processing bugs are
-**CLOSED**. Shared-face double counting is not evident. The remaining issue is
-an open discrete elemental-flux reconstruction / physical-consistency gate;
-it is not converted to PASS merely because route-to-route values are similar.
+**CLOSED**. Shared-face double counting is not evident. The result parser also
+selects the last saved `Perm` field explicitly (including Elmer's `use
+previous` form for native auxiliary fields).
+The remaining issue is an open discrete elemental-flux reconstruction /
+physical-consistency gate; it is not converted to PASS merely because
+route-to-route values are similar.
+
+## Real-case flux classification
+
+A source-free, nonzero-flux conduction control was added on the same geometry
+and shared-node route: the bath is fixed at 0.15 K, the absorber top at
+0.16 K, and the TES electrical body force is disabled. Three successful levels
+(base, coarse, medium) were measured; the fine direct solve was separately
+stopped by UMFPACK factorization failure and was not used as evidence.
+
+| level | nodes | tetrahedra | Membrane/TES epsilon_Q | TES/Stycast epsilon_Q | Stycast/absorber epsilon_Q |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| base | 26,705 | 132,458 | 0.820532 | 1.362282 | 0.361549 |
+| coarse | 90,872 | 459,683 | 0.930095 | 1.288345 | 0.194488 |
+| medium | 225,821 | 1,170,252 | 0.996450 | 1.006581 | 0.172361 |
+
+The control carries nonzero flux, but raw elemental-gradient epsilon is not
+monotone for all interfaces. This supports a `FLUX_RECONSTRUCTION_LIMITATION`
+diagnosis, but is not sufficient to close the production gate.
+
+The same final 7-step field gives essentially identical Mortar/conformal
+values (maximum normalized-imbalance difference `2.82e-5`), so this is not a
+conformal-only defect. Transient internal energy was evaluated as
+`rho*cp*integral(T dV)`; storage is nonzero, but does not by itself explain
+the raw side-flux jump.
+
+Elmer 26.1's native `FluxSolver` is available and was executed on the control
+case. It exports `temperature flux` and `temperature grad` to VTK. On a
+shared-node conformal interface the exported flux is a single nodal projected
+field, so exact opposite side integrals are not independent weak-form
+conservation evidence; it is a useful diagnostic, not a replacement gate.
 
 ## Production readiness
 
@@ -88,7 +121,7 @@ it is not converted to PASS merely because route-to-route values are similar.
 | HYPRE CPU/GPU smoke parity | CLOSED / PASS |
 | production topology | CLOSED / PASS after regeneration |
 | Stycast ideal/OCC/FEM convergence | CLOSED / PASS |
-| real-case heat-flux validation | OPEN / FAIL |
+| real-case heat-flux validation | OPEN / FLUX_RECONSTRUCTION_LIMITATION |
 | production HYPRE CPU/GPU benchmark | NOT READY / NOT RUN |
 | production pulse | NOT READY / NOT RUN |
 
@@ -112,9 +145,18 @@ Key reports are in `artifacts/phase20_conformal/`:
 - `electrical_parity.json`
 - `production_benchmark.json`
 - `production_pulse_waveform.json`
+- `heat_flux_mesh_convergence_control.json`
+- `body_energy_balance.json`
+- `body_energy_balance_steady_control.json`
+- `mortar_conformal_flux_comparison.json`
+- `native_flux_probe.json`
+- `heat_flux_acceptance.json`
 
 ## Decision
 
 **CONTINUE.** The production topology and geometry-understanding blockers are
-closed. The conformal route is not yet ready for production GPU benchmarking
-because the real-case heat-flux correctness gate remains open.
+closed. The real-case imbalance is classified as a flux-reconstruction
+limitation rather than proven physical inconsistency, but refinement is not
+uniformly convergent and independent body-level weak-form conservation is not
+yet established. The heat-flux blocker therefore remains **OPEN** and the
+production GPU benchmark remains **NOT READY / NOT RUN**.

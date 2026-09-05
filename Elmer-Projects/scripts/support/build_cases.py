@@ -596,6 +596,21 @@ def vtu_solver_block(case_name: str, vtu: Any, *, solver_index: int = 2) -> list
     return lines
 
 
+def native_flux_solver_block(solver_index: int = 2) -> list[str]:
+    """Run Elmer's native FluxSolver after the thermal solve."""
+    return [
+        f"Solver {solver_index}",
+        "  Exec Solver = After Simulation",
+        "  Equation = ComputeFlux",
+        '  Procedure = "FluxSolver" "FluxSolver"',
+        "  Calculate Flux = Logical True",
+        "  Calculate Grad = Logical True",
+        '  Target Variable = String "Temperature"',
+        '  Flux Coefficient = String "Heat Conductivity"',
+        "End",
+    ]
+
+
 # Body Force name for a dual-TES side's circuit instance (TESTransientHeatSourceL/R
 # in tes_transient_heat_source.f90). Natural per-side extension of the
 # single-instance HEAT_SOURCES["circuit_implicit"] label.
@@ -615,6 +630,8 @@ def body_force_blocks(heat_source: str, tes_body_names: list[str], with_pulse: b
     has two ("TES_L", "TES_R"), each wired to its own UDF instance
     (TESTransientHeatSourceL/R) via the shared circuit_implicit dll.
     """
+    if heat_source == "none":
+        return []
     dll, unprefixed_proc, unprefixed_label = HEAT_SOURCES[heat_source]
     lines: list[str] = []
     for i, name in enumerate(tes_body_names, start=1):
@@ -769,14 +786,19 @@ def _target_boundaries_line(targets: list[int]) -> str:
 
 
 def bodies_and_bcs(
-    mesh_names: MeshNames, with_pulse: bool, *, reverse_stycast_abs: bool = False,
+    mesh_names: MeshNames, with_pulse: bool, *, heat_source: str = "circuit_local",
+    reverse_stycast_abs: bool = False,
     apply_mortar_bcs: bool = True,
+    fixed_temperature_boundaries: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     bodies = resolve_bodies(mesh_names)
     # TES-role bodies get Body Force 1..N (ascending target id, i.e. one per
     # stack); the pulse (if any) is appended after them on the abs body.
     tes_body_names = resolve_tes_body_names(mesh_names)
-    body_force_by_name = {name: i for i, name in enumerate(tes_body_names, start=1)}
+    body_force_by_name = (
+        {name: i for i, name in enumerate(tes_body_names, start=1)}
+        if heat_source != "none" else {}
+    )
     pulse_body_force = len(tes_body_names) + 1
 
     lines: list[str] = []
@@ -804,6 +826,25 @@ def bodies_and_bcs(
         ]
     ]
     bc_number = 2
+    for fixed in fixed_temperature_boundaries or []:
+        boundary_name = str(fixed["boundary"])
+        try:
+            target = mesh_names.boundaries[boundary_name]
+        except KeyError as exc:
+            raise ValueError(
+                f"fixed temperature boundary {boundary_name!r} is not present in mesh.names"
+            ) from exc
+        label = fixed.get("name", f"controlled temperature on {boundary_name}")
+        bc_blocks.append(
+            [
+                f"Boundary Condition {bc_number}",
+                _target_boundaries_line([target]),
+                f'  Name = "{label}"',
+                f"  Temperature = {fixed['temperature']}",
+                "End",
+            ]
+        )
+        bc_number += 1
     master_bc_of: dict[int, int] = {}
     mortar_pairs = resolve_mortar_pairs(
         mesh_names, reverse_stycast_abs=reverse_stycast_abs
@@ -971,6 +1012,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     heat_source = spec.get(
         "heat_source", "circuit_implicit" if template in ("transient", "pulse") else "circuit_local"
     )
+    native_flux = bool(spec.get("native_flux_solver", False))
     with_pulse = template == "pulse"
     series_file = spec.get("series_file")
     if heat_source == "circuit_implicit" and not series_file:
@@ -1136,10 +1178,13 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         )
         lines.append("")
 
+    if native_flux:
+        lines += native_flux_solver_block(solver_index=2)
+        lines.append("")
     vtu_default = "after_simulation" if template == "steady" else "after_timestep"
     vtu_spec = spec.get("vtu", vtu_default)
     if vtu_spec:
-        lines += vtu_solver_block(case_name, vtu_spec)
+        lines += vtu_solver_block(case_name, vtu_spec, solver_index=3 if native_flux else 2)
         lines.append("")
     if heat_source == "circuit_implicit":
         # Solver 1 = Heat Equation always (the `else` branch below); Solver 2
@@ -1151,15 +1196,20 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         active = " ".join(str(i) for i in range(1, 2 * parallel_circuit_iterations + 1))
         lines += ["Equation 1", '  Name = "Heat"', f"  Active Solvers({2 * parallel_circuit_iterations}) = {active}", "End", ""]
     else:
-        lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
+        if native_flux:
+            lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(2) = 1 2", "End", ""]
+        else:
+            lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
 
     lines += materials_block(model)
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)
     body_lines = bodies_and_bcs(
         mesh_names,
         with_pulse,
+        heat_source=heat_source,
         reverse_stycast_abs=bool(spec.get("reverse_stycast_abs_mortar", False)),
         apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
+        fixed_temperature_boundaries=spec.get("fixed_temperature_boundaries"),
     )
     body_lines = [
         line.replace("__T_BATH__", fmt(params["T_bath"])) for line in body_lines

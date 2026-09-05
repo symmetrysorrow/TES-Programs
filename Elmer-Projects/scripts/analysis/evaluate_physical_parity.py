@@ -28,17 +28,41 @@ PAIR_DEFS = (
 )
 
 
-def result_values(path: Path) -> dict[int, float]:
+def result_values(path: Path, field_index: int = -1) -> dict[int, float]:
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    index = next(i for i, line in enumerate(lines) if line.startswith("Perm:"))
+    permutations = [i for i, line in enumerate(lines) if line.startswith("Perm:")]
+    if not permutations:
+        raise ValueError(f"result file has no Perm field: {path}")
+    index = permutations[field_index]
     count = int(lines[index].split()[1])
+    # Elmer writes ``node_index, internal_permutation``.  Values are emitted
+    # in node-index order, so the first column identifies the mesh node; the
+    # second column is only the internal storage permutation.
     permutation = [int(lines[index + 1 + i].split()[0]) for i in range(count)]
     start = index + 1 + count
     values = [
         float(lines[start + i].replace("D", "E"))
         for i in range(count)
     ]
-    return {node: values[node - 1] for node in permutation}
+    return {permutation[position]: values[position] for position in range(count)}
+
+
+def result_field_times(path: Path) -> list[float | None]:
+    """Return the Elmer ``Time:`` value associated with every Perm block."""
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    times: list[float | None] = []
+    for index, line in enumerate(lines):
+        if not line.startswith("Perm:"):
+            continue
+        time_value: float | None = None
+        for previous in reversed(lines[:index]):
+            if previous.startswith("Time:"):
+                fields = previous.split()
+                if len(fields) >= 4:
+                    time_value = float(fields[3].replace("D", "E"))
+                break
+        times.append(time_value)
+    return times
 
 
 def mesh_data(mesh: Path):
@@ -318,15 +342,17 @@ def heat_flux_consistency(
     result: Path,
     project: Path,
     field_metadata: dict[str, object] | None = None,
+    field_index: int = -1,
 ) -> dict[str, dict[str, object]]:
     bodies, _, nodes, elements, _, faces, parents = mesh_data(mesh)
-    values = result_values(result)
+    values = result_values(result, field_index)
     model = reconcile_project(json.loads(project.read_text(encoding="utf-8")))
     parameters = model["parameters"]
     reverse = {value: key for key, value in bodies.items()}
     report: dict[str, dict[str, float | str]] = {}
     for left, right, label, left_body, right_body, left_sign, right_sign in PAIR_DEFS:
         side_reports: list[dict[str, object]] = []
+        side_fluxes: list[dict[tuple[int, ...], tuple[float, float]] ] = []
         for surface, body_name in (
             (left, left_body),
             (right, right_body),
@@ -338,6 +364,8 @@ def heat_flux_consistency(
             conductivities: list[float] = []
             normals: list[tuple[float, float, float]] = []
             surface_temperatures: list[float] = []
+            gradient_magnitudes: list[float] = []
+            fluxes_by_face: dict[tuple[int, ...], tuple[float, float]] = {}
             for face, parent in zip(
                 faces[surface], parents[surface]
             ):
@@ -364,6 +392,13 @@ def heat_flux_consistency(
                 facet_count += 1
                 conductivities.append(float(flux["conductivity_W_mK"]))
                 normals.append(flux["normal"])
+                gradient = flux["gradient"]
+                gradient_magnitude = math.sqrt(sum(value * value for value in gradient))
+                gradient_magnitudes.append(gradient_magnitude)
+                fluxes_by_face[tuple(sorted(face))] = (
+                    float(flux["integrated_flux_W"]),
+                    float(flux["area_m2"]),
+                )
             side_reports.append(
                 {
                     "integrated_outward_flux_W": total,
@@ -373,6 +408,16 @@ def heat_flux_consistency(
                     "conductivity_min_W_mK": min(conductivities, default=math.nan),
                     "conductivity_max_W_mK": max(conductivities, default=math.nan),
                     "conductivity_mean_W_mK": sum(conductivities) / len(conductivities) if conductivities else math.nan,
+                    "mean_abs_flux_density_W_m2": (
+                        sum(abs(value[0]) / value[1] for value in fluxes_by_face.values())
+                        / len(fluxes_by_face) if fluxes_by_face else math.nan
+                    ),
+                    "gradient_magnitude_min_K_m": min(gradient_magnitudes, default=math.nan),
+                    "gradient_magnitude_max_K_m": max(gradient_magnitudes, default=math.nan),
+                    "gradient_magnitude_mean_K_m": (
+                        sum(gradient_magnitudes) / len(gradient_magnitudes)
+                        if gradient_magnitudes else math.nan
+                    ),
                     "surface_temperature_min_K": min(surface_temperatures, default=math.nan),
                     "surface_temperature_max_K": max(surface_temperatures, default=math.nan),
                     "surface_temperature_mean_K": sum(surface_temperatures) / len(surface_temperatures) if surface_temperatures else math.nan,
@@ -384,11 +429,42 @@ def heat_flux_consistency(
                     "outward_normal_z_negative_facets": sum(normal[2] < 0.0 for normal in normals),
                 }
             )
+            side_fluxes.append(fluxes_by_face)
         q_left = float(side_reports[0]["integrated_outward_flux_W"])
         q_right = float(side_reports[1]["integrated_outward_flux_W"])
         denominator = max(abs(q_left), abs(q_right), 1.0e-30)
         imbalance = abs(q_left + q_right) / denominator
         magnitude = max(abs(q_left), abs(q_right))
+        common_faces = sorted(set(side_fluxes[0]) & set(side_fluxes[1]))
+        if common_faces:
+            jumps = [side_fluxes[0][face][0] + side_fluxes[1][face][0] for face in common_faces]
+            jump_densities = [
+                side_fluxes[0][face][0] / side_fluxes[0][face][1]
+                + side_fluxes[1][face][0] / side_fluxes[1][face][1]
+                for face in common_faces
+            ]
+            mean_local_flux = sum(
+                abs(side_fluxes[0][face][0]) / side_fluxes[0][face][1]
+                + abs(side_fluxes[1][face][0]) / side_fluxes[1][face][1]
+                for face in common_faces
+            ) / (2.0 * len(common_faces))
+            local_flux_jump: dict[str, object] = {
+                "status": "AVAILABLE",
+                "paired_facet_count": len(common_faces),
+                "max_local_facet_flux_jump_W": max(abs(value) for value in jumps),
+                "rms_local_facet_flux_jump_W": math.sqrt(sum(value * value for value in jumps) / len(jumps)),
+                "max_local_facet_flux_jump_W_m2": max(abs(value) for value in jump_densities),
+                "rms_local_facet_flux_jump_W_m2": math.sqrt(
+                    sum(value * value for value in jump_densities) / len(jump_densities)
+                ),
+                "mean_local_flux_W_m2": mean_local_flux,
+            }
+        else:
+            local_flux_jump = {
+                "status": "NOT_AVAILABLE",
+                "paired_facet_count": 0,
+                "reason": "The two sides do not share node IDs; use integrated side flux for the Mortar route.",
+            }
         status = (
             "NOT_INFORMATIVE"
             if magnitude < 1.0e-12
@@ -408,7 +484,65 @@ def heat_flux_consistency(
                 - float(side_reports[1]["surface_temperature_mean_K"])
             ),
             "normalized_imbalance": imbalance,
+            "local_flux_jump": local_flux_jump,
             "status": status,
+        }
+    return report
+
+
+def body_boundary_flux_balance(
+    mesh: Path,
+    result: Path,
+    project: Path,
+    field_index: int = -1,
+) -> dict[str, dict[str, object]]:
+    """Integrate reconstructed flux over every boundary face of each body.
+
+    This is a body-level diagnostic, not an acceptance shortcut: for a
+    source-free steady control it checks whether the reconstructed boundary
+    fluxes close around each material body.  Internal interface faces are
+    included once for each adjacent body, with each body's outward normal.
+    """
+    bodies, _, nodes, elements, _, faces, parents = mesh_data(mesh)
+    values = result_values(result, field_index)
+    model = reconcile_project(json.loads(project.read_text(encoding="utf-8")))
+    parameters = model["parameters"]
+    reverse = {value: key for key, value in bodies.items()}
+    by_body: dict[str, dict[str, object]] = {}
+    for surface, surface_faces in faces.items():
+        for face, parent in zip(surface_faces, parents[surface]):
+            if parent not in elements:
+                continue
+            body_id, conn = elements[parent]
+            body_name = reverse.get(body_id, f"body_{body_id}")
+            points = [nodes[node] for node in conn]
+            temps = [values[node] for node in conn]
+            face_indices = tuple(conn.index(node) for node in face)
+            flux = oriented_face_flux(
+                points,
+                temps,
+                face_indices,
+                conductivity(body_name, sum(temps) / 4.0, parameters),
+            )
+            if flux is None:
+                continue
+            entry = by_body.setdefault(
+                body_name,
+                {"boundary_fluxes_W": defaultdict(float), "facet_count": 0},
+            )
+            entry["boundary_fluxes_W"][surface] += float(flux["integrated_flux_W"])
+            entry["facet_count"] += 1
+    report: dict[str, dict[str, object]] = {}
+    for body_name, entry in by_body.items():
+        boundary_fluxes = dict(entry["boundary_fluxes_W"])
+        net = sum(boundary_fluxes.values())
+        scale = max((abs(value) for value in boundary_fluxes.values()), default=1.0e-30)
+        report[body_name] = {
+            "boundary_fluxes_W": boundary_fluxes,
+            "net_outward_flux_W": net,
+            "absolute_net_residual_W": abs(net),
+            "normalized_net_residual": abs(net) / scale,
+            "facet_count": entry["facet_count"],
         }
     return report
 

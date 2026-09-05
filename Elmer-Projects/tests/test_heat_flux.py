@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
-from scripts.analysis.evaluate_physical_parity import oriented_face_flux, tetra_gradient
+from scripts.analysis.evaluate_physical_parity import oriented_face_flux, result_values, tetra_gradient
 
 
 LEFT = [(0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (0.0, 1.0, 1.0), (0.0, 0.0, 0.0)]
@@ -33,3 +34,23 @@ def test_zero_temperature_gradient_has_zero_flux() -> None:
     result = oriented_face_flux(LEFT, [1.0, 1.0, 1.0, 1.0], FACE, 123.0)
     assert result is not None
     assert result["integrated_flux_W"] == 0.0
+
+
+def test_result_parser_uses_mesh_node_column_and_last_field(tmp_path: Path) -> None:
+    result = tmp_path / "field.result"
+    result.write_text(
+        "ASCII 3\n"
+        "Time: 1 1 1.0\n"
+        "temperature\n"
+        "Perm: 3 3\n"
+        "1 3\n2 1\n3 2\n"
+        "30\n10\n20\n"
+        "Time: 2 2 2.0\n"
+        "temperature\n"
+        "Perm: 3 3\n"
+        "1 3\n2 1\n3 2\n"
+        "300\n100\n200\n",
+        encoding="utf-8",
+    )
+    assert result_values(result, field_index=0) == {1: 30.0, 2: 10.0, 3: 20.0}
+    assert result_values(result) == {1: 300.0, 2: 100.0, 3: 200.0}

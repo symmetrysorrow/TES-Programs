@@ -1,0 +1,533 @@
+{
+  "steady_control": {
+    "source_term": "none",
+    "levels": [
+      {
+        "label": "base",
+        "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+        "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+        "body_boundary_flux_balance": {
+          "TES": {
+            "boundary_fluxes_W": {
+              "TES__zmin": 2.354727908451085e-10,
+              "TES__ymin": 3.308696561782001e-11,
+              "TES__xmin": 3.615300070311345e-11,
+              "TES__xmax": 3.3378616903306485e-11,
+              "TES__ymax": 4.2438772357854805e-11,
+              "TES__zmax_free": 2.0720853114792813e-10,
+              "TES__zmax": 3.151236352214363e-10
+            },
+            "net_outward_flux_W": 9.028623127965677e-10,
+            "absolute_net_residual_W": 9.028623127965677e-10,
+            "normalized_net_residual": 2.8651050314335493,
+            "facet_count": 312
+          },
+          "Stycast": {
+            "boundary_fluxes_W": {
+              "Stycast__zmax": -1.0877132953527634e-10,
+              "Stycast__zmin": 1.1416371028655425e-10
+            },
+            "net_outward_flux_W": 5.39238075127791e-12,
+            "absolute_net_residual_W": 5.39238075127791e-12,
+            "normalized_net_residual": 0.04723375526025631,
+            "facet_count": 131
+          },
+          "SiO2_1": {
+            "boundary_fluxes_W": {
+              "SiO2_1__zmin": 2.132634551561699e-07,
+              "Si_2__zmax": 1.358682135510747e-07,
+              "Si_2_sub__zmax": 1.358682135510747e-07,
+              "SiO2_1__xmin": 7.919368670140603e-15,
+              "SiO2_1__xmax": 7.837615131017588e-15,
+              "SiO2_1__ymin": 9.964017037314995e-16,
+              "SiO2_1__ymax": 1.0101873121600781e-15,
+              "bath": 3.4749061764245143e-08,
+              "SiO2_1__zmax": -2.407854449797133e-07,
+              "Si_1__zmin": -1.2768520902715276e-07,
+              "Si_1_sub__zmin": -1.2768520902715276e-07,
+              "Membrane_Si1__zmin": -1.1310023595256055e-07
+            },
+            "net_outward_flux_W": -8.950713720044213e-08,
+            "absolute_net_residual_W": 8.950713720044213e-08,
+            "normalized_net_residual": 0.37172984940174975,
+            "facet_count": 38905
+          },
+          "Membrane_Si1": {
+            "boundary_fluxes_W": {
+              "Membrane_Si1__zmax": -4.889472204393273e-12,
+              "Si_1_sub__xmin": 9.645274818470406e-12,
+              "Membrane_Si1__xmin": 9.645274818470406e-12,
+              "Si_1_sub__xmax": 9.599463083171749e-12,
+              "Membrane_Si1__xmax": 9.599463083171749e-12,
+              "Si_1_sub__ymin": 9.899318409543881e-12,
+              "Membrane_Si1__ymin": 9.899318409543881e-12,
+              "Si_1_sub__ymax": 9.766051704119929e-12,
+              "Membrane_Si1__ymax": 9.766051704119929e-12
+            },
+            "net_outward_flux_W": 7.293074382621866e-11,
+            "absolute_net_residual_W": 7.293074382621866e-11,
+            "normalized_net_residual": 7.367249017458264,
+            "facet_count": 368
+          },
+          "Membrane_SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx_sub__ymin": 6.428124355980323e-13,
+              "Membrane_SiNx__ymin": 6.428124355980323e-13,
+              "Membrane_SiNx__zmax_free": -3.556496248041613e-11,
+              "SiNx_sub__ymax": 6.426967473337652e-13,
+              "Membrane_SiNx__ymax": 6.426967473337652e-13,
+              "SiNx_sub__xmin": 6.057763929136096e-13,
+              "Membrane_SiNx__xmin": 6.057763929136096e-13,
+              "SiNx_sub__xmax": 6.077099264821872e-13,
+              "Membrane_SiNx__xmax": 6.077099264821872e-13,
+              "Membrane_SiNx__zmax": -4.225976564075903e-11
+            },
+            "net_outward_flux_W": -7.282673711651998e-11,
+            "absolute_net_residual_W": 7.282673711651998e-11,
+            "normalized_net_residual": 1.7233114290222062,
+            "facet_count": 414
+          },
+          "Si_2": {
+            "boundary_fluxes_W": {
+              "bath": 4.099248358592965e-11,
+              "Si_2__xmin": 3.4195027289043883e-12,
+              "Si_2_sub__xmin": -7.311115208774909e-11,
+              "Si_2__ymin": 4.397941057911295e-13,
+              "Si_2__ymax": 4.432072326892093e-13,
+              "Si_2__zmin": 2.9994482086052387e-10,
+              "Si_2_sub__zmin": 2.9994482086052387e-10,
+              "SiO2_2__zmax": 2.9994482086052387e-10,
+              "SiO2_2_sub__zmax": 2.9994482086052387e-10,
+              "Si_2_sub__xmax": -6.866822022232897e-11,
+              "Si_2__xmax": 3.657561458896824e-12,
+              "Si_2_sub__ymin": -3.5694537642458745e-11,
+              "Si_2_sub__ymax": -3.264542869549489e-11
+            },
+            "net_outward_flux_W": 1.038612493906275e-09,
+            "absolute_net_residual_W": 1.038612493906275e-09,
+            "normalized_net_residual": 3.462678538427693,
+            "facet_count": 29419
+          },
+          "Si_1": {
+            "boundary_fluxes_W": {
+              "Si_1__xmin": 1.1733369899264016e-13,
+              "Si_1_sub__xmin": -5.9049618425930526e-12,
+              "Si_1__ymin": 1.583612618723369e-14,
+              "Si_1__ymax": 1.5701079414909938e-14,
+              "Si_1__zmax": -1.3347758262297265e-10,
+              "Si_1_sub__zmax": -1.3347758262297265e-10,
+              "SiNx__zmin": -1.3347758262297265e-10,
+              "SiNx_sub__zmin": -1.3347758262297265e-10,
+              "Si_1_sub__xmax": -6.214230710593407e-12,
+              "Si_1__xmax": 1.1732135704392027e-13
+            },
+            "net_outward_flux_W": -5.457633307834383e-10,
+            "absolute_net_residual_W": 5.457633307834383e-10,
+            "normalized_net_residual": 4.088801430611972,
+            "facet_count": 24484
+          },
+          "SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx__xmin": 7.783437915180469e-15,
+              "SiNx_sub__xmin": 1.780973212358588e-12,
+              "SiNx__ymin": 1.0640825646630638e-15,
+              "SiNx__ymax": 1.0515544103631865e-15,
+              "SiNx__zmax": -1.1754702335579044e-07,
+              "SiNx_sub__zmax": -1.1754702335579044e-07,
+              "SiNx_sub__xmax": 2.3007309345603243e-12,
+              "SiNx__xmax": 7.876818330244e-15
+            },
+            "net_outward_flux_W": -2.3508994723154073e-07,
+            "absolute_net_residual_W": 2.3508994723154073e-07,
+            "normalized_net_residual": 1.9999651247651953,
+            "facet_count": 12588
+          },
+          "SiO2_2": {
+            "boundary_fluxes_W": {
+              "SiO2_2__xmin": 3.023491952036975e-14,
+              "SiO2_2_sub__xmin": -4.002735762825616e-14,
+              "SiO2_2__ymin": 8.011634361005118e-16,
+              "SiO2_2__ymax": 6.913311130418536e-16,
+              "SiO2_2__zmin": 2.2739220801840279e-07,
+              "SiO2_2_sub__zmin": 2.2739220801840279e-07,
+              "SiO2_2_sub__xmax": -1.3871188002836869e-13,
+              "SiO2_2__xmax": -2.1185981621927863e-14,
+              "SiO2_2_sub__ymin": -8.026391852238954e-15,
+              "SiO2_2_sub__ymax": -2.278672008855602e-14
+            },
+            "net_outward_flux_W": 4.5478421702588845e-07,
+            "absolute_net_residual_W": 4.5478421702588845e-07,
+            "normalized_net_residual": 1.9999991248120643,
+            "facet_count": 12632
+          },
+          "abs": {
+            "boundary_fluxes_W": {
+              "abs__zmin": 6.944517370089398e-11,
+              "abs__xmin": -8.185460750747862e-12,
+              "abs__xmax": -7.946052206368898e-12,
+              "abs__ymin": -7.741160308806635e-12,
+              "abs__ymax": -8.456320307845635e-12,
+              "abs__zmin_free": 4.687418253884149e-11,
+              "abs__zmax": -1.1218058645241746e-10
+            },
+            "net_outward_flux_W": -2.8190223786451022e-11,
+            "absolute_net_residual_W": 2.8190223786451022e-11,
+            "normalized_net_residual": 0.25129324670100733,
+            "facet_count": 510
+          }
+        }
+      },
+      {
+        "label": "coarse",
+        "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_coarse",
+        "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_coarse\\case_heat_flux_control_coarse.result",
+        "body_boundary_flux_balance": {
+          "TES": {
+            "boundary_fluxes_W": {
+              "TES__zmin": 8.575563333653747e-10,
+              "TES__ymin": 2.5353936300155558e-11,
+              "TES__xmin": 2.6571264866539858e-11,
+              "TES__xmax": 2.226450303651188e-11,
+              "TES__ymax": 2.4291386925160524e-11,
+              "TES__zmax_free": 2.0010139581025874e-10,
+              "TES__zmax": 3.534337481824554e-10
+            },
+            "net_outward_flux_W": 1.5095725684864566e-09,
+            "absolute_net_residual_W": 1.5095725684864566e-09,
+            "normalized_net_residual": 1.760318838253254,
+            "facet_count": 816
+          },
+          "Stycast": {
+            "boundary_fluxes_W": {
+              "Stycast__zmax": -1.0039294982570444e-10,
+              "Stycast__zmin": 1.0191097950167483e-10
+            },
+            "net_outward_flux_W": 1.5180296759703983e-12,
+            "absolute_net_residual_W": 1.5180296759703983e-12,
+            "normalized_net_residual": 0.01489564405516729,
+            "facet_count": 449
+          },
+          "SiO2_1": {
+            "boundary_fluxes_W": {
+              "SiO2_1__zmin": 5.572090120440365e-07,
+              "Si_2__zmax": 1.1652823866897969e-07,
+              "Si_2_sub__zmax": 1.1652823866897969e-07,
+              "SiO2_1__xmin": 3.3610113828764463e-15,
+              "SiO2_1__xmax": 3.2755596146562834e-15,
+              "SiO2_1__ymin": 5.011535659794655e-16,
+              "SiO2_1__ymax": 4.847399464401626e-16,
+              "bath": 3.422529514218347e-08,
+              "SiO2_1__zmax": 1.762790034978152e-07,
+              "Si_1__zmin": -1.304668038210125e-07,
+              "Si_1_sub__zmin": -1.304668038210125e-07,
+              "Membrane_Si1__zmin": 3.067458073188274e-07
+            },
+            "net_outward_flux_W": 1.0465819953212615e-06,
+            "absolute_net_residual_W": 1.0465819953212615e-06,
+            "normalized_net_residual": 1.8782574809442414,
+            "facet_count": 132414
+          },
+          "Membrane_Si1": {
+            "boundary_fluxes_W": {
+              "Membrane_Si1__zmax": -7.0925864230645e-11,
+              "Si_1_sub__xmin": 9.283165891800347e-12,
+              "Membrane_Si1__xmin": 9.283165891800347e-12,
+              "Si_1_sub__xmax": 9.174607788033265e-12,
+              "Membrane_Si1__xmax": 9.174607788033265e-12,
+              "Si_1_sub__ymin": 9.521683012773147e-12,
+              "Membrane_Si1__ymin": 9.521683012773147e-12,
+              "Si_1_sub__ymax": 9.308538881613537e-12,
+              "Membrane_Si1__ymax": 9.308538881613537e-12
+            },
+            "net_outward_flux_W": 3.6501269177955894e-12,
+            "absolute_net_residual_W": 3.6501269177955894e-12,
+            "normalized_net_residual": 0.051463975199874626,
+            "facet_count": 954
+          },
+          "Membrane_SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx_sub__ymin": 6.394541874127828e-13,
+              "Membrane_SiNx__ymin": 6.394541874127828e-13,
+              "Membrane_SiNx__zmax_free": -5.865061604608556e-11,
+              "SiNx_sub__ymax": 6.156655160787821e-13,
+              "Membrane_SiNx__ymax": 6.156655160787821e-13,
+              "SiNx_sub__xmin": 6.171345710575482e-13,
+              "Membrane_SiNx__xmin": 6.171345710575482e-13,
+              "SiNx_sub__xmax": 6.083803898525944e-13,
+              "Membrane_SiNx__xmax": 6.083803898525944e-13,
+              "Membrane_SiNx__zmax": -5.99472741410746e-11
+            },
+            "net_outward_flux_W": -1.1363662085835673e-10,
+            "absolute_net_residual_W": 1.1363662085835673e-10,
+            "normalized_net_residual": 1.8956094749351637,
+            "facet_count": 1010
+          },
+          "Si_2": {
+            "boundary_fluxes_W": {
+              "bath": 4.218060279350261e-11,
+              "Si_2__xmin": 2.1195881663217243e-12,
+              "Si_2_sub__xmin": -6.1981785979993e-11,
+              "Si_2__ymin": 2.7574217732322474e-13,
+              "Si_2__ymax": 2.6797507716275123e-13,
+              "Si_2__zmin": 2.729469153928037e-10,
+              "Si_2_sub__zmin": 2.729469153928037e-10,
+              "SiO2_2__zmax": 2.729469153928037e-10,
+              "SiO2_2_sub__zmax": 2.729469153928037e-10,
+              "Si_2_sub__xmax": -6.040878875452226e-11,
+              "Si_2__xmax": 2.1730994286272486e-12,
+              "Si_2_sub__ymin": -3.387319910260693e-11,
+              "Si_2_sub__ymax": -3.0503248539348726e-11
+            },
+            "net_outward_flux_W": 9.520376468376815e-10,
+            "absolute_net_residual_W": 9.520376468376815e-10,
+            "normalized_net_residual": 3.4879956253309694,
+            "facet_count": 97734
+          },
+          "Si_1": {
+            "boundary_fluxes_W": {
+              "Si_1__xmin": 4.91296444154443e-14,
+              "Si_1_sub__xmin": -5.041867930357894e-12,
+              "Si_1__ymin": 7.507655996862172e-15,
+              "Si_1__ymax": 7.257266843695121e-15,
+              "Si_1__zmax": -7.28646218996143e-11,
+              "Si_1_sub__zmax": -7.28646218996143e-11,
+              "SiNx__zmin": -7.28646218996143e-11,
+              "SiNx_sub__zmin": -7.28646218996143e-11,
+              "Si_1_sub__xmax": -4.969814598130973e-12,
+              "Si_1__xmax": 5.044586017029525e-14
+            },
+            "net_outward_flux_W": -3.013558296995198e-10,
+            "absolute_net_residual_W": 3.013558296995198e-10,
+            "normalized_net_residual": 4.135831928349236,
+            "facet_count": 83000
+          },
+          "SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx__xmin": 3.3150292084787858e-15,
+              "SiNx_sub__xmin": 5.771164548588387e-13,
+              "SiNx__ymin": 5.061812112316188e-16,
+              "SiNx__ymax": 4.863131033380309e-16,
+              "SiNx__zmax": -6.0433669398734525e-09,
+              "SiNx_sub__zmax": -6.0433669398734525e-09,
+              "SiNx_sub__xmax": 9.509926700673817e-14,
+              "SiNx__xmax": 3.406820898836938e-15
+            },
+            "net_outward_flux_W": -1.2086053949680617e-08,
+            "absolute_net_residual_W": 1.2086053949680617e-08,
+            "normalized_net_residual": 1.999887491513745,
+            "facet_count": 42056
+          },
+          "SiO2_2": {
+            "boundary_fluxes_W": {
+              "SiO2_2__xmin": -5.3545570392009116e-14,
+              "SiO2_2_sub__xmin": -1.7875997166321732e-13,
+              "SiO2_2__ymin": 4.048770542855323e-16,
+              "SiO2_2__ymax": 3.3071476152602956e-16,
+              "SiO2_2__zmin": 2.0531991734822838e-07,
+              "SiO2_2_sub__zmin": 2.0531991734822838e-07,
+              "SiO2_2_sub__xmax": -1.3103634104343833e-13,
+              "SiO2_2__xmax": -1.834292118544344e-14,
+              "SiO2_2_sub__ymin": 1.2509820962076949e-14,
+              "SiO2_2_sub__ymax": 9.351440883417413e-15
+            },
+            "net_outward_flux_W": 4.106394756085061e-07,
+            "absolute_net_residual_W": 4.106394756085061e-07,
+            "normalized_net_residual": 1.9999982510807754,
+            "facet_count": 42052
+          },
+          "abs": {
+            "boundary_fluxes_W": {
+              "abs__zmin": 8.08677143905289e-11,
+              "abs__xmin": -4.298574732585938e-12,
+              "abs__xmax": -4.162026912868297e-12,
+              "abs__ymin": -4.306317250622327e-12,
+              "abs__ymax": -4.320342746464899e-12,
+              "abs__zmin_free": 3.593376092897614e-11,
+              "abs__zmax": -1.0131544610496514e-10
+            },
+            "net_outward_flux_W": -1.60123242800156e-12,
+            "absolute_net_residual_W": 1.60123242800156e-12,
+            "normalized_net_residual": 0.015804425579320318,
+            "facet_count": 1680
+          }
+        }
+      },
+      {
+        "label": "medium",
+        "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium",
+        "result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_medium\\case_heat_flux_control_medium.result",
+        "body_boundary_flux_balance": {
+          "TES": {
+            "boundary_fluxes_W": {
+              "TES__zmin": 1.826431721266626e-08,
+              "TES__ymin": 2.1999130913128252e-11,
+              "TES__xmin": 2.002253280916963e-11,
+              "TES__xmax": 2.1031452597406504e-11,
+              "TES__ymax": 2.340702995219407e-11,
+              "TES__zmax_free": 2.71556548172533e-09,
+              "TES__zmax": 1.5105603464622862e-08
+            },
+            "net_outward_flux_W": 3.617194630528635e-08,
+            "absolute_net_residual_W": 3.617194630528635e-08,
+            "normalized_net_residual": 1.9804707662546068,
+            "facet_count": 1622
+          },
+          "Stycast": {
+            "boundary_fluxes_W": {
+              "Stycast__zmax": -9.874896922412447e-11,
+              "Stycast__zmin": 9.940748013268545e-11
+            },
+            "net_outward_flux_W": 6.585109085609743e-13,
+            "absolute_net_residual_W": 6.585109085609743e-13,
+            "normalized_net_residual": 0.00662435973311081,
+            "facet_count": 1012
+          },
+          "SiO2_1": {
+            "boundary_fluxes_W": {
+              "SiO2_1__zmin": 2.3103307759939573e-07,
+              "Si_2__zmax": 1.2524516612779456e-07,
+              "Si_2_sub__zmax": 1.2524516612779456e-07,
+              "SiO2_1__xmin": 2.5532029186492394e-15,
+              "SiO2_1__xmax": 2.9081330640806055e-15,
+              "SiO2_1__ymin": 3.3276868790482253e-16,
+              "SiO2_1__ymax": 3.267755773371013e-16,
+              "bath": 3.565946129419958e-08,
+              "SiO2_1__zmax": -1.4884556935343877e-07,
+              "Si_1__zmin": -1.2997103024503128e-07,
+              "Si_1_sub__zmin": -1.2997103024503128e-07,
+              "Membrane_Si1__zmin": -1.8874539108407387e-08
+            },
+            "net_outward_flux_W": 8.952070831815598e-08,
+            "absolute_net_residual_W": 8.952070831815598e-08,
+            "normalized_net_residual": 0.387480049386617,
+            "facet_count": 296312
+          },
+          "Membrane_Si1": {
+            "boundary_fluxes_W": {
+              "Membrane_Si1__zmax": -8.519044673170764e-11,
+              "Si_1_sub__xmin": 9.011058694907613e-12,
+              "Membrane_Si1__xmin": 9.011058694907613e-12,
+              "Si_1_sub__xmax": 8.971838950598608e-12,
+              "Membrane_Si1__xmax": 8.971838950598608e-12,
+              "Si_1_sub__ymin": 9.097615134443301e-12,
+              "Membrane_Si1__ymin": 9.097615134443301e-12,
+              "Si_1_sub__ymax": 8.944536448068514e-12,
+              "Membrane_Si1__ymax": 8.944536448068514e-12
+            },
+            "net_outward_flux_W": -1.3140348275671565e-11,
+            "absolute_net_residual_W": 1.3140348275671565e-11,
+            "normalized_net_residual": 0.1542467351656787,
+            "facet_count": 1972
+          },
+          "Membrane_SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx_sub__ymin": 6.088311061223775e-13,
+              "Membrane_SiNx__ymin": 6.088311061223775e-13,
+              "Membrane_SiNx__zmax_free": -4.467193530806735e-11,
+              "SiNx_sub__ymax": 5.973715551348629e-13,
+              "Membrane_SiNx__ymax": 5.973715551348629e-13,
+              "SiNx_sub__xmin": 6.056274971448075e-13,
+              "Membrane_SiNx__xmin": 6.056274971448075e-13,
+              "SiNx_sub__xmax": 6.0277437248731e-13,
+              "Membrane_SiNx__xmax": 6.0277437248731e-13,
+              "Membrane_SiNx__zmax": -6.484540959587123e-11
+            },
+            "net_outward_flux_W": -1.0468813584215986e-10,
+            "absolute_net_residual_W": 1.0468813584215986e-10,
+            "normalized_net_residual": 1.61442631783184,
+            "facet_count": 1824
+          },
+          "Si_2": {
+            "boundary_fluxes_W": {
+              "bath": 4.065547256091476e-11,
+              "Si_2__xmin": 1.4721067750884898e-12,
+              "Si_2_sub__xmin": -6.150842285001366e-11,
+              "Si_2__ymin": 2.056940527717443e-13,
+              "Si_2__ymax": 1.908006539915033e-13,
+              "Si_2__zmin": 2.677466466495369e-10,
+              "Si_2_sub__zmin": 2.677466466495369e-10,
+              "SiO2_2__zmax": 2.677466466495369e-10,
+              "SiO2_2_sub__zmax": 2.677466466495369e-10,
+              "Si_2_sub__xmax": -6.381535016711495e-11,
+              "Si_2__xmax": 1.3626313351370695e-12,
+              "Si_2_sub__ymin": -2.4994149343969025e-11,
+              "Si_2_sub__ymax": -2.703887610230165e-11
+            },
+            "net_outward_flux_W": 9.375164935126518e-10,
+            "absolute_net_residual_W": 9.375164935126518e-10,
+            "normalized_net_residual": 3.501506014153001,
+            "facet_count": 216046
+          },
+          "Si_1": {
+            "boundary_fluxes_W": {
+              "Si_1__xmin": 2.413805619356901e-14,
+              "Si_1_sub__xmin": -5.167907865692377e-12,
+              "Si_1__ymin": 3.5079729770893024e-15,
+              "Si_1__ymax": 3.453361208414916e-15,
+              "Si_1__zmax": -5.478722328688106e-11,
+              "Si_1_sub__zmax": -5.478722328688106e-11,
+              "SiNx__zmin": -5.478722328688106e-11,
+              "SiNx_sub__zmin": -5.478722328688106e-11,
+              "Si_1_sub__xmax": -5.259407808089476e-12,
+              "Si_1__xmax": 2.746312007296328e-14
+            },
+            "net_outward_flux_W": -2.2951764631085406e-10,
+            "absolute_net_residual_W": 2.2951764631085406e-10,
+            "normalized_net_residual": 4.189254949261366,
+            "facet_count": 185968
+          },
+          "SiNx": {
+            "boundary_fluxes_W": {
+              "SiNx__xmin": 2.319255887830974e-15,
+              "SiNx_sub__xmin": -1.262249911438542e-13,
+              "SiNx__ymin": 3.4412514070912267e-16,
+              "SiNx__ymax": 3.3489009704831943e-16,
+              "SiNx__zmax": -9.018871245898364e-09,
+              "SiNx_sub__zmax": -9.018871245898364e-09,
+              "SiNx_sub__xmax": 1.613137113149295e-14,
+              "SiNx__xmax": 2.6296958476892182e-15
+            },
+            "net_outward_flux_W": -1.8037846957449766e-08,
+            "absolute_net_residual_W": 1.8037846957449766e-08,
+            "normalized_net_residual": 2.0000115830074727,
+            "facet_count": 92984
+          },
+          "SiO2_2": {
+            "boundary_fluxes_W": {
+              "SiO2_2__xmin": 3.522211607452745e-14,
+              "SiO2_2_sub__xmin": -1.7074333486554915e-13,
+              "SiO2_2__ymin": 2.6931998154915574e-16,
+              "SiO2_2__ymax": 2.8345695525289957e-16,
+              "SiO2_2__zmin": 2.0044484584804368e-07,
+              "SiO2_2_sub__zmin": 2.0044484584804368e-07,
+              "SiO2_2_sub__xmax": -1.5765773277356865e-13,
+              "SiO2_2__xmax": -1.73560933969563e-14,
+              "SiO2_2_sub__ymin": 8.33406454908369e-15,
+              "SiO2_2_sub__ymax": 7.687186082974528e-15
+            },
+            "net_outward_flux_W": 4.0088939773507e-07,
+            "absolute_net_residual_W": 4.0088939773507e-07,
+            "normalized_net_residual": 1.9999985334568413,
+            "facet_count": 93164
+          },
+          "abs": {
+            "boundary_fluxes_W": {
+              "abs__zmin": 8.172845418351653e-11,
+              "abs__xmin": -2.7583968074435e-12,
+              "abs__xmax": -2.657339416675214e-12,
+              "abs__ymin": -3.111202841119707e-12,
+              "abs__ymax": -2.9628602074320618e-12,
+              "abs__zmin_free": 2.369766569824786e-11,
+              "abs__zmax": -9.913331648115422e-11
+            },
+            "net_outward_flux_W": -5.196995872060317e-12,
+            "absolute_net_residual_W": 5.196995872060317e-12,
+            "normalized_net_residual": 0.052424311589013506,
+            "facet_count": 3660
+          }
+        }
+      }
+    ],
+    "interpretation": "For the source-free steady control, body net outward reconstructed flux should approach zero. This is a raw-gradient diagnostic, not a relaxed interface gate."
+  }
+}

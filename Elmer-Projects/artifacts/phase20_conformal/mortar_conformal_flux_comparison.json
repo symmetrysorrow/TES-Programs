@@ -1,0 +1,69 @@
+{
+  "source": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\artifacts\\phase20_conformal\\seven_step_physical_parity_flux_oriented.json",
+  "comparison": {
+    "Membrane_TES": {
+      "mortar_normalized_imbalance": 0.9540918437802833,
+      "conformal_normalized_imbalance": 0.9540909420404362,
+      "normalized_imbalance_absolute_difference": 9.017398471256044e-07,
+      "left_flux_absolute_difference_W": 2.7581661073043892e-15,
+      "right_flux_absolute_difference_W": 1.139308612664966e-13,
+      "conformal_local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 132,
+        "max_local_facet_flux_jump_W": 2.299260129968731e-09,
+        "rms_local_facet_flux_jump_W": 3.3280807306869557e-10,
+        "max_local_facet_flux_jump_W_m2": 1.628161320829859,
+        "rms_local_facet_flux_jump_W_m2": 0.21150480750452338,
+        "mean_local_flux_W_m2": 0.02686755568778985
+      },
+      "mortar_local_flux_jump": {
+        "status": "NOT_AVAILABLE",
+        "paired_facet_count": 0,
+        "reason": "The two sides do not share node IDs; use integrated side flux for the Mortar route."
+      }
+    },
+    "TES_Stycast": {
+      "mortar_normalized_imbalance": 1.0207620078857147,
+      "conformal_normalized_imbalance": 1.020766793465641,
+      "normalized_imbalance_absolute_difference": 4.785579926336325e-06,
+      "left_flux_absolute_difference_W": 8.076737803399748e-14,
+      "right_flux_absolute_difference_W": 1.6499514306194409e-15,
+      "conformal_local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 81,
+        "max_local_facet_flux_jump_W": 5.629346534662696e-10,
+        "rms_local_facet_flux_jump_W": 1.0925140274218755e-10,
+        "max_local_facet_flux_jump_W_m2": 0.24655370499238113,
+        "rms_local_facet_flux_jump_W_m2": 0.04429389952250946,
+        "mean_local_flux_W_m2": 0.007975034454681696
+      },
+      "mortar_local_flux_jump": {
+        "status": "NOT_AVAILABLE",
+        "paired_facet_count": 0,
+        "reason": "The two sides do not share node IDs; use integrated side flux for the Mortar route."
+      }
+    },
+    "Stycast_absorber": {
+      "mortar_normalized_imbalance": 0.38279291790351916,
+      "conformal_normalized_imbalance": 0.3828211457917494,
+      "normalized_imbalance_absolute_difference": 2.8227888230258902e-05,
+      "left_flux_absolute_difference_W": 4.185687929737837e-15,
+      "right_flux_absolute_difference_W": 1.7915525352522557e-15,
+      "conformal_local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 32,
+        "max_local_facet_flux_jump_W": 1.0985679979372168e-12,
+        "rms_local_facet_flux_jump_W": 4.4280618569197127e-13,
+        "max_local_facet_flux_jump_W_m2": 0.0001345120368141759,
+        "rms_local_facet_flux_jump_W_m2": 7.207182157355246e-05,
+        "mean_local_flux_W_m2": 0.0001241793832994916
+      },
+      "mortar_local_flux_jump": {
+        "status": "NOT_AVAILABLE",
+        "paired_facet_count": 0,
+        "reason": "The two sides do not share node IDs; use integrated side flux for the Mortar route."
+      }
+    }
+  },
+  "conclusion": "Mortar and conformal reconstructed elemental fluxes are numerically equivalent at the tested 7-step final field; the large imbalance is not conformal-only."
+}

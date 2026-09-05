@@ -1,0 +1,56 @@
+{
+  "evidence": {
+    "control_flux_nonzero": true,
+    "epsilon_Q_by_interface": {
+      "Membrane_TES": [
+        0.8205322768329651,
+        0.9300952347867121,
+        0.9964496121677682
+      ],
+      "TES_Stycast": [
+        1.3622822839243138,
+        1.2883453547539119,
+        1.006580834745563
+      ],
+      "Stycast_absorber": [
+        0.36154891185391125,
+        0.1944881136481591,
+        0.17236144513040458
+      ]
+    },
+    "strict_monotone_refinement_decrease": {
+      "Membrane_TES": false,
+      "TES_Stycast": true,
+      "Stycast_absorber": true
+    },
+    "mesh_refinement_improves_all_interfaces": false,
+    "mortar_conformal_max_normalized_difference": 2.8227888230258902e-05,
+    "mortar_conformal_route_parity": true,
+    "native_elmer_flux_solver_available": true,
+    "native_flux_pairing_note": "The native FluxSolver result is a shared nodal projected field; exact opposite pair integrals on conformal faces do not establish independent weak-form side conservation.",
+    "steady_control_body_raw_residuals": {
+      "control": {
+        "TES": 2.8651050314335493,
+        "Stycast": 0.04723375526025631,
+        "SiO2_1": 0.37172984940174975,
+        "Membrane_Si1": 7.367249017458264,
+        "Membrane_SiNx": 1.7233114290222062,
+        "Si_2": 3.462678538427693,
+        "Si_1": 4.088801430611972,
+        "SiNx": 1.9999651247651953,
+        "SiO2_2": 1.9999991248120643,
+        "abs": 0.25129324670100733
+      }
+    },
+    "transient_storage_measured": true
+  },
+  "classification": {
+    "real_case_flux_imbalance": "FLUX_RECONSTRUCTION_LIMITATION",
+    "transient_storage_effect": "PRESENT_BUT_NOT_SUFFICIENT_TO_EXPLAIN_RAW_JUMP",
+    "physical_inconsistency": "NOT_PROVEN",
+    "reason": "The same large imbalance appears in Mortar and conformal routes, the controlled nonzero-flux case exercises the geometry/material path, and Elmer native FluxSolver is available. However raw-gradient epsilon_Q is not monotone for all interfaces and body-level conservation has not yet been demonstrated from an independent weak-form integrated flux quantity.",
+    "heat_flux_blocker": "OPEN",
+    "gpu_benchmark_readiness": "NOT_READY",
+    "final_decision": "CONTINUE"
+  }
+}

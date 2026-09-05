@@ -1,0 +1,265 @@
+{
+  "native_solver": {
+    "available": true,
+    "implementation": "Elmer 26.1 FluxSolver; Calculate Flux + Calculate Grad",
+    "stored_fields": [
+      "temperature flux 1",
+      "temperature flux 2",
+      "temperature flux 3",
+      "temperature grad 1",
+      "temperature grad 2",
+      "temperature grad 3"
+    ],
+    "sign_conversion": "FluxSolver stores +k*grad; comparison converts to physical -k*grad."
+  },
+  "raw_gradient": {
+    "Membrane_TES": {
+      "sign_convention": "Each face flux is q=-k*grad(T) dot n_outward; opposite body outward normals should give q_left + q_right = 0.",
+      "source_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+      "field_metadata": {
+        "field": "last saved result field",
+        "time_step": null,
+        "nonlinear_iter": null
+      },
+      "left": {
+        "integrated_outward_flux_W": -4.225976564075903e-11,
+        "surface_area_m2": 2.500000000000001e-07,
+        "facet_count": 132,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 2.1753927204867033e-05,
+        "conductivity_max_W_mK": 2.1764863549930945e-05,
+        "conductivity_mean_W_mK": 2.1760276387912298e-05,
+        "mean_abs_flux_density_W_m2": 0.00040683879699490385,
+        "gradient_magnitude_min_K_m": 0.024792481511912313,
+        "gradient_magnitude_max_K_m": 64.10131800057958,
+        "gradient_magnitude_mean_K_m": 18.697920212096278,
+        "surface_temperature_min_K": 0.15555393091479633,
+        "surface_temperature_max_K": 0.1555563819896879,
+        "surface_temperature_mean_K": 0.15555569882700865,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "outward_normal_z_positive_facets": 132,
+        "outward_normal_z_negative_facets": 0
+      },
+      "right": {
+        "integrated_outward_flux_W": 2.354727908451085e-10,
+        "surface_area_m2": 2.500000000000001e-07,
+        "facet_count": 132,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 68.0,
+        "conductivity_max_W_mK": 68.0,
+        "conductivity_mean_W_mK": 68.0,
+        "mean_abs_flux_density_W_m2": 0.003425451341271085,
+        "gradient_magnitude_min_K_m": 0.0003286484966604722,
+        "gradient_magnitude_max_K_m": 0.01765657726812638,
+        "gradient_magnitude_mean_K_m": 0.006035680789913738,
+        "surface_temperature_min_K": 0.15555393091479633,
+        "surface_temperature_max_K": 0.1555563819896879,
+        "surface_temperature_mean_K": 0.15555569882700865,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "outward_normal_z_positive_facets": 0,
+        "outward_normal_z_negative_facets": 132
+      },
+      "left_outward_flux_W": -4.225976564075903e-11,
+      "right_outward_flux_W": 2.354727908451085e-10,
+      "absolute_imbalance_W": 1.9321302520434947e-10,
+      "surface_mean_temperature_difference_K": 0.0,
+      "normalized_imbalance": 0.8205322768329651,
+      "local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 132,
+        "max_local_facet_flux_jump_W": 1.246707405463024e-10,
+        "rms_local_facet_flux_jump_W": 2.0540096786773452e-11,
+        "max_local_facet_flux_jump_W_m2": 0.06456477462496582,
+        "rms_local_facet_flux_jump_W_m2": 0.00963494686173678,
+        "mean_local_flux_W_m2": 0.0019161450691329949
+      },
+      "status": "FAIL"
+    },
+    "TES_Stycast": {
+      "sign_convention": "Each face flux is q=-k*grad(T) dot n_outward; opposite body outward normals should give q_left + q_right = 0.",
+      "source_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+      "field_metadata": {
+        "field": "last saved result field",
+        "time_step": null,
+        "nonlinear_iter": null
+      },
+      "left": {
+        "integrated_outward_flux_W": 3.151236352214363e-10,
+        "surface_area_m2": 1.9125107200725655e-07,
+        "facet_count": 81,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 68.0,
+        "conductivity_max_W_mK": 68.0,
+        "conductivity_mean_W_mK": 68.0,
+        "mean_abs_flux_density_W_m2": 0.006463019144030842,
+        "gradient_magnitude_min_K_m": 0.00032866874279013745,
+        "gradient_magnitude_max_K_m": 0.008227866249179787,
+        "gradient_magnitude_mean_K_m": 0.004692293028147133,
+        "surface_temperature_min_K": 0.1555553572051139,
+        "surface_temperature_max_K": 0.15555638199028565,
+        "surface_temperature_mean_K": 0.15555594834956446,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "outward_normal_z_positive_facets": 81,
+        "outward_normal_z_negative_facets": 0
+      },
+      "right": {
+        "integrated_outward_flux_W": 1.1416371028655425e-10,
+        "surface_area_m2": 1.9125107200725655e-07,
+        "facet_count": 81,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 2.69094e-06,
+        "conductivity_max_W_mK": 2.69094e-06,
+        "conductivity_mean_W_mK": 2.69094e-06,
+        "mean_abs_flux_density_W_m2": 0.0005969395547131255,
+        "gradient_magnitude_min_K_m": 221.74337331318586,
+        "gradient_magnitude_max_K_m": 221.90083874176636,
+        "gradient_magnitude_mean_K_m": 221.83309730603943,
+        "surface_temperature_min_K": 0.1555553572051139,
+        "surface_temperature_max_K": 0.15555638199028565,
+        "surface_temperature_mean_K": 0.15555594834956446,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "outward_normal_z_positive_facets": 0,
+        "outward_normal_z_negative_facets": 81
+      },
+      "left_outward_flux_W": 3.151236352214363e-10,
+      "right_outward_flux_W": 1.1416371028655425e-10,
+      "absolute_imbalance_W": 4.2928734550799057e-10,
+      "surface_mean_temperature_difference_K": 0.0,
+      "normalized_imbalance": 1.3622822839243138,
+      "local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 81,
+        "max_local_facet_flux_jump_W": 2.6555113720207997e-10,
+        "rms_local_facet_flux_jump_W": 4.986960289353637e-11,
+        "max_local_facet_flux_jump_W_m2": 0.11630589152571327,
+        "rms_local_facet_flux_jump_W_m2": 0.020084865069967116,
+        "mean_local_flux_W_m2": 0.003529979349371984
+      },
+      "status": "FAIL"
+    },
+    "Stycast_absorber": {
+      "sign_convention": "Each face flux is q=-k*grad(T) dot n_outward; opposite body outward normals should give q_left + q_right = 0.",
+      "source_result": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity-latest\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal\\case_heat_flux_control_mesh_physical_parity_conformal.result",
+      "field_metadata": {
+        "field": "last saved result field",
+        "time_step": null,
+        "nonlinear_iter": null
+      },
+      "left": {
+        "integrated_outward_flux_W": -1.0877132953527634e-10,
+        "surface_area_m2": 1.8221636713721206e-07,
+        "facet_count": 50,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 2.69094e-06,
+        "conductivity_max_W_mK": 2.69094e-06,
+        "conductivity_mean_W_mK": 2.6909399999999998e-06,
+        "mean_abs_flux_density_W_m2": 0.0005968960643914928,
+        "gradient_magnitude_min_K_m": 221.7408334639867,
+        "gradient_magnitude_max_K_m": 221.89207354497913,
+        "gradient_magnitude_mean_K_m": 221.81693613381245,
+        "surface_temperature_min_K": 0.15999123697248746,
+        "surface_temperature_max_K": 0.15999428883868033,
+        "surface_temperature_mean_K": 0.15999237704577343,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "outward_normal_z_positive_facets": 50,
+        "outward_normal_z_negative_facets": 0
+      },
+      "right": {
+        "integrated_outward_flux_W": 6.944517370089398e-11,
+        "surface_area_m2": 1.8221636713721206e-07,
+        "facet_count": 50,
+        "skipped_facets": 0,
+        "conductivity_min_W_mK": 0.0168,
+        "conductivity_max_W_mK": 0.0168,
+        "conductivity_mean_W_mK": 0.0168,
+        "mean_abs_flux_density_W_m2": 0.000392458002369249,
+        "gradient_magnitude_min_K_m": 0.02305485894252564,
+        "gradient_magnitude_max_K_m": 0.03826451393294714,
+        "gradient_magnitude_mean_K_m": 0.02883811973167105,
+        "surface_temperature_min_K": 0.15999123697248746,
+        "surface_temperature_max_K": 0.15999428883868033,
+        "surface_temperature_mean_K": 0.15999237704577343,
+        "outward_normal_mean": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "outward_normal_z_positive_facets": 0,
+        "outward_normal_z_negative_facets": 50
+      },
+      "left_outward_flux_W": -1.0877132953527634e-10,
+      "right_outward_flux_W": 6.944517370089398e-11,
+      "absolute_imbalance_W": 3.932615583438236e-11,
+      "surface_mean_temperature_difference_K": 0.0,
+      "normalized_imbalance": 0.36154891185391125,
+      "local_flux_jump": {
+        "status": "AVAILABLE",
+        "paired_facet_count": 50,
+        "max_local_facet_flux_jump_W": 2.140277966470421e-12,
+        "rms_local_facet_flux_jump_W": 9.153069181157172e-13,
+        "max_local_facet_flux_jump_W_m2": 0.000329011823486838,
+        "rms_local_facet_flux_jump_W_m2": 0.00021365705119883704,
+        "mean_local_flux_W_m2": 0.0004946770333803708
+      },
+      "status": "FAIL"
+    }
+  },
+  "native_flux": {
+    "Membrane_TES": {
+      "left": {
+        "integrated_outward_flux_W": 6.418961667426658e-11,
+        "surface_area_m2": 2.500000000000001e-07
+      },
+      "right": {
+        "integrated_outward_flux_W": -6.418961667426658e-11,
+        "surface_area_m2": 2.500000000000001e-07
+      },
+      "absolute_imbalance_W": 0.0,
+      "normalized_imbalance": 0.0
+    },
+    "TES_Stycast": {
+      "left": {
+        "integrated_outward_flux_W": 1.1796033307056016e-10,
+        "surface_area_m2": 1.9125107200725655e-07
+      },
+      "right": {
+        "integrated_outward_flux_W": -1.1796033307056016e-10,
+        "surface_area_m2": 1.9125107200725655e-07
+      },
+      "absolute_imbalance_W": 0.0,
+      "normalized_imbalance": 0.0
+    },
+    "Stycast_absorber": {
+      "left": {
+        "integrated_outward_flux_W": 7.502582753928813e-11,
+        "surface_area_m2": 1.8221636713721206e-07
+      },
+      "right": {
+        "integrated_outward_flux_W": -7.502582753928813e-11,
+        "surface_area_m2": 1.8221636713721206e-07
+      },
+      "absolute_imbalance_W": 0.0,
+      "normalized_imbalance": 0.0
+    }
+  }
+}
