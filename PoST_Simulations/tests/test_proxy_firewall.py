@@ -114,6 +114,35 @@ def test_proxy_uses_eight_independent_sources_and_production_flink():
     assert len(metadata["source_names"]) == 8
 
 
+def test_shared_five_state_linearization_has_left_right_reflection_symmetry():
+    sys.path.insert(0, str(ROOT / "PoST_Simulations"))
+    from lib.tes_noise_model import linearized_matrix
+
+    parameters = json.loads((ROOT / "PoST_Simulations/input.json").read_text(encoding="utf-8"))
+    matrix = linearized_matrix(parameters, 37.0)
+    reflection = np.eye(5)[[4, 3, 2, 1, 0]]
+    np.testing.assert_allclose(reflection @ matrix @ reflection, matrix, rtol=0.0, atol=1e-18)
+
+
+def test_production_make_noise_output_matches_shared_helper(tmp_path, monkeypatch):
+    sys.path.insert(0, str(ROOT / "PoST_Simulations"))
+    import h5py
+    import PoST_Simulation as production
+    from lib.tes_noise_model import noise_components
+
+    parameters = json.loads((ROOT / "PoST_Simulations/input.json").read_text(encoding="utf-8"))
+    (tmp_path / "input.json").write_text(json.dumps(parameters), encoding="utf-8")
+    monkeypatch.setattr(production, "output", str(tmp_path))
+    production.MakeNoise()
+    with h5py.File(tmp_path / "noise.h5", "r") as output:
+        frequencies = np.asarray(output["frequency"])
+        expected = noise_components(parameters, frequencies)
+        np.testing.assert_allclose(output["transfer_ch0"], expected["transfer_ch0"], rtol=0.0, atol=1e-30)
+        np.testing.assert_allclose(output["transfer_ch1"], expected["transfer_ch1"], rtol=0.0, atol=1e-30)
+        np.testing.assert_allclose(output["total_ch0"], expected["total_ch0"], rtol=0.0, atol=1e-30)
+        assert output.attrs["G_eff_W_per_K"] == expected["operating_point"]["G_eff_W_per_K"]
+
+
 def test_pulse_audit_is_noise_blind_and_stationarity_result_is_conservative():
     source = PULSE_AUDIT.read_text(encoding="utf-8")
     assert "CH0_noise" not in source and "CH1_noise" not in source

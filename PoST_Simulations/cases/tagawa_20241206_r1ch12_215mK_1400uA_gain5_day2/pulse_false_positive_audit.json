@@ -1,0 +1,60 @@
+{
+  "stage": "pulse_false_positive_audit",
+  "null_source": "pulse pretrigger baseline portions",
+  "simulation_spectrum_read": false,
+  "controls": {
+    "CH0": {
+      "forward": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6888733930117824,
+        "false_positive_count": 4,
+        "false_positive_rate": 0.0016666666666666668,
+        "score_q99": 0.5261809944886284
+      },
+      "time_reversed": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6888733930117824,
+        "false_positive_count": 14,
+        "false_positive_rate": 0.005833333333333334,
+        "score_q99": 0.6539487123155331
+      },
+      "sign_inverted": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6888733930117824,
+        "false_positive_count": 0,
+        "false_positive_rate": 0.0,
+        "score_q99": 0.44524937540427206
+      }
+    },
+    "CH1": {
+      "forward": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6918055874278399,
+        "false_positive_count": 4,
+        "false_positive_rate": 0.0016666666666666668,
+        "score_q99": 0.37174000764658094
+      },
+      "time_reversed": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6918055874278399,
+        "false_positive_count": 0,
+        "false_positive_rate": 0.0,
+        "score_q99": 0.5001510052789652
+      },
+      "sign_inverted": {
+        "sample_count": 2400,
+        "threshold_primary": 0.6918055874278399,
+        "false_positive_count": 0,
+        "false_positive_rate": 0.0,
+        "score_q99": 0.39101709894199976
+      }
+    }
+  },
+  "controls_included": [
+    "pulse pretrigger baseline",
+    "time-reversed template",
+    "sign-inverted template",
+    "random baseline lag windows"
+  ],
+  "interpretation": "The primary threshold remains the fixed 1e-3 pulse-null quantile; these controls do not tune it against any spectrum."
+}

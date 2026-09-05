@@ -146,6 +146,16 @@ def tes_johnson_voltage_asd(temperature, resistance, beta, excess_johnson_M=0.0)
     )
 
 
+def tes_operating_point(parameters):
+    """Return the canonical five-state TES operating point for tests/tools."""
+    return shared_tes_operating_point(parameters)
+
+
+def tes_linearized_time_matrix(parameters):
+    """Return the time-domain A matrix used by the pulse solver."""
+    return -np.real(shared_tes_linearized_matrix(parameters, 0.0))
+
+
 def random_noise(spe, seed):
     spe_re = spe[::-1]  # reverse
     spe_mirror = np.r_[spe, spe_re]
@@ -1258,15 +1268,6 @@ def MakeNoise():
         transfer_ch1
     )
 
-
-def tes_operating_point(parameters):
-    """Return the canonical five-state TES operating point for tests/tools."""
-    return shared_tes_operating_point(parameters)
-
-
-def tes_linearized_time_matrix(parameters):
-    """Return the time-domain A matrix used by the pulse solver."""
-    return -np.real(shared_tes_linearized_matrix(parameters, 0.0))
 
     # Keep the production writer on the same pure implementation used by the
     # noise-blind proxy.  The legacy local equations above are retained for

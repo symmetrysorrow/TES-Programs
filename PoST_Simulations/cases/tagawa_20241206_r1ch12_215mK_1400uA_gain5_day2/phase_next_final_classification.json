@@ -1,104 +1,71 @@
 {
   "stage": "phase_next_final_classification",
-  "classification": "R5",
-  "classification_status": "provisional_due_to_inconclusive_low_frequency_coherence",
-  "interpretation": "Pulse-constrained full physical source ensemble covers 1\u201310 kHz but not the 10\u2013100 Hz anchors; the low-frequency audit is not drift-like, yet its frequency-dependent coherence is inconclusive, so an independent readout/circuit contribution remains required before any added TES source is considered.",
+  "classification": "PC3",
+  "classification_status": "conditional_on_fixed_FPR_detector; paired_channel_coherence_inconclusive",
+  "interpretation": "Detected pulses do not materially change the CH0 10-100 Hz ASD; pulse-free records retain the excess. The additive pulse-only reconstruction is numerically close to all-record ASD because its contribution is small, not because it explains the excess.",
   "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified",
+  "previous_provisional_classification": "R5 provisional \u2014 superseded by pulse partitioning",
+  "pc_classification": "PC3",
   "evidence": {
-    "pulse_consistent_scenario_count": 79,
-    "pulse_selected_slow_poles": {
-      "CH0": {
-        "time_constant_s": 0.06877978899371456,
-        "frequency_Hz": 2.313978356438978,
-        "model_order": 3
-      },
-      "CH1": {
-        "time_constant_s": 0.15995291491379446,
-        "frequency_Hz": 0.9950112080024975,
-        "model_order": 3
-      }
+    "CH0_counts": {
+      "pulse_free": 239,
+      "ambiguous": 5,
+      "likely_pulse_contaminated": 0,
+      "definitely_pulse_contaminated": 101
     },
-    "low_frequency_rows": [
-      {
-        "frequency_Hz": 10.0,
-        "experimental_pre_analysis_normalized": 46.156196536257895,
-        "proxy_min": 1.0022095782777347,
-        "proxy_q05": 1.024870033290489,
-        "proxy_median": 1.2679700174482844,
-        "proxy_q95": 1.912779637892716,
-        "proxy_max": 2.4536446785769646,
-        "classification": "outside_sampled_envelope"
-      },
-      {
-        "frequency_Hz": 100.0,
-        "experimental_pre_analysis_normalized": 4.0243259068646395,
-        "proxy_min": 1.0064634840520694,
-        "proxy_q05": 1.0298783949596255,
-        "proxy_median": 1.265332091280097,
-        "proxy_q95": 1.8851078771008165,
-        "proxy_max": 2.3568799545224453,
-        "classification": "outside_sampled_envelope"
-      }
-    ],
-    "kilohertz_rows": [
-      {
-        "frequency_Hz": 1000.0,
-        "experimental_pre_analysis_normalized": 1.0,
-        "proxy_min": 1.0,
-        "proxy_q05": 1.0,
-        "proxy_median": 1.0,
-        "proxy_q95": 1.0,
-        "proxy_max": 1.0,
-        "classification": "inside_sampled_q05_q95"
-      },
-      {
-        "frequency_Hz": 3000.0,
-        "experimental_pre_analysis_normalized": 0.9356576676273981,
-        "proxy_min": 0.5036799242241733,
-        "proxy_q05": 0.5258093070606411,
-        "proxy_median": 0.6345028220381627,
-        "proxy_q95": 0.8323172669193136,
-        "proxy_max": 0.9520153021259017,
-        "classification": "inside_sampled_min_max"
-      },
-      {
-        "frequency_Hz": 5000.0,
-        "experimental_pre_analysis_normalized": 0.8625524183725526,
-        "proxy_min": 0.4050262594657194,
-        "proxy_q05": 0.41271338727562273,
-        "proxy_median": 0.5141763707502337,
-        "proxy_q95": 0.7094839009897849,
-        "proxy_max": 0.8751879577107035,
-        "classification": "inside_sampled_min_max"
-      },
-      {
-        "frequency_Hz": 7000.0,
-        "experimental_pre_analysis_normalized": 0.7827241692134552,
-        "proxy_min": 0.3463244505446304,
-        "proxy_q05": 0.3667593396699617,
-        "proxy_median": 0.4637194980089147,
-        "proxy_q95": 0.6946276670099328,
-        "proxy_max": 0.791025498784272,
-        "classification": "inside_sampled_min_max"
-      },
-      {
-        "frequency_Hz": 10000.0,
-        "experimental_pre_analysis_normalized": 0.6364832111684274,
-        "proxy_min": 0.300632349040486,
-        "proxy_q05": 0.31823867042796916,
-        "proxy_median": 0.4358040493091457,
-        "proxy_q95": 0.6784987343715615,
-        "proxy_max": 0.6979519568311481,
-        "classification": "inside_sampled_q05_q95"
-      }
-    ],
-    "stationarity_classification": "inconclusive",
-    "coherence_10_to_100_Hz_median": 0.42600711084502046,
-    "coherence_10_to_100_Hz_range": [
-      0.09031450906893124,
-      0.9395996185586993
-    ],
-    "common_accepted_records": 345
+    "CH0_contaminated_fraction": 0.2927536231884058,
+    "all_over_clean_ASD_anchors": {
+      "10": 1.0106473230645288,
+      "20": 0.9814401046196577,
+      "50": 0.9663565680996162,
+      "100": 1.0090002520248031,
+      "200": 1.017465436934332,
+      "500": 0.9892738215769359,
+      "1000": 0.9643156039350326,
+      "3000": 0.996817209303773,
+      "5000": 1.0195086899879964,
+      "7000": 0.9874088976631673,
+      "10000": 1.016446635408553
+    },
+    "pulse_power_fraction_of_all_anchors": {
+      "10": 0.00029838820267820225,
+      "20": 0.001369314341721452,
+      "50": 0.0064003056196037175,
+      "100": 0.013951400551316237,
+      "200": 0.044485333901206306
+    },
+    "predicted_over_measured_all_minus_one": {
+      "10": -0.010384380766577772,
+      "20": 0.019582607905155758,
+      "50": 0.03790260008740143,
+      "100": -0.001906303835016221,
+      "200": 0.005210788570430669,
+      "500": 0.02112074309025802,
+      "1000": 0.043897363946795,
+      "3000": 0.0038880092820328116,
+      "5000": -0.01891978123334881,
+      "7000": 0.01282698245621483,
+      "10000": -0.016145831256855203
+    },
+    "threshold_sensitivity": {
+      "CH0": "robust",
+      "CH1": "robust"
+    },
+    "false_positive_forward_rates": {
+      "CH0": 0.0016666666666666668,
+      "CH1": 0.0016666666666666668
+    },
+    "independent_acceptance_counts": {
+      "CH0": 345,
+      "CH1": 1
+    },
+    "paired_coherence_record_counts": {
+      "all": 1,
+      "pulse_free": 1,
+      "pulse_contaminated": 0,
+      "ambiguous": 0
+    },
+    "pulse_free_simulation_envelope_coverage": 6
   },
   "prohibitions_respected": [
     "no noise residual fitting",

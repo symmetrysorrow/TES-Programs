@@ -108,7 +108,7 @@ def linearized_matrix(parameters: dict, frequency_hz: float) -> np.ndarray:
     matrix[2, 1] = -g_eff / c_abs
     matrix[2, 2] = 2.0 * g_eff / c_abs + 1j * omega
     matrix[2, 3] = -g_eff / c_abs
-    matrix[3, 2] = -g_eff / c_abs
+    matrix[3, 2] = -g_eff / c_tes
     matrix[3, 3] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
     matrix[3, 4] = -current * resistance * (2.0 + beta) / c_tes
     matrix[4, 3] = loop_gain * g_tes_bath / (current * inductance)

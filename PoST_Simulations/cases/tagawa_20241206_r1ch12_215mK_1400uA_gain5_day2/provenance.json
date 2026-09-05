@@ -39,9 +39,11 @@
       "pulse_audit": "target_pulse_pole_audit.json",
       "pulse_consistent_scenario_count": 79,
       "stationarity_audit": "low_frequency_stationarity_audit.json",
-      "stationarity_classification": "inconclusive",
-      "final_classification": "R5 provisional",
-      "final_report": "phase_next_final_classification.md"
+      "stationarity_classification": "inconclusive_due_to_strict_independent_CH1_acceptance",
+      "final_classification": "PC3 — pulse contamination negligible for observed CH0 excess",
+      "superseded_classification": "R5 provisional",
+      "final_report": "pulse_contamination_summary.md",
+      "required_artifacts": ["pulse_template_library.json", "pulse_detection_thresholds.json", "noise_record_pulse_classification.json", "pulse_partitioned_noise_spectra.json", "pulse_contamination_threshold_sensitivity.json", "pulse_false_positive_audit.json", "pulse_channel_coincidence.json", "pulse_contamination_psd_prediction.json", "pulse_free_simulation_comparison.json", "full_acquisition_reproduction.json"]
     },
     "target_input_modified": false,
     "source_class_policy": "3-8 are proxies/references only and never target truth"

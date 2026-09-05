@@ -1,0 +1,71 @@
+{
+  "stage": "fixed_fpr_pulse_detection_thresholds",
+  "target_root": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "simulation_spectrum_read": false,
+  "noise_spectrum_read": false,
+  "primary_fpr": 0.001,
+  "fprs_reported": [
+    0.01,
+    0.001,
+    0.0001
+  ],
+  "channels": {
+    "CH0": {
+      "channel": "CH0",
+      "primary_fpr": 0.001,
+      "null_records_source": "pulse pretrigger baseline portions only",
+      "baseline_std_median": 0.0017124240818546784,
+      "null_sample_count": {
+        "full_pulse": 1200,
+        "post_peak_tail": 1200,
+        "slow_tail": 2000
+      },
+      "thresholds_by_template": {
+        "full_pulse": {
+          "fpr_0.01": 0.508504180269931,
+          "fpr_0.001": 0.6888733930117824,
+          "fpr_0.0001": 0.6920575591021842
+        },
+        "post_peak_tail": {
+          "fpr_0.01": 0.5258951788220224,
+          "fpr_0.001": 0.8582018694252477,
+          "fpr_0.0001": 0.8724051923987349
+        },
+        "slow_tail": {
+          "fpr_0.01": 0.03714494125395753,
+          "fpr_0.001": 0.05128258283505597,
+          "fpr_0.0001": 0.054637679789430516
+        }
+      }
+    },
+    "CH1": {
+      "channel": "CH1",
+      "primary_fpr": 0.001,
+      "null_records_source": "pulse pretrigger baseline portions only",
+      "baseline_std_median": 0.005125361792111189,
+      "null_sample_count": {
+        "full_pulse": 1200,
+        "post_peak_tail": 1200,
+        "slow_tail": 2000
+      },
+      "thresholds_by_template": {
+        "full_pulse": {
+          "fpr_0.01": 0.3620548448846768,
+          "fpr_0.001": 0.6918055874278399,
+          "fpr_0.0001": 0.6978023928040373
+        },
+        "post_peak_tail": {
+          "fpr_0.01": 0.3881592479564228,
+          "fpr_0.001": 0.7819479777785602,
+          "fpr_0.0001": 0.814783116275711
+        },
+        "slow_tail": {
+          "fpr_0.01": 0.03693963571003897,
+          "fpr_0.001": 0.052043454344530865,
+          "fpr_0.0001": 0.054381581228513234
+        }
+      }
+    }
+  },
+  "selection_rule": "thresholds are pulse-pretrigger null quantiles fixed before any noise PSD comparison; no threshold tuning against simulation or residual"
+}

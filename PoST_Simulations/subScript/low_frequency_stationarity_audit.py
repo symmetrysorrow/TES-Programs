@@ -97,7 +97,8 @@ def main() -> None:
         raise RuntimeError("stationarity audit requires a completed Stage-B ensemble")
     paths0, paths1 = _paths("CH0"), _paths("CH1")
     accepted0 = _accepted(paths0)
-    common = [index for index in sorted(accepted0) if index < len(paths1)]
+    accepted1 = _accepted(paths1)
+    common = sorted(accepted0 & accepted1)
     records = []
     sum_p0 = sum_p1 = sum_pxy = None
     usable_common = []
@@ -129,6 +130,21 @@ def main() -> None:
     common = usable_common
     if not records:
         raise RuntimeError("no common accepted CH0/CH1 records")
+    if len(records) < 4:
+        result = {
+            "stage": "C_stationarity_audit",
+            "ensemble_completed_before_experiment_read": True,
+            "source_kind": "target CH0/CH1 noise raw records using independent production acceptance",
+            "accepted_counts": {"CH0_available": len(accepted0), "CH1_available": len(accepted1), "common": len(records)},
+            "accepted_indices_common": common,
+            "classification": "inconclusive",
+            "reason": "independent CH0/CH1 production acceptance leaves fewer than four paired records for a stationarity or coherence estimate",
+            "strict_target_conclusion": "C — exact target physical case remains unidentified",
+        }
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        (args.output_dir / "low_frequency_stationarity_audit.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        (args.output_dir / "low_frequency_stationarity_audit.md").write_text("# Low-frequency stationarity and coherence audit\n\nClassification: **inconclusive**. Independent CH0/CH1 acceptance leaves fewer than four paired records.\n\nStrict conclusion: **C — exact target physical case remains unidentified**.\n", encoding="utf-8")
+        return
     mean_p0, mean_p1, mean_pxy = sum_p0 / len(records), sum_p1 / len(records), sum_pxy / len(records)
     coherence = np.abs(mean_pxy) ** 2 / np.maximum(mean_p0 * mean_p1, np.finfo(float).tiny)
     logp0 = np.log10(np.maximum([row["p10_ch0"] for row in records], np.finfo(float).tiny))
@@ -159,7 +175,7 @@ def main() -> None:
         "stage": "C_stationarity_audit",
         "ensemble_completed_before_experiment_read": True,
         "source_kind": "target CH0/CH1 noise raw records using the production acceptance predicates",
-        "accepted_counts": {"CH0_available": len(accepted0), "CH1_paired_available": len(records), "common": len(records)},
+        "accepted_counts": {"CH0_available": len(accepted0), "CH1_available": len(accepted1), "common": len(records)},
         "accepted_indices_common": common,
         "frequency_points_Hz": list(POINTS_HZ),
         "mean_psd": full,

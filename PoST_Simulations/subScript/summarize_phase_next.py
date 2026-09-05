@@ -25,7 +25,7 @@ def main() -> None:
     khz_covered = all(row["classification"] != "outside_sampled_envelope" for row in kilohertz)
     if low_outside and khz_covered and stationarity["classification"] != "nonstationary":
         classification = "R5"
-        interpretation = "Pulse-constrained full physical source ensemble covers 1–10 kHz but not the 10–100 Hz anchors; the low-frequency audit is not drift-like, yet its frequency-dependent coherence is inconclusive, so an independent readout/circuit contribution remains required before any added TES source is considered."
+        interpretation = "Pulse-constrained full physical source ensemble covers 1–10 kHz but not the 10–100 Hz anchors; independent CH0/CH1 acceptance leaves too few paired records for a definitive stationarity/coherence decision, so R5 is provisional and an independent readout/circuit contribution remains the next hypothesis before any added TES source is considered."
     elif low_outside and stationarity["classification"] == "nonstationary":
         classification = "R4"
         interpretation = "The low-frequency residual is drift-like and is not a stationary TES-noise comparison target."
@@ -47,8 +47,8 @@ def main() -> None:
             "low_frequency_rows": low,
             "kilohertz_rows": kilohertz,
             "stationarity_classification": stationarity["classification"],
-            "coherence_10_to_100_Hz_median": stationarity["coherence_10_to_100_Hz_median"],
-            "coherence_10_to_100_Hz_range": stationarity["coherence_10_to_100_Hz_range"],
+            "coherence_10_to_100_Hz_median": stationarity.get("coherence_10_to_100_Hz_median"),
+            "coherence_10_to_100_Hz_range": stationarity.get("coherence_10_to_100_Hz_range"),
             "common_accepted_records": stationarity["accepted_counts"]["common"],
         },
         "prohibitions_respected": ["no noise residual fitting", "no parameter optimizer", "no extra noise source added", "no hanging state added", "no target physical case promoted from proxy"],

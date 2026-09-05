@@ -1,0 +1,114 @@
+{
+  "stage": "pulse_free_simulation_comparison",
+  "experimental_subset": "CH0 pulse_free strict clean",
+  "scenario_selection": "frozen pulse_consistent_scenarios only",
+  "parameter_generation_called": false,
+  "frequencies_Hz": [
+    10.0,
+    20.0,
+    50.0,
+    100.0,
+    200.0,
+    500.0,
+    1000.0,
+    3000.0,
+    5000.0,
+    7000.0,
+    10000.0
+  ],
+  "rows": [
+    {
+      "frequency_Hz": 10.0,
+      "pulse_free_experimental_normalized": 44.04022998175372,
+      "proxy_min": 1.0024889909472223,
+      "proxy_median": 1.2681814068012198,
+      "proxy_max": 2.456458863091876,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 20.0,
+      "pulse_free_experimental_normalized": 20.345011534868867,
+      "proxy_min": 1.005485143729791,
+      "proxy_median": 1.2688838381932055,
+      "proxy_max": 2.4531271951735554,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 50.0,
+      "pulse_free_experimental_normalized": 8.189310745241748,
+      "proxy_min": 1.0063834338962117,
+      "proxy_median": 1.2682821164354705,
+      "proxy_max": 2.430930621833735,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 100.0,
+      "pulse_free_experimental_normalized": 3.8461043587669774,
+      "proxy_min": 1.006466730727702,
+      "proxy_median": 1.2653342921407575,
+      "proxy_max": 2.35691223999254,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 200.0,
+      "pulse_free_experimental_normalized": 1.9018520286250917,
+      "proxy_min": 1.0063007858054909,
+      "proxy_median": 1.253635477471067,
+      "proxy_max": 2.12223076311198,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 500.0,
+      "pulse_free_experimental_normalized": 1.4778833565234735,
+      "proxy_min": 1.0049183379033924,
+      "proxy_median": 1.1803855763735416,
+      "proxy_max": 1.4555472682349484,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 1000.0,
+      "pulse_free_experimental_normalized": 1.0,
+      "proxy_min": 1.0,
+      "proxy_median": 1.0,
+      "proxy_max": 1.0,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 3000.0,
+      "pulse_free_experimental_normalized": 0.9051501924457629,
+      "proxy_min": 0.5036798255730314,
+      "proxy_median": 0.6345028113645845,
+      "proxy_max": 0.9520152745134708,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 5000.0,
+      "pulse_free_experimental_normalized": 0.8158564653905445,
+      "proxy_min": 0.4050262535999144,
+      "proxy_median": 0.5141763568735288,
+      "proxy_max": 0.8751879303122967,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 7000.0,
+      "pulse_free_experimental_normalized": 0.7644179951547295,
+      "proxy_min": 0.3463244489155965,
+      "proxy_median": 0.46371947876584024,
+      "proxy_max": 0.7910254735382133,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 10000.0,
+      "pulse_free_experimental_normalized": 0.603839563033912,
+      "proxy_min": 0.30063233392870375,
+      "proxy_median": 0.43580390802932517,
+      "proxy_max": 0.6979518703951636,
+      "inside_envelope": true
+    }
+  ],
+  "envelope_coverage_count": 6,
+  "single_scenario_within_10pct_all_anchor": false,
+  "best_member_not_promoted": true,
+  "best_member_max_abs_log_ratio_descriptive": 2.8863827076113555,
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}
