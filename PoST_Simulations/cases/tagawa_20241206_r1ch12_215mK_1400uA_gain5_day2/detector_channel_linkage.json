@@ -35,6 +35,20 @@
     "temperature_labels_K": [0.215],
     "note": "No second bath-temperature IV, temperature sweep, RT, or thermal-law record was found under G:/tagawa/20241206."
   },
+  "nearby_campaign_multi_temperature": {
+    "status": "available_but_unlinked",
+    "files_found": [
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt",
+      "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt",
+      "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv",
+      "G:/tagawa/20241202/room1-ch1-rt/output/RT_20uA.csv"
+    ],
+    "temperature_labels_K": [0.220, 0.225, 0.230, 0.235],
+    "admissible_for_target": false,
+    "note": "Nearby room1-ch1 data provides campaign context only. No explicit detector serial, DAQ map, or mapping to target r1ch12 CH0 was found."
+  },
   "r_sh_provenance": {
     "status": "unresolved",
     "target_campaign_circuit_config": null,
@@ -42,5 +56,10 @@
     "target_campaign_instrument_setting": null,
     "rejected_generic_values_ohm": [0.0038, 0.0039],
     "note": "The same-day files contain IV data but no shunt specification; the generic code constants are not promoted."
-  }
+  },
+  "search_status": "exhausted",
+  "search_manifest": "existing_data_search_manifest.json",
+  "evidence_graph": "detector_linkage_evidence.json",
+  "provenance_reports": ["thermal_dc_provenance.json", "r_sh_provenance.json"],
+  "stop_condition": "No explicit detector linkage, target-linked T_c, campaign R_SH, or target-linked multi-temperature thermal/DC record was found; conclusion C is frozen."
 }

@@ -114,6 +114,7 @@ def audit(case_dir: Path) -> dict:
         "provenance_status": {**normalized["provenance_status"], "readout_calibration_A_per_V": _provenance_status(calibration), "readout_gain_transfer": _provenance_status(transfer)},
         "blocking_reason": None if normalized["ready"] and not absolute_missing else "Absolute ASD comparison requires independently established CH0 calibration and readout gain.",
     }
+    search = provenance.get("existing_data_search", {})
     return {
         "status": "ready" if normalized["ready"] else "blocked",
         "runnable": False if not reduced["ready"] else True,
@@ -136,6 +137,13 @@ def audit(case_dir: Path) -> dict:
             "readout_white_asd_A_rtHz": parameters.get("readout_white_asd_A_rtHz", 0.0),
             "tes_resistance_fluctuation_model": parameters.get("tes_resistance_fluctuation_model", "none"),
             "tes_internal_model": parameters.get("tes_internal_model", "none"),
+        },
+        "provenance_audit": {
+            "detector_channel_linkage": provenance.get("detector_channel_linkage", {}).get("result", "unknown"),
+            "existing_data_search": search.get("status", "not_recorded"),
+            "target_physics_classification": search.get("conclusion", "not_recorded"),
+            "exploratory_proxy_conclusion": provenance.get("exploratory_proxy_phase", {}).get("conclusion", "not_recorded"),
+            "generic_input_used": False,
         },
         "generic_input_used": False,
     }

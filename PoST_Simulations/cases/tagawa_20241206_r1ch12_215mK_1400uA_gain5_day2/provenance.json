@@ -8,6 +8,35 @@
     "iv_candidate_admissible_for_target": false,
     "reason": "Same-day room1/ch1 naming is suggestive, but no explicit detector/channel/DAQ linkage is present in the existing metadata."
   },
+  "existing_data_search": {
+    "status": "exhausted",
+    "manifest": "existing_data_search_manifest.json",
+    "detector_evidence": "detector_linkage_evidence.json",
+    "thermal_dc_report": "thermal_dc_provenance.json",
+    "r_sh_report": "r_sh_provenance.json",
+    "stop_condition": "No explicit detector linkage, target-linked T_c, campaign R_SH, or target-linked multi-temperature thermal/DC record was found.",
+    "conclusion": "C_frozen"
+  },
+  "exploratory_proxy_phase": {
+    "strict_target_conclusion": "C — exact target physical case remains unidentified",
+    "conclusion": "P4 — proxy parameter space is still too underconstrained to make a useful target reproduction statement",
+    "stage_A": {
+      "parameter_envelope": "proxy_parameter_envelope.json",
+      "scenarios": "proxy_scenarios.json",
+      "manifest": "noise_blind_sweep_manifest.json",
+      "noise_spectrum_read": false,
+      "ranges_frozen_before_comparison": true
+    },
+    "stage_B": {
+      "ensemble": "proxy_noise_envelope.json",
+      "comparison": "conditional_comparison_summary.json",
+      "experiment_read_after_ensemble": true,
+      "range_adjustment_performed": false,
+      "best_member_used_as_estimate": false
+    },
+    "target_input_modified": false,
+    "source_class_policy": "3-8 are proxies/references only and never target truth"
+  },
   "independently_observed": {
     "date": {
       "value": "2024-12-06",
@@ -50,8 +79,11 @@
     {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/PulseConfig.json", "source_location": "Readout and Analysis objects", "applicable_to_target": true, "accepted_for": ["rate", "samples", "cutoff"]},
     {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt", "source_location": "Rate, Samples/Channels, Pretrigger_Samples, Threshold", "applicable_to_target": true, "accepted_for": ["acquisition metadata"]},
     {"source_class": "exact_target_run", "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/setting.xml", "source_location": "Hardware Config and Log Config clusters", "applicable_to_target": true, "accepted_for": ["DAQ channel, rate, samples, folder/setpoint labels"]},
-    {"source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt", "source_location": "IV_215mK calibration grid and 1400 uA row", "applicable_to_target": false, "accepted_for": ["bath setpoint meaning", "TES current candidate only"], "notes": "No encoded linkage proves this IV channel is the target r1ch12 detector."},
-    {"source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.json", "source_location": "Config/main settings", "applicable_to_target": false, "accepted_for": ["campaign context only"], "notes": "Adjacent-day repeat; no target physics calibration."},
+    {"source_class": "same_campaign_unlinked_detector_candidate", "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt", "source_location": "IV_215mK calibration grid and 1400 uA row", "applicable_to_target": false, "accepted_for": ["bath setpoint meaning", "TES current candidate only"], "notes": "No encoded linkage proves this IV channel is the target r1ch12 detector."},
+    {"source_class": "adjacent_day_same_label_unlinked", "source_file": "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.json", "source_location": "Config/main settings", "applicable_to_target": false, "accepted_for": ["campaign context only"], "notes": "Adjacent-day repeat; no target physics calibration or detector serial linkage."},
+    {"source_class": "same_campaign_unlinked_detector_candidate", "source_file": "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt; IV_225mK.txt; IV_230mK.txt; IV_235mK.txt", "source_location": "multi-temperature room1-ch1 IV calibration series", "applicable_to_target": false, "accepted_for": ["existence of nearby campaign multi-temperature DC data"], "notes": "Potentially relevant room1/ch1 series, but no explicit mapping to target r1ch12 CH0."},
+    {"source_class": "same_campaign_unlinked_detector_candidate", "source_file": "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv; RT_20uA.csv", "source_location": "room1-ch1 RT outputs", "applicable_to_target": false, "accepted_for": ["existence of nearby RT data"], "notes": "No explicit detector/channel linkage to target r1ch12 CH0."},
+    {"source_class": "nearby_shared_daq_convention", "source_file": "G:/tagawa/20241203/room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V/setting.xml; ..._rate500k_samples100k/setting.xml", "source_location": "DAQChannel Val", "applicable_to_target": false, "accepted_for": ["recurring PXI2Slot2/ai0:1 acquisition convention"], "notes": "Shared DAQ string is not a physical detector identity map."},
     {"source_class": "same_detector_other_run", "source_file": "G:/tagawa/20240222_ROOM1_CH1_106mK_0uA_gain10_AC", "source_location": "frequency response files 1 Hz-100 kHz", "applicable_to_target": false, "accepted_for": [], "notes": "Possible circuit/impedance context; date, bias and gain differ."},
     {"source_class": "generic_code_default", "source_file": "getpara/IV_matome.py; Analyze_Experimental_Data/tes_analysis/iv.py", "source_location": "R_SH constants and IV derivation", "applicable_to_target": false, "accepted_for": [], "notes": "3.9 mOhm/3.8 mOhm constants are not target proof."},
     {"source_class": "simulation_assumption", "source_file": "PoST_Simulations/input.json; Elmer-Projects", "source_location": "simulation parameter/case files", "applicable_to_target": false, "accepted_for": [], "notes": "Generic or unrelated simulation values; never copied into target case."}
@@ -73,7 +105,7 @@
       "value": 0.000251847592058536,
       "unit": "A",
       "status": "independently_derived",
-      "source_class": "same_detector_same_campaign",
+      "source_class": "same_campaign_unlinked_detector_candidate",
       "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
       "source_location": "row 2 at I_bias=1400 uA; first 10 points for superconducting slope",
       "derivation": "eta=1/slope(V_out[0:10] versus I_bias[0:10]); I_TES=eta*V_out(1400 uA)",
@@ -84,7 +116,7 @@
   },
   "parameter_status": {
     "T_c": {"value": null, "unit": "K", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Blocks operating point and noise transfer."},
-    "T_bath": {"value": 0.215, "unit": "K", "status": "setpoint_only", "source_class": "same_detector_same_campaign", "source_file": "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt; target directory name", "source_location": "IV_215mK filename and target folder label", "derivation": "Campaign setpoint label; not a thermometer trace", "confidence": "medium", "applicable_to_target": true, "notes": "Meaning promoted to bath setpoint only, not measured TES temperature."},
+    "T_bath": {"value": 0.215, "unit": "K", "status": "setpoint_only", "source_class": "target_label_only", "source_file": "target directory name; G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt", "source_location": "target folder label and same-day IV filename", "derivation": "Campaign setpoint label; not a thermometer trace", "confidence": "medium", "applicable_to_target": true, "notes": "Meaning promoted to bath setpoint only, not measured TES temperature; IV detector linkage remains unproven."},
     "R": {"value": null, "unit": "ohm", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "An 17.7798 mOhm candidate requires generic R_SH=3.9 mOhm and is rejected."},
     "R_l": {"value": null, "unit": "ohm", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Bias/load impedance not target-specific."},
     "alpha": {"value": null, "unit": "1", "status": "unresolved", "source_class": "unresolved", "source_file": null, "source_location": null, "derivation": null, "confidence": "none", "applicable_to_target": false, "notes": "Needs R(T,I) transition slope or impedance."},

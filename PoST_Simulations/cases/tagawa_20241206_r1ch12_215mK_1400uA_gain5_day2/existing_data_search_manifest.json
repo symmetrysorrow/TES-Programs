@@ -1,0 +1,90 @@
+{
+  "search_status": "exhausted",
+  "search_date": "2026-09-05",
+  "objective": "Exhaust existing-data provenance for detector/channel linkage and target-linked TES/DC parameters without adding a noise model or fitting noise/residuals.",
+  "target": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2, CH0",
+  "directories_searched": [
+    {"path": "G:/tagawa/20241205", "coverage": "recursive files, metadata, names, headers; exact adjacent-day r1ch12 run"},
+    {"path": "G:/tagawa/20241206", "coverage": "recursive files, metadata, names, IV headers; target and same-day room1 IV runs"},
+    {"path": "G:/tagawa/20241202", "coverage": "recursive room1 RT/IV campaign files"},
+    {"path": "G:/tagawa/20241203", "coverage": "recursive room1 ch1/ch2 IV, RT-adjacent and paired acquisition files"},
+    {"path": "G:/tagawa/20241125", "coverage": "nearby RT naming scan; room2 runs only"},
+    {"path": "G:/tagawa/2024*", "coverage": "broader top-level naming scan for room/ch/date candidates"}
+  ],
+  "repository_paths_searched": [
+    "Analyze_Experimental_Data",
+    "PoST_Simulations",
+    "tes_cpp",
+    "getpara",
+    "Elmer-Projects",
+    "git history --all and git blame for R_SH constants"
+  ],
+  "filename_patterns": [
+    "setting.xml", "setting.json", "Setting.txt", "PulseConfig.json",
+    "*log*", "*map*", "*config*", "*serial*", "*bom*", "*shunt*", "*bias*", "*squid*",
+    "IV_*.txt", "RT_*.csv", "*.dat", "*thermal*", "*conduct*"
+  ],
+  "keywords": [
+    "detector", "serial", "channel", "CH0", "CH1", "room1", "ch1", "ch2",
+    "PXI", "DAQ", "board", "mapping", "shunt", "R_SH", "bias", "SQUID",
+    "BOM", "T_c", "thermal", "conductance", "bath", "exponent"
+  ],
+  "files_inspected": [
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/PulseConfig.json",
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt",
+    "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/setting.xml",
+    "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.json",
+    "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/Setting.txt",
+    "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.xml",
+    "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
+    "G:/tagawa/20241206/room1-ch1-iv3/rawdata/IV_215mK.txt",
+    "G:/tagawa/20241206/room1-ch1-iv3/215mK/CH1_215mK_1400uA.dat",
+    "G:/tagawa/20241206/room1-ch1-iv4/215mK/CH1_215mK_1400uA.dat",
+    "G:/tagawa/20241206/room1-ch2-iv4/215mK/CH2_215mK_1400uA.dat",
+    "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt",
+    "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt",
+    "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt",
+    "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt",
+    "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv",
+    "G:/tagawa/20241202/room1-ch1-rt/output/RT_20uA.csv",
+    "G:/tagawa/20241203/room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V/setting.xml",
+    "G:/tagawa/20241203/room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V_rate500k_samples100k/setting.xml",
+    "Analyze_Experimental_Data/tes_analysis/iv.py",
+    "Analyze_Experimental_Data/tes_analysis/operations.py",
+    "getpara/thermalconductivity.py",
+    "PoST_Simulations/PoST_Simulation.py",
+    "PoST_Simulations/subScript/Input_param_comberer.py"
+  ],
+  "findings": [
+    "Target and adjacent-day r1ch12 settings explicitly contain PXI2Slot2/ai0:1 and paired CH0/CH1 acquisition metadata.",
+    "Same-day room1-ch1/room1-ch2 IV directories contain measured-temperature headers, but no detector or DAQ cross-reference.",
+    "Nearby 12/3 room1-ch1 multi-temperature IV and 12/2 room1-ch1 RT data exist, but remain unlinked candidates.",
+    "The repository contains generic 3.8 mOhm and 3.9 mOhm R_SH assumptions only; no same-board/config target value was found.",
+    "No target-linked T_c, G_tes-bath, n, or thermal-law fit record was found."
+  ],
+  "no_result_searches": [
+    "Explicit r1ch12 -> room1-ch1 -> target CH0 mapping",
+    "Detector serial/ID, wiring map, BOM, PXI-to-detector map, or acquisition log in 12/2-12/6 directories",
+    "Second bath-temperature IV or RT series in the target's 12/6 directory",
+    "Target-linked T_c record",
+    "Campaign R_SH specification tied to the target board/config",
+    "Repository detector/channel naming convention that proves physical identity",
+    "Admissible multi-temperature DC/IV provenance for the target"
+  ],
+  "stop_condition": {
+    "no_explicit_linkage": true,
+    "no_target_linked_T_c": true,
+    "no_campaign_R_SH": true,
+    "no_target_linked_multi_temperature_thermal_DC": true,
+    "decision": "existing-data provenance search = exhausted; freeze conclusion C"
+  },
+  "deliverables": {
+    "detector_linkage_evidence": "detector_linkage_evidence.json",
+    "thermal_dc_report": "thermal_dc_provenance.json",
+    "r_sh_report": "r_sh_provenance.json",
+    "updated_linkage": "detector_channel_linkage.json",
+    "updated_provenance": "provenance.json",
+    "updated_audit": "audit_status.json",
+    "updated_continuation": "../TARGET_CASE_CONTINUATION.md"
+  }
+}

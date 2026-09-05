@@ -1,0 +1,308 @@
+{
+  "stage": "A",
+  "stage_name": "noise_blind_physics_construction",
+  "freeze_status": "frozen",
+  "noise_spectrum_read": false,
+  "noise_likelihood_used": false,
+  "parameters": {
+    "T_c": {
+      "range": [
+        0.2412532357693213,
+        0.2653066839227378
+      ],
+      "nominal": 0.2549363341154389,
+      "unit": "K",
+      "source": [
+        "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv",
+        "G:/tagawa/20241202/room1-ch1-rt/output/RT_20uA.csv"
+      ],
+      "source_class": "nearby_run_proxy",
+      "derivation": "RT transition envelope from onset/midpoint/high R/Rn definitions",
+      "confidence": "conditional",
+      "correlations": [
+        "T_c definition with Rn and bias",
+        "T_c-G-n thermal-law degeneracy"
+      ],
+      "allowed_for_proxy_sweep": true,
+      "allowed_for_strict_target": false
+    },
+    "T_bath": {
+      "range": [
+        0.215,
+        0.215
+      ],
+      "nominal": 0.215,
+      "unit": "K",
+      "source": [
+        "target directory label 215mK"
+      ],
+      "source_class": "target_setpoint",
+      "derivation": "setpoint label only",
+      "confidence": "conditional",
+      "correlations": [
+        "operating-point power balance"
+      ],
+      "allowed_for_proxy_sweep": true,
+      "allowed_for_strict_target": false
+    },
+    "R": {
+      "range": [
+        0.017323886698759824,
+        0.017779778453990345
+      ],
+      "nominal": 0.017551832576375083,
+      "unit": "ohm",
+      "source": [
+        "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt"
+      ],
+      "source_class": "same_campaign_unlinked_proxy",
+      "derivation": "R_SH-dependent deterministic IV conversion at 1400 uA candidate",
+      "confidence": "conditional",
+      "correlations": [
+        "R_SH",
+        "eta",
+        "I_TES",
+        "P_J"
+      ],
+      "allowed_for_proxy_sweep": true,
+      "allowed_for_strict_target": false
+    },
+    "R_SH": {
+      "range": [
+        0.0038,
+        0.0039
+      ],
+      "nominal": 0.00385,
+      "unit": "ohm",
+      "source": [
+        "Analyze_Experimental_Data/tes_analysis/iv.py",
+        "getpara/thermalconductivity.py"
+      ],
+      "source_class": "generic_code_reference",
+      "derivation": "reference branches only; no board evidence",
+      "confidence": "none_for_target",
+      "correlations": [
+        "R",
+        "V_TES",
+        "P_J"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false
+    },
+    "alpha": {
+      "range": null,
+      "nominal": 71.4,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "C_tes": {
+      "range": null,
+      "nominal": 7.9e-12,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "C_abs": {
+      "range": null,
+      "nominal": 7.9e-10,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "R_l": {
+      "range": null,
+      "nominal": 0.0039,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "beta": {
+      "range": null,
+      "nominal": 1.6,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "G_tes-bath": {
+      "range": null,
+      "nominal": 1.68e-08,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "n": {
+      "range": null,
+      "nominal": 3.5,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "L": {
+      "range": null,
+      "nominal": 1e-10,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "G_abs-tes": {
+      "range": null,
+      "nominal": 8.2e-09,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "G_abs-abs": {
+      "range": null,
+      "nominal": 1.5e-07,
+      "unit": "SI_or_dimensionless",
+      "source": [
+        "D:/Github/TES-Programs/PoST_Simulations/input.json"
+      ],
+      "source_class": "simulation_reference_only",
+      "derivation": "generic simulation nominal used only for sensitivity/reference scenarios",
+      "confidence": "none_for_target",
+      "correlations": [
+        "multi-parameter electrothermal degeneracy"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false,
+      "allowed_for_sensitivity_reference": true
+    },
+    "K": {
+      "range": null,
+      "nominal": null,
+      "unit": "W/K^n",
+      "source": [
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt"
+      ],
+      "source_class": "unresolved",
+      "derivation": "P=K(T_c^n-T_bath^n) cannot be target-linked from the unlinked/nonmonotonic series",
+      "confidence": "none",
+      "correlations": [
+        "G_tes-bath=n*K*T_c^(n-1)",
+        "T_c",
+        "n"
+      ],
+      "allowed_for_proxy_sweep": false,
+      "allowed_for_strict_target": false
+    }
+  },
+  "sensitivity_reference": {
+    "T_c": 0.142,
+    "T_bath": 0.136,
+    "R": 0.0293,
+    "R_l": 0.0039,
+    "alpha": 71.4,
+    "beta": 1.6,
+    "L": 1e-10,
+    "n": 3.5,
+    "C_tes": 7.9e-12,
+    "C_abs": 7.9e-10,
+    "G_tes-bath": 1.68e-08,
+    "G_abs-tes": 8.2e-09,
+    "G_abs-abs": 1.5e-07
+  },
+  "thermal_convention": {
+    "formula": "P=K*(T_c^n-T_bath^n)=G_tes-bath*T_c/n*(1-(T_bath/T_c)^n)",
+    "G_definition": "G_tes-bath=n*K*T_c^(n-1) at T_c",
+    "repository_sources": [
+      "PoST_Simulations/PoST_Simulation.py",
+      "getpara/thermalconductivity.py"
+    ]
+  },
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}

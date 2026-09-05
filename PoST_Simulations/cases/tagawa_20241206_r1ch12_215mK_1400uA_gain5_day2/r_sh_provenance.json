@@ -1,0 +1,63 @@
+{
+  "status": "unresolved",
+  "target_campaign_value_ohm": null,
+  "search_scope": [
+    "G:/tagawa/20241202",
+    "G:/tagawa/20241203",
+    "G:/tagawa/20241205",
+    "G:/tagawa/20241206",
+    "Analyze_Experimental_Data",
+    "getpara",
+    "PoST_Simulations",
+    "Elmer-Projects",
+    "git history and blame"
+  ],
+  "code_candidates": [
+    {
+      "source_file": "Analyze_Experimental_Data/tes_analysis/iv.py",
+      "source_location": "line 12 and V_tes = I_sh * R_SH path",
+      "value_ohm": 0.0038,
+      "classification": "contradicted",
+      "reason": "Generic interactive IV constant introduced in the repository's initial analysis code; no target board/config evidence."
+    },
+    {
+      "source_file": "Analyze_Experimental_Data/tes_analysis/operations.py",
+      "source_location": "line 740 RT calculation",
+      "value_ohm": 0.0039,
+      "classification": "contradicted",
+      "reason": "Generic RT workflow literal; history shows it was added to a general operations module, not a target campaign record."
+    },
+    {
+      "source_file": "getpara/thermalconductivity.py",
+      "source_location": "line 16 and Joule-power calculation",
+      "value_ohm": 0.0039,
+      "classification": "contradicted",
+      "reason": "The script is bound to an unrelated external data path and generic R_n/eta settings; no target linkage."
+    },
+    {
+      "source_file": "Elmer-Projects generated simulation inputs",
+      "source_location": "generic R_sh=3.9[mohm] entries",
+      "value_ohm": 0.0039,
+      "classification": "contradicted",
+      "reason": "Simulation assumptions for other cases, not measurement provenance."
+    }
+  ],
+  "campaign_evidence": {
+    "same_day_files": [
+      "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt",
+      "G:/tagawa/20241206/room1-ch1-iv4",
+      "G:/tagawa/20241206/room1-ch2-iv4"
+    ],
+    "shunt_specification_found": false,
+    "board_configuration_found": false,
+    "BOM_or_wiring_record_found": false,
+    "instrument_setting_with_shunt_found": false,
+    "serial_or_detector_link_found": false
+  },
+  "history": {
+    "iv_py_R_SH_origin": "2ecc2a0c initial analysis code; later commits preserve or modify surrounding workflows, not target provenance",
+    "operations_3_9_origin": "2ecc2a0c generic operations code, with later workflow changes",
+    "interpretation": "Repository history confirms code provenance, not hardware provenance."
+  },
+  "decision": "Do not use 3.8 mOhm or 3.9 mOhm for the target. A same-board/config record is required before R_SH can enter the target input."
+}

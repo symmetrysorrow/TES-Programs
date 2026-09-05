@@ -1,0 +1,112 @@
+{
+  "target": {
+    "path": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+    "requested_channel": "CH0",
+    "detector_label": "r1ch12"
+  },
+  "overall_classification": "likely_but_unproven",
+  "classification_reason": "The target and the room1/ch1 IV records share campaign date and naming cues, and some acquisitions share PXI2Slot2/ai0:1. No existing file explicitly maps the detector label, IV record, DAQ input, and target CH0 together.",
+  "evidence": [
+    {
+      "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/setting.xml",
+      "source_location": "DAQChannel Val and Hardware Config",
+      "fact": "The target acquisition declares PXI2Slot2/ai0:1 and stores paired CH0/CH1 records.",
+      "supports": "The target acquisition hardware/channel pair is known; it does not identify which physical detector is CH0.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "confirmed"
+    },
+    {
+      "source_file": "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5/setting.xml",
+      "source_location": "DAQChannel Val and Log Config",
+      "fact": "The adjacent-day r1ch12 acquisition uses the same PXI2Slot2/ai0:1 two-channel acquisition convention.",
+      "supports": "A repeated acquisition setup for the r1ch12-labelled run; it does not establish detector serial or IV-channel identity.",
+      "strength": "likely_but_unproven",
+      "independent": true,
+      "classification": "likely_but_unproven"
+    },
+    {
+      "source_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt",
+      "source_location": "Rate, Samples/Channels, Pretrigger_Samples, Threshold",
+      "fact": "The target metadata records a 500 kS/s, 100000 samples/channel acquisition with paired channels.",
+      "supports": "Target acquisition provenance only; no detector mapping field is present.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "confirmed"
+    },
+    {
+      "source_file": "G:/tagawa/20241206/room1-ch1-iv3",
+      "source_location": "directory name and IV_215mK calibration/raw-data names",
+      "fact": "A same-day IV record is labelled room1-ch1 and contains CH1_215mK_1400uA.dat with an actual-temperature header near 0.2149 K.",
+      "supports": "A plausible same-day room1/ch1 candidate for the target's r1ch12 label, but not an explicit target linkage.",
+      "strength": "likely_but_unproven",
+      "independent": true,
+      "classification": "likely_but_unproven"
+    },
+    {
+      "source_file": "G:/tagawa/20241206/room1-ch1-iv3",
+      "source_location": "recursive metadata inventory",
+      "fact": "The IV directory has no setting.xml, DAQ input string, detector serial/ID, hardware map, acquisition log, BOM, or channel cross-reference linking it to target CH0.",
+      "supports": "The candidate linkage remains unproven.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "unknown"
+    },
+    {
+      "source_file": "G:/tagawa/20241206/room1-ch1-iv4 and room1-ch2-iv4",
+      "source_location": "IV .dat headers and directory labels",
+      "fact": "Separate same-day room1-ch1 and room1-ch2 IV runs exist and report actual temperatures near 0.2145 K; their labels distinguish the two IV channels.",
+      "supports": "Same-day channel-labelled IV activity exists, but it does not identify which target CH0/CH1 record corresponds to either IV directory.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "confirmed"
+    },
+    {
+      "source_file": "G:/tagawa/20241203/room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V/setting.xml; G:/tagawa/20241203/room1_ch1ch2_220mK_920uA920uA_gain5_trig0.2V_rate500k_samples100k/setting.xml",
+      "source_location": "DAQChannel Val",
+      "fact": "Nearby paired room1 ch1/ch2 acquisitions also declare PXI2Slot2/ai0:1.",
+      "supports": "A recurring DAQ setup convention across nearby runs; it does not prove a physical detector mapping.",
+      "strength": "likely_but_unproven",
+      "independent": true,
+      "classification": "likely_but_unproven"
+    },
+    {
+      "source_file": "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt; G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt; G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt; G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt",
+      "source_location": "calibration files and corresponding raw-data/output IV records",
+      "fact": "A multi-temperature room1-ch1 IV series exists in the nearby campaign data.",
+      "supports": "Existence of potentially useful campaign thermal/DC data only; no target detector/channel applicability.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "confirmed"
+    },
+    {
+      "source_file": "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv; .../RT_20uA.csv",
+      "source_location": "CSV output headers and rows",
+      "fact": "Room1-ch1 RT outputs exist for 10 uA and 20 uA in nearby campaign data.",
+      "supports": "Existence of RT data; no explicit link to target r1ch12 CH0.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "confirmed"
+    },
+    {
+      "source_file": "G:/tagawa/20241205; G:/tagawa/20241206",
+      "source_location": "recursive filename and keyword inventory",
+      "fact": "No explicit detector/channel map, serial list, PXI-to-detector map, shunt/BOM record, or campaign log was found in the searched date directories.",
+      "supports": "The available naming and shared-DAQ evidence cannot be upgraded to confirmed linkage or target-specific R_SH.",
+      "strength": "confirmed",
+      "independent": true,
+      "classification": "unknown"
+    }
+  ],
+  "required_for_confirmed_linkage": [
+    "An explicit map from r1ch12 to a physical detector and readout channel",
+    "An explicit map from the room1-ch1 IV records to target CH0",
+    "A target-linked detector serial, board/config record, or acquisition log"
+  ],
+  "admissibility": {
+    "target_linked_T_c": false,
+    "target_linked_R_SH": false,
+    "target_linked_multi_temperature_DC": false,
+    "candidate_IV_admissible_for_target": false
+  }
+}

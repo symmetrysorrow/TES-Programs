@@ -132,3 +132,119 @@ The highest-value existing-data action is to locate a target-linked detector
 mapping or calibration record that proves the IV linkage and supplies
 `T_c`, `R`, `G_tes-bath`, `n`, and the campaign `R_SH`. Until then the correct
 final judgment is **C: existing data do not determine the target physics**.
+
+## Exhaustive existing-data provenance search (2026-09-05)
+
+The date-range and repository search is now recorded in
+`cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/existing_data_search_manifest.json`.
+The detector evidence graph is in `detector_linkage_evidence.json`.
+
+### Linkage
+
+The target and the adjacent-day r1ch12-labelled run explicitly use
+`PXI2Slot2/ai0:1` and paired CH0/CH1 acquisition records. Nearby 12/3 paired
+room1 ch1/ch2 acquisitions repeat that DAQ string. This confirms a recurring
+acquisition convention, not the physical detector identity. The same-day
+`room1-ch1-iv3`, `room1-ch1-iv4`, and `room1-ch2-iv4` records have useful
+temperature headers and channel labels, but no serial, DAQ map, or explicit
+mapping to target CH0. Classification remains **likely_but_unproven**.
+
+### New target-linked parameters
+
+None. The 12/3 room1-ch1 multi-temperature IV series and 12/2 room1-ch1 RT
+outputs are recorded as nearby, unlinked candidates and are not promoted.
+The same-day target folder still has only the 215 mK IV label/file.
+
+### Rejected candidates
+
+The generic `R_SH=3.8 mOhm` in `tes_analysis/iv.py`, `R_SH=3.9 mOhm` in
+generic RT/thermal workflows, and 3.9 mOhm values in Elmer simulation inputs
+have no same-board/config evidence and remain rejected. Generic thermal fit
+bounds and simulation values are likewise not target provenance.
+
+### Search coverage
+
+Searched 2024-11-25 through 2024-12-06 nearby campaign directories, the
+broader `G:/tagawa/2024*` naming space, repository analysis/simulation/C++/
+parameter paths, and git history/blame for shunt constants. Patterns included
+settings, logs, maps, serial/BOM/shunt/bias/SQUID metadata, IV/RT/calibration
+files, raw-data headers, and thermal-law terms. Full coverage and no-result
+queries are in the manifest.
+
+### Unresolved parameters
+
+Target-linked `T_c`, TES `R`, `R_SH`, `R_l`, `alpha`, `beta`, `L`, `n`, thermal
+conductances, heat capacities, and absolute CH0 readout calibration/transfer
+remain unresolved. `T_bath=0.215 K` remains setpoint-only.
+
+### Readiness
+
+The provenance-aware gate remains closed for the operating point, Python
+stability, reduced physical noise, C++ parity, and normalized/absolute target
+comparison. Existing estimator and matrix tests remain valid, but they do not
+resolve missing target physics.
+
+### Exhausted?
+
+Yes. The stop condition is met: no explicit detector linkage, no target-linked
+`T_c`, no campaign `R_SH`, and no target-linked multi-temperature thermal/DC
+record. **Existing-data provenance search = exhausted; conclusion C is frozen.**
+
+## Conditional proxy physics phase (2026-09-05)
+
+### Strict target conclusion
+
+Unchanged: **C — exact target physical case remains unidentified.** No proxy
+value was copied into the strict target input, and no detector linkage was
+promoted.
+
+### Stage A: noise-blind physics construction
+
+`build_proxy_envelope.py` reads only RT, IV, pulse, configuration, and generic
+simulation-reference files. It does not read the experimental spectrum. The
+RT-derived conditional proxy is `T_c=0.2413–0.2653 K`, nominal midpoint about
+`0.2549 K`; the 12/6 IV candidate gives `R=17.3239–17.7798 mOhm` across the
+two generic R_SH reference branches. The 12/3 IV conversion retains explicit
+`I_bias`, `I_TES`, `V_TES`, `R_TES`, and `P_J` values per temperature and R_SH
+branch, with data-quality flags.
+
+The envelope and fixed-seed 96-member scenario set were frozen before any
+experimental spectrum was read. Unresolved `R_l`, `alpha`, `beta`, `L`, `n`,
+heat capacities, and conductances are marked `simulation_reference_only`, so
+the resulting ensemble is a sensitivity/reference ensemble rather than a
+target-supported physical envelope.
+
+### Stage B: stability and intrinsic physical sources
+
+All 96 generated scenarios passed the current operating-point and eigenvalue
+stability checks. The ensemble includes only TES Johnson, load Johnson,
+TES-bath TFN, and TES-absorber TFN; empirical white/readout floors are zero,
+resistance fluctuation is `none`, and target hanging is disabled.
+
+### Shape comparison
+
+Using the frozen ensemble, the experimental pre-analysis anchors at 1–10 kHz
+fall inside the sampled min/max envelope. The 10 Hz and 100 Hz anchors remain
+outside it. The same conclusion holds for the corresponding post-analysis
+comparison after the deterministic 10 kHz Bessel factor is applied. Sampled
+q05/q95 are descriptive quantiles, not probabilities.
+
+Reference-point finite differences indicate that `T_c` and `T_bath` dominate
+normalized-shape sensitivity in this model, with `alpha`, `C_tes`, and
+`G_tes-bath` affecting higher-frequency structure more strongly than `R`,
+`R_l`, or `L` at the tested nominal point. These are model sensitivities, not
+target parameter estimates.
+
+### Exploratory conclusion
+
+**P4 — proxy parameter space is still too underconstrained to make a useful
+target reproduction statement.** The frozen reference ensemble demonstrates
+that the mid/high-frequency shape can be covered under conditional/reference
+assumptions, while the low-frequency excess is outside this ensemble; however,
+the unresolved thermal/electrical parameters prevent attributing that result to
+the exact target case or ruling out all admissible target physics.
+
+Required artifacts are in the target case directory: `proxy_parameter_envelope.json`,
+`proxy_scenarios.json`, `noise_blind_sweep_manifest.json`,
+`pulse_combination_constraints.json`, `sensitivity_summary.json/.md`,
+`proxy_noise_envelope.json`, and `conditional_comparison_summary.json/.md`.

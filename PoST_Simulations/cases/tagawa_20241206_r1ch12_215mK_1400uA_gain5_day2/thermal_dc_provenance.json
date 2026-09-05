@@ -1,0 +1,66 @@
+{
+  "status": "unresolved_for_target",
+  "search_scope": [
+    "G:/tagawa/20241202",
+    "G:/tagawa/20241203",
+    "G:/tagawa/20241205",
+    "G:/tagawa/20241206",
+    "repository getpara/thermalconductivity.py and PoST thermal-equation code"
+  ],
+  "target_linkage": "not_confirmed",
+  "target_same_day": {
+    "multi_temperature_IV": false,
+    "RT_or_transition_series": false,
+    "Joule_power_vs_bath_temperature": false,
+    "thermal_law_record": false,
+    "files": [
+      "G:/tagawa/20241206/room1-ch1-iv3/calibration/IV_215mK.txt"
+    ],
+    "note": "Only the 215 mK same-day IV calibration file was found; it is not linked to target CH0. The .dat headers provide actual temperature for IV runs, not a target thermal sweep."
+  },
+  "nearby_campaign_data": [
+    {
+      "source_files": [
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_220mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_225mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_230mK.txt",
+        "G:/tagawa/20241203/room1-ch1-iv/calibration/IV_235mK.txt"
+      ],
+      "fact": "Multi-temperature room1-ch1 IV calibration data exists.",
+      "admissible_for_target": false,
+      "classification": "likely_but_unproven",
+      "reason": "No explicit detector serial, DAQ map, or target CH0 cross-reference."
+    },
+    {
+      "source_files": [
+        "G:/tagawa/20241202/room1-ch1-rt/output/RT_10uA.csv",
+        "G:/tagawa/20241202/room1-ch1-rt/output/RT_20uA.csv"
+      ],
+      "fact": "Room1-ch1 RT outputs exist at two bias labels.",
+      "admissible_for_target": false,
+      "classification": "likely_but_unproven",
+      "reason": "No explicit detector/channel linkage to target r1ch12 CH0."
+    }
+  ],
+  "thermal_convention_checked": {
+    "repository_formula": "P_J = G_tes-bath * T_c / n * (1 - (T_bath/T_c)^n)",
+    "source": "PoST_Simulations/PoST_Simulation.py operating-point calculation; getpara/thermalconductivity.py fit_func",
+    "interpretation": "The repository uses the power-law convention but contains no target-linked fitted G_tes-bath, T_c, or n.",
+    "target_parameters_promoted": false
+  },
+  "T_c_provenance": {
+    "target_linked_value": null,
+    "candidate_values": [],
+    "generic_bounds_rejected": "getpara/thermalconductivity.py T_c_s/T_c_f are workflow bounds for an unrelated path and are not target evidence."
+  },
+  "G_tes_bath_and_n": {
+    "target_linked_values": null,
+    "status": "not_evaluated_as_target_parameters",
+    "reason": "The nearby multi-temperature data is unlinked; no target-specific R_SH and no admissible target detector identity are available."
+  },
+  "prohibited_actions_observed": [
+    "No noise-model fit",
+    "No residual fit",
+    "No promotion of nearby IV/RT data into target physics parameters"
+  ]
+}
