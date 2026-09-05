@@ -1118,16 +1118,18 @@ index 5628f72ca6b07ad2afa1a87e502627aeded9408c..a252c1a5cdb419d791ffe42cae1446ab
     /* which process number am I? */
     MPI_Comm_rank(comm, &myid);
  
-@@ -143,6 +151,20 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -143,6 +151,22 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
     local_size = *nrows;
     hypre_sol = *hypre_method / 100;
     hypre_pre = *hypre_method % 100;
 +   hypre_use_gpu = hypre_intpara[18];
 +
-+   /* Keep IJ assembly in host memory; HYPRE's device execution policy then
-+      dispatches supported kernels and performs internal staging as needed. */
++   /* Assemble IJ objects on the host, then explicitly migrate the assembled
++      matrix/vectors to device memory before solver setup/solve.  HYPRE maps
++      execution policy from each object's memory location; setting only the
++      default policy while leaving objects in HOST memory is a CPU fallback. */
 +   HYPRE_SetMemoryLocation(HYPRE_MEMORY_HOST);
-+   HYPRE_SetExecutionPolicy(hypre_use_gpu ? HYPRE_EXEC_DEVICE : HYPRE_EXEC_HOST);
++   HYPRE_SetExecutionPolicy(HYPRE_EXEC_HOST);
 +   if (hypre_use_gpu) {
 +     /* Explicitly create the CUDA/HIP stream and bind HYPRE to the process's
 +        already-selected device before any IJ allocation. */
@@ -1135,7 +1137,7 @@ index 5628f72ca6b07ad2afa1a87e502627aeded9408c..a252c1a5cdb419d791ffe42cae1446ab
 +     if (myverb > 4) HYPRE_PrintDeviceInfo();
 +   }
 +   if (hypre_use_gpu && myverb > 4) fprintf(stdout,
-+     "SolveHypre: HYPRE device mode requested; IJ host assembly with device kernels\n");
++     "SolveHypre: HYPRE GPU requested; host IJ assembly will be migrated to device memory\n");
  
     if(hypre_sol == 2 || hypre_pre == 2)  {
       if (*ContainerPtr == NULL) {
