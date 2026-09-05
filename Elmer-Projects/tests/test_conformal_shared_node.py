@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import pytest
 
 from scripts.analysis.check_conformal_interfaces import inspect
 from scripts.support.build_cases import _MORTAR_PAIRS, bodies_and_bcs
@@ -23,6 +24,8 @@ def test_mortar_bcs_are_removed_only_when_requested() -> None:
     mesh_names = ROOT / "work/meshes/mesh_refined_3x/mesh.names"
     if not mesh_names.exists():
         mesh_names = ROOT / "work/meshes/mesh_physical_parity_conformal/mesh.names"
+    if not mesh_names.exists():
+        pytest.skip("runtime mesh is not present in this clean source-only worktree")
     names = parse_mesh_names(mesh_names)
     with_mortar = "\n".join(bodies_and_bcs(names, False, apply_mortar_bcs=True))
     without_mortar = "\n".join(bodies_and_bcs(names, False, apply_mortar_bcs=False))
