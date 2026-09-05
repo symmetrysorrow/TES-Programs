@@ -802,6 +802,15 @@ def MakeNoise():
         "C_abs"
     ]
 
+    # Optional TES internal hanging heat capacity.  Omitting this option
+    # keeps the historical five-state model unchanged.
+    internal_model = str(
+        para.get("tes_internal_model", "none")
+    ).strip().lower()
+    if internal_model not in {"none", "hanging"}:
+        raise ValueError("tes_internal_model must be 'none' or 'hanging'")
+    hanging_requested = internal_model == "hanging"
+
     C_tes = para[
         "C_tes"
     ]
@@ -817,6 +826,23 @@ def MakeNoise():
     G_tes_bath = para[
         "G_tes-bath"
     ]
+
+    if hanging_requested:
+        if "C_tes_hanging" not in para or "G_tes-hanging" not in para:
+            raise ValueError(
+                "hanging model requires C_tes_hanging and G_tes-hanging"
+            )
+        C_tes_hanging = float(para["C_tes_hanging"])
+        G_tes_hanging = float(para["G_tes-hanging"])
+        if not np.isfinite(C_tes_hanging) or C_tes_hanging <= 0:
+            raise ValueError("C_tes_hanging must be finite and positive")
+        if not np.isfinite(G_tes_hanging) or G_tes_hanging < 0:
+            raise ValueError("G_tes-hanging must be finite and non-negative")
+    else:
+        C_tes_hanging = 0.0
+        G_tes_hanging = 0.0
+    # Gh=0 is the exact five-state limit; do not retain decoupled DC states.
+    hanging = hanging_requested and G_tes_hanging > 0.0
 
     R = para[
         "R"
@@ -970,6 +996,17 @@ def MakeNoise():
         * ptfn_Flink
     )
 
+    ptfn_hanging = (
+        np.sqrt(
+            4
+            * k_b
+            * T_c**2
+            * G_tes_hanging
+        )
+        if hanging
+        else 0.0
+    )
+
     # --------------------------------------------------------
     # Johnson noise amplitudes
     # --------------------------------------------------------
@@ -1000,6 +1037,13 @@ def MakeNoise():
         "johnson_load2",
         "johnson_tes2",
     ]
+    if hanging:
+        source_names.extend(
+            [
+                "phonon_tes1_hanging",
+                "phonon_tes2_hanging",
+            ]
+        )
 
     # --------------------------------------------------------
     # Noise source matrix
@@ -1009,9 +1053,10 @@ def MakeNoise():
 
     def matrix_N():
 
+        state_count = 7 if hanging else 5
         X = np.zeros(
             (
-                5,
+                state_count,
                 len(source_names),
             ),
             dtype=np.complex128,
@@ -1050,45 +1095,53 @@ def MakeNoise():
             / C_tes
         )
 
-        X[2, 3] = (
+        X[3 if hanging else 2, 3] = (
             -ptfn_eff
             / C_abs
         )
 
         # Absorber-TES2 effective TFN
-        X[2, 4] = (
+        X[3 if hanging else 2, 4] = (
             -ptfn_eff
             / C_abs
         )
 
-        X[3, 4] = (
+        X[4 if hanging else 3, 4] = (
             +ptfn_eff
             / C_tes
         )
 
         # TES2-bath TFN
-        X[3, 5] = (
+        X[4 if hanging else 3, 5] = (
             ptfn_tes_bath
             / C_tes
         )
 
         # Load2 Johnson noise
-        X[4, 6] = (
+        X[6 if hanging else 4, 6] = (
             enj_R
             / L
         )
 
         # TES2 Johnson noise
-        X[4, 7] = (
+        X[6 if hanging else 4, 7] = (
             -enj
             / L
         )
 
-        X[3, 7] = (
+        X[4 if hanging else 3, 7] = (
             I
             * enj
             / C_tes
         )
+
+        if hanging:
+            # Independent TES--hanging ITFN sources.  One heat-current
+            # fluctuation is injected with opposite signs at the two nodes.
+            X[1, 8] = +ptfn_hanging / C_tes
+            X[2, 8] = -ptfn_hanging / C_tes_hanging
+            X[4, 9] = +ptfn_hanging / C_tes
+            X[5, 9] = -ptfn_hanging / C_tes_hanging
 
         return X
 
@@ -1099,6 +1152,53 @@ def MakeNoise():
     def matrix_M(
         omega,
     ):
+
+        if hanging:
+            X = np.zeros(
+                (
+                    7,
+                    7,
+                ),
+                dtype=np.complex128,
+            )
+
+            # TES1 electrical and thermal states.
+            X[0, 0] = 1 / t_el + 1j * omega
+            X[0, 1] = L_I * G_tes_bath / (I * L)
+            X[1, 0] = -I * R * (2 + b) / C_tes
+            X[1, 1] = (
+                1 / t_I
+                + G_eff / C_tes
+                + G_tes_hanging / C_tes
+                + 1j * omega
+            )
+            X[1, 2] = -G_tes_hanging / C_tes
+            X[1, 3] = -G_eff / C_tes
+
+            # The hanging node has no direct absorber/bath branch.
+            X[2, 1] = -G_tes_hanging / C_tes_hanging
+            X[2, 2] = G_tes_hanging / C_tes_hanging + 1j * omega
+
+            # Reduced absorber center.
+            X[3, 1] = -G_eff / C_abs
+            X[3, 3] = 2 * G_eff / C_abs + 1j * omega
+            X[3, 4] = -G_eff / C_abs
+
+            # TES2 and its symmetric hanging node.
+            X[4, 3] = -G_eff / C_tes
+            X[4, 4] = (
+                1 / t_I
+                + G_eff / C_tes
+                + G_tes_hanging / C_tes
+                + 1j * omega
+            )
+            X[4, 5] = -G_tes_hanging / C_tes
+            X[4, 6] = -I * R * (2 + b) / C_tes
+            X[5, 4] = -G_tes_hanging / C_tes_hanging
+            X[5, 5] = G_tes_hanging / C_tes_hanging + 1j * omega
+            X[6, 4] = L_I * G_tes_bath / (I * L)
+            X[6, 6] = 1 / t_el + 1j * omega
+            return X
 
         X = np.zeros(
             (
@@ -1242,7 +1342,7 @@ def MakeNoise():
         )
 
         transfer_ch1.append(
-            H[4, :]
+            H[6 if hanging else 4, :]
         )
 
     # Shape:
@@ -1362,8 +1462,17 @@ def MakeNoise():
         f.attrs[
             "noise_model"
         ] = (
-            "five_state_effective_conductance"
+            "seven_state_hanging_tes"
+            if hanging
+            else "five_state_effective_conductance"
         )
+
+        f.attrs["state_count"] = 7 if hanging else 5
+        f.attrs["tes_internal_model"] = "hanging" if hanging else "none"
+        f.attrs["source_names"] = json.dumps(source_names)
+        if hanging:
+            f.attrs["C_tes_hanging_J_per_K"] = C_tes_hanging
+            f.attrs["G_tes_hanging_W_per_K"] = G_tes_hanging
 
         f.attrs["excess_johnson_M"] = excess_johnson_M
         f.attrs["johnson_model"] = "standard_tes_johnson_with_excess_factor"

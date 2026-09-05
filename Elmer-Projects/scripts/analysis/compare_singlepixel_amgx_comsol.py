@@ -170,6 +170,7 @@ def write_outputs(
     metrics: dict[str, object],
     aligned: np.ndarray,
     solver_label: str = "AMGX / RTX 3060 Ti",
+    timestep_description: str = "0.625 µs (optimized hybrid grid)",
 ) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(
@@ -215,6 +216,43 @@ def write_outputs(
     fig.savefig(out / "current_comparison.svg")
     plt.close(fig)
 
+    # The post-pulse rise is compressed on a linear time axis.  Keep the
+    # zero-time sample out of the log plot and show the same waveform/error
+    # data against positive time from the pulse.
+    fig, axes = plt.subplots(
+        2, 1, figsize=(8.6, 7.0), sharex=True, constrained_layout=True,
+        gridspec_kw={"height_ratios": [2.2, 1.0]},
+    )
+    positive_c = mask_c & (comsol.time_us > 0.0)
+    positive_e = mask_e & (elmer.time_us > 0.0)
+    positive_aligned = aligned[:, 0] > 0.0
+    axes[0].plot(
+        comsol.time_us[positive_c], comsol.drop_uA[positive_c],
+        label="COMSOL", color="#2166ac", linewidth=2.0,
+    )
+    axes[0].plot(
+        elmer.time_us[positive_e], elmer.drop_uA[positive_e],
+        label=f"Elmer {solver_label}", color="#d95f02", linewidth=1.7,
+    )
+    axes[0].set_ylabel("TES current drop [µA]")
+    axes[0].legend(frameon=False)
+    axes[0].grid(True, which="both", alpha=0.25)
+    axes[1].plot(
+        aligned[positive_aligned, 0], aligned[positive_aligned, 3],
+        color="#6a3d9a", linewidth=1.5,
+    )
+    axes[1].axhline(0.0, color="#555555", linewidth=0.8)
+    axes[1].set(
+        xlabel="Time from pulse [µs]",
+        ylabel=f"{solver_label} − COMSOL [µA]",
+    )
+    axes[1].grid(True, which="both", alpha=0.25)
+    axes[0].set_xscale("log")
+    axes[1].set_xscale("log")
+    fig.savefig(out / "current_comparison_logx.png", dpi=220)
+    fig.savefig(out / "current_comparison_logx.svg")
+    plt.close(fig)
+
     baseline = metrics["baseline_uA"]
     crossings = metrics["crossing_us_at_comsol_peak_fraction"]
     assert isinstance(baseline, dict) and isinstance(crossings, dict)
@@ -223,7 +261,7 @@ def write_outputs(
 - Comparison window: 0–{end_us:.3f} µs after the 20.020 ms pulse
 - Mesh: `mesh_singlepixel_prod_v2` (optimized production-v2)
 - Solver: `{solver_label}`
-- Early timestep: 0.625 µs (optimized hybrid grid)
+- Time grid: {timestep_description}
 - COMSOL baseline: {baseline['COMSOL']:.6f} µA
 - {solver_label} baseline: {baseline['AMGX']:.6f} µA ({baseline['AMGX_error_pct']:+.3f}%)
 - Maximum absolute waveform difference: {metrics['max_abs_difference_uA']:.6f} µA at {metrics['max_abs_difference_time_us']:.3f} µs ({metrics['max_abs_difference_pct_comsol_peak']:.3f}% of COMSOL full-trace peak)
@@ -247,6 +285,11 @@ def main() -> None:
         default="AMGX / RTX 3060 Ti",
         help="label used in the plot and summary (for example: CPU MUMPS)",
     )
+    parser.add_argument(
+        "--timestep-description",
+        default="0.625 µs (optimized hybrid grid)",
+        help="time-grid description written to summary.md",
+    )
     args = parser.parse_args()
     metrics, aligned = compare(
         read_comsol(args.comsol), read_elmer(args.elmer), args.end_us
@@ -258,6 +301,7 @@ def main() -> None:
         metrics,
         aligned,
         solver_label=args.solver_label,
+        timestep_description=args.timestep_description,
     )
     print(json.dumps(metrics, indent=2))
 

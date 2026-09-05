@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
+#include <cctype>
 #include <atomic>
 #include <chrono>
 #include <complex>
@@ -20,9 +21,17 @@ namespace tes_cpp {
 namespace {
 struct Input {
     double c_abs, c_tes, g_abs_abs, g_abs_tes, g_tes_bath;
+    double c_tes_hanging, g_tes_hanging;
     double resistance, load_resistance, t_c, t_bath, alpha, beta, inductance, exponent;
     double energy, rate, samples;
     int n_abs;
+    bool hanging{false};
+
+    int absorber_start() const { return hanging ? 3 : 2; }
+    int tes2_temperature() const { return hanging ? n_abs + 3 : n_abs + 2; }
+    int tes2_hanging() const { return hanging ? n_abs + 4 : -1; }
+    int tes2_current() const { return hanging ? n_abs + 5 : n_abs + 3; }
+    int state_count() const { return hanging ? n_abs + 6 : n_abs + 4; }
 };
 
 Input read_input(const std::string& path) {
@@ -30,12 +39,26 @@ Input read_input(const std::string& path) {
     if (!file) throw std::runtime_error("cannot open input JSON: " + path);
     nlohmann::json j;
     file >> j;
+    std::string model = j.value("tes_internal_model", "none");
+    std::transform(model.begin(), model.end(), model.begin(),
+                   [](unsigned char value) { return static_cast<char>(std::tolower(value)); });
+    if (model != "none" && model != "hanging") {
+        throw std::runtime_error("tes_internal_model must be 'none' or 'hanging'");
+    }
+    const bool hanging = model == "hanging";
+    const double c_hanging = j.value("C_tes_hanging", 0.0);
+    const double g_hanging = j.value("G_tes-hanging", 0.0);
+    if (hanging && (c_hanging <= 0.0 || g_hanging < 0.0)) {
+        throw std::runtime_error("hanging model requires C_tes_hanging > 0 and G_tes-hanging >= 0");
+    }
     return {
         j.at("C_abs").get<double>(), j.at("C_tes").get<double>(),
         j.at("G_abs-abs").get<double>(), j.at("G_abs-tes").get<double>(), j.at("G_tes-bath").get<double>(),
+        c_hanging, g_hanging,
         j.at("R").get<double>(), j.at("R_l").get<double>(), j.at("T_c").get<double>(), j.at("T_bath").get<double>(),
         j.at("alpha").get<double>(), j.at("beta").get<double>(), j.at("L").get<double>(), j.at("n").get<double>(),
-        j.at("E").get<double>(), j.at("rate").get<double>(), j.at("samples").get<double>(), j.at("n_abs").get<int>()
+        j.at("E").get<double>(), j.at("rate").get<double>(), j.at("samples").get<double>(), j.at("n_abs").get<int>(),
+        hanging && g_hanging > 0.0
     };
 }
 
@@ -52,7 +75,7 @@ std::vector<double> linspace(double start, double stop, int count) {
 
 Eigen::MatrixXd make_matrix(const Input& in) {
     const int n = in.n_abs;
-    const int size = n + 4;
+    const int size = in.state_count();
     const double c_abs = in.c_abs / n;
     const double g_abs_abs = in.g_abs_abs * (n - 1);
     const double current = std::sqrt((in.g_tes_bath * in.t_c * (1 - std::pow(in.t_bath / in.t_c, in.exponent))) /
@@ -62,28 +85,61 @@ Eigen::MatrixXd make_matrix(const Input& in) {
     const double t_i = in.c_tes / ((1 - loop_gain) * in.g_tes_bath);
 
     Eigen::MatrixXd a = Eigen::MatrixXd::Zero(size, size);
-    for (int i = 0; i < size; ++i) {
-        if (i > 0) a(i, i - 1) = -g_abs_abs / c_abs;
-        a(i, i) = 2 * g_abs_abs / c_abs;
-        if (i + 1 < size) a(i, i + 1) = -g_abs_abs / c_abs;
-    }
     a(0, 0) = 1 / t_el;
     a(0, 1) = loop_gain * in.g_tes_bath / (current * in.inductance);
     a(1, 0) = -current * in.resistance * (2 + in.beta) / in.c_tes;
     a(1, 1) = 1 / t_i + in.g_abs_tes / in.c_tes;
-    a(1, 2) = -in.g_abs_tes / in.c_tes;
-    a(2, 1) = -in.g_abs_tes / c_abs;
-    a(2, 2) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
-    a(2, 3) = -g_abs_abs / c_abs;
-    const int n1 = n + 1, n2 = n + 2, n3 = n + 3;
-    a(n1, n) = -g_abs_abs / c_abs;
-    a(n1, n1) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
-    a(n1, n2) = -in.g_abs_tes / c_abs;
-    a(n2, n1) = -in.g_abs_tes / in.c_tes;
-    a(n2, n2) = 1 / t_i + in.g_abs_tes / in.c_tes;
-    a(n2, n3) = -current * in.resistance * (2 + in.beta) / in.c_tes;
-    a(n3, n2) = loop_gain * in.g_tes_bath / (current * in.inductance);
-    a(n3, n3) = 1 / t_el;
+    const int abs_start = in.absorber_start();
+    const int tes2 = in.tes2_temperature();
+    const int current2 = in.tes2_current();
+    const double tes_hanging_g = in.hanging ? in.g_tes_hanging : 0.0;
+    const double tes_hanging_c = in.hanging ? in.c_tes_hanging : 1.0;
+
+    if (in.hanging) {
+        const int hanging1 = 2;
+        const int hanging2 = in.tes2_hanging();
+        a(1, 1) += tes_hanging_g / in.c_tes;
+        a(1, hanging1) = -tes_hanging_g / in.c_tes;
+        a(1, abs_start) = -in.g_abs_tes / in.c_tes;
+        a(hanging1, 1) = -tes_hanging_g / tes_hanging_c;
+        a(hanging1, hanging1) = tes_hanging_g / tes_hanging_c;
+    } else {
+        a(1, 2) = -in.g_abs_tes / in.c_tes;
+    }
+
+    // Distributed absorber chain.  Its endpoints attach to the main TESs;
+    // hanging nodes, when enabled, are intentionally absent from this chain.
+    a(abs_start, abs_start) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
+    a(abs_start, 1) = -in.g_abs_tes / c_abs;
+    if (n > 1) {
+        a(abs_start, abs_start + 1) = -g_abs_abs / c_abs;
+    }
+    for (int i = abs_start + 1; i < abs_start + n - 1; ++i) {
+        a(i, i - 1) = -g_abs_abs / c_abs;
+        a(i, i) = 2 * g_abs_abs / c_abs;
+        a(i, i + 1) = -g_abs_abs / c_abs;
+    }
+    const int abs_last = abs_start + n - 1;
+    if (n > 1) {
+        a(abs_last, abs_last - 1) = -g_abs_abs / c_abs;
+    }
+    a(abs_last, abs_last) = in.g_abs_tes / c_abs + g_abs_abs / c_abs;
+    a(abs_last, tes2) = -in.g_abs_tes / c_abs;
+    a(tes2, abs_last) = -in.g_abs_tes / in.c_tes;
+
+    if (in.hanging) {
+        const int hanging2 = in.tes2_hanging();
+        a(tes2, tes2) = 1 / t_i + in.g_abs_tes / in.c_tes + tes_hanging_g / in.c_tes;
+        a(tes2, hanging2) = -tes_hanging_g / in.c_tes;
+        a(tes2, current2) = -current * in.resistance * (2 + in.beta) / in.c_tes;
+        a(hanging2, tes2) = -tes_hanging_g / tes_hanging_c;
+        a(hanging2, hanging2) = tes_hanging_g / tes_hanging_c;
+    } else {
+        a(tes2, tes2) = 1 / t_i + in.g_abs_tes / in.c_tes;
+        a(tes2, current2) = -current * in.resistance * (2 + in.beta) / in.c_tes;
+    }
+    a(current2, tes2) = loop_gain * in.g_tes_bath / (current * in.inductance);
+    a(current2, current2) = 1 / t_el;
     return -a;
 }
 
@@ -130,7 +186,7 @@ Pulse make_pulse(
             const std::complex<double> factor =
                 -constants[mode] * std::exp(eigenvalue * time[sample]);
             pulse.ch0[sample] += (factor * eigenvectors(0, mode)).real();
-            pulse.ch1[sample] += (factor * eigenvectors(in.n_abs + 3, mode)).real();
+            pulse.ch1[sample] += (factor * eigenvectors(in.tes2_current(), mode)).real();
         }
     }
     return pulse;
@@ -183,8 +239,8 @@ std::vector<Pulse> generate_pulses(const std::string& input_json_path, const std
     std::vector<Pulse> result;
     result.reserve(positions.size());
     for (int position : positions) {
-        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.n_abs + 4);
-        initial[position + 1] = in.energy * 1e3 * electron_charge / c_abs;
+        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.state_count());
+        initial[position + (in.hanging ? 2 : 1)] = in.energy * 1e3 * electron_charge / c_abs;
         const Eigen::VectorXcd constants = vectors.colPivHouseholderQr().solve(initial);
         result.push_back(make_pulse(in, vectors, eigenvalues, time, position, constants));
     }
@@ -238,8 +294,8 @@ void generate_pulses_json(
     std::vector<Eigen::VectorXcd> constants;
     constants.reserve(positions.size());
     for (int position : positions) {
-        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.n_abs + 4);
-        initial[position + 1] = in.energy * 1e3 * electron_charge / c_abs;
+        Eigen::VectorXcd initial = Eigen::VectorXcd::Zero(in.state_count());
+        initial[position + (in.hanging ? 2 : 1)] = in.energy * 1e3 * electron_charge / c_abs;
         constants.push_back(qr.solve(initial));
     }
 

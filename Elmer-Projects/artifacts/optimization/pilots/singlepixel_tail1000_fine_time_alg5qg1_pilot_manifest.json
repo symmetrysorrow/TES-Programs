@@ -1,0 +1,41 @@
+{
+  "axis": "time",
+  "levels": [
+    0.625,
+    1.25
+  ],
+  "tail_start_us": 100.0,
+  "fixed_settings": {
+    "stycast_layers": 32.0,
+    "tes_layers": 1.0,
+    "sinx_layers": 1.0,
+    "sio2_1_layers": 2.0,
+    "si_1_layers": 2.0,
+    "si_2_layers": 2.0,
+    "global_mesh_size_um": 100.0,
+    "stack_local_size_um": 12.5,
+    "stack_local_half_width_um": 400.0,
+    "absorber_local_size_um": 25.0,
+    "absorber_local_radius_um": 25.0
+  },
+  "tag": "tail1000_fine",
+  "linear_system": "mumps",
+  "elmer_solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+  "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+  "project": "artifacts\\optimization\\pilots\\singlepixel_tail1000_fine_time_alg5qg1_pilot.json",
+  "execute": true,
+  "cases": [
+    "case_tail1000_fine_time_0p625_alg5qg1_pulse",
+    "case_tail1000_fine_time_1p25_alg5qg1_pulse"
+  ],
+  "comparisons": [
+    {
+      "max_abs_uA": 0.004665870388386395,
+      "time_us": 178.0,
+      "pct_comsol_peak": 0.06001240157349016,
+      "left": "case_tail1000_fine_time_0p625_alg5qg1_pulse",
+      "right": "case_tail1000_fine_time_1p25_alg5qg1_pulse",
+      "accepted": true
+    }
+  ]
+}
