@@ -1,0 +1,54 @@
+{
+  "reference": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_transient_physical_parity_mortar_7step\\case_tes_transient_physical_parity_mortar_7step_series.csv",
+  "reference_metrics": {
+    "row_count": 7,
+    "baseline_current_A": 0.00018847508115413621,
+    "min_current_A": 0.00018847508115413621,
+    "max_current_A": 0.00019255695409406122,
+    "current_amplitude_A": 4.081872939925007e-06,
+    "relative_amplitude": 0.021657361360077215,
+    "t10_s": 0.020001592920007645,
+    "t50_s": 0.02000205923905035,
+    "t90_s": 0.02000252555809306,
+    "final_current_A": 0.00019069601513252736,
+    "final_temperature_K": 0.16728039203848305
+  },
+  "waveforms": {
+    "conformal": {
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_transient_physical_parity_conformal_7step\\case_tes_transient_physical_parity_conformal_7step_series.csv",
+      "metrics": {
+        "row_count": 7,
+        "baseline_current_A": 0.00018849433609084522,
+        "min_current_A": 0.00018849433609084522,
+        "max_current_A": 0.00019257586244238195,
+        "current_amplitude_A": 4.081526351536728e-06,
+        "relative_amplitude": 0.021653310312568903,
+        "t10_s": 0.020001592885779965,
+        "t50_s": 0.020002059067911953,
+        "t90_s": 0.02000252525004394,
+        "final_current_A": 0.0001907386096168027,
+        "final_temperature_K": 0.16727927265029002
+      },
+      "vs_reference": {
+        "status": "PASS",
+        "common_timesteps": 7,
+        "tes_current_A": {
+          "max_absolute_difference": 5.466837704902927e-08,
+          "rmse": 3.4020070745857746e-08
+        },
+        "tes_temperature_K": {
+          "max_absolute_difference": 1.4550927297241056e-06,
+          "rmse": 9.002338560447199e-07
+        },
+        "tes_resistance_ohm": {
+          "max_absolute_difference": 4.627131590870248e-06,
+          "rmse": 2.768599064545876e-06
+        },
+        "tes_power_W": {
+          "max_absolute_difference": 5.5375176381502446e-14,
+          "rmse": 3.9412379969690115e-14
+        }
+      }
+    }
+  }
+}

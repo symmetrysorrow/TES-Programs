@@ -392,17 +392,19 @@ def solver1_block(
         # l1-Jacobi.  The same formulation is also the CPU correctness gate.
         hypre_gpu = linear_system.endswith("_gpu")
         hypre_preconditioning = "MGR" if "_mgr" in linear_system else "BoomerAMG"
+        hypre_max_iterations = solver.get("linear_system_max_iterations", 2000)
+        hypre_tolerance = solver.get("linear_system_convergence_tolerance")
+        hypre_abort = solver.get("linear_system_abort_not_converged", True)
         lines += [
             "  Linear System Use Hypre = True",
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = FlexGMRES",
             f"  Linear System Preconditioning = {hypre_preconditioning}",
-            "  Linear System Max Iterations = 2000",
-            "  Linear System Convergence Tolerance = 1.0e-11",
-            "  Linear System Abort Not Converged = True",
-            "  Linear System Residual Output = 1",
+            f"  Linear System Max Iterations = {hypre_max_iterations}",
+            f"  Linear System Convergence Tolerance = {fmt_real(hypre_tolerance) if hypre_tolerance is not None else '1.0e-11'}",
+            f"  Linear System Abort Not Converged = {'True' if hypre_abort else 'False'}",
+            f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 1)}",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",
             "  BoomerAMG Num Sweeps = 1",
@@ -413,6 +415,11 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+        if hypre_gpu or not solver.get("omit_hypre_gpu_when_false", False):
+            lines.insert(
+                lines.index("  BoomerAMG Relax Type = 18"),
+                f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            )
     elif linear_system in {
         "iterative_hypre_block_diag",
         "iterative_hypre_block_diag_gpu",
@@ -431,18 +438,24 @@ def solver1_block(
         block_lower = "block_lower" in linear_system or "block_full" in linear_system
         block_full = "block_full" in linear_system
         block_matrix_free_schur = block_lower or block_full
+        block_max_iterations = solver.get("linear_system_max_iterations", 2000)
+        block_tolerance = solver.get("linear_system_convergence_tolerance")
+        block_abort = solver.get("linear_system_abort_not_converged", True)
+        nested_max_iterations = solver.get("block_nested_primal_max_iterations", 1)
+        schur_tolerance = solver.get("block_schur_inner_tolerance")
+        schur_max_iterations = solver.get("block_schur_max_iterations", 30)
+        schur_restart = solver.get("block_schur_restart", min(30, schur_max_iterations))
         lines += [
             "  Linear System Block Mode = True",
             "  Linear System Use Hypre = True",
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = FlexGMRES",
             "  Linear System Preconditioning = BoomerAMG",
-            "  Linear System Max Iterations = 2000",
-            "  Linear System Convergence Tolerance = 1.0e-11",
-            "  Linear System Abort Not Converged = True",
-            "  Linear System Residual Output = 1",
+            f"  Linear System Max Iterations = {block_max_iterations}",
+            f"  Linear System Convergence Tolerance = {fmt_real(block_tolerance) if block_tolerance is not None else '1.0e-11'}",
+            f"  Linear System Abort Not Converged = {'True' if block_abort else 'False'}",
+            f"  Linear System Residual Output = {solver.get('linear_system_residual_output', 1)}",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
             "  Block Preconditioner = True",
             f"  Block Gauss-Seidel = {'True' if block_lower else 'False'}",
             f"  Block Lower Triangular = {'True' if block_lower else 'False'}",
@@ -451,10 +464,10 @@ def solver1_block(
             "  Block Matrix Reuse = True",
             f"  Create Schur Matrix Approximation = {'True' if solver.get('create_schur_matrix_approximation', True) else 'False'}",
             "  Block Nested Primal AMG = True",
-            "  Block Nested Primal Max Iterations = 1",
-            "  Block Schur Inner Tolerance = 1.0e-4",
-            "  Block Schur Max Iterations = 30",
-            "  Block Schur Restart = 30",
+            f"  Block Nested Primal Max Iterations = {nested_max_iterations}",
+            f"  Block Schur Inner Tolerance = {fmt_real(schur_tolerance) if schur_tolerance is not None else '1.0e-4'}",
+            f"  Block Schur Max Iterations = {schur_max_iterations}",
+            f"  Block Schur Restart = {schur_restart}",
             "  Block Schur Preconditioner = diagonal",
             "  Block Schur Direct Solver = True",
             "  BoomerAMG Relax Type = 18",
@@ -467,6 +480,11 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             "  BoomerAMG Strong Threshold = 0.25",
         ]
+        if hypre_gpu or not solver.get("omit_hypre_gpu_when_false", False):
+            lines.insert(
+                lines.index("  Block Preconditioner = True"),
+                f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            )
     elif linear_system == "mumps":
         lines += [
             "  Linear System Solver = Direct",
@@ -477,8 +495,16 @@ def solver1_block(
             "  Linear System Solver = Direct",
             "  Linear System Direct Method = Umfpack",
         ]
+    # Matrix dumps are an explicit diagnostic opt-in.  In particular, a
+    # prefix alone must not turn a bounded probe into a multi-gigabyte write
+    # on a mounted filesystem.  Probe/sweep cases carry an explicit false
+    # flag; legacy non-probe cases retain their historical prefix behavior.
     matrix_dump_prefix = solver.get("matrix_dump_prefix")
-    if matrix_dump_prefix:
+    matrix_dump_enabled = solver.get(
+        "matrix_dump",
+        bool(matrix_dump_prefix) and not solver.get("block_schur_probe", False),
+    )
+    if matrix_dump_enabled and matrix_dump_prefix:
         # Save the fully assembled collection matrix at the solver dispatch
         # point.  This is after mortar restriction/penalty/elimination, so a
         # MUMPS-vs-HYPRE comparison detects an algebraic mismatch rather than
@@ -501,6 +527,13 @@ def solver1_block(
             lines.append("  Block Schur Diagnostic Direct = Logical True")
         if solver.get("block_schur_diagnostic_only", False):
             lines.append("  Block Schur Diagnostic Only = Logical True")
+    if solver.get("block_schur_probe", False):
+        lines += [
+            "  Block Schur Probe = Logical True",
+            f'  Block Schur Probe Prefix = String "{solver.get("block_schur_probe_prefix", "block_schur_probe")}"',
+            f'  Block Schur Probe Workload ID = String "{solver.get("block_schur_probe_workload_id", "unknown")}"',
+            f'  Block Schur Probe Lifecycle = String "{solver.get("block_schur_probe_lifecycle", "linear solve")}"',
+        ]
     if solver.get("eliminate_linear_constraints", False):
         lines.append("  Eliminate Linear Constraints = True")
     if solver.get("no_explicit_constrained_matrix", False):

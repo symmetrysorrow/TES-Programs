@@ -1,0 +1,39 @@
+{
+  "route": "mortar_control",
+  "source_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+  "source_mesh_sha256": {
+    "mesh.nodes": "21b69f85b59825a0c5665ac8b1efc67221954e620fef550f4a14f90fed196192",
+    "mesh.elements": "3b7bbd9d4c5f57d9973e20691b97b2fab786b9d780b911daeeb8a8c09b085144",
+    "mesh.boundary": "cc171630071c10bbcd651a0e897382c3336b420ec9c40876bda92408b60fe4d3",
+    "mesh.header": "9a667ef31c2d9293310545b6b14ef2df2a4f6a798a149e088493930a7664eb2d"
+  },
+  "method": "duplicate right-side interface node IDs; preserve all coordinates and volume connectivity",
+  "interfaces": [
+    {
+      "interface": "Membrane_TES",
+      "left_surface": "Membrane_SiNx__zmax",
+      "right_surface": "TES__zmin",
+      "duplicated_body": "TES",
+      "duplicated_nodes": 79,
+      "source_shared_nodes": 79
+    },
+    {
+      "interface": "TES_Stycast",
+      "left_surface": "TES__zmax",
+      "right_surface": "Stycast__zmin",
+      "duplicated_body": "Stycast",
+      "duplicated_nodes": 51,
+      "source_shared_nodes": 51
+    },
+    {
+      "interface": "Stycast_absorber",
+      "left_surface": "Stycast__zmax",
+      "right_surface": "abs__zmin",
+      "duplicated_body": "abs",
+      "duplicated_nodes": 22,
+      "source_shared_nodes": 22
+    }
+  ],
+  "node_count": 26845,
+  "volume_element_count": 132357
+}

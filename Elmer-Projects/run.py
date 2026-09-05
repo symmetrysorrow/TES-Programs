@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import os
@@ -54,6 +55,122 @@ def find_case_insensitive(path: Path) -> Path | None:
         if candidate.name.lower() == target:
             return candidate
     return None
+
+
+ELECTRICAL_SERIES_FIELDS = (
+    "time_s",
+    "time_step",
+    "nonlinear_iter",
+    "tes_temperature_K",
+    "tes_current_A",
+    "tes_resistance_ohm",
+    "tes_power_W",
+    "bias_current_A",
+    "shunt_resistance_ohm",
+)
+
+
+def _csv_float(row: dict[str, str], *names: str) -> float | None:
+    for name in names:
+        value = row.get(name)
+        if value not in (None, ""):
+            try:
+                return float(value)
+            except ValueError:
+                return None
+    return None
+
+
+def _electrical_rows_from_iteration(
+    iteration_file: Path, bias_current: float | None, shunt_resistance: float | None
+) -> list[dict[str, object]]:
+    with iteration_file.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    # One canonical row per timestep: retain the last nonlinear circuit update
+    # so the artifact describes the converged electrical state rather than a
+    # log-derived hand selection.
+    latest: dict[str, dict[str, str]] = {}
+    for row in rows:
+        step = row.get("time_step", "0")
+        latest[step] = row
+    result: list[dict[str, object]] = []
+    for row in sorted(latest.values(), key=lambda item: int(item.get("time_step", "0"))):
+        result.append(
+            {
+                "time_s": _csv_float(row, "time_s") or 0.0,
+                "time_step": int(float(row.get("time_step", "0"))),
+                "nonlinear_iter": int(float(row.get("nonlinear_iter", "0"))),
+                "tes_temperature_K": _csv_float(row, "tes_temperature_K") or 0.0,
+                "tes_current_A": _csv_float(row, "raw_current_A", "tes_current_A") or 0.0,
+                "tes_resistance_ohm": _csv_float(row, "tes_resistance_ohm") or 0.0,
+                "tes_power_W": _csv_float(row, "raw_power_W", "tes_power_W") or 0.0,
+                "bias_current_A": bias_current,
+                "shunt_resistance_ohm": shunt_resistance,
+            }
+        )
+    return result
+
+
+def ensure_electrical_series(
+    root: Path,
+    out_dir: Path,
+    spec: dict,
+    model: dict,
+    series_name: str,
+    iteration_path: Path | None,
+) -> str:
+    """Create the canonical series artifact when a solver only emits iterations.
+
+    Custom HeatSolve builds currently emit an iteration CSV for the first
+    transient step but may not emit the legacy summary CSV until a timestep
+    boundary.  This normalization is deterministic and keeps analysis out of
+    solver-log scraping.  A steady state falls back to the final iteration row
+    or the shared five-value state file.
+    """
+    destination = out_dir / series_name
+    if destination.exists():
+        with destination.open(encoding="utf-8", newline="") as handle:
+            header = set(next(csv.reader(handle), []))
+        if set(ELECTRICAL_SERIES_FIELDS).issubset(header):
+            return "solver_series"
+        # Older HeatSolve builds emit a five-column legacy series.  Prefer the
+        # richer iteration stream below so every collected parity artifact has
+        # the same timestep/nonlinear/bias schema.
+        if iteration_path and iteration_path.exists():
+            destination.unlink()
+        else:
+            return "legacy_solver_series"
+    params = model.get("parameters", {})
+    bias = params.get("I_bias")
+    shunt = params.get("R_sh")
+    rows: list[dict[str, object]] = []
+    if iteration_path and iteration_path.exists():
+        rows = _electrical_rows_from_iteration(iteration_path, bias, shunt)
+    if not rows:
+        state_file = spec.get("state_file")
+        if state_file:
+            state_path = root / state_file
+            if state_path.exists():
+                values = state_path.read_text(encoding="utf-8").split()
+                if len(values) >= 4:
+                    rows = [{
+                        "time_s": 0.0,
+                        "time_step": 0,
+                        "nonlinear_iter": 0,
+                        "tes_temperature_K": float(values[0]),
+                        "tes_current_A": float(values[1]),
+                        "tes_resistance_ohm": float(values[2]),
+                        "tes_power_W": float(values[3]),
+                        "bias_current_A": bias,
+                        "shunt_resistance_ohm": shunt,
+                    }]
+    if not rows:
+        return "not_available"
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=ELECTRICAL_SERIES_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+    return "normalized_from_iteration_or_state"
 
 
 def sha256(path: Path) -> str:
@@ -532,7 +649,7 @@ def run_case(
         )
     )
     env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin)
-    if amgx_config:
+    if amgx_config or not Path(elmer_solver).suffix.lower() == ".exe":
         # Linux Elmer prefixes restart/output names with the mesh basename.
         # The historical ../work/meshes/... paths therefore need that
         # basename to exist in the launch CWD for ``mesh/../work`` to be
@@ -607,6 +724,7 @@ def run_case(
     completed = reported_done and proc.returncode == 0 and not fatal
 
     collected: list[str] = []
+    electrical_series_source = "not_available"
     for pattern in (f"{case_name}_t*.vtu", f"{case_name}*.pvtu", f"{case_name}.ep"):
         for src in mesh_dir.glob(pattern):
             shutil.move(str(src), out_dir / src.name)
@@ -618,6 +736,7 @@ def run_case(
             # Single-instance cases (single-pixel): one series CSV, exact name.
             shutil.move(str(found), out_dir / series)
             collected.append(series)
+            electrical_series_source = "solver_series"
         else:
             # Dual-TES cases: the builder writes one series CSV per circuit
             # instance with an 'L'/'R' side tag inserted before the
@@ -633,11 +752,19 @@ def run_case(
                     shutil.move(str(found_side), out_dir / side_name)
                     collected.append(side_name)
     iteration_series = spec.get("iteration_series_file")
+    iteration_output_path: Path | None = None
     if iteration_series:
         found_iteration = find_case_insensitive(ROOT / iteration_series)
         if found_iteration is not None:
             shutil.move(str(found_iteration), out_dir / iteration_series)
             collected.append(iteration_series)
+            iteration_output_path = out_dir / iteration_series
+    if series:
+        electrical_series_source = ensure_electrical_series(
+            ROOT, out_dir, spec, model, series, iteration_output_path
+        )
+        if (out_dir / series).exists() and series not in collected:
+            collected.append(series)
     result_file = result_file_of(model, case_name)
 
     manifest = {
@@ -664,6 +791,7 @@ def run_case(
         "mesh": spec["mesh"],
         "restart_from": spec.get("restart_from"),
         "collected_outputs": sorted(collected),
+        "electrical_series_source": electrical_series_source,
         "result_file": str(result_file.relative_to(ROOT)) if result_file else None,
         "convergence_tail": convergence,
         "solver_completed": completed,

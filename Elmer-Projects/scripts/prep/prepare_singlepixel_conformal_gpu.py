@@ -16,6 +16,9 @@ SMOKE = f"{PULSE}_amgx_smoke_7step"
 FINE_MESH = "mesh_singlepixel_conformal_gpu_fine"
 FINE_STEADY = "case_tes_steady_singlepixel_conformal_gpu_fine"
 FINE_PULSE = "case_tes_pulse_singlepixel_conformal_gpu_fine_hybrid_177step"
+REFERENCE_STEADY = "case_tes_steady_singlepixel_conformal_mortar_reference"
+HYPRE_CPU_STEADY = "case_tes_steady_singlepixel_conformal_hypre_cpu"
+HYPRE_GPU_STEADY = "case_tes_steady_singlepixel_conformal_hypre_gpu"
 
 PULSE_PREFIX = [
     ["18[us]", 1], ["1[us]", 2], ["1[ns]", 1], ["10[ns]", 10],
@@ -63,7 +66,8 @@ def main() -> None:
     project.setdefault("elmer_overrides", {})[
         "conformal_shared_interfaces"
     ] = False
-    project["elmer_overrides"]["conformal_mortar_interfaces"] = True
+    project["elmer_overrides"]["conformal_mortar_interfaces"] = False
+    project["elmer_overrides"]["conformal_shared_node_interfaces"] = True
     project["elmer_overrides"]["fragment_mortar_interfaces"] = True
 
     mesh = copy.deepcopy(project["meshes"]["mesh_refined_3x"])
@@ -72,8 +76,9 @@ def main() -> None:
         "14", "2", "gmsh/project.msh", "-merge", "1e-10", "-out", MESH,
     ]
     mesh["notes"] = (
-        "All-tetra 3x single-pixel mesh with the three thermal contact faces "
-        "periodically copied before ElmerGrid node merging, so no mortar is needed."
+        "Independent all-tetra 3x shared-node experiment.  The three contact "
+        "footprints are imprinted and face meshes are paired before ElmerGrid "
+        "node merging; this route must pass the post-conversion connectivity gate."
     )
     project["meshes"][MESH] = mesh
     fine_mesh = copy.deepcopy(mesh)
@@ -86,8 +91,8 @@ def main() -> None:
     }
     fine_mesh["recipe"]["elmergrid_args"][-1] = FINE_MESH
     fine_mesh["notes"] = (
-        "Fine conformal GPU mesh targeting production-v2-like spatial resolution; "
-        "three former mortar interfaces use shared nodes."
+        "Fine shared-node contact mesh targeting production-v2-like spatial "
+        "resolution; generated independently from the Mortar production path."
     )
     project["meshes"][FINE_MESH] = fine_mesh
 
@@ -106,7 +111,10 @@ def main() -> None:
             "nonlinear_convergence_tolerance": 1e-8,
             "nonlinear_relaxation_factor": 1.0,
             "steady_state_convergence_tolerance": 1e-8,
-            "linear_system": "mumps",
+            # The stock Windows Elmer 26.1 binary used for this validation
+            # does not ship MUMPS; use the direct UMFPACK backend for the
+            # CPU parity gate and keep the solver class (direct) explicit.
+            "linear_system": "direct",
         },
         "state_file": f"work/meshes/{MESH}/{STEADY}.state",
         "series_file": f"{STEADY}_series.csv",
@@ -114,6 +122,54 @@ def main() -> None:
         "output_file_path": f"../work/meshes/{MESH}/{STEADY}.result",
     }
     project["cases"][STEADY] = steady
+
+    reference = copy.deepcopy(steady)
+    reference.update(
+        {
+            "mesh": "mesh_refined_3x",
+            "apply_mortar_bcs": True,
+            "state_file": f"work/meshes/mesh_refined_3x/{REFERENCE_STEADY}.state",
+            "series_file": f"{REFERENCE_STEADY}_series.csv",
+            "iteration_series_file": f"{REFERENCE_STEADY}_iterations.csv",
+            "output_file_path": f"../work/meshes/mesh_refined_3x/{REFERENCE_STEADY}.result",
+            "solver": dict(steady["solver"]),
+        }
+    )
+    reference["solver"]["nonlinear_convergence_tolerance"] = 1.0e-6
+    reference["solver"]["steady_state_convergence_tolerance"] = 1.0e-6
+    project["cases"][REFERENCE_STEADY] = reference
+
+    for case_name, linear_system in (
+        (HYPRE_CPU_STEADY, "iterative_hypre_flexgmres_boomeramg"),
+        (HYPRE_GPU_STEADY, "iterative_hypre_flexgmres_boomeramg_gpu"),
+    ):
+        iterative = copy.deepcopy(steady)
+        iterative["solver"] = dict(steady["solver"])
+        iterative["solver"].update(
+            {
+                "linear_system": linear_system,
+                "linear_system_max_iterations": 1000,
+                # This primal mesh reaches 1.94e-8 in the stock HYPRE
+                # FlexGMRES/AMG build at 1000 iterations; keep the first
+                # conformal gate honest and attainable, then tighten in a
+                # separate convergence study.
+                "linear_system_convergence_tolerance": 1.0e-7,
+                "linear_system_abort_not_converged": True,
+                # The stock Windows Elmer build does not register the
+                # HYPRE GPU keyword.  Omitting an explicit false value keeps
+                # the CPU case portable; the GPU case still emits True.
+                "omit_hypre_gpu_when_false": True,
+            }
+        )
+        iterative.update(
+            {
+                "state_file": f"work/meshes/{MESH}/{case_name}.state",
+                "series_file": f"{case_name}_series.csv",
+                "iteration_series_file": f"{case_name}_iterations.csv",
+                "output_file_path": f"../work/meshes/{MESH}/{case_name}.result",
+            }
+        )
+        project["cases"][case_name] = iterative
 
     pulse = copy.deepcopy(
         project["cases"]["case_tes_mpi_comsol_grid_full_uniform_continuous"]
@@ -138,7 +194,7 @@ def main() -> None:
         }
     )
     pulse["solver"] = dict(pulse["solver"])
-    pulse["solver"]["linear_system"] = "mumps"
+    pulse["solver"]["linear_system"] = "direct"
     project["cases"][PULSE] = pulse
 
     smoke = copy.deepcopy(pulse)

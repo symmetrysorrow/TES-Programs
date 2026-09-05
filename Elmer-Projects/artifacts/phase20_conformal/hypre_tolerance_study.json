@@ -1,0 +1,154 @@
+{
+  "study_route": "conformal shared-node + external circuit_parallel UDF",
+  "runs": {
+    "cpu_1e-6": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em06\\solver.log",
+      "hypre_gpu_requested": false,
+      "hypre_solution_times_s": [
+        0.174712,
+        0.00400686,
+        0.00101709
+      ],
+      "hypre_solution_time_sum_s": 0.17973595,
+      "result_norms": [
+        0.15063982565415834,
+        0.15064052552217416,
+        0.15064052552217416
+      ],
+      "nonlinear_iterations": [
+        {
+          "iteration": 1,
+          "norm": 0.15063983,
+          "relative_change": 2.0
+        },
+        {
+          "iteration": 2,
+          "norm": 0.15064053,
+          "relative_change": 4.6459586e-06
+        },
+        {
+          "iteration": 3,
+          "norm": 0.15064053,
+          "relative_change": 0.0
+        }
+      ],
+      "solver_total_cpu_s": 9.54,
+      "solver_total_wall_s": 4.17,
+      "all_done": true
+    },
+    "cpu_1e-7": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em07\\solver.log",
+      "hypre_gpu_requested": false,
+      "hypre_solution_times_s": [
+        0.255883,
+        0.00903606,
+        0.000797033
+      ],
+      "hypre_solution_time_sum_s": 0.26571609300000004,
+      "result_norms": [
+        0.15063983835479175,
+        0.15064087498248216,
+        0.15064087498248216
+      ],
+      "nonlinear_iterations": [
+        {
+          "iteration": 1,
+          "norm": 0.15063984,
+          "relative_change": 2.0
+        },
+        {
+          "iteration": 2,
+          "norm": 0.15064087,
+          "relative_change": 6.881474e-06
+        },
+        {
+          "iteration": 3,
+          "norm": 0.15064087,
+          "relative_change": 0.0
+        }
+      ],
+      "solver_total_cpu_s": 9.66,
+      "solver_total_wall_s": 4.19,
+      "all_done": true
+    },
+    "gpu_1e-7": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em07_gpu\\solver.log",
+      "hypre_gpu_requested": true,
+      "hypre_solution_times_s": [
+        0.589079,
+        0.0105839,
+        0.000890017
+      ],
+      "hypre_solution_time_sum_s": 0.600552917,
+      "result_norms": [
+        0.15063983356054858,
+        0.15064086501850263,
+        0.15064086501850263
+      ],
+      "nonlinear_iterations": [
+        {
+          "iteration": 1,
+          "norm": 0.15063983,
+          "relative_change": 2.0
+        },
+        {
+          "iteration": 2,
+          "norm": 0.15064087,
+          "relative_change": 6.8471559e-06
+        },
+        {
+          "iteration": 3,
+          "norm": 0.15064087,
+          "relative_change": 0.0
+        }
+      ],
+      "solver_total_cpu_s": 11.63,
+      "solver_total_wall_s": 4.36,
+      "all_done": true
+    },
+    "cpu_1e-8": {
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\results\\case_tes_steady_physical_parity_conformal_hypre_1em08\\solver.log",
+      "hypre_gpu_requested": false,
+      "hypre_solution_times_s": [
+        0.383832,
+        0.0196152,
+        0.00404215,
+        0.001019
+      ],
+      "hypre_solution_time_sum_s": 0.40850835,
+      "result_norms": [
+        0.15063983658524516,
+        0.15064087690233263,
+        0.150640879127144,
+        0.150640879127144
+      ],
+      "nonlinear_iterations": [
+        {
+          "iteration": 1,
+          "norm": 0.15063984,
+          "relative_change": 2.0
+        },
+        {
+          "iteration": 2,
+          "norm": 0.15064088,
+          "relative_change": 6.9059654e-06
+        },
+        {
+          "iteration": 3,
+          "norm": 0.15064088,
+          "relative_change": 1.4768975e-08
+        },
+        {
+          "iteration": 4,
+          "norm": 0.15064088,
+          "relative_change": 0.0
+        }
+      ],
+      "solver_total_cpu_s": 11.91,
+      "solver_total_wall_s": 4.27,
+      "all_done": true
+    }
+  },
+  "decision": "REPORT_ONLY",
+  "note": "The current 1e-8 result is not comparable to the earlier inactive-inner-circuit run; changing to circuit_parallel also changed the thermal source path."
+}

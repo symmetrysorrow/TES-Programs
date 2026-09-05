@@ -1,0 +1,119 @@
+{
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\elmer_project_physical_parity_conformal.json",
+  "definition": "498 um analytic Stycast cylinder; conformal shared-node meshes",
+  "levels": [
+    {
+      "label": "generated_2x",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_2x",
+      "node_count": 26705,
+      "stycast_element_count": 317,
+      "stycast_volume_m3": 3.761319552429535e-12,
+      "stycast_analytic_volume_m3": 3.895637722304414e-12,
+      "stycast_relative_volume_error": -0.034479122405515865,
+      "contact_areas": {
+        "Membrane_TES": {
+          "left_m2": 2.5e-07,
+          "right_m2": 2.5e-07
+        },
+        "TES_Stycast": {
+          "left_m2": 1.9125107200725647e-07,
+          "right_m2": 1.9125107200725647e-07
+        },
+        "Stycast_absorber": {
+          "left_m2": 1.82216367137212e-07,
+          "right_m2": 1.82216367137212e-07
+        }
+      },
+      "contact_area_relative_errors": {
+        "Membrane_TES": {
+          "left_m2": 0.0,
+          "right_m2": 0.0
+        },
+        "TES_Stycast": {
+          "left_m2": -0.018127014674637842,
+          "right_m2": -0.018127014674637842
+        },
+        "Stycast_absorber": {
+          "left_m2": -0.06451071620990328,
+          "right_m2": -0.06451071620990328
+        }
+      }
+    },
+    {
+      "label": "generated_base",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_stycast_convergence_base",
+      "node_count": 26705,
+      "stycast_element_count": 317,
+      "stycast_volume_m3": 3.761319552429535e-12,
+      "stycast_analytic_volume_m3": 3.895637722304414e-12,
+      "stycast_relative_volume_error": -0.034479122405515865,
+      "contact_areas": {
+        "Membrane_TES": {
+          "left_m2": 2.5e-07,
+          "right_m2": 2.5e-07
+        },
+        "TES_Stycast": {
+          "left_m2": 1.9125107200725647e-07,
+          "right_m2": 1.9125107200725647e-07
+        },
+        "Stycast_absorber": {
+          "left_m2": 1.82216367137212e-07,
+          "right_m2": 1.82216367137212e-07
+        }
+      },
+      "contact_area_relative_errors": {
+        "Membrane_TES": {
+          "left_m2": 0.0,
+          "right_m2": 0.0
+        },
+        "TES_Stycast": {
+          "left_m2": -0.018127014674637842,
+          "right_m2": -0.018127014674637842
+        },
+        "Stycast_absorber": {
+          "left_m2": -0.06451071620990328,
+          "right_m2": -0.06451071620990328
+        }
+      }
+    },
+    {
+      "label": "parity",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+      "node_count": 26693,
+      "stycast_element_count": 274,
+      "stycast_volume_m3": 3.761319552429538e-12,
+      "stycast_analytic_volume_m3": 3.895637722304414e-12,
+      "stycast_relative_volume_error": -0.03447912240551524,
+      "contact_areas": {
+        "Membrane_TES": {
+          "left_m2": 2.5e-07,
+          "right_m2": 2.5e-07
+        },
+        "TES_Stycast": {
+          "left_m2": 1.9125107200725647e-07,
+          "right_m2": 1.9125107200725647e-07
+        },
+        "Stycast_absorber": {
+          "left_m2": 1.82216367137212e-07,
+          "right_m2": 1.8221636713721203e-07
+        }
+      },
+      "contact_area_relative_errors": {
+        "Membrane_TES": {
+          "left_m2": 0.0,
+          "right_m2": 0.0
+        },
+        "TES_Stycast": {
+          "left_m2": -0.018127014674637842,
+          "right_m2": -0.018127014674637842
+        },
+        "Stycast_absorber": {
+          "left_m2": -0.06451071620990328,
+          "right_m2": -0.06451071620990316
+        }
+      }
+    }
+  ],
+  "status": "REPORT_ONLY",
+  "note": "Production acceptance still requires a monotone convergence decision and a production-size run."
+}

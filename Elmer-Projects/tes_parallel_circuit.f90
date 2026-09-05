@@ -10,6 +10,7 @@ MODULE TESParallelCircuitModule
   IMPLICIT NONE
   LOGICAL, SAVE :: CircuitInitialized = .FALSE.
   LOGICAL, SAVE :: SeriesStarted = .FALSE.
+  LOGICAL, SAVE :: IterationSeriesStarted = .FALSE.
   INTEGER, SAVE :: CircuitTimeStep = -1
   INTEGER, SAVE :: CircuitNonlinIter = -1
   INTEGER, SAVE :: CircuitIterInStep = 0
@@ -32,8 +33,9 @@ CONTAINS
     TYPE(Element_t), POINTER :: Element
     TYPE(Variable_t), POINTER :: TemperatureVariable
     INTEGER :: t, i, n, body, localCount, p, IoStatus, TimeStep, NonlinIter
-    LOGICAL :: Found, FoundSeries, FoundState, WriteSeries
-    CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile, StateFile
+    LOGICAL :: Found, FoundSeries, FoundState, FoundIterationSeries, WriteSeries
+    CHARACTER(LEN=MAX_NAME_LEN) :: SeriesFile, StateFile, IterationSeriesFile
+    INTEGER :: IterationUnit
     REAL(KIND=dp) :: localSum, globalSum, globalCount, localT
     REAL(KIND=dp) :: I_BIAS, R_SH, R0, R_MIN, ALPHA, BETA, I0, T0, L_TES
     REAL(KIND=dp) :: A, B, C, Discriminant, RawPower, DtLocal, Residual, Denominator
@@ -64,6 +66,7 @@ CONTAINS
     L_TES = GetConstReal(Model % Constants, 'TES Inductance', Found)
     IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Inductance is required')
     SeriesFile = ListGetString(Model % Constants, 'TES Series File', FoundSeries)
+    IterationSeriesFile = ListGetString(Model % Constants, 'TES Iteration Series File', FoundIterationSeries)
     StateFile = ListGetString(Model % Constants, 'TES State File', FoundState)
     body = ListGetInteger(GetSolverParams(), 'TES Body ID', Found)
     IF (.NOT. Found) CALL Fatal('TESParallelCircuitSolver', 'TES Body ID is required')
@@ -72,6 +75,10 @@ CONTAINS
     TimeStep = GetTimeStep()
     NonlinIter = GetNonlinIter()
     CALL Info('TESParallelCircuitSolver', 'parameters loaded', Level=4)
+    CALL Info('TESParallelCircuitSolver', 'series=' // TRIM(SeriesFile) // &
+      ' found=' // MERGE('T', 'F', FoundSeries) // ' write=' // MERGE('T', 'F', WriteSeries), Level=4)
+    CALL Info('TESParallelCircuitSolver', 'iteration series=' // TRIM(IterationSeriesFile) // &
+      ' found=' // MERGE('T', 'F', FoundIterationSeries), Level=4)
 
     ! These two collectives are always first, on every rank and every call.
     localSum = 0.0_dp
@@ -146,6 +153,47 @@ CONTAINS
       CircuitOmega = 0.5_dp
       CircuitOmegaCap = 0.5_dp
       CircuitInitialized = .TRUE.
+      ! A one-step or steady circuit solve can return after initialization;
+      ! emit that initial electrical state as well so HYPRE/CPU/GPU cases do
+      ! not lose their only machine-readable observable row.
+      IF (WriteSeries .AND. FoundSeries .AND. ParEnv % MyPE == 0) THEN
+        IF (.NOT. SeriesStarted) THEN
+          OPEN(UNIT=97, FILE=TRIM(SeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
+          IF (IoStatus == 0) WRITE(97,'(A)') &
+            'time_s,time_step,nonlinear_iter,tes_temperature_K,tes_current_A,' // &
+            'tes_resistance_ohm,tes_power_W,bias_current_A,shunt_resistance_ohm'
+          SeriesStarted = .TRUE.
+        ELSE
+          OPEN(UNIT=97, FILE=TRIM(SeriesFile), STATUS='OLD', POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
+        END IF
+        IF (IoStatus == 0) THEN
+          WRITE(97,'(ES24.16,A,I0,A,I0,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+            GetTime(), ',', TimeStep, ',', NonlinIter, ',', CircuitTemperature, ',', CircuitCurrent, ',', &
+            CircuitResistance, ',', CircuitPower, ',', I_BIAS, ',', R_SH
+          CLOSE(97)
+        END IF
+      END IF
+      IF (WriteSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
+        IterationUnit = 96
+        IF (.NOT. IterationSeriesStarted) THEN
+          OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
+          IF (IoStatus == 0) WRITE(IterationUnit,'(A)') &
+            'time_s,time_step,nonlinear_iter,tes_temperature_K,previous_current_A,' // &
+            'raw_current_A,tes_resistance_ohm,raw_power_W,residual_W,omega,omega_cap,' // &
+            'relaxed_power_W'
+        ELSE
+          OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='OLD', POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
+        END IF
+        IF (IoStatus == 0) THEN
+          WRITE(IterationUnit,'(ES24.16,A,I0,A,I0,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,' // &
+            'A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+            GetTime(), ',', TimeStep, ',', NonlinIter, ',', CircuitTemperature, ',', PreviousCurrent, ',', &
+            CircuitCurrent, ',', CircuitResistance, ',', CircuitPower, ',', 0.0_dp, ',', CircuitOmega, ',', &
+            CircuitOmegaCap, ',', CircuitPower
+          CLOSE(IterationUnit)
+          IterationSeriesStarted = .TRUE.
+        END IF
+      END IF
       ! Preserve the legacy serial UDF's initial electrical state for the
       ! first assembly.  Its first update happens on the next nonlinear sweep.
       RETURN
@@ -220,18 +268,47 @@ CONTAINS
       END IF
     END IF
 
-    IF (TransientSimulation .AND. WriteSeries .AND. FoundSeries .AND. ParEnv % MyPE == 0) THEN
+    ! Emit the canonical electrical row for both steady and transient cases.
+    ! The old writer was transient-only, which made a steady electrical
+    ! reference impossible to compare and hid missing UDF execution in smoke
+    ! cases.  The explicit time-step/nonlinear columns make repeated rows
+    ! machine-readable instead of requiring log scraping.
+    IF (WriteSeries .AND. FoundSeries .AND. ParEnv % MyPE == 0) THEN
       IF (.NOT. SeriesStarted) THEN
         OPEN(UNIT=97, FILE=TRIM(SeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
-        IF (IoStatus == 0) WRITE(97,'(A)') 'time_s,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W'
+        IF (IoStatus == 0) WRITE(97,'(A)') &
+          'time_s,time_step,nonlinear_iter,tes_temperature_K,tes_current_A,' // &
+          'tes_resistance_ohm,tes_power_W,bias_current_A,shunt_resistance_ohm'
         SeriesStarted = .TRUE.
       ELSE
         OPEN(UNIT=97, FILE=TRIM(SeriesFile), STATUS='OLD', POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
       END IF
       IF (IoStatus == 0) THEN
-        WRITE(97,'(ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
-          GetTime(), ',', CircuitTemperature, ',', CircuitCurrent, ',', CircuitResistance, ',', CircuitPower
+        WRITE(97,'(ES24.16,A,I0,A,I0,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+          GetTime(), ',', TimeStep, ',', NonlinIter, ',', CircuitTemperature, ',', CircuitCurrent, ',', &
+          CircuitResistance, ',', CircuitPower, ',', I_BIAS, ',', R_SH
         CLOSE(97)
+      END IF
+    END IF
+    IF (WriteSeries .AND. FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
+      IterationUnit = 96
+      IF (.NOT. IterationSeriesStarted) THEN
+        OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='REPLACE', ACTION='WRITE', IOSTAT=IoStatus)
+        IF (IoStatus == 0) WRITE(IterationUnit,'(A)') &
+          'time_s,time_step,nonlinear_iter,tes_temperature_K,previous_current_A,' // &
+          'raw_current_A,tes_resistance_ohm,raw_power_W,residual_W,omega,omega_cap,' // &
+          'relaxed_power_W'
+      ELSE
+        OPEN(UNIT=IterationUnit, FILE=TRIM(IterationSeriesFile), STATUS='OLD', POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
+      END IF
+      IF (IoStatus == 0) THEN
+        WRITE(IterationUnit,'(ES24.16,A,I0,A,I0,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,' // &
+          'A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16,A,ES24.16)') &
+          GetTime(), ',', TimeStep, ',', NonlinIter, ',', CircuitTemperature, ',', PreviousCurrent, ',', &
+          CircuitCurrent, ',', CircuitResistance, ',', RawPower, ',', Residual, ',', CircuitOmega, ',', &
+          CircuitOmegaCap, ',', CircuitPower
+        CLOSE(IterationUnit)
+        IterationSeriesStarted = .TRUE.
       END IF
     END IF
   END SUBROUTINE TESParallelCircuitSolverCore

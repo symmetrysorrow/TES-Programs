@@ -1,0 +1,15 @@
+{
+  "status": "NOT_RUN",
+  "candidate_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+  "candidate_mesh_counts": {
+    "node_count": 90872,
+    "volume_element_count": 459683
+  },
+  "topology_gate": "FAIL",
+  "reason": "The available production-sized candidate failed the current branch's conformal shared-node interface checker; no CPU/GPU benchmark was run on an invalid route.",
+  "required_follow_up": [
+    "regenerate the fine production mesh from the current project hash and interface naming",
+    "rerun the post-ElmerGrid topology gate",
+    "run identical HYPRE CPU/GPU cases and capture setup, linear-solve, and total wall times"
+  ]
+}

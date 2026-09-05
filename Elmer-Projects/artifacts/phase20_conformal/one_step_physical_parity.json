@@ -1,0 +1,431 @@
+{
+  "inputs": {
+    "mortar_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_mortar",
+    "conformal_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\work\\meshes\\mesh_physical_parity_conformal",
+    "project": "D:\\Github\\TES-Programs\\Elmer-Projects-physical-parity\\Elmer-Projects\\elmer_project_physical_parity_conformal.json"
+  },
+  "geometry_parity": {
+    "bodies": {
+      "abs": {
+        "analytic_volume_m3": 7e-10,
+        "mortar_mesh_volume_m3": 7.000000000000014e-10,
+        "conformal_mesh_volume_m3": 7.000000000000014e-10,
+        "mortar_relative_to_analytic": 2.067951531382569e-15,
+        "conformal_relative_to_analytic": 2.067951531382569e-15,
+        "route_relative_difference": 0.0
+      },
+      "TES": {
+        "analytic_volume_m3": 4e-14,
+        "mortar_mesh_volume_m3": 3.9999999999999596e-14,
+        "conformal_mesh_volume_m3": 3.9999999999999596e-14,
+        "mortar_relative_to_analytic": -1.0097419586828951e-14,
+        "conformal_relative_to_analytic": -1.0097419586828951e-14,
+        "route_relative_difference": 0.0
+      },
+      "Stycast": {
+        "analytic_volume_m3": 3.895637722304414e-12,
+        "mortar_mesh_volume_m3": 3.761319552429538e-12,
+        "conformal_mesh_volume_m3": 3.761319552429538e-12,
+        "mortar_relative_to_analytic": -0.03447912240551524,
+        "conformal_relative_to_analytic": -0.03447912240551524,
+        "route_relative_difference": 0.0
+      },
+      "SiO2_1": {
+        "analytic_volume_m3": 1.8e-11,
+        "mortar_mesh_volume_m3": 1.800000000000002e-11,
+        "conformal_mesh_volume_m3": 1.800000000000002e-11,
+        "mortar_relative_to_analytic": 1.077058089261755e-15,
+        "conformal_relative_to_analytic": 1.077058089261755e-15,
+        "route_relative_difference": 0.0
+      },
+      "Si_1": {
+        "analytic_volume_m3": 2.6265e-10,
+        "mortar_mesh_volume_m3": 2.626499999999936e-10,
+        "conformal_mesh_volume_m3": 2.626499999999936e-10,
+        "mortar_relative_to_analytic": -2.4407575660711838e-14,
+        "conformal_relative_to_analytic": -2.4407575660711838e-14,
+        "route_relative_difference": 0.0
+      },
+      "SiNx": {
+        "analytic_volume_m3": 1.751e-11,
+        "mortar_mesh_volume_m3": 1.7509999999999935e-11,
+        "conformal_mesh_volume_m3": 1.7509999999999935e-11,
+        "mortar_relative_to_analytic": -3.690661642244734e-15,
+        "conformal_relative_to_analytic": -3.690661642244734e-15,
+        "route_relative_difference": 0.0
+      },
+      "Si_2": {
+        "analytic_volume_m3": 6.1285e-09,
+        "mortar_mesh_volume_m3": 6.128500000000017e-09,
+        "conformal_mesh_volume_m3": 6.128500000000017e-09,
+        "mortar_relative_to_analytic": 2.699455372613291e-15,
+        "conformal_relative_to_analytic": 2.699455372613291e-15,
+        "route_relative_difference": 0.0
+      },
+      "SiO2_2": {
+        "analytic_volume_m3": 3.502e-11,
+        "mortar_mesh_volume_m3": 3.502000000000011e-11,
+        "conformal_mesh_volume_m3": 3.502000000000011e-11,
+        "mortar_relative_to_analytic": 3.1370623959080236e-15,
+        "conformal_relative_to_analytic": 3.1370623959080236e-15,
+        "route_relative_difference": 0.0
+      },
+      "Membrane_Si1": {
+        "analytic_volume_m3": 7.349999999999999e-12,
+        "mortar_mesh_volume_m3": 7.35000000000001e-12,
+        "conformal_mesh_volume_m3": 7.35000000000001e-12,
+        "mortar_relative_to_analytic": 1.5386544132310785e-15,
+        "conformal_relative_to_analytic": 1.5386544132310785e-15,
+        "route_relative_difference": 0.0
+      },
+      "Membrane_SiNx": {
+        "analytic_volume_m3": 4.899999999999999e-13,
+        "mortar_mesh_volume_m3": 4.899999999999983e-13,
+        "conformal_mesh_volume_m3": 4.899999999999983e-13,
+        "mortar_relative_to_analytic": -3.2971165997808825e-15,
+        "conformal_relative_to_analytic": -3.2971165997808825e-15,
+        "route_relative_difference": 0.0
+      }
+    },
+    "contact_areas": {
+      "Membrane_TES": {
+        "analytic_m2": 2.5e-07,
+        "mortar": {
+          "left_m2": 2.5e-07,
+          "right_m2": 2.5e-07
+        },
+        "conformal": {
+          "left_m2": 2.5e-07,
+          "right_m2": 2.5e-07
+        }
+      },
+      "TES_Stycast": {
+        "analytic_m2": 1.9478188611522071e-07,
+        "mortar": {
+          "left_m2": 1.9125107200725647e-07,
+          "right_m2": 1.9125107200725647e-07
+        },
+        "conformal": {
+          "left_m2": 1.9125107200725647e-07,
+          "right_m2": 1.9125107200725647e-07
+        }
+      },
+      "Stycast_absorber": {
+        "analytic_m2": 1.9478188611522071e-07,
+        "mortar": {
+          "left_m2": 1.82216367137212e-07,
+          "right_m2": 1.8221636713721203e-07
+        },
+        "conformal": {
+          "left_m2": 1.82216367137212e-07,
+          "right_m2": 1.8221636713721203e-07
+        }
+      }
+    },
+    "max_route_volume_relative_difference": 0.0,
+    "status": "PASS",
+    "analytic_convergence_status": "REPORT_ONLY",
+    "analytic_convergence_note": "The route comparison is exact; analytic cylinder discretization error is reported separately and must be reduced by mesh convergence before production acceptance."
+  },
+  "mortar_observables": {
+    "SiO2_2": {
+      "volume_m3": 3.502000000000011e-11,
+      "element_count": 21927,
+      "volume_average_temperature_K": 0.14999999999998267,
+      "min_temperature_K": 0.1499999999999089,
+      "max_temperature_K": 0.15000000000000005
+    },
+    "SiNx": {
+      "volume_m3": 1.7509999999999935e-11,
+      "element_count": 21960,
+      "volume_average_temperature_K": 0.14999999999995978,
+      "min_temperature_K": 0.14999999999450134,
+      "max_temperature_K": 0.1500000000027689
+    },
+    "Si_2": {
+      "volume_m3": 6.128500000000017e-09,
+      "element_count": 42281,
+      "volume_average_temperature_K": 0.1499999999999706,
+      "min_temperature_K": 0.14999999999979846,
+      "max_temperature_K": 0.14999999999999497
+    },
+    "SiO2_1": {
+      "volume_m3": 1.800000000000002e-11,
+      "element_count": 20140,
+      "volume_average_temperature_K": 0.1499999999280358,
+      "min_temperature_K": 0.14999999614484594,
+      "max_temperature_K": 0.15000000000010164
+    },
+    "Si_1": {
+      "volume_m3": 2.626499999999936e-10,
+      "element_count": 21686,
+      "volume_average_temperature_K": 0.14999999999997243,
+      "min_temperature_K": 0.149999999999453,
+      "max_temperature_K": 0.15000000000010305
+    },
+    "abs": {
+      "volume_m3": 7.000000000000014e-10,
+      "element_count": 1282,
+      "volume_average_temperature_K": 0.14999999633473332,
+      "min_temperature_K": 0.1499999963346693,
+      "max_temperature_K": 0.1499999963347413
+    },
+    "Membrane_SiNx": {
+      "volume_m3": 4.899999999999983e-13,
+      "element_count": 1385,
+      "volume_average_temperature_K": 0.1499999972546511,
+      "min_temperature_K": 0.14999999620016713,
+      "max_temperature_K": 0.1500000000027689
+    },
+    "Membrane_Si1": {
+      "volume_m3": 7.35000000000001e-12,
+      "element_count": 898,
+      "volume_average_temperature_K": 0.1499999972964454,
+      "min_temperature_K": 0.14999999614484594,
+      "max_temperature_K": 0.14999999999981092
+    },
+    "TES": {
+      "volume_m3": 3.9999999999999596e-14,
+      "element_count": 524,
+      "volume_average_temperature_K": 0.14999999624611562,
+      "min_temperature_K": 0.1499999962117394,
+      "max_temperature_K": 0.14999999626065785
+    },
+    "Stycast": {
+      "volume_m3": 3.761319552429538e-12,
+      "element_count": 274,
+      "volume_average_temperature_K": 0.1499999962988758,
+      "min_temperature_K": 0.14999999622245172,
+      "max_temperature_K": 0.14999999635904263
+    }
+  },
+  "conformal_observables": {
+    "SiO2_2": {
+      "volume_m3": 3.502000000000011e-11,
+      "element_count": 21927,
+      "volume_average_temperature_K": 0.14999999999993113,
+      "min_temperature_K": 0.1499999999994892,
+      "max_temperature_K": 0.15000000000000005
+    },
+    "SiNx": {
+      "volume_m3": 1.7509999999999935e-11,
+      "element_count": 21960,
+      "volume_average_temperature_K": 0.149999999999796,
+      "min_temperature_K": 0.1499999999607523,
+      "max_temperature_K": 0.15000000002010563
+    },
+    "Si_2": {
+      "volume_m3": 6.128500000000017e-09,
+      "element_count": 42281,
+      "volume_average_temperature_K": 0.14999999999985353,
+      "min_temperature_K": 0.14999999999869557,
+      "max_temperature_K": 0.14999999999997524
+    },
+    "SiO2_1": {
+      "volume_m3": 1.800000000000002e-11,
+      "element_count": 20140,
+      "volume_average_temperature_K": 0.14999999947848844,
+      "min_temperature_K": 0.1499999722833935,
+      "max_temperature_K": 0.14999999999998206
+    },
+    "Si_1": {
+      "volume_m3": 2.626499999999936e-10,
+      "element_count": 21686,
+      "volume_average_temperature_K": 0.14999999999980956,
+      "min_temperature_K": 0.14999999999617328,
+      "max_temperature_K": 0.14999999999998206
+    },
+    "abs": {
+      "volume_m3": 7.000000000000014e-10,
+      "element_count": 1282,
+      "volume_average_temperature_K": 0.14999997303291226,
+      "min_temperature_K": 0.14999997303281257,
+      "max_temperature_K": 0.14999997303292142
+    },
+    "Membrane_SiNx": {
+      "volume_m3": 4.899999999999983e-13,
+      "element_count": 1385,
+      "volume_average_temperature_K": 0.14999998017299782,
+      "min_temperature_K": 0.14999997275196295,
+      "max_temperature_K": 0.15000000002010563
+    },
+    "Membrane_Si1": {
+      "volume_m3": 7.35000000000001e-12,
+      "element_count": 898,
+      "volume_average_temperature_K": 0.1499999804380244,
+      "min_temperature_K": 0.1499999722833935,
+      "max_temperature_K": 0.14999999999867122
+    },
+    "TES": {
+      "volume_m3": 3.9999999999999596e-14,
+      "element_count": 524,
+      "volume_average_temperature_K": 0.14999997290135852,
+      "min_temperature_K": 0.1499999728874943,
+      "max_temperature_K": 0.1499999729184509
+    },
+    "Stycast": {
+      "volume_m3": 3.761319552429538e-12,
+      "element_count": 274,
+      "volume_average_temperature_K": 0.1499999729786079,
+      "min_temperature_K": 0.1499999728874943,
+      "max_temperature_K": 0.14999997303730267
+    }
+  },
+  "steady_thermal_parity": {
+    "Membrane_Si1": {
+      "volume_average_temperature_K_abs_difference": 1.68584209925271e-08,
+      "min_temperature_K_abs_difference": 2.3861452425055774e-08,
+      "max_temperature_K_abs_difference": 1.1396994459289544e-12,
+      "volume_relative_difference": 0.0
+    },
+    "Membrane_SiNx": {
+      "volume_average_temperature_K_abs_difference": 1.70816532862883e-08,
+      "min_temperature_K_abs_difference": 2.34482041838735e-08,
+      "max_temperature_K_abs_difference": 1.7336743152185363e-11,
+      "volume_relative_difference": 0.0
+    },
+    "SiNx": {
+      "volume_average_temperature_K_abs_difference": 1.6378565170782622e-13,
+      "min_temperature_K_abs_difference": 3.3749031347340974e-11,
+      "max_temperature_K_abs_difference": 1.7336743152185363e-11,
+      "volume_relative_difference": 0.0
+    },
+    "SiO2_1": {
+      "volume_average_temperature_K_abs_difference": 4.4954737155045166e-10,
+      "min_temperature_K_abs_difference": 2.3861452425055774e-08,
+      "max_temperature_K_abs_difference": 1.1957101975212936e-13,
+      "volume_relative_difference": 0.0
+    },
+    "SiO2_2": {
+      "volume_average_temperature_K_abs_difference": 5.154210391822289e-14,
+      "min_temperature_K_abs_difference": 4.196920588839248e-13,
+      "max_temperature_K_abs_difference": 0.0,
+      "volume_relative_difference": 0.0
+    },
+    "Si_1": {
+      "volume_average_temperature_K_abs_difference": 1.6286971771251046e-13,
+      "min_temperature_K_abs_difference": 3.279709837045175e-12,
+      "max_temperature_K_abs_difference": 1.2098655410852643e-13,
+      "volume_relative_difference": 0.0
+    },
+    "Si_2": {
+      "volume_average_temperature_K_abs_difference": 1.1707301794672276e-13,
+      "min_temperature_K_abs_difference": 1.1028955526626305e-12,
+      "max_temperature_K_abs_difference": 1.9734214262712158e-14,
+      "volume_relative_difference": 0.0
+    },
+    "Stycast": {
+      "volume_average_temperature_K_abs_difference": 2.3320267911186576e-08,
+      "min_temperature_K_abs_difference": 2.333495741080327e-08,
+      "max_temperature_K_abs_difference": 2.3321739955894927e-08,
+      "volume_relative_difference": 0.0
+    },
+    "TES": {
+      "volume_average_temperature_K_abs_difference": 2.3344757099641456e-08,
+      "min_temperature_K_abs_difference": 2.3324245090883267e-08,
+      "max_temperature_K_abs_difference": 2.3342206945109467e-08,
+      "volume_relative_difference": 0.0
+    },
+    "abs": {
+      "volume_average_temperature_K_abs_difference": 2.3301821056032068e-08,
+      "min_temperature_K_abs_difference": 2.3301856721946734e-08,
+      "max_temperature_K_abs_difference": 2.3301819862542317e-08,
+      "volume_relative_difference": 0.0
+    }
+  },
+  "interface_continuity": {
+    "mortar": {
+      "Membrane_TES": {
+        "left_nodes": 79,
+        "right_nodes": 79,
+        "max_abs_temperature_jump_K": 7.89046605831345e-12,
+        "mean_abs_temperature_jump_K": 4.766205011535807e-13,
+        "rms_temperature_jump_K": 1.2526814808787418e-12
+      },
+      "TES_Stycast": {
+        "left_nodes": 51,
+        "right_nodes": 51,
+        "max_abs_temperature_jump_K": 2.603472992745992e-14,
+        "mean_abs_temperature_jump_K": 1.3153965933916683e-15,
+        "rms_temperature_jump_K": 3.927179809650012e-15
+      },
+      "Stycast_absorber": {
+        "left_nodes": 22,
+        "right_nodes": 22,
+        "max_abs_temperature_jump_K": 2.886579864025407e-15,
+        "mean_abs_temperature_jump_K": 5.286175537703871e-16,
+        "rms_temperature_jump_K": 8.4802254759775925e-16
+      }
+    },
+    "conformal": {
+      "Membrane_TES": {
+        "left_nodes": 79,
+        "right_nodes": 79,
+        "max_abs_temperature_jump_K": 0.0,
+        "mean_abs_temperature_jump_K": 0.0,
+        "rms_temperature_jump_K": 0.0
+      },
+      "TES_Stycast": {
+        "left_nodes": 51,
+        "right_nodes": 51,
+        "max_abs_temperature_jump_K": 0.0,
+        "mean_abs_temperature_jump_K": 0.0,
+        "rms_temperature_jump_K": 0.0
+      },
+      "Stycast_absorber": {
+        "left_nodes": 22,
+        "right_nodes": 22,
+        "max_abs_temperature_jump_K": 0.0,
+        "mean_abs_temperature_jump_K": 0.0,
+        "rms_temperature_jump_K": 0.0
+      }
+    }
+  },
+  "electrical_observables": {
+    "mortar": null,
+    "conformal": null,
+    "status": "NOT_AVAILABLE"
+  },
+  "heat_flux_consistency": {
+    "mortar": {
+      "Membrane_TES": {
+        "left_outward_flux_W": 3.4510939714689406e-17,
+        "right_outward_flux_W": -1.2825020267696724e-14,
+        "normalized_imbalance": 0.9973090927737858,
+        "status": "NOT_INFORMATIVE"
+      },
+      "TES_Stycast": {
+        "left_outward_flux_W": 9.081128420834547e-15,
+        "right_outward_flux_W": 3.3704790648083755e-18,
+        "normalized_imbalance": 1.0003711520098182,
+        "status": "NOT_INFORMATIVE"
+      },
+      "Stycast_absorber": {
+        "left_outward_flux_W": -7.881288622194856e-19,
+        "right_outward_flux_W": 6.658644648201664e-19,
+        "normalized_imbalance": 0.15513249578882937,
+        "status": "NOT_INFORMATIVE"
+      }
+    },
+    "conformal": {
+      "Membrane_TES": {
+        "left_outward_flux_W": 1.9509464196903861e-16,
+        "right_outward_flux_W": 4.845301911531897e-15,
+        "normalized_imbalance": 1.040264702908339,
+        "status": "NOT_INFORMATIVE"
+      },
+      "TES_Stycast": {
+        "left_outward_flux_W": 1.5150696713844207e-14,
+        "right_outward_flux_W": 5.0443380578955165e-18,
+        "normalized_imbalance": 1.0003329442964353,
+        "status": "NOT_INFORMATIVE"
+      },
+      "Stycast_absorber": {
+        "left_outward_flux_W": -1.2583506274386528e-18,
+        "right_outward_flux_W": 1.0451148456217439e-18,
+        "normalized_imbalance": 0.16945657050368068,
+        "status": "NOT_INFORMATIVE"
+      }
+    }
+  }
+}
