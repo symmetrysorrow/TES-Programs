@@ -31,8 +31,12 @@ _repo_root = Path(__file__).resolve().parents[1]
 _tes_cpp_python = _repo_root / "tes_cpp" / "python"
 if str(_tes_cpp_python) not in sys.path:
     sys.path.insert(0, str(_tes_cpp_python))
+_analysis_root = _repo_root / "Analyze_Experimental_Data"
+if str(_analysis_root) not in sys.path:
+    sys.path.insert(0, str(_analysis_root))
 
 from lib import general
+from tes_analysis.noise_utils import estimate_one_sided_asd
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
 from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
@@ -863,6 +867,193 @@ def FitRatios():
     )
 
 
+def tes_operating_point(parameters):
+    """Return the zero-input equilibrium used by the reduced TES model.
+
+    The bath law is ``P_b(T) = G_bath*T_c/n * ((T/T_c)**n -
+    (T_bath/T_c)**n)``.  At equilibrium both TES and absorber nodes are at
+    ``T_c`` and the Joule power balances the bath power.  ``alpha`` and
+    ``beta`` are logarithmic local derivatives of R(T, I).
+    """
+    t_c = float(parameters["T_c"])
+    t_bath = float(parameters["T_bath"])
+    g_bath = float(parameters["G_tes-bath"])
+    resistance = float(parameters["R"])
+    exponent = float(parameters["n"])
+    if not np.isfinite(t_c) or t_c <= 0.0:
+        raise ValueError("T_c must be positive and finite")
+    if not np.isfinite(t_bath) or t_bath < 0.0 or t_bath >= t_c:
+        raise ValueError("operating point requires 0 <= T_bath < T_c")
+    if not np.isfinite(g_bath) or g_bath <= 0.0:
+        raise ValueError("G_tes-bath must be positive and finite")
+    if not np.isfinite(resistance) or resistance <= 0.0:
+        raise ValueError("R must be positive and finite")
+    if not np.isfinite(exponent) or exponent <= 0.0:
+        raise ValueError("n must be positive and finite")
+    joule_power = g_bath * t_c * (1.0 - (t_bath / t_c) ** exponent) / exponent
+    current = np.sqrt(joule_power / resistance)
+    hanging = (
+        str(parameters.get("tes_internal_model", "none")).strip().lower() == "hanging"
+        and float(parameters.get("G_tes-hanging", 0.0)) > 0.0
+    )
+    state = np.full(7 if hanging else 5, t_c, dtype=float)
+    state[[0, -1]] = current
+    return {
+        "state": state,
+        "current_A": float(current),
+        "tes_temperature_K": t_c,
+        "bath_power_W": float(joule_power),
+    }
+
+
+def tes_linearized_time_matrix(parameters):
+    """Build the time-domain Jacobian A for ``d(state)/dt = A state``.
+
+    The frequency-domain matrix used by MakeNoise is ``-A + i*omega*I``.
+    Keeping A explicit prevents the sign convention from being hidden in the
+    magnitude calculation and makes stability checks unambiguous.
+    """
+    c_abs = float(parameters["C_abs"])
+    c_tes = float(parameters["C_tes"])
+    g_abs_abs = float(parameters["G_abs-abs"])
+    g_abs_tes = float(parameters["G_abs-tes"])
+    g_bath = float(parameters["G_tes-bath"])
+    r = float(parameters["R"])
+    r_load = float(parameters["R_l"])
+    t_c = float(parameters["T_c"])
+    alpha = float(parameters["alpha"])
+    beta = float(parameters["beta"])
+    inductance = float(parameters["L"])
+    point = tes_operating_point(parameters)
+    current = point["current_A"]
+    g_eff = 1.0 / (1.0 / g_abs_tes + 1.0 / (2.0 * g_abs_abs))
+    loop_gain = alpha * current**2 * r / (g_bath * t_c)
+    electrical_rate = (r_load + r * (1.0 + beta)) / inductance
+    thermal_rate = ((1.0 - loop_gain) * g_bath + g_eff) / c_tes
+
+    hanging_requested = str(parameters.get("tes_internal_model", "none")).strip().lower() == "hanging"
+    hanging = hanging_requested and float(parameters.get("G_tes-hanging", 0.0)) > 0.0
+    if hanging:
+        c_hanging = float(parameters["C_tes_hanging"])
+        g_hanging = float(parameters["G_tes-hanging"])
+        a = np.zeros((7, 7), dtype=float)
+        a[0, 0] = -electrical_rate
+        a[0, 1] = -alpha * current * r / (t_c * inductance)
+        a[1, 0] = current * r * (2.0 + beta) / c_tes
+        a[1, 1] = -thermal_rate - g_hanging / c_tes
+        a[1, 2] = g_hanging / c_tes
+        a[1, 3] = g_eff / c_tes
+        a[2, 1] = g_hanging / c_hanging
+        a[2, 2] = -g_hanging / c_hanging
+        a[3, 1] = g_eff / c_abs
+        a[3, 3] = -2.0 * g_eff / c_abs
+        a[3, 4] = g_eff / c_abs
+        a[4, 3] = g_eff / c_tes
+        a[4, 4] = -thermal_rate - g_hanging / c_tes
+        a[4, 5] = g_hanging / c_tes
+        a[4, 6] = current * r * (2.0 + beta) / c_tes
+        a[5, 4] = g_hanging / c_hanging
+        a[5, 5] = -g_hanging / c_hanging
+        a[6, 4] = -alpha * current * r / (t_c * inductance)
+        a[6, 6] = -electrical_rate
+        return a
+
+    a = np.zeros((5, 5), dtype=float)
+    a[0, 0] = -electrical_rate
+    a[0, 1] = -alpha * current * r / (t_c * inductance)
+    a[1, 0] = current * r * (2.0 + beta) / c_tes
+    a[1, 1] = -thermal_rate
+    a[1, 2] = g_eff / c_tes
+    a[2, 1] = g_eff / c_abs
+    a[2, 2] = -2.0 * g_eff / c_abs
+    a[2, 3] = g_eff / c_abs
+    a[3, 2] = g_eff / c_tes
+    a[3, 3] = -thermal_rate
+    a[3, 4] = current * r * (2.0 + beta) / c_tes
+    a[4, 3] = -alpha * current * r / (t_c * inductance)
+    a[4, 4] = -electrical_rate
+    return a
+
+
+def tes_nonlinear_rhs(state, parameters):
+    """Canonical nonlinear RHS corresponding to the five/seven-state model."""
+    state = np.asarray(state, dtype=float)
+    point = tes_operating_point(parameters)
+    if state.shape != point["state"].shape:
+        raise ValueError("state shape does not match the selected TES model")
+    c_abs = float(parameters["C_abs"])
+    c_tes = float(parameters["C_tes"])
+    g_bath = float(parameters["G_tes-bath"])
+    g_eff = 1.0 / (1.0 / float(parameters["G_abs-tes"]) + 1.0 / (2.0 * float(parameters["G_abs-abs"])))
+    t_c = float(parameters["T_c"])
+    t_bath = float(parameters["T_bath"])
+    n = float(parameters["n"])
+    r0 = float(parameters["R"])
+    alpha = float(parameters["alpha"])
+    beta = float(parameters["beta"])
+    load = float(parameters["R_l"])
+    inductance = float(parameters["L"])
+    i0 = point["current_A"]
+    bias_voltage = i0 * (load + r0)
+
+    def resistance(current, temperature):
+        return r0 * (temperature / t_c) ** alpha * (current / i0) ** beta
+
+    def bath_power(temperature):
+        return g_bath * t_c / n * ((temperature / t_c) ** n - (t_bath / t_c) ** n)
+
+    hanging = state.size == 7
+    if hanging:
+        c_hanging = float(parameters["C_tes_hanging"])
+        g_hanging = float(parameters["G_tes-hanging"])
+        i1, t1, th1, ta, t2, th2, i2 = state
+        r1, r2 = resistance(i1, t1), resistance(i2, t2)
+        return np.array([
+            (bias_voltage - i1 * (load + r1)) / inductance,
+            (i1**2 * r1 - bath_power(t1) - g_eff * (t1 - ta) - g_hanging * (t1 - th1)) / c_tes,
+            g_hanging * (t1 - th1) / c_hanging,
+            (g_eff * (t1 - ta) + g_eff * (t2 - ta)) / c_abs,
+            (i2**2 * r2 - bath_power(t2) - g_eff * (t2 - ta) - g_hanging * (t2 - th2)) / c_tes,
+            g_hanging * (t2 - th2) / c_hanging,
+            (bias_voltage - i2 * (load + r2)) / inductance,
+        ])
+
+    i1, t1, ta, t2, i2 = state
+    r1, r2 = resistance(i1, t1), resistance(i2, t2)
+    return np.array([
+        (bias_voltage - i1 * (load + r1)) / inductance,
+        (i1**2 * r1 - bath_power(t1) - g_eff * (t1 - ta)) / c_tes,
+        (g_eff * (t1 - ta) + g_eff * (t2 - ta)) / c_abs,
+        (i2**2 * r2 - bath_power(t2) - g_eff * (t2 - ta)) / c_tes,
+        (bias_voltage - i2 * (load + r2)) / inductance,
+    ])
+
+
+def numerical_jacobian(function, point, relative_step=1.0e-6):
+    """Central finite-difference Jacobian for audit and regression tests."""
+    point = np.asarray(point, dtype=float)
+    jacobian = np.empty((point.size, point.size), dtype=float)
+    for index in range(point.size):
+        step = relative_step * max(abs(point[index]), 1.0e-12)
+        plus = point.copy(); plus[index] += step
+        minus = point.copy(); minus[index] -= step
+        jacobian[:, index] = (function(plus) - function(minus)) / (2.0 * step)
+    return jacobian
+
+
+def diagnose_linear_stability(time_matrix, tolerance=1.0e-12):
+    """Return poles and a stability gate for a time-domain Jacobian A."""
+    eigenvalues = np.linalg.eigvals(np.asarray(time_matrix, dtype=float))
+    max_real = float(np.max(eigenvalues.real))
+    unstable = eigenvalues.real >= -float(tolerance)
+    return {
+        "eigenvalues_per_s": eigenvalues,
+        "max_real_part_per_s": max_real,
+        "unstable_mode": bool(np.any(unstable)),
+        "pole_frequency_scale_hz": np.abs(eigenvalues) / (2.0 * np.pi),
+    }
+
+
 def MakeNoise():
     """
     Calculate detector noise with a reduced five-state thermal model.
@@ -1435,6 +1626,33 @@ def MakeNoise():
 
         return X
 
+    # Use the explicitly derived time-domain Jacobian for the production
+    # frequency-domain solve.  The legacy inline construction above is kept
+    # temporarily as a readable reference, while this override makes the
+    # sign convention and the audit target unambiguous.
+    linearized_time_matrix = tes_linearized_time_matrix(para)
+    stability = diagnose_linear_stability(linearized_time_matrix)
+    stability_mode = str(para.get("stability_mode", "warn")).strip().lower()
+    if stability_mode not in {"warn", "strict", "ignore"}:
+        raise ValueError("stability_mode must be 'warn', 'strict', or 'ignore'")
+    if stability["unstable_mode"]:
+        message = (
+            "unstable TES operating point: "
+            f"max Re(lambda)={stability['max_real_part_per_s']:.6g} s^-1; "
+            f"pole scales={np.asarray(stability['pole_frequency_scale_hz'])} Hz"
+        )
+        if stability_mode == "strict":
+            raise ValueError(message)
+        if stability_mode == "warn":
+            import warnings
+            warnings.warn(message, RuntimeWarning, stacklevel=2)
+        print("STABILITY DIAGNOSTIC:", message)
+
+    def matrix_M(omega):
+        return -linearized_time_matrix + 1j * float(omega) * np.eye(
+            linearized_time_matrix.shape[0]
+        )
+
     # --------------------------------------------------------
     # Transfer functions
     # --------------------------------------------------------
@@ -1613,6 +1831,20 @@ def MakeNoise():
             f.attrs["resistance_fluctuation_tau_s"] = resistance_fluctuation_tau_s
         f.attrs["johnson_formula"] = (
             "S_V_J = 4*k_B*T*R*(1+2*beta)*(1+M^2)"
+        )
+        f.attrs["linearized_matrix_convention"] = "M(omega) = -A + i*omega*I; dx/dt = A*x"
+        f.attrs["operating_current_A"] = tes_operating_point(para)["current_A"]
+        f.attrs["operating_temperature_K"] = tes_operating_point(para)["tes_temperature_K"]
+        f.attrs["stability_max_real_part_per_s"] = stability["max_real_part_per_s"]
+        f.attrs["stability_unstable_mode"] = stability["unstable_mode"]
+        f.attrs["stability_eigenvalues_real_per_s"] = np.asarray(
+            stability["eigenvalues_per_s"].real
+        )
+        f.attrs["stability_eigenvalues_imag_per_s"] = np.asarray(
+            stability["eigenvalues_per_s"].imag
+        )
+        f.attrs["stability_pole_frequency_scale_hz"] = np.asarray(
+            stability["pole_frequency_scale_hz"]
         )
 
         f.attrs[
@@ -1861,39 +2093,34 @@ def finite_record_simulation_spectrum(
     if input_asd.shape != frequency.shape:
         raise ValueError("input ASD must have the one-sided rFFT length")
 
-    df = rate / sample
-    window = np.hanning(sample)
-    window_power_gain = np.sqrt(np.mean(window**2))
-    numerator, denominator = scipy.signal.bessel(
-        2,
-        cutoff / (rate / 2),
-        "low",
-    )
     rng = np.random.default_rng(seed)
-    # Average power spectra before taking the square root.  Averaging the
-    # magnitudes directly estimates the mean of a Rayleigh-distributed
-    # random variable, rather than the ASD, and also misses the rFFT
-    # normalization/one-sided factors handled by ``asd_from_rfft``.
-    power_sum = np.zeros(len(frequency))
+    df = rate / sample
 
-    for _ in range(records):
-        spectrum = np.zeros(len(frequency), dtype=np.complex128)
-        sigma = input_asd[1:-1] * sample * np.sqrt(df) / 2.0
-        spectrum[1:-1] = (
-            rng.normal(size=len(sigma)) * sigma
-            + 1j * rng.normal(size=len(sigma)) * sigma
-        )
-        spectrum[0] = rng.normal() * input_asd[0] * sample * np.sqrt(df)
-        spectrum[-1] = rng.normal() * input_asd[-1] * sample * np.sqrt(df)
+    def records_generator():
+        for _ in range(int(records)):
+            spectrum = np.zeros(len(frequency), dtype=np.complex128)
+            sigma = input_asd[1:-1] * sample * np.sqrt(df) / 2.0
+            spectrum[1:-1] = (
+                rng.normal(size=len(sigma)) * sigma
+                + 1j * rng.normal(size=len(sigma)) * sigma
+            )
+            spectrum[0] = rng.normal() * input_asd[0] * sample * np.sqrt(df)
+            spectrum[-1] = rng.normal() * input_asd[-1] * sample * np.sqrt(df)
+            yield np.fft.irfft(spectrum, n=sample)
 
-        noise = np.fft.irfft(spectrum, n=sample)
-        noise = noise - np.mean(noise)
-        noise = scipy.signal.filtfilt(numerator, denominator, noise)
-        noise_fft = np.fft.rfft(noise * window) / window_power_gain
-        power_sum += np.abs(noise_fft) ** 2
-
-    mean_amplitude = np.sqrt(power_sum / records)
-    return asd_from_rfft(mean_amplitude, sample, rate)
+    # The same canonical estimator is used by NoiseAnalysis and by the
+    # experimental rebuild scripts: preprocess each record, average FFT power,
+    # then apply the one-sided ASD normalization once.
+    estimated_asd, accepted = estimate_one_sided_asd(
+        records_generator(),
+        sample,
+        rate,
+        cutoff=cutoff,
+        remove_mean=True,
+    )
+    if accepted != int(records):
+        raise RuntimeError("simulation record estimator accepted an unexpected count")
+    return estimated_asd
 
 
 def LoadNoiseTransfers():

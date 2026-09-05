@@ -1,0 +1,26 @@
+--- fem/src/SParIterSolver.F90
++++ fem/src/SParIterSolver.F90
+@@ -2040,2 +2040,3 @@
+   INTEGER :: verbosity, myverb
+   INTEGER :: nrows, ncols, nnz
++  CHARACTER(LEN=1024) :: DumpPath
+@@ -2042,1 +2043,2 @@
+   TYPE(ValueList_t), POINTER :: Params
++  INTEGER :: DumpStatus, DumpLength, DumpUnit
+@@ -2247,1 +2247,16 @@
+   IF(Parallel) CALL ExchangeHypreResults()    
++
++  ! Optional correctness diagnostic.  This is intentionally environment-
++  ! controlled so normal solver runs do not create solution files.
++  CALL GET_ENVIRONMENT_VARIABLE('ELMER_HYPRE_SOLUTION_DUMP', &
++       DumpPath, LENGTH=DumpLength, STATUS=DumpStatus)
++  IF (DumpStatus == 0 .AND. DumpLength > 0) THEN
++    OPEN(NEWUNIT=DumpUnit, FILE=TRIM(DumpPath(1:DumpLength)), &
++         STATUS='REPLACE', ACTION='WRITE', IOSTAT=DumpStatus)
++    IF (DumpStatus == 0) THEN
++      DO i=1,SIZE(XVec)
++        WRITE(DumpUnit,'(I12,1X,ES26.17E3)') i, XVec(i)
++      END DO
++      CLOSE(DumpUnit)
++    END IF
++  END IF

@@ -23,14 +23,17 @@ from scipy import optimize, signal
 
 SIMULATION_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIMULATION_ROOT))
+ANALYSIS_ROOT = SIMULATION_ROOT.parent / "Analyze_Experimental_Data"
+sys.path.insert(0, str(ANALYSIS_ROOT))
 import PoST_Simulation as post  # noqa: E402
+from tes_analysis.noise_utils import estimate_one_sided_asd  # noqa: E402
 
 
 EXPERIMENT_PATH = Path(
     r"G:\tagawa\20241206\r1ch12_215mK_1400uA1400uA_"
     r"difftrig5e-5_rate500k_samples100k_gain5_day2"
 )
-BASE_INPUT_PATH = Path(r"H:\hata2025\new\input.json")
+BASE_INPUT_PATH = SIMULATION_ROOT / "input.json"
 
 # Best point in post_noise_bath_lr_sweep.csv (normalized 1--30 kHz score).
 BEST_CHANGES = {
@@ -56,25 +59,36 @@ STABLE_INTERNAL_CHANGES = {
 }
 
 
-def experimental_asd(rate: float, sample: int, cutoff: float):
-    window = np.hanning(sample)
-    power_gain = np.sqrt(np.mean(window**2))
-    numerator, denominator = signal.bessel(2, cutoff / (rate / 2), "low")
-    amplitude = np.zeros(sample // 2 + 1)
-    count = 0
-    for path in (EXPERIMENT_PATH / "CH0_noise" / "rawdata").glob("CH0_*.dat"):
-        values = np.frombuffer(path.read_bytes()[4:], dtype=np.float64).copy()
-        if len(values) != sample or values.max() - values.min() > 0.04:
-            continue
-        values -= values.mean()
-        values = signal.filtfilt(numerator, denominator, values)
-        if values.max() - values.min() > 0.04:
-            continue
-        amplitude += np.abs(np.fft.rfft(values * window) / power_gain)
-        count += 1
-    if count == 0:
-        raise RuntimeError("No experimental records passed selection")
-    return amplitude / count, count
+def experimental_asd(
+    rate: float,
+    sample: int,
+    cutoff: float,
+    experiment_path: Path = EXPERIMENT_PATH,
+):
+    """Rebuild modelnoise with the production power-averaged estimator."""
+    paths = (Path(experiment_path) / "CH0_noise" / "rawdata").glob("CH0_*.dat")
+
+    def records():
+        for path in paths:
+            values = np.frombuffer(path.read_bytes()[4:], dtype=np.float64).copy()
+            yield values
+
+    def range_ok(values):
+        return values.max() - values.min() <= 0.04
+
+    try:
+        asd, count = estimate_one_sided_asd(
+            records(),
+            sample,
+            rate,
+            cutoff=cutoff,
+            remove_mean=True,
+            accept_raw=range_ok,
+            accept_processed=range_ok,
+        )
+    except ValueError as error:
+        raise RuntimeError("No experimental records passed selection") from error
+    return asd, count
 
 
 def analysis_magnitude(frequency: np.ndarray, rate: float, cutoff: float):
@@ -376,13 +390,19 @@ def main():
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--csv", type=Path, required=True)
     parser.add_argument("--plot", type=Path, required=True)
+    parser.add_argument("--experiment-path", type=Path, default=EXPERIMENT_PATH)
+    parser.add_argument("--base-input-path", type=Path, default=BASE_INPUT_PATH)
     args = parser.parse_args()
     args.work_dir.mkdir(parents=True, exist_ok=True)
 
-    base_parameters = json.loads(BASE_INPUT_PATH.read_text(encoding="utf-8"))
+    base_parameters = json.loads(args.base_input_path.read_text(encoding="utf-8"))
     parameters = dict(base_parameters)
-    parameters.update(BEST_CHANGES)
-    parameters["samples"] = 10_000
+    experiment_config = json.loads(
+        (args.experiment_path / "PulseConfig.json").read_text(encoding="utf-8")
+    )
+    parameters["rate"] = float(experiment_config["Readout"]["Rate"])
+    parameters["samples"] = int(experiment_config["Readout"]["Sample"])
+    parameters["cutoff"] = float(experiment_config["Analysis"]["CutoffFrequency"])
     (args.work_dir / "input.json").write_text(
         json.dumps(parameters, indent=2), encoding="utf-8"
     )
@@ -391,7 +411,7 @@ def main():
     sample = 100_000
     frequency = np.fft.rfftfreq(sample, d=1.0 / rate)
     measured_filtered, records = experimental_asd(
-        rate, sample, float(parameters["cutoff"])
+        rate, sample, float(parameters["cutoff"]), args.experiment_path
     )
     digital = analysis_magnitude(frequency, rate, float(parameters["cutoff"]))
     experimental = normalize_at_1khz(measured_filtered / digital, frequency)
@@ -429,20 +449,30 @@ def main():
         residual_fit_mask,
     )
 
-    stable_parameters = dict(base_parameters)
-    stable_parameters.update(STABLE_INTERNAL_CHANGES)
-    stable_parameters["samples"] = 10_000
-    stable_work_dir = args.work_dir / "stable_internal"
-    stable_work_dir.mkdir(parents=True, exist_ok=True)
-    (stable_work_dir / "input.json").write_text(
-        json.dumps(stable_parameters, indent=2), encoding="utf-8"
+    # The historical stable candidate was fit against a different base input
+    # (with T_c above 210 mK).  Do not silently evaluate it with an incompatible
+    # nominal input; that would create a negative Joule-power operating point.
+    stable_simulated = np.full_like(simulated, np.nan)
+    stable_candidate_available = float(STABLE_INTERNAL_CHANGES["T_bath"]) < float(
+        base_parameters["T_c"]
     )
-    stable_simulated = normalize_at_1khz(
-        simulated_pre_analysis_asd(
-            stable_work_dir, frequency, rate, stable_parameters
-        ),
-        frequency,
-    )
+    if stable_candidate_available:
+        stable_parameters = dict(base_parameters)
+        stable_parameters.update(STABLE_INTERNAL_CHANGES)
+        stable_parameters["rate"] = rate
+        stable_parameters["samples"] = sample
+        stable_parameters["cutoff"] = float(parameters["cutoff"])
+        stable_work_dir = args.work_dir / "stable_internal"
+        stable_work_dir.mkdir(parents=True, exist_ok=True)
+        (stable_work_dir / "input.json").write_text(
+            json.dumps(stable_parameters, indent=2), encoding="utf-8"
+        )
+        stable_simulated = normalize_at_1khz(
+            simulated_pre_analysis_asd(
+                stable_work_dir, frequency, rate, stable_parameters
+            ),
+            frequency,
+        )
 
     fixed_residual_psd = experimental**2 - simulated**2
     scaled_residual_psd = experimental**2 - (
@@ -489,9 +519,13 @@ def main():
         (current_ratio[comparison_band] >= 0.9)
         & (current_ratio[comparison_band] <= 1.1)
     )
-    stable_inside = 100.0 * np.mean(
-        (stable_ratio[comparison_band] >= 0.9)
-        & (stable_ratio[comparison_band] <= 1.1)
+    stable_inside = (
+        100.0 * np.mean(
+            (stable_ratio[comparison_band] >= 0.9)
+            & (stable_ratio[comparison_band] <= 1.1)
+        )
+        if stable_candidate_available
+        else float("nan")
     )
 
     args.plot.parent.mkdir(parents=True, exist_ok=True)
@@ -583,12 +617,14 @@ def main():
     print("multiplicative pole/zero fit:", json.dumps({
         key: value for key, value in biquad.items() if key != "response"
     }, sort_keys=True))
-    print("stable internal-source-only candidate:", json.dumps(
-        STABLE_INTERNAL_CHANGES, sort_keys=True
-    ))
+    print(
+        "stable internal-source-only candidate:",
+        json.dumps(STABLE_INTERNAL_CHANGES, sort_keys=True),
+        "evaluated=" + str(stable_candidate_available),
+    )
     print(f"fixed-scale negative PSD bins in 1--40 kHz: {np.count_nonzero(fixed_residual_psd[fit_mask] < 0)} / {np.count_nonzero(fit_mask)}")
     print("frequency_khz exp sim fixed_residual_asd best_source_asd best_combined")
-    for target in (1_000, 3_000, 5_000, 7_000, 10_000, 15_000, 20_000, 30_000, 40_000):
+    for target in (10, 100, 1_000, 3_000, 5_000, 7_000, 10_000, 15_000, 20_000, 30_000, 40_000):
         index = np.abs(frequency - target).argmin()
         fixed_asd = np.sqrt(max(fixed_residual_psd[index], 0.0))
         print(

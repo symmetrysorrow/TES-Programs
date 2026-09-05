@@ -19,7 +19,12 @@ from scipy.optimize import curve_fit
 from contextlib import contextmanager
 
 from . import analysis_utils as general
-from .noise_utils import one_sided_asd_from_power, voltage_asd_to_pA
+from .noise_utils import (
+    one_sided_asd_from_power,
+    preprocess_noise_record,
+    voltage_asd_to_pA,
+    windowed_rfft_power,
+)
 
 
 @contextmanager
@@ -116,12 +121,6 @@ def PulseAnalysis(config: dict, path: str):
         output_path = f"{folder}/output.csv"
         df.to_csv(output_path, index=False)
 
-def _remove_dc(data):
-    """Remove the per-record DC component before filtering and FFT."""
-    data = np.asarray(data)
-    return data - np.mean(data)
-
-
 def NoiseModelPath(path, channel):
     """Return the path of the noise ASD model for a channel."""
     return os.path.join(path, f"CH{channel}_noise", "modelnoise.txt")
@@ -160,8 +159,6 @@ def NoiseAnalysis(
 
         power_model = np.zeros(sample // 2 + 1)
         count = 0
-        original_noise_list = []
-
         # メディアンフィルタのカーネルサイズ (窓サイズ) を定義
         # 奇数に設定し、ノイズの幅に応じて調整します。3, 5, 7 などが一般的です。
         # ここでは例としてカーネルサイズ3を使用します。
@@ -200,16 +197,17 @@ def NoiseAnalysis(
             # スペクトルが高周波側まで漏れ込み、特にデジタルBesselがほぼ0に
             # なるNyquist近傍で偽のノイズ床として支配的になる。平均値だけを
             # 引けばACノイズ成分は保ったまま、この解析アーティファクトを除ける。
-            noise = _remove_dc(noise)
-            noise = general.Bessel(noise, rate, cutoff)
+            noise = preprocess_noise_record(
+                noise,
+                rate,
+                cutoff=cutoff,
+                remove_mean=True,
+            )
             diff=np.max(noise)-np.min(noise)
             if diff>noise_threshold:
                 filtered+=1
                 continue
-            original_noise_list.append(noise)
-
-            noise_fft = np.fft.rfft(noise * fft_window)
-            power_model += np.abs(noise_fft) ** 2
+            power_model += windowed_rfft_power(noise, fft_window)
             count += 1
 
         print(f"count;{count}")

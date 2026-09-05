@@ -26,6 +26,13 @@ reports `nsys_phase20_lower_gpu_migrated2_20260905.nsys-rep` and
 Those reports contain real CUDA kernel launches and memory transfers, and both
 Phase20 lower/full runs reached `ALL DONE`. Both nevertheless reported outer
 linear non-convergence, while the independent P19 smoke ended in
-`MPI_ABORT`; therefore correctness is `FAIL` and performance readiness remains
-`NO`. The outer Krylov state is not owned by the instrumentation hook, so
-missing outer fields remain missing rather than being fabricated.
+`MPI_ABORT`. The isolated no-mortar smoke subsequently passed its HYPRE linear
+solve on both CPU and GPU, with solution relative L2 difference
+`2.9639969303996504e-08`; its process exit code is still `1` because the
+existing nonlinear/linear-system-abort status is emitted after the linear solve.
+The no-mortar GPU Nsight report records 35,290 kernel launches. Phase20 lower
+correctness remains `FAIL` because CPU and GPU share the same outer stagnation
+pattern, and performance readiness remains `NO`. The outer Krylov state is not
+owned by the instrumentation hook; the captured HUTI history is recorded in
+`gpu_correctness_20260905/phase20_lower_outer_history.json` rather than being
+fabricated in the hook.

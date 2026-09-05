@@ -405,3 +405,129 @@ scripts added during this work are:
 - `PoST_Simulations/subScript/distributed_noise_300.py`
 
 Do not discard unrelated existing worktree changes.
+
+## Estimator/Jacobian audit and correction (2026-09-05)
+
+### Baseline
+
+Before this change, the repository test suite passed `42` tests.  The
+production `tes_analysis.operations.NoiseAnalysis()` already used a Hann
+window and power averaging, but `subScript/midband_residual.py` rebuilt the
+experimental spectrum by averaging `abs(FFT)` record-by-record.  That was a
+real estimator-parity error.  `finite_record_simulation_spectrum()` had the
+right power-average intent, but duplicated the normalization and preprocessing
+instead of sharing the production implementation.
+
+### Confirmed and corrected errors
+
+The following changes were made without fitting an experimental residual or
+adding white/readout noise:
+
+* `Analyze_Experimental_Data/tes_analysis/noise_utils.py` now owns record
+  preprocessing, windowed rFFT power, one-sided ASD normalization, and the
+  finite-record estimator.
+* `NoiseAnalysis()`, `noise_main.py`, `midband_residual.experimental_asd()`,
+  and `PoST_Simulation.finite_record_simulation_spectrum()` use the shared
+  implementation.  The order is per-record mean removal, digital Bessel
+  `filtfilt`, Hann window, power average, square root, then DC/Nyquist/interior
+  one-sided factors.  `df = rate/sample` and the Hann power gain are applied
+  once.
+* The analytic reduced TES Jacobian is now explicit as a time-domain matrix
+  `A`, with `M(omega) = -A + i*omega*I`.  A canonical nonlinear five/seven
+  state RHS and central finite-difference Jacobian are available for audit.
+* A stability gate reports all eigenvalues, maximum real part, unstable-mode
+  status, and pole-frequency scales.  `stability_mode` defaults to `warn`;
+  `strict` rejects an unstable operating point.  Invalid `T_bath >= T_c`
+  operating points are rejected instead of producing NaNs.
+* The hanging model's right TES thermal `dT2/dI2` element was found missing
+  in the new explicit matrix and restored.  The existing left/right symmetry
+  test catches regressions of this kind.
+
+### Jacobian and stability result
+
+For the repository nominal `PoST_Simulations/input.json` (`I=57.1173 uA`,
+`T=T_c=142 mK`), the analytic and finite-difference Jacobians agree to a
+maximum relative error of `1.78e-9` (maximum absolute error `4.69e-2 s^-1`,
+from finite-difference roundoff on entries of order `1e8 s^-1`).  The time
+domain eigenvalues are approximately
+
+```text
+-16.1647, -5066.72, -5070.76, -8.00792e8, -8.00792e8  [s^-1]
+```
+
+so this nominal point is stable; its pole scales are `2.57 Hz`, `806.4 Hz`,
+`807.0 Hz`, and `127.45 MHz` (the last pair is electrical).  Earlier broad
+search points reported in this file were not stability-valid; the new gate
+will warn or reject them before a spectrum is treated as physical.
+
+### Estimator parity result
+
+The synthetic regression uses a sloped known ASD and 512 finite records.  The
+experimental-style and simulation-style estimates agree in absolute level
+within 4--5% in the passband and in normalized spectral shape within 3% (the
+remaining variation is finite-record scatter).  The test explicitly covers
+DC, Nyquist, interior `sqrt(2)`, `df`, Hann power correction, mean removal,
+`filtfilt`, and power-vs-magnitude averaging.  The full repository suite now
+passes `45` tests.
+
+### Recomputed nominal comparison (no fitted parameters)
+
+`noise_model_audit.py` and `midband_residual.py` were run using the repository
+nominal input, the experiment's `500 kS/s / 100,000 sample / 10 kHz` analysis
+configuration, and `white/readout ASD = 0`.  The table reports the pre-analysis
+normalized five-state CH0 ASD divided by the rebuilt experimental ASD; the
+common digital Bessel response cancels in this ratio below the diagnostic
+cutoff.
+
+| Frequency | Experiment normalized | Simulation normalized | Simulation / experiment |
+| ---: | ---: | ---: | ---: |
+| 10 Hz | 46.1561 | 1.49635 | 0.0324 |
+| 100 Hz | 4.02432 | 1.48496 | 0.3690 |
+| 1 kHz | 1.00000 | 1.00000 | 1.0000 |
+| 3 kHz | 0.93566 | 0.57709 | 0.6168 |
+| 5 kHz | 0.86256 | 0.49675 | 0.5759 |
+| 7 kHz | 0.78273 | 0.47017 | 0.6007 |
+| 10 kHz | 0.63648 | 0.45394 | 0.7132 |
+
+This is a diagnostic comparison, not a parameter fit.  It shows that fixing
+the estimator parity does not by itself remove the broad 1--10 kHz difference.
+
+### Physical-noise and circuit audit
+
+The current source matrix treats each independent source column as an ASD,
+then adds independent columns in PSD.  TES Johnson noise remains
+`sqrt(4*k_B*T*R*(1+2*beta)*(1+M^2))`; the old `(1+beta)^2` expression was not
+reintroduced.  The TES voltage source's electrical and Joule-heating entries
+retain their correlated relative sign.  Thermal-link sources enter the two
+connected nodes with opposite signs.  `alpha` and `beta` are used as the local
+logarithmic derivatives `d ln R/d ln T` and `d ln R/d ln I`, respectively; the
+new nonlinear RHS makes this convention explicit.
+
+The modeled electrical/readout chain contains `R_l`, one series `L`, the TES
+electrothermal states, and direct TES-current output.  Repository search found
+no configured frequency-dependent bias impedance, shunt/stray capacitance,
+wiring resonance, SQUID input impedance, FLL transfer, amplifier voltage or
+current noise, source-impedance-dependent readout noise, or additional
+pole/zero.  No such term was added, because no independent circuit constant
+in the repository uniquely determines one.
+
+### Unresolved items and most likely causes
+
+1. The previous `experimental_asd()` magnitude-average bug was confirmed and
+   fixed, but the remaining nominal mismatch is much larger than its expected
+   estimator bias; it is not sufficient as the sole explanation.
+2. The nominal comparison uses repository parameters, while the external
+   experiment's independently measured operating-point/circuit parameter set
+   is not versioned here.  The stability-validity and parameter-definition
+   parity must be established from DC/pulse/impedance information.
+3. The model has no independently specified readout/bias transfer function.
+   Such a transfer may be a physical cause, but adding a pole/zero or fitting
+   it to this spectrum is intentionally left unresolved pending an external
+   injected-signal or circuit measurement.
+
+The most likely root causes at present are therefore: (a) the former
+experimental estimator inconsistency, now corrected; (b) operating-point or
+parameter-definition mismatch, especially stability and the actual bias
+impedance; and (c) an unmodeled but independently measurable readout/bias
+chain.  No empirical noise source or fitted transfer was promoted to the
+production model.

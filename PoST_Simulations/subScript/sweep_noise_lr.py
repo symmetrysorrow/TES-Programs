@@ -17,36 +17,41 @@ from scipy import signal
 
 SIMULATION_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIMULATION_ROOT))
+sys.path.insert(0, str(SIMULATION_ROOT.parent / "Analyze_Experimental_Data"))
 import PoST_Simulation as post  # noqa: E402
+from tes_analysis.noise_utils import estimate_one_sided_asd  # noqa: E402
 
 
 EXPERIMENT_PATH = Path(
     r"G:\tagawa\20241206\r1ch12_215mK_1400uA1400uA_"
     r"difftrig5e-5_rate500k_samples100k_gain5_day2"
 )
-BASE_INPUT_PATH = Path(r"H:\hata2025\new\input.json")
+BASE_INPUT_PATH = SIMULATION_ROOT / "input.json"
 
 
 def experimental_asd(rate, sample, cutoff):
     """Rebuild the current CH0 analysis spectrum without saving it."""
-    window = np.hanning(sample)
-    power_gain = np.sqrt(np.mean(window**2))
-    b, a = signal.bessel(2, cutoff / (rate / 2), "low")
-    amplitude = np.zeros(sample // 2 + 1)
-    count = 0
-    for path in (EXPERIMENT_PATH / "CH0_noise" / "rawdata").glob("CH0_*.dat"):
-        values = np.frombuffer(path.read_bytes()[4:], dtype=np.float64).copy()
-        if len(values) != sample or values.max() - values.min() > 0.04:
-            continue
-        values -= values.mean()
-        values = signal.filtfilt(b, a, values)
-        if values.max() - values.min() > 0.04:
-            continue
-        amplitude += np.abs(np.fft.rfft(values * window) / power_gain)
-        count += 1
-    if count == 0:
-        raise RuntimeError("No experimental records passed selection")
-    return amplitude / count, count
+    paths = (EXPERIMENT_PATH / "CH0_noise" / "rawdata").glob("CH0_*.dat")
+
+    def records():
+        for path in paths:
+            yield np.frombuffer(path.read_bytes()[4:], dtype=np.float64).copy()
+
+    def range_ok(values):
+        return values.max() - values.min() <= 0.04
+
+    try:
+        return estimate_one_sided_asd(
+            records(),
+            sample,
+            rate,
+            cutoff=cutoff,
+            remove_mean=True,
+            accept_raw=range_ok,
+            accept_processed=range_ok,
+        )
+    except ValueError as error:
+        raise RuntimeError("No experimental records passed selection") from error
 
 
 def analysis_magnitude(frequency, rate, cutoff):

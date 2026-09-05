@@ -133,8 +133,36 @@ independent P19 FlexGMRES/BoomerAMG smoke reached the CUDA path but failed its
 PASS.
 
 Current gate summary: actual GPU backend YES; CUDA HYPRE YES; Elmer linked to
-CUDA HYPRE YES; minimal independent smoke NO; Phase20 lower runtime YES;
-Phase20 full runtime YES; numerical correctness FAIL pending outer
-convergence and CPU/GPU solution parity; performance readiness NO. Timing
-semantics, explicit GPU synchronization accounting, and performance comparison
-remain deferred until correctness is resolved.
+CUDA HYPRE YES; Elmer linked to CUDA HYPRE YES; mortar smoke remains
+non-convergent, but the isolated no-mortar CPU/GPU linear smoke now passes.
+Phase20 lower runtime YES; Phase20 full runtime YES; Phase20 lower numerical
+correctness FAIL because CPU and GPU show the same outer stagnation pattern;
+performance readiness NO. Timing semantics, explicit GPU synchronization
+accounting, and performance comparison remain deferred until the Phase20 outer
+convergence blocker is resolved.
+
+## No-mortar correctness gate (2026-09-05)
+
+The no-mortar cases
+`generated/cases/case_p19_hypre_flexgmres_boomeramg_{cpu,gpu}_nomortar_time5us.sif`
+solve identical saved systems: the CPU/GPU A, b, and sizes files have identical
+SHA256 hashes. Both HYPRE linear solves reached the requested residual
+(`8.971914e-12` CPU, `9.289339e-12` GPU) and completed with `ALL DONE`; the
+process exit code remains `1` because the existing nonlinear/linear-system-abort
+status is reported after the linear solve. The GPU run reports the RTX 3060 Ti,
+explicit host-to-device IJ migration, and Nsight records 35,290
+`cudaLaunchKernel` calls plus CUDA memory transfers.
+
+An environment-controlled solution dump was added through the reviewable patch
+`docs/hypre_phase20_solution_dump.patch`. The 84,636-entry CPU/GPU solutions
+have relative L2 difference `2.9639969303996504e-08` (PASS threshold `1e-6`),
+so the isolated GPU solve is numerically consistent with CPU. Details are in
+`artifacts/hypre_phase20/gpu_correctness_20260905/no_mortar_solution_parity.json`.
+
+For Phase20 lower, the actual HUTI outer residual history is now captured in
+`artifacts/hypre_phase20/gpu_correctness_20260905/phase20_lower_outer_history.json`.
+CPU and GPU both execute 16 outer steps with non-monotone/stagnating residuals,
+while all recorded inner Schur solves hit `maxiter=30`. This classifies the
+remaining failure as a shared block-Schur/outer convergence issue, not a
+GPU-specific migration or kernel-correctness issue. No performance comparison
+has been started.

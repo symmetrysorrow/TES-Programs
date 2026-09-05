@@ -1,0 +1,31 @@
+{
+  "source": "Linear System Residual Output=1 / HUTI outer solver output",
+  "interpretation": "These are the actual outer residuals; BlockMatrixPrec does not own the outer iteration state.",
+  "cpu": {
+    "outer_history": [[1, 3.969e-05], [2, 6.744e-05], [3, 6.174e-05], [4, 4.916e-05], [5, 4.247e-05], [6, 4.27e-05], [7, 4.492e-05], [8, 9.095e-05], [9, 5.812e-05], [10, 2.217e-04], [11, 2.11e-04], [12, 5.682e-04], [13, 1.844e-03], [14, 4.673e-04], [15, 1.71e-04], [16, 1.71e-04]],
+    "outer_count": 16,
+    "outer_max": 1.844e-03,
+    "outer_final": 1.71e-04,
+    "inner_schur_solves": 30,
+    "inner_schur_iterations": [30],
+    "inner_schur_residual_min": 1.05933e-14,
+    "inner_schur_residual_max": 7.26465e-10,
+    "inner_schur_residual_final": 8.44648e-14
+  },
+  "gpu": {
+    "outer_history": [[1, 3.525e-05], [2, 6.13e-05], [3, 5.457e-05], [4, 4.932e-05], [5, 3.751e-05], [6, 2.701e-05], [7, 7.077e-05], [8, 3.212e-05], [9, 2.566e-05], [10, 1.912e-05], [11, 4.317e-05], [12, 2.166e-05], [13, 2.643e-04], [14, 2.391e-05], [15, 6.034e-05], [16, 6.034e-05]],
+    "outer_count": 16,
+    "outer_max": 2.643e-04,
+    "outer_final": 6.034e-05,
+    "inner_schur_solves": 30,
+    "inner_schur_iterations": [30],
+    "inner_schur_residual_min": 1.83945e-14,
+    "inner_schur_residual_max": 1.42883e-10,
+    "inner_schur_residual_final": 7.86825e-14
+  },
+  "classification": {
+    "cpu_gpu_outer_pattern": "same_stagnation_pattern",
+    "gpu_specific_lower_failure": false,
+    "next_blocker": "block-Schur/outer convergence: every recorded inner Schur solve hit maxiter=30, while CPU and GPU outer histories both stagnate/non-monotonically grow."
+  }
+}

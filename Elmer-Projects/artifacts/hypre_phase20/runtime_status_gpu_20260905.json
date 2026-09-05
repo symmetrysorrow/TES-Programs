@@ -1,13 +1,14 @@
 {
   "date": "2026-09-05",
   "branch": "phase20-native-probe-integration",
-  "status": "GPU_RUNTIME_ESTABLISHED_CORRECTNESS_FAILED",
+  "status": "GPU_RUNTIME_ESTABLISHED_BASIC_CORRECTNESS_PASS_PHASE20_OUTER_FAIL",
   "gpu": {
     "device": "NVIDIA GeForce RTX 3060 Ti",
     "actual_cuda_kernel_execution": true,
     "evidence": [
       "nsys_phase20_lower_gpu_migrated2_20260905.nsys-rep",
-      "nsys_phase20_full_gpu_migrated_20260905.nsys-rep"
+      "nsys_phase20_full_gpu_migrated_20260905.nsys-rep",
+      "gpu_correctness_20260905/no_mortar_gpu.nsys-rep"
     ]
   },
   "hypre": {
@@ -21,20 +22,31 @@
     "evidence": "elmer_phase20_gpu_link_evidence_20260905.txt"
   },
   "gates": {
-    "minimal_independent_gpu_smoke": "NO_CONVERGENCE_MPI_ABORT",
+    "minimal_independent_gpu_smoke": "PASS_LINEAR_SOLVE_NONLINEAR_EXIT_1",
+    "no_mortar_cpu_linear_solve": "PASS",
+    "no_mortar_gpu_linear_solve": "PASS",
+    "no_mortar_solution_parity": "PASS_RELATIVE_L2_2.964E-08",
     "phase20_lower_gpu_runtime": "PASS_RUNTIME",
     "phase20_full_gpu_runtime": "PASS_RUNTIME",
-    "numerical_correctness": "FAIL",
+    "phase20_lower_outer_correctness": "FAIL_CPU_GPU_SAME_STAGNATION",
+    "numerical_correctness": "BASIC_SMOKE_PASS_PHASE20_FAIL",
     "performance_ready": "NO"
   },
   "correctness_notes": [
+    "No-mortar CPU and GPU solved the same saved matrix/RHS; A/B/sizes hashes match exactly.",
+    "No-mortar solution vectors have relative L2 difference 2.9639969303996504e-08 (PASS threshold 1e-06).",
+    "No-mortar GPU Nsight records 35290 cudaLaunchKernel calls and CUDA memory transfers.",
     "Both lower/full runs reached ALL DONE and had finite matrix-free Schur residuals.",
-    "Both runs reported outer linear iteration did not converge to tolerance.",
-    "CPU/GPU physical solution parity has not been established."
+    "Both lower CPU/GPU outer histories stagnate or grow non-monotonically; the lower failure is not GPU-specific.",
+    "No-mortar process exit code is 1 because the existing nonlinear/linear-system-abort status remains after the converged HYPRE linear solve."
   ],
   "performance_blockers": [
-    "outer convergence failure",
-    "CPU/GPU numerical parity missing",
+    "Phase20 lower/full outer convergence failure",
+    "inner Schur solves hit maxiter=30",
     "probe timing semantics and explicit GPU synchronization contract not yet finalized"
-  ]
+  ],
+  "artifacts": {
+    "no_mortar_parity": "gpu_correctness_20260905/no_mortar_solution_parity.json",
+    "phase20_lower_history": "gpu_correctness_20260905/phase20_lower_outer_history.json"
+  }
 }

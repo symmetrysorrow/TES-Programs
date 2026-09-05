@@ -17,12 +17,16 @@ import tqdm
 try:
     from tes_analysis.noise_utils import (
         one_sided_asd_from_power,
+        preprocess_noise_record,
         voltage_asd_to_pA,
+        windowed_rfft_power,
     )
 except ImportError:  # Package import (e.g. from the repository root).
     from .tes_analysis.noise_utils import (
         one_sided_asd_from_power,
+        preprocess_noise_record,
         voltage_asd_to_pA,
+        windowed_rfft_power,
     )
 
 
@@ -58,18 +62,19 @@ def main():
         try:
             data = gp.loadbi(i, "binary")
             base, data_ba = gp.baseline(data, set["Config"]["presamples"], 1000, 500)
-            # Remove each record's DC component before filtering and FFT so all
-            # noise-generation paths use the same AC-only analysis.
-            data = data - np.mean(data)
-            if set["main"]["cutoff"] > 0:
-                data = gp.BesselFilter(data, rate, set["main"]["cutoff"])
+            data = preprocess_noise_record(
+                data,
+                rate,
+                cutoff=set["main"]["cutoff"],
+                remove_mean=True,
+            )
             peak = np.max(data_ba)
             if (base <= -3 and base >= 3) or peak >= float(set["Config"]["threshold"]):
                 print("error")
                 continue
             else:
-                data_fft = np.fft.rfft(data * window)
-            power_model += np.abs(data_fft) ** 2
+                data_fft_power = windowed_rfft_power(data, window)
+            power_model += data_fft_power
             accepted += 1
 
         except FileNotFoundError:

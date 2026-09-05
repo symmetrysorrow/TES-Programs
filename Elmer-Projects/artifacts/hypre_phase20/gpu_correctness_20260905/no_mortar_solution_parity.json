@@ -1,0 +1,29 @@
+{
+  "case": "case_p19_hypre_flexgmres_boomeramg_*_nomortar_time5us.sif",
+  "cpu_solution": "no_mortar_cpu_solution.vec",
+  "gpu_solution": "no_mortar_gpu_solution.vec",
+  "cpu_size": 84636,
+  "gpu_size": 84636,
+  "size_match": true,
+  "cpu_l2": 251.2809496452724,
+  "difference_l2": 7.447959634164965e-06,
+  "relative_l2": 2.9639969303996504e-08,
+  "max_abs_difference": 1.7896236048642322e-07,
+  "pass_threshold_relative_l2": 1.0e-06,
+  "solution_parity": "PASS",
+  "linear_solver": {
+    "cpu_iterations": 164,
+    "gpu_iterations": 167,
+    "cpu_final_residual": 8.971914e-12,
+    "gpu_final_residual": 9.289339e-12
+  },
+  "process_exit_code": {
+    "cpu": 1,
+    "gpu": 1
+  },
+  "all_done": {
+    "cpu": true,
+    "gpu": true
+  },
+  "note": "Elmer process exit 1 is from the existing nonlinear-iteration/linear-system-abort status after the HYPRE linear solve; both logs report ALL DONE and the HYPRE linear residual reached the requested tolerance."
+}
