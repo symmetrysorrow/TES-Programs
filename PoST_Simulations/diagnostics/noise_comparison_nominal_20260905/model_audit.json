@@ -1,0 +1,157 @@
+{
+  "operating_current_A": 5.7117308605866646e-05,
+  "operating_temperature_K": 0.142,
+  "bath_power_W": 9.558793741166978e-11,
+  "matrix_convention": "M(omega) = -A + i*omega*I; dx/dt = A*x",
+  "jacobian_max_absolute_error_per_s": 0.04691731929779053,
+  "jacobian_max_relative_error": 1.7797466022112779e-09,
+  "jacobian_element_errors": [
+    [
+      {
+        "absolute_per_s": 0.04691731929779053,
+        "relative": 5.858806106460954e-11
+      },
+      {
+        "absolute_per_s": 0.0075666531920433044,
+        "relative": 8.992047779281986e-10
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      }
+    ],
+    [
+      {
+        "absolute_per_s": 5.119910929352045e-05,
+        "relative": 6.713540926420347e-11
+      },
+      {
+        "absolute_per_s": 5.244935891823843e-06,
+        "relative": 1.7797466022112779e-09
+      },
+      {
+        "absolute_per_s": 6.065158686396899e-08,
+        "relative": 6.002978481942668e-11
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      }
+    ],
+    [
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 6.065157265311427e-10,
+        "relative": 6.002977075426209e-11
+      },
+      {
+        "absolute_per_s": 1.2130314530622854e-09,
+        "relative": 6.002977075426209e-11
+      },
+      {
+        "absolute_per_s": 6.065157265311427e-10,
+        "relative": 6.002977075426209e-11
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      }
+    ],
+    [
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 6.065158686396899e-08,
+        "relative": 6.002978481942668e-11
+      },
+      {
+        "absolute_per_s": 5.244935891823843e-06,
+        "relative": 1.7797466022112779e-09
+      },
+      {
+        "absolute_per_s": 5.119910929352045e-05,
+        "relative": 6.713540926420347e-11
+      }
+    ],
+    [
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0,
+        "relative": 0.0
+      },
+      {
+        "absolute_per_s": 0.0075666531920433044,
+        "relative": 8.992047779281986e-10
+      },
+      {
+        "absolute_per_s": 0.04691731929779053,
+        "relative": 5.858806106460954e-11
+      }
+    ]
+  ],
+  "eigenvalues_per_s": [
+    {
+      "real": -16.164699553542903,
+      "imag": 0.0
+    },
+    {
+      "real": -5066.716631753461,
+      "imag": 0.0
+    },
+    {
+      "real": -5070.7590967076485,
+      "imag": 0.0
+    },
+    {
+      "real": -800791986.2706443,
+      "imag": 0.0
+    },
+    {
+      "real": -800791986.2706441,
+      "imag": 0.0
+    }
+  ],
+  "max_real_part_per_s": -16.164699553542903,
+  "unstable_mode": false,
+  "pole_frequency_scale_hz": [
+    2.572691837541707,
+    806.3929971894818,
+    807.0363754692164,
+    127450003.00335023,
+    127450003.0033502
+  ],
+  "noise_sources": {
+    "tes_johnson": "ASD sqrt(4*k_B*T*R*(1+2*beta)*(1+M^2)); injected as one correlated voltage source",
+    "load_johnson": "ASD sqrt(4*k_B*T_bath*R_l); independent voltage source",
+    "thermal_links": "ASD sqrt(4*k_B*T_c^2*G*F); shared link source enters connected nodes with opposite signs",
+    "aggregation": "independent columns add in PSD; CH0/CH1 cross PSD retains shared-source complex transfer"
+  }
+}
