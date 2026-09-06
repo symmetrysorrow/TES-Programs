@@ -1,0 +1,16 @@
+--- a/src/utilities/_hypre_utilities.hpp
++++ b/src/utilities/_hypre_utilities.hpp
+@@
+ #elif defined(HYPRE_USING_CUDA)
+ #define HYPRE_THRUST_IDENTITY(type) cuda::std::identity()
++#elif defined(HYPRE_USING_HIP)
++#define HYPRE_THRUST_IDENTITY(type) thrust::identity<type>()
+ #endif
+--- a/src/utilities/device_utils.h
++++ b/src/utilities/device_utils.h
+@@
+ #elif defined(HYPRE_USING_CUDA)
+ #define HYPRE_THRUST_IDENTITY(type) cuda::std::identity()
++#elif defined(HYPRE_USING_HIP)
++#define HYPRE_THRUST_IDENTITY(type) thrust::identity<type>()
+ #endif

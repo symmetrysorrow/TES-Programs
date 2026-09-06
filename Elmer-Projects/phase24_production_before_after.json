@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_production_before_after",
+  "clock": "wall",
+  "backend": "cpu_conformal_hypre",
+  "case": "case_dual_pulse_center",
+  "scope": "bounded one-timestep production-path smoke on mesh_dual_base; HYPRE FlexGMRES + BoomerAMG; mortar boundary handling enabled",
+  "solver_tolerance": 1e-06,
+  "baseline": {
+    "phase24_vector_assembly": false,
+    "solver_wall_seconds": 20.75,
+    "assembly_wall_seconds": 13.51,
+    "solver_converged": true,
+    "log": "results/case_dual_pulse_center_baseline_hypre_1step.log"
+  },
+  "candidate": {
+    "phase24_vector_assembly": true,
+    "solver_wall_seconds": 11.18,
+    "assembly_wall_seconds": 2.23,
+    "solver_converged": true,
+    "log": "results/case_dual_pulse_center_phase24_hypre_1step.log",
+    "metadata": {
+      "static_elements": 261140,
+      "dynamic_elements": 5429,
+      "generic_elements": 0,
+      "csr_cache_builds": 266569,
+      "csr_cache_hits": 533138,
+      "csr_cache_invalidations": 2
+    }
+  },
+  "speedup": {
+    "solver_wall_fraction_reduced": 0.4612048193,
+    "solver_wall_speedup": 1.8559928444,
+    "assembly_wall_fraction_reduced": 0.8349370836,
+    "assembly_wall_speedup": 6.0582959641
+  },
+  "correctness_evidence": {
+    "matrix_sparsity_identical": true,
+    "matrix_relative_linf": 2.4903403489518744e-08,
+    "rhs_relative_linf": 1.1671956384772996e-16,
+    "temperature_field_linf": 1.5472582056799689e-04,
+    "tes_observables_match_at_log_precision": true,
+    "matrix_dump_diagnostic": {
+      "baseline_prefix": "baseline_compare",
+      "candidate_prefix": "phase24_compare",
+      "note": "Exact floating-point matrix equality is not expected after atomic parallel accumulation; sparsity is identical and the normalized value error is recorded above."
+    }
+  },
+  "notes": [
+    "The production hybrid prism/tetra smoke remains on the generic fallback because it is outside the scalar 3D P1-tetra eligibility guard.",
+    "The long tetra-only run was intentionally bounded; the completed one-step HYPRE run is the reported production measurement."
+  ]
+}

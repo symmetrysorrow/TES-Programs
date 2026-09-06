@@ -13,6 +13,7 @@ SOURCE_CASE = "case_p19_pulse_time5us"
 MUMPS_DIAG_CASE = "case_p19_mumps_matrixdiag_time5us_smoke_7step"
 CPU_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_time5us"
 GPU_CASE = "case_p19_hypre_flexgmres_boomeramg_gpu_time5us"
+GPU_50_CASE = "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_50step"
 MGR_CPU_CASE = "case_p19_hypre_flexgmres_mgr_cpu_time5us"
 MGR_GPU_CASE = "case_p19_hypre_flexgmres_mgr_gpu_time5us"
 CONTROL_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_nomortar_time5us"
@@ -143,6 +144,20 @@ def main() -> None:
         smoke["solver"] = dict(smoke["solver"])
         smoke["solver"]["matrix_dump_prefix"] = smoke_name
         project["cases"][smoke_name] = smoke
+
+        # Production-relevant prefix: keep the same restart, physics, and
+        # baseline BoomerAMG parameters while extending the transient to 50
+        # steps.  This is intentionally a wall-time gate, not a solver sweep.
+        prefix = copy.deepcopy(full)
+        prefix["timesteps"] = truncate(full["timesteps"], 50)
+        prefix["output_intervals"] = [999999] * len(prefix["timesteps"])
+        prefix["output_intervals"][-1] = 1
+        prefix["series_file"] = f"{GPU_50_CASE}_series.csv"
+        prefix["iteration_series_file"] = f"{GPU_50_CASE}_iterations.csv"
+        prefix["output_file_path"] = f"../work/meshes/{full['mesh']}/{GPU_50_CASE}.result"
+        prefix["solver"] = dict(prefix["solver"])
+        prefix["solver"]["matrix_dump_prefix"] = GPU_50_CASE
+        project["cases"][GPU_50_CASE] = prefix
 
         # One-step diagnostic: keep the assembled matrix/RHS at the restart
         # state while avoiding the many nonlinear iterations of the full

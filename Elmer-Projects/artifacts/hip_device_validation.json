@@ -1,0 +1,35 @@
+{
+  "schema": "tes.hip_device_validation.v1",
+  "runtime_artifact": "amd_gpu_runtime.json",
+  "device_query_source": "scripts/support/hip_device_query.cpp",
+  "sparse_query_source": "scripts/support/hip_sparse_query.cpp",
+  "simple_hip_device_query": {
+    "command": [
+      "wsl.exe",
+      "-d",
+      "Ubuntu",
+      "--",
+      "bash",
+      "-lc",
+      "hipcc --offload-arch=gfx1201 -x hip /mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_device_query.cpp -o /tmp/tes_hip_device_query && /tmp/tes_hip_device_query"
+    ],
+    "returncode": 0,
+    "stdout": "device_count=1\ndevice=0 name=AMD Radeon RX 9070 XT gcnArchName=gfx1201 totalGlobalMem=16974905344\ndevice_memory_probe=PASS\n",
+    "stderr": "/mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_device_query.cpp:39:7: warning: ignoring return value of type 'hipError_t' declared with 'nodiscard' attribute [-Wunused-value]\n   39 |       hipFree(ptr);\n      |       ^~~~~~~~~~~~\n/mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_device_query.cpp:43:5: warning: ignoring return value of type 'hipError_t' declared with 'nodiscard' attribute [-Wunused-value]\n   43 |     hipFree(ptr);\n      |     ^~~~~~~~~~~~\n2 warnings generated when compiling for gfx1201.\n/mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_device_query.cpp:39:7: warning: ignoring return value of type 'hipError_t' declared with 'nodiscard' attribute [-Wunused-value]\n   39 |       hipFree(ptr);\n      |       ^~~~~~~~~~~~\n/mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_device_query.cpp:43:5: warning: ignoring return value of type 'hipError_t' declared with 'nodiscard' attribute [-Wunused-value]\n   43 |     hipFree(ptr);\n      |     ^~~~~~~~~~~~\n2 warnings generated when compiling for host.\n"
+  },
+  "simple_hipsparse_query": {
+    "command": [
+      "wsl.exe",
+      "-d",
+      "Ubuntu",
+      "--",
+      "bash",
+      "-lc",
+      "hipcc --offload-arch=gfx1201 -x hip /mnt/d/Github/TES-Programs/Elmer-Projects/scripts/support/hip_sparse_query.cpp -I/opt/rocm/core-7.14/include -L/opt/rocm/core-7.14/lib -lhipsparse -o /tmp/tes_hip_sparse_query && /tmp/tes_hip_sparse_query"
+    ],
+    "returncode": 0,
+    "stdout": "hipsparse_handle=PASS version=400600\n",
+    "stderr": ""
+  },
+  "gpu_execution_proven": true
+}

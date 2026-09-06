@@ -1,8 +1,8 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("cuda", "hip")]
+    [ValidateSet("cpu", "cuda", "hip")]
     [string]$Backend = "cuda",
-    [string]$GpuArchitecture = "86",
+    [string]$GpuArchitecture = "",
     [string]$HypreTag = "v3.0.0",
     [string]$Case = "case_p19_hypre_flexgmres_boomeramg_gpu_time5us_smoke_7step",
     [int]$MpiProcs = 1,
@@ -48,16 +48,19 @@ $udfCircuit = "$repoWsl/tes_parallel_circuit.so"
 $udfPulse = "$repoWsl/tes_transient_heat_source_t0.so"
 
 $runOptions = if ($DryRun) { "--dry-run" } else { "" }
-$deviceEnv = if ($Backend -eq "cuda") { "export CUDA_VISIBLE_DEVICES=0" } else { "export HIP_VISIBLE_DEVICES=0" }
+$deviceEnv = if ($Backend -eq "cuda") { "export CUDA_VISIBLE_DEVICES=0" } elseif ($Backend -eq "hip") { "export HIP_VISIBLE_DEVICES=0" } else { "true" }
+$amgxFlags = if ($Backend -eq "cuda") { "-L'$amgxWsl' -Wl,-rpath,'$amgxWsl' -lamgxsh" } else { "" }
+$rocmEnv = if ($Backend -eq "hip") { "export HIP_PATH=/opt/rocm/core-7.14; export ROCM_PATH=/opt/rocm/core-7.14; export PATH=/opt/rocm/core-7.14/bin:/opt/rocm/core-7.14/lib/llvm/bin:/opt/rocm-wsl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/wsl/lib" } else { "true" }
 $bash = @"
 set -euo pipefail
 $deviceEnv
+$rocmEnv
 export ELMER_HOME='$prefixWsl'
 export PATH='$prefixWsl/bin':/usr/lib/wsl/lib:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export LD_LIBRARY_PATH='/usr/lib/wsl/lib:${hypreWsl}/lib:${amgxWsl}:${prefixWsl}/lib/elmersolver:${repoWsl}'
 cd '$repoWsl'
-gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_parallel_circuit.f90 -L'$prefixWsl/lib/elmersolver' -L'$amgxWsl' -Wl,-rpath,'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$amgxWsl' -lelmersolver -lamgxsh -o '$udfCircuit'
-gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_transient_heat_source.f90 -L'$prefixWsl/lib/elmersolver' -L'$amgxWsl' -Wl,-rpath,'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$amgxWsl' -lelmersolver -lamgxsh -o '$udfPulse'
+gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_parallel_circuit.f90 -L'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$prefixWsl/lib/elmersolver' $amgxFlags -lelmersolver -o '$udfCircuit'
+gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_transient_heat_source.f90 -L'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$prefixWsl/lib/elmersolver' $amgxFlags -lelmersolver -o '$udfPulse'
 python3 run.py '$Case' --project '$projectWsl' --mpi-procs $MpiProcs --elmer-solver '$solverWsl' --runtime-bin '' $runOptions
 "@
 Write-Host "Running $Case with HYPRE $Backend ($MpiProcs MPI rank(s))."

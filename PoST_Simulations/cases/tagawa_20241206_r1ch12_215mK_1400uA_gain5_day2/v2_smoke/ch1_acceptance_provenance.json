@@ -1,0 +1,13 @@
+{
+  "stage": "ch1_acceptance_provenance",
+  "production_rule_source": "Analyze_Experimental_Data/tes_analysis/noise_utils.py plus PoST_Simulations/subScript/classify_noise_record_pulses.py",
+  "production_CH1_rule": "same max-min <= 0.04 raw and processed predicate as CH0; no CH1-specific dynamic range, ADC scale, gain or saturation criterion found in repository/config",
+  "production_accepted_counts": {
+    "CH0": 345,
+    "CH1": 1
+  },
+  "auxiliary_mask": "finite, exact 100000 samples, exact event key, no gross clipping (range < 0.2); not production-accepted",
+  "auxiliary_hardware_valid_pair_count": 400,
+  "scientific_label": "auxiliary paired-channel audit; not production-accepted coherence",
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}

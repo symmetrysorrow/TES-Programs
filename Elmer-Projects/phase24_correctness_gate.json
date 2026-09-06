@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_regression_gate",
+  "baseline_case": "case_dual_pulse_center:phase24_off",
+  "candidate_case": "case_dual_pulse_center:phase24_on",
+  "tolerance": 0.001,
+  "passed": true,
+  "checks": {
+    "matrix_sparsity_identical": true,
+    "matrix_values_identical_within_tolerance": true,
+    "rhs_identical_within_tolerance": true,
+    "temperature_field_identical_within_tolerance": true,
+    "tes_observables_identical_at_report_precision": true,
+    "solver_converged": true,
+    "csr_cache_stable": true,
+    "generic_fallback_smoke_completed": true
+  },
+  "numeric_parity_errors": {
+    "matrix_relative_linf": 2.4903403489518744e-08,
+    "rhs_relative_linf": 1.1671956384772996e-16,
+    "temperature_field_linf": 1.5472582056799689e-04,
+    "tes_average_temperature_abs": 0.0,
+    "tes_current_abs": 0.0,
+    "tes_resistance_abs": 0.0,
+    "tes_joule_power_abs": 0.0
+  },
+  "evidence": {
+    "baseline_log": "results/case_dual_pulse_center_baseline_hypre_1step.log",
+    "candidate_log": "results/case_dual_pulse_center_phase24_hypre_1step.log",
+    "matrix_compare": "baseline_compare_{a,b}.dat vs phase24_compare_{a,b}.dat",
+    "field_compare": "work/meshes/case_dual_pulse_center_t0001.vtu vs work/meshes/case_dual_pulse_center_phase24_t0001.vtu",
+    "cache_observation": "builds=266569, hits=533138, invalidations=2 after two nonlinear iterations"
+  },
+  "interpretation": "The gate uses a physics-level tolerance rather than bitwise equality because OpenMP atomic insertion changes floating-point summation order."
+}

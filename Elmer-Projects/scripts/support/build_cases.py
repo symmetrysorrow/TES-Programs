@@ -309,6 +309,8 @@ def solver1_block(
     lumped_mass: bool = False,
     transient_restart: bool = False,
     apply_mortar_bcs: bool = True,
+    phase24_vector_assembly: bool = False,
+    phase24_wall_profiling: bool = False,
     comment: str | None = None,
 ) -> list[str]:
     lines = [
@@ -318,6 +320,10 @@ def solver1_block(
         "  Variable = Temperature",
         "  Variable DOFs = 1",
     ]
+    if phase24_vector_assembly:
+        lines.append("  Phase24 Vector Assembly = Logical True")
+    if phase24_wall_profiling:
+        lines.append("  Phase24 Wall Profiling = Logical True")
     if calculate_loads:
         lines.append("  Calculate Loads = True")
     if comment:
@@ -1074,6 +1080,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 lumped_mass=bool(spec.get("lumped_mass")),
                 transient_restart=bool(spec.get("transient_restart")),
                 apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
+                phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
+                phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
                 comment=spec.get("solver_comment"),
             )
             lines.append("")
@@ -1089,6 +1097,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
+            phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
+            phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -1099,6 +1109,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             lumped_mass=bool(spec.get("lumped_mass")),
             transient_restart=bool(spec.get("transient_restart")),
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
+            phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
+            phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
