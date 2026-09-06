@@ -1,18 +1,25 @@
-"""Exploratory parameter search for the TES 1--10 kHz noise shape.
+"""Exploratory multi-band parameter search for TES noise shape.
 
 This script is deliberately separate from the frozen proxy-ensemble workflow.
 It generates *new* trial points inside the same Stage-A proxy coordinate ranges,
 applies the same pulse-time-constant gate, and uses the measured noise spectrum
-only to rank those trials.  Therefore its output is exploratory and must never
+only to rank those trials. Therefore its output is exploratory and must never
 be promoted to a strict target parameter estimate.
+
+The confirmed readout chain is held fixed during the search:
+- 4th-order, 100 kHz analog hardware Bessel before the ADC,
+- measured sample rate and record length,
+- target 10 kHz second-order software Bessel ``filtfilt``,
+- Hann -> rFFT -> record power average -> one-sided ASD.
 
 Search strategy:
 1. random draws from the original Stage-A parameter ranges,
 2. stability + pulse slow-pole gate,
-3. deterministic 1--10 kHz post-analysis shape score using
-   100 kHz analog hardware Bessel + 10 kHz software Bessel expectation,
-4. finite-record time-domain re-evaluation of only the top candidates using
-   the same accepted-record count and a fixed common random seed.
+3. deterministic post-analysis scoring in three bands:
+   1--10 kHz, 10--100 kHz, and 1--100 kHz,
+4. Pareto analysis of the 1--10 kHz / 10--100 kHz trade-off,
+5. finite-record time-domain re-evaluation of the top candidates from each
+   deterministic objective using a common seed and the experimental record count.
 
 No additive residual/noise-floor parameter is fitted.
 """
@@ -47,6 +54,22 @@ from proxy_physics import linear_modes, operating_point  # noqa: E402
 
 
 STRICT = "C — exact target physical case remains unidentified"
+HARDWARE_BESSEL_ORDER = 4
+BANDS_HZ = {
+    "mid": (1_000.0, 10_000.0),
+    "high": (10_000.0, 100_000.0),
+    "all": (1_000.0, 100_000.0),
+}
+SCORE_FIELDS = {
+    "mid": "rms_log_ratio_1_10_kHz",
+    "high": "rms_log_ratio_10_100_kHz",
+    "all": "rms_log_ratio_1_100_kHz",
+}
+MAX_FIELDS = {
+    "mid": "max_abs_log_ratio_1_10_kHz",
+    "high": "max_abs_log_ratio_10_100_kHz",
+    "all": "max_abs_log_ratio_1_100_kHz",
+}
 SEARCH_VARY = (
     "R_l",
     "alpha",
@@ -69,7 +92,10 @@ def dump(path: Path, value: dict) -> None:
     )
 
 
-def rms_log_ratio(simulated: np.ndarray, experimental: np.ndarray) -> tuple[float, float]:
+def rms_log_ratio(
+    simulated: np.ndarray,
+    experimental: np.ndarray,
+) -> tuple[float, float]:
     log_ratio = np.log(
         np.asarray(simulated, dtype=float) / np.asarray(experimental, dtype=float)
     )
@@ -77,6 +103,77 @@ def rms_log_ratio(simulated: np.ndarray, experimental: np.ndarray) -> tuple[floa
         float(np.sqrt(np.mean(log_ratio**2))),
         float(np.max(np.abs(log_ratio))),
     )
+
+
+def evaluation_grids() -> dict[str, np.ndarray]:
+    """Use equal log-frequency density: 200 points per decade."""
+    return {
+        "mid": np.logspace(np.log10(1_000.0), np.log10(10_000.0), 200),
+        "high": np.logspace(np.log10(10_000.0), np.log10(100_000.0), 200),
+        "all": np.logspace(np.log10(1_000.0), np.log10(100_000.0), 400),
+    }
+
+
+def experimental_targets(
+    exp_freq: np.ndarray,
+    exp_norm: np.ndarray,
+    grids: dict[str, np.ndarray],
+) -> dict[str, np.ndarray]:
+    return {
+        name: log_interp(exp_freq[1:], exp_norm[1:], grid)
+        for name, grid in grids.items()
+    }
+
+
+def _row_id(row: dict) -> str:
+    return str(row.get("trial_id", row.get("scenario_id", "")))
+
+
+def pareto_front(
+    rows: list[dict],
+    mid_field: str = SCORE_FIELDS["mid"],
+    high_field: str = SCORE_FIELDS["high"],
+) -> list[dict]:
+    """Return the non-dominated mid/high-error front, sorted by mid error."""
+    ordered = sorted(
+        rows,
+        key=lambda row: (
+            float(row[mid_field]),
+            float(row[high_field]),
+            _row_id(row),
+        ),
+    )
+    front = []
+    best_high = np.inf
+    for row in ordered:
+        high = float(row[high_field])
+        if high < best_high:
+            front.append(row)
+            best_high = high
+    return front
+
+
+def best_by_objective(rows: list[dict]) -> dict[str, dict]:
+    return {
+        name: min(
+            rows,
+            key=lambda row, field=field: (float(row[field]), _row_id(row)),
+        )
+        for name, field in SCORE_FIELDS.items()
+    }
+
+
+def finite_best_by_objective(rows: list[dict]) -> dict[str, dict]:
+    return {
+        name: min(
+            rows,
+            key=lambda row, field=field: (
+                float(row[f"finite_{field}"]),
+                _row_id(row),
+            ),
+        )
+        for name, field in SCORE_FIELDS.items()
+    }
 
 
 def sample_parameters(
@@ -103,11 +200,10 @@ def sample_parameters(
         factors[name] = factor
         params[name] = float(generic[name]) * factor
 
-    # Acquisition metadata are not searched.  In particular, ``cutoff`` remains
-    # provenance for the 100 kHz hardware configuration and is not reused as
-    # the 10 kHz analysis filter.
+    # Acquisition/hardware metadata are fixed, not searched.
     params["rate"] = float(template["rate"])
     params["samples"] = int(template["samples"])
+    params["hardware_bessel_order"] = HARDWARE_BESSEL_ORDER
     return params, factors
 
 
@@ -138,20 +234,119 @@ def pulse_gate(parameters: dict, constraints: dict) -> tuple[bool, dict]:
 
 def score_parameters(
     parameters: dict,
-    eval_freq: np.ndarray,
-    exp_eval: np.ndarray,
+    grids: dict[str, np.ndarray],
+    exp_targets: dict[str, np.ndarray],
     rate_hz: float,
     analysis_cutoff_hz: float,
-) -> tuple[float, float]:
+) -> dict[str, float]:
+    model_frequency = np.unique(
+        np.concatenate(
+            (
+                np.asarray([1_000.0]),
+                *[np.asarray(grid, dtype=float) for grid in grids.values()],
+            )
+        )
+    )
+    fixed = dict(parameters)
+    fixed["hardware_bessel_order"] = HARDWARE_BESSEL_ORDER
     expected = expected_post_analysis_asd(
-        parameters,
-        eval_freq,
+        fixed,
+        model_frequency,
         rate_hz=rate_hz,
         hardware_cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
         analysis_cutoff_hz=analysis_cutoff_hz,
     )
-    expected_norm = expected / expected[0]
-    return rms_log_ratio(expected_norm, exp_eval)
+    norm_1k = log_interp(
+        model_frequency,
+        expected,
+        np.asarray([1_000.0]),
+    )[0]
+    expected_norm = expected / norm_1k
+    scores: dict[str, float] = {}
+    for name, grid in grids.items():
+        simulated = log_interp(model_frequency, expected_norm, grid)
+        rms, maximum = rms_log_ratio(simulated, exp_targets[name])
+        scores[SCORE_FIELDS[name]] = rms
+        scores[MAX_FIELDS[name]] = maximum
+    return scores
+
+
+def finite_scores(
+    finite_norm: np.ndarray,
+    full_freq: np.ndarray,
+    grids: dict[str, np.ndarray],
+    exp_targets: dict[str, np.ndarray],
+) -> dict[str, float]:
+    scores: dict[str, float] = {}
+    for name, grid in grids.items():
+        simulated = log_interp(full_freq[1:], finite_norm[1:], grid)
+        rms, maximum = rms_log_ratio(simulated, exp_targets[name])
+        scores[f"finite_{SCORE_FIELDS[name]}"] = rms
+        scores[f"finite_{MAX_FIELDS[name]}"] = maximum
+    return scores
+
+
+def deterministic_candidate_pool(
+    rows: list[dict],
+    per_objective: int,
+) -> list[dict]:
+    """Union of the top N deterministic candidates from each objective."""
+    selected: dict[str, dict] = {}
+    for field in SCORE_FIELDS.values():
+        ordered = sorted(
+            rows,
+            key=lambda row, score_field=field: (
+                float(row[score_field]),
+                _row_id(row),
+            ),
+        )
+        for row in ordered[:per_objective]:
+            selected[_row_id(row)] = row
+    return [selected[key] for key in sorted(selected)]
+
+
+def realize_finite(
+    row: dict,
+    sample: int,
+    rate: float,
+    analysis_cutoff: float,
+    records: int,
+    seed: int,
+    grids: dict[str, np.ndarray],
+    exp_targets: dict[str, np.ndarray],
+) -> dict:
+    parameters = dict(row["parameters"])
+    parameters["hardware_bessel_order"] = HARDWARE_BESSEL_ORDER
+    full_freq = np.fft.rfftfreq(sample, d=1.0 / rate)
+    pre_analysis = hardware_sampled_asd(
+        parameters,
+        full_freq,
+        rate_hz=rate,
+        cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
+        order=HARDWARE_BESSEL_ORDER,
+    )
+    finite_asd = finite_record_post_analysis_asd(
+        pre_analysis,
+        sample,
+        rate,
+        analysis_cutoff_hz=analysis_cutoff,
+        records=records,
+        seed=seed,
+    )
+    finite_norm = normalized(finite_asd, full_freq)
+    scores = finite_scores(finite_norm, full_freq, grids, exp_targets)
+    return {
+        **row,
+        **scores,
+        "finite_record_count": records,
+        "finite_record_seed": seed,
+        "_finite_frequency_Hz": full_freq,
+        "_finite_normalized_asd": finite_norm,
+    }
+
+
+def public_row(row: dict) -> dict:
+    return {key: value for key, value in row.items() if not key.startswith("_")}
 
 
 def main() -> None:
@@ -167,7 +362,10 @@ def main() -> None:
         "--finite-top",
         type=int,
         default=3,
-        help="number of deterministic top candidates to re-evaluate in time domain",
+        help=(
+            "top deterministic candidates per objective to re-evaluate in time "
+            "domain; the union of mid/high/all lists is used"
+        ),
     )
     ap.add_argument(
         "--finite-records",
@@ -211,33 +409,33 @@ def main() -> None:
     rate = float(acquisition["rate_Hz"])
     sample = int(acquisition["samples"])
     analysis_cutoff = float(acquisition["analysis_bessel_cutoff_Hz"])
+    if rate / 2.0 < BANDS_HZ["high"][1]:
+        raise RuntimeError(
+            "Nyquist frequency is below 100 kHz; 10--100 kHz score is unavailable"
+        )
     exp_norm = normalized(exp_asd, exp_freq)
-    eval_freq = np.logspace(np.log10(1000.0), np.log10(10000.0), 200)
-    exp_eval = log_interp(exp_freq[1:], exp_norm[1:], eval_freq)
+    grids = evaluation_grids()
+    exp_targets = experimental_targets(exp_freq, exp_norm, grids)
 
-    # Baseline: re-score the frozen candidates through the corrected deterministic
-    # measurement chain before creating any new trial.
+    # Re-score the frozen candidates through the fixed measurement chain.
     frozen_rows = []
     for scenario in frozen:
-        score, max_abs = score_parameters(
+        scores = score_parameters(
             scenario["parameters"],
-            eval_freq,
-            exp_eval,
+            grids,
+            exp_targets,
             rate,
             analysis_cutoff,
         )
         frozen_rows.append(
             {
                 "scenario_id": scenario["scenario_id"],
-                "rms_log_ratio": score,
-                "max_abs_log_ratio": max_abs,
+                **scores,
                 "parameters": scenario["parameters"],
             }
         )
-    frozen_best = min(
-        frozen_rows,
-        key=lambda row: (row["rms_log_ratio"], row["scenario_id"]),
-    )
+    frozen_best = best_by_objective(frozen_rows)
+    frozen_pareto = pareto_front(frozen_rows)
 
     rng = np.random.default_rng(int(args.seed))
     template = dict(frozen[0]["parameters"])
@@ -255,10 +453,10 @@ def main() -> None:
             rejected_pulse_gate += 1
             continue
         try:
-            score, max_abs = score_parameters(
+            scores = score_parameters(
                 params,
-                eval_freq,
-                exp_eval,
+                grids,
+                exp_targets,
                 rate,
                 analysis_cutoff,
             )
@@ -268,8 +466,7 @@ def main() -> None:
         accepted_rows.append(
             {
                 "trial_id": f"search_{index:06d}",
-                "rms_log_ratio": score,
-                "max_abs_log_ratio": max_abs,
+                **scores,
                 "parameters": params,
                 "factor_from_generic_reference": factors,
                 "pulse_consistency": gate,
@@ -280,87 +477,67 @@ def main() -> None:
 
     if not accepted_rows:
         raise RuntimeError("no exploratory trial passed stability and pulse gates")
-    accepted_rows.sort(key=lambda row: (row["rms_log_ratio"], row["trial_id"]))
-    deterministic_best = accepted_rows[0]
+
+    deterministic_best = best_by_objective(accepted_rows)
+    deterministic_pareto = pareto_front(accepted_rows)
 
     finite_count = (
         int(args.finite_records) if args.finite_records > 0 else len(exp_paths)
     )
-    finite_top = min(int(args.finite_top), len(accepted_rows))
-    full_freq = np.fft.rfftfreq(sample, d=1.0 / rate)
 
-    # Realize the frozen baseline with the same finite-record estimator and the
-    # same random seed used for exploratory candidates.  This keeps the main
-    # comparison figure apples-to-apples and avoids plotting the exact Nyquist
-    # zero of the analytic digital-IIR response as if it were measured ASD.
-    frozen_pre_analysis = hardware_sampled_asd(
-        frozen_best["parameters"],
-        full_freq,
-        rate_hz=rate,
-        cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
-    )
-    frozen_finite_asd = finite_record_post_analysis_asd(
-        frozen_pre_analysis,
-        sample,
-        rate,
-        analysis_cutoff_hz=analysis_cutoff,
-        records=finite_count,
-        seed=int(args.finite_seed),
-    )
-    frozen_finite_norm = normalized(frozen_finite_asd, full_freq)
-    frozen_finite_eval = log_interp(full_freq[1:], frozen_finite_norm[1:], eval_freq)
-    frozen_finite_score, frozen_finite_max = rms_log_ratio(
-        frozen_finite_eval,
-        exp_eval,
-    )
-
-    finite_rows = []
-    for row in accepted_rows[:finite_top]:
-        pre_analysis = hardware_sampled_asd(
-            row["parameters"],
-            full_freq,
-            rate_hz=rate,
-            cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
-        )
-        finite_asd = finite_record_post_analysis_asd(
-            pre_analysis,
+    # Finite-record evaluation is performed for the top N of each objective.
+    candidate_pool = deterministic_candidate_pool(accepted_rows, int(args.finite_top))
+    finite_rows = [
+        realize_finite(
+            row,
             sample,
             rate,
-            analysis_cutoff_hz=analysis_cutoff,
-            records=finite_count,
-            seed=int(args.finite_seed),
+            analysis_cutoff,
+            finite_count,
+            int(args.finite_seed),
+            grids,
+            exp_targets,
         )
-        finite_norm = normalized(finite_asd, full_freq)
-        finite_eval = log_interp(full_freq[1:], finite_norm[1:], eval_freq)
-        finite_score, finite_max = rms_log_ratio(finite_eval, exp_eval)
-        finite_rows.append(
-            {
-                **row,
-                "finite_record_rms_log_ratio": finite_score,
-                "finite_record_max_abs_log_ratio": finite_max,
-                "finite_record_count": finite_count,
-                "finite_record_seed": int(args.finite_seed),
-                "_finite_frequency_Hz": full_freq,
-                "_finite_normalized_asd": finite_norm,
-            }
-        )
+        for row in candidate_pool
+    ]
+    finite_best = finite_best_by_objective(finite_rows)
+    finite_pareto = pareto_front(
+        finite_rows,
+        mid_field=f"finite_{SCORE_FIELDS['mid']}",
+        high_field=f"finite_{SCORE_FIELDS['high']}",
+    )
 
-    finite_rows.sort(
-        key=lambda row: (
-            row["finite_record_rms_log_ratio"],
-            row["trial_id"],
+    # Evaluate each distinct frozen deterministic objective winner with the same
+    # finite-record estimator for objective-by-objective baselines.
+    frozen_unique: dict[str, dict] = {}
+    for row in frozen_best.values():
+        frozen_unique[_row_id(row)] = row
+    frozen_finite_rows = [
+        realize_finite(
+            row,
+            sample,
+            rate,
+            analysis_cutoff,
+            finite_count,
+            int(args.finite_seed),
+            grids,
+            exp_targets,
         )
-    )
-    finite_best = finite_rows[0]
-    score_improvement = float(
-        frozen_best["rms_log_ratio"] - deterministic_best["rms_log_ratio"]
-    )
-    finite_improvement_vs_frozen_deterministic = float(
-        frozen_best["rms_log_ratio"] - finite_best["finite_record_rms_log_ratio"]
-    )
-    finite_improvement_vs_frozen_finite = float(
-        frozen_finite_score - finite_best["finite_record_rms_log_ratio"]
-    )
+        for row in frozen_unique.values()
+    ]
+    frozen_finite_best = finite_best_by_objective(frozen_finite_rows)
+
+    deterministic_improvement = {
+        name: float(frozen_best[name][field] - deterministic_best[name][field])
+        for name, field in SCORE_FIELDS.items()
+    }
+    finite_improvement = {
+        name: float(
+            frozen_finite_best[name][f"finite_{field}"]
+            - finite_best[name][f"finite_{field}"]
+        )
+        for name, field in SCORE_FIELDS.items()
+    }
 
     result = {
         "stage": "exploratory_noise_guided_parameter_search",
@@ -372,9 +549,17 @@ def main() -> None:
             "shape and therefore are exploratory only. They must not be written back "
             "into proxy_scenarios.json or the strict target input."
         ),
-        "selection_band_Hz": [1000.0, 10000.0],
-        "low_frequency_excluded_from_score": True,
-        "normalization_frequency_Hz": 1000.0,
+        "score_bands_Hz": {name: list(bounds) for name, bounds in BANDS_HZ.items()},
+        "low_frequency_below_1kHz_excluded_from_score": True,
+        "normalization_frequency_Hz": 1_000.0,
+        "score_definition": (
+            "RMS natural-log ASD ratio on log-spaced frequencies after independent "
+            "1 kHz normalization; 200 points/decade"
+        ),
+        "ranking_policy": (
+            "mid (1-10 kHz), high (10-100 kHz), and balanced/all (1-100 kHz) "
+            "are ranked independently; Pareto front minimizes mid and high scores"
+        ),
         "search_method": (
             "fixed-seed random draws inside original Stage-A ranges; stability and "
             "the original pulse slow-pole gate are applied before noise ranking"
@@ -384,6 +569,8 @@ def main() -> None:
         "additive_noise_parameter_fit": False,
         "simulation_amplitude_rescale": False,
         "hardware_bessel_cutoff_Hz": float(HARDWARE_BESSEL_CUTOFF_HZ),
+        "hardware_bessel_order": HARDWARE_BESSEL_ORDER,
+        "hardware_parameters_searched": False,
         "analysis_bessel_cutoff_Hz": analysis_cutoff,
         "trial_count_requested": int(args.trials),
         "trial_count_gate_accepted": len(accepted_rows),
@@ -392,36 +579,53 @@ def main() -> None:
         "random_seed": int(args.seed),
         "finite_record_common_seed": int(args.finite_seed),
         "finite_record_count": finite_count,
-        "finite_rerank_count": finite_top,
-        "frozen_baseline_best": frozen_best,
-        "frozen_baseline_finite_record": {
-            "finite_record_rms_log_ratio": frozen_finite_score,
-            "finite_record_max_abs_log_ratio": frozen_finite_max,
-            "finite_record_count": finite_count,
-            "finite_record_seed": int(args.finite_seed),
+        "finite_top_per_objective": int(args.finite_top),
+        "finite_candidate_pool_size": len(candidate_pool),
+        "finite_candidate_pool_ids": [_row_id(row) for row in candidate_pool],
+        "frozen_best_deterministic_by_objective": {
+            name: public_row(row) for name, row in frozen_best.items()
         },
-        "best_exploratory_deterministic": deterministic_best,
-        "best_exploratory_finite_record": {
-            key: value
-            for key, value in finite_best.items()
-            if not key.startswith("_")
+        "frozen_pareto_count": len(frozen_pareto),
+        "frozen_pareto_front": [public_row(row) for row in frozen_pareto],
+        "frozen_best_finite_by_objective": {
+            name: public_row(row) for name, row in frozen_finite_best.items()
         },
-        "deterministic_score_improvement_vs_frozen": score_improvement,
-        "finite_score_improvement_vs_frozen_deterministic_baseline": (
-            finite_improvement_vs_frozen_deterministic
-        ),
-        "finite_score_improvement_vs_frozen_finite_baseline": (
-            finite_improvement_vs_frozen_finite
-        ),
-        "plot_curve_semantics": (
-            "main PNG compares experiment, frozen baseline, and exploratory best "
-            "through the same finite-record estimator; the deterministic analytic "
-            "curve is intentionally not drawn through the exact Nyquist endpoint"
-        ),
-        "top_exploratory_deterministic": accepted_rows[: min(100, len(accepted_rows))],
+        "best_exploratory_deterministic_by_objective": {
+            name: public_row(row) for name, row in deterministic_best.items()
+        },
+        "deterministic_pareto_count": len(deterministic_pareto),
+        "deterministic_pareto_front": [
+            public_row(row) for row in deterministic_pareto[:100]
+        ],
+        "best_exploratory_finite_by_objective": {
+            name: public_row(row) for name, row in finite_best.items()
+        },
+        "finite_pareto_count": len(finite_pareto),
+        "finite_pareto_front": [public_row(row) for row in finite_pareto],
+        "deterministic_score_improvement_vs_frozen": deterministic_improvement,
+        "finite_score_improvement_vs_frozen": finite_improvement,
+        "top_exploratory_deterministic": {
+            name: [
+                public_row(row)
+                for row in sorted(
+                    accepted_rows,
+                    key=lambda row, score_field=field: (
+                        float(row[score_field]),
+                        _row_id(row),
+                    ),
+                )[:100]
+            ]
+            for name, field in SCORE_FIELDS.items()
+        },
         "top_exploratory_finite_record": [
-            {key: value for key, value in row.items() if not key.startswith("_")}
-            for row in finite_rows
+            public_row(row)
+            for row in sorted(
+                finite_rows,
+                key=lambda row: (
+                    float(row[f"finite_{SCORE_FIELDS['all']}"]),
+                    _row_id(row),
+                ),
+            )
         ],
     }
     dump(args.case_dir / "high_frequency_parameter_search.json", result)
@@ -434,14 +638,13 @@ def main() -> None:
         1200,
     )
     exp_plot = log_interp(exp_freq[1:], exp_norm[1:], plot_freq)
-    frozen_finite_plot = log_interp(
-        full_freq[1:],
-        frozen_finite_norm[1:],
-        plot_freq,
-    )
-    finite_plot = log_interp(
-        finite_best["_finite_frequency_Hz"][1:],
-        finite_best["_finite_normalized_asd"][1:],
+
+    # Main figure: one frozen balanced baseline plus unique finite winners from
+    # each exploratory objective.
+    frozen_plot_row = frozen_finite_best["all"]
+    frozen_plot = log_interp(
+        frozen_plot_row["_finite_frequency_Hz"][1:],
+        frozen_plot_row["_finite_normalized_asd"][1:],
         plot_freq,
     )
 
@@ -455,27 +658,46 @@ def main() -> None:
     )
     plt.plot(
         plot_freq,
-        frozen_finite_plot,
+        frozen_plot,
         lw=1.3,
         ls="--",
-        label=f"Frozen best finite ({frozen_best['scenario_id']})",
+        label=f"Frozen balanced finite ({_row_id(frozen_plot_row)})",
     )
-    plt.plot(
-        plot_freq,
-        finite_plot,
-        lw=1.2,
-        label=f"Exploratory finite best ({finite_best['trial_id']})",
-    )
-    plt.scatter([1000.0], [1.0], color="black", s=28, zorder=5)
+
+    labels = {
+        "mid": "Exploratory mid-band best",
+        "high": "Exploratory high-band best",
+        "all": "Exploratory balanced best",
+    }
+    plotted_ids = set()
+    for name in ("mid", "high", "all"):
+        row = finite_best[name]
+        identity = _row_id(row)
+        if identity in plotted_ids:
+            continue
+        plotted_ids.add(identity)
+        curve = log_interp(
+            row["_finite_frequency_Hz"][1:],
+            row["_finite_normalized_asd"][1:],
+            plot_freq,
+        )
+        plt.plot(
+            plot_freq,
+            curve,
+            lw=1.2,
+            label=f"{labels[name]} ({identity})",
+        )
+
+    plt.scatter([1_000.0], [1.0], color="black", s=28, zorder=5)
     plt.xscale("log")
     plt.yscale("log")
     plt.xlim(rate / sample, rate / 2.0)
     plt.xlabel("Frequency [Hz]")
     plt.ylabel("Normalized ASD (ASD / ASD at 1 kHz)")
-    plt.title("Exploratory TES parameter search — corrected measurement chain")
+    plt.title("Exploratory TES parameter search — multi-band comparison")
     plt.suptitle(
-        "Ranking uses 1–10 kHz only; plotted simulation curves use the same "
-        "finite-record estimator as the experiment.",
+        "Hardware fixed at 4th-order 100 kHz Bessel; rankings: 1–10 kHz, "
+        "10–100 kHz, and 1–100 kHz.",
         fontsize=9,
         y=0.94,
     )
@@ -485,22 +707,113 @@ def main() -> None:
     plt.savefig(args.case_dir / "high_frequency_parameter_search.png", dpi=180)
     plt.close()
 
+    # Ratio figure directly exposes where each selected simulation is high/low.
+    ratio_freq = grids["all"]
+    exp_ratio_reference = exp_targets["all"]
+    plt.figure(figsize=(9, 4.8))
+    plt.axhline(1.0, color="black", lw=1.0)
+    plotted_ids.clear()
+    for name in ("mid", "high", "all"):
+        row = finite_best[name]
+        identity = _row_id(row)
+        if identity in plotted_ids:
+            continue
+        plotted_ids.add(identity)
+        simulated = log_interp(
+            row["_finite_frequency_Hz"][1:],
+            row["_finite_normalized_asd"][1:],
+            ratio_freq,
+        )
+        plt.plot(
+            ratio_freq,
+            simulated / exp_ratio_reference,
+            lw=1.2,
+            label=f"{labels[name]} ({identity})",
+        )
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.xlim(BANDS_HZ["all"])
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("Simulation / experiment normalized ASD")
+    plt.title("Selected exploratory candidates — 1–100 kHz shape ratio")
+    plt.grid(True, which="both", alpha=0.25)
+    plt.legend(fontsize=8)
+    plt.tight_layout()
+    plt.savefig(
+        args.case_dir / "high_frequency_parameter_search_ratio.png",
+        dpi=180,
+    )
+    plt.close()
+
+    # Pareto figure: every accepted deterministic trial plus the non-dominated front.
+    pareto_mid = [row[SCORE_FIELDS["mid"]] for row in deterministic_pareto]
+    pareto_high = [row[SCORE_FIELDS["high"]] for row in deterministic_pareto]
+    plt.figure(figsize=(6.5, 5.5))
+    plt.scatter(
+        [row[SCORE_FIELDS["mid"]] for row in accepted_rows],
+        [row[SCORE_FIELDS["high"]] for row in accepted_rows],
+        s=8,
+        alpha=0.25,
+        label="accepted exploratory trials",
+    )
+    plt.plot(
+        pareto_mid,
+        pareto_high,
+        marker="o",
+        ms=3,
+        lw=1.2,
+        label="mid/high Pareto front",
+    )
+    balanced = deterministic_best["all"]
+    plt.scatter(
+        [balanced[SCORE_FIELDS["mid"]]],
+        [balanced[SCORE_FIELDS["high"]]],
+        s=45,
+        marker="*",
+        label=f"balanced best ({_row_id(balanced)})",
+    )
+    plt.xlabel("RMS log ratio: 1–10 kHz")
+    plt.ylabel("RMS log ratio: 10–100 kHz")
+    plt.title("TES parameter-search Pareto trade-off")
+    plt.grid(True, alpha=0.25)
+    plt.legend(fontsize=8)
+    plt.tight_layout()
+    plt.savefig(
+        args.case_dir / "high_frequency_parameter_search_pareto.png",
+        dpi=180,
+    )
+    plt.close()
+
     print(
         json.dumps(
             {
+                "hardware": {
+                    "bessel_order": HARDWARE_BESSEL_ORDER,
+                    "bessel_cutoff_Hz": float(HARDWARE_BESSEL_CUTOFF_HZ),
+                    "searched": False,
+                },
                 "frozen_best": {
-                    "id": frozen_best["scenario_id"],
-                    "deterministic_rms_log_ratio": frozen_best["rms_log_ratio"],
-                    "finite_record_rms_log_ratio": frozen_finite_score,
+                    name: {
+                        "id": _row_id(row),
+                        "rms_log_ratio": row[SCORE_FIELDS[name]],
+                    }
+                    for name, row in frozen_best.items()
                 },
                 "exploratory_expected_best": {
-                    "id": deterministic_best["trial_id"],
-                    "rms_log_ratio": deterministic_best["rms_log_ratio"],
+                    name: {
+                        "id": _row_id(row),
+                        "rms_log_ratio": row[SCORE_FIELDS[name]],
+                    }
+                    for name, row in deterministic_best.items()
                 },
                 "exploratory_finite_best": {
-                    "id": finite_best["trial_id"],
-                    "rms_log_ratio": finite_best["finite_record_rms_log_ratio"],
+                    name: {
+                        "id": _row_id(row),
+                        "rms_log_ratio": row[f"finite_{SCORE_FIELDS[name]}"],
+                    }
+                    for name, row in finite_best.items()
                 },
+                "deterministic_pareto_count": len(deterministic_pareto),
                 "gate_accepted": len(accepted_rows),
                 "trials": int(args.trials),
             },
