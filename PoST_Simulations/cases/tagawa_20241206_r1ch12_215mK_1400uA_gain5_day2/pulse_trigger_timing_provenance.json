@@ -1,0 +1,32 @@
+{
+  "stage": "pulse_trigger_timing_provenance",
+  "target_setting_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/Setting.txt",
+  "target_setting": {
+    "date": "20241206",
+    "max_input": 5.0,
+    "minimum_input": -5.0,
+    "rate_Hz": 500000.0,
+    "samples": 100000.0,
+    "samples_to_log": 100000.0,
+    "pretrigger_samples": 5000.0,
+    "threshold": 5e-05
+  },
+  "target_trigger_sample": 5000,
+  "expected_peak_window_samples": [
+    5000,
+    15000
+  ],
+  "expected_peak_window_s": [
+    0.01,
+    0.03
+  ],
+  "analysis_PeakSearchSample": 10000,
+  "target_sample_rate_Hz": 500000.0,
+  "target_record_samples": 100000,
+  "legacy_pulse_config_file": "G:/tagawa/20241206/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2/PulseConfig.json",
+  "legacy_pulse_config_PreSample": 1000,
+  "legacy_config_conflict": true,
+  "selection_rule": "target Setting.txt Pretrigger_Samples controls trigger-relative timing; PulseConfig is legacy metadata only",
+  "whole_record_abs_max_used_for_production_peak": false,
+  "noise_psd_used_for_timing": false
+}

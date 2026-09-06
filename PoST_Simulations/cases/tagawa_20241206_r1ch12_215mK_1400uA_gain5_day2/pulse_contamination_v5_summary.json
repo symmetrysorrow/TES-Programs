@@ -1,0 +1,141 @@
+{
+  "stage": "pulse_contamination_v5_summary",
+  "accepted_CH0": 345,
+  "accepted_CH1_auxiliary": 1,
+  "counts_CH0": {
+    "short_definite": 0,
+    "short_likely": 0,
+    "short_ambiguous": 2,
+    "long_definite": 0,
+    "long_likely": 1,
+    "long_ambiguous": 15,
+    "pulse_free_candidate": 329,
+    "primary_full_pulse": 0,
+    "primary_long_tail": 0,
+    "primary_ambiguous": 16
+  },
+  "recovery_gate_pass": false,
+  "recovery_gate_measured": {
+    "full_q50": 1.0,
+    "full_q25": 0.03,
+    "tail_q50_age_0_to_50ms": 0.16666666666666666,
+    "tail_q25_age_0_to_50ms": 0.0,
+    "tail_q50_age_100ms": 0.16666666666666666,
+    "pre_record_tail_q50": 0.0,
+    "onset_near_end_q50": 0.01,
+    "false_positive_per_record": 0.001,
+    "primary_threshold_rho": 224.9168805572623
+  },
+  "false_positive_controls": {
+    "CH0": {
+      "record_count": 345,
+      "time_reversed_short_threshold": 224.9168805572623,
+      "time_reversed_edge_threshold": 434.7579149266939,
+      "time_reversed_long_threshold": 220.13024807538918,
+      "time_reversed_short_hit_rate": 0.0,
+      "time_reversed_long_hit_rate": 0.0,
+      "time_reversed_combined_hit_rate": 0.0,
+      "pass_at_approximately_1pct": true
+    },
+    "CH1": {
+      "record_count": 1,
+      "time_reversed_short_threshold": 475.6430940823204,
+      "time_reversed_edge_threshold": 483.2144325086593,
+      "time_reversed_long_threshold": 1.2448692267209323,
+      "time_reversed_short_hit_rate": 0.0,
+      "time_reversed_long_hit_rate": 0.0,
+      "time_reversed_combined_hit_rate": 0.0,
+      "pass_at_approximately_1pct": true
+    }
+  },
+  "selection_bias_pass": false,
+  "selection_bias_correlations": {
+    "10": {
+      "rho": 0.522181421405181,
+      "status": "fail"
+    },
+    "20": {
+      "rho": 0.4674442449192145,
+      "status": "fail"
+    },
+    "50": {
+      "rho": 0.449143774113539,
+      "status": "fail"
+    },
+    "100": {
+      "rho": 0.39372948970539196,
+      "status": "fail"
+    },
+    "200": {
+      "rho": 0.30620751912719185,
+      "status": "warning"
+    },
+    "1000": {
+      "rho": 0.11241978704515586,
+      "status": "pass"
+    }
+  },
+  "validated_pulse_free_exists": false,
+  "pulse_free_candidate_count": 329,
+  "asd_all_over_pulse_free_candidate": {
+    "pre_analysis": {
+      "5": 1.0717556128537864,
+      "10": 1.0737422787882607,
+      "20": 1.0623624700298626,
+      "30": 1.0667983108078969,
+      "50": 1.0532037318082474,
+      "70": 1.0642431985028964,
+      "100": 1.0721372940450118,
+      "150": 1.0962036507253412,
+      "200": 1.0951849764594153,
+      "300": 1.0690770695860035,
+      "500": 1.0026106829796944,
+      "1000": 1.0068571378535398,
+      "3000": 0.989647520279577,
+      "5000": 0.998599284258496,
+      "7000": 0.9959930533171689,
+      "10000": 1.0206644162766771
+    },
+    "post_analysis": {
+      "5": 1.0717556046943528,
+      "10": 1.0737422869548812,
+      "20": 1.062362452255824,
+      "30": 1.0667983151684388,
+      "50": 1.0532036877699948,
+      "70": 1.0642430814158756,
+      "100": 1.0721373009980906,
+      "150": 1.0962037216679252,
+      "200": 1.0951853323686258,
+      "300": 1.069077500907365,
+      "500": 1.0026114145246532,
+      "1000": 1.0068572035774583,
+      "3000": 0.9896496806822905,
+      "5000": 0.9985960143731735,
+      "7000": 0.9959926248926886,
+      "10000": 1.0206525569873404
+    }
+  },
+  "auxiliary_common_mode": "common_low_frequency_component_supported",
+  "auxiliary_coherence_all": {
+    "5": 0.9681962942265714,
+    "10": 0.9459061709030585,
+    "20": 0.8034145629963291,
+    "30": 0.6835186051773136,
+    "50": 0.39218755566164154,
+    "100": 0.09537244529099541
+  },
+  "pulse_vs_noise_signature": "pulse_channel_signature_match",
+  "pulse_vs_noise_similarity": {
+    "5": 0.98438674777311,
+    "10": 0.9382121189166528,
+    "20": 0.9396385050912888,
+    "30": 0.9516570880749495,
+    "50": 0.8096353430664094,
+    "70": 0.9330910527459075,
+    "100": 0.9051969885300822
+  },
+  "stationary_physical_source_investigation_allowed": false,
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified",
+  "empirical_white_floor": 0.0,
+  "readout_white_floor": 0.0
+}

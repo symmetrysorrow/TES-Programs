@@ -1,0 +1,29 @@
+{
+  "stage": "pulse_false_positive_controls_v5",
+  "primary_threshold_frozen": true,
+  "threshold_source": "short/long conditional null .999 quantile",
+  "canonical_classifier": "classify_record_v5",
+  "controls": {
+    "CH0": {
+      "record_count": 345,
+      "time_reversed_short_threshold": 224.9168805572623,
+      "time_reversed_edge_threshold": 434.7579149266939,
+      "time_reversed_long_threshold": 220.13024807538918,
+      "time_reversed_short_hit_rate": 0.0,
+      "time_reversed_long_hit_rate": 0.0,
+      "time_reversed_combined_hit_rate": 0.0,
+      "pass_at_approximately_1pct": true
+    },
+    "CH1": {
+      "record_count": 1,
+      "time_reversed_short_threshold": 475.6430940823204,
+      "time_reversed_edge_threshold": 483.2144325086593,
+      "time_reversed_long_threshold": 1.2448692267209323,
+      "time_reversed_short_hit_rate": 0.0,
+      "time_reversed_long_hit_rate": 0.0,
+      "time_reversed_combined_hit_rate": 0.0,
+      "pass_at_approximately_1pct": true
+    }
+  },
+  "status": "pass"
+}
