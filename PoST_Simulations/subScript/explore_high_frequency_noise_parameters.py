@@ -288,8 +288,33 @@ def main() -> None:
     )
     finite_top = min(int(args.finite_top), len(accepted_rows))
     full_freq = np.fft.rfftfreq(sample, d=1.0 / rate)
-    finite_rows = []
 
+    # Realize the frozen baseline with the same finite-record estimator and the
+    # same random seed used for exploratory candidates.  This keeps the main
+    # comparison figure apples-to-apples and avoids plotting the exact Nyquist
+    # zero of the analytic digital-IIR response as if it were measured ASD.
+    frozen_pre_analysis = hardware_sampled_asd(
+        frozen_best["parameters"],
+        full_freq,
+        rate_hz=rate,
+        cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
+    )
+    frozen_finite_asd = finite_record_post_analysis_asd(
+        frozen_pre_analysis,
+        sample,
+        rate,
+        analysis_cutoff_hz=analysis_cutoff,
+        records=finite_count,
+        seed=int(args.finite_seed),
+    )
+    frozen_finite_norm = normalized(frozen_finite_asd, full_freq)
+    frozen_finite_eval = log_interp(full_freq[1:], frozen_finite_norm[1:], eval_freq)
+    frozen_finite_score, frozen_finite_max = rms_log_ratio(
+        frozen_finite_eval,
+        exp_eval,
+    )
+
+    finite_rows = []
     for row in accepted_rows[:finite_top]:
         pre_analysis = hardware_sampled_asd(
             row["parameters"],
@@ -330,8 +355,11 @@ def main() -> None:
     score_improvement = float(
         frozen_best["rms_log_ratio"] - deterministic_best["rms_log_ratio"]
     )
-    finite_improvement = float(
+    finite_improvement_vs_frozen_deterministic = float(
         frozen_best["rms_log_ratio"] - finite_best["finite_record_rms_log_ratio"]
+    )
+    finite_improvement_vs_frozen_finite = float(
+        frozen_finite_score - finite_best["finite_record_rms_log_ratio"]
     )
 
     result = {
@@ -366,6 +394,12 @@ def main() -> None:
         "finite_record_count": finite_count,
         "finite_rerank_count": finite_top,
         "frozen_baseline_best": frozen_best,
+        "frozen_baseline_finite_record": {
+            "finite_record_rms_log_ratio": frozen_finite_score,
+            "finite_record_max_abs_log_ratio": frozen_finite_max,
+            "finite_record_count": finite_count,
+            "finite_record_seed": int(args.finite_seed),
+        },
         "best_exploratory_deterministic": deterministic_best,
         "best_exploratory_finite_record": {
             key: value
@@ -373,7 +407,17 @@ def main() -> None:
             if not key.startswith("_")
         },
         "deterministic_score_improvement_vs_frozen": score_improvement,
-        "finite_score_improvement_vs_frozen_deterministic_baseline": finite_improvement,
+        "finite_score_improvement_vs_frozen_deterministic_baseline": (
+            finite_improvement_vs_frozen_deterministic
+        ),
+        "finite_score_improvement_vs_frozen_finite_baseline": (
+            finite_improvement_vs_frozen_finite
+        ),
+        "plot_curve_semantics": (
+            "main PNG compares experiment, frozen baseline, and exploratory best "
+            "through the same finite-record estimator; the deterministic analytic "
+            "curve is intentionally not drawn through the exact Nyquist endpoint"
+        ),
         "top_exploratory_deterministic": accepted_rows[: min(100, len(accepted_rows))],
         "top_exploratory_finite_record": [
             {key: value for key, value in row.items() if not key.startswith("_")}
@@ -390,23 +434,16 @@ def main() -> None:
         1200,
     )
     exp_plot = log_interp(exp_freq[1:], exp_norm[1:], plot_freq)
+    frozen_finite_plot = log_interp(
+        full_freq[1:],
+        frozen_finite_norm[1:],
+        plot_freq,
+    )
     finite_plot = log_interp(
         finite_best["_finite_frequency_Hz"][1:],
         finite_best["_finite_normalized_asd"][1:],
         plot_freq,
     )
-    frozen_expected = expected_post_analysis_asd(
-        frozen_best["parameters"],
-        plot_freq,
-        rate_hz=rate,
-        hardware_cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
-        analysis_cutoff_hz=analysis_cutoff,
-    )
-    frozen_expected = frozen_expected / log_interp(
-        plot_freq,
-        frozen_expected,
-        np.asarray([1000.0]),
-    )[0]
 
     plt.figure(figsize=(9, 5.5))
     plt.plot(
@@ -418,10 +455,10 @@ def main() -> None:
     )
     plt.plot(
         plot_freq,
-        frozen_expected,
+        frozen_finite_plot,
         lw=1.3,
         ls="--",
-        label=f"Frozen best expected ({frozen_best['scenario_id']})",
+        label=f"Frozen best finite ({frozen_best['scenario_id']})",
     )
     plt.plot(
         plot_freq,
@@ -437,8 +474,8 @@ def main() -> None:
     plt.ylabel("Normalized ASD (ASD / ASD at 1 kHz)")
     plt.title("Exploratory TES parameter search — corrected measurement chain")
     plt.suptitle(
-        "Ranking uses 1–10 kHz only; new noise-ranked trials are exploratory "
-        "and are not strict target estimates.",
+        "Ranking uses 1–10 kHz only; plotted simulation curves use the same "
+        "finite-record estimator as the experiment.",
         fontsize=9,
         y=0.94,
     )
@@ -453,7 +490,8 @@ def main() -> None:
             {
                 "frozen_best": {
                     "id": frozen_best["scenario_id"],
-                    "rms_log_ratio": frozen_best["rms_log_ratio"],
+                    "deterministic_rms_log_ratio": frozen_best["rms_log_ratio"],
+                    "finite_record_rms_log_ratio": frozen_finite_score,
                 },
                 "exploratory_expected_best": {
                     "id": deterministic_best["trial_id"],
