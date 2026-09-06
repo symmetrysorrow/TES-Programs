@@ -1,0 +1,114 @@
+{
+  "stage": "clean_v2_simulation_comparison",
+  "experimental_subset": "CH0 clean_v2",
+  "scenario_selection": "existing frozen pulse-consistent scenarios; no parameter generation or update",
+  "frequencies_Hz": [
+    10.0,
+    20.0,
+    50.0,
+    100.0,
+    200.0,
+    500.0,
+    1000.0,
+    3000.0,
+    5000.0,
+    7000.0,
+    10000.0
+  ],
+  "rows": [
+    {
+      "frequency_Hz": 10.0,
+      "clean_v2_normalized": 58.107103157787726,
+      "simulation_min": 1.0024889909472223,
+      "simulation_median": 1.2681814068012198,
+      "simulation_max": 2.456458863091876,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 20.0,
+      "clean_v2_normalized": 26.165227553285067,
+      "simulation_min": 1.005485143729791,
+      "simulation_median": 1.2688838381932055,
+      "simulation_max": 2.4531271951735554,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 50.0,
+      "clean_v2_normalized": 10.434287076663832,
+      "simulation_min": 1.0063834338962117,
+      "simulation_median": 1.2682821164354705,
+      "simulation_max": 2.430930621833735,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 100.0,
+      "clean_v2_normalized": 5.003164965318716,
+      "simulation_min": 1.006466730727702,
+      "simulation_median": 1.2653342921407575,
+      "simulation_max": 2.35691223999254,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 200.0,
+      "clean_v2_normalized": 2.316152008273356,
+      "simulation_min": 1.0063007858054909,
+      "simulation_median": 1.253635477471067,
+      "simulation_max": 2.12223076311198,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 500.0,
+      "clean_v2_normalized": 1.473479968708626,
+      "simulation_min": 1.0049183379033924,
+      "simulation_median": 1.1803855763735416,
+      "simulation_max": 1.4555472682349484,
+      "inside_envelope": false
+    },
+    {
+      "frequency_Hz": 1000.0,
+      "clean_v2_normalized": 1.0,
+      "simulation_min": 1.0,
+      "simulation_median": 1.0,
+      "simulation_max": 1.0,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 3000.0,
+      "clean_v2_normalized": 0.8302438451348148,
+      "simulation_min": 0.5036798255730314,
+      "simulation_median": 0.6345028113645845,
+      "simulation_max": 0.9520152745134708,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 5000.0,
+      "clean_v2_normalized": 0.6528828476119233,
+      "simulation_min": 0.4050262535999144,
+      "simulation_median": 0.5141763568735288,
+      "simulation_max": 0.8751879303122967,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 7000.0,
+      "clean_v2_normalized": 0.4542060549070165,
+      "simulation_min": 0.3463244489155965,
+      "simulation_median": 0.46371947876584024,
+      "simulation_max": 0.7910254735382133,
+      "inside_envelope": true
+    },
+    {
+      "frequency_Hz": 10000.0,
+      "clean_v2_normalized": 0.19481332026245493,
+      "simulation_min": 0.30063233392870375,
+      "simulation_median": 0.43580390802932517,
+      "simulation_max": 0.6979518703951636,
+      "inside_envelope": false
+    }
+  ],
+  "metrics": {
+    "RMS_log_ratio_by_scenario_median": 1.6854664674378845,
+    "minimum_max_abs_log_ratio": 3.1635670874938926
+  },
+  "single_scenario_target_update": false,
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}
