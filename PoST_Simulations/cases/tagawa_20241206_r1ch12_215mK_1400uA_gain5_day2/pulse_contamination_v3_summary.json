@@ -1,0 +1,45 @@
+{
+  "stage": "pulse_contamination_v3_summary",
+  "accepted_CH0": 345,
+  "counts_CH0": {
+    "pulse_free": 293,
+    "ambiguous_full": 1,
+    "ambiguous_tail": 50,
+    "likely_full": 1,
+    "likely_tail": 0,
+    "definite_full": 0,
+    "definite_tail": 0
+  },
+  "clean_v3_record_count": 293,
+  "recovery_criteria_pass": false,
+  "selection_bias_correlations": {
+    "10": {
+      "spearman_rho_between_minus_log10_p_and_log10_psd": -0.45554002669773536
+    },
+    "20": {
+      "spearman_rho_between_minus_log10_p_and_log10_psd": -0.5374551901291789
+    },
+    "50": {
+      "spearman_rho_between_minus_log10_p_and_log10_psd": -0.5193391770356208
+    },
+    "100": {
+      "spearman_rho_between_minus_log10_p_and_log10_psd": -0.47451042316941516
+    },
+    "1000": {
+      "spearman_rho_between_minus_log10_p_and_log10_psd": -0.13266876849674836
+    }
+  },
+  "pre_analysis_all_over_clean_asd": {
+    "10": 0.9393884536434844,
+    "20": 0.9348237797471409,
+    "50": 0.9381681431081491,
+    "100": 0.9534651663113014,
+    "200": 0.9839273698530905
+  },
+  "clean_v3_10_to_200_Hz_slope": -1.0545944886487306,
+  "pc_classification": "PC4",
+  "rl_classification": "RL5_unvalidated_clean_mask",
+  "stationary_physical_source_investigation_allowed": false,
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified",
+  "reason": "v3 recovery criteria fail and detector p-value is correlated with low-frequency PSD; PC3 and physics-source attribution are prohibited"
+}

@@ -1,0 +1,14 @@
+{
+  "stage": "pulse_detection_decision_policy_v3",
+  "target_primary_fwer": 0.001,
+  "operational_boundaries": {
+    "definite": "FWER<=1e-3",
+    "likely": "1e-3<FWER<=1e-2",
+    "ambiguous": "1e-2<FWER<=5e-2",
+    "pulse_free": "FWER>5e-2"
+  },
+  "one_e_minus_4_category": "removed",
+  "resolution_rule": "A null requires >=999 records for 1e-3 rank resolution; negative-polarity control is reported at its actual resolution",
+  "threshold_selection_before_noise_spectrum": true,
+  "simulation_agreement_used": false
+}

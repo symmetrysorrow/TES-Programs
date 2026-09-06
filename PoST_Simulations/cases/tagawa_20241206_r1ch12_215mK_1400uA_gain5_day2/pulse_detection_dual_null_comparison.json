@@ -1,0 +1,62 @@
+{
+  "stage": "pulse_detection_dual_null_comparison",
+  "channels": {
+    "CH0": {
+      "thresholds_by_template": {
+        "full_pulse": {
+          "block_bootstrap_fwer_0.01_score": 0.9126669906771765,
+          "block_bootstrap_fwer_0.001_score": 0.9336381207144573,
+          "negative_fwer_0.01_score": 0.7060258468313587,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.002890173410404624
+        },
+        "post_peak_tail": {
+          "block_bootstrap_fwer_0.01_score": 0.9107862291598797,
+          "block_bootstrap_fwer_0.001_score": 0.92910098626348,
+          "negative_fwer_0.01_score": 0.8547690535304839,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.002890173410404624
+        },
+        "slow_tail": {
+          "block_bootstrap_fwer_0.01_score": 0.5701211495257205,
+          "block_bootstrap_fwer_0.001_score": 0.6444138635224022,
+          "negative_fwer_0.01_score": 0.4096525585822035,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.002890173410404624
+        }
+      },
+      "max_threshold_ratio_at_fwer_0.01": 1.3917187567408207,
+      "consistency": "null_consistent",
+      "primary_threshold_rule": "conservative maximum; no simulation agreement used"
+    },
+    "CH1": {
+      "thresholds_by_template": {
+        "full_pulse": {
+          "block_bootstrap_fwer_0.01_score": 0.8052905989407313,
+          "block_bootstrap_fwer_0.001_score": 0.8113810768806049,
+          "negative_fwer_0.01_score": 0.3683084998862071,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.5
+        },
+        "post_peak_tail": {
+          "block_bootstrap_fwer_0.01_score": 0.9035505147669497,
+          "block_bootstrap_fwer_0.001_score": 0.9090908676900624,
+          "negative_fwer_0.01_score": 0.36976860623085933,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.5
+        },
+        "slow_tail": {
+          "block_bootstrap_fwer_0.01_score": 0.8409963293175066,
+          "block_bootstrap_fwer_0.001_score": 0.9052259603408699,
+          "negative_fwer_0.01_score": 0.06750418107564646,
+          "negative_fwer_0.001_score": null,
+          "negative_resolution": 0.5
+        }
+      },
+      "max_threshold_ratio_at_fwer_0.01": 12.458433180236202,
+      "consistency": "null_moderately_different",
+      "primary_threshold_rule": "conservative maximum; no simulation agreement used"
+    }
+  },
+  "familywise_p_distributions_compared": true
+}
