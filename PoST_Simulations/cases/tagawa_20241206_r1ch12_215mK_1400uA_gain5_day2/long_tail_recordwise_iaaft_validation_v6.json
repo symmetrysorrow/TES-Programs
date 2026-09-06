@@ -1,0 +1,108 @@
+{
+  "stage": "long_tail_recordwise_iaaft_validation_v6",
+  "fixed_seed": 20261106,
+  "records_per_channel": 10,
+  "surrogates_per_record": 20,
+  "selection": "first records_per_channel after deterministic event_key sort",
+  "threshold_tuning_used": false,
+  "channels": {
+    "CH0": {
+      "record_count": 10,
+      "rows": [
+        {
+          "event_key": "1",
+          "real_long_statistic": 28.41807701990632,
+          "surrogate_q50": 17.30094218153105,
+          "surrogate_q95": 27.844688935396906,
+          "real_percentile": 0.95,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "10",
+          "real_long_statistic": 7.438714046674667,
+          "surrogate_q50": 7.53751229622205,
+          "surrogate_q95": 8.363181432511043,
+          "real_percentile": 0.4,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "100",
+          "real_long_statistic": 56.9173029056126,
+          "surrogate_q50": 68.20752504701866,
+          "surrogate_q95": 100.54340937072139,
+          "real_percentile": 0.3,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "101",
+          "real_long_statistic": 13.70907158431329,
+          "surrogate_q50": 16.641700823645863,
+          "surrogate_q95": 40.056528782776724,
+          "real_percentile": 0.1,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "102",
+          "real_long_statistic": 8.112968217038487,
+          "surrogate_q50": 8.126087035668705,
+          "surrogate_q95": 9.5613558564757,
+          "real_percentile": 0.5,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "103",
+          "real_long_statistic": 13.87242899321592,
+          "surrogate_q50": 21.196447907835772,
+          "surrogate_q95": 40.39530548299921,
+          "real_percentile": 0.0,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "104",
+          "real_long_statistic": 28.44736951919682,
+          "surrogate_q50": 39.68651565560807,
+          "surrogate_q95": 97.13602158220849,
+          "real_percentile": 0.0,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "105",
+          "real_long_statistic": 16.471300230948597,
+          "surrogate_q50": 24.80843869054445,
+          "surrogate_q95": 63.51736203080399,
+          "real_percentile": 0.0,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "106",
+          "real_long_statistic": 8.693674426465696,
+          "surrogate_q50": 8.401606966772935,
+          "surrogate_q95": 9.859520267019374,
+          "real_percentile": 0.55,
+          "surrogate_count": 20
+        },
+        {
+          "event_key": "107",
+          "real_long_statistic": 8.990537783338915,
+          "surrogate_q50": 11.537467850338945,
+          "surrogate_q95": 23.09938632594944,
+          "real_percentile": 0.0,
+          "surrogate_count": 20
+        }
+      ]
+    },
+    "CH1": {
+      "record_count": 1,
+      "rows": [
+        {
+          "event_key": "2",
+          "real_long_statistic": 0.6528802207114567,
+          "surrogate_q50": 0.7207298944651399,
+          "surrogate_q95": 0.903916165909222,
+          "real_percentile": 0.4,
+          "surrogate_count": 20
+        }
+      ]
+    }
+  }
+}

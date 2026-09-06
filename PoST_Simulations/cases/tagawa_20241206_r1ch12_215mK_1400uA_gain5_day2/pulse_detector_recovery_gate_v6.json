@@ -1,0 +1,31 @@
+{
+  "stage": "pulse_detector_recovery_gate_v6",
+  "measured": {
+    "full_q50_full_overlap": 0.01,
+    "full_q25_full_overlap": 0.0,
+    "full_q50_75pct_overlap": 0.06,
+    "full_q50_50pct_overlap": 0.94,
+    "tail_age_0ms_q50": 1.0,
+    "tail_age_10ms_q50": 0.07,
+    "tail_age_20ms_q50": 0.07,
+    "tail_age_50ms_q50": 0.06,
+    "tail_age_100ms_q50": 0.08,
+    "pre_record_tail_age_50ms_q50_50pct": 0.09
+  },
+  "criteria": {
+    "full_q50_full_overlap": false,
+    "full_q25_full_overlap": false,
+    "full_q50_75pct_overlap": false,
+    "full_q50_50pct_overlap": true,
+    "tail_age_0ms_q50": true,
+    "tail_age_10ms_q50": false,
+    "tail_age_20ms_q50": false,
+    "tail_age_50ms_q50": false,
+    "tail_age_100ms_q50": false,
+    "pre_record_tail_age_50ms_q50_50pct": false
+  },
+  "criteria_pass": false,
+  "hardcoded_result": false,
+  "short_null_resolution": true,
+  "long_tail_alpha": 0.01
+}

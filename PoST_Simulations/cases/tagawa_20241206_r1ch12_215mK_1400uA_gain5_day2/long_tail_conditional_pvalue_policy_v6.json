@@ -1,0 +1,9 @@
+{
+  "stage": "long_tail_conditional_pvalue_policy_v6",
+  "primary_definition": "(1 + #{surrogate >= real})/(M+1), per record",
+  "primary_alpha": 0.01,
+  "minimum_surrogates_for_p_0.01": 99,
+  "maximum_surrogates_per_record": 100,
+  "global_pooled_null_primary": false,
+  "option_selected": "B, compute-budget-limited p<=0.01"
+}

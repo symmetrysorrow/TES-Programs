@@ -1,0 +1,58 @@
+{
+  "stage": "pulse_timing_metadata_provenance_v6",
+  "fields": {
+    "Setting.txt.Pretrigger_Samples": {
+      "value": 5000.0,
+      "classification": "target_authoritative"
+    },
+    "Setting.txt.Rate": {
+      "value": 500000.0,
+      "classification": "target_authoritative"
+    },
+    "Setting.txt.Samples": {
+      "value": 100000.0,
+      "classification": "target_authoritative"
+    },
+    "PulseConfig.Readout.PreSample": {
+      "value": 1000,
+      "classification": "legacy_only",
+      "reason": "conflicts with target Setting.txt"
+    },
+    "PulseConfig.Analysis.PeakSearchSample": {
+      "value": 10000,
+      "classification": "target_analysis_metadata",
+      "reason": "window width only; trigger origin is Setting.txt"
+    }
+  },
+  "repository_reader": {
+    "path": "Analyze_Experimental_Data/tes_analysis/analysis_utils.py",
+    "functions": [
+      "PeakSearchWindow",
+      "PeakHeight",
+      "AnalyzePulse"
+    ],
+    "classification": "uncertain",
+    "reason": "the generic reader starts from PulseConfig.Readout.PreSample=1000; this audit uses the target Setting.txt trigger explicitly"
+  },
+  "production_audit_reader": {
+    "path": "PoST_Simulations/subScript/pulse_contamination_v5.py",
+    "functions": [
+      "_read_setting",
+      "timing_distribution",
+      "_timed_pulse"
+    ],
+    "classification": "target_analysis_metadata",
+    "trigger_source": "Setting.txt"
+  },
+  "acquisition_writer": {
+    "path": "setting.xml",
+    "classification": "target_authoritative",
+    "evidence": {
+      "daq_channel": "PXI2Slot2/ai0:1",
+      "sample_rate_Hz": 500000.0,
+      "samples_per_channel": 100000.0,
+      "pretrigger_samples": 5000.0
+    }
+  },
+  "decision": "trigger 5000; peak window [5000,15000); no noise PSD for timing"
+}
