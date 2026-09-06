@@ -10,6 +10,9 @@ The physical chain is kept explicit:
 
 The 100 kHz hardware filter and the 10 kHz analysis filter are intentionally
 separate parameters and must never be conflated through ``input["cutoff"]``.
+The historical hardware Bessel convention is SciPy ``norm="phase"``.  The
+helpers also expose ``norm="mag"`` and an explicit diagnostic bypass so those
+conventions can be compared without changing the production default.
 """
 
 from __future__ import annotations
@@ -36,6 +39,7 @@ from proxy_physics import noise_components  # noqa: E402
 HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
 ANALYSIS_BESSEL_CUTOFF_HZ = 10_000.0
 DEFAULT_HARDWARE_BESSEL_ORDER = 4
+DEFAULT_HARDWARE_BESSEL_NORM = "phase"
 DEFAULT_FINITE_RECORD_SEED = 20260906
 
 
@@ -53,6 +57,34 @@ def analysis_filter_magnitude(
     )
 
 
+def hardware_filter_magnitude(
+    frequency_hz: np.ndarray,
+    cutoff_hz: float = HARDWARE_BESSEL_CUTOFF_HZ,
+    order: int = DEFAULT_HARDWARE_BESSEL_ORDER,
+    norm: str = DEFAULT_HARDWARE_BESSEL_NORM,
+    bypass: bool = False,
+) -> np.ndarray:
+    """Return the analog hardware Bessel magnitude for a stated convention.
+
+    ``norm="phase"`` preserves the repository's historical behavior.
+    ``norm="mag"`` uses SciPy's magnitude normalization, where ``cutoff_hz``
+    is the -3 dB angular-frequency reference after the Hz-to-rad/s mapping.
+    ``bypass=True`` returns unity and exists only for diagnostic comparisons;
+    it does not change the confirmed physical hardware configuration.
+    """
+    frequency = np.asarray(frequency_hz, dtype=float)
+    if bypass:
+        return np.ones_like(frequency)
+    if norm not in {"phase", "mag", "delay"}:
+        raise ValueError("hardware Bessel norm must be 'phase', 'mag', or 'delay'")
+    return general.AnalogBesselMagnitudeResponse(
+        frequency,
+        float(cutoff_hz),
+        order=int(order),
+        norm=str(norm),
+    )
+
+
 def fold_hardware_asd(
     frequency_hz: np.ndarray,
     main_asd: np.ndarray,
@@ -60,6 +92,8 @@ def fold_hardware_asd(
     rate_hz: float,
     cutoff_hz: float = HARDWARE_BESSEL_CUTOFF_HZ,
     order: int = DEFAULT_HARDWARE_BESSEL_ORDER,
+    norm: str = DEFAULT_HARDWARE_BESSEL_NORM,
+    bypass: bool = False,
 ) -> np.ndarray:
     """Apply the analog hardware response and first ADC alias fold in PSD.
 
@@ -67,6 +101,10 @@ def fold_hardware_asd(
     the intrinsic ASD at ``rate_hz - frequency_hz``.  The two independent
     folded PSD contributions are added in quadrature.  At exact Nyquist the
     alias frequency equals the main frequency, so it is counted only once.
+
+    ``norm`` selects the analog Bessel normalization.  ``bypass`` is a
+    diagnostic-only switch that sets both main and alias hardware responses to
+    unity while preserving the same alias-fold bookkeeping.
     """
     frequency = np.asarray(frequency_hz, dtype=float)
     main_asd = np.asarray(main_asd, dtype=float)
@@ -77,15 +115,19 @@ def fold_hardware_asd(
     if np.any(frequency < 0.0) or np.any(frequency > rate_hz / 2.0):
         raise ValueError("frequency must lie between DC and Nyquist")
     alias_frequency = rate_hz - frequency
-    main_response = general.AnalogBesselMagnitudeResponse(
+    main_response = hardware_filter_magnitude(
         frequency,
-        float(cutoff_hz),
+        cutoff_hz=float(cutoff_hz),
         order=int(order),
+        norm=norm,
+        bypass=bypass,
     )
-    alias_response = general.AnalogBesselMagnitudeResponse(
+    alias_response = hardware_filter_magnitude(
         alias_frequency,
-        float(cutoff_hz),
+        cutoff_hz=float(cutoff_hz),
         order=int(order),
+        norm=norm,
+        bypass=bypass,
     )
     main = main_asd * main_response
     alias = alias_asd * alias_response
@@ -105,8 +147,10 @@ def hardware_sampled_asd(
     rate_hz: float | None = None,
     cutoff_hz: float = HARDWARE_BESSEL_CUTOFF_HZ,
     order: int | None = None,
+    norm: str = DEFAULT_HARDWARE_BESSEL_NORM,
+    bypass: bool = False,
 ) -> np.ndarray:
-    """Return intrinsic CH0 ASD after the physical 100 kHz hardware stage."""
+    """Return intrinsic CH0 ASD after the physical hardware stage and alias fold."""
     frequency = np.asarray(frequency_hz, dtype=float)
     rate = float(parameters.get("rate", rate_hz) if rate_hz is None else rate_hz)
     if rate <= 0.0:
@@ -129,6 +173,8 @@ def hardware_sampled_asd(
         rate,
         cutoff_hz=cutoff_hz,
         order=hardware_order,
+        norm=norm,
+        bypass=bypass,
     )
 
 
@@ -138,14 +184,18 @@ def expected_post_analysis_asd(
     rate_hz: float | None = None,
     hardware_cutoff_hz: float = HARDWARE_BESSEL_CUTOFF_HZ,
     analysis_cutoff_hz: float = ANALYSIS_BESSEL_CUTOFF_HZ,
+    hardware_norm: str = DEFAULT_HARDWARE_BESSEL_NORM,
+    bypass_hardware: bool = False,
 ) -> np.ndarray:
-    """Return the deterministic expected ASD after hardware and analysis filters."""
+    """Return deterministic expected ASD after hardware and analysis filters."""
     rate = float(parameters.get("rate", rate_hz) if rate_hz is None else rate_hz)
     pre_analysis = hardware_sampled_asd(
         parameters,
         frequency_hz,
         rate_hz=rate,
         cutoff_hz=hardware_cutoff_hz,
+        norm=hardware_norm,
+        bypass=bypass_hardware,
     )
     return pre_analysis * analysis_filter_magnitude(
         frequency_hz,

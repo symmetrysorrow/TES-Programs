@@ -14,6 +14,7 @@ from PoST_Simulations.subScript.noise_measurement_model import (  # noqa: E402
     analysis_filter_magnitude,
     finite_record_post_analysis_asd,
     fold_hardware_asd,
+    hardware_filter_magnitude,
 )
 from PoST_Simulations.lib import general  # noqa: E402
 
@@ -57,6 +58,47 @@ def test_nyquist_is_not_double_counted_in_alias_fold():
         order=4,
     )
     np.testing.assert_allclose(folded, expected)
+
+
+def test_phase_and_mag_hardware_normalizations_are_distinct_at_100_khz():
+    frequency = np.array([100_000.0])
+    phase = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=100_000.0,
+        order=4,
+        norm="phase",
+    )[0]
+    mag = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=100_000.0,
+        order=4,
+        norm="mag",
+    )[0]
+    assert phase < mag
+    np.testing.assert_allclose(mag, 1.0 / np.sqrt(2.0), rtol=2e-3, atol=0.0)
+
+
+def test_hardware_bypass_is_unity_and_keeps_alias_psd_fold():
+    frequency = np.array([100_000.0, 250_000.0])
+    response = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=100_000.0,
+        order=4,
+        norm="phase",
+        bypass=True,
+    )
+    np.testing.assert_allclose(response, np.ones_like(frequency))
+
+    folded = fold_hardware_asd(
+        frequency,
+        np.array([3.0, 3.0]),
+        np.array([4.0, 4.0]),
+        500_000.0,
+        cutoff_hz=100_000.0,
+        order=4,
+        bypass=True,
+    )
+    np.testing.assert_allclose(folded, np.array([5.0, 3.0]))
 
 
 def test_finite_record_path_applies_software_lowpass():
