@@ -1,0 +1,24 @@
+{
+  "stage": "pulse_detector_recovery_gate_v4",
+  "measured": {
+    "full_q50": 1.0,
+    "full_q25": 0.04,
+    "tail_q50_age_0_to_50ms": 0.26,
+    "tail_q25_age_0_to_50ms": 0.0275,
+    "pre_record_tail_q50": 0.02,
+    "onset_near_end_q50": 0.03,
+    "false_positive_per_record": 0.001
+  },
+  "criteria": {
+    "full_q50": true,
+    "full_q25": false,
+    "tail_q50_age_0_to_50ms": false,
+    "tail_q25_age_0_to_50ms": false,
+    "pre_record_tail_q50": false,
+    "onset_near_end_q50": false,
+    "false_positive_per_record": true
+  },
+  "criteria_pass": false,
+  "threshold_selection_used": false,
+  "criteria_source": "measured injection and null outputs"
+}

@@ -1,0 +1,121 @@
+{
+  "stage": "clean_v4_simulation_comparison",
+  "experimental_subset": "verified pulse_free; validity separately gated",
+  "primary_semantics": "pre-analysis; no Bessel",
+  "post_semantics": "diagnostic only; BesselMagnitudeResponse passes=2 = |H|^2",
+  "rows": [
+    {
+      "frequency_Hz": 10.0,
+      "experimental_pre_analysis": 47.93142133222703,
+      "simulation_median_pre": 1.2681814068012198,
+      "simulation_min_pre": 1.0024889909472223,
+      "simulation_max_pre": 2.456458863091876,
+      "experimental_post_analysis": 48.41420704086233,
+      "simulation_median_post": 1.2809550705512864,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 20.0,
+      "experimental_pre_analysis": 21.71820360218796,
+      "simulation_median_pre": 1.2688838381932055,
+      "simulation_min_pre": 1.005485143729791,
+      "simulation_max_pre": 2.4531271951735554,
+      "experimental_post_analysis": 21.936892969451144,
+      "simulation_median_post": 1.281660742249718,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 50.0,
+      "experimental_pre_analysis": 8.68100846890678,
+      "simulation_median_pre": 1.2682821164354705,
+      "simulation_min_pre": 1.0063834338962117,
+      "simulation_max_pre": 2.430930621833735,
+      "experimental_post_analysis": 8.768237397571367,
+      "simulation_median_post": 1.2810261300667638,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 100.0,
+      "experimental_pre_analysis": 4.248496885031715,
+      "simulation_median_pre": 1.2653342921407575,
+      "simulation_min_pre": 1.006466730727702,
+      "simulation_max_pre": 2.35691223999254,
+      "experimental_post_analysis": 4.29086583626443,
+      "simulation_median_post": 1.2779530814131883,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 200.0,
+      "experimental_pre_analysis": 2.074684438933429,
+      "simulation_median_pre": 1.253635477471067,
+      "simulation_min_pre": 1.0063007858054909,
+      "simulation_max_pre": 2.12223076311198,
+      "experimental_post_analysis": 2.0947476061720325,
+      "simulation_median_post": 1.2657587178871754,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 500.0,
+      "experimental_pre_analysis": 1.495922973050154,
+      "simulation_median_pre": 1.1803855763735416,
+      "simulation_min_pre": 1.0049183379033924,
+      "simulation_max_pre": 1.4555472682349484,
+      "experimental_post_analysis": 1.5072245104004838,
+      "simulation_median_post": 1.1893032625910183,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 1000.0,
+      "experimental_pre_analysis": 1.0,
+      "simulation_median_pre": 1.0,
+      "simulation_min_pre": 1.0,
+      "simulation_max_pre": 1.0,
+      "experimental_post_analysis": 1.0,
+      "simulation_median_post": 1.0,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 3000.0,
+      "experimental_pre_analysis": 0.9155556780385933,
+      "simulation_median_pre": 0.6345028113645845,
+      "simulation_min_pre": 0.5036798255730314,
+      "simulation_max_pre": 0.9520152745134708,
+      "experimental_post_analysis": 0.8423573825123346,
+      "simulation_median_post": 0.5837745755919601,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 5000.0,
+      "experimental_pre_analysis": 0.8304022942283065,
+      "simulation_median_pre": 0.5141763568735288,
+      "simulation_min_pre": 0.4050262535999144,
+      "simulation_max_pre": 0.8751879303122967,
+      "experimental_post_analysis": 0.639421357211739,
+      "simulation_median_post": 0.39592297160473333,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 7000.0,
+      "experimental_pre_analysis": 0.7818939448176219,
+      "simulation_median_pre": 0.46371947876584024,
+      "simulation_min_pre": 0.3463244489155965,
+      "simulation_max_pre": 0.7910254735382133,
+      "experimental_post_analysis": 0.4568322285061115,
+      "simulation_median_post": 0.27093444614883644,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    },
+    {
+      "frequency_Hz": 10000.0,
+      "experimental_pre_analysis": 0.6096915824003722,
+      "simulation_median_pre": 0.43580390802932517,
+      "simulation_min_pre": 0.30063233392870375,
+      "simulation_max_pre": 0.6979518703951636,
+      "experimental_post_analysis": 0.20527775671351642,
+      "simulation_median_post": 0.14673131660278746,
+      "post_transfer_semantics": "|H|^2 for one filtfilt"
+    }
+  ],
+  "parameter_generation_called": false,
+  "noise_residual_fit": false,
+  "strict_target_conclusion": "C \u2014 exact target physical case remains unidentified"
+}

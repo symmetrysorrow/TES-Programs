@@ -1,0 +1,38 @@
+{
+  "stage": "pulse_false_positive_validation_v4",
+  "threshold_tuning_used": false,
+  "controls": {
+    "CH0": {
+      "primary_threshold_rho": 191.28458450935233,
+      "block_bootstrap_null": {
+        "records": 5000,
+        "hit_rate": 0.001
+      },
+      "negative_polarity": {
+        "records": 345,
+        "hit_rate": null,
+        "used_as_primary": false
+      },
+      "time_reversed_template": {
+        "records": 345,
+        "hit_rate": 0.09565217391304348
+      }
+    },
+    "CH1": {
+      "primary_threshold_rho": 474.9202633991142,
+      "block_bootstrap_null": {
+        "records": 5000,
+        "hit_rate": 0.001
+      },
+      "negative_polarity": {
+        "records": 1,
+        "hit_rate": null,
+        "used_as_primary": false
+      },
+      "time_reversed_template": {
+        "records": 1,
+        "hit_rate": 0.0
+      }
+    }
+  }
+}

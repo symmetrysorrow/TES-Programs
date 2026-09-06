@@ -1,0 +1,14 @@
+{
+  "stage": "pulse_detector_statistic_v4",
+  "statistic": "rho=(t^T C^-1 x)/sqrt(t^T C^-1 t)",
+  "amplitude": "A_hat=(t^T C^-1 x)/(t^T C^-1 t)",
+  "record_local_energy_normalization": false,
+  "covariance_source": "pulse pretrigger only",
+  "templates": [
+    "full_pulse",
+    "post_peak_tail",
+    "slow_tail"
+  ],
+  "family_statistic": "maximum per-template max-lag rho",
+  "canonical_classifier": "classify_record_v4"
+}

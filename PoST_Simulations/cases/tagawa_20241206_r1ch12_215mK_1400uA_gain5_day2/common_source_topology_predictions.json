@@ -1,0 +1,17 @@
+{
+  "stage": "common_source_topology_predictions",
+  "amplitude_fit": false,
+  "target_parameter_estimation": false,
+  "candidates": {
+    "bath_temperature_perturbation": {
+      "status": "conditional_proxy_only"
+    },
+    "bias_voltage_current_perturbation": {
+      "status": "not_represented_as_independent_input_in_current_five_state_model"
+    },
+    "readout_output_disturbance": {
+      "status": "not_represented_as_independent_input_in_current_five_state_model"
+    }
+  },
+  "strict_target": "blocked: exact T_c/R and absolute channel transfer remain unresolved"
+}

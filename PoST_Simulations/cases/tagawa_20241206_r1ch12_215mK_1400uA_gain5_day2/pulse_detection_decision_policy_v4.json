@@ -1,0 +1,14 @@
+{
+  "stage": "pulse_detection_decision_policy_v4",
+  "target_primary_fwer": 0.001,
+  "operational_boundaries": {
+    "definite": "family FWER <= 1e-3",
+    "likely": "1e-3 < family FWER <= 1e-2",
+    "ambiguous": "1e-2 < family FWER <= 5e-2",
+    "pulse_free": "family FWER > 5e-2"
+  },
+  "primary_null": "pulse-baseline block-bootstrap family null",
+  "negative_control_role": "external validation/veto only",
+  "simulation_agreement_used": false,
+  "threshold_tuning_used": false
+}

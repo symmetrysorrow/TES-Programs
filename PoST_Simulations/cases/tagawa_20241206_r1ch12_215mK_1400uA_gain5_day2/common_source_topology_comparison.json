@@ -1,0 +1,70 @@
+{
+  "stage": "common_source_topology_comparison",
+  "status": "topology_ambiguous",
+  "amplitude_fit": false,
+  "source_amplitude_fit": false,
+  "primary_band_Hz": [
+    5,
+    30
+  ],
+  "secondary_band_Hz": [
+    30,
+    100
+  ],
+  "observed": {
+    "5": {
+      "coherence": 0.9661159944731442,
+      "phase_rad": -0.025271141380611564,
+      "channel_ratio_H0_over_H1": [
+        1.483115406558542,
+        -0.037487999790456736
+      ]
+    },
+    "10": {
+      "coherence": 0.9495558062740642,
+      "phase_rad": -0.04034444994773364,
+      "channel_ratio_H0_over_H1": [
+        1.4538885414803049,
+        -0.058688178700482825
+      ]
+    },
+    "20": {
+      "coherence": 0.8214590344490249,
+      "phase_rad": -0.06172196182608828,
+      "channel_ratio_H0_over_H1": [
+        1.2835176721666737,
+        -0.07932198271308316
+      ]
+    },
+    "30": {
+      "coherence": 0.7098797703569583,
+      "phase_rad": -0.12666394143302784,
+      "channel_ratio_H0_over_H1": [
+        1.1091595363504698,
+        -0.14124670351720925
+      ]
+    },
+    "50": {
+      "coherence": 0.41333875364837575,
+      "phase_rad": -0.18051549091926233,
+      "channel_ratio_H0_over_H1": [
+        0.671563602300012,
+        -0.12256179414383887
+      ]
+    },
+    "100": {
+      "coherence": 0.10443392249418933,
+      "phase_rad": -0.41047195044607865,
+      "channel_ratio_H0_over_H1": [
+        0.21449055924585653,
+        -0.09334466633220802
+      ]
+    }
+  },
+  "candidates": {
+    "bath": "conditional proxy prediction only",
+    "bias": "blocked",
+    "readout": "blocked"
+  },
+  "reason": "current model lacks independent bias/readout source transfer and strict target parameters remain unresolved"
+}
