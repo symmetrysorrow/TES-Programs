@@ -1,0 +1,115 @@
+{
+  "artifact_id": "phase24-stage11-exact-failing-system-v1",
+  "role": "canonical exact A/b for standalone solver comparisons",
+  "classification": "pre-event retry step induced by an event-landing rejection; not an event-landing solve",
+  "time": {
+    "step_start_s": 0.02002,
+    "step_end_s": 0.0200200005,
+    "event_time_s": 0.020020001,
+    "rhs_source_evaluation_s": 0.0200200005,
+    "pulse_start_s": 0.02002,
+    "pulse_cutoff_s": 0.020020001,
+    "pulse_active_at_step_start": true,
+    "pulse_active_at_step_end": true,
+    "event_forced": true,
+    "event_forced_interpretation": "controller retry after the rejected 1 ns event-landing trial",
+    "bdf_order": 1,
+    "attempted_dt_s": 5.0e-10,
+    "previous_accepted_dt_s": null,
+    "rejection_log_hold_s": 6.8125e-6,
+    "timing_basis": "step end is inferred as step start plus retry dt; exact BDF h_old publication is not emitted by the failing log"
+  },
+  "bdf_coefficients": {
+    "normalized": {"a0": 1.0, "a1": -1.0, "a2": 0.0},
+    "units_scaled_coefficients": "not emitted by the failing log"
+  },
+  "system": {
+    "rows": 87534,
+    "nonzero_records": 1447196,
+    "underlying_saved_values": 1561670,
+    "rhs_records": 87534,
+    "a": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_a.dat",
+    "b": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_b.dat",
+    "a_sha256": "508911E8A56DF9F64617A0FF687F88EA2AFA0ACF339756AF669D6D51EB340ED4",
+    "b_sha256": "D085D50FCCD6C0550975BF5DFDAB02780248E9ED3221327BD5D6E8C0788E06CB",
+    "csr_pattern_sha256": "4a6a292dd344410fed35bc1963c8201a95c3e05674989b816ade997b5b7f3bbb",
+    "matrix_values_sha256": "d6058e9f958efb96e5a0713b636ef42447fc72360a9cde4a868277ff31c6fb8a",
+    "rhs_sha256": "4bbf572d0b4a007499d8c44b08aa385993b5adbb4515fb5767ea8602f45a49c8",
+    "frobenius_norm": 3.4850035250886204,
+    "max_abs_value": 0.061669979557031684,
+    "diagonal_min_nonzero": 6.903532278928438e-10,
+    "diagonal_max": 0.061669979557031684,
+    "explicit_diagonal_records": 84636,
+    "implicit_zero_diagonal_rows": 2898,
+    "negative_diagonal_count": 0,
+    "diagonal_ratio_nonzero": 89331051.2145589,
+    "row_norm_min": 1.3486119538988712e-10,
+    "row_norm_max": 0.24663037436033186,
+    "row_sum_range": [-2.40178150332055e-10, 3.46598922718528e-7],
+    "symmetry_max_abs_defect": 3.4470523512475175e-7,
+    "symmetry_frobenius_defect": 2.56286130587834e-5,
+    "rhs_l2": 3.5823077729382544e-6,
+    "rhs_max_abs": 5.1989838407779196e-8
+  },
+  "tes_state_summary": "not serialized in the SaveLinearSystem dump; production log records TES T=1.684549e-1 K, I=1.475533e-4 A immediately before retry",
+  "initial_guess": {
+    "elmer_xvec": "not present in the existing dump; cannot claim exact xvec replay",
+    "zero_vector": "used by standalone HYPRE baseline",
+    "previous_accepted_temperature": "not present as a vector artifact",
+    "trusted_solution": "available as direct reference, but not treated as production xvec"
+  },
+  "solver_settings": {
+    "hypre_version": "2.33.0",
+    "backend": "CPU",
+    "solver": "FlexGMRES",
+    "preconditioner": "BoomerAMG",
+    "tolerance": 5.0e-7,
+    "gmres_dimension": 100,
+    "max_levels": 25,
+    "num_sweeps": 1,
+    "relax_type": 18,
+    "coarsen_type": 8,
+    "interpolation_type": 6,
+    "smooth_type": 0,
+    "cycle_type": 1,
+    "strong_threshold": 0.25
+  },
+  "standalone_replay": {
+    "script": "scripts/support/phase24_stage11_hypre_replay.py",
+    "baseline_log": "results/case_phase24_adaptive_output_smoke/standalone_hypre_2000.log",
+    "baseline_residual_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_2000.csv",
+    "result": "FAIL",
+    "iterations": 2000,
+    "reported_final_relative_residual": 5.244241e-7,
+    "trajectory_classification": "rapid initial drop followed by immediate plateau; no GMRES restart-period recovery",
+    "4000_log": "results/case_phase24_adaptive_output_smoke/standalone_hypre_4000.log",
+    "4000_residual_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_4000.csv",
+    "4000_reported_final_relative_residual": 5.244241e-7,
+    "same_state_conclusion": "exact A/b reproduces the hard HYPRE behavior outside Elmer",
+    "failed_solution_vector": {
+      "npy": "results/case_phase24_adaptive_output_smoke/standalone_hypre_solution_2000.npy",
+      "sha256": "04FE83225E395EE8A29A1D872196D5C395B24FBFDBE840EAC3A8B961EFA61876",
+      "relative_l2_difference_to_direct": 1.0000008461613195,
+      "max_abs_difference_to_direct": 4.595038195824359,
+      "interpretation": "The failed Krylov iterate remains near zero and is not a reference solution; comparison is diagnostic only."
+    }
+  },
+  "direct_reference": {
+    "script": "scripts/support/phase24_stage11_direct_reference.py",
+    "result": "PASS",
+    "solver": "SciPy sparse SuperLU backend",
+    "relative_residual": 4.1951356950876785e-10,
+    "max_abs_residual": 2.8028849461586176e-16,
+    "wall_seconds": 9.220337799983099,
+    "solution_sha256": "54fd843369ca4df92cc489791f0c397fc322711b2f96273b4c7d0dca82e5a219",
+    "classification": "matrix is directly solvable; current HYPRE setup is the leading incompatibility"
+  },
+  "scaling_diagnostics": {
+    "symmetric_jacobi": "not applicable without a policy for 2898 implicit zero-diagonal rows",
+    "row_scaling": {
+      "result": "FAIL",
+      "reported_print_residual_at_2000": 4.530828,
+      "interpretation": "simple row scaling worsened convergence"
+    }
+  }
+}

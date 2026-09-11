@@ -1,5 +1,5 @@
 {
-  "tes_programs_commit_sha_at_recording": "7c6660ab",
+  "tes_programs_commit_sha_at_recording": "f6384a9c",
   "native_source_path": "D:/Github/TES-Programs/tools/elmer-hypre",
   "native_git_repository": null,
   "native_commit_sha": null,
@@ -24,6 +24,24 @@
   "native_patch_artifact_sha256": "E7B24771A07D26D0CFB6C947C3493E5CC6AC5A896CBC500314E171A7EFB29DAA",
   "linear_lifecycle_diagnostic_artifact": "artifacts/phase24_stage11_linear_lifecycle_diagnostic.json",
   "linear_lifecycle_diagnostic_artifact_sha256": "B68CE6EAC2A34D0BBBF5D434A58A73D93F774996781F38831A525D66BF93F880",
+  "exact_failing_system_artifact": "artifacts/phase24_stage11_exact_failing_system.json",
+  "exact_failing_system_artifact_sha256": "3E2126EF7AEDEDF011A23EAA19458F5F501BDB19627B9F2AA94F69849B0F834D",
+  "standalone_replay": {
+    "script": "scripts/support/phase24_stage11_hypre_replay.py",
+    "script_sha256": "E1FAAE3A989475BA9CBD232BEDC08BF55DD8253CDC3EABB6239ADC770664F369",
+    "trajectory_extractor": "scripts/support/phase24_stage11_hypre_extract_residual.py",
+    "trajectory_extractor_sha256": "EBD843F40217C85159545D17F84540457D751DB286E3AB97FF369B09C8344C7A",
+    "direct_reference_script": "scripts/support/phase24_stage11_direct_reference.py",
+    "direct_reference_script_sha256": "8CE6B7CDD5DAEC4DA2B44C5C6CC06E9543AC733EDBA7C558969809A364E15EF6",
+    "compiler": "not used for replay; Python ctypes",
+    "mpi": "Microsoft MPI via C:\\Windows\\System32\\msmpi.dll",
+    "hypre_library": "C:\\msys64\\ucrt64\\bin\\libHYPRE.dll",
+    "hypre_version": "2.33.0",
+    "baseline_residual_csv_sha256": "3792371A26754FE58E58FCA2D7AFEC3B01AF03EF1C5657B89FA149998D8D9B3B",
+    "diagnostic_4000_residual_csv_sha256": "8DD4485860926983C1096781C8DCEA57AA7F8B31ED584A23AC00FCAE7403FD58",
+    "failed_solution_vector_sha256": "04FE83225E395EE8A29A1D872196D5C395B24FBFDBE840EAC3A8B961EFA61876",
+    "direct_solver": "SciPy 1.17.1 sparse SuperLU backend"
+  },
   "runtime_artifacts_sha256": {
     "bin/ElmerSolver_mpi.exe": "E0DC32F5E262CCD42AC78597D4F60DED559FF208FB1404FE0F45647AEF94E18D",
     "lib/elmersolver/libelmersolver.dll": "5999A34BD02A728DA9E0204C93943A1B816267E652C52DC9C7BA4A51731EB1F1",
