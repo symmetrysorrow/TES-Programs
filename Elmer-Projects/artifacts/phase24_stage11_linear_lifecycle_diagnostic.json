@@ -85,6 +85,16 @@
       "relative_tolerance": 5.0e-7,
       "final_relative_residual": 5.47722e-7
     },
+    "four_thousand_iteration_diagnostic": {
+      "sif": "generated/cases/case_phase24_adaptive_post_event_reuse_off_2ns_4000diag.sif",
+      "log": "results/case_phase24_adaptive_post_event_reuse_off_2ns/native_stage11_reuse_off_4000diag.log",
+      "max_iterations": 4000,
+      "relative_tolerance": 5.0e-7,
+      "nonlinear_iteration": 14,
+      "final_relative_residual": 5.10542e-7,
+      "result": "FAILED",
+      "interpretation": "The residual improved from 5.47722e-7 at 2000 iterations but remained above 5e-7 at 4000; increasing the production iteration cap is not a sufficient workaround."
+    },
     "successful_krylov_iterations_before_failure": [
       245, 270, 324, 373, 458, 798, 598, 844, 1151, 841, 972,
       232, 265, 309, 368, 421, 745, 868, 740, 1254, 1178, 958,
@@ -115,7 +125,7 @@
     "phase24_reuse_off": "bounded diagnostic failed at 2000 iterations with final relative residual 5.47722e-7",
     "trusted_direct_solver": "not run",
     "residual_trajectory": "not available from the current wrapper; only final residual is emitted",
-    "max_iterations_4000": "not run; requires an isolated replay harness",
+    "max_iterations_4000": "reuse-off bounded diagnostic completed; failed at 4000 iterations with final relative residual 5.10542e-7",
     "native_rebuild_attempt": "source change was reverted after the current MSYS2/GFortran preprocessing step failed before compilation; installed runtime binary remains unchanged"
   }
 }
