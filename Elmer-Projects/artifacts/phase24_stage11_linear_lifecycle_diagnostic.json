@@ -68,13 +68,54 @@
     "rhs_same_as_failure": false,
     "interpretation": "The bounded dump is one 0.5 ns earlier in physical time than the failure dump; value/RHS differences are expected and are not treated as root cause evidence."
   },
+  "reuse_off_comparison": {
+    "sif": "generated/cases/case_phase24_adaptive_post_event_reuse_off_2ns.sif",
+    "log": "results/case_phase24_adaptive_post_event_reuse_off_2ns/native_stage11_reuse_off.log",
+    "result": "FAILED",
+    "policy": {
+      "static_matrix_reuse": true,
+      "hypre_reuse": false,
+      "preconditioner_reuse": false,
+      "warm_start": "new HYPRE container on every solve; x initialized from current Elmer xvec"
+    },
+    "completed_solves_before_failure": 24,
+    "failure": {
+      "nonlinear_iteration": 14,
+      "max_iterations": 2000,
+      "relative_tolerance": 5.0e-7,
+      "final_relative_residual": 5.47722e-7
+    },
+    "successful_krylov_iterations_before_failure": [
+      245, 270, 324, 373, 458, 798, 598, 844, 1151, 841, 972,
+      232, 265, 309, 368, 421, 745, 868, 740, 1254, 1178, 958,
+      1217, 1217
+    ],
+    "dump": {
+      "a": "results/case_phase24_adaptive_post_event_reuse_off_2ns/reuse_off_post_event_a.dat",
+      "b": "results/case_phase24_adaptive_post_event_reuse_off_2ns/reuse_off_post_event_b.dat",
+      "raw_sha256": {
+        "a": "C7402DA6C8161A830831B16D81D83437A9E8488F9D851D4960687A988B77A67F",
+        "b": "05EF1D67BD5784B08B30365C3A9ED4D30F27E67468CE11609387869994C85E2E"
+      },
+      "csr_pattern_same_as_production_failure": true,
+      "comparison_to_production_failure": {
+        "a_exact_mismatches": 84636,
+        "a_max_abs_difference": 9.012976027662291e-9,
+        "b_exact_mismatches": 84636,
+        "b_max_abs_difference": 1.8932798207828048e-9,
+        "interpretation": "The reuse-off run reaches a different nonlinear state, so value/RHS differences are not used as a same-state equivalence claim."
+      }
+    },
+    "interpretation": "Disabling HYPRE and preconditioner reuse does not make the bounded campaign pass. The failure remains possible with fresh IJ/ParCSR, solver, preconditioner, and x initialization, so stale AMG reuse alone is not the root cause."
+  },
   "comparisons": {
     "fresh_amg_only": "not isolated yet; failure already enters a full fresh setup",
     "full_hypre_rebuild": "already exercised on the failing path and still failed",
-    "warm_start_off": "not run",
-    "phase24_reuse_off": "not run",
+    "warm_start_off": "not isolated; the reuse-off comparison resets x from Elmer xvec on every newly created container, but also changes the full lifecycle policy",
+    "phase24_reuse_off": "bounded diagnostic failed at 2000 iterations with final relative residual 5.47722e-7",
     "trusted_direct_solver": "not run",
     "residual_trajectory": "not available from the current wrapper; only final residual is emitted",
-    "max_iterations_4000": "not run; requires an isolated replay harness"
+    "max_iterations_4000": "not run; requires an isolated replay harness",
+    "native_rebuild_attempt": "source change was reverted after the current MSYS2/GFortran preprocessing step failed before compilation; installed runtime binary remains unchanged"
   }
 }
