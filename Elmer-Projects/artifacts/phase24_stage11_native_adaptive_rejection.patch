@@ -1,0 +1,58 @@
+diff --git a/src/fem/src/ElmerSolver.F90 b/src/fem/src/ElmerSolver.F90
+--- a/src/fem/src/ElmerSolver.F90
++++ b/src/fem/src/ElmerSolver.F90
+@@
+      INTEGER, SAVE :: RequestedOutputIndex = 1, RequestedOutputCount = 0, &
+          AdaptiveAcceptedCount = 0, AdaptiveRejectedCount = 0, &
++         AdaptiveRejectedInRow = 0, AdaptiveMaxRejectedInRow = 0, &
+          AdaptiveInterpolationCount = 0, AdaptiveEventCount = 0, &
+@@
+      AdaptiveAcceptedCount = 0
+      AdaptiveRejectedCount = 0
++     AdaptiveRejectedInRow = 0
++     AdaptiveMaxRejectedInRow = 0
+@@
+                  AdaptiveAcceptedCount = AdaptiveAcceptedCount + 1
++                 ! The rejection budget is consecutive: an accepted trial
++                 ! closes the current rejection streak.
++                 AdaptiveRejectedInRow = 0
+@@
+                  AdaptiveRejectedCount = AdaptiveRejectedCount + 1
+-                 IF (AdaptiveRejectedCount > AdaptiveMaxRejected) &
++                 AdaptiveRejectedInRow = AdaptiveRejectedInRow + 1
++                 AdaptiveMaxRejectedInRow = MAX(AdaptiveMaxRejectedInRow, &
++                      AdaptiveRejectedInRow)
++                 WRITE(*,'(A,I0,A,I0,A,6ES20.12,A,I0,A,L1)') &
++                      'Adaptive rejection: index=',AdaptiveRejectedCount, &
++                      ', consecutive=',AdaptiveRejectedInRow, &
++                      ', t0/hnew/hold/r/error/maxdiff=',AdaptiveStepStart,ddt, &
++                      AdaptivePreviousDt,ddt/MAX(ABS(AdaptivePreviousDt),1.0e-99_dp), &
++                      MaxErr,DebugSolverMaxAbsDiff,', order=',AdaptiveStepOrder, &
++                      ', event=',AdaptiveEventForced
++                 IF (AdaptiveNextEvent < HUGE(AdaptiveNextEvent)/2.0_dp) THEN
++                   WRITE(*,'(A,3ES20.12,A,2ES20.12)') &
++                        'Adaptive rejection event/distance/maxvalue=', &
++                        AdaptiveNextEvent,AdaptiveNextEvent-AdaptiveStepStart, &
++                        DebugSolverMaxAbsValue,', abs_tol/rel_tol=', &
++                        AdaptiveAbsoluteTolerance,AdaptiveRelativeTolerance
++                 ELSE
++                   WRITE(*,'(A,3ES20.12,A,2ES20.12)') &
++                        'Adaptive rejection event/distance/maxvalue=', &
++                        -1.0_dp,-1.0_dp,DebugSolverMaxAbsValue, &
++                        ', abs_tol/rel_tol=',AdaptiveAbsoluteTolerance, &
++                        AdaptiveRelativeTolerance
++                 END IF
++                 IF (AdaptiveRejectedInRow > AdaptiveMaxRejected) &
+                       CALL Fatal(Caller,'Maximum rejected adaptive timesteps exceeded')
+@@
+               CALL ListAddInteger(CurrentModel % Simulation, &
+                    'Adaptive Rejected Internal Steps',AdaptiveRejectedCount)
++              CALL ListAddInteger(CurrentModel % Simulation, &
++                   'Adaptive Consecutive Rejections',AdaptiveRejectedInRow)
++              CALL ListAddInteger(CurrentModel % Simulation, &
++                   'Adaptive Max Consecutive Rejections',AdaptiveMaxRejectedInRow)
+@@
+               CALL Info(Caller,Message,Level=3)
++              WRITE(Message,'(A,I0,A,I0)') 'Adaptive rejection counters: total=', &
++                   AdaptiveRejectedCount,', max_consecutive=',AdaptiveMaxRejectedInRow
++              CALL Info(Caller,Message,Level=3)

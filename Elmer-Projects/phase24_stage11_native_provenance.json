@@ -5,7 +5,7 @@
   "native_commit_sha": null,
   "native_commit_status": "BLOCKER: checkout is under the parent repository tools/ ignore rule and has no independent Git history",
   "native_source_snapshot_sha256": {
-    "src/fem/src/ElmerSolver.F90": "03A3C3D0D9F3CB65A0310FC31624A41034643DFC4B5ABF63070D418790648C20",
+    "src/fem/src/ElmerSolver.F90": "BD10E265A3265680B6C6FF0EF5C3E07C500A8C21325F7D9230CA084520CD2D66",
     "src/fem/src/TimeIntegrate.F90": "3EAA36B502069661E1842D9D21DCE0898A6297E443F798EAB7A2B62EA3777927",
     "src/fem/src/modules/HeatSolve.F90": "49DFDEEAD6684BD771073CAD07DE5D6736D0ADDF618AB1C1C9DEF87AD817DD5D",
     "src/fem/src/SParIterSolver.F90": "1B2D923E0C04CF96C70E9938F2633DAD84A5DE99FED2CEA5DC3FB4B633EFD21A",
@@ -20,5 +20,12 @@
     "backend": "CPU"
   },
   "linear_backend": "FlexGMRES + BoomerAMG",
+  "native_patch_artifact": "artifacts/phase24_stage11_native_adaptive_rejection.patch",
+  "native_patch_artifact_sha256": "7AD1335438F85DDE9971217E65C3832AD9907F3CA7BC24E866093FD1074DA912",
+  "runtime_artifacts_sha256": {
+    "bin/ElmerSolver_mpi.exe": "E0DC32F5E262CCD42AC78597D4F60DED559FF208FB1404FE0F45647AEF94E18D",
+    "lib/elmersolver/libelmersolver.dll": "4D19C63A322C75B167A8C348B0D90D0DC8D84EC44C4A404C4D1208EE27FA48CE",
+    "share/elmersolver/lib/HeatSolve.dll": "0452CE88962A5121611DD661BAE7D4EFAC3227F9C4E8D2C5F8A2830A86DA062B"
+  },
   "status": "VALIDATION IN PROGRESS; native commit must be fixed before COMPLETE"
 }

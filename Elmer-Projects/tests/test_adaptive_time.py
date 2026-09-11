@@ -66,6 +66,24 @@ def test_rejection_does_not_advance_accepted_count() -> None:
     assert controller.counters.bdf1_steps == 1
 
 
+def test_rejection_budget_is_consecutive_not_cumulative() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 0.5, max_rejected=2))
+
+    # Two reject/accept cycles must not consume the next rejection streak.
+    controller.reject(0.1)
+    controller.accept(0.05, 0.01)
+    controller.reject(0.1)
+    controller.accept(0.05, 0.01)
+
+    controller.reject(0.1)
+    controller.reject(0.05)
+    with pytest.raises(RuntimeError, match="maximum rejected"):
+        controller.reject(0.025)
+
+    assert controller.counters.rejected_internal_steps == 5
+    assert controller.rejected_in_row == 3
+
+
 def test_dense_output_and_weighted_error() -> None:
     assert dense_linear((0.0, 10.0), (10.0, 20.0), 0.25) == pytest.approx((2.5, 12.5))
     assert weighted_error((1.0, 10.0), (1.001, 10.0), atol=1.0e-4, rtol=1.0e-3) == pytest.approx(
