@@ -83,11 +83,26 @@ class OutputSchedule:
         values = tuple(origin + a * ratio**i for i in range(count))
         return cls((*values[:-1], float(end)))
 
-    def between(self, start: float, end: float) -> tuple[float, ...]:
-        """Return requested times in ``[start, end]`` including endpoints."""
+    def between(
+        self, start: float, end: float, *, include_start: bool = True
+    ) -> tuple[float, ...]:
+        """Return requested times in ``[start, end]`` including endpoints.
+
+        Set ``include_start=False`` when this span follows another accepted
+        span whose endpoint is the same physical time.  This keeps the
+        endpoint available to the first span while preventing duplicate
+        accounting across adjacent spans.
+        """
         scale = max(1.0, abs(start), abs(end))
+        lower = (
+            (lambda t: t >= start - _TIME_EPS * scale)
+            if include_start
+            else (lambda t: t > start + _TIME_EPS * scale)
+        )
         return tuple(
-            t for t in self.times if t >= start - _TIME_EPS * scale and t <= end + _TIME_EPS * scale
+            t
+            for t in self.times
+            if lower(t) and t <= end + _TIME_EPS * scale
         )
 
 
@@ -264,9 +279,16 @@ class AdaptiveController:
         return self.dt
 
 
-def add_output_counters(counters: StepCounters, schedule: OutputSchedule, start: float, end: float) -> None:
-    """Count requested and interpolation-only outputs for one accepted span."""
-    outputs = schedule.between(start, end)
+def add_output_counters(
+    counters: StepCounters,
+    schedule: OutputSchedule,
+    start: float,
+    end: float,
+    *,
+    include_start: bool = True,
+) -> None:
+    """Count outputs for one accepted span without double-counting endpoints."""
+    outputs = schedule.between(start, end, include_start=include_start)
     counters.requested_outputs += len(outputs)
     if end > start:
         counters.interpolation_only_outputs += sum(

@@ -78,3 +78,12 @@ def test_interpolation_counter_is_explicit() -> None:
     add_output_counters(counters, OutputSchedule.uniform(0.0, 1.0, 11), 0.0, 0.5)
     assert counters.requested_outputs == 6
     assert counters.interpolation_only_outputs == 4
+
+
+def test_adjacent_output_spans_do_not_double_count_shared_endpoint() -> None:
+    counters = AdaptiveController(AdaptiveConfig(0.1, 0.01, 0.5)).counters
+    schedule = OutputSchedule.uniform(0.0, 1.0, 11)
+    add_output_counters(counters, schedule, 0.0, 0.5)
+    add_output_counters(counters, schedule, 0.5, 1.0, include_start=False)
+    assert counters.requested_outputs == 11
+    assert counters.interpolation_only_outputs == 8

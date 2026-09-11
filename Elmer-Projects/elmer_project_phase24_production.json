@@ -16339,8 +16339,8 @@
       "vtu": false,
       "timesteps": [
         [
-          "1[us]",
-          1
+          "2[us]",
+          2
         ]
       ],
       "output_intervals": [
@@ -16380,7 +16380,7 @@
       "phase24_smoke": {
         "purpose": "short same-mesh Stage 11 trial sequencing diagnostic",
         "reference_case": "case_phase24_adaptive_output_smoke",
-        "path": "same Phase24 HeatSolve/HYPRE/TES path, one outer microsecond interval"
+        "path": "same Phase24 HeatSolve/HYPRE/TES path, two outer microsecond intervals"
       },
       "phase24_vector_assembly": true,
       "phase24_wall_profiling": true,
@@ -16398,16 +16398,16 @@
       "bdf_order": 2,
       "adaptive_time": {
         "start": "20[ms]",
-        "end": "20.001[ms]",
+        "end": "20.004[ms]",
         "requested_output_times": {
           "mode": "uniform",
           "start": "20[ms]",
-          "end": "20.001[ms]",
-          "count": 3
+          "end": "20.004[ms]",
+          "count": 5
         },
-        "dt_initial": "1[us]",
+        "dt_initial": "2[us]",
         "dt_min": "1[ns]",
-        "dt_max": "1[us]",
+        "dt_max": "2[us]",
         "relative_tolerance": 0.0001,
         "absolute_tolerance": 1e-08,
         "r_min": 0.5,

@@ -32,7 +32,7 @@ from scripts.support.vendored.dimensioned_expression import (
     dimension_name_of,
     evaluate_dimensioned_expression,
 )
-from scripts.support.adaptive_time import OutputSchedule
+from scripts.support.adaptive_time import OutputSchedule, _TIME_EPS
 
 # Upstream unit tables use keV as the energy base unit.
 KEV_TO_JOULE = 1.602176634e-16
@@ -895,6 +895,44 @@ def _timestep_lines(spec: dict, params: dict[str, float]) -> list[str]:
     return lines
 
 
+def _validate_adaptive_time_consistency(
+    case_name: str, spec: dict, params: dict[str, float]
+) -> None:
+    """Reject adaptive cases whose generated interval disagrees with stages."""
+    config = spec.get("adaptive_time")
+    if not config:
+        return
+    if not isinstance(config, dict):
+        raise ValueError(f"{case_name}: adaptive_time must be an object")
+
+    def time_value(raw: Any) -> float:
+        return eval_si(raw, params) if isinstance(raw, str) else float(raw)
+
+    start = time_value(config.get("start", 0.0))
+    default_end = start + time_value(config.get("dt_max", "1[s]"))
+    end = time_value(config.get("end", default_end))
+    scale = max(1.0, abs(start), abs(end))
+    tolerance = 1.0e-12 * scale
+
+    if "restart_time" in spec:
+        restart_time = time_value(spec["restart_time"])
+        if abs(restart_time - start) > tolerance:
+            raise ValueError(
+                f"{case_name}: restart_time={restart_time:g} does not match "
+                f"adaptive_time.start={start:g}"
+            )
+
+    staged_duration = sum(
+        time_value(size) * int(count) for size, count in spec["timesteps"]
+    )
+    expected_duration = end - start
+    if abs(staged_duration - expected_duration) > tolerance:
+        raise ValueError(
+            f"{case_name}: timestep stages span {staged_duration:g}s but "
+            f"adaptive interval spans {expected_duration:g}s"
+        )
+
+
 def _adaptive_time_lines(spec: dict, params: dict[str, float]) -> list[str]:
     """Emit Stage 11 controls without coupling output count to FEM steps."""
     config = spec.get("adaptive_time")
@@ -946,7 +984,15 @@ def _adaptive_time_lines(spec: dict, params: dict[str, float]) -> list[str]:
     if pulse:
         pulse_start = eval_si(pulse["start"], params)
         events.extend((pulse_start, pulse_start + eval_si(pulse["duration"], params)))
-    event_values = sorted({time_value(t) for t in events})
+    event_values = sorted(
+        {
+            time_value(t)
+            for t in events
+            if start - _TIME_EPS * max(1.0, abs(start), abs(end))
+            <= time_value(t)
+            <= end + _TIME_EPS * max(1.0, abs(start), abs(end))
+        }
+    )
 
     def cfg(name: str, default: Any) -> float:
         return time_value(config[name]) if name in config else float(default)
@@ -1059,6 +1105,7 @@ def _pulse_constants(
 def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     params = model["parameters"]
     template = spec["template"]
+    _validate_adaptive_time_consistency(case_name, spec, params)
     meshes = model.get("meshes", {})
     if spec["mesh"] not in meshes:
         raise ValueError(f"{case_name}: mesh '{spec['mesh']}' is not in the meshes registry")

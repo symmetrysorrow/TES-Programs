@@ -119,27 +119,27 @@ def main() -> None:
     }
     project["cases"][ADAPTIVE_CASE] = adaptive_candidate
 
-    # Same production mesh/material/UDF path, shortened only to isolate the
-    # first adaptive full-vs-half trial during native runtime debugging.
+    # Same production mesh/material/UDF path, shortened to two adaptive
+    # intervals so the native debug gate reaches the first BDF2 trial.
     adaptive_debug = copy.deepcopy(adaptive_candidate)
     adaptive_debug["series_file"] = f"{ADAPTIVE_DEBUG_CASE}_series.csv"
     adaptive_debug["iteration_series_file"] = f"{ADAPTIVE_DEBUG_CASE}_iterations.csv"
     adaptive_debug["output_file_path"] = (
         f"../work/meshes/{adaptive_debug['mesh']}/{ADAPTIVE_DEBUG_CASE}.result"
     )
-    adaptive_debug["timesteps"] = [["1[us]", 1]]
+    adaptive_debug["timesteps"] = [["2[us]", 2]]
     adaptive_debug["adaptive_time"] = {
         "start": "20[ms]",
-        "end": "20.001[ms]",
+        "end": "20.004[ms]",
         "requested_output_times": {
             "mode": "uniform",
             "start": "20[ms]",
-            "end": "20.001[ms]",
-            "count": 3,
+            "end": "20.004[ms]",
+            "count": 5,
         },
-        "dt_initial": "1[us]",
+        "dt_initial": "2[us]",
         "dt_min": "1[ns]",
-        "dt_max": "1[us]",
+        "dt_max": "2[us]",
         "relative_tolerance": 1.0e-4,
         "absolute_tolerance": 1.0e-8,
         "r_min": 0.5,
@@ -152,7 +152,7 @@ def main() -> None:
     adaptive_debug["phase24_smoke"] = {
         "purpose": "short same-mesh Stage 11 trial sequencing diagnostic",
         "reference_case": ADAPTIVE_CASE,
-        "path": "same Phase24 HeatSolve/HYPRE/TES path, one outer microsecond interval",
+        "path": "same Phase24 HeatSolve/HYPRE/TES path, two outer microsecond intervals",
     }
     project["cases"][ADAPTIVE_DEBUG_CASE] = adaptive_debug
     OUTPUT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
