@@ -110,7 +110,10 @@ def main() -> None:
         "r_max": 2.0,
         "max_growth": 1.5,
         "max_shrink": 0.5,
-        "max_rejected": 12,
+        # The production window crosses two physical events.  Keep the
+        # rejection budget finite, but large enough to cover both event
+        # neighborhoods without changing the temporal error target.
+        "max_rejected": 64,
         "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
     }
     adaptive_candidate["phase24_smoke"] = {
