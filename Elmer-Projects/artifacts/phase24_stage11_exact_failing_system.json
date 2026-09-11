@@ -80,19 +80,49 @@
     "baseline_residual_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_2000.csv",
     "result": "FAIL",
     "iterations": 2000,
-    "reported_final_relative_residual": 5.244241e-7,
-    "trajectory_classification": "rapid initial drop followed by immediate plateau; no GMRES restart-period recovery",
+    "reported_final_relative_residual": 0.008133050391,
+    "trajectory_classification": "smooth but very slow relative-residual reduction from 1.0 to 8.13e-3 at 2000 iterations; no tolerance crossing",
+    "trajectory_samples_relative_residual": {
+      "0": 1.0,
+      "1": 0.7254166,
+      "2": 0.6394091,
+      "5": 0.635793,
+      "10": 0.3202486,
+      "100": 0.01953833,
+      "200": 0.0113179,
+      "500": 0.009326955,
+      "1000": 0.008491471,
+      "1500": 0.008226846,
+      "2000": 0.00813305,
+      "4000": 0.007603503
+    },
     "4000_log": "results/case_phase24_adaptive_output_smoke/standalone_hypre_4000.log",
     "4000_residual_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_4000.csv",
-    "4000_reported_final_relative_residual": 5.244241e-7,
-    "same_state_conclusion": "exact A/b reproduces the hard HYPRE behavior outside Elmer",
+    "4000_reported_final_relative_residual": 0.007603503153,
+    "same_state_conclusion": "exact A/b reproduces a hard, slowly converging HYPRE solve outside Elmer; the exact operator is not directly comparable to the native failed xvec because that xvec was not saved",
     "failed_solution_vector": {
       "npy": "results/case_phase24_adaptive_output_smoke/standalone_hypre_solution_2000.npy",
-      "sha256": "04FE83225E395EE8A29A1D872196D5C395B24FBFDBE840EAC3A8B961EFA61876",
+      "sha256": "F3A0D157BAF6FFB571CCC7F354F4D4FCD3F26D810AF4F631A0C27689E979D7A9",
       "relative_l2_difference_to_direct": 1.0000008461613195,
       "max_abs_difference_to_direct": 4.595038195824359,
       "interpretation": "The failed Krylov iterate remains near zero and is not a reference solution; comparison is diagnostic only."
     }
+  },
+  "initial_guess_comparison": {
+    "zero_vector": {
+      "max_iterations": 2000,
+      "result": "FAIL",
+      "final_relative_residual": 0.008133050391,
+      "trajectory_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_2000.csv"
+    },
+    "trusted_direct_solution": {
+      "result": "PASS",
+      "iterations": 0,
+      "initial_relative_residual": 4.195610070628172e-10,
+      "solution_sha256": "54fd843369ca4df92cc489791f0c397fc322711b2f96273b4c7d0dca82e5a219",
+      "interpretation": "A trusted solution initial guess satisfies the HYPRE stopping test immediately; this demonstrates strong initial-guess sensitivity but is not an Elmer xvec replay."
+    },
+    "production_xvec": "not serialized; exact native warm-start equivalence remains unproven"
   },
   "direct_reference": {
     "script": "scripts/support/phase24_stage11_direct_reference.py",
@@ -108,8 +138,9 @@
     "symmetric_jacobi": "not applicable without a policy for 2898 implicit zero-diagonal rows",
     "row_scaling": {
       "result": "FAIL",
-      "reported_print_residual_at_2000": 4.530828,
-      "interpretation": "simple row scaling worsened convergence"
+      "reported_print_residual_at_2000": 0.1120618,
+      "trajectory_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_row_residual_2000.csv",
+      "interpretation": "simple row scaling worsened convergence relative to the unscaled exact replay"
     }
   }
 }

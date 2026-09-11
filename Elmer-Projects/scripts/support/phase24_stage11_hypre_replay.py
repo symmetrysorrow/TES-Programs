@@ -59,6 +59,7 @@ def main() -> int:
     p.add_argument("--scaling", choices=("none", "symmetric-jacobi", "row"), default="none")
     p.add_argument("--guess-npy", type=Path)
     p.add_argument("--solution-npy-out", type=Path)
+    p.add_argument("--b-check-npy", type=Path)
     args = p.parse_args()
     n = 87534
     rows, cols, vals, rhs = load_dump(args.a, args.b)
@@ -135,7 +136,7 @@ def main() -> int:
                 stop += 1
             count = INT(stop - start)
             row = BIG(int(rows[start]))
-            row_cols = np.ascontiguousarray(cols[start:stop], dtype=np.int64)
+            row_cols = np.ascontiguousarray(cols[start:stop], dtype=np.int32)
             row_vals = np.ascontiguousarray(vals[start:stop], dtype=np.float64)
             check(matrix_set(matrix, 1, C.byref(count), C.byref(row), row_cols.ctypes.data_as(C.POINTER(BIG)), row_vals.ctypes.data_as(C.POINTER(REAL))), "HYPRE_IJMatrixSetValues")
             start = stop
@@ -143,7 +144,7 @@ def main() -> int:
         A = PTR()
         check(matrix_object(matrix, C.byref(A)), "HYPRE_IJMatrixGetObject")
 
-        indices = np.arange(n, dtype=np.int64)
+        indices = np.arange(n, dtype=np.int32)
         rhs = np.ascontiguousarray(rhs, dtype=np.float64)
         x = np.zeros(n, dtype=np.float64) if args.guess_npy is None else np.ascontiguousarray(np.load(args.guess_npy), dtype=np.float64)
         if x.shape != (n,):
@@ -160,6 +161,11 @@ def main() -> int:
         check(vector_set(vector_x, n, indices.ctypes.data_as(C.POINTER(BIG)), x.ctypes.data_as(C.POINTER(REAL))), "HYPRE_IJVectorSetValues(x)")
         check(vector_assemble(vector_b), "HYPRE_IJVectorAssemble(b)")
         check(vector_assemble(vector_x), "HYPRE_IJVectorAssemble(x)")
+        b_check = np.zeros(n, dtype=np.float64)
+        check(vector_get(vector_b, n, indices.ctypes.data_as(C.POINTER(BIG)), b_check.ctypes.data_as(C.POINTER(REAL))), "HYPRE_IJVectorGetValues(b)")
+        b_roundtrip_relative_error = float(np.linalg.norm(b_check - rhs) / np.linalg.norm(rhs))
+        if args.b_check_npy:
+            np.save(args.b_check_npy, np.ascontiguousarray(b_check))
         b = PTR()
         xv = PTR()
         check(vector_object(vector_b, C.byref(b)), "HYPRE_IJVectorGetObject(b)")
@@ -245,7 +251,7 @@ def main() -> int:
         solution_hash = hashlib.sha256(x.tobytes()).hexdigest()
         if args.solution_npy_out:
             np.save(args.solution_npy_out, np.ascontiguousarray(x))
-        print(f"replay dimensions={n} nnz={rows.size} scaling={args.scaling} rhs_l2={np.linalg.norm(rhs):.17g}")
+        print(f"replay dimensions={n} nnz={rows.size} scaling={args.scaling} rhs_l2={np.linalg.norm(rhs):.17g} b_check_l2={np.linalg.norm(b_check):.17g} b_check_max={np.max(np.abs(b_check)):.17g} b_roundtrip_relative_error={b_roundtrip_relative_error:.17g}")
         print(f"replay status={status} result={'PASS' if status == 0 and residual.value <= 5.0e-7 else 'FAIL'} iterations={iterations.value} final_relative_residual={residual.value:.17g} original_relative_residual={original_relative_residual:.17g} tolerance=5e-7 getter_statuses={iter_status},{residual_status},{generic_residual_before_status},{generic_residual_status}")
         print(f"replay solution_sha256={solution_hash} residual_csv={args.csv}")
         flex_destroy(solver)

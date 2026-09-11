@@ -7,7 +7,14 @@ import re
 from pathlib import Path
 
 
-LINE = re.compile(r"^\s*(\d+)\s+([0-9.+-]+(?:[Ee][+-]?\d+)?)\s+")
+# HYPRE print level 3 columns are:
+# iteration, residual norm, convergence rate, relative residual norm.
+LINE = re.compile(
+    r"^\s*(\d+)\s+"
+    r"([0-9.+-]+(?:[Ee][+-]?\d+)?)\s+"
+    r"([0-9.+-]+(?:[Ee][+-]?\d+)?)\s+"
+    r"([0-9.+-]+(?:[Ee][+-]?\d+)?)\s*$"
+)
 
 
 def main() -> int:
@@ -19,7 +26,7 @@ def main() -> int:
     for line in args.log.read_text(encoding="utf-8", errors="replace").splitlines():
         match = LINE.match(line)
         if match:
-            rows.append((int(match.group(1)), float(match.group(2))))
+            rows.append((int(match.group(1)), float(match.group(4))))
     if not rows:
         raise SystemExit("no HYPRE residual lines found")
     with args.csv.open("w", newline="", encoding="utf-8") as stream:

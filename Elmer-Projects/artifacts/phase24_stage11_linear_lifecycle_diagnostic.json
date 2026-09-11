@@ -133,9 +133,10 @@
     "warm_start_off": "exact Elmer xvec is not present in the existing dump; zero-vector and trusted-solution replay are separate diagnostics, not production xvec equivalence",
     "phase24_reuse_off": "bounded diagnostic failed at 2000 iterations with final relative residual 5.47722e-7",
     "trusted_direct_solver": "SciPy SuperLU sparse direct reference succeeds with relative residual 4.1951356950876785e-10",
-    "residual_trajectory": "standalone HYPRE print-level-3 trajectory captured; rapid initial drop then plateau at 5.244241e-7 through 4000",
-    "standalone_hypre_replay": "exact A/b reproduces the HYPRE hard solve outside Elmer",
-    "scaling_diagnostics": "row scaling worsened to reported residual 4.530828; symmetric Jacobi is not applicable to 2898 implicit zero-diagonal rows",
+    "residual_trajectory": "standalone HYPRE print-level-3 trajectory captured; zero-vector relative residual decreases smoothly but slowly from 1.0 to 8.13305e-3 at 2000 and 7.60350e-3 at 4000",
+    "standalone_hypre_replay": "exact A/b reproduces a hard, slowly converging HYPRE solve outside Elmer; exact native xvec equivalence remains unavailable",
+    "initial_guess_comparison": "zero-vector replay fails at 2000, while the trusted direct solution as x converges immediately at 0 iterations; production Elmer xvec was not serialized",
+    "scaling_diagnostics": "row scaling worsened to relative residual 1.120618e-1 at 2000; symmetric Jacobi is not applicable to 2898 implicit zero-diagonal rows",
     "max_iterations_4000": "reuse-off bounded diagnostic completed; failed at 4000 iterations with final relative residual 5.10542e-7",
     "native_rebuild_attempt": "source change was reverted after the current MSYS2/GFortran preprocessing step failed before compilation; installed runtime binary remains unchanged"
   }
