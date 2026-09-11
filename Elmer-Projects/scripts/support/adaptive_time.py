@@ -14,6 +14,7 @@ from typing import Iterable, Sequence
 
 
 _TIME_EPS = 1.0e-12
+_POST_REJECT_MAX_GROWTH = 1.2
 
 
 def _finite_times(values: Iterable[float], *, name: str) -> tuple[float, ...]:
@@ -214,6 +215,7 @@ class AdaptiveController:
     previous_dt: float | None = None
     bdf_order: int = 1
     rejected_in_row: int = 0
+    growth_cooldown_remaining: int = 0
     counters: StepCounters = field(default_factory=StepCounters)
 
     def __post_init__(self) -> None:
@@ -253,15 +255,29 @@ class AdaptiveController:
         self.counters.accepted_internal_steps += 1
         self.counters.event_forced_steps += int(event_forced)
         self.bdf_order = 1 if event_forced or discontinuity or not had_history else 2
+        forced_floor = dt <= self.config.dt_min * (1.0 + 1.0e-10) and error > 1.0
         self.rejected_in_row = 0
-        difficulty_factor = 0.75 if nonlinear_difficulty > 1.0 else 1.0
-        if error <= 0.1:
-            factor = self.config.max_growth
-        elif error >= 1.0:
-            factor = self.config.max_shrink
+        if forced_floor:
+            # A floor accept is a safety valve, not evidence that the error
+            # target was met.  Hold the floor until an ordinary accept gives
+            # the controller a reliable recovery point.
+            self.dt = self.config.dt_min
+            self.growth_cooldown_remaining = 1
+        elif self.growth_cooldown_remaining > 0:
+            # After reject -> accept, avoid immediately replaying the old
+            # max-growth proposal.  One conservative recovery step is enough
+            # to preserve normal behavior once the local transient settles.
+            self.dt = min(self.config.dt_max, dt * min(self.config.max_growth, _POST_REJECT_MAX_GROWTH))
+            self.growth_cooldown_remaining -= 1
         else:
-            factor = min(self.config.max_growth, max(self.config.max_shrink, 0.9 * error ** -0.5))
-        self.dt = min(self.config.dt_max, max(self.config.dt_min, dt * factor * difficulty_factor))
+            difficulty_factor = 0.75 if nonlinear_difficulty > 1.0 else 1.0
+            if error <= 0.1:
+                factor = self.config.max_growth
+            elif error >= 1.0:
+                factor = self.config.max_shrink
+            else:
+                factor = min(self.config.max_growth, max(self.config.max_shrink, 0.9 * error ** -0.5))
+            self.dt = min(self.config.dt_max, max(self.config.dt_min, dt * factor * difficulty_factor))
         if self.bdf_order == 1:
             self.counters.bdf1_steps += 1
         else:
@@ -275,6 +291,7 @@ class AdaptiveController:
         if self.rejected_in_row > self.config.max_rejected:
             raise RuntimeError("maximum rejected adaptive timesteps exceeded")
         self.dt = max(self.config.dt_min, dt * self.config.max_shrink)
+        self.growth_cooldown_remaining = 1
         self.bdf_order = 1
         return self.dt
 

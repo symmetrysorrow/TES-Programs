@@ -15,6 +15,7 @@ GPU_CASE = "case_phase24_hypre_gpu_smoke_7step"
 ADAPTIVE_CASE = "case_phase24_adaptive_output_smoke"
 ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_strict_4us"
 BDF2_SMOKE_CASE = "case_phase24_adaptive_bdf2_smoke_4us"
+ADAPTIVE_POST_EVENT_CASE = "case_phase24_adaptive_post_event_cooldown_2ns"
 
 
 def main() -> None:
@@ -176,6 +177,157 @@ def main() -> None:
         "path": "same production mesh/material/TES/HYPRE path, 4-us adaptive interval",
     }
     project["cases"][BDF2_SMOKE_CASE] = adaptive_bdf2_smoke
+
+    # Bounded reproducible diagnostic that reaches the production event
+    # neighborhood and retains a 2 ns tail after the second event.
+    # The restart state is the same 20 ms steady state as production; the
+    # short tail makes the post-event controller behavior inspectable without
+    # changing the production tolerances, mesh, TES coupling, or HYPRE path.
+    adaptive_post_event = copy.deepcopy(adaptive_candidate)
+    adaptive_post_event["series_file"] = f"{ADAPTIVE_POST_EVENT_CASE}_series.csv"
+    adaptive_post_event["iteration_series_file"] = f"{ADAPTIVE_POST_EVENT_CASE}_iterations.csv"
+    adaptive_post_event["output_file_path"] = (
+        f"../work/meshes/{adaptive_post_event['mesh']}/{ADAPTIVE_POST_EVENT_CASE}.result"
+    )
+    adaptive_post_event["output_result"] = True
+    adaptive_post_event["timesteps"] = [["20.002[us]", 1]]
+    adaptive_post_event["adaptive_time"] = {
+        "start": "20[ms]",
+        "end": "20.020002[ms]",
+        "requested_output_times": {
+            "mode": "explicit",
+            "times": [
+                "20[ms]",
+                "20.02[ms]",
+                "20.020001[ms]",
+                "20.020002[ms]",
+            ],
+        },
+        "dt_initial": "20[us]",
+        "dt_min": "1[ns]",
+        "dt_max": "20[us]",
+        "relative_tolerance": 2.0e-3,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 8,
+        "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+    }
+    adaptive_post_event["phase24_smoke"] = {
+        "purpose": "bounded post-event adaptive rejection/cooldown diagnostic",
+        "reference_case": ADAPTIVE_CASE,
+        "path": "same production restart, mesh/material/TES/HYPRE path; 2-ns tail after the second event",
+    }
+    project["cases"][ADAPTIVE_POST_EVENT_CASE] = adaptive_post_event
+
+    # Fixed-dt local scaling probes.  All probes restart from output position
+    # 3 of the bounded case (the accepted state at 20.020001 ms), so their
+    # embedded estimators are directly comparable across dt.
+    local_dt_values_ns = (1.5, 1.25, 1.0, 0.875, 0.75, 0.625, 0.5)
+    local_state_time = 0.020020001
+    for dt_ns in local_dt_values_ns:
+        tag = str(dt_ns).replace(".", "p")
+        local_case_name = f"case_phase24_adaptive_local_dt_{tag}ns"
+        local_dt = dt_ns * 1.0e-9
+        local_end = local_state_time + local_dt
+        local_case = copy.deepcopy(adaptive_post_event)
+        local_case["restart_from"] = ADAPTIVE_POST_EVENT_CASE
+        local_case["restart_file_path"] = (
+            f"../work/meshes/{local_case['mesh']}/{ADAPTIVE_POST_EVENT_CASE}.result"
+        )
+        local_case["restart_position"] = 3
+        local_case["restart_time"] = local_state_time
+        local_case["series_file"] = f"{local_case_name}_series.csv"
+        local_case["iteration_series_file"] = f"{local_case_name}_iterations.csv"
+        local_case["output_file_path"] = (
+            f"../work/meshes/{local_case['mesh']}/{local_case_name}.result"
+        )
+        local_case["timesteps"] = [[f"{dt_ns:g}[ns]", 1]]
+        local_case["adaptive_time"] = {
+            "start": f"{local_state_time * 1000:.12f}[ms]",
+            "end": f"{local_end * 1000:.12f}[ms]",
+            "requested_output_times": {
+                "mode": "explicit",
+                "times": [
+                    f"{local_state_time * 1000:.12f}[ms]",
+                    f"{local_end * 1000:.12f}[ms]",
+                ],
+            },
+            "dt_initial": f"{dt_ns:g}[ns]",
+            "dt_min": f"{dt_ns:g}[ns]",
+            "dt_max": f"{dt_ns:g}[ns]",
+            "relative_tolerance": 2.0e-3,
+            "absolute_tolerance": 1.0e-8,
+            "r_min": 0.5,
+            "r_max": 2.0,
+            "max_growth": 1.0,
+            "max_shrink": 0.5,
+            "max_rejected": 2,
+            "physical_event_times": [],
+            "debug": True,
+        }
+        local_case["phase24_smoke"] = {
+            "purpose": "same-state adaptive estimator local dt scaling probe",
+            "reference_case": ADAPTIVE_POST_EVENT_CASE,
+            "restart_position": 3,
+            "dt_ns": dt_ns,
+        }
+        project["cases"][local_case_name] = local_case
+
+    # dt_min sensitivity probes use the same accepted restart state and the
+    # same 1.5 ns proposed step.  Only the floor is changed, allowing the
+    # forced-accept path to be compared at 1, 0.5, and 0.25 ns.
+    for dt_min_ns in (1.0, 0.5, 0.25):
+        tag = str(dt_min_ns).replace(".", "p")
+        diag_case_name = f"case_phase24_adaptive_dtmin_{tag}ns"
+        diag_case = copy.deepcopy(adaptive_post_event)
+        diag_case["restart_from"] = ADAPTIVE_POST_EVENT_CASE
+        diag_case["restart_file_path"] = (
+            f"../work/meshes/{diag_case['mesh']}/{ADAPTIVE_POST_EVENT_CASE}.result"
+        )
+        diag_case["restart_position"] = 3
+        diag_case["restart_time"] = local_state_time
+        diag_case["series_file"] = f"{diag_case_name}_series.csv"
+        diag_case["iteration_series_file"] = f"{diag_case_name}_iterations.csv"
+        diag_case["output_file_path"] = (
+            f"../work/meshes/{diag_case['mesh']}/{diag_case_name}.result"
+        )
+        diag_case["output_result"] = False
+        diag_case["timesteps"] = [["1.5[ns]", 1]]
+        diag_end = local_state_time + 1.5e-9
+        diag_case["adaptive_time"] = {
+            "start": f"{local_state_time * 1000:.12f}[ms]",
+            "end": f"{diag_end * 1000:.12f}[ms]",
+            "requested_output_times": {
+                "mode": "explicit",
+                "times": [
+                    f"{local_state_time * 1000:.12f}[ms]",
+                    f"{diag_end * 1000:.12f}[ms]",
+                ],
+            },
+            "dt_initial": "1.5[ns]",
+            "dt_min": f"{dt_min_ns:g}[ns]",
+            "dt_max": "1.5[ns]",
+            "relative_tolerance": 2.0e-3,
+            "absolute_tolerance": 1.0e-8,
+            "r_min": 0.5,
+            "r_max": 2.0,
+            "max_growth": 1.5,
+            "max_shrink": 0.5,
+            "max_rejected": 8,
+            "physical_event_times": [],
+            "debug": True,
+        }
+        diag_case["phase24_smoke"] = {
+            "purpose": "same-state dt_min forced-accept sensitivity diagnostic",
+            "reference_case": ADAPTIVE_POST_EVENT_CASE,
+            "restart_position": 3,
+            "proposed_dt_ns": 1.5,
+            "dt_min_ns": dt_min_ns,
+        }
+        project["cases"][diag_case_name] = diag_case
     OUTPUT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {OUTPUT}")
 

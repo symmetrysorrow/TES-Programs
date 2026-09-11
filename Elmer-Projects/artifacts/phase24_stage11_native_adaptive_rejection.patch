@@ -52,7 +52,37 @@ diff --git a/src/fem/src/ElmerSolver.F90 b/src/fem/src/ElmerSolver.F90
 +              CALL ListAddInteger(CurrentModel % Simulation, &
 +                   'Adaptive Max Consecutive Rejections',AdaptiveMaxRejectedInRow)
 @@
-               CALL Info(Caller,Message,Level=3)
-+              WRITE(Message,'(A,I0,A,I0)') 'Adaptive rejection counters: total=', &
-+                   AdaptiveRejectedCount,', max_consecutive=',AdaptiveMaxRejectedInRow
-+              CALL Info(Caller,Message,Level=3)
+              CALL Info(Caller,Message,Level=3)
+              WRITE(Message,'(A,I0,A,I0)') 'Adaptive rejection counters: total=', &
+                   AdaptiveRejectedCount,', max_consecutive=',AdaptiveMaxRejectedInRow
+              CALL Info(Caller,Message,Level=3)
+
+--- Stage 11 floor-accept diagnostics and internal cooldown ---
+The native `ExecSimulation` adaptive state also contains:
+
+     INTEGER :: AdaptiveRejectedBeforeAccept, AdaptiveCooldownBeforeAccept, &
+          AdaptiveGrowthCooldownRemaining
+     REAL(KIND=dp) :: AdaptiveAcceptedDt, AdaptivePreviousDtBeforeAccept, &
+          AdaptiveProposedNextDt, AdaptiveAppliedGrowthFactor
+     REAL(KIND=dp), PARAMETER :: AdaptivePostRejectMaxGrowth = 1.2_dp
+
+Before the acceptance test it records `dt_is_min`, `ordinary_error`,
+`forced_floor`, the previous rejection streak, and the pre-accept `h_old`.
+After acceptance it emits `Adaptive accept`, `Adaptive accept ratio`,
+`Adaptive accept flags`, `Adaptive accept cooldown`, and `Adaptive accept
+growth` records when debugging or recovering from a reject.
+
+The acceptance growth decision is:
+
+     IF ( AdaptiveForcedFloor ) THEN
+       ddt = AdaptiveMinTimestep
+       AdaptiveGrowthCooldownRemaining = 1
+     ELSE IF ( AdaptiveGrowthCooldownRemaining > 0 ) THEN
+       ddt = MIN( AdaptivePostRejectMaxGrowth * ddt, AdaptiveMaxTimeStep )
+       AdaptiveGrowthCooldownRemaining = AdaptiveGrowthCooldownRemaining - 1
+     ELSE
+       ddt = MIN( AdaptiveIncrease * ddt, AdaptiveMaxTimeStep )
+     END IF
+
+Rejection sets `AdaptiveGrowthCooldownRemaining = 1`. This is an internal
+policy default; no new SIF keyword is required.

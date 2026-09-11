@@ -84,6 +84,45 @@ def test_rejection_budget_is_consecutive_not_cumulative() -> None:
     assert controller.rejected_in_row == 3
 
 
+def test_reject_accept_does_not_immediately_use_max_growth() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 1.0))
+    controller.reject(0.02)
+    controller.accept(0.01, 0.2)
+    assert controller.dt == pytest.approx(0.012)
+    assert controller.growth_cooldown_remaining == 0
+
+
+def test_reject_accept_accept_resumes_growth_after_cooldown() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 1.0))
+    controller.reject(0.02)
+    controller.accept(0.01, 0.2)
+    controller.accept(0.012, 0.01)
+    assert controller.dt == pytest.approx(0.018)
+
+
+def test_normal_accept_keeps_max_growth_behavior() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 1.0))
+    controller.accept(0.1, 0.01)
+    assert controller.dt == pytest.approx(0.15)
+
+
+def test_event_restart_preserves_reject_cooldown() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 1.0))
+    controller.reject(0.02)
+    controller.accept(0.01, 0.2, event_forced=True)
+    assert controller.bdf_order == 1
+    assert controller.dt == pytest.approx(0.012)
+
+
+def test_dt_min_forced_accept_stays_at_floor_without_oscillation() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 1.0))
+    controller.reject(0.015)
+    controller.accept(0.01, 2.0)
+    assert controller.dt == pytest.approx(0.01)
+    controller.accept(0.01, 2.0)
+    assert controller.dt == pytest.approx(0.01)
+
+
 def test_dense_output_and_weighted_error() -> None:
     assert dense_linear((0.0, 10.0), (10.0, 20.0), 0.25) == pytest.approx((2.5, 12.5))
     assert weighted_error((1.0, 10.0), (1.001, 10.0), atol=1.0e-4, rtol=1.0e-3) == pytest.approx(
