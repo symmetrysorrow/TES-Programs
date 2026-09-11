@@ -13,7 +13,8 @@ BASE_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step"
 CASE = "case_phase24_hypre_cpu_smoke_7step"
 GPU_CASE = "case_phase24_hypre_gpu_smoke_7step"
 ADAPTIVE_CASE = "case_phase24_adaptive_output_smoke"
-ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_1us"
+ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_strict_4us"
+BDF2_SMOKE_CASE = "case_phase24_adaptive_bdf2_smoke_4us"
 
 
 def main() -> None:
@@ -155,6 +156,23 @@ def main() -> None:
         "path": "same Phase24 HeatSolve/HYPRE/TES path, two outer microsecond intervals",
     }
     project["cases"][ADAPTIVE_DEBUG_CASE] = adaptive_debug
+
+    # Reproducible production-tolerance BDF2 gate.  Keep this separate from
+    # the strict temporal-tolerance diagnostic so the successful policy does
+    # not depend on an unrecorded SIF override.
+    adaptive_bdf2_smoke = copy.deepcopy(adaptive_debug)
+    adaptive_bdf2_smoke["series_file"] = f"{BDF2_SMOKE_CASE}_series.csv"
+    adaptive_bdf2_smoke["iteration_series_file"] = f"{BDF2_SMOKE_CASE}_iterations.csv"
+    adaptive_bdf2_smoke["output_file_path"] = (
+        f"../work/meshes/{adaptive_bdf2_smoke['mesh']}/{BDF2_SMOKE_CASE}.result"
+    )
+    adaptive_bdf2_smoke["adaptive_time"]["relative_tolerance"] = 2.0e-3
+    adaptive_bdf2_smoke["phase24_smoke"] = {
+        "purpose": "committed production-tolerance BDF2 cache-invalidation gate",
+        "reference_case": ADAPTIVE_CASE,
+        "path": "same production mesh/material/TES/HYPRE path, 4-us adaptive interval",
+    }
+    project["cases"][BDF2_SMOKE_CASE] = adaptive_bdf2_smoke
     OUTPUT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {OUTPUT}")
 
