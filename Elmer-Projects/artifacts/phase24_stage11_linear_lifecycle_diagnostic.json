@@ -1,0 +1,80 @@
+{
+  "status": "VALIDATION IN PROGRESS",
+  "production_failure": {
+    "log": "results/case_phase24_adaptive_output_smoke/native_stage11_cooldown_dtmin05_31us_production.log",
+    "physical_time_ms": 20.0200005,
+    "trial": "first post-event BDF1 solve after event-localized rejection",
+    "accepted_adaptive_markers_before_failure": 7,
+    "rejected_trials_before_failure": 1,
+    "max_consecutive_rejections": 1,
+    "event_forced": true,
+    "bdf_order": 1,
+    "attempted_dt_s": 5.0e-10,
+    "previous_accepted_dt_s": 5.0e-10,
+    "structure_epoch": 1,
+    "matrix_epoch": 44,
+    "preconditioner_epoch_before_setup": 1,
+    "lifecycle": {
+      "static_matrix": "fresh rebuild",
+      "current_matrix_refresh": false,
+      "hypre_object": "full recreate/setup",
+      "amg": "fresh setup",
+      "warm_start": "persistent HYPRE x is initialized from Elmer xvec on the recreated container",
+      "recovery": "one fresh numeric retry; both solves failed"
+    },
+    "hypre": {
+      "method": "FlexGMRES + BoomerAMG",
+      "max_iterations": 2000,
+      "relative_tolerance": 5.0e-7,
+      "final_relative_residual": 5.2906e-7,
+      "result": "failed"
+    },
+    "matrix_dump": {
+      "a": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_a.dat",
+      "b": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_b.dat",
+      "raw_sha256": {
+        "a": "508911E8A56DF9F64617A0FF687F88EA2AFA0ACF339756AF669D6D51EB340ED4",
+        "b": "D085D50FCCD6C0550975BF5DFDAB02780248E9ED3221327BD5D6E8C0788E06CB"
+      },
+      "rows": 87534,
+      "nonzero_records": 1447196,
+      "rhs_records": 87534,
+      "csr_pattern_sha256": "4a6a292dd344410fed35bc1963c8201a95c3e05674989b816ade997b5b7f3bbb",
+      "matrix_values_sha256": "d6058e9f958efb96e5a0713b636ef42447fc72360a9cde4a868277ff31c6fb8a",
+      "rhs_sha256": "4bbf572d0b4a007499d8c44b08aa385993b5adbb4515fb5767ea8602f45a49c8",
+      "diagonal_min": 6.903532278928438e-10,
+      "diagonal_max": 6.166997955703168e-2,
+      "row_sum_range": [-2.40178150332055e-10, 3.46598922718528e-7],
+      "symmetry_max_abs_defect": 3.4470523512475175e-7,
+      "symmetry_frobenius_defect": 2.56286130587834e-5,
+      "rhs_l2": 3.5823077729382544e-6,
+      "rhs_max_abs": 5.1989838407779196e-8
+    }
+  },
+  "bounded_comparison": {
+    "log": "results/case_phase24_adaptive_post_event_cooldown_2ns/bounded_compare_dump.log",
+    "result": "ALL DONE",
+    "wall_seconds": 425.10,
+    "a": "results/case_phase24_adaptive_post_event_cooldown_2ns/bounded_post_event_a.dat",
+    "b": "results/case_phase24_adaptive_post_event_cooldown_2ns/bounded_post_event_b.dat",
+    "raw_sha256": {
+      "a": "92F63EBA3FF1D57FC88E5346FE75EBC40FE753746A63CC1C040D1C737B992FE7",
+      "b": "D5A030D74232B3F7AB891046D19D20AD8709C12B09E580EA29028CED7EF5EE88"
+    },
+    "physical_time_ms": 20.020001,
+    "trial": "post-event BDF1 at 1 ns after direct 1 ns floor accept",
+    "csr_pattern_same_as_failure": true,
+    "matrix_values_same_as_failure": false,
+    "rhs_same_as_failure": false,
+    "interpretation": "The bounded dump is one 0.5 ns earlier in physical time than the failure dump; value/RHS differences are expected and are not treated as root cause evidence."
+  },
+  "comparisons": {
+    "fresh_amg_only": "not isolated yet; failure already enters a full fresh setup",
+    "full_hypre_rebuild": "already exercised on the failing path and still failed",
+    "warm_start_off": "not run",
+    "phase24_reuse_off": "not run",
+    "trusted_direct_solver": "not run",
+    "residual_trajectory": "not available from the current wrapper; only final residual is emitted",
+    "max_iterations_4000": "not run; requires an isolated replay harness"
+  }
+}
