@@ -100,7 +100,7 @@ def main() -> None:
             "count": 64,
         },
         "dt_initial": "1[us]",
-        "dt_min": "1[ns]",
+        "dt_min": "0.5[ns]",
         "dt_max": "100[us]",
         # Native production calibration: the strict debug tolerance is useful
         # for exercising rollback, but the fixed-step reference shows that
