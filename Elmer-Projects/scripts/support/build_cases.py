@@ -32,6 +32,7 @@ from scripts.support.vendored.dimensioned_expression import (
     dimension_name_of,
     evaluate_dimensioned_expression,
 )
+from scripts.support.adaptive_time import OutputSchedule
 
 # Upstream unit tables use keV as the energy base unit.
 KEV_TO_JOULE = 1.602176634e-16
@@ -311,6 +312,17 @@ def solver1_block(
     apply_mortar_bcs: bool = True,
     phase24_vector_assembly: bool = False,
     phase24_wall_profiling: bool = False,
+    phase24_static_matrix_reuse: bool = False,
+    phase24_operator_lagging: str | None = None,
+    phase24_operator_lag_threshold: float | None = None,
+    phase24_operator_lag_max_reuse: int | None = None,
+    phase24_operator_lag_residual_growth: float | None = None,
+    phase24_preconditioner_lagging: str | None = None,
+    phase24_preconditioner_lag_threshold: float | None = None,
+    phase24_preconditioner_lag_max_age: int | None = None,
+    phase24_preconditioner_lag_krylov_relative_growth: float | None = None,
+    phase24_preconditioner_lag_nonlinear_threshold: float | None = None,
+    phase24_hypre_reuse: bool = False,
     comment: str | None = None,
 ) -> list[str]:
     lines = [
@@ -324,6 +336,42 @@ def solver1_block(
         lines.append("  Phase24 Vector Assembly = Logical True")
     if phase24_wall_profiling:
         lines.append("  Phase24 Wall Profiling = Logical True")
+    if phase24_static_matrix_reuse:
+        lines.append("  Phase24 Static Matrix Reuse = Logical True")
+    if phase24_operator_lagging:
+        lines.append(f'  "Phase24 Operator Lagging" = String "{phase24_operator_lagging}"')
+    if phase24_operator_lag_threshold is not None:
+        lines.append(
+            f"  \"Phase24 Operator Lag Threshold\" = Real {fmt_real(phase24_operator_lag_threshold)}"
+        )
+    if phase24_operator_lag_max_reuse is not None:
+        lines.append(
+            f"  \"Phase24 Operator Lag Max Reuse\" = Integer {phase24_operator_lag_max_reuse}"
+        )
+    if phase24_operator_lag_residual_growth is not None:
+        lines.append(
+            f"  \"Phase24 Operator Lag Residual Growth\" = Real {fmt_real(phase24_operator_lag_residual_growth)}"
+        )
+    if phase24_preconditioner_lagging:
+        lines.append(f'  "Phase24 Preconditioner Lagging" = String "{phase24_preconditioner_lagging}"')
+    if phase24_preconditioner_lag_threshold is not None:
+        lines.append(
+            f"  \"Phase24 Preconditioner Lag Threshold\" = Real {fmt_real(phase24_preconditioner_lag_threshold)}"
+        )
+    if phase24_preconditioner_lag_max_age is not None:
+        lines.append(
+            f"  \"Phase24 Preconditioner Lag Max Age\" = Integer {phase24_preconditioner_lag_max_age}"
+        )
+    if phase24_preconditioner_lag_krylov_relative_growth is not None:
+        lines.append(
+            f"  \"Phase24 Preconditioner Lag Krylov Relative Growth\" = Real {fmt_real(phase24_preconditioner_lag_krylov_relative_growth)}"
+        )
+    if phase24_preconditioner_lag_nonlinear_threshold is not None:
+        lines.append(
+            f"  \"Phase24 Preconditioner Lag Nonlinear Threshold\" = Real {fmt_real(phase24_preconditioner_lag_nonlinear_threshold)}"
+        )
+    if phase24_hypre_reuse:
+        lines.append("  Phase24 HYPRE Reuse = Logical True")
     if calculate_loads:
         lines.append("  Calculate Loads = True")
     if comment:
@@ -363,7 +411,7 @@ def solver1_block(
             "  Linear System Iterative Method = BiCGStabl",
             "  Linear System Preconditioning = ILU2",
             "  Linear System Max Iterations = 2000",
-            "  Linear System Convergence Tolerance = 1.0e-10",
+            f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
         ]
     elif linear_system == "iterative_hypre_boomeramg":
         # HYPRE is an optional Elmer build dependency.  This configuration is
@@ -375,7 +423,7 @@ def solver1_block(
             "  Linear System Iterative Method = BiCGStab",
             "  Linear System Preconditioning = BoomerAMG",
             "  Linear System Max Iterations = 1000",
-            "  Linear System Convergence Tolerance = 1.0e-10",
+            f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 20",
             "  BoomerAMG Relax Type = 3",
@@ -404,7 +452,7 @@ def solver1_block(
             "  Linear System Iterative Method = FlexGMRES",
             f"  Linear System Preconditioning = {hypre_preconditioning}",
             "  Linear System Max Iterations = 2000",
-            "  Linear System Convergence Tolerance = 1.0e-11",
+            f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-11))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
             "  HYPRE GmRes Dimension = 100",
@@ -444,7 +492,7 @@ def solver1_block(
             "  Linear System Iterative Method = FlexGMRES",
             "  Linear System Preconditioning = BoomerAMG",
             "  Linear System Max Iterations = 2000",
-            "  Linear System Convergence Tolerance = 1.0e-11",
+            f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-11))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
             "  HYPRE GmRes Dimension = 100",
@@ -847,6 +895,85 @@ def _timestep_lines(spec: dict, params: dict[str, float]) -> list[str]:
     return lines
 
 
+def _adaptive_time_lines(spec: dict, params: dict[str, float]) -> list[str]:
+    """Emit Stage 11 controls without coupling output count to FEM steps."""
+    config = spec.get("adaptive_time")
+    if not config:
+        return []
+    if not isinstance(config, dict):
+        raise ValueError("adaptive_time must be an object")
+
+    def eval_value(raw: Any, default: Any) -> float:
+        raw = config.get(raw, default) if isinstance(raw, str) and raw in config else raw
+        return eval_si(raw, params) if isinstance(raw, str) else float(raw)
+
+    start = eval_value(config.get("start", 0.0), 0.0)
+    end = eval_value(config.get("end", start + eval_value(config.get("dt_max", "1[s]"), 1.0)), 1.0)
+    requested = config.get("requested_output_times", spec.get("requested_output_times"))
+    if requested is None:
+        requested = {
+            "mode": "uniform", "start": start, "end": end,
+            "count": int(config.get("output_count", 2)),
+        }
+
+    def time_value(raw: Any) -> float:
+        return eval_si(raw, params) if isinstance(raw, str) else float(raw)
+
+    if isinstance(requested, dict):
+        mode = requested.get("mode", "explicit")
+        if mode == "uniform":
+            schedule = OutputSchedule.uniform(
+                time_value(requested["start"]), time_value(requested["end"]), int(requested["count"])
+            )
+        elif mode == "interval":
+            schedule = OutputSchedule.interval(
+                time_value(requested["start"]), time_value(requested["end"]), time_value(requested["interval"])
+            )
+        elif mode == "logarithmic":
+            schedule = OutputSchedule.logarithmic(
+                time_value(requested["start"]), time_value(requested["end"]), int(requested["count"]),
+                origin=time_value(requested.get("origin", 0.0)),
+            )
+        elif mode == "explicit":
+            schedule = OutputSchedule.explicit(time_value(t) for t in requested["times"])
+        else:
+            raise ValueError(f"adaptive_time: unsupported requested schedule mode {mode!r}")
+    else:
+        schedule = OutputSchedule.explicit(time_value(t) for t in requested)
+
+    events = list(config.get("physical_event_times", []))
+    pulse = spec.get("pulse")
+    if pulse:
+        pulse_start = eval_si(pulse["start"], params)
+        events.extend((pulse_start, pulse_start + eval_si(pulse["duration"], params)))
+    event_values = sorted({time_value(t) for t in events})
+
+    def cfg(name: str, default: Any) -> float:
+        return time_value(config[name]) if name in config else float(default)
+
+    lines = [
+        "  Adaptive Timestepping = Logical True",
+        "  Adaptive Output Decoupling = Logical True",
+        f"  Adaptive Time Error = Real {fmt_real(cfg('relative_tolerance', 1.0e-4))}",
+        f"  Adaptive Relative Tolerance = Real {fmt_real(cfg('relative_tolerance', 1.0e-4))}",
+        f"  Adaptive Absolute Tolerance = Real {fmt_real(cfg('absolute_tolerance', 1.0e-8))}",
+        f"  Adaptive Initial Timestep = Real {fmt_real(cfg('dt_initial', cfg('dt_max', 1.0e-3)))}",
+        f"  Adaptive Min Timestep = Real {fmt_real(cfg('dt_min', 1.0e-9))}",
+        f"  Adaptive Max Timestep = Real {fmt_real(cfg('dt_max', 1.0e-3))}",
+        f"  Adaptive Max Growth = Real {fmt_real(cfg('max_growth', 1.5))}",
+        f"  Adaptive Max Shrink = Real {fmt_real(cfg('max_shrink', 0.5))}",
+        f"  Adaptive Step Ratio Min = Real {fmt_real(cfg('r_min', 0.5))}",
+        f"  Adaptive Step Ratio Max = Real {fmt_real(cfg('r_max', 2.0))}",
+        f"  Adaptive Max Rejected = Integer {int(config.get('max_rejected', 12))}",
+        f"  Requested Output Times({len(schedule.times)}) = Real " + " ".join(fmt_real(t) for t in schedule.times),
+    ]
+    if event_values:
+        lines.append(f"  Physical Event Times({len(event_values)}) = Real " + " ".join(fmt_real(t) for t in event_values))
+    if config.get("debug"):
+        lines.append("  Adaptive Debug = Logical True")
+    return lines
+
+
 def _resolve_pulse_center(
     center_spec: Any, params: dict[str, float], mesh_dir: Path, mesh_name: str
 ) -> tuple[tuple[float, float, float], str]:
@@ -981,9 +1108,10 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         lines += [
             "  Simulation Type = Transient",
             "  Timestepping Method = BDF",
-            "  BDF Order = 1",
+            f"  BDF Order = {spec.get('bdf_order', 2 if spec.get('adaptive_time') else 1)}",
         ]
         lines += _timestep_lines(spec, params)
+        lines += _adaptive_time_lines(spec, params)
         lines.append(
             f"  Steady State Max Iterations = {spec.get('steady_state_max_iterations', 1)}"
         )
@@ -1082,6 +1210,17 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
                 phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
                 phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
+                phase24_static_matrix_reuse=bool(spec.get("phase24_static_matrix_reuse")),
+                phase24_operator_lagging=spec.get("phase24_operator_lagging"),
+                phase24_operator_lag_threshold=spec.get("phase24_operator_lag_threshold"),
+                phase24_operator_lag_max_reuse=spec.get("phase24_operator_lag_max_reuse"),
+                phase24_operator_lag_residual_growth=spec.get("phase24_operator_lag_residual_growth"),
+                phase24_preconditioner_lagging=spec.get("phase24_preconditioner_lagging"),
+                phase24_preconditioner_lag_threshold=spec.get("phase24_preconditioner_lag_threshold"),
+                phase24_preconditioner_lag_max_age=spec.get("phase24_preconditioner_lag_max_age"),
+                phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
+                phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
+                phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
                 comment=spec.get("solver_comment"),
             )
             lines.append("")
@@ -1099,6 +1238,17 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
             phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
             phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
+            phase24_static_matrix_reuse=bool(spec.get("phase24_static_matrix_reuse")),
+            phase24_operator_lagging=spec.get("phase24_operator_lagging"),
+            phase24_operator_lag_threshold=spec.get("phase24_operator_lag_threshold"),
+            phase24_operator_lag_max_reuse=spec.get("phase24_operator_lag_max_reuse"),
+            phase24_operator_lag_residual_growth=spec.get("phase24_operator_lag_residual_growth"),
+            phase24_preconditioner_lagging=spec.get("phase24_preconditioner_lagging"),
+            phase24_preconditioner_lag_threshold=spec.get("phase24_preconditioner_lag_threshold"),
+            phase24_preconditioner_lag_max_age=spec.get("phase24_preconditioner_lag_max_age"),
+            phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
+            phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
+            phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -1111,6 +1261,17 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
             phase24_vector_assembly=bool(spec.get("phase24_vector_assembly")),
             phase24_wall_profiling=bool(spec.get("phase24_wall_profiling")),
+            phase24_static_matrix_reuse=bool(spec.get("phase24_static_matrix_reuse")),
+            phase24_operator_lagging=spec.get("phase24_operator_lagging"),
+            phase24_operator_lag_threshold=spec.get("phase24_operator_lag_threshold"),
+            phase24_operator_lag_max_reuse=spec.get("phase24_operator_lag_max_reuse"),
+            phase24_operator_lag_residual_growth=spec.get("phase24_operator_lag_residual_growth"),
+            phase24_preconditioner_lagging=spec.get("phase24_preconditioner_lagging"),
+            phase24_preconditioner_lag_threshold=spec.get("phase24_preconditioner_lag_threshold"),
+            phase24_preconditioner_lag_max_age=spec.get("phase24_preconditioner_lag_max_age"),
+            phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
+            phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
+            phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
             comment=spec.get("solver_comment"),
         )
         lines.append("")

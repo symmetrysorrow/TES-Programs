@@ -11,6 +11,9 @@ SOURCE = ROOT / "elmer_project_hypre_gpu_phase19.json"
 OUTPUT = ROOT / "elmer_project_phase24_production.json"
 BASE_CASE = "case_p19_hypre_flexgmres_boomeramg_cpu_time5us_smoke_7step"
 CASE = "case_phase24_hypre_cpu_smoke_7step"
+GPU_CASE = "case_phase24_hypre_gpu_smoke_7step"
+ADAPTIVE_CASE = "case_phase24_adaptive_output_smoke"
+ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_1us"
 
 
 def main() -> None:
@@ -31,9 +34,127 @@ def main() -> None:
     }
     candidate["phase24_vector_assembly"] = True
     candidate["phase24_wall_profiling"] = True
+    candidate["phase24_static_matrix_reuse"] = True
+    # Stage 8 keeps A current and moves reuse to the AMG preconditioner.
+    candidate["phase24_operator_lagging"] = "disabled"
+    candidate["phase24_operator_lag_threshold"] = 1.0e-4
+    candidate["phase24_operator_lag_max_reuse"] = 3
+    candidate["phase24_operator_lag_residual_growth"] = 1.25
+    candidate["phase24_preconditioner_lagging"] = "adaptive"
+    candidate["phase24_preconditioner_lag_threshold"] = 1.0e-4
+    candidate["phase24_preconditioner_lag_max_age"] = 2
+    candidate["phase24_preconditioner_lag_krylov_relative_growth"] = 0.50
+    candidate["phase24_preconditioner_lag_nonlinear_threshold"] = 1.0e-3
+    candidate["phase24_hypre_reuse"] = True
     candidate["solver"] = dict(candidate["solver"])
     candidate["solver"]["matrix_dump_prefix"] = CASE
+    # Stage 4 uses the physical linear-solve policy accepted in Stage 3:
+    # avoid spending the run budget on an artificial 1e-11 residual target.
+    candidate["solver"]["linear_system_convergence_tolerance"] = 5e-7
     project["cases"][CASE] = candidate
+
+    # Keep GPU selection explicit while sharing the exact Phase24 lifecycle
+    # policy and production inputs.  The WSL runner chooses CUDA, HIP, or CPU;
+    # this case only selects HYPRE's device-capable solver entry.
+    gpu_candidate = copy.deepcopy(candidate)
+    gpu_candidate["series_file"] = f"{GPU_CASE}_series.csv"
+    gpu_candidate["iteration_series_file"] = f"{GPU_CASE}_iterations.csv"
+    gpu_candidate["output_file_path"] = (
+        f"../work/meshes/{gpu_candidate['mesh']}/{GPU_CASE}.result"
+    )
+    gpu_candidate["phase24_smoke"] = {
+        "purpose": "same Phase24 production HYPRE lifecycle with device-resident linear algebra",
+        "baseline_case": BASE_CASE,
+        "path": "CPU FEM assembly, persistent IJ/ParCSR GPU linear algebra, explicit transfer counters",
+        "backend_selection": "runner-selected CUDA/HIP/CPU",
+    }
+    gpu_candidate["phase24_hypre_backend"] = "device"
+    gpu_candidate["solver"] = dict(gpu_candidate["solver"])
+    gpu_candidate["solver"]["linear_system"] = "iterative_hypre_flexgmres_boomeramg_gpu"
+    gpu_candidate["solver"]["matrix_dump_prefix"] = GPU_CASE
+    project["cases"][GPU_CASE] = gpu_candidate
+
+    # Stage 11 uses one outer interval for the physical window.  The native
+    # driver chooses accepted internal steps inside it, while this schedule
+    # is only sampled through dense output.  The count is intentionally a
+    # case default, not a solver invariant; callers may replace the schedule
+    # with 50, 500, 5000, or an explicit/nonuniform array.
+    adaptive_candidate = copy.deepcopy(candidate)
+    adaptive_candidate["series_file"] = f"{ADAPTIVE_CASE}_series.csv"
+    adaptive_candidate["iteration_series_file"] = f"{ADAPTIVE_CASE}_iterations.csv"
+    adaptive_candidate["output_file_path"] = (
+        f"../work/meshes/{adaptive_candidate['mesh']}/{ADAPTIVE_CASE}.result"
+    )
+    adaptive_candidate["timesteps"] = [["31[us]", 1]]
+    adaptive_candidate["output_intervals"] = [0]
+    adaptive_candidate["bdf_order"] = 2
+    adaptive_candidate["adaptive_time"] = {
+        "start": "20[ms]",
+        "end": "20.031[ms]",
+        "requested_output_times": {
+            "mode": "uniform",
+            "start": "20[ms]",
+            "end": "20.031[ms]",
+            "count": 64,
+        },
+        "dt_initial": "1[us]",
+        "dt_min": "1[ns]",
+        "dt_max": "100[us]",
+        # Native production calibration: the strict debug tolerance is useful
+        # for exercising rollback, but the fixed-step reference shows that
+        # 0.2% relative temporal control is the first viable CPU candidate.
+        "relative_tolerance": 2.0e-3,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 12,
+        "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+    }
+    adaptive_candidate["phase24_smoke"] = {
+        "purpose": "Stage 11 output/internal-step decoupling smoke",
+        "reference_case": BASE_CASE,
+        "path": "persistent Phase24 HYPRE lifecycle under adaptive BDF1/BDF2 stepping with dense output",
+    }
+    project["cases"][ADAPTIVE_CASE] = adaptive_candidate
+
+    # Same production mesh/material/UDF path, shortened only to isolate the
+    # first adaptive full-vs-half trial during native runtime debugging.
+    adaptive_debug = copy.deepcopy(adaptive_candidate)
+    adaptive_debug["series_file"] = f"{ADAPTIVE_DEBUG_CASE}_series.csv"
+    adaptive_debug["iteration_series_file"] = f"{ADAPTIVE_DEBUG_CASE}_iterations.csv"
+    adaptive_debug["output_file_path"] = (
+        f"../work/meshes/{adaptive_debug['mesh']}/{ADAPTIVE_DEBUG_CASE}.result"
+    )
+    adaptive_debug["timesteps"] = [["1[us]", 1]]
+    adaptive_debug["adaptive_time"] = {
+        "start": "20[ms]",
+        "end": "20.001[ms]",
+        "requested_output_times": {
+            "mode": "uniform",
+            "start": "20[ms]",
+            "end": "20.001[ms]",
+            "count": 3,
+        },
+        "dt_initial": "1[us]",
+        "dt_min": "1[ns]",
+        "dt_max": "1[us]",
+        "relative_tolerance": 1.0e-4,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 2,
+        "debug": True,
+    }
+    adaptive_debug["phase24_smoke"] = {
+        "purpose": "short same-mesh Stage 11 trial sequencing diagnostic",
+        "reference_case": ADAPTIVE_CASE,
+        "path": "same Phase24 HeatSolve/HYPRE/TES path, one outer microsecond interval",
+    }
+    project["cases"][ADAPTIVE_DEBUG_CASE] = adaptive_debug
     OUTPUT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {OUTPUT}")
 

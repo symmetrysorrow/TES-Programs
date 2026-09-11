@@ -1,30 +1,33 @@
 # Phase24 CPU fast path
 
-The Phase24 path is opt-in through `Phase24 Vector Assembly = Logical True` and is limited to a scalar, three-dimensional, fixed-mesh P1 tetrahedral bulk mesh. Unsupported element types, dimensions, DOF counts, periodic flips, anisotropic or MATC/UDF properties, dynamic heat capacity, body-force elements, convection, phase change, and other ineligible terms remain on the original HeatSolve path.
+The Phase24 path is opt-in through `Phase24 Vector Assembly = Logical True` for scalar, three-dimensional, fixed-mesh meshes. Eligibility is element-level: P1 tetrahedra and constant-scalar linear wedges (element code 706) can use the fast path independently, while unsupported elements and ineligible materials/terms remain on the original HeatSolve path.
 
 ## Persistent initialization state
 
 `HeatSolve.F90` builds contiguous per-bulk-element metadata once per mesh:
 
-- `Phase24ElementNodes(4,nelem)` and `Phase24ElementEq(4,nelem)`
+- `Phase24ElementNodes(6,nelem)` and `Phase24ElementEq(6,nelem)`
 - body/part identifiers
 - physical shape gradients and tetra volume
 - reusable static stiffness and spatial mass matrices
 - compact `StaticElements`, `DynamicElements`, and `GenericElements` lists
+- compact production-wedge lists plus per-quadrature geometry (`8` points for code 706), cached stiffness, and spatial mass
 
 `ElementInfo` is called during metadata construction only. The generic `ElementDescription` implementation is unchanged; this avoids affecting periodic-projector and boundary code.
 
-Static elements require constant scalar density, heat capacity, and isotropic conductivity, with no source or temperature-dependent term. Their conductivity stiffness and spatial mass are computed once and reused. The timestep/BDF multiplier and RHS history remain per-iteration quantities. Dynamic and generic elements continue through the existing local formulation.
+Static elements require constant scalar density, heat capacity, and isotropic conductivity, with no source or temperature-dependent term. Their conductivity stiffness and spatial mass are computed once and reused. The same rule is applied to eligible six-node wedges after exact quadrature-point geometry evaluation. The timestep/BDF multiplier and RHS history remain per-iteration quantities. Dynamic tetrahedra and generic elements continue through the existing local formulation.
 
 ## Assembly and insertion
 
-Eligible static elements use an OpenMP `parallel do`. Each worker forms private local mass, stiffness, and RHS values. CSR destinations are cached in `CRSMatrix.F90`; the cold cache build is narrowly synchronized, while subsequent matrix updates use cached positions and OpenMP atomics. No whole-element loop is enclosed by a global critical region. A coloring pass is not required for this stage because the atomic implementation is the simpler safe option and removes repeated CRS searches.
+Eligible static elements and production wedges use an OpenMP `parallel do`. Each worker forms private local mass, stiffness, and RHS values. CSR destinations are cached in `CRSMatrix.F90` for both 4x4 tetra and 6x6 wedge insertion; the cold cache build is narrowly synchronized, while subsequent matrix updates use cached positions and OpenMP atomics. No whole-element loop is enclosed by a global critical region. A coloring pass is not required for this stage because the atomic implementation is the simpler safe option and removes repeated CRS searches.
 
 The cache records CSR row/column storage identity and dimensions. It is cleared when the matrix structure or mesh changes. The observed one-step run built 266,569 element destinations once, reached 533,138 hits after the second nonlinear iteration, and reported only the two expected initial invalidations.
 
 ## Fallback and validation
 
-The fallback path is explicitly guarded against Fortran non-short-circuit evaluation: fast-path arrays are never indexed until activation and bounds have been checked. The production hybrid prism/tetra case therefore disables the fast path cleanly and completes assembly through the generic route.
+The fallback path is explicitly guarded against Fortran non-short-circuit evaluation: fast-path arrays are never indexed until activation and bounds have been checked. The production hybrid prism/tetra case uses the fast path for `125,972` tets and `95,612` constant-material wedges, while `2,134` variable-material wedges remain generic. The strict-tolerance run completed mixed assembly and then stopped at the known HYPRE convergence limit (`2000` iterations, residual `2.56e-7` against `1e-11`).
+
+The hybrid matrix dump has identical CSR sparsity to a Phase24-off generic baseline. The normalized matrix-value difference is `2.49e-8`, RHS relative L2 difference is `1.56e-16`, and the maximum matrix absolute difference is `1.31e-9`, within the existing `1e-3` physics-level gate. The fast wedge assembly measured about `3.27 s` for the strict one-iteration smoke versus `7.86 s` for the all-generic assembly run.
 
 The reported conformal CPU HYPRE smoke uses `case_dual_pulse_center` on the tetra-only `mesh_dual_base` mesh. One timestep converged with FlexGMRES + BoomerAMG. Solver wall time improved from 20.75 s to 11.18 s; assembly improved from 13.51 s to 2.23 s. Matrix sparsity was identical, normalized matrix-value error was `2.49e-8`, RHS error was `1.17e-16`, and the maximum temperature-field difference was `1.55e-4` in the recorded one-step outputs.
 
@@ -33,3 +36,67 @@ The reported conformal CPU HYPRE smoke uses `case_dual_pulse_center` on the tetr
 The existing configured native build used MSYS2 UCRT64 GNU Fortran/C/C++ wrappers with Microsoft MPI import libraries and `mpiexec` from Microsoft MPI. The CMake cache already contained the correct MPI paths (`C:/msys64/ucrt64/.../mpif90.exe`, `mpicc.exe`, `mpicxx.exe`, `libmsmpi.dll.a`, and `C:/Program Files/Microsoft MPI/Bin/mpiexec.exe`). The apparent compiler failure was the MSYS2 runtime missing from the PowerShell `PATH`: `f951.exe` exited with Windows status `0xC0000139`. Prepending `C:\msys64\ucrt64\bin;C:\msys64\usr\bin` restored the configured build without reconfiguration or MPI changes. Mixing the WSL OpenMPI wrappers with the native cache was avoided.
 
 GPU assembly was not changed.
+
+## Stage 4 reuse controls
+
+Stage 4 adds two opt-in controls to the production generator. `Phase24 Static Matrix Reuse` snapshots the static fast-path CSR contribution for a fixed mesh, timestep/order, and lumped-mass mode; later nonlinear iterations restore that matrix portion and refresh only the transient RHS history. The existing compact static/dynamic/generic element lists and cached tetra/wedge CSR destinations remain the ownership boundary for the dynamic work.
+
+`Phase24 HYPRE Reuse` adds a guarded `SolveHYPRE3` path that reopens an assembled IJ matrix, replaces its numeric values, and refreshes the numeric solver setup while retaining IJ objects and scratch buffers. It is disabled automatically for mesh changes, AMS, block-diagonal, or separate preconditioner matrices, and the production result is not credited with an AMG-hierarchy reuse speedup until that branch has a dedicated debug/runtime gate.
+
+The Phase24 production policy uses a `5e-7` linear convergence tolerance, within the accepted physical tolerance band. The bounded run validated static reuse through repeated nonlinear iterations: iteration 2 logged `Phase24 static matrix cache hit; RHS history refreshed`, with no assembly crash and continued HYPRE solves. The full seven-timestep historical campaign was intentionally not rerun.
+
+## Stage 5 epoch and persistent-solver lifecycle
+
+Stage 5 makes the reuse decision explicit with three independently published epochs: `Phase24 Structure Epoch`, `Phase24 Matrix Epoch`, and `Phase24 RHS Epoch`. Structure changes invalidate the retained native objects. A matrix-epoch change takes Case B: fixed-pattern IJ values are updated in place and the existing numeric solver/preconditioner setup is refreshed. If only the RHS epoch changes, Case A updates the persistent RHS, preserves the AMG/Krylov setup, and keeps the persistent `x` vector as the warm start. A structure-epoch change takes Case C and performs a full rebuild. AMS, block-diagonal, and separate preconditioner matrices remain on the conservative full-setup path.
+
+The native HYPRE container now owns the IJ matrix, ParCSR object, persistent `b`/`x` vectors, solver, preconditioner, and scratch buffers. Elmer's wrapper-matrix teardown clears only the wrapper handle for eligible Phase 24 containers; the native container is reattached by structure epoch on the next solve. Numeric refresh uses the fixed-pattern `SetValues`/`Assemble` path because reinitializing the assembled IJ handle while the live solver owns its ParCSR object is unsafe in the production HYPRE build.
+
+The production hybrid case exercises Case B because it contains `125,972` dynamic tetrahedra and `2,134` generic wedges; its bounded seven-step smoke completed successfully with 13 lifecycle decisions, 12 numeric refreshes, 9 static-cache hits, and 3 exercised retry recoveries. One refreshed FlexGMRES solve missed the required `5e-7` tolerance; the controlled recovery restored the Elmer iterate, performed one fresh numeric setup on the persistent objects, and solved successfully without changing the production tolerance. No exact Case A event was claimed for this mixed nonlinear case, and no broad solver tuning or historical campaign was performed.
+
+GPU assembly remains disabled. The validation was CPU HYPRE only; no GPU assembly or GPU solver path was introduced.
+
+## Stage 11 adaptive internal time and dense output
+
+Stage 11 separates `RequestedOutputTimes` from the accepted internal FEM time sequence. The case generator accepts uniform, fixed-interval, explicit, and logarithmic schedules; output count is not used to select `dt_internal`. The native transient driver performs an embedded full-step versus two-half-step estimate, normalized by absolute and relative state tolerances, and adapts the internal step with bounded growth/shrink and configurable `r_min`/`r_max` limits.
+
+Physical event times are a separate list. Pulse onset/cutoff and user-supplied discontinuities clip an internal step so the accepted state lands exactly on the event; ordinary output samples do not clip a step. Accepted spans are linearly sampled through `SaveCurrent` without FEM reassembly, HYPRE setup, or HYPRE solve. Interpolation changes only the serialized field values and restores the accepted state before postprocessing, so it cannot mutate solver or TES history.
+
+The embedded controller starts with BDF1, returns to BDF1 after an event or rejected trial, and resumes BDF2 only after accepted history is available. `TimeIntegrate.F90` now uses the correct unequal-step BDF2 coefficients, with `r = h_new / h_old`; equal steps reduce to `(3u[n+1] - 4u[n] + u[n-1])/(2h)`. Full-trial field/history snapshots are restored before the half-step comparison, and a dedicated TES circuit snapshot/restore handshake prevents either the discarded full trial or a rejected retry from advancing lumped electrical history.
+
+The native simulation list publishes accepted/rejected internal steps, requested and interpolation-only outputs, event-forced steps, and BDF1/BDF2 counts. Existing Phase24 matrix/HYPRE counters remain owned by the lower lifecycle and are not reset by ordinary output interpolation. The generated `case_phase24_adaptive_output_smoke` is a bounded production-style configuration with a 31 microsecond physical window and a 64-point default output schedule; callers can replace it with 50, 500, 5000, or explicit times without changing the internal solver policy.
+
+Focused policy/SIF tests cover schedule independence, exact endpoint generation, variable-step BDF2 reduction and unequal ratios, event-only clipping, weighted error control, rejection counters, and interpolation counters. The native `fem/all` target builds successfully. A full adaptive-vs-fixed physical waveform campaign remains a runtime validation task because it requires the production mesh/run environment; the implementation does not claim that campaign was completed here.
+
+## Stage 7 native HYPRE Case-A fast path
+
+Stage 7 audits the native call graph rather than trusting the high-level lifecycle labels. `SolveHYPRE2` now requires an explicit `setup_epoch == matrix_epoch` and enters FlexGMRES directly after updating the persistent RHS vector. The IJ matrix and cached ParCSR handle are untouched in Case A; `HYPRE_IJMatrixGetObject` is performed only during initial construction or an allowed Case-B numeric refresh. The persistent `b` and `x` IJ/ParVector objects remain alive, and normal solves no longer reinitialize them. `x` is therefore a warm start across unchanged-RHS solves.
+
+The native container records actual wrapper-boundary events: matrix refreshes, Krylov setup calls, BoomerAMG setup callbacks, solves, direct Case-A solves, recovery setups, IJ calls, and the latest FlexGMRES iteration count. Fortran queries these counters after each solve and asserts that Case A adds zero matrix-refresh, Krylov-setup, or AMG-setup events. The setup epoch is committed only after a successful native setup; structure changes still invalidate the container, while Case B refreshes fixed-pattern numeric values and then commits the new matrix/setup epoch.
+
+Recovery clears HYPRE's process-global stale convergence flag, reapplies the saved RHS to the same persistent IJ vector, performs a fresh numeric setup, restores the Elmer iterate into `x`, and retries with a warm start. This preserves the allocation-free normal path and prevents a failed refreshed solve from being mistaken for a valid setup. Adaptive operator lagging also has a Krylov-iteration degradation gate using relative and absolute growth limits, in addition to coefficient, nonlinear-trend, residual, reuse-limit, and recovery gates.
+
+The final seven-timestep CPU smoke completed with `ALL DONE`. Native totals were `10` matrix refreshes, `14` Krylov setups, `14` AMG setups, `20` solves, `6` direct Case-A solves, and `3` recovery setups. Thus the previous one-setup-per-solve ratio is gone: unchanged Case-A solves add solves only. The run recorded `6` operator-lag reuses, `4` fresh confirmation cycles, and `3` controlled recovery fallbacks; after each recovery, the next fresh solve completed the explicit cooldown before lagging resumed. Final nonlinear relative change was `0.0` at result norm `0.1548520955004124`; the final TES sample was `T=0.1684594 K`, `I=1.473235e-4 A`, and `P=3.251468e-10 W`.
+
+## Stage 6 adaptive operator lagging
+
+Stage 6 adds an opt-in `Phase24 Operator Lagging` policy with `disabled`, `conservative`, and `adaptive` modes. The production smoke uses adaptive mode with a `1e-4` relative coefficient threshold and a maximum of three consecutive reuses. HeatSolve records per-element conductivity, transient capacity, and reaction coefficients with a floor near zero; RHS-only source terms do not by themselves dirty the operator. Fixed Dirichlet boundaries are treated as invariant after final CSR elimination, while heat gaps, radiation, convection, perfusion, and other active operator terms remain conservative invalidation gates.
+
+When the indicator is small, the finalized previous CSR values are restored, the current RHS is retained, and Stage 5 enters Case A with its warm-start vector and AMG/Krylov setup intact. A coefficient change, timestep/order change, reuse limit, residual growth, or HYPRE recovery forces a fresh matrix; a HYPRE recovery or nonlinear deterioration disables lagging for the remainder of that timestep. A timestep that used lagging receives a mandatory fresh-matrix convergence confirmation before acceptance.
+
+The production CSR audit measured a relative symmetry defect of `1.66446504e-2` after boundary and Dirichlet handling. PCG was therefore not enabled; FlexGMRES remains the safe production method. No undocumented AMG or GPU tuning was added.
+
+The bounded seven-step CPU HYPRE smoke exited `0` and reached `ALL DONE`. It recorded `7` lagged Case A reuses, `4` fresh confirmation cycles, `3` fallback recoveries, `3` full HYPRE setups, `13` Case A reuses, `14` Case B refreshes, `20` AMG setups, `20` linear solves, and `3` HYPRE recovery events. Final nonlinear relative change was `0.0` at result norm `0.1548520955004124`; the final TES sample was `T=0.1684598 K`, `I=1.473235e-4 A`, and `P=3.251468e-10 W`.
+
+## Stage 8 current operator with lagged AMG preconditioner
+
+Stage 8 separates the native lifecycle into `StructureEpoch`, `MatrixEpoch`, and `PreconditionerEpoch`. The production policy keeps the current linear operator `A` synchronized on every matrix change and uses adaptive lagging only for the BoomerAMG preconditioner. A significant change takes B1: current IJ/ParCSR values are refreshed and AMG is rebuilt. A modest change takes B2: current `A` is refreshed, the bounded-age older AMG hierarchy is retained, and FlexGMRES applies that preconditioner to the current operator. This deliberately prefers current `A` plus a lagged preconditioner over an operator that is itself stale.
+
+The preconditioner decision uses the existing coefficient-change tracker, a maximum preconditioner age of two matrix epochs, nonlinear-change threshold `1e-3`, and a Krylov relative-growth threshold of `0.50` with the existing absolute-growth safeguard. Degradation and failed B2 convergence trigger a current-operator recovery setup and a cooldown before reuse is allowed again. Native counters distinguish B2 reused-AMG solves, B1 fresh-AMG solves, age-triggered rebuilds, degradation-triggered rebuilds, and recovery-triggered rebuilds. Operator lagging is disabled in the production case, so the existing Case-A path is unchanged and its zero matrix-refresh/setup assertions remain in force.
+
+The final seven-timestep CPU HYPRE smoke completed with exit code `0` and `ALL DONE`. It recorded `14` matrix refreshes, `16` supported FlexGMRES setup calls, `10` real native AMG setups, and `16` native solves. The run exercised `6` B2 reused-AMG solves, `6` B1 fresh-AMG solves, `3` degradation rebuilds, and `3` recovery rebuilds; no age limit was reached before the degradation/recovery gates fired. Native AMG setup work therefore fell from the Stage 7 total of `14` to `10` (`4` fewer setups) while retaining the current operator. The mixed production run had no unchanged-matrix Case-A solves, but the native Case-A zero-setup assertions remain enabled. Final nonlinear relative change was `0.0` at result norm `0.15485209551058407`; the final TES sample was `T=0.1684598 K`, `I=1.473235e-4 A`, and `P=3.251468e-10 W`.
+
+## Stage 11 native runtime gate status
+
+The fixed-step control case was rerun from the isolated Stage 11 install prefix and completed with `ALL DONE`, so the original crash was an environment/data-layout failure rather than a universal native build failure. The adaptive case now enters the full/half trial controller without a HeatSolver segmentation fault. Native assertions and debug logging exposed and fixed timestep-index handling, unequal-step BDF2 coefficients, accepted-history publication, TES trial restoration, and safe HYPRE invalidation/rebuild behavior.
+
+The strict CPU adaptive gate is not yet complete. With the production linear tolerance (`5e-7`), the second BDF2 half-step reaches a repeatable FlexGMRES residual plateau near `4.22e-5` at the 2,000-iteration limit; a fresh HYPRE retry reproduces the same result. A diagnostic `1e-4` linear-tolerance run advances farther and exercises rejection/rollback, but its temporal estimator spikes and it was not accepted as a production policy. Therefore no Stage 11 physical-parity, output-density, CUDA, solve-reduction, or wall-time claim is made from these diagnostics, and the generated production case remains at the strict configured tolerance.
