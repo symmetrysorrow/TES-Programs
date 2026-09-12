@@ -32,6 +32,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import differential_evolution, minimize
 
+from lib.tes_noise_model import operating_point as tes_operating_point
+
 
 # ---------- Paths ----------
 # Keep the defaults relocatable.  The old H: drive paths were specific to the
@@ -535,11 +537,19 @@ def optimize_case(
 
     cache = {}
     evaluation_count = 0
+    stability_rejection_count = 0
+    simulation_failure_count = 0
     best_score = np.inf
     best_candidate = initial.copy()
 
     def objective(vector):
-        nonlocal evaluation_count, best_score, best_candidate
+        nonlocal (
+            evaluation_count,
+            stability_rejection_count,
+            simulation_failure_count,
+            best_score,
+            best_candidate,
+        )
         cache_key = tuple(np.round(vector, 12))
         if cache_key in cache:
             return cache[cache_key]
@@ -555,6 +565,29 @@ def optimize_case(
         candidate["R_SH"] = shunt_resistance_ohm
         candidate["samples"] = OPTIMIZATION_SAMPLES
         evaluation_count += 1
+
+        # Reject unstable five-state operating points before launching the
+        # subprocess.  PoST_Simulation.py performs the same stability check,
+        # but doing it here avoids a full Python launch and a noisy traceback
+        # for candidates that are expected to be invalid during optimization.
+        point = tes_operating_point(candidate)
+        if not point.get("stable", False):
+            stability_rejection_count += 1
+            max_real = point.get("max_eigenvalue_real_s_inv")
+            detail = (
+                f", max Re(lambda)={float(max_real):.6g} 1/s"
+                if max_real is not None and np.isfinite(max_real)
+                else ""
+            )
+            print(
+                f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
+                f"evaluation {evaluation_count:4d}: rejected "
+                f"({point.get('reason', 'unstable')}{detail})"
+            )
+            score = 1e12
+            cache[cache_key] = score
+            return score
+
         try:
             write_json_atomically(work_input_path, candidate)
             run_post(args.timeout, work_dir, work_noise_path)
@@ -565,6 +598,7 @@ def optimize_case(
                 f"evaluation {evaluation_count:4d}: {score:.6g}"
             )
         except Exception as error:
+            simulation_failure_count += 1
             print(
                 f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
                 f"evaluation {evaluation_count:4d}: rejected ({error})"
@@ -611,7 +645,9 @@ def optimize_case(
     )
     objective(local_result.x)
 
-    print("\nPoST evaluations:", evaluation_count)
+    print("\nObjective evaluations:", evaluation_count)
+    print("Stability rejections:", stability_rejection_count)
+    print("PoST/subprocess failures:", simulation_failure_count)
     print("Best score:", best_score)
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
@@ -621,6 +657,8 @@ def optimize_case(
         "iv_operating_point": operating_point,
         "best_score": float(best_score),
         "evaluations": evaluation_count,
+        "stability_rejections": stability_rejection_count,
+        "simulation_failures": simulation_failure_count,
         "best_candidate": best_candidate,
         "work_dir": str(work_dir),
     }
