@@ -74,6 +74,7 @@ FIT_WEIGHT_START_HZ = 40_000.0
 FIT_HIGH_FREQUENCY_WEIGHT = 4.0
 FIT_ROBUST_DELTA_DEX = 0.30
 FIT_POINTS = 601
+FIT_BAND_MEAN_PENALTY = 3.0
 FIT_BANDS_HZ = (
     (1_000.0, 5_000.0, 1.0),
     (5_000.0, 15_000.0, 1.25),
@@ -399,6 +400,23 @@ def band_balanced_residual_weights(
     return weights
 
 
+def band_mean_residuals(
+    residual: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> np.ndarray:
+    residual = np.asarray(residual, dtype=float)
+    fit_freq = np.asarray(fit_freq, dtype=float)
+    means = []
+    for low, high, _band_weight in FIT_BANDS_HZ:
+        low_eff = max(float(low), float(args.fit_min_hz))
+        high_eff = min(float(high), float(args.fit_max_hz))
+        mask = (fit_freq >= low_eff) & (fit_freq <= high_eff)
+        if np.any(mask):
+            means.append(float(np.mean(residual[mask])))
+    return np.asarray(means, dtype=float)
+
+
 def weighted_residual_vector(
     model: np.ndarray,
     target: np.ndarray,
@@ -409,7 +427,13 @@ def weighted_residual_vector(
     weights = band_balanced_residual_weights(fit_freq, args)
     # Preserve the residual's natural dex scale for scipy least_squares while
     # retaining the same relative weighting as the scalar band-balanced loss.
-    return residual * np.sqrt(weights * len(weights))
+    point_residual = residual * np.sqrt(weights * len(weights))
+    # Add broad-band mean residuals as pseudo-observations. This specifically
+    # suppresses the smooth, alternating over/under-shoot seen in the ratio
+    # plot without trying to chase narrow experimental spikes.
+    means = band_mean_residuals(residual, fit_freq, args)
+    mean_residual = means * np.sqrt(FIT_BAND_MEAN_PENALTY)
+    return np.concatenate((point_residual, mean_residual))
 
 
 def fit_score(
@@ -423,7 +447,14 @@ def fit_score(
     residual = log_ratio_residual(model, target)
     loss = robust_point_loss(residual, float(args.robust_delta_dex))
     weights = band_balanced_residual_weights(fit_freq, args)
-    return float(np.sum(weights * loss))
+    point_score = float(np.sum(weights * loss))
+    means = band_mean_residuals(residual, fit_freq, args)
+    mean_score = (
+        float(np.mean(means**2)) * FIT_BAND_MEAN_PENALTY
+        if len(means)
+        else 0.0
+    )
+    return point_score + mean_score
 
 
 def band_fit_diagnostics(
@@ -1293,8 +1324,10 @@ def main():
                 "points": int(args.fit_points),
                 "loss": (
                     "band-balanced robust log10(model/measurement) residual; "
-                    "equalized broad bands plus high-frequency ramp"
+                    "equalized broad bands plus high-frequency ramp and "
+                    "broad-band mean-ratio penalty"
                 ),
+                "band_mean_penalty": float(FIT_BAND_MEAN_PENALTY),
                 "bands_Hz": [
                     {
                         "min": float(low),
