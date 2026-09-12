@@ -17,6 +17,7 @@ ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_strict_4us"
 BDF2_SMOKE_CASE = "case_phase24_adaptive_bdf2_smoke_4us"
 ADAPTIVE_POST_EVENT_CASE = "case_phase24_adaptive_post_event_cooldown_2ns"
 ADAPTIVE_REJECTION_CASE = "case_phase24_adaptive_event_rejection_progression_2ns"
+ADAPTIVE_RECOVERY_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns"
 
 
 def main() -> None:
@@ -266,6 +267,58 @@ def main() -> None:
         "path": "same production restart, mesh/material/TES/HYPRE path; 2-ns tail after the second event",
     }
     project["cases"][ADAPTIVE_REJECTION_CASE] = adaptive_rejection
+
+    # Extended bounded diagnostic for the post-event dt_min recovery question.
+    # It preserves the production solver and adaptive policy, but observes a
+    # 10-ns tail after the second event so normal growth or floor-lock can be
+    # classified without starting the full 31-us campaign.
+    adaptive_recovery = copy.deepcopy(adaptive_rejection)
+    adaptive_recovery["series_file"] = f"{ADAPTIVE_RECOVERY_CASE}_series.csv"
+    adaptive_recovery["iteration_series_file"] = f"{ADAPTIVE_RECOVERY_CASE}_iterations.csv"
+    adaptive_recovery["output_file_path"] = (
+        f"../work/meshes/{adaptive_recovery['mesh']}/{ADAPTIVE_RECOVERY_CASE}.result"
+    )
+    # Start from the accepted state at the second-event crossing recorded by
+    # the 2-ns lifecycle case.  This keeps the recovery observation within the
+    # runtime budget while retaining the exact post-event BDF history.
+    adaptive_recovery["restart_from"] = None
+    adaptive_recovery["preexisting_restart"] = True
+    adaptive_recovery["restart_file_base"] = ADAPTIVE_REJECTION_CASE
+    adaptive_recovery["restart_file_path"] = (
+        f"../work/meshes/{adaptive_recovery['mesh']}/{ADAPTIVE_REJECTION_CASE}.result"
+    )
+    adaptive_recovery["restart_position"] = 3
+    adaptive_recovery["restart_time"] = 0.020020001
+    adaptive_recovery["timesteps"] = [["0.01[us]", 1]]
+    adaptive_recovery["adaptive_time"] = {
+        "start": "20.020001[ms]",
+        "end": "20.020011[ms]",
+        "requested_output_times": {
+            "mode": "explicit",
+            "times": [
+                "20.020001[ms]",
+                "20.020011[ms]",
+            ],
+        },
+        "dt_initial": "0.5[ns]",
+        "dt_min": "0.5[ns]",
+        "dt_max": "20[us]",
+        "relative_tolerance": 2.0e-3,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 8,
+        "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+        "debug": True,
+    }
+    adaptive_recovery["phase24_smoke"] = {
+        "purpose": "bounded post-event adaptive dt_min recovery diagnostic",
+        "reference_case": ADAPTIVE_CASE,
+        "path": "same production restart, mesh/material/TES/HYPRE path; 10-ns tail after the second event",
+    }
+    project["cases"][ADAPTIVE_RECOVERY_CASE] = adaptive_recovery
 
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their
