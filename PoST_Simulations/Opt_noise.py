@@ -176,12 +176,16 @@ def arguments():
                         help="Same-element IV file used to derive TES R at the target bias.")
     parser.add_argument("--target-bias-ua", type=float, default=TARGET_BIAS_UA,
                         help="Bias current in uA at which TES R is derived from the IV.")
-    parser.add_argument("--r-shunt-start-mohm", type=float, default=3.8,
+    parser.add_argument("--r-shunt-start-mohm", type=float, default=3.85,
                         help="First shunt-resistance branch in mOhm.")
-    parser.add_argument("--r-shunt-stop-mohm", type=float, default=3.9,
+    parser.add_argument("--r-shunt-stop-mohm", type=float, default=3.85,
                         help="Last shunt-resistance branch in mOhm.")
-    parser.add_argument("--r-shunt-count", type=int, default=3,
-                        help="Number of equally spaced R_SH branches, including endpoints.")
+    parser.add_argument("--r-shunt-count", type=int, default=1,
+                        help=(
+                            "Number of equally spaced R_SH branches. The default "
+                            "focuses the deeper search on the repeatedly selected "
+                            "3.85 mOhm branch; pass 3.8/3.9/3 to restore the sweep."
+                        ))
     return parser.parse_args()
 
 
