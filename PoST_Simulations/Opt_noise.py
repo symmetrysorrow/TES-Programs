@@ -404,7 +404,9 @@ def weighted_residual_vector(
 ) -> np.ndarray:
     residual = log_ratio_residual(model, target)
     weights = band_balanced_residual_weights(fit_freq, args)
-    return residual * np.sqrt(weights)
+    # Preserve the residual's natural dex scale for scipy least_squares while
+    # retaining the same relative weighting as the scalar band-balanced loss.
+    return residual * np.sqrt(weights * len(weights))
 
 
 def fit_score(
@@ -906,7 +908,7 @@ def optimize_case(
     if args.skip_de:
         starting_x = initial_x
     else:
-        print("\nStage 1/2: differential_evolution")
+        print("\nStage 1/3: differential_evolution")
         global_result = differential_evolution(
             objective,
             scipy_bounds,
@@ -920,7 +922,7 @@ def optimize_case(
         starting_x = global_result.x
         print("DE result:", global_result.fun)
 
-    print("\nStage 2/2: Powell")
+    print("\nStage 2/3: Powell")
     local_result = minimize(
         objective,
         starting_x,
@@ -929,6 +931,78 @@ def optimize_case(
         options={"maxfev": args.powell_maxfev, "disp": True},
     )
     objective(local_result.x)
+
+    print("\nStage 3/3: robust residual least_squares")
+    ls_cache = {}
+    lower = np.asarray([bound[0] for bound in scipy_bounds], dtype=float)
+    upper = np.asarray([bound[1] for bound in scipy_bounds], dtype=float)
+
+    def least_squares_residual(vector):
+        nonlocal evaluation_count, stability_rejection_count
+        nonlocal simulation_failure_count, best_score, best_candidate
+
+        cache_key = tuple(np.round(vector, 12))
+        cached = ls_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        candidate = decode(
+            vector,
+            case_original,
+            keys,
+            bounds,
+            experimental_rate,
+            post_filter_white_asd,
+        )
+        candidate["R"] = fixed_r_ohm
+        candidate["R_SH"] = shunt_resistance_ohm
+        candidate["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+        candidate["samples"] = int(experimental_samples)
+        evaluation_count += 1
+
+        point = tes_operating_point(candidate)
+        if not point.get("stable", False):
+            stability_rejection_count += 1
+            residual_vector = np.full(len(fit_freq), 3.0, dtype=float)
+            ls_cache[cache_key] = residual_vector
+            return residual_vector
+
+        try:
+            model = deterministic_simulated_spectrum(candidate, fit_freq)
+            residual_vector = weighted_residual_vector(
+                model,
+                target,
+                fit_freq,
+                args,
+            )
+            score = fit_score(model, target, fit_freq, args)
+            if score < best_score:
+                best_score = score
+                best_candidate = candidate.copy()
+                print(
+                    f"  least_squares new best: {best_score:.6g} "
+                    f"(evaluation {evaluation_count})"
+                )
+        except Exception:
+            simulation_failure_count += 1
+            residual_vector = np.full(len(fit_freq), 3.0, dtype=float)
+
+        ls_cache[cache_key] = residual_vector
+        return residual_vector
+
+    least_squares_start = encode(best_candidate, keys, bounds)
+    least_squares_result = least_squares(
+        least_squares_residual,
+        least_squares_start,
+        bounds=(lower, upper),
+        method="trf",
+        loss="soft_l1",
+        f_scale=max(float(args.robust_delta_dex), 0.05),
+        x_scale="jac",
+        max_nfev=int(args.least_squares_max_nfev),
+        verbose=1,
+    )
+    objective(least_squares_result.x)
 
     if not np.isfinite(best_score) or best_score >= 1e11:
         raise RuntimeError(
@@ -954,12 +1028,32 @@ def optimize_case(
         fit_freq,
         args,
     )
+    deterministic_best_model = deterministic_simulated_spectrum(
+        best_candidate.copy(),
+        fit_freq,
+    )
+    deterministic_band_diagnostics = band_fit_diagnostics(
+        deterministic_best_model,
+        target,
+        fit_freq,
+        args,
+    )
+    finite_band_diagnostics = band_fit_diagnostics(
+        finite_model,
+        target,
+        fit_freq,
+        args,
+    )
 
     print("\nObjective evaluations:", evaluation_count)
     print("Stability rejections:", stability_rejection_count)
     print("Model-evaluation failures:", simulation_failure_count)
     print("Best deterministic score:", best_score)
     print("Full-record validation score:", finite_validation_score)
+    print("Deterministic band diagnostics:")
+    print(json.dumps(deterministic_band_diagnostics, indent=2))
+    print("Full-record band diagnostics:")
+    print(json.dumps(finite_band_diagnostics, indent=2))
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
     print(
@@ -974,6 +1068,15 @@ def optimize_case(
         "iv_operating_point": operating_point,
         "best_score": float(best_score),
         "finite_validation_score": float(finite_validation_score),
+        "deterministic_band_diagnostics": deterministic_band_diagnostics,
+        "finite_band_diagnostics": finite_band_diagnostics,
+        "least_squares": {
+            "success": bool(least_squares_result.success),
+            "status": int(least_squares_result.status),
+            "cost": float(least_squares_result.cost),
+            "optimality": float(least_squares_result.optimality),
+            "nfev": int(least_squares_result.nfev),
+        },
         "evaluations": evaluation_count,
         "stability_rejections": stability_rejection_count,
         "simulation_failures": simulation_failure_count,
@@ -1169,7 +1272,18 @@ def main():
                 "high_frequency_weight": float(args.high_frequency_weight),
                 "robust_delta_dex": float(args.robust_delta_dex),
                 "points": int(args.fit_points),
-                "loss": "weighted robust log10(model/measurement) residual",
+                "loss": (
+                    "band-balanced robust log10(model/measurement) residual; "
+                    "equalized broad bands plus high-frequency ramp"
+                ),
+                "bands_Hz": [
+                    {
+                        "min": float(low),
+                        "max": float(high),
+                        "weight": float(weight),
+                    }
+                    for low, high, weight in FIT_BANDS_HZ
+                ],
                 "frequencies_outside_fit_band_ignored": True,
             },
             "cases": [
