@@ -91,6 +91,40 @@ TARGET_HARDWARE_BESSEL_NORM = "mag"
 TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
 L_FIT_MIN_H = 1.0e-10
 L_FIT_MAX_H = 12.3e-9
+
+# Broad physical priors from the Elmer single/dual-pixel geometry and material
+# table.  These are deliberately ranges rather than fixed values: Pb and
+# Stycast properties at ~0.24 K and real interface geometry are uncertain.
+R_L_FIT_MIN_OHM = 3.0e-3
+R_L_FIT_MAX_OHM = 8.0e-3
+N_FIT_MIN = 2.0
+N_FIT_MAX = 5.0
+
+# TES: 500 um x 500 um x (40+120) nm, rho=15695 kg/m3,
+# cp=1.25e-3 J/(kg K) -> 7.85e-13 J/K.
+C_TES_MATERIAL_J_PER_K = 7.8475e-13
+C_TES_FIT_MIN_J_PER_K = 0.5 * C_TES_MATERIAL_J_PER_K
+C_TES_FIT_MAX_J_PER_K = 3.0 * C_TES_MATERIAL_J_PER_K
+
+# Pb absorber: 20 mm x 1 mm x 0.7 mm, rho=9860 kg/m3,
+# cp=3.26e-5 J/(kg K) -> 4.50e-9 J/K in the current Elmer table.
+# The upper factor also covers a substantially larger low-T Pb heat capacity.
+C_ABS_MATERIAL_J_PER_K = 4.500104e-9
+C_ABS_FIT_MIN_J_PER_K = 0.5 * C_ABS_MATERIAL_J_PER_K
+C_ABS_FIT_MAX_J_PER_K = 4.0 * C_ABS_MATERIAL_J_PER_K
+
+# End-to-end Pb conductance from k*A/L using k=1.68e-2 W/(m K),
+# A=1 mm*0.7 mm and L=20 mm -> 5.88e-7 W/K.
+G_ABS_ABS_MATERIAL_W_PER_K = 5.88e-7
+G_ABS_ABS_FIT_MIN_W_PER_K = 0.3 * G_ABS_ABS_MATERIAL_W_PER_K
+G_ABS_ABS_FIT_MAX_W_PER_K = 3.0 * G_ABS_ABS_MATERIAL_W_PER_K
+
+# One Stycast pad: diameter 498 um, thickness 20 um,
+# k=2.69094e-6 W/(m K) -> about 2.62e-8 W/K.
+G_ABS_TES_MATERIAL_W_PER_K = 2.622e-8
+G_ABS_TES_FIT_MIN_W_PER_K = 0.25 * G_ABS_TES_MATERIAL_W_PER_K
+G_ABS_TES_FIT_MAX_W_PER_K = 8.0 * G_ABS_TES_MATERIAL_W_PER_K
+
 POST_FILTER_WHITE_FRACTION_MIN = 1.0e-6
 POST_FILTER_WHITE_FRACTION_MAX = 1.0
 POST_FILTER_WHITE_FRACTION_INITIAL = 1.0e-4
@@ -661,19 +695,28 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
 
     return {
         "T_c": Bound(tc_low, tc_high, logarithmic=False),
-        "R_l": Bound(ref("R_l") * 0.25, ref("R_l") * 6.0),
+        # Do not let the noise fit replace a missing electrical transfer
+        # function with a tens-of-mOhm effective load.
+        "R_l": Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM),
         "alpha": Bound(ref("alpha") * 0.05, ref("alpha") * 15.0),
         "beta": Bound(0.0, 12.0, logarithmic=False),
         # Circuit inductance is independently constrained by the hardware:
         # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
         # Keep this logarithmic because the allowed interval spans >2 decades.
         "L": Bound(L_FIT_MIN_H, L_FIT_MAX_H),
-        "n": Bound(max(1.01, ref("n") * 0.5), ref("n") * 2.0),
-        "C_tes": Bound(ref("C_tes") * 0.1, ref("C_tes") * 10.0),
-        "C_abs": Bound(ref("C_abs") * 0.1, ref("C_abs") * 10.0),
-        "G_tes-bath": Bound(ref("G_tes-bath") * 0.1, ref("G_tes-bath") * 10.0),
-        "G_abs-tes": Bound(ref("G_abs-tes") * 0.1, ref("G_abs-tes") * 20.0),
-        "G_abs-abs": Bound(ref("G_abs-abs") * 0.1, ref("G_abs-abs") * 10.0),
+        "n": Bound(N_FIT_MIN, N_FIT_MAX, logarithmic=False),
+        "C_tes": Bound(C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K),
+        "C_abs": Bound(C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K),
+        # G_tes-bath is not a free noise-fit parameter. It is recalculated
+        # from the target IV Joule power for every (T_c, n) candidate.
+        "G_abs-tes": Bound(
+            G_ABS_TES_FIT_MIN_W_PER_K,
+            G_ABS_TES_FIT_MAX_W_PER_K,
+        ),
+        "G_abs-abs": Bound(
+            G_ABS_ABS_FIT_MIN_W_PER_K,
+            G_ABS_ABS_FIT_MAX_W_PER_K,
+        ),
         "excess_johnson_M": Bound(0.0, EXCESS_JOHNSON_MAX, logarithmic=False),
         # Empirical white readout floor added after the fixed 100 kHz analog
         # hardware stage and before the software analysis filter.
@@ -706,6 +749,24 @@ def encode(candidate: dict, keys, bounds):
     ], dtype=float)
 
 
+def g_tes_bath_from_joule_power(
+    joule_power_w: float,
+    t_c: float,
+    t_bath: float,
+    exponent: float,
+) -> float:
+    """Convert measured IV Joule power into differential G at T_c."""
+
+    if not (t_c > t_bath > 0.0):
+        raise ValueError("Require T_c > T_bath > 0 for IV power balance")
+    if exponent <= 0.0 or joule_power_w <= 0.0:
+        raise ValueError("n and target Joule power must be positive")
+    factor = 1.0 - (t_bath / t_c) ** exponent
+    if factor <= 0.0:
+        raise ValueError("Invalid thermal power-law factor")
+    return float(joule_power_w * exponent / (t_c * factor))
+
+
 def decode(
     vector,
     original: dict,
@@ -722,6 +783,16 @@ def decode(
     # Filter coefficients and the frequency grid must use the acquisition rate
     # of modelnoise.txt, even when an old optimization reference used 300 kHz.
     candidate["rate"] = sample_rate
+
+    target_joule_power_w = candidate.pop("_target_joule_power_W", None)
+    if target_joule_power_w is not None:
+        candidate["G_tes-bath"] = g_tes_bath_from_joule_power(
+            float(target_joule_power_w),
+            float(candidate["T_c"]),
+            float(candidate["T_bath"]),
+            float(candidate["n"]),
+        )
+
     candidate["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
     candidate.pop("readout_white_asd_A_rtHz", None)
     candidate["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
@@ -817,6 +888,9 @@ def optimize_case(
     case_original["R"] = fixed_r_ohm
     case_original["R_SH"] = shunt_resistance_ohm
     case_original["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+    case_original["_target_joule_power_W"] = float(
+        operating_point["P_J_W"]
+    )
     case_original["rate"] = float(experimental_rate)
     case_original["samples"] = int(experimental_samples)
     case_original["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
@@ -952,7 +1026,27 @@ def optimize_case(
     )
     print(
         f"Target assumptions: T_bath={case_original['T_bath']:.6g} K, "
-        f"T_c search={bounds['T_c'].lower:.6g}--{bounds['T_c'].upper:.6g} K"
+        f"T_c search={bounds['T_c'].lower:.6g}--{bounds['T_c'].upper:.6g} K, "
+        f"P_J={case_original['_target_joule_power_W']:.6g} W"
+    )
+    print(
+        "Physical fit bounds:",
+        {
+            "L_H": [L_FIT_MIN_H, L_FIT_MAX_H],
+            "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
+            "n": [N_FIT_MIN, N_FIT_MAX],
+            "C_tes_J_per_K": [C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K],
+            "C_abs_J_per_K": [C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K],
+            "G_abs_tes_W_per_K": [
+                G_ABS_TES_FIT_MIN_W_PER_K,
+                G_ABS_TES_FIT_MAX_W_PER_K,
+            ],
+            "G_abs_abs_W_per_K": [
+                G_ABS_ABS_FIT_MIN_W_PER_K,
+                G_ABS_ABS_FIT_MAX_W_PER_K,
+            ],
+            "G_tes_bath": "derived from IV Joule power",
+        },
     )
     print("Initial deterministic evaluation")
     objective(initial_x)
@@ -1141,6 +1235,8 @@ def optimize_case(
         "best_post_filter_white_asd_A_rtHz": float(
             best_candidate.get("post_filter_white_asd_A_rtHz", 0.0)
         ),
+        "target_joule_power_W": float(operating_point["P_J_W"]),
+        "derived_G_tes_bath_W_per_K": float(best_candidate["G_tes-bath"]),
         "searched_parameters": list(keys),
         "search_bounds": {
             key: {
