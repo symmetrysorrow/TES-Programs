@@ -1594,10 +1594,16 @@ def _simulation_pre_analysis_asd(frequency, rate, para):
         detector_asd = file["total"][:]
 
     hardware_order = int(para.get("hardware_bessel_order", 4))
+    hardware_norm = str(para.get("hardware_bessel_norm", "phase"))
+    if hardware_norm not in {"phase", "mag", "delay"}:
+        raise ValueError(
+            "hardware_bessel_norm must be 'phase', 'mag', or 'delay'"
+        )
     hardware_main = general.AnalogBesselMagnitudeResponse(
         frequency,
         100000.0,
         order=hardware_order,
+        norm=hardware_norm,
     )
     detector_main = (
         np.interp(frequency, source_frequency, detector_asd)
@@ -1611,6 +1617,7 @@ def _simulation_pre_analysis_asd(frequency, rate, para):
         alias_frequency,
         100000.0,
         order=hardware_order,
+        norm=hardware_norm,
     )
     detector_alias = (
         np.interp(alias_frequency, source_frequency, detector_asd)
