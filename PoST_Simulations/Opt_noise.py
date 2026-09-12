@@ -2,8 +2,9 @@
 
 The optimizer is specialized for the 2024-12-06 215 mK / 1400 uA target
 case.  During optimization it evaluates the deterministic five-state TES noise
-model through the confirmed 100 kHz fourth-order analog Bessel, sampling/alias
-fold, and 10 kHz digital analysis Bessel.  This avoids fitting 4096-sample
+model through a fourth-order analog Bessel with an effective cutoff fitted near
+100 kHz, sampling/alias fold, and the fixed 10 kHz digital analysis Bessel.
+This avoids fitting 4096-sample
 finite-record artifacts.  After each R_SH branch is optimized, the best point
 is re-run with the full experimental record length so the generated comparison
 plot uses the same finite-record processing as the measurement.
@@ -65,11 +66,11 @@ TARGET_BIAS_UA = 1400.0
 
 # ---------- Comparison settings ----------
 # Fit the full requested band.  Log-spaced samples give comparable weight per
-# frequency decade, with an extra ramp above 80 kHz so the 100--200 kHz tail
-# cannot be sacrificed to improve the mid-band fit.
+# frequency decade, with an extra ramp above 40 kHz so both the 50--100 kHz
+# shoulder and the 100--200 kHz tail contribute strongly to the solution.
 FIT_MIN_HZ = 1_000.0
 FIT_MAX_HZ = 200_000.0
-FIT_WEIGHT_START_HZ = 80_000.0
+FIT_WEIGHT_START_HZ = 40_000.0
 FIT_HIGH_FREQUENCY_WEIGHT = 4.0
 FIT_ROBUST_DELTA_DEX = 0.30
 FIT_POINTS = 401
@@ -79,6 +80,11 @@ TARGET_HARDWARE_BESSEL_ORDER = 4
 # The target-case hardware refinement in this repository also preferred
 # scipy's magnitude-normalized Bessel convention over the legacy phase norm.
 TARGET_HARDWARE_BESSEL_NORM = "mag"
+HARDWARE_BESSEL_CUTOFF_MIN_HZ = 70_000.0
+HARDWARE_BESSEL_CUTOFF_MAX_HZ = 180_000.0
+POST_FILTER_WHITE_FRACTION_MIN = 1.0e-6
+POST_FILTER_WHITE_FRACTION_MAX = 1.0
+POST_FILTER_WHITE_FRACTION_INITIAL = 1.0e-4
 EXCESS_JOHNSON_MAX = 5.0
 
 
@@ -203,6 +209,11 @@ def target_case_reference(case_dir: Path, explicit_reference: Path | None = None
     reference["samples"] = 100_000
     reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     reference["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
+    reference.setdefault("hardware_bessel_cutoff_Hz", HARDWARE_BESSEL_CUTOFF_HZ)
+    reference.setdefault(
+        "post_filter_white_fraction",
+        POST_FILTER_WHITE_FRACTION_INITIAL,
+    )
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference.setdefault("excess_johnson_M", 0.0)
     return reference, envelope, reference_source
@@ -536,6 +547,22 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
         "G_abs-tes": Bound(ref("G_abs-tes") * 0.1, ref("G_abs-tes") * 20.0),
         "G_abs-abs": Bound(ref("G_abs-abs") * 0.1, ref("G_abs-abs") * 10.0),
         "excess_johnson_M": Bound(0.0, EXCESS_JOHNSON_MAX, logarithmic=False),
+        # Keep the physical filter order fixed, but fit its effective -3 dB
+        # corner.  Component tolerances and the actual analog chain can move
+        # the measured corner away from the nominal 100 kHz value.
+        "hardware_bessel_cutoff_Hz": Bound(
+            HARDWARE_BESSEL_CUTOFF_MIN_HZ,
+            HARDWARE_BESSEL_CUTOFF_MAX_HZ,
+            logarithmic=False,
+        ),
+        # Empirical white readout floor added after the analog hardware stage
+        # and before the software analysis filter.  It is parameterized as a
+        # fraction of the detector ASD near 1 kHz so the search scale remains
+        # well conditioned while the final candidate stores the absolute ASD.
+        "post_filter_white_fraction": Bound(
+            POST_FILTER_WHITE_FRACTION_MIN,
+            POST_FILTER_WHITE_FRACTION_MAX,
+        ),
     }
 
 
@@ -581,6 +608,36 @@ def decode(
     return candidate
 
 
+def apply_post_filter_white_fraction(candidate: dict) -> float:
+    """Convert the dimensionless fitted readout floor into absolute ASD."""
+
+    fraction = float(
+        candidate.get(
+            "post_filter_white_fraction",
+            POST_FILTER_WHITE_FRACTION_INITIAL,
+        )
+    )
+    if fraction < 0.0:
+        raise ValueError("post_filter_white_fraction must be non-negative")
+
+    rate = float(candidate["rate"])
+    cutoff_hz = float(
+        candidate.get("hardware_bessel_cutoff_Hz", HARDWARE_BESSEL_CUTOFF_HZ)
+    )
+    detector_at_reference = hardware_sampled_asd(
+        candidate,
+        np.asarray([1_000.0]),
+        rate_hz=rate,
+        cutoff_hz=cutoff_hz,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )[0]
+    white_asd = fraction * float(detector_at_reference)
+    candidate["post_filter_white_asd_A_rtHz"] = white_asd
+    candidate.pop("readout_white_asd_A_rtHz", None)
+    return white_asd
+
+
 def deterministic_simulated_spectrum(
     candidate: dict,
     fit_freq: np.ndarray,
@@ -591,11 +648,15 @@ def deterministic_simulated_spectrum(
         np.concatenate((np.asarray([1_000.0]), np.asarray(fit_freq, dtype=float)))
     )
     rate = float(candidate["rate"])
+    cutoff_hz = float(
+        candidate.get("hardware_bessel_cutoff_Hz", HARDWARE_BESSEL_CUTOFF_HZ)
+    )
+    apply_post_filter_white_fraction(candidate)
     pre_analysis = hardware_sampled_asd(
         candidate,
         frequency,
         rate_hz=rate,
-        cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
+        cutoff_hz=cutoff_hz,
         order=TARGET_HARDWARE_BESSEL_ORDER,
         norm=TARGET_HARDWARE_BESSEL_NORM,
     )
@@ -641,6 +702,14 @@ def optimize_case(
     case_original["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     case_original["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     case_original["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
+    case_original.setdefault(
+        "hardware_bessel_cutoff_Hz",
+        HARDWARE_BESSEL_CUTOFF_HZ,
+    )
+    case_original.setdefault(
+        "post_filter_white_fraction",
+        POST_FILTER_WHITE_FRACTION_INITIAL,
+    )
 
     work_dir.mkdir(parents=True, exist_ok=True)
     work_input_path = work_dir / "input.json"
@@ -650,6 +719,13 @@ def optimize_case(
 
     initial = case_original.copy()
     initial["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
+    initial["post_filter_white_fraction"] = max(
+        float(initial.get("post_filter_white_fraction", POST_FILTER_WHITE_FRACTION_INITIAL)),
+        POST_FILTER_WHITE_FRACTION_MIN,
+    )
+    initial["hardware_bessel_cutoff_Hz"] = float(
+        initial.get("hardware_bessel_cutoff_Hz", HARDWARE_BESSEL_CUTOFF_HZ)
+    )
     initial.pop("readout_white_asd_A_rtHz", None)
     initial_x = encode(initial, keys, bounds)
 
@@ -792,6 +868,11 @@ def optimize_case(
     print("Full-record validation score:", finite_validation_score)
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
+    print(
+        "Best absolute post-filter white ASD:",
+        best_candidate.get("post_filter_white_asd_A_rtHz", 0.0),
+        "A/rtHz",
+    )
 
     return {
         "R_SH_ohm": shunt_resistance_ohm,
@@ -802,6 +883,15 @@ def optimize_case(
         "evaluations": evaluation_count,
         "stability_rejections": stability_rejection_count,
         "simulation_failures": simulation_failure_count,
+        "best_hardware_bessel_cutoff_Hz": float(
+            best_candidate["hardware_bessel_cutoff_Hz"]
+        ),
+        "best_post_filter_white_fraction": float(
+            best_candidate["post_filter_white_fraction"]
+        ),
+        "best_post_filter_white_asd_A_rtHz": float(
+            best_candidate.get("post_filter_white_asd_A_rtHz", 0.0)
+        ),
         "searched_parameters": list(keys),
         "search_bounds": {
             key: {
@@ -868,6 +958,11 @@ def main():
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     reference["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
+    reference.setdefault("hardware_bessel_cutoff_Hz", HARDWARE_BESSEL_CUTOFF_HZ)
+    reference.setdefault(
+        "post_filter_white_fraction",
+        POST_FILTER_WHITE_FRACTION_INITIAL,
+    )
 
     post_filter_white_asd = float(
         reference.get(
@@ -890,7 +985,14 @@ def main():
             "samples": experimental_samples,
             "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
             "hardware_bessel_norm": TARGET_HARDWARE_BESSEL_NORM,
-            "hardware_bessel_cutoff_Hz": HARDWARE_BESSEL_CUTOFF_HZ,
+            "hardware_bessel_cutoff_search_Hz": [
+                HARDWARE_BESSEL_CUTOFF_MIN_HZ,
+                HARDWARE_BESSEL_CUTOFF_MAX_HZ,
+            ],
+            "post_filter_white_fraction_search": [
+                POST_FILTER_WHITE_FRACTION_MIN,
+                POST_FILTER_WHITE_FRACTION_MAX,
+            ],
             "analysis_bessel_cutoff_Hz": SIM_ANALYSIS_CUTOFF_HZ,
         },
     )
@@ -948,7 +1050,14 @@ def main():
                 "samples": experimental_samples,
                 "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
                 "hardware_bessel_norm": TARGET_HARDWARE_BESSEL_NORM,
-                "hardware_bessel_cutoff_Hz": float(HARDWARE_BESSEL_CUTOFF_HZ),
+                "hardware_bessel_cutoff_search_Hz": [
+                    float(HARDWARE_BESSEL_CUTOFF_MIN_HZ),
+                    float(HARDWARE_BESSEL_CUTOFF_MAX_HZ),
+                ],
+                "post_filter_white_fraction_search": [
+                    float(POST_FILTER_WHITE_FRACTION_MIN),
+                    float(POST_FILTER_WHITE_FRACTION_MAX),
+                ],
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
             },
             "T_c_proxy_range_K": [
@@ -982,6 +1091,15 @@ def main():
             "best_case_score": best_case["best_score"],
             "best_case_finite_validation_score": best_case[
                 "finite_validation_score"
+            ],
+            "best_case_hardware_bessel_cutoff_Hz": best_case[
+                "best_hardware_bessel_cutoff_Hz"
+            ],
+            "best_case_post_filter_white_fraction": best_case[
+                "best_post_filter_white_fraction"
+            ],
+            "best_case_post_filter_white_asd_A_rtHz": best_case[
+                "best_post_filter_white_asd_A_rtHz"
             ],
         }
 
