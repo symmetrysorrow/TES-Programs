@@ -2,9 +2,11 @@
 
 For each trial, this script writes an isolated input.json, runs
 PoST_Simulation.py, then compares the newly generated
-noise_total-bessel100k.dat with tagawa CH0_noise/modelnoise.txt.  The fit score
-uses 1--30 kHz, while the generated comparison plot shows the full positive
-frequency range.
+noise_total-bessel100k.dat with tagawa CH0_noise/modelnoise.txt.  The default
+fit deliberately ignores the low-frequency region and scores 10--100 kHz,
+with an additional smooth weight ramp above 30 kHz so the roll-off is driven
+by the high-frequency data.  The generated comparison plot still shows the
+full positive frequency range.
 The TES resistance is no longer fitted freely.  It is calculated from the
 same-campaign 1400 uA IV point for each R_SH value in the configured sweep.
 The .dat file must include the 100 kHz hardware Bessel and a 10 kHz analysis
@@ -51,9 +53,15 @@ TARGET_IV_PATH = Path(r"G:\tagawa\20241206\room1-ch1-iv3\calibration\IV_215mK.tx
 TARGET_BIAS_UA = 1400.0
 
 # ---------- Comparison settings ----------
-# 1--10 kHz already agrees reasonably well; optimize the remaining mismatch.
-FIT_MIN_HZ = 1000.0
-FIT_MAX_HZ = 30000.0
+# The low-frequency region is intentionally excluded from the optimizer.
+# 10--100 kHz spans the useful high-frequency roll-off while avoiding the
+# very-high-frequency finite-record / near-Nyquist artifacts.
+FIT_MIN_HZ = 10_000.0
+FIT_MAX_HZ = 100_000.0
+FIT_WEIGHT_START_HZ = 30_000.0
+FIT_HIGH_FREQUENCY_WEIGHT = 4.0
+FIT_ROBUST_DELTA_DEX = 0.12
+FIT_POINTS = 241
 SIM_ANALYSIS_CUTOFF_HZ = 10000  # modelnoise.txt is filtered at this cutoff.
 OPTIMIZATION_SAMPLES = 4096
 
@@ -74,6 +82,48 @@ def arguments():
     parser.add_argument("--apply-final", action="store_true")
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--seed", type=int, default=20260818)
+    parser.add_argument(
+        "--fit-min-hz",
+        type=float,
+        default=FIT_MIN_HZ,
+        help="Lowest frequency included in the fit. Frequencies below this are ignored.",
+    )
+    parser.add_argument(
+        "--fit-max-hz",
+        type=float,
+        default=FIT_MAX_HZ,
+        help="Highest frequency included in the fit.",
+    )
+    parser.add_argument(
+        "--fit-weight-start-hz",
+        type=float,
+        default=FIT_WEIGHT_START_HZ,
+        help=(
+            "Frequency above which the log-frequency fit weight ramps from 1 "
+            "toward --high-frequency-weight."
+        ),
+    )
+    parser.add_argument(
+        "--high-frequency-weight",
+        type=float,
+        default=FIT_HIGH_FREQUENCY_WEIGHT,
+        help="Fit-weight multiplier reached at --fit-max-hz.",
+    )
+    parser.add_argument(
+        "--robust-delta-dex",
+        type=float,
+        default=FIT_ROBUST_DELTA_DEX,
+        help=(
+            "Huber transition for log10(model/measurement) residuals. "
+            "Set 0 for ordinary weighted least squares."
+        ),
+    )
+    parser.add_argument(
+        "--fit-points",
+        type=int,
+        default=FIT_POINTS,
+        help="Number of log-spaced frequencies used by the objective.",
+    )
     parser.add_argument("--reference-input", type=Path, default=DEFAULT_REFERENCE_INPUT_PATH,
                         help="Original JSON that defines all parameter bounds and fixed values.")
     parser.add_argument("--target-iv", type=Path, default=TARGET_IV_PATH,
@@ -168,12 +218,74 @@ def normalize_at(freq, asd, reference_hz=1000.0):
     return asd / value
 
 
-def target_spectrum():
+def fit_frequency_weights(frequency: np.ndarray, args) -> np.ndarray:
+    """Return a smooth high-frequency emphasis on a log-frequency axis."""
+
+    frequency = np.asarray(frequency, dtype=float)
+    weights = np.ones_like(frequency)
+    high_weight = float(args.high_frequency_weight)
+    weight_start = max(float(args.fit_weight_start_hz), float(args.fit_min_hz))
+    fit_max = float(args.fit_max_hz)
+
+    if high_weight <= 1.0 or fit_max <= weight_start:
+        return weights
+
+    denominator = np.log10(fit_max) - np.log10(weight_start)
+    if denominator <= 0.0:
+        return weights
+
+    ramp = (
+        np.log10(np.maximum(frequency, weight_start)) - np.log10(weight_start)
+    ) / denominator
+    ramp = np.clip(ramp, 0.0, 1.0)
+    return 1.0 + (high_weight - 1.0) * ramp
+
+
+def fit_score(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> float:
+    """Weighted robust loss in log-ASD ratio, focused on high frequency."""
+
+    model = np.asarray(model, dtype=float)
+    target = np.asarray(target, dtype=float)
+    if (
+        np.any(~np.isfinite(model))
+        or np.any(~np.isfinite(target))
+        or np.any(model <= 0.0)
+        or np.any(target <= 0.0)
+    ):
+        raise ValueError("Fit spectra must be finite and strictly positive")
+
+    residual = np.log10(model) - np.log10(target)
+    delta = float(args.robust_delta_dex)
+    if delta > 0.0:
+        absolute = np.abs(residual)
+        # Huber-like loss with the same quadratic scale as residual**2 near zero.
+        loss = np.where(
+            absolute <= delta,
+            residual**2,
+            2.0 * delta * absolute - delta**2,
+        )
+    else:
+        loss = residual**2
+
+    weights = fit_frequency_weights(fit_freq, args)
+    return float(np.sum(weights * loss) / np.sum(weights))
+
+
+def target_spectrum(args):
     pulse_config = load_json(PULSE_CONFIG_PATH)
     exp_asd = np.loadtxt(MODELNOISE_PATH)
     exp_rate = float(pulse_config["Readout"]["Rate"])
     exp_freq = np.arange(len(exp_asd)) * (exp_rate / 2.0) / len(exp_asd)
-    fit_freq = np.geomspace(FIT_MIN_HZ, FIT_MAX_HZ, 121)
+    fit_freq = np.geomspace(
+        float(args.fit_min_hz),
+        float(args.fit_max_hz),
+        int(args.fit_points),
+    )
     target = np.interp(fit_freq, exp_freq, normalize_at(exp_freq, exp_asd))
     return fit_freq, target
 
@@ -249,6 +361,8 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
 
     colors = ("tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple")
     cases = summary["cases"]
+    fit_min_hz = float(summary["fit"]["min_hz"])
+    fit_max_hz = float(summary["fit"]["max_hz"])
     best_r_sh = float(summary["best_case_R_SH_ohm"])
     for index, case in enumerate(cases):
         noise_path = Path(case["work_dir"]) / NOISE_DAT_PATH.name
@@ -294,8 +408,8 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
     spectrum_axis.set_title("PoST noise model vs measured CH0 noise (full frequency range)")
     spectrum_axis.grid(True, which="both", alpha=0.25)
     spectrum_axis.axvspan(
-        FIT_MIN_HZ,
-        FIT_MAX_HZ,
+        fit_min_hz,
+        fit_max_hz,
         color="gray",
         alpha=0.08,
         label="fit band",
@@ -303,7 +417,7 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
     spectrum_axis.legend(fontsize=9)
     ratio_axis.axhline(1.0, color="black", linewidth=1.0)
     ratio_axis.fill_between(
-        [FIT_MIN_HZ, FIT_MAX_HZ],
+        [fit_min_hz, fit_max_hz],
         [0.9, 0.9],
         [1.1, 1.1],
         color="gray",
@@ -446,7 +560,7 @@ def optimize_case(
             write_json_atomically(work_input_path, candidate)
             run_post(args.timeout, work_dir, work_noise_path)
             model = simulated_spectrum(candidate, fit_freq, work_noise_path)
-            score = float(np.mean((np.log10(model) - np.log10(target)) ** 2))
+            score = fit_score(model, target, fit_freq, args)
             print(
                 f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
                 f"evaluation {evaluation_count:4d}: {score:.6g}"
@@ -530,11 +644,26 @@ def main():
         raise ValueError("--r-shunt-count must be at least 1")
     if args.r_shunt_start_mohm <= 0.0 or args.r_shunt_stop_mohm <= 0.0:
         raise ValueError("R_SH values must be positive")
+    if args.fit_min_hz <= 0.0 or args.fit_max_hz <= args.fit_min_hz:
+        raise ValueError("Fit band must satisfy 0 < --fit-min-hz < --fit-max-hz")
+    if args.fit_weight_start_hz <= 0.0:
+        raise ValueError("--fit-weight-start-hz must be positive")
+    if args.high_frequency_weight < 1.0:
+        raise ValueError("--high-frequency-weight must be at least 1")
+    if args.robust_delta_dex < 0.0:
+        raise ValueError("--robust-delta-dex must be non-negative")
+    if args.fit_points < 16:
+        raise ValueError("--fit-points must be at least 16")
 
     original = load_json(INPUT_PATH)  # state to restore when --apply-final is absent
     reference = load_json(args.reference_input)
     pulse_config = load_json(PULSE_CONFIG_PATH)
     experimental_rate = float(pulse_config["Readout"]["Rate"])
+    if args.fit_max_hz >= experimental_rate / 2.0:
+        raise ValueError(
+            f"--fit-max-hz={args.fit_max_hz:g} must be below Nyquist "
+            f"({experimental_rate / 2.0:g} Hz)"
+        )
     post_filter_white_asd = float(
         original.get(
             "post_filter_white_asd_A_rtHz",
@@ -544,7 +673,7 @@ def main():
     backup = INPUT_PATH.with_name(f"input.before_scipy_optimization.{time.strftime('%Y%m%d-%H%M%S')}.json")
     shutil.copy2(INPUT_PATH, backup)
     print("backup:", backup)
-    fit_freq, target = target_spectrum()
+    fit_freq, target = target_spectrum(args)
 
     try:
         shunt_values_ohm = np.linspace(
@@ -582,6 +711,16 @@ def main():
             "r_shunt_sweep_mOhm": [float(value * 1e3) for value in shunt_values_ohm],
             "tes_resistance_is_fitted": False,
             "alpha_bounds": [50.0, 100.0],
+            "fit": {
+                "min_hz": float(args.fit_min_hz),
+                "max_hz": float(args.fit_max_hz),
+                "weight_start_hz": float(args.fit_weight_start_hz),
+                "high_frequency_weight": float(args.high_frequency_weight),
+                "robust_delta_dex": float(args.robust_delta_dex),
+                "points": int(args.fit_points),
+                "loss": "weighted robust log10(model/measurement) residual",
+                "low_frequency_below_fit_min_ignored": True,
+            },
             "cases": [
                 {
                     key: value
