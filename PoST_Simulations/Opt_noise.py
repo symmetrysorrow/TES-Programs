@@ -1,13 +1,18 @@
 """Standalone PoST optimizer: differential evolution -> Powell.
 
-For each trial, this script writes H:/hata2025/new/input.json, runs
+For each trial, this script writes an isolated input.json, runs
 PoST_Simulation.py, then compares the newly generated
-noise_total-bessel100k.dat with tagawa CH0_noise/modelnoise.txt from 1--30 kHz.
+noise_total-bessel100k.dat with tagawa CH0_noise/modelnoise.txt.  The fit score
+uses 1--30 kHz, while the generated comparison plot shows the full positive
+frequency range.
+The TES resistance is no longer fitted freely.  It is calculated from the
+same-campaign 1400 uA IV point for each R_SH value in the configured sweep.
 The .dat file must include the 100 kHz hardware Bessel and a 10 kHz analysis
 Bessel, so each candidate fixes input.json["cutoff"] to 10000.
 
 By default input.json is restored after optimization.  Add --apply-final to
-keep the best parameters and run PoST one final time.
+keep the best parameters (including the best R_SH branch) and run PoST one
+final time.
 """
 
 from __future__ import annotations
@@ -21,23 +26,29 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import differential_evolution, minimize
 
 
 # ---------- Paths ----------
-POST_SCRIPT = Path(r"D:\Github\TES-Programs\PoST_Simulations\PoST_Simulation.py")
-INPUT_PATH = Path(r"H:\hata2025\new\input.json")
+# Keep the defaults relocatable.  The old H: drive paths were specific to the
+# original workstation and make the script fail before optimization starts.
+SCRIPT_DIR = Path(__file__).resolve().parent
+POST_SCRIPT = SCRIPT_DIR / "PoST_Simulation.py"
+INPUT_PATH = SCRIPT_DIR / "input.json"
 # This is the original, constraint-defining input.  Do not use a previously
 # optimized input.json as the reference, or R's 50--200% range will compound.
-DEFAULT_REFERENCE_INPUT_PATH = Path(r"H:\hata2025\new\input.before_noise_optimization.20260818-011257.json")
-NOISE_DAT_PATH = Path(r"H:\hata2025\new\noise_total-bessel100k.dat")
+DEFAULT_REFERENCE_INPUT_PATH = SCRIPT_DIR / "input.json"
+NOISE_DAT_PATH = SCRIPT_DIR / "noise_total-bessel100k.dat"
 EXPERIMENT_ROOT = Path(
     r"G:\tagawa\20241206\r1ch12_215mK_1400uA1400uA_"
     r"difftrig5e-5_rate500k_samples100k_gain5_day2"
 )
 MODELNOISE_PATH = EXPERIMENT_ROOT / "CH0_noise" / "modelnoise.txt"
 PULSE_CONFIG_PATH = EXPERIMENT_ROOT / "PulseConfig.json"
+TARGET_IV_PATH = Path(r"G:\tagawa\20241206\room1-ch1-iv3\calibration\IV_215mK.txt")
+TARGET_BIAS_UA = 1400.0
 
 # ---------- Comparison settings ----------
 # 1--10 kHz already agrees reasonably well; optimize the remaining mismatch.
@@ -65,12 +76,81 @@ def arguments():
     parser.add_argument("--seed", type=int, default=20260818)
     parser.add_argument("--reference-input", type=Path, default=DEFAULT_REFERENCE_INPUT_PATH,
                         help="Original JSON that defines all parameter bounds and fixed values.")
+    parser.add_argument("--target-iv", type=Path, default=TARGET_IV_PATH,
+                        help="Same-element IV file used to derive TES R at the target bias.")
+    parser.add_argument("--target-bias-ua", type=float, default=TARGET_BIAS_UA,
+                        help="Bias current in uA at which TES R is derived from the IV.")
+    parser.add_argument("--r-shunt-start-mohm", type=float, default=3.8,
+                        help="First shunt-resistance branch in mOhm.")
+    parser.add_argument("--r-shunt-stop-mohm", type=float, default=3.9,
+                        help="Last shunt-resistance branch in mOhm.")
+    parser.add_argument("--r-shunt-count", type=int, default=3,
+                        help="Number of equally spaced R_SH branches, including endpoints.")
     return parser.parse_args()
 
 
 def load_json(path: Path):
     with path.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+def tes_resistance_from_iv(iv_path: Path, shunt_resistance_ohm: float,
+                           target_bias_uA: float) -> dict:
+    """Derive the TES operating resistance from a calibrated IV point.
+
+    The IV files store two rows: bias current in uA and measured output
+    voltage.  The first ten points define the superconducting calibration
+    slope, matching the existing IV analysis workflow.
+    """
+
+    data = np.asarray(np.loadtxt(iv_path), dtype=float)
+    if data.ndim != 2 or data.shape[0] < 2:
+        raise ValueError(f"Expected two-row IV data in {iv_path}")
+
+    bias_uA = data[0]
+    output_voltage = data[1]
+    finite = np.isfinite(bias_uA) & np.isfinite(output_voltage)
+    if np.count_nonzero(finite) < 10:
+        raise ValueError(f"Not enough finite IV points in {iv_path}")
+
+    bias_uA = bias_uA[finite]
+    output_voltage = output_voltage[finite]
+    order = np.argsort(bias_uA)
+    bias_uA = bias_uA[order]
+    output_voltage = output_voltage[order]
+
+    calibration_count = min(10, len(bias_uA))
+    slope, intercept = np.polyfit(
+        bias_uA[:calibration_count],
+        output_voltage[:calibration_count],
+        1,
+    )
+    if not np.isfinite(slope) or slope == 0.0:
+        raise ValueError(f"Invalid superconducting IV slope in {iv_path}")
+
+    eta_uA_per_V = 1.0 / slope
+    index = int(np.argmin(np.abs(bias_uA - float(target_bias_uA))))
+    i_bias_uA = float(bias_uA[index])
+    i_tes_uA = float(eta_uA_per_V * output_voltage[index])
+    i_shunt_uA = i_bias_uA - i_tes_uA
+    if i_tes_uA <= 0.0 or i_shunt_uA <= 0.0:
+        raise ValueError(
+            f"Invalid operating point in {iv_path}: "
+            f"I_bias={i_bias_uA:g} uA, I_TES={i_tes_uA:g} uA"
+        )
+
+    v_tes = i_shunt_uA * 1.0e-6 * float(shunt_resistance_ohm)
+    r_tes = v_tes / (i_tes_uA * 1.0e-6)
+    return {
+        "R_SH_ohm": float(shunt_resistance_ohm),
+        "I_bias_uA": i_bias_uA,
+        "I_TES_uA": i_tes_uA,
+        "V_TES_V": float(v_tes),
+        "R_TES_ohm": float(r_tes),
+        "P_J_W": float(v_tes * i_tes_uA * 1.0e-6),
+        "eta_uA_per_V": float(eta_uA_per_V),
+        "iv_point_index": index,
+    }
 
 
 def write_json_atomically(path: Path, data: dict):
@@ -129,21 +209,140 @@ def simulated_spectrum(candidate: dict, fit_freq: np.ndarray, noise_path: Path):
     return np.interp(fit_freq, sim_freq, normalize_at(sim_freq, sim_asd))
 
 
-def parameter_bounds(original: dict):
+def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
+    """Plot normalized measured ASD against every fixed-R_SH result."""
+
+    pulse_config = load_json(PULSE_CONFIG_PATH)
+    experimental_rate = float(pulse_config["Readout"]["Rate"])
+    experimental_asd = np.asarray(np.loadtxt(MODELNOISE_PATH), dtype=float)
+    experimental_frequency = (
+        np.arange(len(experimental_asd))
+        * (experimental_rate / 2.0)
+        / len(experimental_asd)
+    )
+    experimental_normalized = normalize_at(
+        experimental_frequency,
+        experimental_asd,
+    )
+    experimental_mask = (
+        (experimental_frequency > 0.0)
+        & np.isfinite(experimental_normalized)
+        & (experimental_normalized > 0.0)
+    )
+    plot_min_frequency = float(np.min(experimental_frequency[experimental_mask]))
+    plot_max_frequency = float(np.max(experimental_frequency[experimental_mask]))
+
+    fig, (spectrum_axis, ratio_axis) = plt.subplots(
+        2,
+        1,
+        figsize=(10, 8),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 1]},
+    )
+    spectrum_axis.loglog(
+        experimental_frequency[experimental_mask],
+        experimental_normalized[experimental_mask],
+        color="black",
+        linewidth=2.0,
+        label="Measured CH0",
+    )
+
+    colors = ("tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple")
+    cases = summary["cases"]
+    best_r_sh = float(summary["best_case_R_SH_ohm"])
+    for index, case in enumerate(cases):
+        noise_path = Path(case["work_dir"]) / NOISE_DAT_PATH.name
+        model_asd = np.asarray(np.loadtxt(noise_path), dtype=float)
+        model_frequency = (
+            np.arange(len(model_asd))
+            * (experimental_rate / 2.0)
+            / len(model_asd)
+        )
+        model_normalized = normalize_at(model_frequency, model_asd)
+        model_mask = (
+            (model_frequency > 0.0)
+            & np.isfinite(model_normalized)
+            & (model_normalized > 0.0)
+        )
+        label = f"R_SH={float(case['R_SH_ohm']) * 1e3:.2f} mOhm"
+        is_best = np.isclose(float(case["R_SH_ohm"]), best_r_sh)
+        spectrum_axis.loglog(
+            model_frequency[model_mask],
+            model_normalized[model_mask],
+            color=colors[index % len(colors)],
+            linewidth=2.4 if is_best else 1.3,
+            linestyle="-" if is_best else "--",
+            label=label + (" (best)" if is_best else ""),
+        )
+
+        measured_on_model_grid = np.interp(
+            model_frequency[model_mask],
+            experimental_frequency[experimental_mask],
+            experimental_normalized[experimental_mask],
+        )
+        ratio = model_normalized[model_mask] / measured_on_model_grid
+        ratio_axis.semilogx(
+            model_frequency[model_mask],
+            ratio,
+            color=colors[index % len(colors)],
+            linewidth=2.0 if is_best else 1.1,
+            linestyle="-" if is_best else "--",
+            label=label,
+        )
+
+    spectrum_axis.set_ylabel("Normalized ASD")
+    spectrum_axis.set_title("PoST noise model vs measured CH0 noise (full frequency range)")
+    spectrum_axis.grid(True, which="both", alpha=0.25)
+    spectrum_axis.axvspan(
+        FIT_MIN_HZ,
+        FIT_MAX_HZ,
+        color="gray",
+        alpha=0.08,
+        label="fit band",
+    )
+    spectrum_axis.legend(fontsize=9)
+    ratio_axis.axhline(1.0, color="black", linewidth=1.0)
+    ratio_axis.fill_between(
+        [FIT_MIN_HZ, FIT_MAX_HZ],
+        [0.9, 0.9],
+        [1.1, 1.1],
+        color="gray",
+        alpha=0.15,
+        label="±10%",
+    )
+    ratio_axis.set_xlabel("Frequency [Hz]")
+    ratio_axis.set_ylabel("Model / measured")
+    ratio_axis.set_xlim(plot_min_frequency, plot_max_frequency)
+    ratio_axis.set_yscale("log")
+    ratio_axis.grid(True, which="both", alpha=0.25)
+    ratio_axis.legend(fontsize=8, ncol=2)
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def parameter_bounds(original: dict, fixed_r_ohm: float | None = None):
     """Only parameters the user has allowed to vary are listed here."""
-    return {
+    bounds = {
         "C_abs": Bound(original["C_abs"] * 1e-3, original["C_abs"] * 1e3),
         "C_tes": Bound(original["C_tes"] * 1e-3, original["C_tes"] * 1e3),
         "G_abs-abs": Bound(original["G_abs-abs"] * 1e-3, original["G_abs-abs"] * 1e3),
         "G_abs-tes": Bound(original["G_abs-tes"] * 1e-3, original["G_abs-tes"] * 1e3),
         "G_tes-bath": Bound(original["G_tes-bath"] * 1e-3, original["G_tes-bath"] * 1e3),
-        "R": Bound(original["R"] * 0.5, original["R"] * 2.0),
         "T_bath": Bound(1e-6, original["T_c"]),
-        "alpha": Bound(50.0, 1000.0),
+        # The 10/20 uA RT data is not the target operating current, so it is
+        # used only as a broad condition-specific prior for the ~252 uA TES
+        # operating point.  Do not let noise-only fitting push alpha to 1000.
+        "alpha": Bound(50.0, 100.0),
         "beta": Bound(0.0, 5.0, logarithmic=False),
         # L is now intentionally variable.  Tighten this upper bound if known.
         "L": Bound(original["L"], 1e-5),
     }
+    if fixed_r_ohm is None:
+        bounds["R"] = Bound(original["R"] * 0.5, original["R"] * 2.0)
+    return bounds
 
 
 def vector_bounds(bounds: dict):
@@ -186,34 +385,34 @@ def decode(
     return candidate
 
 
-def main():
-    args = arguments()
-    for path in (POST_SCRIPT, INPUT_PATH, MODELNOISE_PATH, PULSE_CONFIG_PATH, args.reference_input):
-        if not path.is_file():
-            raise FileNotFoundError(f"Missing required file: {path}")
+def optimize_case(
+    args,
+    original: dict,
+    reference: dict,
+    fit_freq: np.ndarray,
+    target: np.ndarray,
+    experimental_rate: float,
+    post_filter_white_asd: float,
+    operating_point: dict,
+    work_dir: Path,
+):
+    """Optimize one fixed-R case derived from one R_SH branch."""
 
-    original = load_json(INPUT_PATH)  # state to restore when --apply-final is absent
-    reference = load_json(args.reference_input)
-    pulse_config = load_json(PULSE_CONFIG_PATH)
-    experimental_rate = float(pulse_config["Readout"]["Rate"])
-    post_filter_white_asd = float(
-        original.get(
-            "post_filter_white_asd_A_rtHz",
-            original.get("readout_white_asd_A_rtHz", 0.0),
-        )
-    )
-    backup = INPUT_PATH.with_name(f"input.before_scipy_optimization.{time.strftime('%Y%m%d-%H%M%S')}.json")
-    shutil.copy2(INPUT_PATH, backup)
-    print("backup:", backup)
-    work_dir = INPUT_PATH.parent / ".noise_optimization_work"
-    work_dir.mkdir(exist_ok=True)
+    fixed_r_ohm = float(operating_point["R_TES_ohm"])
+    shunt_resistance_ohm = float(operating_point["R_SH_ohm"])
+    case_original = original.copy()
+    case_original["R"] = fixed_r_ohm
+    # R_SH is metadata for the IV-derived R only; the TES noise model does not
+    # consume it directly.
+    case_original["R_SH"] = shunt_resistance_ohm
+
+    work_dir.mkdir(parents=True, exist_ok=True)
     work_input_path = work_dir / "input.json"
     work_noise_path = work_dir / NOISE_DAT_PATH.name
-
-    bounds = parameter_bounds(reference)
+    bounds = parameter_bounds(reference, fixed_r_ohm=fixed_r_ohm)
     keys, scipy_bounds = vector_bounds(bounds)
-    fit_freq, target = target_spectrum()
-    initial = original.copy()
+
+    initial = case_original.copy()
     initial["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     initial["rate"] = experimental_rate
     initial["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
@@ -233,12 +432,14 @@ def main():
             return cache[cache_key]
         candidate = decode(
             vector,
-            original,
+            case_original,
             keys,
             bounds,
             experimental_rate,
             post_filter_white_asd,
         )
+        candidate["R"] = fixed_r_ohm
+        candidate["R_SH"] = shunt_resistance_ohm
         candidate["samples"] = OPTIMIZATION_SAMPLES
         evaluation_count += 1
         try:
@@ -246,9 +447,15 @@ def main():
             run_post(args.timeout, work_dir, work_noise_path)
             model = simulated_spectrum(candidate, fit_freq, work_noise_path)
             score = float(np.mean((np.log10(model) - np.log10(target)) ** 2))
-            print(f"evaluation {evaluation_count:4d}: {score:.6g}")
+            print(
+                f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
+                f"evaluation {evaluation_count:4d}: {score:.6g}"
+            )
         except Exception as error:
-            print(f"evaluation {evaluation_count:4d}: rejected ({error})")
+            print(
+                f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
+                f"evaluation {evaluation_count:4d}: rejected ({error})"
+            )
             score = 1e12
         cache[cache_key] = score
         if score < best_score:
@@ -257,50 +464,159 @@ def main():
             print("  new best score:", best_score)
         return score
 
-    try:
-        print("Initial evaluation")
-        objective(initial_x)
+    print(
+        f"\n=== R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm: "
+        f"R_TES={fixed_r_ohm * 1e3:.6f} mOhm ==="
+    )
+    print("Initial evaluation")
+    objective(initial_x)
 
-        if args.skip_de:
-            starting_x = initial_x
-        else:
-            print("\nStage 1/2: differential_evolution")
-            global_result = differential_evolution(
-                objective,
-                scipy_bounds,
-                maxiter=args.de_maxiter,
-                popsize=args.de_popsize,
-                seed=args.seed,
-                workers=1,       # input.json and output directory are shared.
-                updating="immediate",
-                polish=False,
-            )
-            starting_x = global_result.x
-            print("DE result:", global_result.fun)
-
-        print("\nStage 2/2: Powell")
-        local_result = minimize(
+    if args.skip_de:
+        starting_x = initial_x
+    else:
+        print("\nStage 1/2: differential_evolution")
+        global_result = differential_evolution(
             objective,
-            starting_x,
-            method="Powell",
-            bounds=scipy_bounds,
-            options={"maxfev": args.powell_maxfev, "disp": True},
+            scipy_bounds,
+            maxiter=args.de_maxiter,
+            popsize=args.de_popsize,
+            seed=args.seed,
+            workers=1,
+            updating="immediate",
+            polish=False,
         )
-        objective(local_result.x)  # ensures the returned point is cached/tracked
+        starting_x = global_result.x
+        print("DE result:", global_result.fun)
 
-        print("\nPoST evaluations:", evaluation_count)
-        print("Best score:", best_score)
-        print("Best fitted parameters:")
-        print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
+    print("\nStage 2/2: Powell")
+    local_result = minimize(
+        objective,
+        starting_x,
+        method="Powell",
+        bounds=scipy_bounds,
+        options={"maxfev": args.powell_maxfev, "disp": True},
+    )
+    objective(local_result.x)
+
+    print("\nPoST evaluations:", evaluation_count)
+    print("Best score:", best_score)
+    print("Best fitted parameters:")
+    print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
+    return {
+        "R_SH_ohm": shunt_resistance_ohm,
+        "R_TES_ohm": fixed_r_ohm,
+        "iv_operating_point": operating_point,
+        "best_score": float(best_score),
+        "evaluations": evaluation_count,
+        "best_candidate": best_candidate,
+        "work_dir": str(work_dir),
+    }
+
+
+def main():
+    args = arguments()
+    for path in (
+        POST_SCRIPT,
+        INPUT_PATH,
+        MODELNOISE_PATH,
+        PULSE_CONFIG_PATH,
+        args.reference_input,
+        args.target_iv,
+    ):
+        if not path.is_file():
+            raise FileNotFoundError(f"Missing required file: {path}")
+
+    if args.r_shunt_count < 1:
+        raise ValueError("--r-shunt-count must be at least 1")
+    if args.r_shunt_start_mohm <= 0.0 or args.r_shunt_stop_mohm <= 0.0:
+        raise ValueError("R_SH values must be positive")
+
+    original = load_json(INPUT_PATH)  # state to restore when --apply-final is absent
+    reference = load_json(args.reference_input)
+    pulse_config = load_json(PULSE_CONFIG_PATH)
+    experimental_rate = float(pulse_config["Readout"]["Rate"])
+    post_filter_white_asd = float(
+        original.get(
+            "post_filter_white_asd_A_rtHz",
+            original.get("readout_white_asd_A_rtHz", 0.0),
+        )
+    )
+    backup = INPUT_PATH.with_name(f"input.before_scipy_optimization.{time.strftime('%Y%m%d-%H%M%S')}.json")
+    shutil.copy2(INPUT_PATH, backup)
+    print("backup:", backup)
+    fit_freq, target = target_spectrum()
+
+    try:
+        shunt_values_ohm = np.linspace(
+            args.r_shunt_start_mohm * 1e-3,
+            args.r_shunt_stop_mohm * 1e-3,
+            args.r_shunt_count,
+        )
+        sweep_root = INPUT_PATH.parent / ".noise_optimization_work_rsh_sweep"
+        sweep_root.mkdir(exist_ok=True)
+        cases = []
+        for shunt_resistance_ohm in shunt_values_ohm:
+            operating_point = tes_resistance_from_iv(
+                args.target_iv,
+                float(shunt_resistance_ohm),
+                args.target_bias_ua,
+            )
+            case_name = f"rsh_{shunt_resistance_ohm * 1e3:.4f}mohm".replace(".", "p")
+            result = optimize_case(
+                args,
+                original,
+                reference,
+                fit_freq,
+                target,
+                experimental_rate,
+                post_filter_white_asd,
+                operating_point,
+                sweep_root / case_name,
+            )
+            cases.append(result)
+
+        best_case = min(cases, key=lambda row: row["best_score"])
+        summary = {
+            "target_iv": str(args.target_iv),
+            "target_bias_uA": args.target_bias_ua,
+            "r_shunt_sweep_mOhm": [float(value * 1e3) for value in shunt_values_ohm],
+            "tes_resistance_is_fitted": False,
+            "alpha_bounds": [50.0, 100.0],
+            "cases": [
+                {
+                    key: value
+                    for key, value in case.items()
+                    if key != "best_candidate"
+                }
+                for case in cases
+            ],
+            "best_case_R_SH_ohm": best_case["R_SH_ohm"],
+            "best_case_R_TES_ohm": best_case["R_TES_ohm"],
+            "best_case_score": best_case["best_score"],
+        }
+        summary_path = sweep_root / "summary.json"
+        write_json_atomically(summary_path, summary)
+        comparison_path = plot_sweep_comparison(
+            summary,
+            sweep_root / "noise_comparison.png",
+        )
+        summary["comparison_plot"] = str(comparison_path)
+        write_json_atomically(summary_path, summary)
+        print("\nR_SH sweep summary:")
+        print(json.dumps(summary, indent=2))
 
         if args.apply_final:
-            final_candidate = best_candidate.copy()
+            final_candidate = best_case["best_candidate"].copy()
             final_candidate["samples"] = original["samples"]
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
-            print("Best input.json applied and final .dat regenerated.")
+            print(
+                "Best input.json applied and final .dat regenerated: "
+                f"R_SH={best_case['R_SH_ohm'] * 1e3:.4f} mOhm, "
+                f"R_TES={best_case['R_TES_ohm'] * 1e3:.6f} mOhm"
+            )
         else:
-            print("Original input.json restored; use --apply-final to keep the best candidate.")
+            print("Original input.json was not changed; use --apply-final to keep the best branch.")
     except Exception:
         write_json_atomically(INPUT_PATH, original)
         print("Original input.json restored after error.")

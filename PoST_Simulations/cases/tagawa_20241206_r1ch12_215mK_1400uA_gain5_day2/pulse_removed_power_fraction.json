@@ -1,8 +1,82 @@
 {
   "stage": "pulse_removed_power_fraction",
-  "status": "UNAVAILABLE_no_validated_clean_subset_and_final_run_incomplete",
   "power_metric": "F_removed=max(0,1-PSD_clean/PSD_all)",
-  "classification": "UNAVAILABLE",
   "ASD_difference_used": false,
-  "bootstrap_replicates": 2000
+  "record_count_all": 345,
+  "record_count_clean_candidate": 338,
+  "validated_pulse_free": false,
+  "bootstrap_replicates": 2000,
+  "anchors_Hz": [
+    5,
+    10,
+    20,
+    30,
+    50,
+    70,
+    100,
+    150,
+    200,
+    500,
+    1000
+  ],
+  "F_removed": {
+    "5": 0.0,
+    "10": 0.0,
+    "20": 0.0,
+    "30": 0.0,
+    "50": 0.0,
+    "70": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0,
+    "500": 0.0,
+    "1000": 0.006461291693541038
+  },
+  "F_removed_CI95": {
+    "5": [
+      0.0,
+      0.0
+    ],
+    "10": [
+      0.0,
+      0.0
+    ],
+    "20": [
+      0.0,
+      0.00013283262707786738
+    ],
+    "30": [
+      0.0,
+      0.0
+    ],
+    "50": [
+      0.0,
+      0.012925178005993838
+    ],
+    "70": [
+      0.0,
+      0.004578785202309156
+    ],
+    "100": [
+      0.0,
+      0.0
+    ],
+    "150": [
+      0.0,
+      0.0
+    ],
+    "200": [
+      0.0,
+      0.0026192971084803575
+    ],
+    "500": [
+      0.0,
+      0.013232998627701055
+    ],
+    "1000": [
+      0.0,
+      0.024638861463067593
+    ]
+  },
+  "classification": "SMALL"
 }

@@ -39,9 +39,24 @@ def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     source_commit = command(["git", "-C", str(SOURCE), "rev-parse", "HEAD"])
     library = INSTALL / "lib" / "libHYPRE.so"
+    # WSL-installed shared libraries appear as symlinks to Windows Python;
+    # the link target is valid inside WSL even when Path.exists() is false on
+    # the host filesystem.
+    library_probe = command(
+        [
+            "wsl.exe",
+            "-d",
+            "Ubuntu",
+            "--",
+            "bash",
+            "-lc",
+            "test -f /mnt/d/Github/TES-Programs/tools/hypre-hip-v3-1-0-install/lib/libHYPRE.so",
+        ]
+    )
+    library_present = library.exists() or library.is_symlink() or library_probe["returncode"] == 0
     manifest = {
         "schema": "tes.hypre_hip_build.v1",
-        "status": "PASS" if library.exists() else "FAIL",
+        "status": "PASS" if library_present else "FAIL",
         "source": {
             "path": str(SOURCE),
             "commit": source_commit.get("stdout", "").strip() or None,
@@ -71,6 +86,7 @@ def main() -> None:
             for path in sorted(INSTALL.glob("lib/*"))
             if path.is_file() or path.is_symlink()
         ],
+        "library_probe": library_probe,
         "runtime_link_check": command(
             [
                 "wsl.exe",
@@ -82,7 +98,7 @@ def main() -> None:
                 "ldd /mnt/d/Github/TES-Programs/tools/hypre-hip-v3-1-0-install/lib/libHYPRE.so",
             ]
         )
-        if library.exists()
+        if library_present
         else None,
     }
     OUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

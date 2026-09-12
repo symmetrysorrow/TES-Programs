@@ -12,7 +12,6 @@ sim_path = "h:/hata2025/200_180"
 exp_path = "G:/TSURUTA/20230616_post/room1-ch2-3_180mK_570uA_100kHz_g10"
 eta = 101
 amp = 100
-dt = 1.0
 
 
 def extract_features(pulse, dt=1.0):
@@ -41,7 +40,10 @@ def extract_features(pulse, dt=1.0):
 
     rise_20 = np.argmax(y[: idx_max + 1] >= h_max * 0.2)
     rise_80 = np.argmax(y[: idx_max + 1] >= h_max * 0.8)
-    rise_time = (rise_80 - rise_20) * dt / len(pulse)
+    # ``dt`` is the interval between adjacent samples [s].  Do not divide
+    # by the record length here: that would apply an extra, unrelated scale
+    # factor to the measured rise time.
+    rise_time = (rise_80 - rise_20) * dt
     return h_max, rise_time, tau
 
 
@@ -108,7 +110,13 @@ with open(f"{sim_path}/input.json", "r") as f:
 selected_keys = gn.LoadTxt(f"{exp_path}/SelectedKeys_fromScatter.txt")
 para_exp = gn.LoadJson(f"{exp_path}/PulseConfig.json")
 Presample = int(para_exp["Readout"]["PreSample"])
-dt = para_exp["Readout"]["Sample"] / para_exp["Readout"]["Rate"]
+# Sample is the number of samples in the record; the sample interval is the
+# reciprocal of the sampling rate.  Using Sample / Rate here makes the decay
+# constant larger by ``Sample`` (e.g. 100,000 times for a 100 kHz record).
+exp_rate = float(para_exp["Readout"]["Rate"])
+exp_dt = 1.0 / exp_rate
+sim_rate = float(para["rate"])
+sim_dt = 1.0 / sim_rate
 
 peak_values = []
 keys_list = []
@@ -138,29 +146,39 @@ pulse_high -= np.mean(pulse_high[0:Presample])
 pulse_low = gn.LoadBin(f"{exp_path}/CH0_pulse/rawdata/CH0_{int(key_low)}.dat") * eta / amp / 1e6
 pulse_low -= np.mean(pulse_low[0:Presample])
 
-exp_h_high, exp_tr_high, exp_tau = extract_features(pulse_high, dt)
-exp_h_low, exp_tr_low, _ = extract_features(pulse_low, dt)
+exp_h_high, exp_tr_high, exp_tau = extract_features(pulse_high, exp_dt)
+exp_h_low, exp_tr_low, _ = extract_features(pulse_low, exp_dt)
 wave_weights_high = build_wave_weights(pulse_high, Presample)
 wave_weights_low = build_wave_weights(pulse_low, Presample)
 
-print(f"Highest Pulse: Height = {exp_h_high}, Rise Time = {exp_tr_high}, Tau = {exp_tau}")
-print(f"Lowest Pulse : Height = {exp_h_low}, Rise Time = {exp_tr_low}")
+print(
+    f"Highest Pulse: Height = {exp_h_high}, "
+    f"Rise Time = {exp_tr_high:.6e} s, Tau = {exp_tau:.6e} s"
+)
+print(f"Lowest Pulse : Height = {exp_h_low}, Rise Time = {exp_tr_low:.6e} s")
 
-time_axis = gn.GetTime(para_exp["Readout"]["Rate"], para_exp["Readout"]["Sample"])
+exp_time_axis = gn.GetTime(exp_rate, para_exp["Readout"]["Sample"])
+sim_time_axis = gn.GetTime(sim_rate, int(para["samples"]))
 
 pulses = MakePulse(para, Presample)
 pulse_sim_high = pulses[0]
 pulse_sim_low = pulses[-1]
 
-init_h_high, init_tr_high, init_tau_high = extract_features(pulse_sim_high, dt)
-init_h_low, init_tr_low, init_tau_low = extract_features(pulse_sim_low, dt)
-print(f"Initial Simulation High Pulse: Height = {init_h_high}, Rise Time = {init_tr_high}, Tau = {init_tau_high}")
-print(f"Initial Simulation Low Pulse : Height = {init_h_low}, Rise Time = {init_tr_low}, Tau = {init_tau_low}")
+init_h_high, init_tr_high, init_tau_high = extract_features(pulse_sim_high, sim_dt)
+init_h_low, init_tr_low, init_tau_low = extract_features(pulse_sim_low, sim_dt)
+print(
+    f"Initial Simulation High Pulse: Height = {init_h_high}, "
+    f"Rise Time = {init_tr_high:.6e} s, Tau = {init_tau_high:.6e} s"
+)
+print(
+    f"Initial Simulation Low Pulse : Height = {init_h_low}, "
+    f"Rise Time = {init_tr_low:.6e} s, Tau = {init_tau_low:.6e} s"
+)
 
-plt.plot(time_axis, pulse_high, label="Experimental High Pulse", color="gray", linestyle="--")
-plt.plot(time_axis, pulse_low, label="Experimental Low Pulse", color="gray", linestyle="--")
-plt.plot(time_axis, pulse_sim_high, label="Simulated High Pulse")
-plt.plot(time_axis, pulse_sim_low, label="Simulated Low Pulse")
+plt.plot(exp_time_axis, pulse_high, label="Experimental High Pulse", color="gray", linestyle="--")
+plt.plot(exp_time_axis, pulse_low, label="Experimental Low Pulse", color="gray", linestyle="--")
+plt.plot(sim_time_axis, pulse_sim_high, label="Simulated High Pulse")
+plt.plot(sim_time_axis, pulse_sim_low, label="Simulated Low Pulse")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()
@@ -191,8 +209,8 @@ def err_func(params):
         pulses = MakePulse(para, Presample)
         pulse_sim_high = pulses[0]
         pulse_sim_low = pulses[-1]
-        sim_h_low, sim_tr_low, _ = extract_features(pulse_sim_low, dt)
-        sim_h_high, sim_tr_high, sim_tau = extract_features(pulse_sim_high, dt)
+        sim_h_low, sim_tr_low, _ = extract_features(pulse_sim_low, sim_dt)
+        sim_h_high, sim_tr_high, sim_tau = extract_features(pulse_sim_high, sim_dt)
     except Exception:
         return 1e18
 
@@ -260,15 +278,21 @@ pulses = MakePulse(para, Presample)
 final_high = pulses[0]
 final_low = pulses[-1]
 
-final_h_high, final_tr_high, final_tau_high = extract_features(final_high, dt)
-final_h_low, final_tr_low, final_tau_low = extract_features(final_low, dt)
-print(f"High Pulse Simulated: Height = {final_h_high}, Rise Time = {final_tr_high}, Tau = {final_tau_high}")
-print(f"Low Pulse Simulated : Height = {final_h_low}, Rise Time = {final_tr_low}, Tau = {final_tau_low}")
+final_h_high, final_tr_high, final_tau_high = extract_features(final_high, sim_dt)
+final_h_low, final_tr_low, final_tau_low = extract_features(final_low, sim_dt)
+print(
+    f"High Pulse Simulated: Height = {final_h_high}, "
+    f"Rise Time = {final_tr_high:.6e} s, Tau = {final_tau_high:.6e} s"
+)
+print(
+    f"Low Pulse Simulated : Height = {final_h_low}, "
+    f"Rise Time = {final_tr_low:.6e} s, Tau = {final_tau_low:.6e} s"
+)
 
-plt.plot(time_axis, pulse_high, label="Experimental High Pulse", color="gray", linestyle="--")
-plt.plot(time_axis, pulse_low, label="Experimental Low Pulse", color="gray", linestyle="--")
-plt.plot(time_axis, final_high, label="Simulated High Pulse")
-plt.plot(time_axis, final_low, label="Simulated Low Pulse")
+plt.plot(exp_time_axis, pulse_high, label="Experimental High Pulse", color="gray", linestyle="--")
+plt.plot(exp_time_axis, pulse_low, label="Experimental Low Pulse", color="gray", linestyle="--")
+plt.plot(sim_time_axis, final_high, label="Simulated High Pulse")
+plt.plot(sim_time_axis, final_low, label="Simulated Low Pulse")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()

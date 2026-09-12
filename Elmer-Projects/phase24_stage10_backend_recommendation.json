@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage10_backend_recommendation",
+  "production_backend": "HIP_BEST",
+  "deployment_mode": "sustained repeated production runs",
+  "reason": "The validated warm-cache HIP run is the lowest measured end-to-end production wall time: 169.51 s versus CUDA 169.83 s and CPU 355.41 s.",
+  "backend_table": [
+    {
+      "backend": "HIP",
+      "device": "AMD Radeon RX 9070 XT",
+      "hypre": "3.1.0",
+      "cold_wall_seconds": 197.93,
+      "warm_wall_seconds": 169.51,
+      "status": "validated"
+    },
+    {
+      "backend": "CUDA",
+      "device": "NVIDIA GeForce RTX 3060 Ti",
+      "hypre": "3.0.0",
+      "cold_wall_seconds": 193.62,
+      "warm_wall_seconds": 169.83,
+      "status": "validated"
+    },
+    {
+      "backend": "CPU",
+      "device": "host CPU",
+      "cold_wall_seconds": 355.41,
+      "warm_wall_seconds": null,
+      "status": "validated"
+    }
+  ],
+  "policy": {
+    "default_for_repeated_runs": "HIP",
+    "explicit_cuda_override": "cuda + HYPRE 3.0.0 remains the frozen reference and is preferable for cold single-shot execution",
+    "explicit_cpu_override": "cpu",
+    "auto_selection": "not enabled because the warm HIP/CUDA margin is only 0.19%; explicit selection remains reproducible"
+  },
+  "correctness_gate": {
+    "exit_zero": true,
+    "all_done": true,
+    "final_norm_relative_difference_gpu_vs_cpu": 1.5373351666331047e-12,
+    "linear_tolerance": 5e-7,
+    "final_relative_change": 0.0
+  },
+  "artifacts": {
+    "comparison": "phase24_stage10_gpu_backends.json",
+    "hip_validation": "phase24_stage10_hip_validation.json",
+    "report": "phase24_stage10_gpu_backend.md"
+  }
+}

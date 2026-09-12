@@ -2,15 +2,27 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import questionary
+from matplotlib.font_manager import FontProperties
+
 from show_data import load_energy_resolution
 
 
-BASE_DIR = Path(r"h:\hata\new_noise_test")
+BASE_DIR = Path(r"H:\hata\1332_142_136_300split")
+
+jp_font = FontProperties(family="Yu Gothic", size=30)
+
 TARGETS = {
     "MS": "Pulse_ms",
     "noise": "Pulse_noise",
     "ms_noise": "Pulse_ms_noise",
 }
+
+DISPLAY_LABELS = {
+    "MS": "多重散乱",
+    "noise": "ノイズ",
+    "ms_noise": "多重散乱 + ノイズ",
+}
+
 MODE_ALL = "MS・Noise・MS+Noiseを比較"
 MODE_MS_NOISE_ONLY = "MS+Noiseのみ"
 
@@ -33,27 +45,50 @@ def main():
     mode = ask_mode()
     if mode is None:
         return
+
     title = ask_title()
     if title is None:
         return
 
-    targets = TARGETS if mode == MODE_ALL else {"ms_noise": TARGETS["ms_noise"]}
-    out_path = BASE_DIR / (
-        "energy_resolution_1332_sum_st_ms_noise_compare.png"
+    targets = (
+        TARGETS
         if mode == MODE_ALL
-        else "energy_resolution_1332_sum_st_ms_noise.png"
+        else {"ms_noise": TARGETS["ms_noise"]}
     )
+
+    out_path = BASE_DIR / (
+        f"energy_resolution_{title.replace(' ', '_')}_sum_st_ms_noise_compare.png"
+        if mode == MODE_ALL
+        else f"energy_resolution_{title.replace(' ', '_')}_sum_st_ms_noise.png"
+    )
+
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_box_aspect(1)
 
-    style_map = {
-        "MS": {"color": "#1f77b4"},
-        "noise": {"color": "#2ca02c"},
-        "ms_noise": {"color": "#d62728"},
+    # 条件ごとの線種・マーカー
+    condition_style_map = {
+        "MS": {
+            "linestyle": "-",
+            "marker": "o",
+        },
+        "noise": {
+            "linestyle": "--",
+            "marker": "^",
+        },
+        "ms_noise": {
+            "linestyle": "-.",
+            "marker": "s",
+        },
     }
+
+    # Max / ST ごとの色
     metric_style_map = {
-        "Sum": {"linestyle": "-", "marker": "o"},
-        "ST": {"linestyle": "--", "marker": "^"},
+        "Sum": {
+            "color": "#1f77b4",
+        },
+        "ST": {
+            "color": "#d62728",
+        },
     }
 
     plotted = False
@@ -64,6 +99,7 @@ def main():
         except FileNotFoundError as error:
             print(f"Skipping missing result: {error}")
             continue
+
         positions = df.index.to_numpy(dtype=float)
 
         for metric in ("Sum", "ST"):
@@ -72,44 +108,64 @@ def main():
                 continue
 
             style = {}
-            style.update(style_map[condition])
+            style.update(condition_style_map[condition])
             style.update(metric_style_map[metric])
-            label_metric = "Max" if metric == "Sum" else metric
+
+            label_metric = "Max" if metric == "Sum" else "ST"
+
+            if mode == MODE_MS_NOISE_ONLY:
+                label = label_metric
+            else:
+                label = f"{DISPLAY_LABELS[condition]} {label_metric}"
 
             ax.plot(
                 positions,
                 df[metric].to_numpy(dtype=float),
-                label=(
-                    label_metric
-                    if mode == MODE_MS_NOISE_ONLY
-                    else f"{condition} {label_metric}"
-                ),
+                label=label,
                 linewidth=2.0,
                 markersize=5.5,
                 markerfacecolor="white",
-                markeredgewidth=1.4,
-                **style,
+                markeredgewidth=1.4
             )
+
             plotted = True
 
     ax.set_title(title, fontsize=35)
-    ax.set_xlabel("Position[mm]", fontsize=30)
-    ax.set_ylabel("Energy Resolution[keV]", fontsize=30)
-    ax.grid(True, alpha=0.25, linestyle=":")
-    ax.tick_params(axis="both", which="major", labelsize=24)
+    ax.set_xlabel("Position [mm]", fontsize=30)
+    ax.set_ylabel("Energy Resolution [keV]", fontsize=30)
+
+    ax.grid(
+        True,
+        alpha=0.25,
+        linestyle=":",
+    )
+
+    ax.tick_params(
+        axis="both",
+        which="major",
+        labelsize=24,
+    )
+
     ax.legend(
         ncol=1,
         frameon=True,
-        fontsize=16.5,
+        prop=jp_font,
         markerscale=1.125,
         handlelength=2.25,
         labelspacing=0.525,
         borderpad=0.525,
     )
+
     plt.tight_layout()
+    plt.ylim(0,30)
 
     if plotted:
-        fig.savefig(out_path, dpi=300, transparent=True)
+        fig.savefig(
+            out_path,
+            dpi=300,
+            transparent=True,
+        )
+
         plt.show()
         print(f"Saved: {out_path}")
     else:

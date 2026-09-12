@@ -1,6 +1,14 @@
 {
   "stage": "pulse_noise_equivalence_margin_provenance",
-  "status": "PNS1 equivalence cannot be established",
+  "source_terms": [
+    "pulse bootstrap uncertainty",
+    "sampling/timing uncertainty",
+    "channel gain/calibration uncertainty",
+    "known acquisition synchronization",
+    "independent electronics tolerance"
+  ],
   "noise_result_used_to_choose_margin": false,
+  "target_linked_nonbootstrap_uncertainty_available": false,
+  "status": "PNS1 equivalence cannot be established",
   "margins": null
 }

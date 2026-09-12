@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage6_adaptive_operator_lagging",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "production_policy": {
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "phase24_operator_lagging": "adaptive",
+    "phase24_operator_lag_threshold": 1e-4,
+    "phase24_operator_lag_max_reuse": 3,
+    "phase24_operator_lag_residual_growth": 1.25,
+    "gpu_assembly": false
+  },
+  "validated": {
+    "native_build_install": true,
+    "bounded_smoke_exit_code": 0,
+    "bounded_smoke_timesteps": 7,
+    "all_done": true,
+    "nonlinear_final_confirmation": true,
+    "adaptive_lag_reuses": 7,
+    "fresh_matrix_confirmations": 4,
+    "forced_rebuild_fallbacks": 3,
+    "hypre_full_setups": 3,
+    "hypre_case_a_reuses": 13,
+    "hypre_case_b_refreshes": 14,
+    "hypre_amg_setups": 20,
+    "hypre_linear_solves": 20,
+    "hypre_recovery_events": 3,
+    "full_operator_rebuilds": 10,
+    "exact_rhs_only_events": 7,
+    "production_csr_symmetry_metric": 1.66446504e-2,
+    "gpu_path": false
+  },
+  "acceptance": {
+    "linear_tolerance": 5e-7,
+    "final_relative_change": 0.0,
+    "final_result_norm": 0.1548520955004124,
+    "final_tes_temperature": 0.1684594,
+    "final_tes_current": 1.473235e-4,
+    "final_tes_power_w": 3.251468e-10,
+    "fatal_solver_errors": 0
+  },
+  "notes": [
+    "Adaptive lagging reuses the finalized production CSR values only when the coefficient indicator, boundary audit, bounded-reuse, and health gates permit it.",
+    "Fresh-matrix confirmation is scheduled after a timestep actually uses lagged reuse.",
+    "HYPRE refresh failure or residual growth disables lagging for the remainder of that timestep and forces rebuild-every-iteration recovery.",
+    "The finalized production CSR symmetry metric is nonzero, so PCG was not enabled; FlexGMRES remains the safe production method.",
+    "The single LUA error line is the pre-existing default-script diagnostic; the run completed with exit code 0 and no solver fatal errors."
+  ]
+}

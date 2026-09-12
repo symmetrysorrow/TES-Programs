@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage10_gpu_backends",
+  "case": "case_phase24_hypre_gpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "same_workload": true,
+  "production_policy": {
+    "linear_system": "FlexGMRES + BoomerAMG",
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "phase24_operator_lagging": "disabled",
+    "phase24_preconditioner_lagging": "adaptive",
+    "gpu_fem_assembly": false,
+    "lifecycle": "shared CPU/CUDA/HIP StructureEpoch, MatrixEpoch, HypreMatrixEpoch, PreconditionerEpoch, Case A/B1/B2/C, warm-start, and recovery policy"
+  },
+  "backends": {
+    "cpu": {
+      "status": "PASS",
+      "hypre_version": "Phase24 Stage 8 validated CPU build",
+      "wall_seconds": 355.41,
+      "final_result_norm": 0.15485209551058407,
+      "log": "results/case_phase24_hypre_cpu_smoke_7step/solver.log"
+    },
+    "cuda": {
+      "status": "PASS",
+      "device": "NVIDIA GeForce RTX 3060 Ti",
+      "hypre_version": "3.0.0",
+      "cold_wall_seconds": 193.62,
+      "warm_wall_seconds": [177.57, 169.83],
+      "final_result_norm": 0.15485209551034601,
+      "lifecycle_counters": {
+        "matrix_refreshes": 12,
+        "krylov_setups": 16,
+        "amg_setups": 10,
+        "solves": 16,
+        "case_b_reused_amg_solves": 6,
+        "case_b_fresh_amg_solves": 6,
+        "recovery_setups": 3
+      },
+      "gpu_counters": {
+        "backend_active": 1,
+        "matrix_h2d_refreshes": 12,
+        "rhs_h2d_transfers": 3,
+        "solution_h2d_transfers": 0,
+        "solution_d2h_syncs": 13,
+        "full_object_migrations": 0,
+        "device_allocations": 3
+      },
+      "logs": [
+        "results/case_phase24_hypre_cuda_smoke_7step/solver.log",
+        "results/case_phase24_hypre_cuda_smoke_7step_warm2/solver.log"
+      ]
+    },
+    "hip": {
+      "status": "PASS",
+      "device": "AMD Radeon RX 9070 XT",
+      "architecture": "gfx1201",
+      "hypre_version": "3.1.0",
+      "cold_wall_seconds": 197.93,
+      "warm_wall_seconds": [177.13, 169.51],
+      "final_result_norm": 0.15485209551034601,
+      "lifecycle_counters": {
+        "matrix_refreshes": 12,
+        "krylov_setups": 16,
+        "amg_setups": 10,
+        "solves": 16,
+        "case_b_reused_amg_solves": 6,
+        "case_b_fresh_amg_solves": 6,
+        "recovery_setups": 3
+      },
+      "gpu_counters": {
+        "backend_active": 1,
+        "matrix_h2d_refreshes": 12,
+        "rhs_h2d_transfers": 3,
+        "solution_h2d_transfers": 0,
+        "solution_d2h_syncs": 13,
+        "full_object_migrations": 0,
+        "device_allocations": 3
+      },
+      "logs": [
+        "results/case_phase24_hypre_hip_smoke_7step/solver.log",
+        "results/case_phase24_hypre_hip_smoke_7step_warm2/solver.log"
+      ]
+    }
+  },
+  "correctness": {
+    "all_gpu_runs_exit_zero": true,
+    "all_done": true,
+    "cpu_gpu_final_norm_absolute_difference": 2.380595720552492e-13,
+    "cpu_gpu_final_norm_relative_difference": 1.5373351666331047e-12,
+    "final_relative_change": 0.0,
+    "final_tes_temperature": 0.1684598,
+    "final_tes_current": 1.473224e-4,
+    "final_tes_power_w": 3.251973e-10
+  },
+  "selection": {
+    "winner_policy": "lowest repeated warm-cache production wall time",
+    "winner": "HIP_BEST",
+    "winner_wall_seconds": 169.51,
+    "cuda_warm_reference_seconds": 169.83,
+    "hip_warm_advantage_seconds": 0.32,
+    "cold_start_winner": "CUDA_BEST",
+    "cold_start_note": "CUDA 193.62 s versus HIP 197.93 s; HIP includes ROCm kernel JIT startup."
+  },
+  "runtime_artifacts": [
+    "artifacts/amd_gpu_runtime.json",
+    "artifacts/hip_device_validation.json",
+    "artifacts/hypre_hip_build.json"
+  ]
+}

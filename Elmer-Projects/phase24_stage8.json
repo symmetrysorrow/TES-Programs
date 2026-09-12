@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage8_current_operator_lagged_preconditioner",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "production_policy": {
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "phase24_operator_lagging": "disabled",
+    "phase24_preconditioner_lagging": "adaptive",
+    "phase24_preconditioner_lag_threshold": 1e-4,
+    "phase24_preconditioner_lag_max_age": 2,
+    "phase24_preconditioner_lag_krylov_relative_growth": 0.5,
+    "phase24_preconditioner_lag_nonlinear_threshold": 1e-3,
+    "gpu_assembly": false
+  },
+  "native_lifecycle": {
+    "epochs": "StructureEpoch, MatrixEpoch, and PreconditionerEpoch are tracked independently",
+    "case_a": "unchanged matrix updates persistent RHS and warm-start x, then enters direct FlexGMRES without matrix or setup work",
+    "case_b1": "current A is refreshed and BoomerAMG is rebuilt when age, Krylov/nonlinear degradation, or recovery policy requires it",
+    "case_b2": "current A is refreshed, supported FlexGMRES setup runs, the bounded-age older AMG hierarchy is retained by the setup wrapper, and FlexGMRES applies it to the current operator",
+    "recovery": "failed B2 convergence clears stale HYPRE state, refreshes setup on current A, restores x, and retries with cooldown"
+  },
+  "validated": {
+    "native_build_install": true,
+    "bounded_smoke_exit_code": 0,
+    "bounded_smoke_timesteps": 7,
+    "all_done": true,
+    "case_a_native_setup_assertions": true,
+    "native_matrix_refreshes": 14,
+    "native_krylov_setups": 16,
+    "native_amg_setups": 10,
+    "native_solves": 16,
+    "native_case_a_direct_solves": 0,
+    "native_case_b_reused_amg_solves": 6,
+    "native_case_b_fresh_amg_solves": 6,
+    "native_preconditioner_age_rebuilds": 0,
+    "native_degradation_rebuilds": 3,
+    "native_recovery_rebuilds": 3,
+    "native_recovery_setups": 3,
+    "hypre_full_setups": 1,
+    "hypre_case_a_reuses": 0,
+    "hypre_case_b_refreshes": 12,
+    "hypre_recovery_events": 3,
+    "operator_lag_reuses": 0,
+    "fresh_matrix_confirmations": 0,
+    "production_csr_symmetry_metric": 1.66446504e-2,
+    "stage7_native_amg_setups": 14,
+    "native_amg_setup_reduction": 4,
+    "gpu_path": false
+  },
+  "acceptance": {
+    "linear_tolerance": 5e-7,
+    "final_relative_change": 0.0,
+    "final_result_norm": 0.15485209551058407,
+    "final_tes_temperature": 0.1684598,
+    "final_tes_current": 1.473235e-4,
+    "final_tes_power_w": 3.251468e-10,
+    "fatal_solver_errors": 0
+  },
+  "notes": [
+    "Production keeps the linear operator current; operator lagging is disabled while preconditioner lagging is adaptive.",
+    "The run exercised both B2 reuse and B1 fresh-AMG decisions, plus three controlled recovery rebuilds.",
+    "Case-A zero-setup assertions remain active in the native lifecycle implementation; this mixed production run had no unchanged-matrix Case-A solves.",
+    "FlexGMRES remains the production Krylov method because the CSR symmetry defect is nonzero.",
+    "One reused-preconditioner solve intentionally reached the configured linear iteration limit and recovered on the current operator; the overall run exited 0."
+  ]
+}

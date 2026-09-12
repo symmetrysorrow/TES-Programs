@@ -1,89 +1,40 @@
 {
   "stage": "final_pulse_selection_bias",
-  "status": "NOT_RUN_fixed_M_audit_incomplete",
-  "selection_bias_pass": false,
-  "evidence": {
-    "v6_selection_bias_pass": false,
-    "v6_correlations": {
-      "short": {
-        "10": {
-          "rho": 0.5327911541315478,
-          "status": "fail"
-        },
-        "20": {
-          "rho": 0.5048434312677795,
-          "status": "fail"
-        },
-        "50": {
-          "rho": 0.4822388811412604,
-          "status": "fail"
-        },
-        "100": {
-          "rho": 0.42224264681670987,
-          "status": "fail"
-        },
-        "200": {
-          "rho": 0.303873068945923,
-          "status": "warning"
-        },
-        "1000": {
-          "rho": 0.12748551120049784,
-          "status": "pass"
-        }
-      },
-      "long": {
-        "10": {
-          "rho": 0.035016459954239965,
-          "status": "pass"
-        },
-        "20": {
-          "rho": 0.03871461348857446,
-          "status": "pass"
-        },
-        "50": {
-          "rho": 0.040086480735111715,
-          "status": "pass"
-        },
-        "100": {
-          "rho": -0.0025999843020908815,
-          "status": "pass"
-        },
-        "200": {
-          "rho": 0.06174841579664452,
-          "status": "pass"
-        },
-        "1000": {
-          "rho": 0.05554660086653707,
-          "status": "pass"
-        }
-      },
-      "combined": {
-        "10": {
-          "rho": 0.06655463972579116,
-          "status": "pass"
-        },
-        "20": {
-          "rho": 0.06853011726521412,
-          "status": "pass"
-        },
-        "50": {
-          "rho": 0.06364465659879696,
-          "status": "pass"
-        },
-        "100": {
-          "rho": 0.024771710320932422,
-          "status": "pass"
-        },
-        "200": {
-          "rho": 0.08023673749587207,
-          "status": "pass"
-        },
-        "1000": {
-          "rho": 0.05161775980526247,
-          "status": "pass"
-        }
-      }
+  "score": "S_final=max(short significance,long significance)",
+  "correlations": {
+    "10": {
+      "rho": 0.3227258102386818,
+      "primary": true,
+      "pass": false
+    },
+    "20": {
+      "rho": 0.3068652282416781,
+      "primary": true,
+      "pass": false
+    },
+    "50": {
+      "rho": 0.3113267703450667,
+      "primary": true,
+      "pass": false
+    },
+    "100": {
+      "rho": 0.24316339613446436,
+      "primary": true,
+      "pass": false
+    },
+    "200": {
+      "rho": 0.1989284642483236,
+      "primary": true,
+      "pass": true
+    },
+    "1000": {
+      "rho": 0.1036352202067018,
+      "primary": false,
+      "pass": true
     }
   },
-  "score_required": "S_final=max(short significance,long significance)"
+  "primary_gate": "all |rho|<0.20 at 10,20,50,100,200 Hz",
+  "selection_bias_pass": false,
+  "short_only_diagnostic_preserved": true,
+  "long_only_diagnostic_preserved": true
 }

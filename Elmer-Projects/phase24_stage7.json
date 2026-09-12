@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage7_native_hypre_case_a_fast_path",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "production_policy": {
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "phase24_operator_lagging": "adaptive",
+    "phase24_operator_lag_threshold": 1e-4,
+    "phase24_operator_lag_max_reuse": 3,
+    "phase24_operator_lag_residual_growth": 1.25,
+    "phase24_operator_lag_krylov_relative_growth": 0.5,
+    "phase24_operator_lag_krylov_absolute_growth": 8,
+    "gpu_assembly": false
+  },
+  "native_lifecycle": {
+    "setup_epoch": "committed only after successful native setup",
+    "case_a": "persistent ParCSR, solver, preconditioner, b, and warm-start x; RHS update and direct FlexGMRES solve",
+    "case_b": "fixed-pattern IJ SetValues/Assemble/GetObject followed by numeric setup",
+    "case_c": "structure epoch invalidates and rebuilds the native container",
+    "recovery": "clear stale HYPRE error state, reassemble persistent RHS, fresh setup, restore x, warm-start retry"
+  },
+  "validated": {
+    "native_build_install": true,
+    "bounded_smoke_exit_code": 0,
+    "bounded_smoke_timesteps": 7,
+    "all_done": true,
+    "case_a_native_setup_assertions": true,
+    "native_matrix_refreshes": 10,
+    "native_krylov_setups": 14,
+    "native_amg_setups": 14,
+    "native_solves": 20,
+    "native_case_a_direct_solves": 6,
+    "native_recovery_setups": 3,
+    "operator_lag_reuses": 6,
+    "fresh_matrix_confirmations": 4,
+    "forced_rebuild_fallbacks": 3,
+    "operator_forced_rebuild_count": 12,
+    "hypre_full_setups": 1,
+    "hypre_case_a_reuses": 6,
+    "hypre_case_b_refreshes": 10,
+    "hypre_recovery_events": 3,
+    "production_csr_symmetry_metric": 1.66446504e-2,
+    "gpu_path": false
+  },
+  "acceptance": {
+    "linear_tolerance": 5e-7,
+    "final_relative_change": 0.0,
+    "final_result_norm": 0.1548520955004124,
+    "final_tes_temperature": 0.1684594,
+    "final_tes_current": 1.473235e-4,
+    "final_tes_power_w": 3.251468e-10,
+    "fatal_solver_errors": 0
+  },
+  "notes": [
+    "Case-A native setup, AMG setup, and matrix-refresh counter deltas are asserted to be zero.",
+    "The cached ParCSR handle removes IJMatrixGetObject from the Case-A solve path.",
+    "Persistent IJ b/x objects are retained; normal solves do not reinitialize them, while recovery reapplies the saved RHS after a failed Krylov cycle.",
+    "FlexGMRES remains the production Krylov method because the CSR symmetry defect is nonzero.",
+    "The single LUA error line remains the pre-existing default-script diagnostic; the verified run exited 0 with no solver fatal errors."
+  ]
+}

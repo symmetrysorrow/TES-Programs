@@ -93,12 +93,15 @@ cmake -S '$toolsWsl/elmer-hypre/src' -B '$elmerBuild' -G Ninja \
   -DHypre_INCLUDE_DIR='$hypreInstall/include' -DHypre_LIBRARIES='$hypreInstall/lib/libHYPRE.so'
 cmake --build '$elmerBuild' --parallel
 cmake --install '$elmerBuild'
-if [ '$Backend' = hip ]; then
-  python3 '$repoWsl/scripts/support/write_hypre_hip_build_artifact.py'
-fi
 "@
 
 Write-Host "Building the portable HYPRE $Backend backend in WSL."
 & wsl.exe -d Ubuntu -- bash -lc $bash
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($Backend -eq "hip") {
+    # The manifest collector invokes wsl.exe and therefore must run from the
+    # Windows host, not from inside the WSL build shell.
+    python (Join-Path $PSScriptRoot "write_hypre_hip_build_artifact.py")
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 Write-Host "Installed: $elmerInstall"

@@ -1,21 +1,58 @@
 {
   "stage": "final_pulse_detector_gate",
-  "status": "NOT_RUN_fixed_M_audit_incomplete",
-  "detector_valid": false,
-  "evidence": {
-    "v6_recovery_gate_pass": false,
-    "v6_measured": {
-      "full_q50_full_overlap": 0.01,
-      "full_q25_full_overlap": 0.0,
-      "full_q50_75pct_overlap": 0.06,
-      "full_q50_50pct_overlap": 0.94,
-      "tail_age_0ms_q50": 1.0,
-      "tail_age_10ms_q50": 0.07,
-      "tail_age_20ms_q50": 0.07,
-      "tail_age_50ms_q50": 0.06,
-      "tail_age_100ms_q50": 0.08,
-      "pre_record_tail_age_50ms_q50_50pct": 0.09
+  "criteria": {
+    "full_q50_100pct": {
+      "threshold": 0.9,
+      "measured": 1.0,
+      "pass": true
+    },
+    "full_q25_100pct": {
+      "threshold": 0.7,
+      "measured": 0.01,
+      "pass": false
+    },
+    "full_q50_75pct": {
+      "threshold": 0.8,
+      "measured": 0.99,
+      "pass": true
+    },
+    "full_q50_50pct": {
+      "threshold": 0.6,
+      "measured": 1.0,
+      "pass": true
+    },
+    "tail_age_0ms_q50": {
+      "threshold": 0.8,
+      "measured": 1.0,
+      "pass": true
+    },
+    "tail_age_10ms_q50": {
+      "threshold": 0.8,
+      "measured": 0.76,
+      "pass": false
+    },
+    "tail_age_20ms_q50": {
+      "threshold": 0.8,
+      "measured": 0.84,
+      "pass": true
+    },
+    "tail_age_50ms_q50": {
+      "threshold": 0.7,
+      "measured": 0.81,
+      "pass": true
+    },
+    "tail_age_100ms_q50": {
+      "threshold": 0.5,
+      "measured": 0.93,
+      "pass": true
+    },
+    "pre_record_tail_age_50ms_q50_50pct": {
+      "threshold": 0.5,
+      "measured": 0.87,
+      "pass": true
     }
   },
-  "gross_short_nonmonotonicity_present": true
+  "detector_valid": false,
+  "all_gate_conditions_have_100_replicates": true,
+  "gross_short_nonmonotonicity_present": false
 }

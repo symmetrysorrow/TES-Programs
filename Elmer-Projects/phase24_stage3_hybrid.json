@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage3_hybrid",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "opt_in": true,
+  "strict_run": {
+    "phase24_vector_assembly": true,
+    "phase24_wall_profiling": true,
+    "assembly_completed": true,
+    "solver_converged": false,
+    "solver_failure": "FlexGMRES reached 2000 iterations with relative residual 2.56122e-7 against tolerance 1e-11",
+    "log": "results/case_phase24_hypre_cpu_smoke_7step/solver.log"
+  },
+  "element_accounting": {
+    "total": 223718,
+    "fast_tet": 125972,
+    "fast_prism": 95612,
+    "generic_prism": 2134,
+    "generic_other": 0,
+    "accounted": 223718,
+    "fast_percent": 99.046
+  },
+  "correctness": {
+    "baseline": "phase24_hybrid_generic_baseline",
+    "candidate": "case_phase24_hypre_cpu_smoke_7step",
+    "csr_sparsity_identical": true,
+    "matrix_relative_l2": 2.4913861069337815e-8,
+    "matrix_max_abs": 1.3073345548753182e-9,
+    "rhs_relative_l2": 1.5562414206567635e-16,
+    "rhs_max_abs": 3.3087224502121107e-23,
+    "gate_tolerance": 1e-3,
+    "gate_passed": true
+  },
+  "timing": {
+    "generic_assembly_seconds": 7.863,
+    "mixed_assembly_seconds": 3.272,
+    "mixed_assembly_speedup": 2.402,
+    "note": "Single strict smoke iteration; solver was not used for a speed claim because HYPRE did not converge at 1e-11."
+  },
+  "cache": {
+    "wedge_cache_builds": 95612,
+    "wedge_cache_hits_after_one_assembly": 95612,
+    "wedge_cache_hits_after_seven_assemblies": 669284,
+    "invalidations": 2
+  },
+  "notes": [
+    "Element code 706 is the exact six-node production wedge and uses eight cached quadrature-point geometries.",
+    "Variable-material wedges remain on the generic path; no element is double-assembled.",
+    "The strict HYPRE non-convergence is pre-existing for this production smoke and is independent of the mixed assembly correctness gate."
+  ]
+}

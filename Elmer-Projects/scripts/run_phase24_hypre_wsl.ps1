@@ -1,0 +1,85 @@
+[CmdletBinding()]
+param(
+    [ValidateSet("cpu", "cuda", "hip")]
+    # Stage 10 selects HIP for sustained repeated production.  CUDA remains
+    # an explicit, frozen reference via -Backend cuda.
+    [string]$Backend = "hip",
+    [string]$GpuArchitecture = "",
+    # Use the validated release for the selected backend unless overridden.
+    [string]$HypreTag = "",
+    [string]$Case = "",
+    [int]$MpiProcs = 1,
+    [switch]$Build,
+    [switch]$DryRun
+)
+
+$ErrorActionPreference = "Stop"
+if ($MpiProcs -lt 1) { throw "MpiProcs must be at least one" }
+
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$tools = Join-Path (Split-Path $repo -Parent) "tools"
+if ([string]::IsNullOrWhiteSpace($HypreTag)) {
+    $HypreTag = if ($Backend -eq "hip") { "v3.1.0" } else { "v3.0.0" }
+}
+$tagSuffix = if ($HypreTag -eq "v3.0.0") { "" } else {
+    "-" + (($HypreTag -replace '[^A-Za-z0-9]+', '-').Trim('-'))
+}
+$prefix = Join-Path $tools "elmer-hypre-$Backend$tagSuffix-wsl"
+$solver = Join-Path $prefix "bin\ElmerSolver_mpi"
+if ($Build) {
+    & (Join-Path $PSScriptRoot "support\build_elmer_hypre_gpu_wsl.ps1") `
+        -Backend $Backend -GpuArchitecture $GpuArchitecture -HypreTag $HypreTag
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+if (-not (Test-Path -LiteralPath $solver -PathType Leaf)) {
+    throw "Missing $solver. Re-run with -Build."
+}
+
+python scripts\prep\prepare_phase24_production.py
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+if ([string]::IsNullOrWhiteSpace($Case)) {
+    $Case = if ($Backend -eq "cpu") {
+        "case_phase24_hypre_cpu_smoke_7step"
+    } else {
+        "case_phase24_hypre_gpu_smoke_7step"
+    }
+}
+
+function To-WslPath([string]$Path) {
+    $drive = $Path.Substring(0, 1).ToLowerInvariant()
+    return "/mnt/$drive" + (($Path.Substring(2) -replace '\\', '/'))
+}
+
+$repoWsl = To-WslPath $repo
+$toolsWsl = To-WslPath $tools
+$prefixWsl = To-WslPath $prefix
+$solverWsl = "$prefixWsl/bin/ElmerSolver_mpi"
+$hypreWsl = "$toolsWsl/hypre-$Backend$tagSuffix-install"
+$amgxWsl = "$toolsWsl/amgx-gpu-install-mpi/lib"
+$fmodulesWsl = "$prefixWsl/share/elmersolver/include"
+$projectWsl = "$repoWsl/elmer_project_phase24_production.json"
+$udfCircuit = "$repoWsl/tes_parallel_circuit.so"
+$udfPulse = "$repoWsl/tes_transient_heat_source_t0.so"
+
+$runOptions = if ($DryRun) { "--dry-run" } else { "" }
+$deviceEnv = if ($Backend -eq "cuda") { "export CUDA_VISIBLE_DEVICES=0" } elseif ($Backend -eq "hip") { "export HIP_VISIBLE_DEVICES=0" } else { "true" }
+# Phase24 uses HYPRE only.  Do not load AMGX into the UDF link line because
+# its CUDA context is unrelated to HYPRE's device handle.
+$amgxFlags = ""
+$rocmEnv = if ($Backend -eq "hip") { "export HIP_PATH=/opt/rocm/core-7.14; export ROCM_PATH=/opt/rocm/core-7.14; export PATH=/opt/rocm/core-7.14/bin:/opt/rocm/core-7.14/lib/llvm/bin:/opt/rocm-wsl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/wsl/lib" } else { "true" }
+$bash = @"
+set -euo pipefail
+$deviceEnv
+$rocmEnv
+export ELMER_HOME='$prefixWsl'
+export PATH='$prefixWsl/bin':/usr/lib/wsl/lib:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export LD_LIBRARY_PATH='/usr/lib/wsl/lib:${hypreWsl}/lib:${amgxWsl}:${prefixWsl}/lib/elmersolver:${repoWsl}'
+cd '$repoWsl'
+gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_parallel_circuit.f90 -L'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$prefixWsl/lib/elmersolver' $amgxFlags -lelmersolver -o '$udfCircuit'
+gfortran -O2 -fPIC -shared -I'$fmodulesWsl' tes_transient_heat_source.f90 -L'$prefixWsl/lib/elmersolver' -Wl,-rpath,'$prefixWsl/lib/elmersolver' $amgxFlags -lelmersolver -o '$udfPulse'
+python3 run.py '$Case' --project '$projectWsl' --mpi-procs $MpiProcs --elmer-solver '$solverWsl' --runtime-bin '' $runOptions
+"@
+Write-Host "Running $Case with Phase24 HYPRE $Backend ($MpiProcs MPI rank(s))."
+& wsl.exe -d Ubuntu -- bash -lc $bash
+exit $LASTEXITCODE

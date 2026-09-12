@@ -1,0 +1,71 @@
+{
+  "target_iv": "G:\\tagawa\\20241206\\room1-ch1-iv3\\calibration\\IV_215mK.txt",
+  "target_bias_uA": 1400.0,
+  "r_shunt_sweep_mOhm": [
+    3.8,
+    3.85,
+    3.9
+  ],
+  "tes_resistance_is_fitted": false,
+  "alpha_bounds": [
+    50.0,
+    100.0
+  ],
+  "cases": [
+    {
+      "R_SH_ohm": 0.0038,
+      "R_TES_ohm": 0.017323886698759824,
+      "iv_operating_point": {
+        "R_SH_ohm": 0.0038,
+        "I_bias_uA": 1400.0,
+        "I_TES_uA": 251.84759205853607,
+        "V_TES_V": 4.362979150177563e-06,
+        "R_TES_ohm": 0.017323886698759824,
+        "P_J_W": 1.098805793173817e-09,
+        "eta_uA_per_V": 100.72533700916726,
+        "iv_point_index": 104
+      },
+      "best_score": 0.0034112448459866678,
+      "evaluations": 493,
+      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p8000mohm"
+    },
+    {
+      "R_SH_ohm": 0.00385,
+      "R_TES_ohm": 0.017551832576375086,
+      "iv_operating_point": {
+        "R_SH_ohm": 0.00385,
+        "I_bias_uA": 1400.0,
+        "I_TES_uA": 251.84759205853607,
+        "V_TES_V": 4.420386770574637e-06,
+        "R_TES_ohm": 0.017551832576375086,
+        "P_J_W": 1.1132637641366307e-09,
+        "eta_uA_per_V": 100.72533700916726,
+        "iv_point_index": 104
+      },
+      "best_score": 0.003370102961198276,
+      "evaluations": 492,
+      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p8500mohm"
+    },
+    {
+      "R_SH_ohm": 0.0039,
+      "R_TES_ohm": 0.017779778453990345,
+      "iv_operating_point": {
+        "R_SH_ohm": 0.0039,
+        "I_bias_uA": 1400.0,
+        "I_TES_uA": 251.84759205853607,
+        "V_TES_V": 4.477794390971709e-06,
+        "R_TES_ohm": 0.017779778453990345,
+        "P_J_W": 1.127721735099444e-09,
+        "eta_uA_per_V": 100.72533700916726,
+        "iv_point_index": 104
+      },
+      "best_score": 0.0033946030178134533,
+      "evaluations": 493,
+      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p9000mohm"
+    }
+  ],
+  "best_case_R_SH_ohm": 0.00385,
+  "best_case_R_TES_ohm": 0.017551832576375086,
+  "best_case_score": 0.003370102961198276,
+  "comparison_plot": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\noise_comparison.png"
+}

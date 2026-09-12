@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage4_reuse",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "production_policy": {
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "gpu_assembly": false
+  },
+  "validated": {
+    "native_build_install": true,
+    "static_cache_hit": true,
+    "static_cache_message": "Phase24 static matrix cache hit; RHS history refreshed",
+    "repeated_nonlinear_iterations": true,
+    "persistent_hypre_reuse_branch": false,
+    "full_historical_campaign": false
+  },
+  "notes": [
+    "Static matrix reuse is keyed by mesh metadata, timestep/order, CSR value count, and lumped-mass mode.",
+    "Transient RHS history is recomputed on every nonlinear iteration.",
+    "HYPRE IJ reuse is guarded and remains an opt-in path without a production speed claim until its branch is observed under a dedicated runtime gate.",
+    "The existing Phase24 physics-level matrix gate remains 1e-3; Stage 3 hybrid matrix and RHS comparison remains the correctness reference."
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage10_hip_validation",
+  "status": "PASS",
+  "device": {
+    "name": "AMD Radeon RX 9070 XT",
+    "architecture": "gfx1201",
+    "vram_gib": 15.81,
+    "windows_driver_status": "OK",
+    "windows_hip_sdk": "D:\\AI\\rocm10"
+  },
+  "runtime": {
+    "hip_platform": "amd",
+    "hip_runtime": "rocclr",
+    "hip_version_wsl": "7.14.60850-0000000",
+    "hipconfig": "PASS",
+    "rocminfo_gpu_agent": "PASS",
+    "device_query": "PASS",
+    "device_memory_probe": "PASS",
+    "hipsparse_query": "PASS",
+    "rocblas": "available",
+    "rocrand": "available",
+    "rocsolver": "available",
+    "rocthrust": "available"
+  },
+  "hypre_build": {
+    "version": "3.1.0",
+    "hip": true,
+    "gpu": true,
+    "architecture": "gfx1201",
+    "rocsparse": true,
+    "rocrand": true,
+    "rocblas": true,
+    "rocsolver": true,
+    "rocthrust": true,
+    "unified_memory": false,
+    "device_malloc_async": true,
+    "isolated_prefix": "D:\\Github\\TES-Programs\\tools\\hypre-hip-v3-1-0-install"
+  },
+  "production": {
+    "case": "case_phase24_hypre_gpu_smoke_7step",
+    "exit_code": 0,
+    "all_done": true,
+    "log_backend": "HIP",
+    "log_device": "AMD Radeon RX 9070 XT",
+    "warm_wall_seconds": 169.51,
+    "final_result_norm": 0.15485209551034601,
+    "gpu_backend_active": 1,
+    "device_allocations": 3,
+    "matrix_h2d_refreshes": 12,
+    "rhs_h2d_transfers": 3,
+    "solution_d2h_syncs": 13,
+    "full_object_migrations": 0
+  },
+  "evidence": {
+    "runtime": "artifacts/amd_gpu_runtime.json",
+    "device_validation": "artifacts/hip_device_validation.json",
+    "build": "artifacts/hypre_hip_build.json",
+    "production_log": "results/case_phase24_hypre_hip_smoke_7step_warm2/solver.log"
+  }
+}

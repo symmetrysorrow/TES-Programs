@@ -1,0 +1,59 @@
+{
+  "schema": "tes.hypre_hip_build.v1",
+  "status": "PASS",
+  "source": {
+    "path": "D:\\Github\\TES-Programs\\tools\\hypre-hip-v3-1-0-src",
+    "commit": "9dc9e18aed6a945a95f966e57daacfb1c269f6ec",
+    "compatibility_patch": "docs/hypre_hip_rocm714_compat.patch"
+  },
+  "build": {
+    "path": "D:\\Github\\TES-Programs\\tools\\hypre-hip-v3-1-0-build",
+    "install_prefix": "D:\\Github\\TES-Programs\\tools\\hypre-hip-v3-1-0-install",
+    "cmake_build_type": "Release",
+    "shared": "ON",
+    "mpi": "ON",
+    "hip": "ON",
+    "hip_architecture": "gfx1201",
+    "hip_flags": "-cxx-isystem /opt/rocm/core-7.14/include",
+    "rocsparse": "ON",
+    "rocrand": "ON",
+    "rocblas": "ON",
+    "rocsolver": "ON",
+    "rocthrust": "ON",
+    "unified_memory": "OFF",
+    "device_malloc_async": "ON",
+    "gpu_aware_mpi": "OFF",
+    "umpire": "OFF"
+  },
+  "installed_files": [
+    "D:\\Github\\TES-Programs\\tools\\hypre-hip-v3-1-0-install\\lib\\libHYPRE.so.3.1.0"
+  ],
+  "library_probe": {
+    "command": [
+      "wsl.exe",
+      "-d",
+      "Ubuntu",
+      "--",
+      "bash",
+      "-lc",
+      "test -f /mnt/d/Github/TES-Programs/tools/hypre-hip-v3-1-0-install/lib/libHYPRE.so"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "runtime_link_check": {
+    "command": [
+      "wsl.exe",
+      "-d",
+      "Ubuntu",
+      "--",
+      "bash",
+      "-lc",
+      "ldd /mnt/d/Github/TES-Programs/tools/hypre-hip-v3-1-0-install/lib/libHYPRE.so"
+    ],
+    "returncode": 0,
+    "stdout": "\tlinux-vdso.so.1 (0x0000721a1e5f8000)\n\tlibrocsparse.so.1 => /opt/rocm/lib/librocsparse.so.1 (0x0000721a16000000)\n\tlibrocrand.so.1 => /opt/rocm/lib/librocrand.so.1 (0x0000721a08600000)\n\tlibrocsolver.so.0 => /opt/rocm/lib/librocsolver.so.0 (0x0000721a05a00000)\n\tlibmpi.so.40 => /usr/lib/x86_64-linux-gnu/libmpi.so.40 (0x0000721a05600000)\n\tlibrocblas.so.5 => /opt/rocm/lib/librocblas.so.5 (0x0000721a03c00000)\n\tlibamdhip64.so.7 => /opt/rocm/lib/libamdhip64.so.7 (0x0000721a02000000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000721a01c00000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x0000721a1a8bb000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000721a1a88d000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000721a01800000)\n\tlibroctx64.so.4 => /opt/rocm/lib/libroctx64.so.4 (0x0000721a1a887000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x0000721a1a882000)\n\tlibucc.so.1 => /usr/lib/x86_64-linux-gnu/libucc.so.1 (0x0000721a15fbe000)\n\tlibpsm2.so.2 => /usr/lib/x86_64-linux-gnu/libpsm2.so.2 (0x0000721a15f56000)\n\tlibfabric.so.1 => /usr/lib/x86_64-linux-gnu/libfabric.so.1 (0x0000721a01a5b000)\n\tlibucp.so.0 => /usr/lib/x86_64-linux-gnu/libucp.so.0 (0x0000721a08488000)\n\tlibucs.so.0 => /usr/lib/x86_64-linux-gnu/libucs.so.0 (0x0000721a05590000)\n\tlibopen-pal.so.80 => /usr/lib/x86_64-linux-gnu/libopen-pal.so.80 (0x0000721a01eaf000)\n\tlibevent_core-2.1.so.7 => /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7 (0x0000721a1a84b000)\n\tlibevent_pthreads-2.1.so.7 => /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7 (0x0000721a15f51000)\n\tlibhwloc.so.15 => /usr/lib/x86_64-linux-gnu/libhwloc.so.15 (0x0000721a0552b000)\n\tlibpmix.so.2 => /usr/lib/x86_64-linux-gnu/libpmix.so.2 (0x0000721a01400000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000721a1e5fa000)\n\tlibhipblaslt.so.1 => /opt/rocm/lib/libhipblaslt.so.1 (0x0000721a00c00000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x0000721a15f4c000)\n\tlibrocm_kpack.so.0 => /opt/rocm/lib/librocm_kpack.so.0 (0x0000721a15f08000)\n\tlibrocprofiler-register.so.0 => /opt/rocm/lib/librocprofiler-register.so.0 (0x0000721a01726000)\n\tlibrt.so.1 => /usr/lib/x86_64-linux-gnu/librt.so.1 (0x0000721a08483000)\n\tlibamd_comgr.so.3 => /opt/rocm/lib/libamd_comgr.so.3 (0x00007219ffe00000)\n\tlibhsa-runtime64.so.1 => /opt/rocm/lib/libhsa-runtime64.so.1 (0x00007219ff800000)\n\tlibnuma.so.1 => /usr/lib/x86_64-linux-gnu/libnuma.so.1 (0x0000721a059f2000)\n\tlibrdmacm.so.1 => /usr/lib/x86_64-linux-gnu/librdmacm.so.1 (0x0000721a059d1000)\n\tlibefa.so.1 => /usr/lib/x86_64-linux-gnu/libefa.so.1 (0x0000721a0551c000)\n\tlibibverbs.so.1 => /usr/lib/x86_64-linux-gnu/libibverbs.so.1 (0x0000721a03bdb000)\n\tlibuct.so.0 => /usr/lib/x86_64-linux-gnu/libuct.so.0 (0x0000721a03b91000)\n\tlibucm.so.0 => /usr/lib/x86_64-linux-gnu/libucm.so.0 (0x0000721a054ff000)\n\tlibnl-3.so.200 => /usr/lib/x86_64-linux-gnu/libnl-3.so.200 (0x0000721a01a38000)\n\tlibudev.so.1 => /usr/lib/x86_64-linux-gnu/libudev.so.1 (0x0000721a016df000)\n\tlibmunge.so.2 => /usr/lib/x86_64-linux-gnu/libmunge.so.2 (0x0000721a01ea7000)\n\tlibrocm_sysdeps_z.so.1 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_z.so.1 (0x0000721a016c1000)\n\tlibrocroller.so.1 => /opt/rocm/lib/librocroller.so.1 (0x00007219f6800000)\n\tlibrocm_sysdeps_zstd.so.1 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_zstd.so.1 (0x0000721a01331000)\n\tlibclang-cpp.so.23.0git => /opt/rocm/lib/llvm/lib/libclang-cpp.so.23.0git (0x00007219f2000000)\n\tlibLLVM.so.23.0git => /opt/rocm/lib/llvm/lib/libLLVM.so.23.0git (0x00007219eae00000)\n\tlibrocm_sysdeps_elf.so.1 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_elf.so.1 (0x0000721a016a5000)\n\tlibrocm_sysdeps_drm.so.2 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_drm.so.2 (0x0000721a01a23000)\n\tlibrocm_sysdeps_drm_amdgpu.so.1 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_drm_amdgpu.so.1 (0x0000721a01690000)\n\tlibrocm_sysdeps_numa.so.1 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_numa.so.1 (0x0000721a01681000)\n\tlibnl-route-3.so.200 => /usr/lib/x86_64-linux-gnu/libnl-route-3.so.200 (0x0000721a01295000)\n\tlibrocm_sysdeps_liblzma.so.5 => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_liblzma.so.5 (0x0000721a01650000)\n\tlibrocm_sysdeps_bz2.so => /opt/rocm/lib/rocm_sysdeps/lib/librocm_sysdeps_bz2.so (0x0000721a01637000)\n",
+    "stderr": ""
+  }
+}

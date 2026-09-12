@@ -1,7 +1,111 @@
 {
   "stage": "pulse_noise_equivalence_test",
-  "status": "PNS1_not_allowed_CI_overlap_is_not_equivalence",
-  "classification": "PNS3",
+  "metric": "direct bootstrap CI of Delta_logR and Delta_phi",
+  "primary_frequencies_Hz": [
+    5,
+    10,
+    20
+  ],
+  "secondary_frequencies_Hz": [
+    30,
+    50,
+    70,
+    100
+  ],
   "CI_overlap_alone_decisive": false,
-  "evidence": "v6 only reported CI overlap; no direct difference CI with independent margin was completed"
+  "equivalence_margin_provenance": "PNS1 equivalence cannot be established",
+  "rows": {
+    "5": {
+      "delta_logR": -4.715013379700334,
+      "delta_logR_CI95": [
+        -5.324581712124099,
+        0.7650162370479626
+      ],
+      "delta_phi_rad": -1.917732631680221,
+      "delta_phi_CI95": [
+        -2.127173128618859,
+        0.1843939383668961
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "10": {
+      "delta_logR": -5.2946297754902005,
+      "delta_logR_CI95": [
+        -5.650558038134109,
+        2.646767402317921
+      ],
+      "delta_phi_rad": 2.8035195665353334,
+      "delta_phi_CI95": [
+        -3.130637227210988,
+        3.1252342666711788
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "20": {
+      "delta_logR": -3.8856667036673107,
+      "delta_logR_CI95": [
+        -4.352008873107658,
+        1.5861374659804874
+      ],
+      "delta_phi_rad": 1.3829354204686441,
+      "delta_phi_CI95": [
+        -0.31661567957521825,
+        1.6847254818566806
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "30": {
+      "delta_logR": -3.4375466801534444,
+      "delta_logR_CI95": [
+        -4.083818211584371,
+        0.9497081829479147
+      ],
+      "delta_phi_rad": 0.8422319832452098,
+      "delta_phi_CI95": [
+        -0.11369351184064524,
+        1.0186143440267115
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "50": {
+      "delta_logR": -1.726094473147935,
+      "delta_logR_CI95": [
+        -3.083770009052337,
+        4.09940950401216
+      ],
+      "delta_phi_rad": 0.5436011554501746,
+      "delta_phi_CI95": [
+        -0.9070582742409643,
+        0.7935984381867753
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "70": {
+      "delta_logR": -2.541539736722353,
+      "delta_logR_CI95": [
+        -3.1504278760155677,
+        2.9707986369594632
+      ],
+      "delta_phi_rad": 0.1304558082002923,
+      "delta_phi_CI95": [
+        -1.49858140521007,
+        1.1847049801328076
+      ],
+      "bootstrap_replicates": 2000
+    },
+    "100": {
+      "delta_logR": -2.440488878936426,
+      "delta_logR_CI95": [
+        -3.42075839849468,
+        2.7692277989736116
+      ],
+      "delta_phi_rad": 1.0839107038490352,
+      "delta_phi_CI95": [
+        -3.055904943814661,
+        3.057900559838468
+      ],
+      "bootstrap_replicates": 2000
+    }
+  },
+  "classification": "PNS3"
 }

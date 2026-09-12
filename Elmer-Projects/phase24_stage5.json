@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage5_epoch_persistent_hypre",
+  "case": "case_phase24_hypre_cpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cpu_hypre",
+  "production_policy": {
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "gpu_assembly": false
+  },
+  "epoch_contract": {
+    "structure_epoch": "full IJ/ParCSR/vector/solver rebuild",
+    "matrix_epoch": "fixed-pattern IJ numeric update and setup refresh",
+    "rhs_epoch": "persistent RHS update with warm-start x"
+  },
+  "validated": {
+    "native_build_install": true,
+    "bounded_smoke_exit_code": 0,
+    "bounded_smoke_timesteps": 7,
+    "lifecycle_decisions": 13,
+    "matrix_refreshes": 12,
+    "exact_rhs_only_events": 0,
+    "static_cache_hits": 9,
+    "retry_recoveries": 3,
+    "all_done": true,
+    "full_historical_campaign": false
+  },
+  "notes": [
+    "The mixed production case exercises Case B because dynamic and generic bulk terms remain present.",
+    "Case A is implemented and guarded by the explicit matrix-invariant contract but was not observed on this mixed nonlinear case.",
+    "Retry recovery restores the Elmer iterate and invokes one fresh numeric setup without broad solver tuning.",
+    "The retained native container is released on structure/mesh invalidation; unsupported AMS, block-diagonal, and separate-preconditioner cases remain conservative."
+  ]
+}

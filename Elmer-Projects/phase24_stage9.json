@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "artifact": "phase24_stage9_persistent_gpu_hypre",
+  "case": "case_phase24_hypre_gpu_smoke_7step",
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "backend": "cuda_hypre",
+  "hypre_release": "3.0.0",
+  "production_policy": {
+    "linear_system": "FlexGMRES + BoomerAMG",
+    "linear_system_convergence_tolerance": 5e-7,
+    "phase24_static_matrix_reuse": true,
+    "phase24_hypre_reuse": true,
+    "phase24_operator_lagging": "disabled",
+    "phase24_preconditioner_lagging": "adaptive",
+    "phase24_preconditioner_lag_max_age": 2,
+    "gpu_fem_assembly": false,
+    "gpu_residency": "persistent HYPRE solver, preconditioner, IJ handles, ParCSR state, and work buffers; host FEM insertion remains the boundary"
+  },
+  "device_validation": {
+    "backend_active": true,
+    "backend_name": "CUDA",
+    "device": "NVIDIA GeForce RTX 3060 Ti",
+    "device_info_printed": true,
+    "seven_step_exit_code": 0,
+    "all_done": true
+  },
+  "native_lifecycle": {
+    "matrix_refreshes": 12,
+    "krylov_setups": 16,
+    "amg_setups": 10,
+    "solves": 16,
+    "case_a_direct_solves": 0,
+    "case_b_reused_amg_solves": 6,
+    "case_b_fresh_amg_solves": 6,
+    "recovery_setups": 3,
+    "degradation_rebuilds": 3,
+    "recovery_rebuilds": 3,
+    "final_matrix_epoch": 14,
+    "final_preconditioner_epoch": 14
+  },
+  "gpu_counters": {
+    "backend_active": 1,
+    "matrix_h2d_refreshes": 12,
+    "rhs_h2d_transfers": 3,
+    "solution_h2d_transfers": 0,
+    "solution_d2h_syncs": 13,
+    "full_object_migrations": 0,
+    "device_allocation_events": 3,
+    "counter_note": "HYPRE 3.0.0 uses the supported host-IJ insertion/device-execution boundary; persistent device work state is retained, while changed host values are staged at refresh boundaries. Explicit IJ migration is not enabled because the tested HYPRE 3.1.0 build faults during sparse setup."
+  },
+  "cpu_comparison": {
+    "cpu_log": "results/case_phase24_hypre_cpu_smoke_7step/solver.log",
+    "cpu_wall_seconds": 355.41,
+    "cuda_wall_seconds": 193.62,
+    "wall_speedup": 1.8356058258444377,
+    "wall_time_reduction_fraction": 0.45522073098674776,
+    "cpu_final_result_norm": 0.15485209551058407,
+    "cuda_final_result_norm": 0.15485209551034601,
+    "final_result_norm_absolute_difference": 2.380595720552492e-13,
+    "final_result_norm_relative_difference": 1.5373351666331047e-12,
+    "cuda_final_relative_change": 0.0
+  },
+  "acceptance": {
+    "fatal_solver_errors": 0,
+    "linear_tolerance": 5e-7,
+    "final_tes_temperature": 0.1684598,
+    "final_tes_current": 1.473224e-4,
+    "final_tes_power_w": 3.251973e-10
+  },
+  "backend_selection": {
+    "cuda": "validated and preferred when a CUDA device is available",
+    "hip": "supported by the same backend-neutral source branch; not device-validated in this WSL session because rocminfo exposed no AMD GPU agent",
+    "cpu": "compile-time fallback when HYPRE_USING_GPU is absent, with the existing Phase24 CPU lifecycle preserved",
+    "version_note": "The runner defaults to validated HYPRE 3.0.0; HYPRE 3.1.0 remains selectable but its tested CUDA build aborts with cudaErrorInvalidDevice before the first sparse solve."
+  },
+  "artifacts": {
+    "gpu_log": "results/case_phase24_hypre_gpu_smoke_7step/solver.log",
+    "gpu_manifest": "results/case_phase24_hypre_gpu_smoke_7step/manifest.json",
+    "runner": "scripts/run_phase24_hypre_wsl.ps1",
+    "source_c": "../tools/elmer-hypre/src/fem/src/SolveHypre.c",
+    "source_fortran": "../tools/elmer-hypre/src/fem/src/SParIterSolver.F90"
+  }
+}

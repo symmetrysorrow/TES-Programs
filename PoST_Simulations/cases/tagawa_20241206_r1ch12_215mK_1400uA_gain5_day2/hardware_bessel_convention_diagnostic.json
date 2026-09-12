@@ -1,0 +1,108 @@
+{
+  "stage": "hardware_bessel_convention_diagnostic",
+  "purpose": "Hold the correlated balanced TES parameters fixed and isolate the effect of the 100 kHz analog hardware Bessel convention.",
+  "parameter_source": "PoST_Simulations\\cases\\tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2\\correlated_high_frequency_parameter_search.json",
+  "parameter_section": "best_finite",
+  "parameter_id": "polish_high_8287",
+  "parameters_refit_for_this_diagnostic": false,
+  "hardware_confirmed_physical_configuration": {
+    "order": 4,
+    "nominal_cutoff_Hz": 100000.0
+  },
+  "bypass_is_diagnostic_only": true,
+  "analysis_chain_fixed": {
+    "rate_Hz": 500000.0,
+    "samples": 100000,
+    "analysis_bessel_cutoff_Hz": 10000.0,
+    "finite_record_count": 345,
+    "finite_record_seed": 20260906
+  },
+  "same_finite_record_seed_for_all_cases": true,
+  "cases": [
+    {
+      "key": "phase",
+      "label": "100 kHz Bessel, phase norm (current)",
+      "norm": "phase",
+      "bypass": false
+    },
+    {
+      "key": "bypass",
+      "label": "100 kHz hardware Bessel bypass (diagnostic)",
+      "norm": "phase",
+      "bypass": true
+    },
+    {
+      "key": "mag",
+      "label": "100 kHz Bessel, mag norm (-3 dB @ 100 kHz)",
+      "norm": "mag",
+      "bypass": false
+    }
+  ],
+  "hardware_magnitude_at_100_kHz": {
+    "phase": {
+      "magnitude": 0.4179214269322223,
+      "dB": -7.578107238057176
+    },
+    "bypass": {
+      "magnitude": 1.0,
+      "dB": 0.0
+    },
+    "mag": {
+      "magnitude": 0.7071067811865475,
+      "dB": -3.0102999566398125
+    }
+  },
+  "comparison_metrics": {
+    "phase": {
+      "label": "100 kHz Bessel, phase norm (current)",
+      "post_analysis_simulation_over_experiment": {
+        "10000_Hz": 1.0065481841071682,
+        "50000_Hz": 0.9466490414029154,
+        "100000_Hz": 0.09791383281690613,
+        "150000_Hz": 0.15793209400053446,
+        "200000_Hz": 0.03152008021974738
+      },
+      "pre_analysis_normalized_asd": {
+        "10000_Hz": 0.6359933432231886,
+        "50000_Hz": 0.058748784845867597,
+        "100000_Hz": 0.013129022448152637,
+        "150000_Hz": 0.0029551457773943396,
+        "200000_Hz": 0.0008216572572669536
+      }
+    },
+    "bypass": {
+      "label": "100 kHz hardware Bessel bypass (diagnostic)",
+      "post_analysis_simulation_over_experiment": {
+        "10000_Hz": 1.013907001899433,
+        "50000_Hz": 1.150878615815686,
+        "100000_Hz": 0.2408290144715145,
+        "150000_Hz": 1.1810657176310841,
+        "200000_Hz": 0.6957263165654454
+      },
+      "pre_analysis_normalized_asd": {
+        "10000_Hz": 0.6406430172836031,
+        "50000_Hz": 0.07142326762368024,
+        "100000_Hz": 0.032292247221510396,
+        "150000_Hz": 0.022099604326552162,
+        "200000_Hz": 0.018137782670288267
+      }
+    },
+    "mag": {
+      "label": "100 kHz Bessel, mag norm (-3 dB @ 100 kHz)",
+      "post_analysis_simulation_over_experiment": {
+        "10000_Hz": 1.0106783107529023,
+        "50000_Hz": 1.056585035356935,
+        "100000_Hz": 0.16566231068438697,
+        "150000_Hz": 0.46351185338433365,
+        "200000_Hz": 0.12580135160144876
+      },
+      "pre_analysis_normalized_asd": {
+        "10000_Hz": 0.6386029666142276,
+        "50000_Hz": 0.0655714094559203,
+        "100000_Hz": 0.022213280924370263,
+        "150000_Hz": 0.008673010658554116,
+        "200000_Hz": 0.0032796024689297197
+      }
+    }
+  }
+}
