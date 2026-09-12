@@ -1,15 +1,15 @@
 {
-  "tes_programs_commit_sha_at_recording": "48d3cea2",
+  "tes_programs_commit_sha_at_recording": "a65d2c87",
   "native_source_path": "D:/Github/TES-Programs/tools/elmer-hypre",
   "native_git_repository": null,
   "native_commit_sha": null,
   "native_commit_status": "BLOCKER: checkout is under the parent repository tools/ ignore rule and has no independent Git history",
   "native_source_snapshot_sha256": {
-    "src/fem/src/ElmerSolver.F90": "0C86093176F4F2329CA453C0C0888EBEED27BF1C2265CCBCFA1EBC4064619F2B",
+    "src/fem/src/ElmerSolver.F90": "15A54E1EDEE485AE768D7E124AD5B21C85749184F3DEAA91908183BD4BFD6116",
     "src/fem/src/TimeIntegrate.F90": "3EAA36B502069661E1842D9D21DCE0898A6297E443F798EAB7A2B62EA3777927",
-    "src/fem/src/modules/HeatSolve.F90": "49DFDEEAD6684BD771073CAD07DE5D6736D0ADDF618AB1C1C9DEF87AD817DD5D",
-    "src/fem/src/SParIterSolver.F90": "1B2D923E0C04CF96C70E9938F2633DAD84A5DE99FED2CEA5DC3FB4B633EFD21A",
-    "src/fem/src/SolveHypre.c": "D9B3057BBD4F1D22F3BB96F6C9E03E6F6FBD02562448C18846E317746CF8D704"
+    "src/fem/src/modules/HeatSolve.F90": "CC1244CDAB20AC01CADE92EF85A11C2681B30F49DCD920660834F8450B1F12F1",
+    "src/fem/src/SParIterSolver.F90": "3A9928002278967C3F69D66CD5732D008901A5A4CEE9C685BA41F1379CAE3FF1",
+    "src/fem/src/SolveHypre.c": "104CD92986358799F9E1A412CFBBDA15BEE69E32D870E0D016E1BA19A288D454"
   },
   "build_directory": "D:/Github/TES-Programs/tools/elmer-hypre/build",
   "install_prefix": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11",
@@ -23,9 +23,11 @@
   "native_patch_artifact": "artifacts/phase24_stage11_native_adaptive_rejection.patch",
   "native_patch_artifact_sha256": "E7B24771A07D26D0CFB6C947C3493E5CC6AC5A896CBC500314E171A7EFB29DAA",
   "linear_lifecycle_diagnostic_artifact": "artifacts/phase24_stage11_linear_lifecycle_diagnostic.json",
-  "linear_lifecycle_diagnostic_artifact_sha256": "E65179A6578B2355FD9C3A2A86134ACB81A8095465B876B7ED1CBE0BAC405EC5",
+  "linear_lifecycle_diagnostic_artifact_sha256": "1B83C1C3C2B1327BF29F9656CF1082E27EBF817BB6981C3C968B54774483EC3A",
   "exact_failing_system_artifact": "artifacts/phase24_stage11_exact_failing_system.json",
-  "exact_failing_system_artifact_sha256": "B6DC310A2DA72FF5E544959831B0F293124C61E3E7F4F73C20525B7FF994F3A3",
+  "exact_failing_system_artifact_sha256": "2CB7E318496C7F98C4A949D63678FC8503F3377165F632716AA8B34DF279F3F4",
+  "actual_xvec_capture_artifact": "artifacts/phase24_stage11_actual_xvec_capture_blocker.json",
+  "actual_xvec_capture_artifact_sha256": "B9C91FE4432154FA79436E0F4D1A5BEFF07F3D7EB750E708A0623F819F0EC3D9",
   "standalone_replay": {
     "script": "scripts/support/phase24_stage11_hypre_replay.py",
     "script_sha256": "94165037E06DF2F622F3289C690B1EABFAA59BEF5C8A5935F65D441FE294176D",
@@ -44,9 +46,9 @@
     "direct_solver": "SciPy 1.17.1 sparse SuperLU backend"
   },
   "runtime_artifacts_sha256": {
-    "bin/ElmerSolver_mpi.exe": "E0DC32F5E262CCD42AC78597D4F60DED559FF208FB1404FE0F45647AEF94E18D",
-    "lib/elmersolver/libelmersolver.dll": "5999A34BD02A728DA9E0204C93943A1B816267E652C52DC9C7BA4A51731EB1F1",
-    "share/elmersolver/lib/HeatSolve.dll": "0452CE88962A5121611DD661BAE7D4EFAC3227F9C4E8D2C5F8A2830A86DA062B"
+    "bin/ElmerSolver_mpi.exe": "63B7791939099C4C1CBD20C57CFA8E63997D247246CF675D1B3D28BE27FAEC67",
+    "lib/elmersolver/libelmersolver.dll": "1E283370874FA0D7D374CC1CC7056D3ACD66DA551EEE98368606360FE35FE7D9",
+    "share/elmersolver/lib/HeatSolve.dll": "7E234655E9474C1934B0B6FF60F82207F58FCE317AF281AE4F3873897C0581D6"
   },
   "status": "VALIDATION IN PROGRESS; native commit must be fixed before COMPLETE"
 }

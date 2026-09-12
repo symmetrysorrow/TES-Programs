@@ -53,7 +53,16 @@
   },
   "tes_state_summary": "not serialized in the SaveLinearSystem dump; production log records TES T=1.684549e-1 K, I=1.475533e-4 A immediately before retry",
   "initial_guess": {
-    "elmer_xvec": "not present in the existing dump; cannot claim exact xvec replay",
+    "elmer_xvec": {
+      "source": "Elmer SaveLinearSystem solution dump captured immediately before the failing retry",
+      "file": "case_phase24_hypre_cpu_smoke_7step_sol.dat",
+      "sha256": "e50e1d827f749587d9782b339addeac4dbc8674ab65a594d6bdb9c44ff564c8c",
+      "records": 84636,
+      "full_vector_length": 87534,
+      "independent_csr_relative_residual": 0.0013803334210044731,
+      "caveat": "This is the saved Elmer x0 candidate; native failed xafter was not captured, and numbering/solver residual equivalence is not yet accepted."
+    },
+    "native_failed_xafter": "not captured; native wrapper dump hook did not produce an artifact despite reproducing the production failure",
     "zero_vector": "used by standalone HYPRE baseline",
     "previous_accepted_temperature": "not present as a vector artifact",
     "trusted_solution": "available as direct reference, but not treated as production xvec"
@@ -99,7 +108,16 @@
     "4000_log": "results/case_phase24_adaptive_output_smoke/standalone_hypre_4000.log",
     "4000_residual_csv": "results/case_phase24_adaptive_output_smoke/standalone_hypre_residual_4000.csv",
     "4000_reported_final_relative_residual": 0.007603503153,
-    "same_state_conclusion": "exact A/b reproduces a hard, slowly converging HYPRE solve outside Elmer; the exact operator is not directly comparable to the native failed xvec because that xvec was not saved",
+      "same_state_conclusion": "exact A/b reproduces a hard, slowly converging HYPRE solve outside Elmer; the saved Elmer x0 candidate replay remains non-equivalent to the native production residual, and the native failed xafter is still unavailable",
+      "elmer_saved_x0_replay": {
+        "guess_npy": "results/case_phase24_adaptive_output_smoke/actual_elmer_x0.npy",
+        "result": "FAIL",
+        "iterations": 2000,
+        "reported_initial_relative_residual": 2.6549873334867843e-05,
+        "reported_final_relative_residual": 2.6549877626465617e-05,
+        "native_production_final_relative_residual": 5.2906e-07,
+        "interpretation": "The SaveLinearSystem x0 candidate does not reproduce the native production convergence trace; do not use it as proof of warm-start fidelity."
+      },
     "failed_solution_vector": {
       "npy": "results/case_phase24_adaptive_output_smoke/standalone_hypre_solution_2000.npy",
       "sha256": "F3A0D157BAF6FFB571CCC7F354F4D4FCD3F26D810AF4F631A0C27689E979D7A9",
@@ -122,7 +140,7 @@
       "solution_sha256": "54fd843369ca4df92cc489791f0c397fc322711b2f96273b4c7d0dca82e5a219",
       "interpretation": "A trusted solution initial guess satisfies the HYPRE stopping test immediately; this demonstrates strong initial-guess sensitivity but is not an Elmer xvec replay."
     },
-    "production_xvec": "not serialized; exact native warm-start equivalence remains unproven"
+    "production_xvec": "native failed xafter not captured; exact native warm-start equivalence remains unproven"
   },
   "direct_reference": {
     "script": "scripts/support/phase24_stage11_direct_reference.py",
