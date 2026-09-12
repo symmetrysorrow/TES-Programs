@@ -16,6 +16,7 @@ ADAPTIVE_CASE = "case_phase24_adaptive_output_smoke"
 ADAPTIVE_DEBUG_CASE = "case_phase24_adaptive_debug_strict_4us"
 BDF2_SMOKE_CASE = "case_phase24_adaptive_bdf2_smoke_4us"
 ADAPTIVE_POST_EVENT_CASE = "case_phase24_adaptive_post_event_cooldown_2ns"
+ADAPTIVE_REJECTION_CASE = "case_phase24_adaptive_event_rejection_progression_2ns"
 
 
 def main() -> None:
@@ -50,6 +51,7 @@ def main() -> None:
     candidate["phase24_hypre_reuse"] = True
     candidate["solver"] = dict(candidate["solver"])
     candidate["solver"]["matrix_dump_prefix"] = CASE
+    candidate["solver"]["boomer_amg_strong_threshold"] = 0.5
     # Stage 4 uses the physical linear-solve policy accepted in Stage 3:
     # avoid spending the run budget on an artificial 1e-11 residual target.
     candidate["solver"]["linear_system_convergence_tolerance"] = 5e-7
@@ -221,6 +223,49 @@ def main() -> None:
         "path": "same production restart, mesh/material/TES/HYPRE path; 2-ns tail after the second event",
     }
     project["cases"][ADAPTIVE_POST_EVENT_CASE] = adaptive_post_event
+
+    # Bounded lifecycle regression for the production 0.5-ns floor.  This
+    # reaches the same two physical events as production, enables the native
+    # trial trace, and stops immediately after the 2-ns local tail.
+    adaptive_rejection = copy.deepcopy(adaptive_candidate)
+    adaptive_rejection["series_file"] = f"{ADAPTIVE_REJECTION_CASE}_series.csv"
+    adaptive_rejection["iteration_series_file"] = f"{ADAPTIVE_REJECTION_CASE}_iterations.csv"
+    adaptive_rejection["output_file_path"] = (
+        f"../work/meshes/{adaptive_rejection['mesh']}/{ADAPTIVE_REJECTION_CASE}.result"
+    )
+    adaptive_rejection["output_result"] = True
+    adaptive_rejection["timesteps"] = [["20.002[us]", 1]]
+    adaptive_rejection["adaptive_time"] = {
+        "start": "20[ms]",
+        "end": "20.020002[ms]",
+        "requested_output_times": {
+            "mode": "explicit",
+            "times": [
+                "20[ms]",
+                "20.02[ms]",
+                "20.020001[ms]",
+                "20.020002[ms]",
+            ],
+        },
+        "dt_initial": "20[us]",
+        "dt_min": "0.5[ns]",
+        "dt_max": "20[us]",
+        "relative_tolerance": 2.0e-3,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 8,
+        "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+        "debug": True,
+    }
+    adaptive_rejection["phase24_smoke"] = {
+        "purpose": "bounded post-event adaptive rejection lifecycle regression",
+        "reference_case": ADAPTIVE_CASE,
+        "path": "same production restart, mesh/material/TES/HYPRE path; 2-ns tail after the second event",
+    }
+    project["cases"][ADAPTIVE_REJECTION_CASE] = adaptive_rejection
 
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their

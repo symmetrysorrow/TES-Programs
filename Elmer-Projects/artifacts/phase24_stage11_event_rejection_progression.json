@@ -1,0 +1,99 @@
+{
+  "artifact_id": "phase24-stage11-event-rejection-progression-v1",
+  "stage_status": "VALIDATION_IN_PROGRESS / PRODUCTION_RUNTIME_LIMIT",
+  "scope": "post-event adaptive rejection lifecycle only; no solver tuning or matrix analysis",
+  "solver_policy": {
+    "method": "FlexGMRES + BoomerAMG",
+    "strong_threshold": 0.5,
+    "kdim": 100,
+    "amg_sweeps": 1,
+    "linear_tolerance": 5.0e-7,
+    "linear_max_iterations": 2000,
+    "temporal_rtol": 0.002,
+    "dt_min_s": 5.0e-10,
+    "dt_min_changed": false,
+    "solver_settings_changed": false
+  },
+  "pre_fix_trace": {
+    "source": "results/case_phase24_adaptive_output_smoke/epoch44_native_strong05_validation/epoch44_capture_run.log",
+    "event_t0_s": 0.02002,
+    "first_trial_dt_s": 9.999999994736e-10,
+    "first_trial_event_forced": true,
+    "first_trial_estimator_E": 4.175235460724,
+    "first_trial_result": "reject",
+    "controller_selected_next_dt_s": 5.0e-10,
+    "observed_followup_trial_dt_s": 3.40625e-6,
+    "observed_followup_event_forced": false,
+    "observed_followup_estimator_E": 8.169430316068,
+    "diagnosis": "reject shrink was written to ddt, then the next proposal reapplied previous accepted dt * ratio_min and expanded the retry before event clipping"
+  },
+  "root_cause": {
+    "dt_owner": "local adaptive controller ddt; accepted history only supplies ordinary-step ratio bounds",
+    "failure_sequence": "proposal 0.5 ns -> ratio lower-bound expansion to 3.40625 us -> event clipping/order interaction -> repeated 1 ns-class retry",
+    "rollback_effect": "physical, accepted-history, and TES trial state rollback did not directly overwrite ddt; the overwrite occurred in next-trial proposal generation",
+    "event_forced_lifecycle": "event_forced is recomputed per trial; the 0.5 ns retry is pre-event and event_forced=false",
+    "bdf_lifecycle": "rejected trial is followed by BDF1 retry; ordinary accepted steps resume BDF2"
+  },
+  "code_fix": {
+    "native_source": "D:/Github/TES-Programs/tools/elmer-hypre/src/fem/src/ElmerSolver.F90",
+    "patch_artifact": "artifacts/phase24_stage11_event_rejection_lifecycle.patch",
+    "python_reference": "scripts/support/adaptive_time.py",
+    "permanent_test": "tests/test_adaptive_time.py::test_rejected_event_retry_keeps_controller_shrink_below_ratio_floor",
+    "behavior": "skip the accepted-step ratio lower bound while AdaptiveRejectedInRow > 0; apply event clip after ordinary proposal bounds; preserve reject-selected ddt through rollback"
+  },
+  "bounded_regression": {
+    "case": "case_phase24_adaptive_event_rejection_progression_2ns",
+    "sif": "generated/cases/case_phase24_adaptive_event_rejection_progression_2ns.sif",
+    "log": "results/case_phase24_adaptive_event_rejection_progression_2ns/solver.log",
+    "manifest": "results/case_phase24_adaptive_event_rejection_progression_2ns/manifest.json",
+    "result": "PASS",
+    "all_done": true,
+    "trial_trace": [
+      {"id": 1, "accepted_before": 0, "t0_s": 0.02, "proposal_dt_s": 2.0e-5, "dt_before_event_clip_s": 2.0e-5, "trial_dt_s": 2.0e-5, "event_forced": false, "bdf_order": 1, "E": 0.5427886047563, "result": "accept", "next_trial_dt_s": 9.999999994736e-10},
+      {"id": 2, "accepted_before": 1, "t0_s": 0.02002, "proposal_dt_s": 2.0e-5, "dt_before_event_clip_s": 1.0e-5, "trial_dt_s": 9.999999994736e-10, "event_forced": true, "bdf_order": 2, "E": 5.722319451379, "result": "reject", "controller_next_dt_s": 5.0e-10, "rollback_start_dt_s": 9.999999994736e-10, "rollback_end_dt_s": 9.999999994736e-10, "dt_min_clamped": true, "next_trial_dt_s": 5.0e-10, "next_trial_bdf_order": 1, "linear_iterations": [6, 0, 3, 0, 3, 0], "linear_final_residuals": [1.40028e-7, 4.45247e-7, 4.27552e-7]},
+      {"id": 3, "accepted_before": 1, "t0_s": 0.02002, "proposal_dt_s": 5.0e-10, "dt_before_event_clip_s": 5.0e-10, "trial_dt_s": 5.0e-10, "event_forced": false, "bdf_order": 1, "E": 1.749157289461, "result": "forced_floor_accept", "next_trial_dt_s": 5.0e-10},
+      {"id": 4, "accepted_before": 2, "t0_s": 0.0200200005, "proposal_dt_s": 5.0e-10, "dt_before_event_clip_s": 5.0e-10, "trial_dt_s": 5.0e-10, "event_forced": false, "bdf_order": 2, "E": 25.66606371497, "result": "forced_floor_accept", "next_trial_dt_s": 5.0e-10},
+      {"id": 5, "accepted_before": 3, "t0_s": 0.020020001, "proposal_dt_s": 5.0e-10, "dt_before_event_clip_s": 5.0e-10, "trial_dt_s": 5.0e-10, "event_forced": false, "bdf_order": 2, "E": 2.997043409741, "result": "forced_floor_accept", "next_trial_dt_s": 5.0e-10},
+      {"id": 6, "accepted_before": 4, "t0_s": 0.0200200015, "proposal_dt_s": 5.0e-10, "dt_before_event_clip_s": 4.999999999943e-10, "trial_dt_s": 4.999999999943e-10, "event_forced": false, "bdf_order": 2, "E": 1.594038429741, "result": "forced_floor_accept", "next_trial_dt_s": null}
+    ],
+    "total_rejections": 1,
+    "max_consecutive_rejections": 1,
+    "linear_solves": 36,
+    "linear_max_iterations": 283,
+    "linear_count_at_2000": 0,
+    "event_crossing": true,
+    "post_event_accepted_steps": 2,
+    "waveform_sanity": "bounded result completed; no waveform comparison requested for this lifecycle regression"
+  },
+  "production_31us": {
+    "case": "case_phase24_adaptive_output_smoke",
+    "log": "results/case_phase24_adaptive_output_smoke/solver.log",
+    "run_started": "2026-09-12T23:59:29",
+    "run_end_reason": "single production run stopped at approximately 30-minute runtime limit",
+    "completed": false,
+    "all_done": false,
+    "partial_trace": {
+      "adaptive_records": 9,
+      "accepted_steps_observed": 8,
+      "rejections": 1,
+      "max_consecutive_rejections": 1,
+      "event_retry_progressed_to_0p5ns": true,
+      "event_crossing_reached": true,
+      "linear_solves_observed": 59,
+      "linear_max_iterations_observed": 420,
+      "linear_count_at_2000": 0,
+      "last_observed_cumtime_s": 2.0001e-5,
+      "last_observed_next_dt_s": 5.0e-10
+    },
+    "classification": "lifecycle_fix_passed; 31us completion not established within runtime limit"
+  },
+  "runtime": {
+    "elmer_solver": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11/bin/ElmerSolver_mpi.exe",
+    "elmer_solver_sha256": "7B90716B0C71F7429411D5A904844E36E43CAB5F543FDB2681D0ED9EE5BDDE95",
+    "libelmersolver_sha256_used_for_bounded_and_production_runs": "B6990BC46A085848B6B64761FF762D02ADFEA68454306EEBEA6DA971160E0BE4",
+    "libelmersolver_sha256_current_rebuilt_runtime": "C897967A017D163D45FD22544A141A23878463645BA3837E7E672900E1D80B2B",
+    "native_source_sha256_current": "8649D3CF5AEFEAA254B42ACE8AAEEAF29582F9FF6D5D3643C2002B63D62EE0CD"
+  },
+  "remaining_blocker": "31us production completion remains unverified because the single production run was stopped at the runtime limit; the post-event rejection lifecycle blocker is closed",
+  "stage11_status": "VALIDATION_IN_PROGRESS / PRODUCTION_RUNTIME_LIMIT"
+}

@@ -434,7 +434,7 @@ def solver1_block(
             "  BoomerAMG Smooth Type = 6",
             "  BoomerAMG Cycle Type = 1",
             "  BoomerAMG Num Functions = 1",
-            "  BoomerAMG Strong Threshold = 0.25",
+            f"  BoomerAMG Strong Threshold = {fmt_real(solver.get('boomer_amg_strong_threshold', 0.25))}",
         ]
     elif linear_system in {
         "iterative_hypre_flexgmres_boomeramg",
@@ -465,7 +465,7 @@ def solver1_block(
             "  BoomerAMG Smooth Type = 0",
             "  BoomerAMG Cycle Type = 1",
             "  BoomerAMG Num Functions = 1",
-            "  BoomerAMG Strong Threshold = 0.25",
+            f"  BoomerAMG Strong Threshold = {fmt_real(solver.get('boomer_amg_strong_threshold', 0.25))}",
         ]
     elif linear_system in {
         "iterative_hypre_block_diag",
@@ -519,7 +519,7 @@ def solver1_block(
             "  BoomerAMG Smooth Type = 0",
             "  BoomerAMG Cycle Type = 1",
             "  BoomerAMG Num Functions = 1",
-            "  BoomerAMG Strong Threshold = 0.25",
+            f"  BoomerAMG Strong Threshold = {fmt_real(solver.get('boomer_amg_strong_threshold', 0.25))}",
         ]
     elif linear_system == "mumps":
         lines += [

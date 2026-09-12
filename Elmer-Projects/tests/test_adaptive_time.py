@@ -66,6 +66,22 @@ def test_rejection_does_not_advance_accepted_count() -> None:
     assert controller.counters.bdf1_steps == 1
 
 
+def test_rejected_event_retry_keeps_controller_shrink_below_ratio_floor() -> None:
+    controller = AdaptiveController(
+        AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_min=0.5, r_max=2.0)
+    )
+    controller.accept(6.8125e-6, 0.01)
+    controller.dt = 1.0e-9
+    controller.reject(1.0e-9)
+
+    retry_dt, event_forced = controller.propose(
+        0.02002, 0.020020001, next_event=0.020020001
+    )
+
+    assert retry_dt == pytest.approx(0.5e-9)
+    assert event_forced is False
+
+
 def test_rejection_budget_is_consecutive_not_cumulative() -> None:
     controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 0.5, max_rejected=2))
 

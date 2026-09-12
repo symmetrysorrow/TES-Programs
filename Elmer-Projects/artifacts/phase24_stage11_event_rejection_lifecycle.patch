@@ -1,0 +1,30 @@
+--- a/src/fem/src/ElmerSolver.F90
++++ b/src/fem/src/ElmerSolver.F90
+@@ adaptive trial proposal
+-                IF (AdaptiveNextEvent < AdaptiveStepStart + ddt - 1.0d-12) THEN
+-                  ddt = AdaptiveNextEvent - AdaptiveStepStart
+-                  AdaptiveEventForced = .TRUE.
+-                END IF
+                 IF (AdaptivePreviousDt > 0.0_dp) THEN
+                   ddt = MIN(ddt,AdaptivePreviousDt*AdaptiveRatioMax)
+-                  IF (.NOT. AdaptiveEventForced) &
++                  ! A rejected retry owns its shrunken controller dt.
++                  IF (AdaptiveRejectedInRow == 0) &
+                        ddt = MAX(ddt,AdaptivePreviousDt*AdaptiveRatioMin)
+                 END IF
++                IF (AdaptiveNextEvent < AdaptiveStepStart + ddt - 1.0d-12) THEN
++                  ddt = AdaptiveNextEvent - AdaptiveStepStart
++                  AdaptiveEventForced = .TRUE.
++                END IF
+@@ rejection transition
+-                 ddt = MAX(AdaptiveMinTimestep,AdaptiveDecrease * ddt)
++                 AdaptiveRejectNextDt = MAX(AdaptiveMinTimestep,AdaptiveDecrease * ddt)
++                 ddt = AdaptiveRejectNextDt
+                  AdaptiveForceBDF1 = .TRUE.
+                  AdaptiveGrowthCooldownRemaining = 1
+
+The native source also emits one-line trial/reject lifecycle diagnostics with
+proposal, ratio-bound, event-clipped, trial, estimator, rollback, next-dt,
+event-forced, BDF-order, and rejection-streak state.  The Python reference
+controller applies the same reject-streak guard and has a permanent regression
+test.

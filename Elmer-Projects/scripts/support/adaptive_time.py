@@ -231,7 +231,12 @@ class AdaptiveController:
         forced = False
         if self.previous_dt is not None:
             dt = min(dt, self.previous_dt * self.config.r_max)
-            dt = max(dt, min(end - time, self.previous_dt * self.config.r_min))
+            # A rejected retry owns the shrunken controller dt.  The
+            # accepted-step ratio lower bound must not expand it before event
+            # clipping, otherwise a 0.5 ns retry can replay the old 1 ns
+            # event-landing step.
+            if self.rejected_in_row == 0:
+                dt = max(dt, min(end - time, self.previous_dt * self.config.r_min))
         if next_event is not None and time < next_event < time + dt + _TIME_EPS:
             dt = next_event - time
             forced = True
