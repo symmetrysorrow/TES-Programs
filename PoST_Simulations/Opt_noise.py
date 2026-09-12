@@ -742,6 +742,22 @@ def vector_bounds(bounds: dict):
     return keys, transformed
 
 
+def clip_candidate_to_bounds(candidate: dict, keys, bounds):
+    """Move an initial/warm-start point inside the configured physical box."""
+
+    for key in keys:
+        bound = bounds[key]
+        value = float(candidate[key])
+        if value < bound.lower or value > bound.upper:
+            clipped = float(np.clip(value, bound.lower, bound.upper))
+            print(
+                f"Clipping initial {key}: {value:.6g} -> {clipped:.6g} "
+                f"(allowed {bound.lower:.6g}--{bound.upper:.6g})"
+            )
+            candidate[key] = clipped
+    return candidate
+
+
 def encode(candidate: dict, keys, bounds):
     return np.asarray([
         np.log10(candidate[key]) if bounds[key].logarithmic else candidate[key]
@@ -949,6 +965,7 @@ def optimize_case(
             pass
 
     initial["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+    clip_candidate_to_bounds(initial, keys, bounds)
     initial_x = encode(initial, keys, bounds)
 
     cache = {}
@@ -1080,6 +1097,13 @@ def optimize_case(
 
     print("\nStage 3/3: robust residual least_squares")
     ls_cache = {}
+    least_squares_residual_size = len(fit_freq) + len(
+        band_mean_residuals(
+            np.zeros(len(fit_freq), dtype=float),
+            fit_freq,
+            args,
+        )
+    )
     lower = np.asarray([bound[0] for bound in scipy_bounds], dtype=float)
     upper = np.asarray([bound[1] for bound in scipy_bounds], dtype=float)
 
@@ -1109,7 +1133,11 @@ def optimize_case(
         point = tes_operating_point(candidate)
         if not point.get("stable", False):
             stability_rejection_count += 1
-            residual_vector = np.full(len(fit_freq), 3.0, dtype=float)
+            residual_vector = np.full(
+                least_squares_residual_size,
+                3.0,
+                dtype=float,
+            )
             ls_cache[cache_key] = residual_vector
             return residual_vector
 
@@ -1131,7 +1159,11 @@ def optimize_case(
                 )
         except Exception:
             simulation_failure_count += 1
-            residual_vector = np.full(len(fit_freq), 3.0, dtype=float)
+            residual_vector = np.full(
+                least_squares_residual_size,
+                3.0,
+                dtype=float,
+            )
 
         ls_cache[cache_key] = residual_vector
         return residual_vector
