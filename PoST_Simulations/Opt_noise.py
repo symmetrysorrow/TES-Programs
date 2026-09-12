@@ -608,9 +608,11 @@ def optimize_case(
     args,
     original: dict,
     reference: dict,
+    envelope: dict,
     fit_freq: np.ndarray,
     target: np.ndarray,
     experimental_rate: float,
+    experimental_samples: int,
     post_filter_white_asd: float,
     operating_point: dict,
     work_dir: Path,
@@ -619,24 +621,27 @@ def optimize_case(
 
     fixed_r_ohm = float(operating_point["R_TES_ohm"])
     shunt_resistance_ohm = float(operating_point["R_SH_ohm"])
-    case_original = original.copy()
+
+    # Start from the frozen 215 mK target-case proxy, not the generic
+    # PoST_Simulations/input.json (which belongs to a different thermal point).
+    case_original = reference.copy()
     case_original["R"] = fixed_r_ohm
-    # R_SH is metadata for the IV-derived R only; the TES noise model does not
-    # consume it directly.
     case_original["R_SH"] = shunt_resistance_ohm
+    case_original["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+    case_original["rate"] = float(experimental_rate)
+    case_original["samples"] = int(experimental_samples)
+    case_original["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
+    case_original["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
 
     work_dir.mkdir(parents=True, exist_ok=True)
     work_input_path = work_dir / "input.json"
     work_noise_path = work_dir / NOISE_DAT_PATH.name
-    bounds = parameter_bounds(reference, fixed_r_ohm=fixed_r_ohm)
+    bounds = parameter_bounds(reference, envelope, fixed_r_ohm=fixed_r_ohm)
     keys, scipy_bounds = vector_bounds(bounds)
 
     initial = case_original.copy()
-    initial["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
-    initial["rate"] = experimental_rate
     initial["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
     initial.pop("readout_white_asd_A_rtHz", None)
-    initial["samples"] = OPTIMIZATION_SAMPLES
     initial_x = encode(initial, keys, bounds)
 
     cache = {}
@@ -649,9 +654,11 @@ def optimize_case(
     def objective(vector):
         nonlocal evaluation_count, stability_rejection_count
         nonlocal simulation_failure_count, best_score, best_candidate
+
         cache_key = tuple(np.round(vector, 12))
         if cache_key in cache:
             return cache[cache_key]
+
         candidate = decode(
             vector,
             case_original,
@@ -662,13 +669,10 @@ def optimize_case(
         )
         candidate["R"] = fixed_r_ohm
         candidate["R_SH"] = shunt_resistance_ohm
-        candidate["samples"] = OPTIMIZATION_SAMPLES
+        candidate["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+        candidate["samples"] = int(experimental_samples)
         evaluation_count += 1
 
-        # Reject unstable five-state operating points before launching the
-        # subprocess.  PoST_Simulation.py performs the same stability check,
-        # but doing it here avoids a full Python launch and a noisy traceback
-        # for candidates that are expected to be invalid during optimization.
         point = tes_operating_point(candidate)
         if not point.get("stable", False):
             stability_rejection_count += 1
@@ -688,9 +692,7 @@ def optimize_case(
             return score
 
         try:
-            write_json_atomically(work_input_path, candidate)
-            run_post(args.timeout, work_dir, work_noise_path)
-            model = simulated_spectrum(candidate, fit_freq, work_noise_path)
+            model = deterministic_simulated_spectrum(candidate, fit_freq)
             score = fit_score(model, target, fit_freq, args)
             print(
                 f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
@@ -703,8 +705,9 @@ def optimize_case(
                 f"evaluation {evaluation_count:4d}: rejected ({error})"
             )
             score = 1e12
+
         cache[cache_key] = score
-        if score < best_score:
+        if score < best_score and score < 1e11:
             best_score = score
             best_candidate = candidate.copy()
             print("  new best score:", best_score)
@@ -714,7 +717,11 @@ def optimize_case(
         f"\n=== R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm: "
         f"R_TES={fixed_r_ohm * 1e3:.6f} mOhm ==="
     )
-    print("Initial evaluation")
+    print(
+        f"Target assumptions: T_bath={case_original['T_bath']:.6g} K, "
+        f"T_c search={bounds['T_c'].lower:.6g}--{bounds['T_c'].upper:.6g} K"
+    )
+    print("Initial deterministic evaluation")
     objective(initial_x)
 
     if args.skip_de:
@@ -744,37 +751,78 @@ def optimize_case(
     )
     objective(local_result.x)
 
+    if not np.isfinite(best_score) or best_score >= 1e11:
+        raise RuntimeError(
+            f"No stable valid candidate found for R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm"
+        )
+
+    # Validate only the winner through the full production finite-record path.
+    # This keeps the optimizer fast while ensuring the comparison plot is made
+    # with the same 100k-sample record length as the experiment.
+    validation_candidate = best_candidate.copy()
+    validation_candidate["samples"] = int(experimental_samples)
+    validation_candidate["rate"] = float(experimental_rate)
+    write_json_atomically(work_input_path, validation_candidate)
+    run_post(args.timeout, work_dir, work_noise_path)
+    finite_model = simulated_spectrum(
+        validation_candidate,
+        fit_freq,
+        work_noise_path,
+    )
+    finite_validation_score = fit_score(
+        finite_model,
+        target,
+        fit_freq,
+        args,
+    )
+
     print("\nObjective evaluations:", evaluation_count)
     print("Stability rejections:", stability_rejection_count)
-    print("PoST/subprocess failures:", simulation_failure_count)
-    print("Best score:", best_score)
+    print("Model-evaluation failures:", simulation_failure_count)
+    print("Best deterministic score:", best_score)
+    print("Full-record validation score:", finite_validation_score)
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
+
     return {
         "R_SH_ohm": shunt_resistance_ohm,
         "R_TES_ohm": fixed_r_ohm,
         "iv_operating_point": operating_point,
         "best_score": float(best_score),
+        "finite_validation_score": float(finite_validation_score),
         "evaluations": evaluation_count,
         "stability_rejections": stability_rejection_count,
         "simulation_failures": simulation_failure_count,
+        "searched_parameters": list(keys),
+        "search_bounds": {
+            key: {
+                "lower": float(bounds[key].lower),
+                "upper": float(bounds[key].upper),
+                "logarithmic": bool(bounds[key].logarithmic),
+            }
+            for key in keys
+        },
         "best_candidate": best_candidate,
         "work_dir": str(work_dir),
     }
 
-
 def main():
     args = arguments()
-    for path in (
+
+    required_paths = [
         POST_SCRIPT,
         INPUT_PATH,
         MODELNOISE_PATH,
         PULSE_CONFIG_PATH,
-        args.reference_input,
         args.target_iv,
-    ):
-        if not path.is_file():
-            raise FileNotFoundError(f"Missing required file: {path}")
+        args.case_dir / "proxy_parameter_envelope.json",
+        args.case_dir / "proxy_scenarios.json",
+    ]
+    if args.reference_input is not None:
+        required_paths.append(args.reference_input)
+    for required_path in required_paths:
+        if not required_path.is_file():
+            raise FileNotFoundError(f"Missing required file: {required_path}")
 
     if args.r_shunt_count < 1:
         raise ValueError("--r-shunt-count must be at least 1")
@@ -791,24 +839,50 @@ def main():
     if args.fit_points < 16:
         raise ValueError("--fit-points must be at least 16")
 
-    original = load_json(INPUT_PATH)  # state to restore when --apply-final is absent
-    reference = load_json(args.reference_input)
+    original = load_json(INPUT_PATH)
+    reference, envelope, reference_source = target_case_reference(
+        args.case_dir,
+        args.reference_input,
+    )
     pulse_config = load_json(PULSE_CONFIG_PATH)
     experimental_rate = float(pulse_config["Readout"]["Rate"])
+    experimental_samples = int(pulse_config["Readout"]["Sample"])
     if args.fit_max_hz >= experimental_rate / 2.0:
         raise ValueError(
             f"--fit-max-hz={args.fit_max_hz:g} must be below Nyquist "
             f"({experimental_rate / 2.0:g} Hz)"
         )
+
+    reference["rate"] = experimental_rate
+    reference["samples"] = experimental_samples
+    reference["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+    reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
+    reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+
     post_filter_white_asd = float(
-        original.get(
+        reference.get(
             "post_filter_white_asd_A_rtHz",
-            original.get("readout_white_asd_A_rtHz", 0.0),
+            reference.get("readout_white_asd_A_rtHz", 0.0),
         )
     )
-    backup = INPUT_PATH.with_name(f"input.before_scipy_optimization.{time.strftime('%Y%m%d-%H%M%S')}.json")
+
+    backup = INPUT_PATH.with_name(
+        f"input.before_scipy_optimization.{time.strftime('%Y%m%d-%H%M%S')}.json"
+    )
     shutil.copy2(INPUT_PATH, backup)
     print("backup:", backup)
+    print("target-case reference:", reference_source)
+    print(
+        "fixed acquisition:",
+        {
+            "T_bath_K": reference["T_bath"],
+            "rate_Hz": experimental_rate,
+            "samples": experimental_samples,
+            "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
+            "hardware_bessel_cutoff_Hz": HARDWARE_BESSEL_CUTOFF_HZ,
+            "analysis_bessel_cutoff_Hz": SIM_ANALYSIS_CUTOFF_HZ,
+        },
+    )
     fit_freq, target = target_spectrum(args)
 
     try:
@@ -820,33 +894,59 @@ def main():
         sweep_root = INPUT_PATH.parent / ".noise_optimization_work_rsh_sweep"
         sweep_root.mkdir(exist_ok=True)
         cases = []
+
         for shunt_resistance_ohm in shunt_values_ohm:
             operating_point = tes_resistance_from_iv(
                 args.target_iv,
                 float(shunt_resistance_ohm),
                 args.target_bias_ua,
             )
-            case_name = f"rsh_{shunt_resistance_ohm * 1e3:.4f}mohm".replace(".", "p")
+            case_name = (
+                f"rsh_{shunt_resistance_ohm * 1e3:.4f}mohm".replace(".", "p")
+            )
             result = optimize_case(
                 args,
                 original,
                 reference,
+                envelope,
                 fit_freq,
                 target,
                 experimental_rate,
+                experimental_samples,
                 post_filter_white_asd,
                 operating_point,
                 sweep_root / case_name,
             )
             cases.append(result)
 
-        best_case = min(cases, key=lambda row: row["best_score"])
+        # All branches use the same finite-record seed in production, so this
+        # is a fair branch-to-branch re-ranking after deterministic fitting.
+        best_case = min(cases, key=lambda row: row["finite_validation_score"])
         summary = {
+            "target_case_dir": str(args.case_dir),
+            "target_case_reference": reference_source,
             "target_iv": str(args.target_iv),
             "target_bias_uA": args.target_bias_ua,
-            "r_shunt_sweep_mOhm": [float(value * 1e3) for value in shunt_values_ohm],
+            "r_shunt_sweep_mOhm": [
+                float(value * 1e3) for value in shunt_values_ohm
+            ],
             "tes_resistance_is_fitted": False,
-            "alpha_bounds": [50.0, 100.0],
+            "fixed_target_assumptions": {
+                "T_bath_K": float(reference["T_bath"]),
+                "rate_Hz": experimental_rate,
+                "samples": experimental_samples,
+                "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
+                "hardware_bessel_cutoff_Hz": float(HARDWARE_BESSEL_CUTOFF_HZ),
+                "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
+            },
+            "T_c_proxy_range_K": [
+                float(envelope["parameters"]["T_c"]["range"][0]),
+                float(envelope["parameters"]["T_c"]["range"][1]),
+            ],
+            "optimization_evaluator": (
+                "deterministic expected post-analysis ASD; full-record "
+                "production validation only for each branch winner"
+            ),
             "fit": {
                 "min_hz": float(args.fit_min_hz),
                 "max_hz": float(args.fit_max_hz),
@@ -868,7 +968,11 @@ def main():
             "best_case_R_SH_ohm": best_case["R_SH_ohm"],
             "best_case_R_TES_ohm": best_case["R_TES_ohm"],
             "best_case_score": best_case["best_score"],
+            "best_case_finite_validation_score": best_case[
+                "finite_validation_score"
+            ],
         }
+
         summary_path = sweep_root / "summary.json"
         write_json_atomically(summary_path, summary)
         comparison_path = plot_sweep_comparison(
@@ -882,7 +986,13 @@ def main():
 
         if args.apply_final:
             final_candidate = best_case["best_candidate"].copy()
-            final_candidate["samples"] = original["samples"]
+            final_candidate["samples"] = experimental_samples
+            final_candidate["rate"] = experimental_rate
+            final_candidate["T_bath"] = float(reference["T_bath"])
+            final_candidate["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
+            final_candidate["hardware_bessel_order"] = (
+                TARGET_HARDWARE_BESSEL_ORDER
+            )
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
             print(
@@ -891,7 +1001,10 @@ def main():
                 f"R_TES={best_case['R_TES_ohm'] * 1e3:.6f} mOhm"
             )
         else:
-            print("Original input.json was not changed; use --apply-final to keep the best branch.")
+            print(
+                "Original input.json was not changed; use --apply-final to "
+                "keep the best branch."
+            )
     except Exception:
         write_json_atomically(INPUT_PATH, original)
         print("Original input.json restored after error.")
