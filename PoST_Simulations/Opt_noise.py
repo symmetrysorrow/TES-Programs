@@ -68,12 +68,16 @@ TARGET_BIAS_UA = 1400.0
 # frequency decade; the default extra high-frequency multiplier is disabled.
 FIT_MIN_HZ = 1_000.0
 FIT_MAX_HZ = 200_000.0
-FIT_WEIGHT_START_HZ = 30_000.0
-FIT_HIGH_FREQUENCY_WEIGHT = 1.0
-FIT_ROBUST_DELTA_DEX = 0.12
+FIT_WEIGHT_START_HZ = 80_000.0
+FIT_HIGH_FREQUENCY_WEIGHT = 4.0
+FIT_ROBUST_DELTA_DEX = 0.30
 FIT_POINTS = 401
 SIM_ANALYSIS_CUTOFF_HZ = 10_000.0  # experimental NoiseAnalysis cutoff.
 TARGET_HARDWARE_BESSEL_ORDER = 4
+# A quoted analog "100 kHz cutoff" is interpreted as the -3 dB frequency.
+# The target-case hardware refinement in this repository also preferred
+# scipy's magnitude-normalized Bessel convention over the legacy phase norm.
+TARGET_HARDWARE_BESSEL_NORM = "mag"
 EXCESS_JOHNSON_MAX = 5.0
 
 
@@ -197,6 +201,7 @@ def target_case_reference(case_dir: Path, explicit_reference: Path | None = None
     reference["rate"] = 500_000.0
     reference["samples"] = 100_000
     reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+    reference["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference.setdefault("excess_johnson_M", 0.0)
     return reference, envelope, reference_source
@@ -571,6 +576,7 @@ def decode(
     candidate["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
     candidate.pop("readout_white_asd_A_rtHz", None)
     candidate["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+    candidate["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     return candidate
 
 
@@ -590,6 +596,7 @@ def deterministic_simulated_spectrum(
         rate_hz=rate,
         cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
         order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
     )
     white = float(candidate.get("post_filter_white_asd_A_rtHz", 0.0))
     if white < 0.0:
@@ -632,6 +639,7 @@ def optimize_case(
     case_original["samples"] = int(experimental_samples)
     case_original["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     case_original["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+    case_original["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
 
     work_dir.mkdir(parents=True, exist_ok=True)
     work_input_path = work_dir / "input.json"
@@ -858,6 +866,7 @@ def main():
     reference["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+    reference["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
 
     post_filter_white_asd = float(
         reference.get(
@@ -879,6 +888,7 @@ def main():
             "rate_Hz": experimental_rate,
             "samples": experimental_samples,
             "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
+            "hardware_bessel_norm": TARGET_HARDWARE_BESSEL_NORM,
             "hardware_bessel_cutoff_Hz": HARDWARE_BESSEL_CUTOFF_HZ,
             "analysis_bessel_cutoff_Hz": SIM_ANALYSIS_CUTOFF_HZ,
         },
@@ -936,6 +946,7 @@ def main():
                 "rate_Hz": experimental_rate,
                 "samples": experimental_samples,
                 "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
+                "hardware_bessel_norm": TARGET_HARDWARE_BESSEL_NORM,
                 "hardware_bessel_cutoff_Hz": float(HARDWARE_BESSEL_CUTOFF_HZ),
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
             },
@@ -993,6 +1004,7 @@ def main():
             final_candidate["hardware_bessel_order"] = (
                 TARGET_HARDWARE_BESSEL_ORDER
             )
+            final_candidate["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
             print(
