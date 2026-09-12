@@ -543,13 +543,8 @@ def optimize_case(
     best_candidate = initial.copy()
 
     def objective(vector):
-        nonlocal (
-            evaluation_count,
-            stability_rejection_count,
-            simulation_failure_count,
-            best_score,
-            best_candidate,
-        )
+        nonlocal evaluation_count, stability_rejection_count
+        nonlocal simulation_failure_count, best_score, best_candidate
         cache_key = tuple(np.round(vector, 12))
         if cache_key in cache:
             return cache[cache_key]
