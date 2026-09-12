@@ -65,7 +65,8 @@ TARGET_BIAS_UA = 1400.0
 
 # ---------- Comparison settings ----------
 # Fit the full requested band.  Log-spaced samples give comparable weight per
-# frequency decade; the default extra high-frequency multiplier is disabled.
+# frequency decade, with an extra ramp above 80 kHz so the 100--200 kHz tail
+# cannot be sacrificed to improve the mid-band fit.
 FIT_MIN_HZ = 1_000.0
 FIT_MAX_HZ = 200_000.0
 FIT_WEIGHT_START_HZ = 80_000.0
