@@ -75,6 +75,9 @@ def main() -> int:
     p.add_argument("--native-npz", type=Path)
     p.add_argument("--native-b-npy", type=Path)
     p.add_argument("--max-iter", type=int, default=2000)
+    p.add_argument("--kdim", type=int, default=100)
+    p.add_argument("--strong-threshold", type=float, default=0.25)
+    p.add_argument("--amg-sweeps", type=int, default=1)
     p.add_argument("--csv", type=Path, default=Path("phase24_stage11_hypre_residual.csv"))
     p.add_argument("--scaling", choices=("none", "symmetric-jacobi", "row"), default="none")
     p.add_argument("--guess-npy", type=Path)
@@ -244,12 +247,12 @@ def main() -> int:
         check(flex_create(MPI_COMM_WORLD, C.byref(solver)), "HYPRE_ParCSRFlexGMRESCreate")
         check(amg_create(C.byref(precond)), "HYPRE_BoomerAMGCreate")
         check(flex_set["max_iter"](solver, args.max_iter), "HYPRE_FlexGMRESSetMaxIter")
-        check(flex_set["kdim"](solver, 100), "HYPRE_FlexGMRESSetKDim")
+        check(flex_set["kdim"](solver, args.kdim), "HYPRE_FlexGMRESSetKDim")
         check(flex_set["tol"](solver, 5.0e-7), "HYPRE_FlexGMRESSetTol")
         check(flex_set["absolute"](solver, 0.0), "HYPRE_FlexGMRESSetAbsoluteTol")
         check(flex_set["logging"](solver, 1), "HYPRE_FlexGMRESSetLogging")
         check(flex_set["print"](solver, 3), "HYPRE_FlexGMRESSetPrintLevel")
-        for key, value in (("tol", 0.0), ("max_iter", 1), ("relax", 18), ("coarsen", 8), ("sweeps", 1), ("levels", 25), ("interp", 6), ("smooth", 0), ("cycle", 1), ("functions", 1), ("strong", 0.25)):
+        for key, value in (("tol", 0.0), ("max_iter", 1), ("relax", 18), ("coarsen", 8), ("sweeps", args.amg_sweeps), ("levels", 25), ("interp", 6), ("smooth", 0), ("cycle", 1), ("functions", 1), ("strong", args.strong_threshold)):
             check(amg_set[key](precond, value), f"HYPRE_BoomerAMGSet{key}")
         check(flex_precond(solver, amg_solve, amg_setup, precond), "HYPRE_FlexGMRESSetPrecond")
         check(flex_setup(solver, A, b, xv), "HYPRE_ParCSRFlexGMRESSetup")
@@ -280,6 +283,7 @@ def main() -> int:
         solution_hash = hashlib.sha256(x.tobytes()).hexdigest()
         if args.solution_npy_out:
             np.save(args.solution_npy_out, np.ascontiguousarray(x))
+        print(f"replay settings=kdim:{args.kdim} strong_threshold:{args.strong_threshold:.17g} amg_sweeps:{args.amg_sweeps}")
         print(f"replay dimensions={n} nnz={rows.size} scaling={args.scaling} rhs_l2={np.linalg.norm(rhs):.17g} b_check_l2={np.linalg.norm(b_check):.17g} b_check_max={np.max(np.abs(b_check)):.17g} b_roundtrip_relative_error={b_roundtrip_relative_error:.17g}")
         print(f"replay status={status} result={'PASS' if status == 0 and residual.value <= 5.0e-7 else 'FAIL'} iterations={iterations.value} initial_relative_residual={initial_relative_residual:.17g} final_relative_residual={residual.value:.17g} original_relative_residual={original_relative_residual:.17g} tolerance=5e-7 getter_statuses={iter_status},{residual_status},{generic_residual_before_status},{generic_residual_status}")
         print(f"replay solution_sha256={solution_hash} residual_csv={args.csv}")

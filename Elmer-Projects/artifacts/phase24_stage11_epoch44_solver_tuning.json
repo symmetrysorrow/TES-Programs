@@ -1,0 +1,71 @@
+{
+  "artifact_id": "phase24-stage11-epoch44-solver-tuning-v1",
+  "scope": "standalone exact native epoch-44 checkpoint only; no full production/native validation run",
+  "production_policy_unchanged": {
+    "tolerance": 5.0e-7,
+    "max_iterations": 2000,
+    "temporal_rtol": 0.002,
+    "dt_min_s": 5.0e-10,
+    "bdf_policy": "unchanged",
+    "adaptive_policy": "unchanged",
+    "matrix_assembly": "unchanged"
+  },
+  "checkpoint": {
+    "artifact": "artifacts/phase24_stage11_epoch44_reproducer.json",
+    "capture_dir": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun",
+    "matrix_epoch": 44,
+    "A_binary_sha256": "DDD0AD7320D96AB0B2291EA0B7D0F9D38BFF7A4A2432E7E081970F19FEBBFC5D",
+    "b_sha256": "D91A89081DEC7D2A261F0EB5C701FC5AE35864D26084ED1CA37790F1FD05DC24",
+    "x_before_sha256": "70BC5C8507B3E7019225B71BA39801B7CE317734FBF7AB745FCE82B809011DC9"
+  },
+  "baseline": {
+    "solver": "FlexGMRES + BoomerAMG",
+    "kdim": 100,
+    "strong_threshold": 0.25,
+    "amg_sweeps": 1,
+    "status": 256,
+    "iterations": 2000,
+    "final_relative_residual": 5.290542684786949e-7,
+    "initial_relative_residual": 3.2974911352629086e-4,
+    "runtime_seconds": 44.09,
+    "classification": "FAIL; tolerance-adjacent slow tail"
+  },
+  "tested_candidates": [
+    {"label": "kdim50", "kdim": 50, "strong_threshold": 0.25, "amg_sweeps": 1, "status": 256, "iterations": 2000, "final_relative_residual": 5.233518213925892e-7, "runtime_seconds": 28.18, "classification": "REJECT; FAIL"},
+    {"label": "kdim200", "kdim": 200, "strong_threshold": 0.25, "amg_sweeps": 1, "status": 0, "iterations": 398, "final_relative_residual": 4.9989428544656815e-7, "runtime_seconds": 11.83, "classification": "PASS"},
+    {"label": "strong05", "kdim": 100, "strong_threshold": 0.5, "amg_sweeps": 1, "status": 0, "iterations": 461, "final_relative_residual": 4.9929270076838628e-7, "runtime_seconds": 10.61, "classification": "PASS; backup"},
+    {"label": "strong07", "kdim": 100, "strong_threshold": 0.7, "amg_sweeps": 1, "status": 256, "iterations": 2000, "final_relative_residual": 7.53260558676287e-7, "runtime_seconds": 37.39, "classification": "REJECT; worse than baseline"},
+    {"label": "sweeps2", "kdim": 100, "strong_threshold": 0.25, "amg_sweeps": 2, "status": 0, "iterations": 339, "final_relative_residual": 4.999318753348241e-7, "runtime_seconds": 8.66, "classification": "PASS; best iteration count"}
+  ],
+  "repeatability": {
+    "selected_label": "sweeps2",
+    "runs": [
+      {"status": 0, "iterations": 339, "final_relative_residual": 4.999318752741874e-7},
+      {"status": 0, "iterations": 339, "final_relative_residual": 4.999318745858752e-7}
+    ],
+    "x_relative_l2": 2.8407796786297645e-14,
+    "x_max_abs": 2.291500322826323e-13,
+    "classification": "stable PASS; non-bitwise floating-point variation is negligible"
+  },
+  "direct_reference": {
+    "solver": "SciPy sparse SuperLU",
+    "relative_residual": 1.6767763979433686e-13,
+    "max_abs_residual": 3.269466222054846e-14,
+    "wall_seconds": 11.659606100001838,
+    "solution_sha256": "d685a78bfd2fb95a9f7e38b5deb00d1420ed5e5a0a60c73bb5a46c1daa6dac77",
+    "selected_relative_l2_to_direct": 0.00023881029957184574,
+    "selected_max_abs_to_direct": 0.01136525932292716,
+    "selected_independent_relative_residual": 4.999318752741856e-7
+  },
+  "ranking": ["sweeps2", "kdim200", "strong05", "baseline_kdim100", "kdim50", "strong07"],
+  "selected_candidate": {
+    "label": "sweeps2",
+    "solver": "FlexGMRES + BoomerAMG",
+    "kdim": 100,
+    "changed_parameter": "BoomerAMG num sweeps: 1 -> 2",
+    "reason": "Only package-level change with the lowest stable iteration count and two PASS repeats"
+  },
+  "native_epoch44_validation": "not performed",
+  "remaining_blocker": "native epoch44 validation is the next gated step; no solver tuning beyond package-level options was attempted",
+  "stage11_status": "READY_FOR_NATIVE_SOLVER_VALIDATION"
+}
