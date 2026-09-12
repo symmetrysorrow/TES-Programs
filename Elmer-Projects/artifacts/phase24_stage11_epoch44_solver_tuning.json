@@ -53,27 +53,36 @@
     "max_abs_residual": 3.269466222054846e-14,
     "wall_seconds": 11.659606100001838,
     "solution_sha256": "d685a78bfd2fb95a9f7e38b5deb00d1420ed5e5a0a60c73bb5a46c1daa6dac77",
-    "selected_relative_l2_to_direct": 0.00023881029957184574,
-    "selected_max_abs_to_direct": 0.01136525932292716,
-    "selected_independent_relative_residual": 4.999318752741856e-7
+    "selected_relative_l2_to_direct": 0.00027899648195716086,
+    "selected_max_abs_to_direct": 0.011370068575860329,
+    "selected_independent_relative_residual": 4.992927008216366e-7,
+    "backup_sweeps2_relative_l2_to_direct": 0.00023881029957184574,
+    "backup_sweeps2_max_abs_to_direct": 0.01136525932292716
   },
   "epoch2_regression": {
     "checkpoint": "results/case_phase24_adaptive_output_smoke/native_exact_capture_attempt_v2",
+    "settings": {"kdim": 100, "strong_threshold": 0.5, "amg_sweeps": 1},
+    "status": 0,
+    "iterations": 169,
+    "final_relative_residual": 4.9996220096353256e-7,
+    "initial_relative_residual": 4.0227991586640264e-5,
+    "baseline_iterations": 168,
+    "classification": "PASS; no setup/convergence regression, one iteration increase"
+  },
+  "epoch2_backup_regression": {
     "settings": {"kdim": 100, "strong_threshold": 0.25, "amg_sweeps": 2},
     "status": 0,
     "iterations": 139,
     "final_relative_residual": 4.9799863393754896e-7,
-    "initial_relative_residual": 4.0227991586640264e-5,
-    "baseline_iterations": 168,
-    "classification": "PASS; no convergence regression, iteration count improved"
+    "classification": "PASS; iteration count improved"
   },
-  "ranking": ["sweeps2", "kdim200", "strong05", "baseline_kdim100", "kdim50", "strong07"],
+  "ranking": ["strong05", "sweeps2", "kdim200", "baseline_kdim100", "kdim50", "strong07"],
   "selected_candidate": {
-    "label": "sweeps2",
+    "label": "strong05",
     "solver": "FlexGMRES + BoomerAMG",
     "kdim": 100,
-    "changed_parameter": "BoomerAMG num sweeps: 1 -> 2",
-    "reason": "Only package-level change with the lowest stable iteration count and two PASS repeats"
+    "changed_parameter": "BoomerAMG strong threshold: 0.25 -> 0.5",
+    "reason": "Larger convergence margin than sweeps=2, two PASS repeats, and no epoch2 setup/convergence regression"
   },
   "native_epoch44_validation": "not performed",
   "remaining_blocker": "native epoch44 validation is the next gated step; no solver tuning beyond package-level options was attempted",
