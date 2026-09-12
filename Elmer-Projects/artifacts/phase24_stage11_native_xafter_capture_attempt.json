@@ -1,0 +1,79 @@
+{
+  "artifact_id": "phase24-stage11-native-xafter-capture-attempt-v2",
+  "status": "BLOCKED_FOR_NATIVE_XAFTER",
+  "scope": "failed native HYPRE solve after the Phase24 adaptive production retry",
+  "production_failure_reference": {
+    "solve_status": 256,
+    "iterations": 2000,
+    "final_relative_residual": 5.29059872736058568e-7,
+    "linear_tolerance": 5.0e-7
+  },
+  "implementation": {
+    "native_source": "D:/Github/TES-Programs/tools/elmer-hypre/src/fem/src/SolveHypre.c",
+    "source_sha256_after_patch": "CEBB6C4FD079BB30664DEA971D8534267B9842C480393043A20D0B3C0BD139C8",
+    "behavior": [
+      "Initializes x_before/b/getter buffers with a sentinel and records NaN, Inf, unchanged, min, max, and L2 statistics.",
+      "Records local/global HYPRE error state and HYPRE_ERROR_CONV before any failed-solve getter.",
+      "Clears only HYPRE_ERROR_CONV, retries IJVectorGetValues, then retries ParVectorGetValues, and compares both when successful.",
+      "Writes x_after only from a successful getter and records all API statuses and error flags in metadata."
+    ],
+    "build": "cmake --build tools/elmer-hypre/build --target elmersolver -j 8",
+    "build_result": "PASS"
+  },
+  "loader_provenance": {
+    "actual_loaded_precedence_path": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11/bin/libelmersolver.dll",
+    "mirrored_path": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11/lib/elmersolver/libelmersolver.dll",
+    "bin_sha256": "447AE9831C317B1CD3F5109928F9F9FA6473CD84DC256954FE2702988261E5A6",
+    "lib_elmersolver_sha256": "447AE9831C317B1CD3F5109928F9F9FA6473CD84DC256954FE2702988261E5A6",
+    "hashes_match": true
+  },
+  "capture_attempts": {
+    "epoch44_target_run": {
+      "result": "STOPPED_AFTER_EXCESSIVE_RUNTIME",
+      "x_after_dump_completed": false
+    },
+    "early_candidate_run": {
+      "selector": "first full-size 87534-DOF candidate with max_iter=2000",
+      "result": "STOPPED_AFTER_EXCESSIVE_RUNTIME",
+      "x_after_dump_completed": false
+    }
+  },
+  "existing_native_files": {
+    "indices": "results/case_phase24_adaptive_output_smoke/native_hypre_indices_rank0000.dat",
+    "x_before": "results/case_phase24_adaptive_output_smoke/native_hypre_x_before_rank0000.dat",
+    "b": "results/case_phase24_adaptive_output_smoke/native_hypre_b_rank0000.dat",
+    "metadata": "results/case_phase24_adaptive_output_smoke/native_hypre_metadata_rank0000.txt",
+    "x_after": null,
+    "full_vector_count": 87534,
+    "finite_and_unchanged_counts": {
+      "x_before_nan": 0,
+      "x_before_inf": 0,
+      "x_before_unchanged": 0,
+      "b_nan": 0,
+      "b_inf": 0,
+      "b_unchanged": 0
+    },
+    "raw_sha256": {
+      "indices": "164B8DAFFB86DAC76B9ABE630186BF99CC4FFB649AF5B1533AAF72E443BEAA59",
+      "x_before": "45568FFA96CC850B0339AB20EDD66FFBBE273207F89E325EC16660EE9B8BB431",
+      "b": "4CE1EB62C68F4D328B8B23441296B881C5525C87EFD7B762E98E31FAEB45C060"
+    },
+    "native_metadata_observed": {
+      "matrix_epoch": 44,
+      "solve_status": 256,
+      "vector_get_after_status": 256,
+      "iterations": 2000,
+      "final_relative_residual": 5.29059872736058568e-7
+    }
+  },
+  "exact_parity_check": {
+    "canonical_a": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_a.dat",
+    "canonical_b": "results/case_phase24_adaptive_output_smoke/failing_post_event_bdf1_b.dat",
+    "canonical_b_l2": 3.582307772938156e-6,
+    "captured_native_b_l2": 1.0000000000000275,
+    "captured_native_xbefore_against_canonical_ab_relative_residual": 122.8114434669993,
+    "replay_decision": "NOT_ACCEPTED",
+    "reason": "The available native vectors are not the same normalized A/b state as the canonical failing-system dump; no x_after provenance can be inferred from them."
+  },
+  "next_action": "Run a bounded single-failure harness or capture the exact epoch-44 native A/b and x_after in one process; do not tune HYPRE until that capture completes."
+}

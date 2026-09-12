@@ -62,7 +62,17 @@
       "independent_csr_relative_residual": 0.0013803334210044731,
       "caveat": "This is the saved Elmer x0 candidate; native failed xafter was not captured, and numbering/solver residual equivalence is not yet accepted."
     },
-    "native_failed_xafter": "not captured; native wrapper dump hook did not produce an artifact despite reproducing the production failure",
+    "native_failed_xafter": "not captured; the bounded capture attempts did not reach an x_after dump before being stopped for excessive runtime",
+    "available_native_capture_audit": {
+      "x_before": "results/case_phase24_adaptive_output_smoke/native_hypre_x_before_rank0000.dat",
+      "b": "results/case_phase24_adaptive_output_smoke/native_hypre_b_rank0000.dat",
+      "vector_count": 87534,
+      "captured_b_l2": 1.0000000000000275,
+      "canonical_b_l2": 3.582307772938156e-6,
+      "xbefore_relative_residual_against_canonical_ab": 122.8114434669993,
+      "accepted_as_exact_failing_system": false,
+      "interpretation": "The available native vectors are valid finite full-length buffers, but belong to a differently normalized or otherwise different A/b state and cannot substitute for the exact failing-system vectors."
+    },
     "zero_vector": "used by standalone HYPRE baseline",
     "previous_accepted_temperature": "not present as a vector artifact",
     "trusted_solution": "available as direct reference, but not treated as production xvec"
