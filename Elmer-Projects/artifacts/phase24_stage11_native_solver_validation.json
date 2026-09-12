@@ -1,0 +1,89 @@
+{
+  "artifact_id": "phase24-stage11-native-solver-validation-v1",
+  "scope": "native Elmer production-path validation of the selected package-level BoomerAMG candidate; no additional solver tuning",
+  "status": "VALIDATION_IN_PROGRESS_NEW_ADAPTIVE_BLOCKER",
+  "selected_candidate": {
+    "label": "strong05",
+    "solver": "FlexGMRES + BoomerAMG",
+    "kdim": 100,
+    "strong_threshold": 0.5,
+    "amg_sweeps": 1,
+    "linear_tolerance": 5.0e-7,
+    "linear_max_iterations": 2000,
+    "changed_parameter": "BoomerAMG strong threshold: 0.25 -> 0.5",
+    "backup_candidate": "strong threshold 0.25 with BoomerAMG Num Sweeps 2; not used"
+  },
+  "production_policy": {
+    "temporal_rtol": 0.002,
+    "dt_min_s": 5.0e-10,
+    "bdf_policy": "unchanged",
+    "adaptive_policy": "unchanged",
+    "matrix_assembly": "unchanged"
+  },
+  "actual_configuration": {
+    "tracked_sif": "generated/cases/case_phase24_adaptive_output_smoke.sif",
+    "validation_sif": "results/case_phase24_adaptive_output_smoke/epoch44_native_strong05_validation/epoch44_capture.sif",
+    "validation_log": "results/case_phase24_adaptive_output_smoke/epoch44_native_strong05_validation/epoch44_capture_run.log",
+    "runner_summary": "results/case_phase24_adaptive_output_smoke/epoch44_native_strong05_validation/epoch44_runner_summary.json",
+    "elmer_home": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11",
+    "loaded_binaries": {
+      "ElmerSolver_mpi.exe_sha256": "7B90716B0C71F7429411D5A904844E36E43CAB5F543FDB2681D0ED9EE5BDDE95",
+      "bin/libelmersolver.dll_sha256": "EBFEE64C16DA736112E66C4445C28BBDF81C6ADAA7BD8DD9018A59730C212DFA",
+      "lib/elmersolver/libelmersolver.dll_sha256": "EBFEE64C16DA736112E66C4445C28BBDF81C6ADAA7BD8DD9018A59730C212DFA"
+    }
+  },
+  "native_validation": {
+    "capture_complete": false,
+    "runner_returncode": 1,
+    "runtime_seconds": 1800.8864506000536,
+    "termination": "runner timeout; no Elmer fatal error observed",
+    "exact_epoch44_capture": "not triggered because the native matrix epoch counter advanced to 45 for the physical event retry under this candidate",
+    "event_state": {
+      "physical_time_s": 0.0200200005,
+      "dt_s": 5.0e-10,
+      "bdf_order": 1,
+      "event_forced": true,
+      "observed_matrix_epoch": 45
+    },
+    "event_hard_solve": {
+      "observed_matrix_epoch": 45,
+      "status": "pass inferred from continued native run; explicit status was not emitted",
+      "required_iterations": 472,
+      "final_relative_residual_logged": 4.99206e-7,
+      "fatal_error": false
+    },
+    "linear_solve_summary_observed": {
+      "solve_count": 70,
+      "min_iterations": 0,
+      "median_iterations": 3,
+      "mean_iterations": 124.485714,
+      "p95_iterations": 425,
+      "max_iterations": 472,
+      "count_over_500": 0,
+      "count_over_1000": 0,
+      "count_at_2000": 0,
+      "maximum_logged_final_relative_residual": 4.99962e-7
+    },
+    "adaptive_summary_observed": {
+      "rejection_count_before_timeout": 5,
+      "maximum_consecutive_rejections": 5,
+      "last_rejection": {
+        "index": 5,
+        "consecutive": 5,
+        "event": true,
+        "t0_s": 0.02002,
+        "hnew_s": 9.999999994736e-10,
+        "hold_s": 6.812499999998e-6
+      },
+      "accepted_steps": "not emitted before timeout"
+    }
+  },
+  "production_31us": {
+    "completed": false,
+    "completion_marker": "ALL DONE not observed",
+    "tes_waveform_sanity": "not available because the campaign did not complete"
+  },
+  "classification": "LINEAR_SOLVER_PASS_NEW_ADAPTIVE_BLOCKER",
+  "remaining_blocker": "post-event adaptive rejection/progression loop near t=20.0200005 ms; do not expand solver tuning until separately requested",
+  "next_action": "stop solver tuning exploration and treat adaptive progression as the next isolated blocker"
+}

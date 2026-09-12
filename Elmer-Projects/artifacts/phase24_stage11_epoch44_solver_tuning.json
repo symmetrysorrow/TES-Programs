@@ -84,7 +84,13 @@
     "changed_parameter": "BoomerAMG strong threshold: 0.25 -> 0.5",
     "reason": "Larger convergence margin than sweeps=2, two PASS repeats, and no epoch2 setup/convergence regression"
   },
-  "native_epoch44_validation": "not performed",
-  "remaining_blocker": "native epoch44 validation is the next gated step; no solver tuning beyond package-level options was attempted",
-  "stage11_status": "READY_FOR_NATIVE_SOLVER_VALIDATION"
+  "native_epoch44_validation": {
+    "artifact": "artifacts/phase24_stage11_native_solver_validation.json",
+    "exact_capture": false,
+    "event_hard_solve": "native equivalent passed at observed matrix epoch 45; epoch counter shifted under the candidate",
+    "31us_completion": false,
+    "classification": "LINEAR_SOLVER_PASS_NEW_ADAPTIVE_BLOCKER"
+  },
+  "remaining_blocker": "post-event adaptive rejection/progression loop near t=20.0200005 ms; no further solver tuning attempted",
+  "stage11_status": "NEW_ADAPTIVE_BLOCKER_AFTER_NATIVE_LINEAR_PASS"
 }
