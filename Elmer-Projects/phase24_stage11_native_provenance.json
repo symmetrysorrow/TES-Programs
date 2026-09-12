@@ -1,5 +1,5 @@
 {
-  "tes_programs_commit_sha_at_recording": "a65d2c87",
+  "tes_programs_commit_sha_at_recording": "04acf26b",
   "native_source_path": "D:/Github/TES-Programs/tools/elmer-hypre",
   "native_git_repository": null,
   "native_commit_sha": null,
@@ -9,7 +9,7 @@
     "src/fem/src/TimeIntegrate.F90": "3EAA36B502069661E1842D9D21DCE0898A6297E443F798EAB7A2B62EA3777927",
     "src/fem/src/modules/HeatSolve.F90": "CC1244CDAB20AC01CADE92EF85A11C2681B30F49DCD920660834F8450B1F12F1",
     "src/fem/src/SParIterSolver.F90": "3A9928002278967C3F69D66CD5732D008901A5A4CEE9C685BA41F1379CAE3FF1",
-    "src/fem/src/SolveHypre.c": "4ACDC1297B4E732D7DB9723137F80F3528EC48292390631A63984957091BA8E4"
+    "src/fem/src/SolveHypre.c": "14F12CE0870D762B4EE04A11A3376ADFCA9A9D2B74DECD446E2BFA8DD281004E"
   },
   "build_directory": "D:/Github/TES-Programs/tools/elmer-hypre/build",
   "install_prefix": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11",
@@ -51,11 +51,27 @@
     "failed_solution_vector_sha256": "F3A0D157BAF6FFB571CCC7F354F4D4FCD3F26D810AF4F631A0C27689E979D7A9",
     "direct_solver": "SciPy 1.17.1 sparse SuperLU backend"
   },
+  "epoch44_checkpoint_reproducer_artifact": "artifacts/phase24_stage11_epoch44_reproducer.json",
+  "epoch44_checkpoint_reproducer_script": "scripts/support/phase24_stage11_epoch44_checkpoint_replay.py",
+  "epoch44_checkpoint_reproducer_script_sha256": "A9D58A86F3F691FB3ADB4845DA4EDC65D8888421D320909AA54F66F9E4E4284B",
+  "epoch44_capture_runner": "scripts/support/phase24_stage11_epoch44_capture_runner.py",
+  "epoch44_capture_runner_sha256": "470DB2CFD3373EB79D574635C1D61251D17DE9E6A9F0B44E5EEAC9404E6A25F9",
+  "epoch44_native_capture": {
+    "capture_directory": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun",
+    "matrix_epoch": 44,
+    "status": 256,
+    "iterations": 2000,
+    "final_relative_residual": 5.29059872736058568e-7,
+    "A_binary_sha256": "DDD0AD7320D96AB0B2291EA0B7D0F9D38BFF7A4A2432E7E081970F19FEBBFC5D",
+    "b_sha256": "D91A89081DEC7D2A261F0EB5C701FC5AE35864D26084ED1CA37790F1FD05DC24",
+    "x_before_sha256": "70BC5C8507B3E7019225B71BA39801B7CE317734FBF7AB745FCE82B809011DC9",
+    "x_after_sha256": "5B2F0905910840463193888BBC5CA9B1E31E50872403DC89F331B8CD9CD52753"
+  },
   "runtime_artifacts_sha256": {
     "bin/ElmerSolver_mpi.exe": "63B7791939099C4C1CBD20C57CFA8E63997D247246CF675D1B3D28BE27FAEC67",
-    "bin/libelmersolver.dll": "24A720DA48E0C48324E86E9AE9FCECD5F145AFAA7F97D18BBFB53F519777A292",
-    "lib/elmersolver/libelmersolver.dll": "24A720DA48E0C48324E86E9AE9FCECD5F145AFAA7F97D18BBFB53F519777A292",
+    "bin/libelmersolver.dll": "EBFEE64C16DA736112E66C4445C28BBDF81C6ADAA7BD8DD9018A59730C212DFA",
+    "lib/elmersolver/libelmersolver.dll": "EBFEE64C16DA736112E66C4445C28BBDF81C6ADAA7BD8DD9018A59730C212DFA",
     "share/elmersolver/lib/HeatSolve.dll": "7E234655E9474C1934B0B6FF60F82207F58FCE317AF281AE4F3873897C0581D6"
   },
-  "status": "READY_FOR_SOLVER_TUNING on bounded native reproducer; production epoch-44 validation remains in progress"
+  "status": "CHECKPOINT_REPRODUCER_IN_PROGRESS; epoch-44 native capture and short exact-system replay complete; full adaptive/TES restart remains open"
 }

@@ -151,7 +151,7 @@
       "solution_sha256": "54fd843369ca4df92cc489791f0c397fc322711b2f96273b4c7d0dca82e5a219",
       "interpretation": "A trusted solution initial guess satisfies the HYPRE stopping test immediately; this demonstrates strong initial-guess sensitivity but is not an Elmer xvec replay."
     },
-    "production_xvec": "native failed xafter not captured; exact native warm-start equivalence remains unproven"
+    "production_xvec": "captured in the epoch-44 native checkpoint artifact; standalone replay is numerically equivalent in hard-solve class, though not bitwise deterministic"
   },
   "direct_reference": {
     "script": "scripts/support/phase24_stage11_direct_reference.py",

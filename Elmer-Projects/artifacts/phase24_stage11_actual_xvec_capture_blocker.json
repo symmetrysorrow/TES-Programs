@@ -2,6 +2,7 @@
   "artifact_id": "phase24-stage11-actual-xvec-capture-audit-v1",
   "status": "BLOCKED_FOR_EXACT_NATIVE_LINEAR_SYSTEM_CAPTURE",
   "superseded_by_bounded_reproducer": "artifacts/phase24_stage11_native_exact_reproducer.json",
+  "epoch44_resolution": "artifacts/phase24_stage11_epoch44_reproducer.json",
   "scope": "31 us production adaptive campaign, exact pre-event BDF1 retry at 20.0200005 ms",
   "production_failure": {
     "linear_tolerance": 5.0e-7,
@@ -34,13 +35,19 @@
   },
   "native_xafter": {
     "requested": true,
+    "epoch44_captured": true,
+    "epoch44_artifact": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_x_after.npy",
+    "epoch44_sha256": "5B2F0905910840463193888BBC5CA9B1E31E50872403DC89F331B8CD9CD52753",
+    "epoch44_status": 256,
+    "epoch44_iterations": 2000,
+    "epoch44_final_relative_residual": 5.29059872736058568e-7,
     "capture_hooks": [
       "Fortran failed-solve capture after SolveHYPRE2",
       "C wrapper failed-iterate retrieval before convergence-contract return",
       "C wrapper one-shot dump via PHASE24_HYPRE_XAFTER_PATH and absolute fallback"
     ],
-    "artifact": null,
-    "blocker": "The production epoch-44 failure xafter remains unrecorded, but a bounded epoch-2 invocation now captures A_native, b_native, x_before, and x_after and replays faithfully. The remaining blocker is exact capture of the production failure invocation, not x_after retrieval in general."
+    "artifact": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_x_after.npy",
+    "blocker": "Resolved for epoch 44. Full adaptive/BDF/TES restart serialization remains a separate open item."
   },
   "direct_reference": {
     "relative_residual": 4.1951356950876785e-10,

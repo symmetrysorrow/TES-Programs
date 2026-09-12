@@ -1,0 +1,78 @@
+{
+  "artifact_id": "phase24-stage11-epoch44-checkpoint-reproducer-v1",
+  "status": "CHECKPOINT_REPRODUCER_IN_PROGRESS",
+  "scope": "production epoch 44 hard linear solve; no post-capture 31 us completion",
+  "checkpoint": {
+    "kind": "exact_native_hypre_linear_system",
+    "position": "epoch 44 solve immediately after the event rejection and before the next nonlinear iteration",
+    "physical_time_s": 0.02002,
+    "step_start_s": 0.02002,
+    "step_end_s": 0.0200200005,
+    "accepted_dt_s": 5.0e-10,
+    "proposed_next_dt_s": 1.0e-9,
+    "previous_accepted_dt_s": 6.8125e-6,
+    "bdf_order": 1,
+    "event_forced": true,
+    "event_time_s": 0.020020001,
+    "rejection_count": 1,
+    "structure_epoch": 1,
+    "matrix_epoch": 44,
+    "rhs_epoch": 1,
+    "preconditioner_epoch": 44,
+    "nonlinear_iteration": 1,
+    "source": "epoch44_capture_run.log plus production reference values; adaptive/TES fields are not serialized by the native linear capture"
+  },
+  "state_inventory": {
+    "exact_native_A": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_A.npz",
+    "exact_native_A_binary": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_A_rank0000.csrbin",
+    "exact_native_b": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_b.npy",
+    "exact_native_x_before": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_x_before.npy",
+    "exact_native_x_after": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_x_after.npy",
+    "exact_native_indices": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_exact_indices.npy",
+    "native_metadata": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/native_hypre_metadata_rank0000.txt",
+    "supplemental_elmer_x0": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/epoch44_state_x0.dat",
+    "supplemental_elmer_xafter": "results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun/epoch44_state_xafter.dat",
+    "not_serialized": ["full BDF history vectors", "adaptive controller cooldown internals", "TES internal state", "complete Elmer restart/result state"]
+  },
+  "native_capture": {
+    "global_size": 87534,
+    "nnz": 1561670,
+    "status": 256,
+    "iterations": 2000,
+    "final_relative_residual": 5.29059872736058568e-7,
+    "tolerance": 5.0e-7,
+    "A_binary_sha256": "DDD0AD7320D96AB0B2291EA0B7D0F9D38BFF7A4A2432E7E081970F19FEBBFC5D",
+    "A_npz_sha256": "E5E308FE6DE315FD6D44E0A63B2B041F5F35F32006F94B6AF587A10B8C64DD74",
+    "b_sha256": "D91A89081DEC7D2A261F0EB5C701FC5AE35864D26084ED1CA37790F1FD05DC24",
+    "x_before_sha256": "70BC5C8507B3E7019225B71BA39801B7CE317734FBF7AB745FCE82B809011DC9",
+    "x_after_sha256": "5B2F0905910840463193888BBC5CA9B1E31E50872403DC89F331B8CD9CD52753",
+    "indices_sha256": "FEDECC17D5CD099BF362AC43FDE211F6F2DF3C557AC38BA3D77CB393A43E437C",
+    "capture_runtime_s": 1062.5195638,
+    "capture_stop": "immediately after native metadata/x_after dump; solver return code was 1 because the production failure path was intentionally interrupted"
+  },
+  "reproducer": {
+    "command": "python scripts/support/phase24_stage11_epoch44_checkpoint_replay.py results/case_phase24_adaptive_output_smoke/epoch44_capture_20260912_rerun",
+    "runtime_target": "short post-capture exact-system replay; no production run",
+    "script": "scripts/support/phase24_stage11_epoch44_checkpoint_replay.py",
+    "capture_runner": "scripts/support/phase24_stage11_epoch44_capture_runner.py"
+  },
+  "standalone_replay": {
+    "runs": 2,
+    "run1": {"status": 256, "iterations": 2000, "final_relative_residual": 5.290539827216904e-7},
+    "run2": {"status": 256, "iterations": 2000, "final_relative_residual": 5.290540387990038e-7},
+    "native_vs_run1_relative_l2": 1.0350743195170033e-9,
+    "native_vs_run1_max_abs": 2.2302426783805214e-8,
+    "native_vs_run2_relative_l2": 1.023174025311677e-9,
+    "native_vs_run2_max_abs": 2.2318250973447223e-8,
+    "run1_vs_run2_relative_l2": 1.3151621968582886e-11,
+    "run1_vs_run2_max_abs": 8.669331919008982e-11,
+    "classification": "same hard-solve class; HYPRE replay is numerically repeatable but not bitwise deterministic"
+  },
+  "remaining_blocker": {
+    "previous_native_capture_blocker": "BLOCKED_FOR_EXACT_NATIVE_LINEAR_SYSTEM_CAPTURE",
+    "resolution": "resolved for production epoch 44: exact native A/b/x_before/x_after/indices and failure metadata captured",
+    "open": "full Elmer adaptive/BDF/TES restart serialization is not yet implemented; the short reproducer reloads the exact native linear checkpoint"
+  },
+  "solver_settings_unchanged": true,
+  "stage11_status": "CHECKPOINT_REPRODUCER_IN_PROGRESS"
+}
