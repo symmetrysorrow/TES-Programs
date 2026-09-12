@@ -31,7 +31,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import differential_evolution, minimize
+from scipy.optimize import differential_evolution, least_squares, minimize
 
 from lib.tes_noise_model import operating_point as tes_operating_point
 from subScript.noise_measurement_model import (
@@ -73,7 +73,14 @@ FIT_MAX_HZ = 200_000.0
 FIT_WEIGHT_START_HZ = 40_000.0
 FIT_HIGH_FREQUENCY_WEIGHT = 4.0
 FIT_ROBUST_DELTA_DEX = 0.30
-FIT_POINTS = 401
+FIT_POINTS = 601
+FIT_BANDS_HZ = (
+    (1_000.0, 5_000.0, 1.0),
+    (5_000.0, 15_000.0, 1.25),
+    (15_000.0, 40_000.0, 1.25),
+    (40_000.0, 100_000.0, 1.5),
+    (100_000.0, 200_000.0, 2.0),
+)
 SIM_ANALYSIS_CUTOFF_HZ = 10_000.0  # experimental NoiseAnalysis cutoff.
 TARGET_HARDWARE_BESSEL_ORDER = 4
 # A quoted analog "100 kHz cutoff" is interpreted as the -3 dB frequency.
@@ -97,9 +104,10 @@ class Bound:
 
 def arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--de-maxiter", type=int, default=20)
-    parser.add_argument("--de-popsize", type=int, default=6)
-    parser.add_argument("--powell-maxfev", type=int, default=600)
+    parser.add_argument("--de-maxiter", type=int, default=35)
+    parser.add_argument("--de-popsize", type=int, default=8)
+    parser.add_argument("--powell-maxfev", type=int, default=800)
+    parser.add_argument("--least-squares-max-nfev", type=int, default=250)
     parser.add_argument("--skip-de", action="store_true")
     parser.add_argument("--apply-final", action="store_true")
     parser.add_argument("--timeout", type=int, default=1800)
@@ -316,14 +324,10 @@ def fit_frequency_weights(frequency: np.ndarray, args) -> np.ndarray:
     return 1.0 + (high_weight - 1.0) * ramp
 
 
-def fit_score(
+def log_ratio_residual(
     model: np.ndarray,
     target: np.ndarray,
-    fit_freq: np.ndarray,
-    args,
-) -> float:
-    """Weighted robust loss in log-ASD ratio across the configured fit band."""
-
+) -> np.ndarray:
     model = np.asarray(model, dtype=float)
     target = np.asarray(target, dtype=float)
     if (
@@ -333,22 +337,112 @@ def fit_score(
         or np.any(target <= 0.0)
     ):
         raise ValueError("Fit spectra must be finite and strictly positive")
+    return np.log10(model) - np.log10(target)
 
-    residual = np.log10(model) - np.log10(target)
-    delta = float(args.robust_delta_dex)
-    if delta > 0.0:
-        absolute = np.abs(residual)
-        # Huber-like loss with the same quadratic scale as residual**2 near zero.
-        loss = np.where(
-            absolute <= delta,
-            residual**2,
-            2.0 * delta * absolute - delta**2,
+
+def robust_point_loss(residual: np.ndarray, delta: float) -> np.ndarray:
+    residual = np.asarray(residual, dtype=float)
+    if delta <= 0.0:
+        return residual**2
+    absolute = np.abs(residual)
+    return np.where(
+        absolute <= delta,
+        residual**2,
+        2.0 * delta * absolute - delta**2,
+    )
+
+
+def band_balanced_residual_weights(
+    fit_freq: np.ndarray,
+    args,
+) -> np.ndarray:
+    """Weights whose squared residuals reproduce an equalized band objective."""
+
+    fit_freq = np.asarray(fit_freq, dtype=float)
+    base = fit_frequency_weights(fit_freq, args)
+    weights = np.zeros_like(fit_freq)
+
+    active = []
+    for low, high, band_weight in FIT_BANDS_HZ:
+        low = max(float(low), float(args.fit_min_hz))
+        high = min(float(high), float(args.fit_max_hz))
+        mask = (fit_freq >= low) & (
+            fit_freq <= high if np.isclose(high, args.fit_max_hz) else fit_freq < high
         )
-    else:
-        loss = residual**2
+        count = int(np.count_nonzero(mask))
+        if count:
+            active.append((mask, float(band_weight), count))
 
-    weights = fit_frequency_weights(fit_freq, args)
-    return float(np.sum(weights * loss) / np.sum(weights))
+    if not active:
+        return base / max(float(np.sum(base)), 1e-30)
+
+    total_band_weight = sum(item[1] for item in active)
+    for mask, band_weight, _count in active:
+        local = base[mask]
+        local_sum = float(np.sum(local))
+        if local_sum <= 0.0:
+            continue
+        weights[mask] = (
+            band_weight / total_band_weight
+        ) * local / local_sum
+
+    missing = weights <= 0.0
+    if np.any(missing):
+        fallback = base[missing]
+        fallback_sum = float(np.sum(fallback))
+        if fallback_sum > 0.0:
+            weights[missing] = 1e-6 * fallback / fallback_sum
+    weights /= np.sum(weights)
+    return weights
+
+
+def weighted_residual_vector(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> np.ndarray:
+    residual = log_ratio_residual(model, target)
+    weights = band_balanced_residual_weights(fit_freq, args)
+    return residual * np.sqrt(weights)
+
+
+def fit_score(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> float:
+    """Band-balanced robust loss in log-ASD ratio."""
+
+    residual = log_ratio_residual(model, target)
+    loss = robust_point_loss(residual, float(args.robust_delta_dex))
+    weights = band_balanced_residual_weights(fit_freq, args)
+    return float(np.sum(weights * loss))
+
+
+def band_fit_diagnostics(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    residual = log_ratio_residual(model, target)
+    diagnostics = {}
+    for low, high, band_weight in FIT_BANDS_HZ:
+        low_eff = max(float(low), float(args.fit_min_hz))
+        high_eff = min(float(high), float(args.fit_max_hz))
+        mask = (fit_freq >= low_eff) & (fit_freq <= high_eff)
+        if not np.any(mask):
+            continue
+        key = f"{low_eff:g}-{high_eff:g}_Hz"
+        diagnostics[key] = {
+            "rms_log10_ratio": float(np.sqrt(np.mean(residual[mask] ** 2))),
+            "mean_log10_ratio": float(np.mean(residual[mask])),
+            "max_abs_log10_ratio": float(np.max(np.abs(residual[mask]))),
+            "band_weight": float(band_weight),
+        }
+    return diagnostics
 
 
 def target_spectrum(args):
