@@ -246,7 +246,7 @@ def fit_score(
     fit_freq: np.ndarray,
     args,
 ) -> float:
-    """Weighted robust loss in log-ASD ratio, focused on high frequency."""
+    """Weighted robust loss in log-ASD ratio across the configured fit band."""
 
     model = np.asarray(model, dtype=float)
     target = np.asarray(target, dtype=float)
