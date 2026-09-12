@@ -18,6 +18,7 @@ BDF2_SMOKE_CASE = "case_phase24_adaptive_bdf2_smoke_4us"
 ADAPTIVE_POST_EVENT_CASE = "case_phase24_adaptive_post_event_cooldown_2ns"
 ADAPTIVE_REJECTION_CASE = "case_phase24_adaptive_event_rejection_progression_2ns"
 ADAPTIVE_RECOVERY_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns"
+ADAPTIVE_RECOVERY_LIGHT_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns_light"
 
 
 def main() -> None:
@@ -319,6 +320,32 @@ def main() -> None:
         "path": "same production restart, mesh/material/TES/HYPRE path; 10-ns tail after the second event",
     }
     project["cases"][ADAPTIVE_RECOVERY_CASE] = adaptive_recovery
+
+    # Lightweight companion: keep the exact same post-event state, solver,
+    # and adaptive policy, but remove per-solve matrix/RHS/solution dumps.
+    adaptive_recovery_light = copy.deepcopy(adaptive_recovery)
+    adaptive_recovery_light["series_file"] = f"{ADAPTIVE_RECOVERY_LIGHT_CASE}_series.csv"
+    adaptive_recovery_light["iteration_series_file"] = f"{ADAPTIVE_RECOVERY_LIGHT_CASE}_iterations.csv"
+    adaptive_recovery_light["output_file_path"] = (
+        f"../work/meshes/{adaptive_recovery_light['mesh']}/{ADAPTIVE_RECOVERY_LIGHT_CASE}.result"
+    )
+    adaptive_recovery_light["output_result"] = False
+    adaptive_recovery_light["solver"] = dict(adaptive_recovery_light["solver"])
+    adaptive_recovery_light["solver"].pop("matrix_dump_prefix", None)
+    adaptive_recovery_light["solver"].pop("matrix_dump_solution", None)
+    adaptive_recovery_light["phase24_smoke"] = {
+        "purpose": "lightweight bounded post-event adaptive dt_min recovery diagnostic",
+        "reference_case": ADAPTIVE_RECOVERY_CASE,
+        "path": "same production restart, mesh/material/TES/HYPRE/adaptive policy; lifecycle trace only",
+        "disabled": [
+            "A matrix dump",
+            "RHS dump",
+            "x_before/x_after capture",
+            "native exact-system capture",
+            "continuous SaveLinearSystem numbering",
+        ],
+    }
+    project["cases"][ADAPTIVE_RECOVERY_LIGHT_CASE] = adaptive_recovery_light
 
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their

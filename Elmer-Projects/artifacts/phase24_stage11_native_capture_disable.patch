@@ -1,0 +1,29 @@
+--- a/tools/elmer-hypre/src/fem/src/SolveHypre.c
++++ b/tools/elmer-hypre/src/fem/src/SolveHypre.c
+@@
+    if (!phase24_capture_attempted) {
++      const char *capture_disabled = getenv("PHASE24_DISABLE_NATIVE_CAPTURE");
++      if (capture_disabled != NULL &&
++          (strcmp(capture_disabled, "1") == 0 ||
++           strcmp(capture_disabled, "true") == 0 ||
++           strcmp(capture_disabled, "TRUE") == 0)) {
++        /* Keep lifecycle-only diagnostics independent of exact native capture. */
++        phase24_capture_attempted = 1;
++        fprintf(stderr,
++                "NATIVE_XVEC_CAPTURE_DISABLED env=PHASE24_DISABLE_NATIVE_CAPTURE\n");
++        fflush(stderr);
++      }
++    }
++
++    if (!phase24_capture_attempted) {
+       /* existing epoch-44 selector/native x-vector capture */
+       ...
+    }
+
+Implementation note: this source edit is outside the tracked Elmer-Projects
+tree and is therefore preserved here as a tracked audit artifact. The
+lightweight run used PHASE24_DISABLE_NATIVE_CAPTURE=1 and the rebuilt
+install-stage11/bin/libelmersolver.dll.
+
+Source SHA256: 2E8B9D48F57564FA64ADD6B59C2076F794475DB23C0A9864BCDF8EC26266C196
+Installed DLL SHA256: 3B2F629BCF2A0CD94BC9059EBBFD096EFF3226251EECF188365D04B58272841C

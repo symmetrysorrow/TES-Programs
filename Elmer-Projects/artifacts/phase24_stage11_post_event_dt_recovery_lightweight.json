@@ -1,0 +1,193 @@
+{
+  "stage": "Stage 11",
+  "purpose": "Lightweight post-event adaptive dt recovery diagnostic",
+  "case": "case_phase24_adaptive_post_event_dt_recovery_10ns_light",
+  "sif": "generated/cases/case_phase24_adaptive_post_event_dt_recovery_10ns_light.sif",
+  "log": "results/case_phase24_adaptive_post_event_dt_recovery_10ns_light/solver.log",
+  "manifest": "results/case_phase24_adaptive_post_event_dt_recovery_10ns_light/manifest.json",
+  "run": {
+    "started_local": "2026-09-13 01:46:43",
+    "finished_local": "2026-09-13 02:01:08",
+    "runtime_seconds": 865,
+    "omp_threads": 8,
+    "completed": true,
+    "endpoint_s": 0.020020011,
+    "endpoint_ns_from_event_origin": 10.0,
+    "extended_to_20ns": false,
+    "production_31us_rerun": false
+  },
+  "solver_fixed": {
+    "linear_solver": "FlexGMRES + BoomerAMG",
+    "strong_threshold": 0.5,
+    "kdim": 100,
+    "sweeps": 1,
+    "linear_tolerance": 5.0e-7,
+    "max_iterations": 2000,
+    "adaptive_rtol": 0.002,
+    "adaptive_atol": 1.0e-8,
+    "dt_min_ns": 0.5,
+    "dt_max_us": 20.0,
+    "ratio_min": 0.5,
+    "ratio_max": 2.0,
+    "growth_factor": 1.5,
+    "shrink_factor": 0.5,
+    "max_rejected": 8,
+    "bdf_policy_changed": false,
+    "estimator_changed": false
+  },
+  "diagnostic_scope": {
+    "lifecycle_trace_only": true,
+    "disabled": [
+      "Linear System Save",
+      "matrix dump",
+      "RHS dump",
+      "x_before capture",
+      "x_after capture",
+      "native exact checkpoint",
+      "continuous numbering",
+      "result output"
+    ],
+    "native_capture_disable_env": "PHASE24_DISABLE_NATIVE_CAPTURE=1",
+    "log_assertions": {
+      "native_capture_disabled_lines": 1,
+      "native_capture_enter_lines": 0,
+      "matrix_save_lines": 0,
+      "rhs_save_lines": 0,
+      "all_done": true
+    }
+  },
+  "outcome": {
+    "trials": 25,
+    "accepted": 20,
+    "rejected": 5,
+    "rejected_trial_ids": [2, 14, 16, 20, 23],
+    "bdf2_rejected": 5,
+    "forced_floor_accepts": 13,
+    "accepted_at_dt_min_or_endpoint_floor": 19,
+    "first_accepted_dt_above_min_ns": {
+      "trial": 22,
+      "t0_s": 0.0200200095,
+      "dt_ns": 0.6,
+      "error": 0.9822123062977,
+      "bdf_order": 2
+    },
+    "maximum_accepted_dt_ns": 0.6,
+    "maximum_attempted_dt_ns": 0.9,
+    "final_accepted_dt_ns": 0.4,
+    "final_dt_note": "0.4 ns is endpoint clipping below the configured 0.5 ns floor.",
+    "accepted_bdf_order_sequence": [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1, 2],
+    "accepted_error_sequence": [
+      0.9725116346223,
+      1.982191750576,
+      2.753773089898,
+      1.351041757348,
+      1.277246208467,
+      1.213910647288,
+      3.302376697703,
+      1.111068538199,
+      1.068940117328,
+      1.030319626203,
+      1.347268854316,
+      0.9629317273229,
+      0.2097687228318,
+      2.442278546894,
+      1.777064680487,
+      0.846370188832,
+      0.2144655076734,
+      0.9822123062977,
+      1.162805399035,
+      0.5780778418687
+    ],
+    "accepted_error_min": 0.2097687228318,
+    "accepted_error_max": 3.302376697703,
+    "accepted_error_below_one_count": 7
+  },
+  "trial_trace": [
+    {"id": 1, "t0_s": 0.020020001, "dt_ns": 0.5, "next_dt_ns": 0.75, "bdf": 1, "error": 0.9725116346223, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 0, "cooldown_after": 0},
+    {"id": 2, "t0_s": 0.0200200015, "dt_ns": 0.75, "next_dt_ns": 0.5, "bdf": 2, "error": 2.423130907247, "result": "rejected", "dt_min_clamp": true, "cooldown_after": 1},
+    {"id": 3, "t0_s": 0.0200200015, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 1, "error": 1.982191750576, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 4, "t0_s": 0.020020002, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 2.753773089898, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 5, "t0_s": 0.0200200025, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.351041757348, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 6, "t0_s": 0.020020003, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.277246208467, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 7, "t0_s": 0.0200200035, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.213910647288, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 8, "t0_s": 0.020020004, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 3.302376697703, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 9, "t0_s": 0.0200200045, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.111068538199, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 10, "t0_s": 0.020020005, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.068940117328, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 11, "t0_s": 0.0200200055, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.030319626203, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 12, "t0_s": 0.020020006, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 2, "error": 1.347268854316, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 13, "t0_s": 0.0200200065, "dt_ns": 0.5, "next_dt_ns": 0.6, "bdf": 2, "error": 0.9629317273229, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 1, "cooldown_after": 0},
+    {"id": 14, "t0_s": 0.020020007, "dt_ns": 0.6, "next_dt_ns": 0.5, "bdf": 2, "error": 1.147023662747, "result": "rejected", "dt_min_clamp": true, "cooldown_after": 1},
+    {"id": 15, "t0_s": 0.020020007, "dt_ns": 0.5, "next_dt_ns": 0.6, "bdf": 1, "error": 0.2097687228318, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 1, "cooldown_after": 0},
+    {"id": 16, "t0_s": 0.0200200075, "dt_ns": 0.6, "next_dt_ns": 0.5, "bdf": 2, "error": 1.106788061503, "result": "rejected", "dt_min_clamp": true, "cooldown_after": 1},
+    {"id": 17, "t0_s": 0.0200200075, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 1, "error": 2.442278546894, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 18, "t0_s": 0.020020008, "dt_ns": 0.5, "next_dt_ns": 0.6, "bdf": 2, "error": 1.777064680487, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 19, "t0_s": 0.0200200085, "dt_ns": 0.5, "next_dt_ns": 0.6, "bdf": 2, "error": 0.846370188832, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 1, "cooldown_after": 0},
+    {"id": 20, "t0_s": 0.020020009, "dt_ns": 0.6, "next_dt_ns": 0.5, "bdf": 2, "error": 1.013136268499, "result": "rejected", "dt_min_clamp": true, "cooldown_after": 1},
+    {"id": 21, "t0_s": 0.020020009, "dt_ns": 0.5, "next_dt_ns": 0.6, "bdf": 1, "error": 0.2144655076734, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 1, "cooldown_after": 0},
+    {"id": 22, "t0_s": 0.0200200095, "dt_ns": 0.6, "next_dt_ns": 0.9, "bdf": 2, "error": 0.9822123062977, "result": "accepted", "dt_is_min": false, "forced_floor": false, "cooldown_before": 0, "cooldown_after": 0},
+    {"id": 23, "t0_s": 0.0200200101, "dt_ns": 0.9, "next_dt_ns": 0.5, "bdf": 2, "error": 1.507764274434, "result": "rejected", "dt_min_clamp": true, "cooldown_after": 1},
+    {"id": 24, "t0_s": 0.0200200101, "dt_ns": 0.5, "next_dt_ns": 0.5, "bdf": 1, "error": 1.162805399035, "result": "accepted", "dt_is_min": true, "forced_floor": true, "cooldown_before": 1, "cooldown_after": 1},
+    {"id": 25, "t0_s": 0.0200200106, "dt_ns": 0.4, "next_dt_ns": 0.48, "bdf": 2, "error": 0.5780778418687, "result": "accepted", "dt_is_min": true, "forced_floor": false, "cooldown_before": 1, "cooldown_after": 0, "endpoint_clipped": true}
+  ],
+  "linear": {
+    "solve_records": 150,
+    "solves_per_trial": 6,
+    "required_iterations_min": 1,
+    "required_iterations_max": 4,
+    "max_final_residual": 4.99095e-7,
+    "failed_solves": 0,
+    "linear_tolerance_respected": true
+  },
+  "restart_audit": {
+    "restart_source": "case_phase24_adaptive_event_rejection_progression_2ns.result",
+    "first_trial_bdf_order": 1,
+    "first_trial_previous_dt_s": -1.0,
+    "first_trial_rejection_streak": 0,
+    "first_trial_event_before": false,
+    "adaptive_controller_history_serialized": false,
+    "provenance_note": "The focused restart begins with BDF1 and previous_dt=-1; it does not retain the continuous-run accepted dt history.",
+    "continuous_run_comparison": {
+      "qualitative_sequence_matches": true,
+      "focused": "BDF1 at 0.5 ns, proposes 0.75 ns, BDF2 rejects, BDF1 floor retry, then repeated BDF2 re-entry rejects",
+      "continuous_31us_partial": "pre-event 1 ns rejection, BDF1 0.5 ns retry, event crossing, then BDF2 re-entry",
+      "exact_history_match": false,
+      "classification": "RESTART_HISTORY_MISMATCH_SUSPECTED"
+    }
+  },
+  "classification": {
+    "result": "BDF2_REENTRY_BLOCKER",
+    "stage_status": "VALIDATION_IN_PROGRESS",
+    "reason": "The 10 ns tail completed and reached an accepted 0.6 ns BDF2 step, but the following 0.9 ns BDF2 attempt rejected and the controller returned to the floor. Five BDF2 rejects recur; E occasionally falls below 1 but growth is not sustained.",
+    "dt_min_recovery_pass": false,
+    "post_event_estimator_floor_lock_confirmed": false,
+    "dt_growth_lifecycle_bug": false,
+    "next_blocker": "BDF2 history/estimator behavior at re-entry",
+    "policy_changes_made": false
+  },
+  "provenance": {
+    "project_sha256": "95c17da92a847eae260d261799245dc04b25771402b1e6a2777cbb33df684943",
+    "sif_sha256": "ea6bf1f8302dd765635f34b3092db686b7b2c4df123c085fb0501d88a6e1ec54",
+    "restart_source_sha256": "c4d9398a32fd543f1fe327bccce86947b3b6dd451430ececac26eb889b78fcb4",
+    "restart_state_sha256": "04a9fa51c0641b0bbe2544f0c60e1998111d388a7202e1a45b515e4344093f7f",
+    "installed_libelmersolver_sha256": "3b2f629bcf2a0cd94bc9059ebbfd096eff3226251eecf188365d04b58272841c",
+    "native_solvehypre_source_sha256": "2e8b9d48f57564fa64add6b59c2076f794475db23c0a9864bcdf8ec26266c196"
+  },
+  "runtime_comparison": {
+    "previous_heavy_10ns_partial": {
+      "runtime_seconds": 832,
+      "accepted_steps_observed": 5,
+      "stopped_at_ns": 2.5,
+      "linear_system_save": true,
+      "omp_threads": 1,
+      "wall_seconds_per_accepted_step": 166.4
+    },
+    "this_lightweight_full_10ns": {
+      "runtime_seconds": 865,
+      "accepted_steps": 20,
+      "linear_system_save": false,
+      "omp_threads": 8,
+      "wall_seconds_per_accepted_step": 43.25
+    },
+    "interpretation": "The full lightweight run completed 10 ns with about 3.85x lower wall time per accepted step than the previous heavy partial run. Because OMP_NUM_THREADS also changed from 1 to 8, this is a combined thread-count and dump-removal comparison, not an isolated I/O speedup measurement."
+  }
+}
