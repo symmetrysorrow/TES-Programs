@@ -1,12 +1,12 @@
 """Standalone PoST optimizer: differential evolution -> Powell.
 
-For each trial, this script writes an isolated input.json, runs
-PoST_Simulation.py, then compares the newly generated
-noise_total-bessel100k.dat with tagawa CH0_noise/modelnoise.txt.  The default
-fit scores the full 1 kHz--200 kHz band on a log-frequency grid.  The loss is
-computed from log-ASD ratios with a robust Huber-like penalty so isolated
-spectral spikes do not dominate the fit.  The generated comparison plot still
-shows the full positive frequency range.
+The optimizer is specialized for the 2024-12-06 215 mK / 1400 uA target
+case.  During optimization it evaluates the deterministic five-state TES noise
+model through the confirmed 100 kHz fourth-order analog Bessel, sampling/alias
+fold, and 10 kHz digital analysis Bessel.  This avoids fitting 4096-sample
+finite-record artifacts.  After each R_SH branch is optimized, the best point
+is re-run with the full experimental record length so the generated comparison
+plot uses the same finite-record processing as the measurement.
 The TES resistance is no longer fitted freely.  It is calculated from the
 same-campaign 1400 uA IV point for each R_SH value in the configured sweep.
 The .dat file must include the 100 kHz hardware Bessel and a 10 kHz analysis
@@ -33,6 +33,10 @@ import numpy as np
 from scipy.optimize import differential_evolution, minimize
 
 from lib.tes_noise_model import operating_point as tes_operating_point
+from subScript.noise_measurement_model import (
+    HARDWARE_BESSEL_CUTOFF_HZ,
+    expected_post_analysis_asd,
+)
 
 
 # ---------- Paths ----------
@@ -41,9 +45,13 @@ from lib.tes_noise_model import operating_point as tes_operating_point
 SCRIPT_DIR = Path(__file__).resolve().parent
 POST_SCRIPT = SCRIPT_DIR / "PoST_Simulation.py"
 INPUT_PATH = SCRIPT_DIR / "input.json"
-# This is the original, constraint-defining input.  Do not use a previously
-# optimized input.json as the reference, or R's 50--200% range will compound.
-DEFAULT_REFERENCE_INPUT_PATH = SCRIPT_DIR / "input.json"
+TARGET_CASE_DIR = (
+    SCRIPT_DIR
+    / "cases"
+    / "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2"
+)
+TARGET_ENVELOPE_PATH = TARGET_CASE_DIR / "proxy_parameter_envelope.json"
+TARGET_SCENARIOS_PATH = TARGET_CASE_DIR / "proxy_scenarios.json"
 NOISE_DAT_PATH = SCRIPT_DIR / "noise_total-bessel100k.dat"
 EXPERIMENT_ROOT = Path(
     r"G:\tagawa\20241206\r1ch12_215mK_1400uA1400uA_"
@@ -63,8 +71,9 @@ FIT_WEIGHT_START_HZ = 30_000.0
 FIT_HIGH_FREQUENCY_WEIGHT = 1.0
 FIT_ROBUST_DELTA_DEX = 0.12
 FIT_POINTS = 401
-SIM_ANALYSIS_CUTOFF_HZ = 10000  # modelnoise.txt is filtered at this cutoff.
-OPTIMIZATION_SAMPLES = 4096
+SIM_ANALYSIS_CUTOFF_HZ = 10_000.0  # experimental NoiseAnalysis cutoff.
+TARGET_HARDWARE_BESSEL_ORDER = 4
+EXCESS_JOHNSON_MAX = 5.0
 
 
 @dataclass(frozen=True)
@@ -125,8 +134,24 @@ def arguments():
         default=FIT_POINTS,
         help="Number of log-spaced frequencies used by the objective.",
     )
-    parser.add_argument("--reference-input", type=Path, default=DEFAULT_REFERENCE_INPUT_PATH,
-                        help="Original JSON that defines all parameter bounds and fixed values.")
+    parser.add_argument(
+        "--case-dir",
+        type=Path,
+        default=TARGET_CASE_DIR,
+        help=(
+            "Target-case directory containing proxy_parameter_envelope.json "
+            "and proxy_scenarios.json."
+        ),
+    )
+    parser.add_argument(
+        "--reference-input",
+        type=Path,
+        default=None,
+        help=(
+            "Optional explicit starting input. By default the first frozen, "
+            "pulse-consistent target-case proxy scenario is used."
+        ),
+    )
     parser.add_argument("--target-iv", type=Path, default=TARGET_IV_PATH,
                         help="Same-element IV file used to derive TES R at the target bias.")
     parser.add_argument("--target-bias-ua", type=float, default=TARGET_BIAS_UA,
@@ -143,6 +168,37 @@ def arguments():
 def load_json(path: Path):
     with path.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+def target_case_reference(case_dir: Path, explicit_reference: Path | None = None):
+    """Return a target-consistent starting point and the frozen envelope."""
+
+    envelope_path = case_dir / "proxy_parameter_envelope.json"
+    scenarios_path = case_dir / "proxy_scenarios.json"
+    envelope = load_json(envelope_path)
+    scenarios = load_json(scenarios_path)
+
+    frozen = scenarios.get("pulse_consistent_scenarios", [])
+    if not frozen:
+        raise RuntimeError(f"No pulse-consistent proxy scenarios in {scenarios_path}")
+
+    if explicit_reference is None:
+        reference = dict(frozen[0]["parameters"])
+        reference_source = f"{scenarios_path}:pulse_consistent_scenarios[0]"
+    else:
+        reference = load_json(explicit_reference)
+        reference_source = str(explicit_reference)
+
+    # The target acquisition is the 215 mK case.  Keep the measured/setpoint
+    # bath condition fixed instead of inheriting the unrelated 136 mK generic
+    # PoST input.
+    reference["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
+    reference["rate"] = 500_000.0
+    reference["samples"] = 100_000
+    reference["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
+    reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
+    reference.setdefault("excess_johnson_M", 0.0)
+    return reference, envelope, reference_source
 
 
 def tes_resistance_from_iv(iv_path: Path, shunt_resistance_ohm: float,
