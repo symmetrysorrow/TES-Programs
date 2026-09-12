@@ -89,6 +89,8 @@ TARGET_HARDWARE_BESSEL_ORDER = 4
 # scipy's magnitude-normalized Bessel convention over the legacy phase norm.
 TARGET_HARDWARE_BESSEL_NORM = "mag"
 TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
+L_FIT_MIN_H = 1.0e-10
+L_FIT_MAX_H = 12.3e-9
 POST_FILTER_WHITE_FRACTION_MIN = 1.0e-6
 POST_FILTER_WHITE_FRACTION_MAX = 1.0
 POST_FILTER_WHITE_FRACTION_INITIAL = 1.0e-4
@@ -657,19 +659,15 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
     def ref(name):
         return float(sensitivity[name])
 
-    r_eff = (
-        float(fixed_r_ohm) * (1.0 + ref("beta"))
-        + ref("R_l")
-    )
-    l_low = min(ref("L") / 10.0, r_eff / (2.0 * np.pi * 300_000.0) / 3.0)
-    l_high = max(ref("L") * 10.0, r_eff / (2.0 * np.pi * 1_000.0) * 3.0)
-
     return {
         "T_c": Bound(tc_low, tc_high, logarithmic=False),
         "R_l": Bound(ref("R_l") * 0.25, ref("R_l") * 6.0),
         "alpha": Bound(ref("alpha") * 0.05, ref("alpha") * 15.0),
         "beta": Bound(0.0, 12.0, logarithmic=False),
-        "L": Bound(max(l_low, 1e-12), l_high),
+        # Circuit inductance is independently constrained by the hardware:
+        # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
+        # Keep this logarithmic because the allowed interval spans >2 decades.
+        "L": Bound(L_FIT_MIN_H, L_FIT_MAX_H),
         "n": Bound(max(1.01, ref("n") * 0.5), ref("n") * 2.0),
         "C_tes": Bound(ref("C_tes") * 0.1, ref("C_tes") * 10.0),
         "C_abs": Bound(ref("C_abs") * 0.1, ref("C_abs") * 10.0),
