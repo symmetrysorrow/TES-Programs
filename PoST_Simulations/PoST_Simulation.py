@@ -1595,13 +1595,18 @@ def _simulation_pre_analysis_asd(frequency, rate, para):
 
     hardware_order = int(para.get("hardware_bessel_order", 4))
     hardware_norm = str(para.get("hardware_bessel_norm", "phase"))
+    hardware_cutoff_hz = float(
+        para.get("hardware_bessel_cutoff_Hz", 100000.0)
+    )
     if hardware_norm not in {"phase", "mag", "delay"}:
         raise ValueError(
             "hardware_bessel_norm must be 'phase', 'mag', or 'delay'"
         )
+    if hardware_cutoff_hz <= 0.0:
+        raise ValueError("hardware_bessel_cutoff_Hz must be positive")
     hardware_main = general.AnalogBesselMagnitudeResponse(
         frequency,
-        100000.0,
+        hardware_cutoff_hz,
         order=hardware_order,
         norm=hardware_norm,
     )
@@ -1615,7 +1620,7 @@ def _simulation_pre_analysis_asd(frequency, rate, para):
     alias_frequency = rate - frequency
     hardware_alias = general.AnalogBesselMagnitudeResponse(
         alias_frequency,
-        100000.0,
+        hardware_cutoff_hz,
         order=hardware_order,
         norm=hardware_norm,
     )
