@@ -1,0 +1,130 @@
+{
+  "artifact_id": "phase24-stage11-native-exact-reproducer-v1",
+  "status": "READY_FOR_SOLVER_TUNING",
+  "production_stage11_status": "VALIDATION IN PROGRESS",
+  "remaining_production_blocker": "BLOCKED_FOR_EXACT_NATIVE_LINEAR_SYSTEM_CAPTURE at epoch 44; the bounded first-stage solve is captured and replayed, but the production failure invocation itself has not been reached by the bounded selector.",
+  "bounded_reproducer": {
+    "command_case": "case_phase24_adaptive_output_smoke",
+    "selection": "first full-size native solve with local_size=87534 and max_iter=2000",
+    "matrix_epoch": 2,
+    "preconditioner_epoch": 2,
+    "bdf_order": 2,
+    "dt_scope": "same adaptive Phase24 restart/event path; first-stage hard solve rather than epoch-44 failed retry",
+    "runtime_seconds_to_capture": 40,
+    "same_solver_settings": {
+      "solver": "FlexGMRES",
+      "preconditioner": "BoomerAMG",
+      "tolerance": 5.0e-7,
+      "max_iterations": 2000,
+      "gmres_dimension": 100,
+      "relax_type": 18,
+      "coarsen_type": 8,
+      "num_sweeps": 1,
+      "max_levels": 25,
+      "interpolation_type": 6,
+      "smooth_type": 0,
+      "cycle_type": 1,
+      "strong_threshold": 0.25
+    }
+  },
+  "native_capture": {
+    "directory": "results/case_phase24_adaptive_output_smoke/native_exact_capture_attempt_v2",
+    "global_size": 87534,
+    "local_range": [0, 87533],
+    "A_native": {
+      "artifact": "native_exact_A.npz",
+      "binary_source": "native_exact_A_rank0000.csrbin",
+      "nnz": 1561670,
+      "binary_sha256": "D4C1E85E202638606DFE2515A2FA68C898893D122D9863E5926B9A5CB50D98BC",
+      "npz_sha256": "DA2EAD25EAB25CE186B36A39A6015B13606BA7200A84D7E3F7AC1AED24C08396"
+    },
+    "b_native": {
+      "artifact": "native_exact_b.npy",
+      "sha256": "6E956615E86E1EE7DCB34CAE3FB60F8E8FF079C85BDF045152F4D9979B8E4185",
+      "l2": 1.0000000000000548,
+      "max_abs": 0.012584293558104257
+    },
+    "x_before": {
+      "artifact": "native_exact_x_before.npy",
+      "sha256": "EAFDC66654D833334DB8F593CF904143F86B14C06A592A20C3E8AE60F5DBEB47",
+      "l2": 250.18220325809008,
+      "min": 0.0,
+      "max": 5.956910701171664,
+      "nan": 0,
+      "inf": 0,
+      "unchanged_sentinel": 0
+    },
+    "x_after": {
+      "artifact": "native_exact_x_after.npy",
+      "sha256": "07522F6B4E360144036A45CF191781FAFD5A074CA4E5496E70F282189337C339",
+      "l2": 250.18019074669,
+      "min": -0.00016668035217866313,
+      "max": 5.956846041163936,
+      "nan": 0,
+      "inf": 0,
+      "unchanged_sentinel": 0
+    },
+    "indices": {
+      "artifact": "native_exact_indices.npy",
+      "sha256": "FEDECC17D5CD099BF362AC43FDE211F6F2DF3C557AC38BA3D77CB393A43E437C"
+    },
+    "metadata": "native_hypre_metadata_rank0000.txt"
+  },
+  "native_solve": {
+    "solve_status": 0,
+    "iterations": 168,
+    "final_relative_residual": 4.96435490708138829e-7,
+    "initial_relative_residual_independent": 4.0227991586633556e-5,
+    "ij_after_status": 0,
+    "parvector_after_status": 0,
+    "ij_and_parvector_validity": "full finite vectors; NaN=0, Inf=0, unchanged=0",
+    "error_before": 0,
+    "global_error_before": 0,
+    "conv_before": 0,
+    "clear_conv_status": 0,
+    "error_after_clear": 0,
+    "global_error_after_clear": 0,
+    "conv_after_clear": 0
+  },
+  "standalone_replay": {
+    "script": "scripts/support/phase24_stage11_hypre_replay.py",
+    "input_A": "native_exact_A.npz",
+    "input_b": "native_exact_b.npy",
+    "input_x_before": "native_exact_x_before.npy",
+    "runtime_seconds": 4,
+    "status": 0,
+    "result": "PASS",
+    "iterations": 168,
+    "initial_relative_residual": 4.0227991586640264e-5,
+    "final_relative_residual": 4.9643549068792407e-7,
+    "solution_artifact": "standalone_x_after.npy",
+    "solution_sha256": "E73A462E7CDB10FFBCA862C51CCD2948DA33BD0B08FDD373A02804D5D9A7AFA2",
+    "trajectory_artifact": "standalone_residual.csv",
+    "trajectory_summary": "same initial residual, same 168 iterations, and final residual difference 2.02e-17"
+  },
+  "native_vs_standalone": {
+    "x_after_relative_l2_difference": 1.7191185464170343e-15,
+    "x_after_max_abs_difference": 1.509903313490213e-14,
+    "final_residual_absolute_difference": 2.018774e-17,
+    "classification": "faithful native replay; bounded system is ready as the solver-tuning reference"
+  },
+  "canonical_savelinearsystem_relation": {
+    "reference": "retained for historical comparison only",
+    "canonical_a_nnz": 1447196,
+    "native_a_nnz": 1561670,
+    "canonical_b_l2": 3.582307772938156e-6,
+    "native_b_l2": 1.0000000000000548,
+    "interpretation": "Different representation/normalization; canonical SaveLinearSystem A/b was not used for this replay."
+  },
+  "loader_provenance": {
+    "loaded_precedence_path": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11/bin/libelmersolver.dll",
+    "mirrored_path": "D:/Github/TES-Programs/tools/elmer-hypre/install-stage11/lib/elmersolver/libelmersolver.dll",
+    "sha256": "24A720DA48E0C48324E86E9AE9FCECD5F145AFAA7F97D18BBFB53F519777A292",
+    "hashes_match": true,
+    "native_source_solvehypre_sha256": "4ACDC1297B4E732D7DB9723137F80F3528EC48292390631A63984957091BA8E4"
+  },
+  "permanent_assets": [
+    "scripts/support/phase24_stage11_native_capture_audit.py",
+    "scripts/support/phase24_stage11_hypre_replay.py"
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "artifact_id": "phase24-stage11-actual-xvec-capture-audit-v1",
-  "status": "BLOCKED_FOR_NATIVE_XAFTER",
+  "status": "BLOCKED_FOR_EXACT_NATIVE_LINEAR_SYSTEM_CAPTURE",
+  "superseded_by_bounded_reproducer": "artifacts/phase24_stage11_native_exact_reproducer.json",
   "scope": "31 us production adaptive campaign, exact pre-event BDF1 retry at 20.0200005 ms",
   "production_failure": {
     "linear_tolerance": 5.0e-7,
@@ -39,7 +40,7 @@
       "C wrapper one-shot dump via PHASE24_HYPRE_XAFTER_PATH and absolute fallback"
     ],
     "artifact": null,
-    "blocker": "The production failure reproduces, but no xafter file is emitted and no dump-open diagnostic appears in the captured solver log. Native failed-iterate provenance therefore remains unresolved."
+    "blocker": "The production epoch-44 failure xafter remains unrecorded, but a bounded epoch-2 invocation now captures A_native, b_native, x_before, and x_after and replays faithfully. The remaining blocker is exact capture of the production failure invocation, not x_after retrieval in general."
   },
   "direct_reference": {
     "relative_residual": 4.1951356950876785e-10,

@@ -62,7 +62,8 @@
       "independent_csr_relative_residual": 0.0013803334210044731,
       "caveat": "This is the saved Elmer x0 candidate; native failed xafter was not captured, and numbering/solver residual equivalence is not yet accepted."
     },
-    "native_failed_xafter": "not captured; the bounded capture attempts did not reach an x_after dump before being stopped for excessive runtime",
+    "native_failed_xafter": "not captured for the production epoch-44 failure; a separate bounded epoch-2 native invocation now captures and replays A_native/b_native/x_before/x_after",
+    "bounded_native_reproducer": "artifacts/phase24_stage11_native_exact_reproducer.json",
     "available_native_capture_audit": {
       "x_before": "results/case_phase24_adaptive_output_smoke/native_hypre_x_before_rank0000.dat",
       "b": "results/case_phase24_adaptive_output_smoke/native_hypre_b_rank0000.dat",

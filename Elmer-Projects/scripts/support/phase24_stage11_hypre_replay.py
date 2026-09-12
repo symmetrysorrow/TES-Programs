@@ -11,6 +11,7 @@ import hashlib
 from pathlib import Path
 
 import numpy as np
+from scipy import sparse as sp
 
 
 MPI_COMM_WORLD = 0x44000000
@@ -50,10 +51,29 @@ def load_dump(a_path: Path, b_path: Path) -> tuple[np.ndarray, np.ndarray, np.nd
     return np.ascontiguousarray(rows), np.ascontiguousarray(cols), vals, rhs
 
 
+def load_native_npz(
+    matrix_path: Path, rhs_path: Path
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    matrix = np.load(matrix_path)
+    indptr = np.ascontiguousarray(matrix["indptr"], dtype=np.int64)
+    cols = np.ascontiguousarray(matrix["indices"], dtype=np.int32)
+    vals = np.ascontiguousarray(matrix["data"], dtype=np.float64)
+    shape = tuple(int(value) for value in matrix["shape"])
+    rhs = np.ascontiguousarray(np.load(rhs_path), dtype=np.float64)
+    if shape != (87534, 87534) or rhs.shape != (87534,):
+        raise ValueError("native capture shape is not 87534 x 87534")
+    rows = np.repeat(np.arange(shape[0], dtype=np.int64), np.diff(indptr))
+    if rows.size != cols.size or vals.size != cols.size:
+        raise ValueError("native CSR arrays have inconsistent lengths")
+    return np.ascontiguousarray(rows), cols, vals, rhs
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("a", type=Path)
-    p.add_argument("b", type=Path)
+    p.add_argument("a", type=Path, nargs="?")
+    p.add_argument("b", type=Path, nargs="?")
+    p.add_argument("--native-npz", type=Path)
+    p.add_argument("--native-b-npy", type=Path)
     p.add_argument("--max-iter", type=int, default=2000)
     p.add_argument("--csv", type=Path, default=Path("phase24_stage11_hypre_residual.csv"))
     p.add_argument("--scaling", choices=("none", "symmetric-jacobi", "row"), default="none")
@@ -62,7 +82,14 @@ def main() -> int:
     p.add_argument("--b-check-npy", type=Path)
     args = p.parse_args()
     n = 87534
-    rows, cols, vals, rhs = load_dump(args.a, args.b)
+    if args.native_npz is not None:
+        if args.native_b_npy is None:
+            p.error("--native-npz requires --native-b-npy")
+        rows, cols, vals, rhs = load_native_npz(args.native_npz, args.native_b_npy)
+    else:
+        if args.a is None or args.b is None:
+            p.error("a and b are required unless --native-npz is supplied")
+        rows, cols, vals, rhs = load_dump(args.a, args.b)
     original_vals = vals.copy()
     original_rhs = rhs.copy()
     scaling = np.ones(n, dtype=np.float64)
@@ -149,6 +176,8 @@ def main() -> int:
         x = np.zeros(n, dtype=np.float64) if args.guess_npy is None else np.ascontiguousarray(np.load(args.guess_npy), dtype=np.float64)
         if x.shape != (n,):
             raise ValueError("initial guess must contain exactly 87534 values")
+        initial_residual_vector = np.ascontiguousarray(rhs - (sp.csr_matrix((vals, (rows, cols)), shape=(n, n)) @ x))
+        initial_relative_residual = float(np.linalg.norm(initial_residual_vector) / np.linalg.norm(rhs))
         vector_b = PTR()
         vector_x = PTR()
         for name, vector in (("b", C.byref(vector_b)), ("x", C.byref(vector_x))):
@@ -247,12 +276,12 @@ def main() -> int:
         np.add.at(original_residual, rows, original_vals * x_original[cols])
         original_residual -= original_rhs
         original_relative_residual = float(np.linalg.norm(original_residual) / np.linalg.norm(original_rhs))
-        args.csv.write_text("iteration,relative_residual\n0,1.0\n" f"{iterations.value},{residual.value:.17g}\n", encoding="utf-8")
+        args.csv.write_text("iteration,relative_residual\n0," f"{initial_relative_residual:.17g}\n" f"{iterations.value},{residual.value:.17g}\n", encoding="utf-8")
         solution_hash = hashlib.sha256(x.tobytes()).hexdigest()
         if args.solution_npy_out:
             np.save(args.solution_npy_out, np.ascontiguousarray(x))
         print(f"replay dimensions={n} nnz={rows.size} scaling={args.scaling} rhs_l2={np.linalg.norm(rhs):.17g} b_check_l2={np.linalg.norm(b_check):.17g} b_check_max={np.max(np.abs(b_check)):.17g} b_roundtrip_relative_error={b_roundtrip_relative_error:.17g}")
-        print(f"replay status={status} result={'PASS' if status == 0 and residual.value <= 5.0e-7 else 'FAIL'} iterations={iterations.value} final_relative_residual={residual.value:.17g} original_relative_residual={original_relative_residual:.17g} tolerance=5e-7 getter_statuses={iter_status},{residual_status},{generic_residual_before_status},{generic_residual_status}")
+        print(f"replay status={status} result={'PASS' if status == 0 and residual.value <= 5.0e-7 else 'FAIL'} iterations={iterations.value} initial_relative_residual={initial_relative_residual:.17g} final_relative_residual={residual.value:.17g} original_relative_residual={original_relative_residual:.17g} tolerance=5e-7 getter_statuses={iter_status},{residual_status},{generic_residual_before_status},{generic_residual_status}")
         print(f"replay solution_sha256={solution_hash} residual_csv={args.csv}")
         flex_destroy(solver)
         amg_destroy(precond)
