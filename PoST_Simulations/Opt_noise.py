@@ -35,7 +35,8 @@ from scipy.optimize import differential_evolution, minimize
 from lib.tes_noise_model import operating_point as tes_operating_point
 from subScript.noise_measurement_model import (
     HARDWARE_BESSEL_CUTOFF_HZ,
-    expected_post_analysis_asd,
+    analysis_filter_magnitude,
+    hardware_sampled_asd,
 )
 
 
@@ -494,26 +495,42 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
     return output_path
 
 
-def parameter_bounds(original: dict, fixed_r_ohm: float | None = None):
-    """Only parameters the user has allowed to vary are listed here."""
-    bounds = {
-        "C_abs": Bound(original["C_abs"] * 1e-3, original["C_abs"] * 1e3),
-        "C_tes": Bound(original["C_tes"] * 1e-3, original["C_tes"] * 1e3),
-        "G_abs-abs": Bound(original["G_abs-abs"] * 1e-3, original["G_abs-abs"] * 1e3),
-        "G_abs-tes": Bound(original["G_abs-tes"] * 1e-3, original["G_abs-tes"] * 1e3),
-        "G_tes-bath": Bound(original["G_tes-bath"] * 1e-3, original["G_tes-bath"] * 1e3),
-        "T_bath": Bound(1e-6, original["T_c"]),
-        # The 10/20 uA RT data is not the target operating current, so it is
-        # used only as a broad condition-specific prior for the ~252 uA TES
-        # operating point.  Do not let noise-only fitting push alpha to 1000.
-        "alpha": Bound(50.0, 100.0),
-        "beta": Bound(0.0, 5.0, logarithmic=False),
-        # L is now intentionally variable.  Tighten this upper bound if known.
-        "L": Bound(original["L"], 1e-5),
+def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
+    """Target-case search box derived from the frozen proxy envelope.
+
+    T_bath and R are not fitted here: T_bath is fixed to the 215 mK target
+    setpoint and R is fixed by the same-campaign IV conversion for each R_SH
+    branch.  The remaining parameters cover the stable target-case region
+    already exercised by the repository's adaptive/correlated searches.
+    """
+
+    sensitivity = envelope["sensitivity_reference"]
+    tc_low, tc_high = map(float, envelope["parameters"]["T_c"]["range"])
+
+    def ref(name):
+        return float(sensitivity[name])
+
+    r_eff = (
+        float(fixed_r_ohm) * (1.0 + ref("beta"))
+        + ref("R_l")
+    )
+    l_low = min(ref("L") / 10.0, r_eff / (2.0 * np.pi * 300_000.0) / 3.0)
+    l_high = max(ref("L") * 10.0, r_eff / (2.0 * np.pi * 1_000.0) * 3.0)
+
+    return {
+        "T_c": Bound(tc_low, tc_high, logarithmic=False),
+        "R_l": Bound(ref("R_l") * 0.25, ref("R_l") * 6.0),
+        "alpha": Bound(ref("alpha") * 0.05, ref("alpha") * 15.0),
+        "beta": Bound(0.0, 12.0, logarithmic=False),
+        "L": Bound(max(l_low, 1e-12), l_high),
+        "n": Bound(max(1.01, ref("n") * 0.5), ref("n") * 2.0),
+        "C_tes": Bound(ref("C_tes") * 0.1, ref("C_tes") * 10.0),
+        "C_abs": Bound(ref("C_abs") * 0.1, ref("C_abs") * 10.0),
+        "G_tes-bath": Bound(ref("G_tes-bath") * 0.1, ref("G_tes-bath") * 10.0),
+        "G_abs-tes": Bound(ref("G_abs-tes") * 0.1, ref("G_abs-tes") * 20.0),
+        "G_abs-abs": Bound(ref("G_abs-abs") * 0.1, ref("G_abs-abs") * 10.0),
+        "excess_johnson_M": Bound(0.0, EXCESS_JOHNSON_MAX, logarithmic=False),
     }
-    if fixed_r_ohm is None:
-        bounds["R"] = Bound(original["R"] * 0.5, original["R"] * 2.0)
-    return bounds
 
 
 def vector_bounds(bounds: dict):
@@ -553,7 +570,38 @@ def decode(
     candidate["rate"] = sample_rate
     candidate["post_filter_white_asd_A_rtHz"] = post_filter_white_asd
     candidate.pop("readout_white_asd_A_rtHz", None)
+    candidate["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     return candidate
+
+
+def deterministic_simulated_spectrum(
+    candidate: dict,
+    fit_freq: np.ndarray,
+) -> np.ndarray:
+    """Expected normalized post-analysis ASD without finite-record Monte Carlo."""
+
+    frequency = np.unique(
+        np.concatenate((np.asarray([1_000.0]), np.asarray(fit_freq, dtype=float)))
+    )
+    rate = float(candidate["rate"])
+    pre_analysis = hardware_sampled_asd(
+        candidate,
+        frequency,
+        rate_hz=rate,
+        cutoff_hz=HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+    )
+    white = float(candidate.get("post_filter_white_asd_A_rtHz", 0.0))
+    if white < 0.0:
+        raise ValueError("post_filter_white_asd_A_rtHz must be non-negative")
+    pre_analysis = np.sqrt(pre_analysis**2 + white**2)
+    expected = pre_analysis * analysis_filter_magnitude(
+        frequency,
+        rate,
+        cutoff_hz=SIM_ANALYSIS_CUTOFF_HZ,
+    )
+    normalized = normalize_at(frequency, expected)
+    return np.interp(fit_freq, frequency, normalized)
 
 
 def optimize_case(
