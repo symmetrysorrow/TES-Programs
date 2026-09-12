@@ -86,9 +86,9 @@ class Bound:
 
 def arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--de-maxiter", type=int, default=8)
-    parser.add_argument("--de-popsize", type=int, default=3)
-    parser.add_argument("--powell-maxfev", type=int, default=250)
+    parser.add_argument("--de-maxiter", type=int, default=20)
+    parser.add_argument("--de-popsize", type=int, default=6)
+    parser.add_argument("--powell-maxfev", type=int, default=600)
     parser.add_argument("--skip-de", action="store_true")
     parser.add_argument("--apply-final", action="store_true")
     parser.add_argument("--timeout", type=int, default=1800)
