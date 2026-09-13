@@ -19,6 +19,7 @@ ADAPTIVE_POST_EVENT_CASE = "case_phase24_adaptive_post_event_cooldown_2ns"
 ADAPTIVE_REJECTION_CASE = "case_phase24_adaptive_event_rejection_progression_2ns"
 ADAPTIVE_RECOVERY_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns"
 ADAPTIVE_RECOVERY_LIGHT_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns_light"
+ADAPTIVE_CONTINUOUS_LIGHT_CASE = "case_phase24_adaptive_continuous_post_event_5ns_light"
 
 
 def main() -> None:
@@ -346,6 +347,65 @@ def main() -> None:
         ],
     }
     project["cases"][ADAPTIVE_RECOVERY_LIGHT_CASE] = adaptive_recovery_light
+
+    # Continuous companion: start from the normal 20-ms steady-state source
+    # and traverse both physical events in one process.  Unlike the recovery
+    # cases above, this intentionally has no mid-run restart position or
+    # post-event restart dependency.  Keep a 5-ns tail so the provenance
+    # comparison stays within the bounded diagnostic budget.
+    adaptive_continuous_light = copy.deepcopy(adaptive_rejection)
+    adaptive_continuous_light["series_file"] = f"{ADAPTIVE_CONTINUOUS_LIGHT_CASE}_series.csv"
+    adaptive_continuous_light["iteration_series_file"] = f"{ADAPTIVE_CONTINUOUS_LIGHT_CASE}_iterations.csv"
+    adaptive_continuous_light["output_file_path"] = (
+        f"../work/meshes/{adaptive_continuous_light['mesh']}/{ADAPTIVE_CONTINUOUS_LIGHT_CASE}.result"
+    )
+    adaptive_continuous_light["output_result"] = False
+    adaptive_continuous_light["restart_from"] = None
+    adaptive_continuous_light.pop("restart_position", None)
+    adaptive_continuous_light["solver"] = dict(adaptive_continuous_light["solver"])
+    adaptive_continuous_light["solver"].pop("matrix_dump_prefix", None)
+    adaptive_continuous_light["solver"].pop("matrix_dump_solution", None)
+    adaptive_continuous_light["timesteps"] = [["20.006[us]", 1]]
+    adaptive_continuous_light["adaptive_time"] = {
+        "start": "20[ms]",
+        "end": "20.020006[ms]",
+        "requested_output_times": {
+            "mode": "explicit",
+            "times": [
+                "20[ms]",
+                "20.02[ms]",
+                "20.020001[ms]",
+                "20.020006[ms]",
+            ],
+        },
+        "dt_initial": "20[us]",
+        "dt_min": "0.5[ns]",
+        "dt_max": "20[us]",
+        "relative_tolerance": 2.0e-3,
+        "absolute_tolerance": 1.0e-8,
+        "r_min": 0.5,
+        "r_max": 2.0,
+        "max_growth": 1.5,
+        "max_shrink": 0.5,
+        "max_rejected": 8,
+        "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+        "debug": True,
+    }
+    adaptive_continuous_light["phase24_smoke"] = {
+        "purpose": "continuous post-event BDF2 re-entry validation",
+        "reference_case": ADAPTIVE_REJECTION_CASE,
+        "path": "normal 20-ms steady-state source; one process through event rejection, crossing, and 5-ns tail",
+        "no_midrun_restart": True,
+        "disabled": [
+            "Linear System Save",
+            "matrix dump",
+            "RHS dump",
+            "x_before/x_after capture",
+            "native exact-system capture",
+            "VTU",
+        ],
+    }
+    project["cases"][ADAPTIVE_CONTINUOUS_LIGHT_CASE] = adaptive_continuous_light
 
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their

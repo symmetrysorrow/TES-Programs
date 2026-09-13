@@ -1,0 +1,207 @@
+{
+  "stage": "Stage 11",
+  "purpose": "Continuous bounded validation of post-event BDF2 re-entry",
+  "case": "case_phase24_adaptive_continuous_post_event_5ns_light",
+  "sif": "generated/cases/case_phase24_adaptive_continuous_post_event_5ns_light.sif",
+  "log": "results/case_phase24_adaptive_continuous_post_event_5ns_light/solver.log",
+  "manifest": "results/case_phase24_adaptive_continuous_post_event_5ns_light/manifest.json",
+  "restart": {
+    "no_midrun_restart": true,
+    "restart_from": null,
+    "restart_position": null,
+    "initial_source": "20-ms steady-state source only",
+    "interpretation": "The case uses the normal steady-state field as its initial condition, then traverses both events and the tail in one process. No post-event recovery result or restart position is used."
+  },
+  "run": {
+    "started_local": "2026-09-13 13:21:18",
+    "finished_local": "2026-09-13 13:29:44",
+    "runtime_seconds": 506,
+    "omp_threads": 8,
+    "completed": true,
+    "simulation_start_s": 0.02,
+    "simulation_end_s": 0.020020006,
+    "second_event_s": 0.020020001,
+    "post_second_event_observed_ns": 5.0,
+    "post_second_event_accepted_steps": 10,
+    "production_31us_rerun": false
+  },
+  "solver_fixed": {
+    "linear_solver": "FlexGMRES + BoomerAMG",
+    "strong_threshold": 0.5,
+    "kdim": 100,
+    "sweeps": 1,
+    "linear_tolerance": 5.0e-7,
+    "max_iterations": 2000,
+    "adaptive_rtol": 0.002,
+    "adaptive_atol": 1.0e-8,
+    "dt_min_ns": 0.5,
+    "dt_max_us": 20.0,
+    "ratio_min": 0.5,
+    "ratio_max": 2.0,
+    "growth_factor": 1.5,
+    "shrink_factor": 0.5,
+    "max_rejected": 8,
+    "floor_accept_semantics_changed": false,
+    "bdf_policy_changed": false,
+    "estimator_changed": false,
+    "cooldown_policy_changed": false
+  },
+  "diagnostic_scope": {
+    "lifecycle_trace_only": true,
+    "linear_system_save": false,
+    "matrix_rhs_solution_dumps": false,
+    "vtu": false,
+    "native_exact_capture": false,
+    "native_capture_disable_env": "PHASE24_DISABLE_NATIVE_CAPTURE=1",
+    "log_assertions": {
+      "native_capture_enter": 0,
+      "matrix_save": 0,
+      "rhs_save": 0,
+      "all_done": true
+    }
+  },
+  "summary": {
+    "trials": 14,
+    "accepted": 13,
+    "rejected": 1,
+    "bdf2_rejected": 1,
+    "rejected_trial_ids": [2],
+    "floor_accepted_steps": 12,
+    "first_post_event_bdf1": {
+      "trial": 3,
+      "t0_s": 0.02002,
+      "dt_ns": 0.5,
+      "error": 1.74915728946,
+      "result": "accepted_floor",
+      "note": "BDF1 retry after the event-localized BDF2 reject; it advances to 20.0200005 ms before the second event."
+    },
+    "first_bdf2": {
+      "trial": 4,
+      "t0_s": 0.0200200005,
+      "dt_ns": 0.5,
+      "error": 25.66606371497,
+      "result": "accepted_floor",
+      "crosses_second_event": true
+    },
+    "first_accepted_dt_above_0p5ns": null,
+    "first_accepted_dt_at_least_1ns": null,
+    "maximum_accepted_dt_ns": 20000.0,
+    "maximum_post_event_accepted_dt_ns": 0.5,
+    "final_accepted_dt_ns": 0.4999999999875,
+    "post_event_dt_sequence_ns": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+    "accepted_bdf_sequence": [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "accepted_error_sequence": [
+      0.5427381859724,
+      1.74915728946,
+      25.66606371497,
+      2.99704340942,
+      1.594038429752,
+      1.47629688794,
+      1.380161863335,
+      2.942240321271,
+      1.234087156129,
+      1.177869348382,
+      1.127930525663,
+      3.338632029635,
+      1.043721067146
+    ],
+    "accepted_errors_below_one": 1,
+    "dt_growth_after_second_event": "none; all 10 post-event accepted steps remained at 0.5 ns"
+  },
+  "trial_trace": [
+    {"id": 1, "t0_s": 0.02, "dt_ns": 20000.0, "proposed_next_dt_ns": 20000.0, "bdf": 1, "error": 0.5427381859724, "result": "accepted", "floor_accepted": false, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [0, 0], "previous_accepted_dt_ns": null, "accepted_history_length_before": 0, "previous_bdf": null, "linear_max_iterations": 283, "max_linear_residual": 4.99254e-7},
+    {"id": 2, "t0_s": 0.02002, "dt_ns": 0.9999999994736, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 5.722319451378, "result": "rejected", "floor_accepted": false, "event_forced": true, "event_localized": true, "rejection_streak": [0, 1], "cooldown": [0, 1], "cooldown_inferred": true, "previous_accepted_dt_ns": 20000.0, "accepted_history_length_before": 1, "previous_bdf": 1, "linear_max_iterations": 6, "max_linear_residual": 4.45247e-7},
+    {"id": 3, "t0_s": 0.02002, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 1, "error": 1.74915728946, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [1, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 20000.0, "accepted_history_length_before": 1, "previous_bdf": 2, "linear_max_iterations": 3, "max_linear_residual": 4.45284e-7},
+    {"id": 4, "t0_s": 0.0200200005, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 25.66606371497, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "crosses_second_event": true, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 2, "previous_bdf": 1, "linear_max_iterations": 3, "max_linear_residual": 4.06664e-7},
+    {"id": 5, "t0_s": 0.020020001, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 2.99704340942, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 3, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 9.70764e-7},
+    {"id": 6, "t0_s": 0.0200200015, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.594038429752, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 4, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 8.56378e-7},
+    {"id": 7, "t0_s": 0.020020002, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.47629688794, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 5, "previous_bdf": 2, "linear_max_iterations": 2, "max_linear_residual": 2.51578e-7},
+    {"id": 8, "t0_s": 0.0200200025, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.380161863335, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 6, "previous_bdf": 2, "linear_max_iterations": 2, "max_linear_residual": 3.87485e-7},
+    {"id": 9, "t0_s": 0.020020003, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 2.942240321271, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 7, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 4.05543e-7},
+    {"id": 10, "t0_s": 0.0200200035, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.234087156129, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 8, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 4.87586e-7},
+    {"id": 11, "t0_s": 0.020020004, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.177869348382, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 9, "previous_bdf": 2, "linear_max_iterations": 2, "max_linear_residual": 2.72843e-7},
+    {"id": 12, "t0_s": 0.0200200045, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.127930525663, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 10, "previous_bdf": 2, "linear_max_iterations": 2, "max_linear_residual": 4.34454e-7},
+    {"id": 13, "t0_s": 0.020020005, "dt_ns": 0.5, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 3.338632029635, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 11, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 4.60397e-7},
+    {"id": 14, "t0_s": 0.0200200055, "dt_ns": 0.4999999999875, "proposed_next_dt_ns": 0.5, "bdf": 2, "error": 1.043721067146, "result": "accepted_floor", "floor_accepted": true, "event_forced": false, "rejection_streak": [0, 0], "cooldown": [1, 1], "previous_accepted_dt_ns": 0.5, "accepted_history_length_before": 12, "previous_bdf": 2, "linear_max_iterations": 4, "max_linear_residual": 1.68151e-7}
+  ],
+  "continuous_history_provenance": {
+    "before_event_trial_2": {
+      "previous_accepted_dt_ns": 20000.0,
+      "accepted_history_length": 1,
+      "bdf_history_available": true,
+      "rejected_in_row": 0,
+      "cooldown": 0,
+      "previous_bdf_order": 1
+    },
+    "after_event_retry_trial_3": {
+      "previous_accepted_dt_ns": 20000.0,
+      "accepted_history_length": 1,
+      "bdf_history_available": true,
+      "rejected_in_row": 1,
+      "cooldown": 1,
+      "previous_bdf_order": 2
+    },
+    "at_second_event_crossing_after_trial_4": {
+      "previous_accepted_dt_ns": 0.5,
+      "accepted_history_length": 3,
+      "bdf_history_available": true,
+      "rejected_in_row": 0,
+      "cooldown": 1,
+      "previous_bdf_order": 1,
+      "current_trial_bdf_order": 2
+    },
+    "first_post_second_event_trial_5": {
+      "previous_accepted_dt_ns": 0.5,
+      "accepted_history_length": 3,
+      "bdf_history_available": true,
+      "rejected_in_row": 0,
+      "cooldown": 1,
+      "previous_bdf_order": 2
+    },
+    "history_mismatch_with_restart_case": false
+  },
+  "restart_case_comparison": {
+    "reference_case": "case_phase24_adaptive_post_event_dt_recovery_10ns_light",
+    "restart_first_bdf1": {"dt_ns": 0.5, "error": 0.9725116346223, "result": "accepted"},
+    "restart_first_bdf2": {"dt_ns": 0.5, "error": 1.982191750576, "result": "accepted_floor"},
+    "restart_first_bdf2_rejection": {"dt_ns": 0.75, "error": 2.423130907247, "result": "rejected"},
+    "restart_first_accepted_dt_above_floor_ns": 0.6,
+    "restart_bdf2_reject_count_10ns": 5,
+    "continuous_first_bdf1": {"dt_ns": 0.5, "error": 1.74915728946, "result": "accepted_floor"},
+    "continuous_first_bdf2": {"dt_ns": 0.5, "error": 25.66606371497, "result": "accepted_floor"},
+    "continuous_bdf2_reject_count_5ns": 1,
+    "comparison": "The event retry shape is qualitatively consistent, but continuous history keeps the prior 20-us accepted dt and reaches the second-event crossing with real accepted history. Unlike the restart case, no post-event dt growth occurs during the observed 5-ns tail; the only BDF2 rejection is the event-localized trial."
+  },
+  "linear": {
+    "solve_records": 83,
+    "post_event_max_iterations": 4,
+    "all_trials_max_iterations": 283,
+    "max_final_residual": 4.99254e-7,
+    "failed_solves": 0
+  },
+  "runtime_comparison": {
+    "runtime_seconds": 506,
+    "accepted_steps": 13,
+    "wall_seconds_per_accepted_step": 38.9230769231,
+    "observed_post_event_ns_per_minute_end_to_end": 0.5928853755,
+    "naive_31us_projection_seconds": 784.0647805658,
+    "projection_note": "The 31-us estimate is a linear end-to-end scaling from the 20.006-us bounded interval only. The persistent 0.5-ns post-event floor makes this extrapolation optimistic and not a production runtime commitment."
+  },
+  "provenance": {
+    "project_sha256": "203d452c7f5853de731c6743ee94978f31cef27b9bc604170d13ec049d207712",
+    "sif_sha256": "5f56ef0922458dc5775049f1b0d3f55eb6ffebe34b81feec0c6701632d454ea9",
+    "initial_restart_result_sha256": "8ab061806707bdbfe36881a97ac6b106b6a068d7ed5e288a5d7471df3615b265",
+    "steady_state_sha256": "04a9fa51c0641b0bbe2544f0c60e1998111d388a7202e1a45b515e4344093f7f",
+    "installed_libelmersolver_sha256": "3b2f629bcf2a0cd94bc9059ebbfd096eff3226251eecf188365d04b58272841c",
+    "native_solvehypre_source_sha256": "2e8b9d48f57564fa64add6b59c2076f794475db23c0a9864bcdf8ec26266c196"
+  },
+  "classification": {
+    "result": "POST_EVENT_SLOW_DT_RECOVERY",
+    "reason": "Without a mid-run restart, the event-localized BDF2 trial rejects once, the BDF1 retry and subsequent BDF2 trials are accepted under existing floor semantics, but all 10 post-second-event accepted steps remain at 0.5 ns with no growth.",
+    "bdf2_blocker_confirmed": false,
+    "restart_history_mismatch_confirmed": false,
+    "remaining_blocker": "Post-event estimator/controller recovery is slow; production runtime impact remains to be assessed before 31-us validation.",
+    "policy_changes_made": false
+  },
+  "stage_status": "VALIDATION_IN_PROGRESS"
+}
