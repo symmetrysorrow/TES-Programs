@@ -1,6 +1,14 @@
 {
-  "stage": "Stage 11C-1 (blocks further native execution for all subsequent stages too)",
-  "status": "BLOCKED",
+  "stage": "Stage 11C-1 (was blocking further native execution for all subsequent stages too)",
+  "status": "RESOLVED",
+  "resolution": {
+    "root_cause_identified_by": "user (symmetrysorrow), not this session",
+    "root_cause": "STATUS_DLL_NOT_FOUND was never about a corrupted or missing native binary. tools/elmer-hypre/install-stage11 is a MinGW-UCRT64 build; --runtime-bin only supplies Elmer's own module DLL directory, not the GNU/HYPRE runtime (libgfortran-5.dll, libgomp-1.dll, libHYPRE.dll, MUMPS, etc). Without C:\\msys64\\ucrt64\\bin on PATH ahead of everything else, the process cannot even start. The vanilla 'C:\\Program Files\\Elmer 26.1-Release\\bin' also carries a libgfortran-5.dll, but it is a DIFFERENT build and copying/relying on it risks a silent ABI mismatch rather than a clean failure -- confirmed empirically: prepending it did not fix the crash, only prepending C:\\msys64\\ucrt64\\bin did.",
+    "verification": "Confirmed exit codes exactly as the user described: without ucrt64/bin on PATH, native process exit is -1073741515 (0xC0000135, STATUS_DLL_NOT_FOUND) before any solver.log line is written. With 'C:\\msys64\\ucrt64\\bin' prepended, case_phase24_adaptive_post_event_cooldown_2ns launched and produced normal solver.log output (HeatSolve assembly, HypreSolver epochs, SolveHypre iterations, ComputeChange) -- i.e. this session's own STATUS_DLL_NOT_FOUND blocker is confirmed fixed, not just plausible.",
+    "permanent_fix_implemented": "Added --toolchain-bin to run.py (CLI flag, runtime_environment(), run_case(), and the manifest.json provenance record). The given directory is placed FIRST on PATH (ahead of the solver's own bin/share/elmersolver/lib and --runtime-bin), so its DLLs win over any same-named ones bundled elsewhere -- avoiding exactly the ABI-mismatch risk the user flagged, rather than working around it by copying DLLs between installs. When --elmer-solver points at a path containing 'elmer-hypre' and --toolchain-bin was not given, run.py now prints a preflight warning explaining what will happen and what flag to pass, instead of a bare STATUS_DLL_NOT_FOUND crash. New unit tests in tests/test_run_runtime.py lock in the PATH ordering, the missing-directory error, and the preflight warning. 149/149 tests pass.",
+    "usage": "python run.py <case> --project elmer_project_phase24_production.json --elmer-solver \"D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe\" --runtime-bin \"D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver\" --toolchain-bin \"C:\\msys64\\ucrt64\\bin\""
+  },
+  "status_before_resolution_for_the_record": "BLOCKED",
   "commit": "6dcb396f01a48f11786d63d24b500be545e87b0d",
   "summary": "Two distinct issues were found while building the Stage 11C-1 fine-reference case. One is fixed and safe to keep. The other is an unresolved environment blocker that currently prevents launching ANY new native ElmerSolver run (the Phase24/HYPRE 'install-stage11' build), independent of anything in this session's own case/controller work.",
   "issue_1_sif_generation_bug": {
@@ -11,7 +19,7 @@
     "not_yet_verified": "Because of issue 2 below, this fix has only been confirmed to resolve SIF PARSING (LoadInputFile succeeds). It has NOT been confirmed to still produce a correct 'ALL DONE' run end-to-end, because no new native run could complete at all in this session after the parsing stage."
   },
   "issue_2_native_launch_blocker": {
-    "status": "UNRESOLVED",
+    "status": "RESOLVED (see top-level resolution block)",
     "description": "After fixing issue 1, launching the Phase24 HYPRE build (tools/elmer-hypre/install-stage11/bin/ElmerSolver_mpi.exe or ElmerSolver.exe, with --runtime-bin pointing at .../install-stage11/lib/elmersolver, exactly matching the paths recorded in results/case_phase24_adaptive_continuous_post_event_20ns_baseline/manifest.json for a run that DID succeed earlier today at 17:37-18:11) now fails immediately with Windows exit code 3221225781 (0xC0000135, STATUS_DLL_NOT_FOUND) before producing any solver.log output at all.",
     "what_was_ruled_out": [
       "Not case-specific: reproduces on the plain steady-state-restart lead-in case (case_phase24_adaptive_post_event_cooldown_2ns), not just new Stage 11C-1 cases.",
@@ -24,10 +32,10 @@
     "next_step_needed": "Requires either: (a) identifying and restoring whatever PATH/DLL environment the 17:37 run actually used (not found in this repository or this session), or (b) rebuilding install-stage11 in a way that bundles or statically links its MinGW/HYPRE runtime dependencies so it no longer depends on ambient environment state, or (c) user guidance on how native runs are normally launched outside of what run.py's committed defaults assume."
   },
   "cases_affected_by_blocker": [
-    "case_phase24_stage11c1_fixed_dt_reference_0p25ns (new, not yet run)",
-    "case_phase24_stage11c1_fixed_dt_reference_0p125ns (new, not yet run)",
-    "any BDF2 stable/re-entry probe cases (not yet designed, blocked on this)"
+    "case_phase24_stage11c1_fixed_dt_reference_0p25ns (new, not yet run -- can now proceed with --toolchain-bin)",
+    "case_phase24_stage11c1_fixed_dt_reference_0p125ns (new, not yet run -- can now proceed with --toolchain-bin)",
+    "any BDF2 stable/re-entry probe cases (not yet designed; no longer blocked on native launch)"
   ],
-  "gate_result": "BLOCKED -- Stage 11C-1 cannot close and no later stage can be attempted until issue 2 is resolved.",
-  "next_allowed_stage": "None until native execution is restored."
+  "gate_result": "RESOLVED -- native execution restored via --toolchain-bin. Stage 11C-1 work can resume.",
+  "next_allowed_stage": "Resume Stage 11C-1: run the fine-reference cases and design BDF2 stable/re-entry probes, always passing --toolchain-bin \"C:\\msys64\\ucrt64\\bin\" (or wherever this machine's UCRT64 toolchain lives) when using the install-stage11 build."
 }

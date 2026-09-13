@@ -78,9 +78,23 @@ def solver_log_errors(log_text: str) -> list[str]:
 
 
 def runtime_environment(
-    elmer_solver: str, runtime_bin: str | None
+    elmer_solver: str,
+    runtime_bin: str | None,
+    toolchain_bin: str | None = None,
 ) -> tuple[dict[str, str], Path, Path]:
-    """Return a loader environment pinned to one Elmer installation."""
+    """Return a loader environment pinned to one Elmer installation.
+
+    ``runtime_bin`` only adds Elmer's own module DLL directory; it does not
+    supply the GNU/HYPRE runtime (libgfortran/libgomp/libHYPRE/MUMPS/...) a
+    MinGW-UCRT64-built solver like tools/elmer-hypre/install-stage11 needs.
+    Without it, the process fails immediately with Windows STATUS_DLL_NOT_FOUND
+    (0xC0000135) before writing any solver.log. Pass ``toolchain_bin`` (e.g.
+    C:\\msys64\\ucrt64\\bin) to supply that runtime explicitly; it is placed
+    ahead of everything else on PATH so its DLLs win over any same-named ones
+    bundled elsewhere (notably the vanilla Elmer release's own libgfortran),
+    which would otherwise risk a silent ABI mismatch rather than a clean
+    failure. Do not "fix" this by copying DLLs between installs.
+    """
     solver = Path(elmer_solver).resolve()
     if not solver.is_file():
         raise FileNotFoundError(f"ElmerSolver not found: {solver}")
@@ -93,7 +107,22 @@ def runtime_environment(
         parts.append(str(runtime))
     env = os.environ.copy()
     env["ELMER_HOME"] = str(prefix)
-    env["PATH"] = os.pathsep.join([*parts, env.get("PATH", "")])
+    if toolchain_bin:
+        toolchain = Path(toolchain_bin).resolve()
+        if not toolchain.is_dir():
+            raise FileNotFoundError(f"toolchain DLL directory not found: {toolchain}")
+        env["PATH"] = os.pathsep.join([str(toolchain), *parts, env.get("PATH", "")])
+    else:
+        env["PATH"] = os.pathsep.join([*parts, env.get("PATH", "")])
+        if "elmer-hypre" in str(solver).lower():
+            print(
+                f"[preflight] warning: {solver} looks like the Phase24/HYPRE "
+                "MinGW-UCRT64 build but --toolchain-bin was not given. It will "
+                "likely fail with STATUS_DLL_NOT_FOUND before producing any "
+                "solver.log. Pass --toolchain-bin \"C:\\msys64\\ucrt64\\bin\" "
+                "(or wherever libgfortran/libgomp/libHYPRE actually live).",
+                file=sys.stderr,
+            )
     return env, solver, prefix
 
 
@@ -522,6 +551,7 @@ def run_case(
     mpi_procs: int,
     udf_dll: str | None = None,
     runtime_bin: str | None = None,
+    toolchain_bin: str | None = None,
     amgx_config: str | None = None,
     amgx_constraint_mode: str = "default",
     amgx_constraint_penalty: float = 1.0e4,
@@ -544,7 +574,7 @@ def run_case(
             for name in ("TESTransientHeatSource", "AbsorberWindowPulseHeatSource")
         )
     )
-    env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin)
+    env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin, toolchain_bin)
     if amgx_config:
         # Linux Elmer prefixes restart/output names with the mesh basename.
         # The historical ../work/meshes/... paths therefore need that
@@ -669,6 +699,7 @@ def run_case(
         "solver": str(solver_path),
         "elmer_prefix": str(prefix),
         "runtime_bin": str(Path(runtime_bin).resolve()) if runtime_bin else None,
+        "toolchain_bin": str(Path(toolchain_bin).resolve()) if toolchain_bin else None,
         "amgx_config": str(amgx_path) if amgx_path else None,
         "amgx_config_sha256": sha256(amgx_path) if amgx_path else None,
         "runtime_artifacts_sha256": runtime_artifacts(
@@ -716,6 +747,19 @@ def main() -> int:
     parser.add_argument(
         "--runtime-bin",
         help="runtime DLL directory appended after the selected Elmer install's bin/module paths",
+    )
+    parser.add_argument(
+        "--toolchain-bin",
+        help=(
+            "GNU/HYPRE toolchain DLL directory (e.g. C:\\msys64\\ucrt64\\bin) placed "
+            "ahead of everything else on PATH. Required for a MinGW-UCRT64-built "
+            "solver such as tools/elmer-hypre/install-stage11: --runtime-bin only "
+            "supplies Elmer's own module DLLs, not libgfortran/libgomp/libHYPRE/MUMPS/etc, "
+            "so without this the process fails immediately with Windows "
+            "STATUS_DLL_NOT_FOUND before any solver.log is written. Do not work around "
+            "this by copying DLLs from another Elmer install -- that risks a silent ABI "
+            "mismatch instead of a clean failure."
+        ),
     )
     parser.add_argument(
         "--amgx-config",
@@ -795,7 +839,7 @@ def main() -> int:
         target_amgx_config = args.amgx_config if name == args.case else None
         code = run_case(
             model, name, project_path, args.elmer_solver, args.mpi_procs,
-            args.udf_dll, args.runtime_bin, target_amgx_config,
+            args.udf_dll, args.runtime_bin, args.toolchain_bin, target_amgx_config,
             args.amgx_constraint_mode, args.amgx_constraint_penalty,
         )
         if code != 0:

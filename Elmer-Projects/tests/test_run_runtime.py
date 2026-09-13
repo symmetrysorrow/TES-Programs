@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 import tempfile
 import unittest
@@ -217,6 +218,48 @@ class RuntimeSifTests(unittest.TestCase):
                 str(runtime.resolve()),
             ])
             self.assertTrue(env["PATH"].endswith(old_path))
+
+    def test_runtime_environment_puts_toolchain_bin_first(self) -> None:
+        """toolchain_bin (e.g. C:\\msys64\\ucrt64\\bin) must win DLL search over
+        everything else, including the Elmer install's own directories -- a
+        MinGW-UCRT64-built solver otherwise fails with STATUS_DLL_NOT_FOUND, and
+        putting it anywhere but first risks resolving a same-named but
+        ABI-incompatible DLL (e.g. the vanilla release's own libgfortran)."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            solver = root / "install" / "bin" / "ElmerSolver.exe"
+            runtime = root / "runtime"
+            toolchain = root / "ucrt64" / "bin"
+            solver.parent.mkdir(parents=True)
+            runtime.mkdir()
+            toolchain.mkdir(parents=True)
+            solver.write_bytes(b"solver")
+            env, _, prefix = run.runtime_environment(str(solver), str(runtime), str(toolchain))
+            self.assertEqual(env["PATH"].split(os.pathsep)[:4], [
+                str(toolchain.resolve()),
+                str(solver.parent.resolve()),
+                str((prefix / "share" / "elmersolver" / "lib").resolve()),
+                str(runtime.resolve()),
+            ])
+
+    def test_runtime_environment_rejects_missing_toolchain_bin(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            solver = root / "install" / "bin" / "ElmerSolver.exe"
+            solver.parent.mkdir(parents=True)
+            solver.write_bytes(b"solver")
+            with self.assertRaises(FileNotFoundError):
+                run.runtime_environment(str(solver), None, str(root / "no-such-toolchain"))
+
+    def test_runtime_environment_warns_without_toolchain_bin_for_hypre_build(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            solver = root / "elmer-hypre" / "install-stage11" / "bin" / "ElmerSolver_mpi.exe"
+            solver.parent.mkdir(parents=True)
+            solver.write_bytes(b"solver")
+            with mock.patch.object(run.sys, "stderr", new=io.StringIO()) as fake_stderr:
+                run.runtime_environment(str(solver), None)
+                self.assertIn("toolchain-bin", fake_stderr.getvalue())
 
     def test_mpi_launcher_uses_pinned_path(self) -> None:
         with mock.patch.object(run.shutil, "which", return_value="C:/runtime/mpiexec.exe") as which:
