@@ -2856,6 +2856,8 @@ def main():
                     float(POST_FILTER_WHITE_FRACTION_MAX),
                 ],
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
+                "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+                "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
             },
             "T_c_fit_range_K": [
                 float(envelope["parameters"]["T_c"]["range"][0]),
@@ -2863,6 +2865,20 @@ def main():
             ],
             "alpha_fit_max": float(ALPHA_FIT_MAX),
             "thermal_link_model": "stycast_node",
+            "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+            "electrical_rc_relaxation": {
+                "topology": "series R_l + L plus one passive R||C relaxation element per TES branch",
+                "fitted_parameters": ["R_rc", "f_rc_Hz"],
+                "R_rc_search_ohm": [
+                    float(R_RC_FIT_MIN_OHM),
+                    float(R_RC_FIT_MAX_OHM),
+                ],
+                "f_rc_search_Hz": [
+                    float(F_RC_FIT_MIN_HZ),
+                    float(F_RC_FIT_MAX_HZ),
+                ],
+                "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+            },
             "stycast_node": {
                 "topology": "TES <-> Stycast <-> Pb absorber center",
                 "symmetric_nodes": 2,
