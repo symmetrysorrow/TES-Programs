@@ -400,3 +400,75 @@ def test_rc_ablation_reports_direct_score_gain() -> None:
     assert result["same_parameters_without_rc_shape_score"] > 0.0
     assert result["score_improvement_from_rc_at_same_parameters"] > 0.0
     assert result["tes_resistance_response"] == "instantaneous alpha/beta in both models"
+
+
+
+def test_rc_degeneracy_profile_preserves_exact_best_seed() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 31)
+    target, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.electrical_rc_degeneracy_diagnostics(
+        candidate,
+        target,
+        fit_freq,
+        args,
+        fixed_rl_grid_ohm=(candidate["R_l"], 8.0e-3),
+        profile_maxfev=20,
+    )
+    matching = next(
+        row for row in result["fixed_R_l_profile"]["rows"]
+        if row["R_l_ohm"] == pytest.approx(candidate["R_l"])
+    )
+    assert matching["shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert matching["R_rc_ohm"] == pytest.approx(candidate["R_rc"])
+    assert matching["f_rc_Hz"] == pytest.approx(candidate["f_rc_Hz"])
+    assert result["tes_resistance_response"] == (
+        "instantaneous alpha/beta (unchanged)"
+    )
+
+
+def test_rc_degeneracy_constant_sum_sweep_contains_best_decomposition() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 31)
+    target, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.electrical_rc_degeneracy_diagnostics(
+        candidate,
+        target,
+        fit_freq,
+        args,
+        fixed_rl_grid_ohm=(candidate["R_l"],),
+        profile_maxfev=5,
+    )
+    rows = result["constant_dc_sum_partition_sweep"]["rows"]
+    matching = next(
+        row for row in rows
+        if np.isclose(row["R_l_ohm"], candidate["R_l"])
+    )
+    assert matching["R_rc_ohm"] == pytest.approx(candidate["R_rc"])
+    assert matching["R_l_plus_R_rc_ohm"] == pytest.approx(
+        candidate["R_l"] + candidate["R_rc"]
+    )
+    assert matching["shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert result["constant_dc_sum_partition_sweep"][
+        "shape_score_span"
+    ] >= 0.0
