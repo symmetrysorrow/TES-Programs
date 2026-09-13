@@ -53,16 +53,17 @@ def linear_modes(params: dict) -> list[dict]:
 
 
 def noise_components(params: dict, frequencies_hz: np.ndarray) -> tuple[np.ndarray, dict]:
-    """Return CH0 ASD components from all eight independent physical sources."""
+    """Return CH0 ASD components from the selected production noise model."""
     result = _production_noise_components(params, frequencies_hz)
     return result["components_ch0"], {
-        "source_names": list(SOURCE_NAMES),
+        "source_names": list(result["source_names"]),
         "source_components_ch1": result["components_ch1"],
         "source_class_components": result["aggregated_components_ch0"],
         "total_asd": result["total_ch0"],
         "total_asd_ch1": result["total_ch1"],
         "cross_psd": result["cross_psd"],
         "operating_point": result["operating_point"],
+        "thermal_link_model": result.get("thermal_link_model", "effective"),
         "F_LINK": F_LINK,
         "units": "production-model output ASD; normalized shape only",
     }
