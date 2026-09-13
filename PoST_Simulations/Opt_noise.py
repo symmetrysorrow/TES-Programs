@@ -2565,6 +2565,10 @@ def optimize_case(
 
     fixed_r_ohm = float(operating_point["R_TES_ohm"])
     shunt_resistance_ohm = float(operating_point["R_SH_ohm"])
+    use_rc_relaxation = bool(args.use_rc_relaxation)
+    electrical_link_model = (
+        ELECTRICAL_LINK_MODEL_RC if use_rc_relaxation else "rl"
+    )
 
     # Start from the frozen 215 mK target-case proxy, not the generic
     # PoST_Simulations/input.json (which belongs to a different thermal point).
@@ -2582,9 +2586,18 @@ def optimize_case(
     case_original["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     case_original["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
     case_original["thermal_link_model"] = "stycast_node"
-    case_original["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
-    case_original.setdefault("R_rc", R_RC_INITIAL_OHM)
-    case_original.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
+    case_original["electrical_link_model"] = electrical_link_model
+    if use_rc_relaxation:
+        case_original.setdefault("R_rc", R_RC_INITIAL_OHM)
+        case_original.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
+        case_original.pop("R_series_eff", None)
+    else:
+        case_original["R_series_eff"] = float(
+            case_original.get("R_series_eff", case_original["R_l"])
+        )
+        case_original["R_l"] = float(case_original["R_series_eff"])
+        case_original.pop("R_rc", None)
+        case_original.pop("f_rc_Hz", None)
     case_original.setdefault("C_stycast", C_STYCAST_PAD_MATERIAL_J_PER_K)
     case_original.setdefault("G_tes-stycast", G_ABS_TES_MATERIAL_W_PER_K)
     case_original.setdefault("G_stycast-abs", G_ABS_TES_MATERIAL_W_PER_K)
@@ -2596,7 +2609,12 @@ def optimize_case(
     work_dir.mkdir(parents=True, exist_ok=True)
     work_input_path = work_dir / "input.json"
     work_noise_path = work_dir / NOISE_DAT_PATH.name
-    bounds = parameter_bounds(reference, envelope, fixed_r_ohm=fixed_r_ohm)
+    bounds = parameter_bounds(
+        reference,
+        envelope,
+        fixed_r_ohm=fixed_r_ohm,
+        use_rc_relaxation=use_rc_relaxation,
+    )
     keys, scipy_bounds = vector_bounds(bounds)
 
     initial = case_original.copy()
@@ -2620,9 +2638,17 @@ def optimize_case(
             ) < 5e-3:
                 reused = []
                 for key in keys:
-                    if key not in previous:
+                    if key == "R_series_eff" and key not in previous:
+                        if "R_rc" in previous and "R_l" in previous:
+                            value = float(previous["R_l"]) + float(previous["R_rc"])
+                        elif "R_l" in previous:
+                            value = float(previous["R_l"])
+                        else:
+                            continue
+                    elif key in previous:
+                        value = float(previous[key])
+                    else:
                         continue
-                    value = float(previous[key])
                     bound = bounds[key]
                     if (
                         np.isfinite(value)
@@ -2665,6 +2691,7 @@ def optimize_case(
             bounds,
             experimental_rate,
             post_filter_white_asd,
+            electrical_link_model=electrical_link_model,
         )
         candidate["R"] = fixed_r_ohm
         candidate["R_SH"] = shunt_resistance_ohm
@@ -2738,9 +2765,26 @@ def optimize_case(
             "T_bath_K": [bounds["T_bath"].lower, bounds["T_bath"].upper],
             "alpha": [bounds["alpha"].lower, bounds["alpha"].upper],
             "L_H": [L_FIT_MIN_H, L_FIT_MAX_H],
-            "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
-            "R_rc_ohm": [R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM],
-            "f_rc_Hz": [F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ],
+            "electrical_model": (
+                "passive_rc_relaxation"
+                if use_rc_relaxation
+                else "static_effective_series_resistance"
+            ),
+            "series_resistance_search_ohm": (
+                [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM]
+                if use_rc_relaxation
+                else [R_SERIES_EFF_FIT_MIN_OHM, R_SERIES_EFF_FIT_MAX_OHM]
+            ),
+            "R_rc_ohm": (
+                [R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM]
+                if use_rc_relaxation
+                else None
+            ),
+            "f_rc_Hz": (
+                [F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ]
+                if use_rc_relaxation
+                else None
+            ),
             "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
             "n": [N_FIT_MIN, N_FIT_MAX],
             "C_tes_J_per_K": [C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K],
@@ -2823,6 +2867,7 @@ def optimize_case(
             bounds,
             experimental_rate,
             post_filter_white_asd,
+            electrical_link_model=electrical_link_model,
         )
         candidate["R"] = fixed_r_ohm
         candidate["R_SH"] = shunt_resistance_ohm
