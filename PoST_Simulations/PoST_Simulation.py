@@ -36,6 +36,7 @@ from lib import general
 from lib.tes_noise_model import noise_components as shared_tes_noise_components
 from lib.tes_noise_model import linearized_matrix as shared_tes_linearized_matrix
 from lib.tes_noise_model import operating_point as shared_tes_operating_point
+from lib.tes_noise_model import tes_johnson_voltage_asd as shared_tes_johnson_voltage_asd
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
 from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
@@ -124,25 +125,18 @@ def resolve_excess_johnson_M(parameters):
 def tes_johnson_voltage_asd(temperature, resistance, beta, excess_johnson_M=0.0):
     """TES Johnson voltage ASD in V/sqrt(Hz).
 
+    Delegates to the shared TES model so production and optimization use the
+    same beta convention:
     S_V,J = 4 k_B T R (1 + 2 beta) (1 + M^2).
     """
-    temperature = float(temperature)
-    resistance = float(resistance)
-    beta = float(beta)
     M = resolve_excess_johnson_M(
         {"excess_johnson_M": excess_johnson_M}
     )
-    if not np.isfinite(temperature) or temperature <= 0.0:
-        raise ValueError("temperature must be positive and finite")
-    if not np.isfinite(resistance) or resistance <= 0.0:
-        raise ValueError("resistance must be positive and finite")
-    if not np.isfinite(beta) or 1.0 + 2.0 * beta < 0.0:
-        raise ValueError("beta must be finite with 1 + 2 beta non-negative")
-    if not np.isfinite(M) or M < 0.0:
-        raise ValueError("excess_johnson_M must be finite and non-negative")
-    return np.sqrt(
-        4.0 * k_b * temperature * resistance
-        * (1.0 + 2.0 * beta) * (1.0 + M**2)
+    return shared_tes_johnson_voltage_asd(
+        temperature,
+        resistance,
+        beta,
+        M,
     )
 
 
