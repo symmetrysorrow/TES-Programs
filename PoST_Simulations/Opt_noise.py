@@ -3237,6 +3237,7 @@ def main():
     reference, envelope, reference_source = target_case_reference(
         args.case_dir,
         args.reference_input,
+        use_rc_relaxation=args.use_rc_relaxation,
     )
     pulse_config = load_json(PULSE_CONFIG_PATH)
     experimental_rate = float(pulse_config["Readout"]["Rate"])
@@ -3289,6 +3290,15 @@ def main():
         },
     )
     fit_freq, target, target_reference_asd_A = target_spectrum(args)
+
+    electrical_link_model = (
+        ELECTRICAL_LINK_MODEL_RC if args.use_rc_relaxation else "rl"
+    )
+    electrical_fit_model = (
+        "passive_rc_relaxation"
+        if args.use_rc_relaxation
+        else "static_effective_series_resistance"
+    )
 
     try:
         shunt_values_ohm = np.linspace(
@@ -3356,7 +3366,8 @@ def main():
                     float(POST_FILTER_WHITE_FRACTION_MAX),
                 ],
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
-                "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+                "electrical_link_model": electrical_link_model,
+                "electrical_fit_model": electrical_fit_model,
                 "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
             },
             "T_c_fit_range_K": [
@@ -3365,10 +3376,32 @@ def main():
             ],
             "alpha_fit_max": float(ALPHA_FIT_MAX),
             "thermal_link_model": "stycast_node",
-            "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+            "electrical_link_model": electrical_link_model,
+            "electrical_fit_model": electrical_fit_model,
+            "static_effective_series_resistance": {
+                "enabled": bool(not args.use_rc_relaxation),
+                "fitted_parameter": "R_series_eff",
+                "mapped_core_parameter": "R_l",
+                "search_ohm": [
+                    float(R_SERIES_EFF_FIT_MIN_OHM),
+                    float(R_SERIES_EFF_FIT_MAX_OHM),
+                ],
+                "extra_electrical_state_count": 0,
+                "load_johnson_temperature": "T_bath",
+                "interpretation": (
+                    "effective total series resistance only; no physical "
+                    "decomposition into load/wiring/readout is inferred"
+                ),
+                "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+            },
             "electrical_rc_relaxation": {
+                "enabled": bool(args.use_rc_relaxation),
                 "topology": "series R_l + L plus one passive R||C relaxation element per TES branch",
-                "fitted_parameters": ["R_rc", "f_rc_Hz"],
+                "fitted_parameters": ["R_l", "R_rc", "f_rc_Hz"],
+                "R_l_search_ohm": [
+                    float(R_L_FIT_MIN_OHM),
+                    float(R_L_FIT_MAX_OHM),
+                ],
                 "R_rc_search_ohm": [
                     float(R_RC_FIT_MIN_OHM),
                     float(R_RC_FIT_MAX_OHM),
@@ -3466,6 +3499,9 @@ def main():
             "best_case_johnson_source_scale_diagnostics": best_case[
                 "johnson_source_scale_diagnostics"
             ],
+            "best_case_effective_series_resistance_diagnostics": best_case[
+                "effective_series_resistance_diagnostics"
+            ],
             "best_case_electrical_rc_ablation_diagnostics": best_case[
                 "electrical_rc_ablation_diagnostics"
             ],
@@ -3519,7 +3555,7 @@ def main():
                 TARGET_HARDWARE_BESSEL_CUTOFF_HZ
             )
             final_candidate["thermal_link_model"] = "stycast_node"
-            final_candidate["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
+            final_candidate["electrical_link_model"] = electrical_link_model
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
             print(
