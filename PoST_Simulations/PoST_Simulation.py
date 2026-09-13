@@ -1275,6 +1275,7 @@ def MakeNoise():
     # below are replaced by the canonical shared result.
     shared_noise = shared_tes_noise_components(para, frequency)
     frequency = shared_noise["frequencies_Hz"]
+    source_names = list(shared_noise["source_names"])
     transfer_ch0 = shared_noise["transfer_ch0"]
     transfer_ch1 = shared_noise["transfer_ch1"]
     asd_ch0_components = shared_noise["components_ch0"]
@@ -1389,11 +1390,18 @@ def MakeNoise():
             ),
         )
 
+        thermal_link_model = shared_noise.get(
+            "thermal_link_model",
+            "effective",
+        )
         f.attrs[
             "noise_model"
         ] = (
-            "five_state_effective_conductance"
+            "seven_state_stycast_node"
+            if thermal_link_model == "stycast_node"
+            else "five_state_effective_conductance"
         )
+        f.attrs["thermal_link_model"] = thermal_link_model
 
         f.attrs["excess_johnson_M"] = excess_johnson_M
         f.attrs["johnson_model"] = "standard_tes_johnson_with_excess_factor"
@@ -1403,7 +1411,14 @@ def MakeNoise():
 
         f.attrs[
             "G_eff_W_per_K"
-        ] = G_eff
+        ] = shared_noise["operating_point"]["G_eff_W_per_K"]
+        if thermal_link_model == "stycast_node":
+            f.attrs["C_stycast_J_per_K"] = float(para["C_stycast"])
+            f.attrs["G_tes_stycast_W_per_K"] = float(para["G_tes-stycast"])
+            f.attrs["G_stycast_abs_W_per_K"] = float(para["G_stycast-abs"])
+            f.attrs["G_stycast_center_W_per_K"] = shared_noise[
+                "operating_point"
+            ]["G_stycast_center_W_per_K"]
 
         f.create_dataset(
             "frequency",
