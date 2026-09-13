@@ -141,6 +141,15 @@ F_RC_FIT_MAX_HZ = 500_000.0
 R_RC_INITIAL_OHM = 1.0e-3
 F_RC_INITIAL_HZ = 100_000.0
 
+# Diagnostic-only profile used to distinguish a genuine finite-frequency RC
+# relaxation from a near-static redistribution between R_l and R_rc.
+RC_DEGENERACY_FIXED_RL_GRID_OHM = tuple(
+    value_mohm * 1.0e-3
+    for value_mohm in (2.5, 4.0, 6.0, 8.0, 10.0, 12.0)
+)
+RC_DEGENERACY_PARTITION_POINTS = 9
+RC_DEGENERACY_PROFILE_MAXFEV = 120
+
 # Broad effective-parameter priors from the Elmer single/dual-pixel geometry
 # and material table.  They are intentionally permissive: the hand-built
 # absorber/glue geometry is not precise, sub-kelvin Pb/Stycast transport can
@@ -1720,6 +1729,318 @@ def johnson_source_scale_diagnostics(
     }
 
 
+def _electrical_rc_diagnostic_row(
+    trial: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Evaluate one diagnostic RC/load decomposition at fixed other parameters."""
+
+    point = tes_operating_point(trial)
+    row = {
+        "R_l_ohm": float(trial["R_l"]),
+        "R_rc_ohm": float(trial["R_rc"]),
+        "f_rc_Hz": float(trial["f_rc_Hz"]),
+        "R_l_plus_R_rc_ohm": float(trial["R_l"] + trial["R_rc"]),
+        "stable": bool(point.get("stable", False)),
+        "valid": bool(point.get("valid", False)),
+        "reason": point.get("reason"),
+    }
+    if not row["stable"] or not row["valid"]:
+        return row
+
+    try:
+        model, _ = deterministic_simulated_spectrum(
+            trial.copy(),
+            fit_freq,
+        )
+    except Exception as error:
+        row["stable"] = False
+        row["valid"] = False
+        row["reason"] = f"evaluation_failed:{error}"
+        return row
+
+    diagnostics = band_fit_diagnostics(
+        model,
+        target,
+        fit_freq,
+        args,
+    )
+    bands = {}
+    for band_name, values in diagnostics.items():
+        mean_log = float(values["mean_log10_ratio"])
+        bands[band_name] = {
+            "rms_log10_ratio": float(values["rms_log10_ratio"]),
+            "mean_log10_ratio": mean_log,
+            "geometric_mean_model_over_measurement": float(
+                10.0 ** mean_log
+            ),
+        }
+
+    row.update(
+        {
+            "shape_score": float(
+                fit_score(model, target, fit_freq, args)
+            ),
+            "bands": bands,
+        }
+    )
+    return row
+
+
+def electrical_rc_degeneracy_diagnostics(
+    candidate: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+    fixed_rl_grid_ohm=None,
+    profile_maxfev: int = RC_DEGENERACY_PROFILE_MAXFEV,
+) -> dict:
+    """Diagnose whether the RC branch is dynamic or merely extra resistance.
+
+    Two complementary shape-only diagnostics are performed while every
+    non-electrical best-fit parameter is held fixed:
+
+    1. Keep R_l + R_rc fixed at the best-fit DC value, keep f_rc fixed, and
+       repartition the resistance between R_l and R_rc.
+    2. Fix R_l to several values and re-optimize only R_rc and f_rc.
+
+    If the score is insensitive to the first repartition, or the second profile
+    repeatedly drives f_rc to its upper bound, the fitted RC branch is acting
+    predominantly like an additional static series resistance rather than a
+    resolved in-band relaxation.
+    """
+
+    if candidate.get("electrical_link_model") != ELECTRICAL_LINK_MODEL_RC:
+        raise ValueError(
+            "RC degeneracy diagnostics require the rl_rc_relaxation model"
+        )
+
+    best_rl = float(candidate["R_l"])
+    best_rrc = float(candidate["R_rc"])
+    best_frc = float(candidate["f_rc_Hz"])
+    best_total = best_rl + best_rrc
+
+    lower_partition_rl = max(
+        R_L_FIT_MIN_OHM,
+        best_total - R_RC_FIT_MAX_OHM,
+    )
+    upper_partition_rl = min(
+        R_L_FIT_MAX_OHM,
+        best_total - R_RC_FIT_MIN_OHM,
+    )
+    partition_rows = []
+    if lower_partition_rl <= upper_partition_rl:
+        partition_values = list(
+            np.linspace(
+                lower_partition_rl,
+                upper_partition_rl,
+                RC_DEGENERACY_PARTITION_POINTS,
+            )
+        )
+        if lower_partition_rl <= best_rl <= upper_partition_rl:
+            partition_values.append(best_rl)
+        partition_values = sorted(
+            set(float(value) for value in partition_values)
+        )
+        for r_l in partition_values:
+            trial = candidate.copy()
+            trial["R_l"] = float(r_l)
+            trial["R_rc"] = float(best_total - r_l)
+            trial["f_rc_Hz"] = best_frc
+            partition_rows.append(
+                _electrical_rc_diagnostic_row(
+                    trial,
+                    target,
+                    fit_freq,
+                    args,
+                )
+            )
+
+    if fixed_rl_grid_ohm is None:
+        fixed_rl_grid_ohm = RC_DEGENERACY_FIXED_RL_GRID_OHM
+    profile_values = [
+        float(value)
+        for value in fixed_rl_grid_ohm
+        if R_L_FIT_MIN_OHM <= float(value) <= R_L_FIT_MAX_OHM
+    ]
+    profile_values.append(best_rl)
+    profile_values = sorted(set(profile_values))
+
+    transformed_bounds = [
+        (np.log10(R_RC_FIT_MIN_OHM), np.log10(R_RC_FIT_MAX_OHM)),
+        (np.log10(F_RC_FIT_MIN_HZ), np.log10(F_RC_FIT_MAX_HZ)),
+    ]
+    seed = np.asarray(
+        [np.log10(best_rrc), np.log10(best_frc)],
+        dtype=float,
+    )
+    profile_rows = []
+
+    for r_l in profile_values:
+        def profile_objective(vector):
+            trial = candidate.copy()
+            trial["R_l"] = float(r_l)
+            trial["R_rc"] = float(10.0 ** vector[0])
+            trial["f_rc_Hz"] = float(10.0 ** vector[1])
+            row = _electrical_rc_diagnostic_row(
+                trial,
+                target,
+                fit_freq,
+                args,
+            )
+            return float(row.get("shape_score", 1.0e12))
+
+        seed_score = float(profile_objective(seed))
+        result = minimize(
+            profile_objective,
+            seed,
+            method="Powell",
+            bounds=transformed_bounds,
+            options={
+                "maxfev": int(profile_maxfev),
+                "xtol": 1.0e-4,
+                "ftol": 1.0e-6,
+                "disp": False,
+            },
+        )
+        result_vector = np.asarray(result.x, dtype=float)
+        result_score = float(profile_objective(result_vector))
+        if seed_score <= result_score:
+            chosen = seed
+            chosen_from = "best_fit_seed"
+        else:
+            chosen = result_vector
+            chosen_from = "profile_optimization"
+
+        trial = candidate.copy()
+        trial["R_l"] = float(r_l)
+        trial["R_rc"] = float(10.0 ** chosen[0])
+        trial["f_rc_Hz"] = float(10.0 ** chosen[1])
+        row = _electrical_rc_diagnostic_row(
+            trial,
+            target,
+            fit_freq,
+            args,
+        )
+        row.update(
+            {
+                "profile_optimizer_success": bool(result.success),
+                "profile_optimizer_status": int(result.status),
+                "profile_optimizer_nfev": int(result.nfev),
+                "chosen_from": chosen_from,
+                "f_rc_at_lower_bound": bool(
+                    np.isclose(
+                        row["f_rc_Hz"],
+                        F_RC_FIT_MIN_HZ,
+                        rtol=0.0,
+                        atol=F_RC_FIT_MIN_HZ * 1.0e-5,
+                    )
+                ),
+                "f_rc_at_upper_bound": bool(
+                    np.isclose(
+                        row["f_rc_Hz"],
+                        F_RC_FIT_MAX_HZ,
+                        rtol=0.0,
+                        atol=F_RC_FIT_MAX_HZ * 1.0e-5,
+                    )
+                ),
+                "R_rc_at_lower_bound": bool(
+                    np.isclose(
+                        row["R_rc_ohm"],
+                        R_RC_FIT_MIN_OHM,
+                        rtol=0.0,
+                        atol=R_RC_FIT_MIN_OHM * 1.0e-5,
+                    )
+                ),
+                "R_rc_at_upper_bound": bool(
+                    np.isclose(
+                        row["R_rc_ohm"],
+                        R_RC_FIT_MAX_OHM,
+                        rtol=0.0,
+                        atol=R_RC_FIT_MAX_OHM * 1.0e-5,
+                    )
+                ),
+            }
+        )
+        profile_rows.append(row)
+
+    finite_partition = [
+        row for row in partition_rows if "shape_score" in row
+    ]
+    finite_profile = [
+        row for row in profile_rows if "shape_score" in row
+    ]
+    best_profile = (
+        min(finite_profile, key=lambda row: row["shape_score"])
+        if finite_profile
+        else None
+    )
+    partition_score_span = (
+        float(
+            max(row["shape_score"] for row in finite_partition)
+            - min(row["shape_score"] for row in finite_partition)
+        )
+        if finite_partition
+        else None
+    )
+    profile_score_span = (
+        float(
+            max(row["shape_score"] for row in finite_profile)
+            - min(row["shape_score"] for row in finite_profile)
+        )
+        if finite_profile
+        else None
+    )
+    upper_bound_count = sum(
+        bool(row.get("f_rc_at_upper_bound"))
+        for row in finite_profile
+    )
+
+    return {
+        "diagnostic_only": True,
+        "objective": "normalized shape score only; absolute ASD excluded",
+        "held_fixed": (
+            "all best-fit parameters except the explicitly profiled "
+            "R_l, R_rc, and f_rc"
+        ),
+        "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+        "best_fit": {
+            "R_l_ohm": best_rl,
+            "R_rc_ohm": best_rrc,
+            "f_rc_Hz": best_frc,
+            "R_l_plus_R_rc_ohm": best_total,
+        },
+        "constant_dc_sum_partition_sweep": {
+            "definition": (
+                "hold R_l + R_rc and f_rc at best-fit values; repartition "
+                "the same DC resistance between R_l and R_rc"
+            ),
+            "rows": partition_rows,
+            "shape_score_span": partition_score_span,
+        },
+        "fixed_R_l_profile": {
+            "definition": (
+                "fix R_l; re-optimize only R_rc and f_rc while all other "
+                "best-fit parameters remain fixed"
+            ),
+            "profile_maxfev_per_R_l": int(profile_maxfev),
+            "rows": profile_rows,
+            "best_row": best_profile,
+            "shape_score_span": profile_score_span,
+            "rows_with_f_rc_at_upper_bound": int(upper_bound_count),
+            "finite_row_count": int(len(finite_profile)),
+        },
+        "interpretation_guardrail": (
+            "A flat constant-sum sweep or repeated f_rc upper-bound solutions "
+            "indicates R_l/R_rc degeneracy or an effectively static added "
+            "resistance; it is not evidence for a resolved TES resistance "
+            "relaxation."
+        ),
+    }
+
+
 def electrical_rc_ablation_diagnostics(
     candidate: dict,
     target: np.ndarray,
@@ -2648,6 +2969,12 @@ def optimize_case(
         fit_freq,
         args,
     )
+    electrical_rc_degeneracy_summary = electrical_rc_degeneracy_diagnostics(
+        best_candidate.copy(),
+        target,
+        fit_freq,
+        args,
+    )
     johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
     beta_sweep_summary = beta_sweep_diagnostics(
         best_candidate.copy(),
@@ -2688,6 +3015,8 @@ def optimize_case(
     print(json.dumps(johnson_scale_summary, indent=2))
     print("Electrical RC ablation diagnostics:")
     print(json.dumps(electrical_rc_ablation_summary, indent=2))
+    print("Electrical RC degeneracy diagnostics:")
+    print(json.dumps(electrical_rc_degeneracy_summary, indent=2))
     print("Johnson/beta audit:")
     print(json.dumps(johnson_audit_summary, indent=2))
     print("Beta sweep diagnostics:")
@@ -2718,6 +3047,7 @@ def optimize_case(
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
         "electrical_rc_ablation_diagnostics": electrical_rc_ablation_summary,
+        "electrical_rc_degeneracy_diagnostics": electrical_rc_degeneracy_summary,
         "johnson_beta_audit": johnson_audit_summary,
         "beta_sweep_diagnostics": beta_sweep_summary,
         "eigenmode_diagnostics": eigenmode_summary,
@@ -3026,6 +3356,9 @@ def main():
             ],
             "best_case_electrical_rc_ablation_diagnostics": best_case[
                 "electrical_rc_ablation_diagnostics"
+            ],
+            "best_case_electrical_rc_degeneracy_diagnostics": best_case[
+                "electrical_rc_degeneracy_diagnostics"
             ],
             "best_case_johnson_beta_audit": best_case[
                 "johnson_beta_audit"
