@@ -1,0 +1,33 @@
+{
+  "stage": "Stage 11C-1 (blocks further native execution for all subsequent stages too)",
+  "status": "BLOCKED",
+  "commit": "6dcb396f01a48f11786d63d24b500be545e87b0d",
+  "summary": "Two distinct issues were found while building the Stage 11C-1 fine-reference case. One is fixed and safe to keep. The other is an unresolved environment blocker that currently prevents launching ANY new native ElmerSolver run (the Phase24/HYPRE 'install-stage11' build), independent of anything in this session's own case/controller work.",
+  "issue_1_sif_generation_bug": {
+    "status": "FIXED",
+    "description": "scripts/support/build_cases.py emitted several Phase24/HYPRE-specific boolean SIF keywords (HYPRE GPU, Linear System Save, Linear System Save Continuous Numbering, Linear System Save Skip Zeros, Block Gauss-Seidel, Block Lower Triangular, Block Full Factorization, Block Matrix-free Schur, Create Schur Matrix Approximation) as bare 'True'/'False' instead of the 'Logical True'/'Logical False' form used consistently everywhere else in the same generator (e.g. 'Phase24 Vector Assembly = Logical True', 'Linear System Save Solution = Logical True' already used the correct form one line away). The currently-installed native binary (tools/elmer-hypre/install-stage11, rebuilt today per file mtimes ~2026-09-13 17:21-22) is stricter about this than whatever binary state validated these cases on 2026-09-11: it fails LoadInputFile with 'Unknown specifier:[false] ... keyword:[hypre gpu]' and then repeats the same keyword name against every subsequent token in the section, which is why the reported keyword stays fixed on 'hypre gpu' even though the real fault (confirmed by isolating it with hand-edited SIF copies) cascades forward one bad keyword at a time.",
+    "reproduction": "Confirmed on the ALREADY-COMMITTED, previously-validated case_phase24_adaptive_post_event_cooldown_2ns.sif (freshly regenerated, untouched by this session's new case work): it fails identically with the current binary. This is not something introduced by this session's new cases -- it is a pre-existing generator bug newly exposed by a stricter (or different) native build.",
+    "fix": "Added the 'Logical' prefix to all 7 affected f-string/literal lines in build_cases.py. Verified this gets the SIF fully past LoadInputFile (confirmed by watching the error move forward through the cascade and then disappear entirely). Updated the two unit test assertions in tests/test_hypre_phase19_matrixfree.py that checked the old bare-boolean text. All 146 tests pass. Regenerating generated/cases/ (tracked in git) changes ~46 previously-committed SIF files to include the 'Logical' prefix -- this is the correct, expected consequence of fixing shared generator code, not scope creep.",
+    "not_yet_verified": "Because of issue 2 below, this fix has only been confirmed to resolve SIF PARSING (LoadInputFile succeeds). It has NOT been confirmed to still produce a correct 'ALL DONE' run end-to-end, because no new native run could complete at all in this session after the parsing stage."
+  },
+  "issue_2_native_launch_blocker": {
+    "status": "UNRESOLVED",
+    "description": "After fixing issue 1, launching the Phase24 HYPRE build (tools/elmer-hypre/install-stage11/bin/ElmerSolver_mpi.exe or ElmerSolver.exe, with --runtime-bin pointing at .../install-stage11/lib/elmersolver, exactly matching the paths recorded in results/case_phase24_adaptive_continuous_post_event_20ns_baseline/manifest.json for a run that DID succeed earlier today at 17:37-18:11) now fails immediately with Windows exit code 3221225781 (0xC0000135, STATUS_DLL_NOT_FOUND) before producing any solver.log output at all.",
+    "what_was_ruled_out": [
+      "Not case-specific: reproduces on the plain steady-state-restart lead-in case (case_phase24_adaptive_post_event_cooldown_2ns), not just new Stage 11C-1 cases.",
+      "Not about run.py's PATH setup being obviously wrong: it adds the solver's own bin dir, share/elmersolver/lib, and the explicit --runtime-bin dir, matching what the manifest of a successful run recorded.",
+      "Not fixed by also prepending the vanilla 'C:\\Program Files\\Elmer 26.1-Release\\bin' (which does carry libgfortran-5.dll) to PATH.",
+      "Not about ElmerSolver_mpi.exe specifically: the non-MPI ElmerSolver.exe from the same install-stage11/bin fails identically.",
+      "install-stage11 itself bundles no MinGW runtime DLLs (no libgcc_s_seh, libwinpthread, libquadmath, liblapack, libblas, libhypre anywhere under the tree) and no wrapper script in this repository sets up any additional PATH entries for it -- whatever environment successfully ran the 20ns baseline at 17:37 today is not reproducible from what's committed or discoverable in this session."
+    ],
+    "impact": "This blocks ALL further native execution needed for the rest of the program: the Stage 11C-1 fine reference and BDF2 stable/re-entry probes, and every native run required by Stage 11C-2 through 11F. It does not invalidate anything already validated by reading archived, pre-existing logs (Stage 11C-0's gate and the interim Stage 11C-1 BDF1 characterization both only read already-archived solver.log output and were not affected).",
+    "next_step_needed": "Requires either: (a) identifying and restoring whatever PATH/DLL environment the 17:37 run actually used (not found in this repository or this session), or (b) rebuilding install-stage11 in a way that bundles or statically links its MinGW/HYPRE runtime dependencies so it no longer depends on ambient environment state, or (c) user guidance on how native runs are normally launched outside of what run.py's committed defaults assume."
+  },
+  "cases_affected_by_blocker": [
+    "case_phase24_stage11c1_fixed_dt_reference_0p25ns (new, not yet run)",
+    "case_phase24_stage11c1_fixed_dt_reference_0p125ns (new, not yet run)",
+    "any BDF2 stable/re-entry probe cases (not yet designed, blocked on this)"
+  ],
+  "gate_result": "BLOCKED -- Stage 11C-1 cannot close and no later stage can be attempted until issue 2 is resolved.",
+  "next_allowed_stage": "None until native execution is restored."
+}

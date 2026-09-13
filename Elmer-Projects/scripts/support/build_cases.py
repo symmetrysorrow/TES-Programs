@@ -456,7 +456,7 @@ def solver1_block(
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            f"  HYPRE GPU = Logical {'True' if hypre_gpu else 'False'}",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",
             "  BoomerAMG Num Sweeps = 1",
@@ -496,14 +496,14 @@ def solver1_block(
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
             "  HYPRE GmRes Dimension = 100",
-            f"  HYPRE GPU = {'True' if hypre_gpu else 'False'}",
+            f"  HYPRE GPU = Logical {'True' if hypre_gpu else 'False'}",
             "  Block Preconditioner = True",
-            f"  Block Gauss-Seidel = {'True' if block_lower else 'False'}",
-            f"  Block Lower Triangular = {'True' if block_lower else 'False'}",
-            f"  Block Full Factorization = {'True' if block_full else 'False'}",
-            f"  Block Matrix-free Schur = {'True' if block_matrix_free_schur else 'False'}",
+            f"  Block Gauss-Seidel = Logical {'True' if block_lower else 'False'}",
+            f"  Block Lower Triangular = Logical {'True' if block_lower else 'False'}",
+            f"  Block Full Factorization = Logical {'True' if block_full else 'False'}",
+            f"  Block Matrix-free Schur = Logical {'True' if block_matrix_free_schur else 'False'}",
             "  Block Matrix Reuse = True",
-            f"  Create Schur Matrix Approximation = {'True' if solver.get('create_schur_matrix_approximation', True) else 'False'}",
+            f"  Create Schur Matrix Approximation = Logical {'True' if solver.get('create_schur_matrix_approximation', True) else 'False'}",
             "  Block Nested Primal AMG = True",
             "  Block Nested Primal Max Iterations = 1",
             "  Block Schur Inner Tolerance = 1.0e-4",
@@ -538,11 +538,11 @@ def solver1_block(
         # MUMPS-vs-HYPRE comparison detects an algebraic mismatch rather than
         # merely comparing the unrestrained PDE matrix.
         lines += [
-            "  Linear System Save = True",
+            "  Linear System Save = Logical True",
             "  Linear System Save Slot = String \"linear solve\"",
             f'  Linear System Save Prefix = String "{matrix_dump_prefix}"',
-            "  Linear System Save Continuous Numbering = True",
-            "  Linear System Save Skip Zeros = True",
+            "  Linear System Save Continuous Numbering = Logical True",
+            "  Linear System Save Skip Zeros = Logical True",
         ]
         if solver.get("matrix_dump_solution", False):
             lines.append("  Linear System Save Solution = Logical True")

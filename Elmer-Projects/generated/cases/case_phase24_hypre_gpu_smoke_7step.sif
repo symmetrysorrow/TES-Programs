@@ -97,7 +97,7 @@ Solver 1
   Linear System Abort Not Converged = True
   Linear System Residual Output = 1
   HYPRE GmRes Dimension = 100
-  HYPRE GPU = True
+  HYPRE GPU = Logical True
   BoomerAMG Relax Type = 18
   BoomerAMG Coarsen Type = 8
   BoomerAMG Num Sweeps = 1
@@ -107,11 +107,11 @@ Solver 1
   BoomerAMG Cycle Type = 1
   BoomerAMG Num Functions = 1
   BoomerAMG Strong Threshold = 0.5
-  Linear System Save = True
+  Linear System Save = Logical True
   Linear System Save Slot = String "linear solve"
   Linear System Save Prefix = String "case_phase24_hypre_gpu_smoke_7step"
-  Linear System Save Continuous Numbering = True
-  Linear System Save Skip Zeros = True
+  Linear System Save Continuous Numbering = Logical True
+  Linear System Save Skip Zeros = Logical True
   Apply Mortar BCs = True
   Steady State Convergence Tolerance = 1e-09
 End

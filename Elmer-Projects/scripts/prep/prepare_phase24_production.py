@@ -545,6 +545,83 @@ def main() -> None:
             "dt_min_ns": dt_min_ns,
         }
         project["cases"][diag_case_name] = diag_case
+
+    # Stage 11C-1 fine reference: same restart anchor as the local_dt probes
+    # above (ADAPTIVE_POST_EVENT_CASE, restart_position=3, t=20.020001ms --
+    # right after both physical events), but with dt_min=dt_initial=dt_max
+    # held at one fixed fine value for the WHOLE window instead of a single
+    # trial. This deliberately reuses the already-validated local_dt probe
+    # pattern rather than a plain non-adaptive multi-stage "timesteps"
+    # schedule: the latter was tried first and hit a genuine native SIF
+    # parser bug in this Phase24-patched Elmer build -- removing the
+    # "Adaptive Timestepping" block entirely (even from an otherwise
+    # byte-identical, known-working SIF) breaks parsing of the unrelated
+    # "HYPRE GPU" keyword in the Solver section ("Unknown specifier:[false]
+    # ... keyword: [hypre gpu]"), confirmed by isolating it: stripping only
+    # the Adaptive/event lines from the known-good 20ns baseline SIF
+    # reproduces the exact same failure. Root-causing that native quirk is
+    # out of scope here; keeping "Adaptive Timestepping" present (with
+    # dt_min=dt_max so it cannot actually adapt) avoids it entirely and, as
+    # a side benefit, keeps the same BDF1-on-event-landing reset semantics
+    # production relies on, which a naive plain fixed-step schedule would
+    # not have applied at the event boundary anyway.
+    # With dt_min=dt_max=dt_initial, every trial satisfies "ddt <=
+    # AdaptiveMinTimestep" and is therefore always a forced-floor accept
+    # regardless of estimated error -- one solve per step, no retries, a
+    # genuinely fixed-dt trajectory. Two resolutions (0.25ns and 0.125ns)
+    # let the reference check its own self-convergence per Stage 11C-1.
+    REFERENCE_WINDOW_NS = 5.0
+    for ref_dt_ns, ref_tag in ((0.25, "0p25ns"), (0.125, "0p125ns")):
+        ref_case_name = f"case_phase24_stage11c1_fixed_dt_reference_{ref_tag}"
+        ref_case = copy.deepcopy(adaptive_post_event)
+        ref_case["restart_from"] = ADAPTIVE_POST_EVENT_CASE
+        ref_case["restart_file_path"] = (
+            f"../work/meshes/{ref_case['mesh']}/{ADAPTIVE_POST_EVENT_CASE}.result"
+        )
+        ref_case["restart_position"] = 3
+        ref_case["restart_time"] = local_state_time
+        ref_case["series_file"] = f"{ref_case_name}_series.csv"
+        ref_case["iteration_series_file"] = f"{ref_case_name}_iterations.csv"
+        ref_case["output_file_path"] = (
+            f"../work/meshes/{ref_case['mesh']}/{ref_case_name}.result"
+        )
+        ref_dt = ref_dt_ns * 1.0e-9
+        ref_steps = round((REFERENCE_WINDOW_NS * 1.0e-9) / ref_dt)
+        ref_end = local_state_time + ref_steps * ref_dt
+        ref_case["timesteps"] = [[f"{ref_dt_ns:g}[ns]", ref_steps]]
+        ref_case["output_intervals"] = [1]
+        ref_case["adaptive_time"] = {
+            "start": f"{local_state_time * 1000:.12f}[ms]",
+            "end": f"{ref_end * 1000:.12f}[ms]",
+            "requested_output_times": {
+                "mode": "explicit",
+                "times": [
+                    f"{local_state_time * 1000:.12f}[ms]",
+                    f"{ref_end * 1000:.12f}[ms]",
+                ],
+            },
+            "dt_initial": f"{ref_dt_ns:g}[ns]",
+            "dt_min": f"{ref_dt_ns:g}[ns]",
+            "dt_max": f"{ref_dt_ns:g}[ns]",
+            "relative_tolerance": 2.0e-3,
+            "absolute_tolerance": 1.0e-8,
+            "r_min": 0.5,
+            "r_max": 2.0,
+            "max_growth": 1.0,
+            "max_shrink": 0.5,
+            "max_rejected": 4,
+            "physical_event_times": [],
+            "debug": True,
+        }
+        ref_case["phase24_smoke"] = {
+            "purpose": "Stage 11C-1 fixed-dt fine reference (dt_min=dt_max, no real adaptation) for post-second-event state-error comparison",
+            "reference_case": ADAPTIVE_POST_EVENT_CASE,
+            "restart_position": 3,
+            "fixed_dt_ns": ref_dt_ns,
+            "window_ns": REFERENCE_WINDOW_NS,
+            "steps": ref_steps,
+        }
+        project["cases"][ref_case_name] = ref_case
     OUTPUT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {OUTPUT}")
 

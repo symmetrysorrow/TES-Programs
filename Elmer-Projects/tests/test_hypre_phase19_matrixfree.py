@@ -50,11 +50,11 @@ def test_generated_factorized_cases_have_matrix_free_schur_configuration():
         assert "Linear System Use Hypre = True" in rendered
         assert "Linear System Iterative Method = FlexGMRES" in rendered
         assert "Block Preconditioner = True" in rendered
-        assert "Block Matrix-free Schur = True" in rendered
+        assert "Block Matrix-free Schur = Logical True" in rendered
         assert "Block Nested Primal AMG = True" in rendered
-        assert "Block Lower Triangular = True" in rendered
-        assert f"Block Full Factorization = {'True' if full else 'False'}" in rendered
-        assert f"HYPRE GPU = {'True' if use_gpu else 'False'}" in rendered
+        assert "Block Lower Triangular = Logical True" in rendered
+        assert f"Block Full Factorization = Logical {'True' if full else 'False'}" in rendered
+        assert f"HYPRE GPU = Logical {'True' if use_gpu else 'False'}" in rendered
         assert "Linear System Direct Method = Umfpack" not in rendered
 
 
@@ -84,7 +84,7 @@ def test_schur_diagonal_only_generation_path_is_available():
         "steady_state_convergence_tolerance": 1.0e-8,
     }
     rendered = "\n".join(solver1_block(solver))
-    assert "Create Schur Matrix Approximation = False" in rendered
+    assert "Create Schur Matrix Approximation = Logical False" in rendered
 
 
 def test_matrix_free_source_has_explicit_sign_and_reuse_guard():
