@@ -54,6 +54,38 @@ STYCAST_SOURCE_CLASS_INDICES = {
 THERMAL_LINK_MODEL_STYCAST = "stycast_node"
 
 
+def tes_johnson_voltage_asd(
+    temperature: float,
+    resistance: float,
+    beta: float,
+    excess_johnson_M: float = 0.0,
+) -> float:
+    """Return the repository's TES Johnson voltage ASD convention.
+
+    The production/shared convention is
+    S_V,J = 4 k_B T R (1 + 2 beta) (1 + M^2).
+    Keeping this in the shared model prevents the production wrapper and the
+    optimizer from silently drifting to different beta dependences.
+    """
+
+    temperature = float(temperature)
+    resistance = float(resistance)
+    beta = float(beta)
+    excess_m = float(excess_johnson_M)
+    if not math.isfinite(temperature) or temperature <= 0.0:
+        raise ValueError("temperature must be positive and finite")
+    if not math.isfinite(resistance) or resistance <= 0.0:
+        raise ValueError("resistance must be positive and finite")
+    if not math.isfinite(beta) or 1.0 + 2.0 * beta < 0.0:
+        raise ValueError("beta must be finite with 1 + 2 beta non-negative")
+    if not math.isfinite(excess_m) or excess_m < 0.0:
+        raise ValueError("excess_johnson_M must be finite and non-negative")
+    return math.sqrt(
+        4.0 * K_B * temperature * resistance
+        * (1.0 + 2.0 * beta) * (1.0 + excess_m**2)
+    )
+
+
 def _use_stycast_node(parameters: dict) -> bool:
     return str(parameters.get("thermal_link_model", "effective")).lower() == THERMAL_LINK_MODEL_STYCAST
 
@@ -212,9 +244,11 @@ def source_matrix(parameters: dict) -> np.ndarray:
     values = _operating_values(parameters)
     current = values["current_A"]
 
-    tes_johnson = math.sqrt(
-        4.0 * K_B * t_c * resistance
-        * (1.0 + 2.0 * beta) * (1.0 + excess_m**2)
+    tes_johnson = tes_johnson_voltage_asd(
+        t_c,
+        resistance,
+        beta,
+        excess_m,
     )
     load_johnson = math.sqrt(4.0 * K_B * t_bath * load_resistance)
     tes_bath_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_tes_bath * F_LINK)
