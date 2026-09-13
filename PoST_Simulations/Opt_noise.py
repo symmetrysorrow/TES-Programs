@@ -92,38 +92,56 @@ TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
 L_FIT_MIN_H = 1.0e-10
 L_FIT_MAX_H = 12.3e-9
 
-# Broad physical priors from the Elmer single/dual-pixel geometry and material
-# table.  These are deliberately ranges rather than fixed values: Pb and
-# Stycast properties at ~0.24 K and real interface geometry are uncertain.
-R_L_FIT_MIN_OHM = 3.0e-3
-R_L_FIT_MAX_OHM = 8.0e-3
-N_FIT_MIN = 2.0
-N_FIT_MAX = 5.0
+# Broad effective-parameter priors from the Elmer single/dual-pixel geometry
+# and material table.  They are intentionally permissive: the hand-built
+# absorber/glue geometry is not precise, sub-kelvin Pb/Stycast transport can
+# be boundary/ballistic limited, and the reduced five-state model has no
+# explicit Stycast heat-capacity node.
+R_L_FIT_MIN_OHM = 2.5e-3
+R_L_FIT_MAX_OHM = 12.0e-3
+N_FIT_MIN = 1.5
+N_FIT_MAX = 6.0
 
 # TES: 500 um x 500 um x (40+120) nm, rho=15695 kg/m3,
 # cp=1.25e-3 J/(kg K) -> 7.85e-13 J/K.
 C_TES_MATERIAL_J_PER_K = 7.8475e-13
-C_TES_FIT_MIN_J_PER_K = 0.5 * C_TES_MATERIAL_J_PER_K
-C_TES_FIT_MAX_J_PER_K = 3.0 * C_TES_MATERIAL_J_PER_K
+
+# One Stycast pad in the Elmer geometry: d=498 um, t=20 um,
+# rho=2400 kg/m3, cp=1.22e-3 J/(kg K) -> about 1.14e-11 J/K.
+# Since the five-state model has no explicit glue node, C_tes is allowed to
+# act as an effective local heat capacity ranging from mostly-bare TES to
+# TES plus roughly one glue pad.
+C_STYCAST_PAD_MATERIAL_J_PER_K = 1.1407e-11
+C_TES_FIT_MIN_J_PER_K = 0.25 * C_TES_MATERIAL_J_PER_K
+C_TES_FIT_MAX_J_PER_K = 1.5 * (
+    C_TES_MATERIAL_J_PER_K + C_STYCAST_PAD_MATERIAL_J_PER_K
+)
 
 # Pb absorber: 20 mm x 1 mm x 0.7 mm, rho=9860 kg/m3,
 # cp=3.26e-5 J/(kg K) -> 4.50e-9 J/K in the current Elmer table.
-# The upper factor also covers a substantially larger low-T Pb heat capacity.
+# In a distributed/ballistic absorber, the heat capacity participating in the
+# 1--200 kHz small-signal mode can be much smaller than the total equilibrium
+# heat capacity, so allow a wide effective range rather than forcing the full
+# Pb volume into one lumped node.
 C_ABS_MATERIAL_J_PER_K = 4.500104e-9
-C_ABS_FIT_MIN_J_PER_K = 0.5 * C_ABS_MATERIAL_J_PER_K
-C_ABS_FIT_MAX_J_PER_K = 4.0 * C_ABS_MATERIAL_J_PER_K
+C_ABS_FIT_MIN_J_PER_K = 0.02 * C_ABS_MATERIAL_J_PER_K
+C_ABS_FIT_MAX_J_PER_K = 6.0 * C_ABS_MATERIAL_J_PER_K
 
 # End-to-end Pb conductance from k*A/L using k=1.68e-2 W/(m K),
-# A=1 mm*0.7 mm and L=20 mm -> 5.88e-7 W/K.
+# A=1 mm*0.7 mm and L=20 mm -> 5.88e-7 W/K.  At sub-kelvin temperature the
+# effective conductance can be dominated by boundary-limited/ballistic paths,
+# contact area, and nonuniform geometry, so use this only as a scale.
 G_ABS_ABS_MATERIAL_W_PER_K = 5.88e-7
-G_ABS_ABS_FIT_MIN_W_PER_K = 0.3 * G_ABS_ABS_MATERIAL_W_PER_K
-G_ABS_ABS_FIT_MAX_W_PER_K = 3.0 * G_ABS_ABS_MATERIAL_W_PER_K
+G_ABS_ABS_FIT_MIN_W_PER_K = 0.03 * G_ABS_ABS_MATERIAL_W_PER_K
+G_ABS_ABS_FIT_MAX_W_PER_K = 30.0 * G_ABS_ABS_MATERIAL_W_PER_K
 
 # One Stycast pad: diameter 498 um, thickness 20 um,
-# k=2.69094e-6 W/(m K) -> about 2.62e-8 W/K.
+# k=2.69094e-6 W/(m K) -> about 2.62e-8 W/K.  The real cured thickness,
+# contact area, cracks/voids, and low-T transport are poorly known, so permit
+# a similarly broad effective TES--absorber conductance.
 G_ABS_TES_MATERIAL_W_PER_K = 2.622e-8
-G_ABS_TES_FIT_MIN_W_PER_K = 0.25 * G_ABS_TES_MATERIAL_W_PER_K
-G_ABS_TES_FIT_MAX_W_PER_K = 8.0 * G_ABS_TES_MATERIAL_W_PER_K
+G_ABS_TES_FIT_MIN_W_PER_K = 0.03 * G_ABS_TES_MATERIAL_W_PER_K
+G_ABS_TES_FIT_MAX_W_PER_K = 30.0 * G_ABS_TES_MATERIAL_W_PER_K
 
 POST_FILTER_WHITE_FRACTION_MIN = 1.0e-6
 POST_FILTER_WHITE_FRACTION_MAX = 1.0
@@ -719,8 +737,7 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
         ),
         "excess_johnson_M": Bound(0.0, EXCESS_JOHNSON_MAX, logarithmic=False),
         # Empirical white readout floor added after the fixed 100 kHz analog
-        # hardware stage and before the software analysis filter.
-        # and before the software analysis filter.  It is parameterized as a
+        # hardware stage and before the software analysis filter. It is parameterized as a
         # fraction of the detector ASD near 1 kHz so the search scale remains
         # well conditioned while the final candidate stores the absolute ASD.
         "post_filter_white_fraction": Bound(
@@ -1053,6 +1070,7 @@ def optimize_case(
             "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
             "n": [N_FIT_MIN, N_FIT_MAX],
             "C_tes_J_per_K": [C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K],
+            "C_stycast_pad_reference_J_per_K": C_STYCAST_PAD_MATERIAL_J_PER_K,
             "C_abs_J_per_K": [C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K],
             "G_abs_tes_W_per_K": [
                 G_ABS_TES_FIT_MIN_W_PER_K,
