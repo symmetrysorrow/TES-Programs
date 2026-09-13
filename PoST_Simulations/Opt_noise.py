@@ -716,7 +716,7 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
         # Do not let the noise fit replace a missing electrical transfer
         # function with a tens-of-mOhm effective load.
         "R_l": Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM),
-        "alpha": Bound(ref("alpha") * 0.05, ref("alpha") * 15.0),
+        "alpha": Bound(ref("alpha") * 0.05, 100.0, logarithmic=False),
         "beta": Bound(0.0, 12.0, logarithmic=False),
         # Circuit inductance is independently constrained by the hardware:
         # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
