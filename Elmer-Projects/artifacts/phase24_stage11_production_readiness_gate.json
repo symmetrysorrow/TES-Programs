@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "stage": "Stage 11 production readiness gate",
+  "status": "NO_GO_FOR_31US_PRODUCTION_RUN",
+  "decision": "Do not start the 31-us production campaign under the current adaptive policy.",
+  "evidence": {
+    "event_boundary_contract": {
+      "status": "PASS",
+      "flags": ["FTFF", "TTFT", "FFFF", "FTFF"],
+      "initial_bdf_sequence_matches_stage11a": true
+    },
+    "native_runtime_provenance": {
+      "status": "PASS",
+      "verification": "native base, complete patch, source hashes, and runtime artifacts verified"
+    },
+    "twenty_ns_continuous_baseline": {
+      "status": "PASS_WITH_RECOVERY_BLOCKER",
+      "exit_code": 0,
+      "reported_all_done": true,
+      "trials": 53,
+      "accepted": 42,
+      "rejected": 11,
+      "bdf2_rejected": 10,
+      "post_event_accepted_steps": 39,
+      "post_event_max_dt_ns": 0.6,
+      "post_event_dt_above_floor_accepts": 5,
+      "first_post_event_dt_above_floor_step": 21,
+      "final_accepted_dt_ns": 0.4999999999537
+    }
+  },
+  "gate_criteria": {
+    "event_landing_and_bdf_reset": {"required": true, "observed": true, "status": "PASS"},
+    "native_completion_and_linear_residual": {"required": true, "observed": true, "status": "PASS"},
+    "sustained_post_event_dt_recovery": {
+      "required": true,
+      "observed": false,
+      "status": "FAIL",
+      "reason": "Only five post-event accepts exceeded 0.5 ns; maximum was 0.6 ns and the final step returned to the floor."
+    },
+    "bounded_bdf2_reentry_reject_rate": {
+      "required": "low and non-recurring",
+      "observed": "10 BDF2 rejects in the 20-ns tail",
+      "status": "FAIL"
+    },
+    "operational_runtime": {
+      "required": "not dominated by dt_min floor",
+      "observed": "floor-dominated",
+      "status": "FAIL",
+      "floor_extrapolated_seconds": 3106200.0,
+      "floor_extrapolated_days": 35.95,
+      "warning": "This is a worst-case extrapolation, not a production forecast; it is sufficient to reject the current campaign gate."
+    }
+  },
+  "root_cause_classification": {
+    "solver_failure": false,
+    "event_boundary_failure": false,
+    "bdf2_reentry_behavior": "BDF2 trial is retried after estimator error exceeds one; retry returns to BDF1 and the floor cooldown. This is reproducible and policy-consistent.",
+    "remaining_issue": "The unchanged estimator/controller combination does not sustain recovery above dt_min after BDF2 re-entry."
+  },
+  "required_before_31us": [
+    "Keep the current Stage 11A event-boundary contract as a regression gate.",
+    "Design and validate a separately approved estimator/BDF2 recovery change on the 20-ns case.",
+    "Repeat the 20-ns baseline with the candidate change and demonstrate sustained dt recovery plus bounded BDF2 rejects.",
+    "Only then reconsider the 31-us production run."
+  ],
+  "policy_audit": {
+    "linear_tolerance_changed": false,
+    "adaptive_tolerances_changed": false,
+    "dt_min_changed": false,
+    "bdf_policy_changed": false,
+    "cooldown_changed": false,
+    "gpu_backend_changed": false,
+    "production_31us_rerun": false
+  },
+  "provenance_artifacts": [
+    "artifacts/phase24_stage11b_20ns_baseline.json",
+    "artifacts/phase24_stage11_native_provenance_manifest.json",
+    "results/case_phase24_adaptive_continuous_post_event_20ns_baseline/manifest.json"
+  ]
+}

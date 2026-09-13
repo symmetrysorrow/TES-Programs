@@ -1180,7 +1180,7 @@ index fb36ee9b6..c1bdeef71 100644
       END IF
  #endif
 diff --git a/fem/src/ElmerSolver.F90 b/fem/src/ElmerSolver.F90
-index 24f774485..b3dcf1222 100644
+index 24f774485..1d1d2d044 100644
 --- a/fem/src/ElmerSolver.F90
 +++ b/fem/src/ElmerSolver.F90
 @@ -2682,16 +2682,49 @@
@@ -1542,7 +1542,7 @@ index 24f774485..b3dcf1222 100644
 +                      DebugHypreMatrixEpoch,DebugPreconditionerEpoch
 +               END IF
 +               IF (AdaptiveDebug) THEN
-+                 WRITE(*,'(A,I0,A,7ES20.12,A,3L1)') &
++                 WRITE(*,'(A,I0,A,7ES20.12,A,4L1)') &
 +                    'Adaptive event audit id=',AdaptiveTrialId, &
 +                    ', start/event/distance/proposed_dt/proposed_end/abs_proposed_gap/final_end=', &
 +                    AdaptiveStepStart,AdaptiveNextEvent,AdaptiveEventDistance, &

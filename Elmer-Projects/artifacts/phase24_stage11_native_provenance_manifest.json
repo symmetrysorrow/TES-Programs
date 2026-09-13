@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "stage": "Stage 11A",
+  "requested_tes_programs_base_commit": "15db705d933cc1a562102170ed052f95f0e64363",
+  "tes_programs_commit_sha_at_recording": "cc30371f06b494cea3b33ce44d016005c4d23b3b",
+  "tes_programs_base_is_ancestor": true,
+  "native": {
+    "repository_url": "https://github.com/ElmerCSC/elmerfem.git",
+    "source_relative_to_repo": "../tools/elmer-hypre/src",
+    "base_commit_sha": "9916c3f056e41e3cf889e28381791c028a761ff9",
+    "base_commit_message": "Add MPI-safe intrinsic TES circuit coupling",
+    "patch_relative_to_repo": "artifacts/phase24_stage11_native_worktree.patch",
+    "patch_sha256": "f55dbeb6249a7efd13dc07e042c4deffcea5d0d23592a9abc136471984230008",
+    "worktree_diff_sha256": "f55dbeb6249a7efd13dc07e042c4deffcea5d0d23592a9abc136471984230008",
+    "patch_description": "Complete binary patch from the pinned native base to the dirty native worktree used for the TES build",
+    "patched_source_sha256": {
+      "fem/src/ElmerSolver.F90": "1d84244fea9ea27131300f6a7cdc4a924dbeb413cf1466eaa0f4e442399eae6d",
+      "fem/src/TimeIntegrate.F90": "3eaa36b502069661e1842d9d21dce0898a6297e443f798eab7a2b62ea3777927",
+      "fem/src/modules/HeatSolve.F90": "cc1244cdab20ac01cade92ef85a11c2681b30f49dcd920660834f8450b1f12f1",
+      "fem/src/SParIterSolver.F90": "3a9928002278967c3f69d66cd5732d008901a5a4cee9c685ba41f1379cae3ff1",
+      "fem/src/SolveHypre.c": "2e8b9d48f57564fa64add6b59c2076f794475db23c0a9864bcdf8ec26266c196"
+    }
+  },
+  "build_configuration": {
+    "windows_production": {
+      "build_directory": "../tools/elmer-hypre/build",
+      "install_prefix": "../tools/elmer-hypre/install-stage11",
+      "generator": "Ninja",
+      "build_shell": "MSYS2 UCRT64 bash",
+      "fortran_compiler": "GNU Fortran (MSYS2) 16.1.0",
+      "cmake": "4.4.0",
+      "ninja": "1.13.2",
+      "with_mpi": true,
+      "with_hypre": true,
+      "hypre_include": "C:/msys64/ucrt64/include",
+      "hypre_import_library": "C:/msys64/ucrt64/lib/libHYPRE.dll.a",
+      "hypre_version": "2.33.0",
+      "gpu_backend": "CPU",
+      "status": "VERIFIED"
+    },
+    "wsl_source_validation": {
+      "build_directory": "/tmp/phase24-stage11a-build-c",
+      "install_prefix": "/tmp/phase24-stage11a-install-c",
+      "generator": "Ninja",
+      "fortran_compiler": "GNU Fortran 15.2.0",
+      "with_mpi": true,
+      "with_hypre": true,
+      "with_mumps": false,
+      "hypre_include": "/usr/include/hypre",
+      "hypre_library": "/usr/lib/x86_64-linux-gnu/libHYPRE.so",
+      "hypre_version": "system package; version not independently recorded",
+      "gpu_backend": "CPU",
+      "status": "COMPILE_AND_LINK_PASS"
+    }
+  },
+  "validation_artifacts": {
+    "wsl_libelmersolver_sha256": "67f6cd54d4c0e75ca139bf1735e17e18a017e098aee096a739965f265ef512df",
+    "wsl_elmersolver_mpi_sha256": "b976b8539c366f71a446ac4a90baaec528ebd1dd0148ec33da03af4284827131"
+  },
+  "runtime_artifacts": {
+    "../tools/elmer-hypre/install-stage11/bin/ElmerSolver_mpi.exe": "331c91d17e49e9b150835543693f93bfe132752a61706de5a9285dddd9984225",
+    "../tools/elmer-hypre/install-stage11/bin/libelmersolver.dll": "5d8bd243f1512ba63c0a24a792ce9071eb06de8b26d8ed978eef10960f37f123",
+    "../tools/elmer-hypre/install-stage11/share/elmersolver/lib/HeatSolve.dll": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+  },
+  "runtime_environment": {
+    "launcher_path_prefix": "C:/msys64/ucrt64/bin",
+    "runner_path_order": "install-stage11/bin;install-stage11/share/elmersolver/lib;install-stage11/lib/elmersolver;then MSYS2 UCRT64 and host paths",
+    "external_runtime_dependencies": ["Microsoft MPI", "MSYS2 UCRT64 GNU runtime", "HYPRE 2.33.0"],
+    "closure_note": "The staged Elmer binaries are hash-verified, but the diagnostic also finds GNU runtime/OpenBLAS dependencies supplied by the host Elmer installation when UCRT64 is not first on PATH; this is not a self-contained ABI proof."
+  },
+  "runtime_status": "VERIFIED",
+  "native_bounded_case_status": "PASS_ALL_DONE_EXIT_0_4FLAG_AUDIT",
+  "runner_diagnostic_filter_test": "PASS",
+  "native_bounded_case": {
+    "case": "case_phase24_adaptive_continuous_post_event_5ns_light",
+    "exit_code": 0,
+    "reported_all_done": true,
+    "wall_seconds": 518.0,
+    "accepted": 13,
+    "rejected": 1,
+    "event_audit_flags_clipped_landing_snapped_forced": {
+      "1": "FTFF",
+      "2": "TTFT",
+      "3": "FFFF",
+      "4": "FTFF"
+    },
+    "event_audit_forced": {"1": false, "2": true, "3": false, "4": false},
+    "event_audit_format_note": "Native event audit format corrected from 3L1 to 4L1 and verified in this run.",
+    "accepted_bdf_sequence": [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "output_summary": "accepted=13, rejected=1, requested_outputs=4, interpolation_only=4, event_forced=2, bdf1=4, bdf2=9",
+    "classification_note": "The runner's initial ERROR scan treated NATIVE_XVEC_CAPTURE diagnostics as fatal; the classifier was corrected without rerunning the native case."
+  },
+  "native_20ns_baseline": {
+    "artifact": "artifacts/phase24_stage11b_20ns_baseline.json",
+    "case": "case_phase24_adaptive_continuous_post_event_20ns_baseline",
+    "endpoint": "20.020021 ms",
+    "exit_code": 0,
+    "reported_all_done": true,
+    "wall_seconds": 2004.0,
+    "trials": 53,
+    "accepted": 42,
+    "rejected": 11,
+    "bdf2_rejected": 10,
+    "accepted_bdf_sequence": [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2],
+    "post_event_max_dt_ns": 0.6,
+    "post_event_dt_above_floor_accepts": 5,
+    "first_post_event_dt_above_floor_accepted_step": 21,
+    "classification": "PASS_WITH_INTERMITTENT_BDF2_REENTRY_REJECTIONS",
+    "policy_changed": false
+  },
+  "production_readiness_gate": {
+    "artifact": "artifacts/phase24_stage11_production_readiness_gate.json",
+    "status": "NO_GO_FOR_31US_PRODUCTION_RUN"
+  },
+  "reproducibility_status": "VERIFIED_SOURCE_PATCH_RUNTIME",
+  "verification_command": "python scripts/support/verify_phase24_stage11_native_provenance.py",
+  "verification_source_only_command": "python scripts/support/verify_phase24_stage11_native_provenance.py --allow-unbuilt",
+  "policy_audit": {
+    "linear_tolerance_changed": false,
+    "adaptive_rtol_changed": false,
+    "adaptive_atol_changed": false,
+    "dt_min_changed": false,
+    "bdf_policy_changed": false,
+    "cooldown_policy_changed": false,
+    "growth_factor_changed": false,
+    "estimator_formula_changed": false,
+    "hypre_settings_changed": false,
+    "gpu_backend_policy_changed": false,
+    "fem_assembly_policy_changed": false,
+    "production_rerun_performed": false
+  }
+}

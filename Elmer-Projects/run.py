@@ -64,6 +64,19 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def solver_log_errors(log_text: str) -> list[str]:
+    """Return genuine solver errors while ignoring native capture diagnostics."""
+    ignored_diagnostics = (
+        "NATIVE_XVEC_CAPTURE_ERROR_BEFORE",
+        "NATIVE_XVEC_CAPTURE_ERROR_CLEAR_CONV",
+    )
+    return [
+        line
+        for line in re.findall(r"(?m)^.*(?:ERROR|Fatal).*$", log_text)
+        if not any(marker in line for marker in ignored_diagnostics)
+    ][:3]
+
+
 def runtime_environment(
     elmer_solver: str, runtime_bin: str | None
 ) -> tuple[dict[str, str], Path, Path]:
@@ -582,7 +595,7 @@ def run_case(
 
     log_text = log_path.read_text(encoding="utf-8", errors="replace")
     convergence = re.findall(r"ComputeChange:.*", log_text)[-4:]
-    fatal = re.findall(r"(?:ERROR|Fatal).*", log_text)[:3]
+    fatal = solver_log_errors(log_text)
     amgx_failures = re.findall(
         r".*(?:Caught amgx exception|AMGX did not converge).*",
         log_text,

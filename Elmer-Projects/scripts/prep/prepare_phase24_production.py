@@ -20,6 +20,7 @@ ADAPTIVE_REJECTION_CASE = "case_phase24_adaptive_event_rejection_progression_2ns
 ADAPTIVE_RECOVERY_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns"
 ADAPTIVE_RECOVERY_LIGHT_CASE = "case_phase24_adaptive_post_event_dt_recovery_10ns_light"
 ADAPTIVE_CONTINUOUS_LIGHT_CASE = "case_phase24_adaptive_continuous_post_event_5ns_light"
+ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE = "case_phase24_adaptive_continuous_post_event_20ns_baseline"
 
 
 def main() -> None:
@@ -406,6 +407,37 @@ def main() -> None:
         ],
     }
     project["cases"][ADAPTIVE_CONTINUOUS_LIGHT_CASE] = adaptive_continuous_light
+
+    # Stage 11A follow-up baseline: extend the same continuous, CPU-only,
+    # dump-free case from a 5-ns to a 20-ns post-event observation window.
+    # No solver or adaptive policy is changed; only the requested endpoint
+    # and output series names differ.
+    adaptive_continuous_20ns = copy.deepcopy(adaptive_continuous_light)
+    adaptive_continuous_20ns["series_file"] = f"{ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE}_series.csv"
+    adaptive_continuous_20ns["iteration_series_file"] = f"{ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE}_iterations.csv"
+    adaptive_continuous_20ns["output_file_path"] = (
+        f"../work/meshes/{adaptive_continuous_20ns['mesh']}/{ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE}.result"
+    )
+    adaptive_continuous_20ns["timesteps"] = [["20.021[us]", 1]]
+    adaptive_continuous_20ns["adaptive_time"] = dict(adaptive_continuous_light["adaptive_time"])
+    adaptive_continuous_20ns["adaptive_time"]["end"] = "20.020021[ms]"
+    adaptive_continuous_20ns["adaptive_time"]["requested_output_times"] = {
+        "mode": "explicit",
+        "times": [
+            "20[ms]",
+            "20.02[ms]",
+            "20.020001[ms]",
+            "20.020021[ms]",
+        ],
+    }
+    adaptive_continuous_20ns["phase24_smoke"] = {
+        "purpose": "20-ns continuous post-event CPU baseline after Stage 11A",
+        "reference_case": ADAPTIVE_CONTINUOUS_LIGHT_CASE,
+        "path": "same normal 20-ms source, native runtime, solver, adaptive policy, and both physical events; 20-ns tail",
+        "no_midrun_restart": True,
+        "policy_comparison_target": "Stage 11A 5-ns bounded case",
+    }
+    project["cases"][ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE] = adaptive_continuous_20ns
 
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their

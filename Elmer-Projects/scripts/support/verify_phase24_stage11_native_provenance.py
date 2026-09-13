@@ -26,6 +26,7 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, default=Path("artifacts/phase24_stage11_native_provenance_manifest.json"))
     parser.add_argument("--source", type=Path)
     parser.add_argument("--skip-clean-patch-check", action="store_true")
+    parser.add_argument("--allow-unbuilt", action="store_true")
     args = parser.parse_args()
 
     manifest_path = args.manifest.resolve()
@@ -62,14 +63,24 @@ def main() -> int:
             run("git", "checkout", "--quiet", base, cwd=clone)
             subprocess.run(("git", "apply", "--check", str(patch)), cwd=clone, check=True)
 
-    for relative, expected in manifest["runtime_artifacts"].items():
+    runtime_status = manifest.get("runtime_status", "UNSPECIFIED")
+    if runtime_status != "VERIFIED" and not args.allow_unbuilt:
+        raise SystemExit(
+            "runtime artifacts are not verified against this patch: "
+            f"{runtime_status}; use --allow-unbuilt for source-only verification"
+        )
+
+    for relative, expected in manifest.get("runtime_artifacts", {}).items():
         path = (root / relative).resolve()
         if not path.is_file():
             raise SystemExit(f"runtime artifact not found: {path}")
         if sha256(path) != expected:
             raise SystemExit(f"runtime artifact SHA256 mismatch: {relative}")
 
-    print("PASS: native base, complete patch, source hashes, and runtime artifacts verified")
+    if runtime_status == "VERIFIED":
+        print("PASS: native base, complete patch, source hashes, and runtime artifacts verified")
+    else:
+        print("PASS: native base, complete patch, and source hashes verified; runtime build pending")
     return 0
 
 

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "stage": "Stage 11A",
+  "status": "PASS_WITH_POST_EVENT_ESTIMATOR_BLOCKER",
+  "scope": "Reproducible event-boundary contract; no estimator, solver, BDF policy, cooldown, GPU, or production changes",
+  "tes_programs": {
+    "requested_base_commit": "15db705d933cc1a562102170ed052f95f0e64363",
+    "recording_commit": "cc30371f06b494cea3b33ce44d016005c4d23b3b",
+    "recording_commit_note": "main contains the requested base, the subsequent summary commit, and an archive commit"
+  },
+  "event_contract": {
+    "epsilon_seconds": 1.0e-12,
+    "event_clipped": "The proposed endpoint is strictly beyond event + epsilon; final_dt is reduced to event - time.",
+    "event_landing": "The final trial endpoint is within epsilon of the physical event, including endpoints on either side before normalization.",
+    "event_endpoint_snapped": "The landing endpoint was numerically different from event and was normalized to event.",
+    "event_forced": "The proposal crossed the event far enough to require clipping; a landing snap alone does not set this flag.",
+    "final_endpoint_invariant": "A landing trial ends at the physical event and never remains beyond it.",
+    "python_native_clipping_condition": "event < start + proposed_dt - epsilon",
+    "python_native_landing_tolerance": "epsilon + 2*ulp(max(1, abs(event), abs(endpoint)))"
+  },
+  "bdf_history_contract": {
+    "event_landing_trial_order": 1,
+    "accepted_history": "Accepted state is committed once; the previous accepted history is shifted and the trial-start state is retained as the older BDF history entry.",
+    "immediate_post_event_trial_order": 1,
+    "bdf1_hold_steps_after_event": 1,
+    "following_ordinary_trial_order": 2,
+    "rejection": "Rejected trials restore values, PrevValues, DoneTime, and order; accepted history is not advanced. Rejection forces BDF1 for the retry and preserves the existing one-step recovery cooldown.",
+    "python_native_sequence": "landing BDF1 -> immediate post-event BDF1 -> following ordinary BDF2"
+  },
+  "epsilon_boundary_results": [
+    {"offset_epsilon": -1.1, "event_clipped": false, "event_landing": false, "event_endpoint_snapped": false, "event_forced": false, "final_endpoint_relation": "before_event"},
+    {"offset_epsilon": -1.0, "event_clipped": false, "event_landing": true, "event_endpoint_snapped": true, "event_forced": false, "final_endpoint_relation": "event"},
+    {"offset_epsilon": -0.5, "event_clipped": false, "event_landing": true, "event_endpoint_snapped": true, "event_forced": false, "final_endpoint_relation": "event"},
+    {"offset_epsilon": 0.0, "event_clipped": false, "event_landing": true, "event_endpoint_snapped": false, "event_forced": false, "final_endpoint_relation": "event"},
+    {"offset_epsilon": 0.5, "event_clipped": false, "event_landing": true, "event_endpoint_snapped": true, "event_forced": false, "final_endpoint_relation": "event"},
+    {"offset_epsilon": 1.0, "event_clipped": false, "event_landing": true, "event_endpoint_snapped": true, "event_forced": false, "final_endpoint_relation": "event"},
+    {"offset_epsilon": 1.1, "event_clipped": true, "event_landing": true, "event_endpoint_snapped": false, "event_forced": true, "final_endpoint_relation": "event"}
+  ],
+  "production_scale_regression": {
+    "start_seconds": 0.0200200005,
+    "event_seconds": 0.020020001,
+    "proposed_dt_seconds": 5.0e-10,
+    "event_clipped": false,
+    "event_landing": true,
+    "event_endpoint_snapped": false,
+    "event_forced": false,
+    "trial_bdf_order": 1,
+    "final_endpoint_equals_event": true
+  },
+  "tests": {
+    "python_adaptive_time": "26 passed",
+    "python_full_suite": "136 passed",
+    "native_source_compile_and_link": "PASS in WSL CPU validation build",
+    "native_windows_rebuild": "PASS: Ninja 322/322 in MSYS2 UCRT64, installed to install-stage11",
+    "native_bounded_stage11a_case": "PASS: exit code 0 and MAIN: *** Elmer Solver: ALL DONE ***",
+    "native_bounded_case_runtime_seconds": 518.0,
+    "native_bounded_case_accepted": 13,
+    "native_bounded_case_rejected": 1,
+    "native_bounded_case_event_audit_flags_clipped_landing_snapped_forced": {"1": "FTFF", "2": "TTFT", "3": "FFFF", "4": "FTFF"},
+    "native_bounded_case_event_audit_forced": {"1": false, "2": true, "3": false, "4": false},
+    "native_bounded_case_event_audit_format_note": "Native event audit format corrected from 3L1 to 4L1 and verified in this run.",
+    "native_bounded_case_accepted_bdf_sequence": [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "native_bounded_case_output_summary": "accepted=13, rejected=1, requested_outputs=4, interpolation_only=4, event_forced=2, bdf1=4, bdf2=9",
+    "provenance_source_only_verification": "PASS with --allow-unbuilt",
+    "provenance_runtime_verification": "PASS: native base, complete patch, source hashes, and runtime artifacts verified"
+  },
+  "projection": {
+    "full_case_linear_projection_seconds": 802.659202239,
+    "post_event_floor_projection_seconds": 3211600.0,
+    "projection_basis_interval": {
+      "full_case_simulated_time_seconds": 2.0006e-05,
+      "post_event_simulated_time_seconds": 5.0e-09,
+      "full_case_wall_time_seconds": 518.0,
+      "post_event_wall_time_seconds": 518.0
+    },
+    "projection_basis_simulated_time": {"full_case_seconds": 2.0006e-05, "post_event_seconds": 5.0e-09},
+    "projection_basis_wall_time": {"full_case_seconds": 518.0, "post_event_seconds": 518.0},
+    "projection_is_production_representative": false,
+    "warning": "The 3.41e6-second value assumes the observed 0.5-ns floor persists across all 31,000 ns; it is an extreme worst-case extrapolation, not a production forecast."
+  },
+  "policy_audit": {
+    "linear_tolerance": "unchanged at 5e-7",
+    "adaptive_tolerances": "unchanged at rtol 0.002 and atol 1e-8",
+    "dt_min": "unchanged at 0.5 ns",
+    "bdf_policy": "unchanged; event reset semantics made explicit",
+    "cooldown": "unchanged",
+    "growth_and_estimator": "unchanged",
+    "solver_and_hypre": "unchanged",
+    "gpu_backend": "unchanged",
+    "production_31us_rerun": false
+  },
+  "next_blocker": "The bounded native case remains at the 0.5-ns floor after the event with estimator error above one; no estimator, floor, or solver policy change is authorized by Stage 11A."
+}

@@ -3,9 +3,9 @@
   "case": "case_phase24_adaptive_continuous_post_event_5ns_light",
   "scope": "Exact event landing recognition and BDF reset semantics only",
   "run": {
-    "started_local": "2026-09-13 13:55:59",
-    "finished_local": "2026-09-13 14:05:09",
-    "runtime_seconds": 550,
+    "started_local": "2026-09-13 17:22:29",
+    "finished_local": "2026-09-13 17:31:07",
+    "runtime_seconds": 518.0,
     "omp_threads": 8,
     "completed": true,
     "post_event_observed_ns": 5.0,
@@ -45,6 +45,7 @@
     "time_epsilon_seconds": 1.0e-12,
     "event_clipped": "proposal endpoint was beyond event by more than epsilon",
     "event_landing": "final trial endpoint is within epsilon of the physical event, whether clipped or not",
+    "event_endpoint_snapped": "landing endpoint is normalized to the exact physical event time",
     "event_forced_meaning_preserved": true
   },
   "root_cause": {
@@ -91,6 +92,7 @@
     "final_end_s": 0.020020001,
     "event_clipped": false,
     "event_landing": true,
+    "event_endpoint_snapped": false,
     "event_forced": false,
     "bdf_order": 1,
     "error": 2.353602675667,
@@ -178,25 +180,48 @@
     "failed_solves": 0
   },
   "tests": {
-    "python_pytest": "127 passed",
+    "python_pytest": "135 passed",
     "python_cases": [
       "proposal > event distance clips and lands",
       "proposal == event distance does not clip and lands",
       "proposal < event distance does not land",
       "production-scale t0=0.0200200005, dt=0.5e-9 selects BDF1"
     ],
-    "native_bounded_case": "completed with event audit and ALL DONE",
+    "native_bounded_case": "PASS: rebuilt Stage 11A Windows runtime; exit code 0, event audit and ALL DONE",
+    "native_bounded_case_audit_flags_clipped_landing_snapped_forced": {"1": "FTFF", "2": "TTFT", "3": "FFFF", "4": "FTFF"},
     "native_capture_enter": 0,
     "matrix_save": 0,
     "rhs_save": 0
   },
   "runtime": {
-    "seconds": 550,
+    "seconds": 518.0,
     "accepted_steps": 13,
-    "wall_seconds_per_accepted_step": 42.3076923077,
-    "post_event_ns_per_minute_end_to_end": 0.5454545455,
-    "naive_31us_projection_seconds": 852.244326702,
-    "projection_note": "The 31-us estimate is linear scaling only and is optimistic while the post-event floor persists."
+    "wall_seconds_per_accepted_step": 39.8461538462,
+    "post_event_ns_per_minute_end_to_end": 0.5791505792,
+    "full_case_linear_projection_seconds": 802.659202239,
+    "post_event_floor_projection_seconds": 3211600.0,
+    "projection_basis_interval": {
+      "full_case_simulated_time_seconds": 2.0006e-05,
+      "post_event_simulated_time_seconds": 5.0e-09,
+      "full_case_wall_time_seconds": 518.0,
+      "post_event_wall_time_seconds": 518.0
+    },
+    "projection_basis_simulated_time": {
+      "full_case_seconds": 2.0006e-05,
+      "post_event_seconds": 5.0e-09
+    },
+    "projection_basis_wall_time": {
+      "full_case_seconds": 518.0,
+      "post_event_seconds": 518.0
+    },
+    "projection_is_production_representative": false,
+    "projection_warnings": [
+      "full_case_linear_projection is a simple 31-us / 20.006-us scaling of the bounded case wall time",
+      "post_event_floor_projection assumes the observed 0.5-ns floor persists for all 31,000 ns and is an extreme worst-case extrapolation",
+      "neither projection includes GPU speedup or post-event recovery"
+    ],
+    "naive_31us_projection_seconds": 802.659202239,
+    "naive_31us_projection_deprecated_alias": true
   },
   "comparison": {
     "pre_fix": {
@@ -222,7 +247,7 @@
   "provenance": {
     "project_sha256": "203d452c7f5853de731c6743ee94978f31cef27b9bc604170d13ec049d207712",
     "sif_sha256": "5f56ef0922458dc5775049f1b0d3f55eb6ffebe34b81feec0c6701632d454ea9",
-    "installed_libelmersolver_sha256": "340392e7a1787c6547249bdb011819767f034609b3ef0e35b8e28a9886834060",
+    "installed_libelmersolver_sha256": "5d8bd243f1512ba63c0a24a792ce9071eb06de8b26d8ed978eef10960f37f123",
     "native_solvehypre_source_sha256": "2e8b9d48f57564fa64add6b59c2076f794475db23c0a9864bcdf8ec26266c196"
   }
 }

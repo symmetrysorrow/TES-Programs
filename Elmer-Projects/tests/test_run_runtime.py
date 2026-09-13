@@ -10,6 +10,14 @@ import run
 
 
 class RuntimeSifTests(unittest.TestCase):
+    def test_solver_log_ignores_native_capture_status_diagnostics(self) -> None:
+        log = (
+            "NATIVE_XVEC_CAPTURE_ERROR_BEFORE local=0 status=0\n"
+            "NATIVE_XVEC_CAPTURE_ERROR_CLEAR_CONV status=0\n"
+            "Fatal: real failure\n"
+        )
+        self.assertEqual(run.solver_log_errors(log), ["Fatal: real failure"])
+
     def test_pinned_udf_creates_copy_and_preserves_source(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
