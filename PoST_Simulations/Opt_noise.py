@@ -255,6 +255,51 @@ def load_json(path: Path):
         return json.load(f)
 
 
+BEST_PARAMETER_KEYS = (
+    "T_c",
+    "T_bath",
+    "R",
+    "R_SH",
+    "R_l",
+    "alpha",
+    "beta",
+    "L",
+    "n",
+    "C_tes",
+    "C_stycast",
+    "C_abs",
+    "G_tes-bath",
+    "G_tes-stycast",
+    "G_stycast-abs",
+    "G_abs-abs",
+    "excess_johnson_M",
+    "post_filter_white_fraction",
+    "post_filter_white_asd_A_rtHz",
+    "hardware_bessel_order",
+    "hardware_bessel_norm",
+    "hardware_bessel_cutoff_Hz",
+    "thermal_link_model",
+    "rate",
+    "samples",
+    "cutoff",
+)
+
+
+def best_parameters_for_summary(candidate: dict) -> dict:
+    """Return the physically relevant best-fit candidate fields as JSON scalars."""
+
+    result = {}
+    for key in BEST_PARAMETER_KEYS:
+        if key not in candidate:
+            continue
+        value = candidate[key]
+        if isinstance(value, np.generic):
+            value = value.item()
+        if isinstance(value, (str, bool, int, float)) or value is None:
+            result[key] = value
+    return result
+
+
 def target_case_reference(case_dir: Path, explicit_reference: Path | None = None):
     """Return a target-consistent starting point and the frozen envelope."""
 
@@ -1525,9 +1570,14 @@ def main():
             },
             "cases": [
                 {
-                    key: value
-                    for key, value in case.items()
-                    if key != "best_candidate"
+                    **{
+                        key: value
+                        for key, value in case.items()
+                        if key != "best_candidate"
+                    },
+                    "best_parameters": best_parameters_for_summary(
+                        case["best_candidate"]
+                    ),
                 }
                 for case in cases
             ],
@@ -1537,6 +1587,9 @@ def main():
             "best_case_finite_validation_score": best_case[
                 "finite_validation_score"
             ],
+            "best_case_parameters": best_parameters_for_summary(
+                best_case["best_candidate"]
+            ),
             "hardware_bessel_cutoff_Hz": float(
                 TARGET_HARDWARE_BESSEL_CUTOFF_HZ
             ),
