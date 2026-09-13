@@ -67,6 +67,18 @@ def _stable_stycast_candidate() -> dict:
     }
 
 
+def _stable_stycast_rc_candidate() -> dict:
+    candidate = _stable_stycast_candidate()
+    candidate.update(
+        {
+            "electrical_link_model": optimizer.ELECTRICAL_LINK_MODEL_RC,
+            "R_rc": 1.0e-3,
+            "f_rc_Hz": 100_000.0,
+        }
+    )
+    return candidate
+
+
 def test_source_class_diagnostics_reconstructs_total_model_psd() -> None:
     candidate = _stable_stycast_candidate()
     result = optimizer.post_analysis_source_class_asd(
@@ -309,3 +321,82 @@ def test_required_transfer_unity_target_reports_zero_db_correction() -> None:
     for band in summary["fit_bands"].values():
         assert band["geometric_mean_required_ASD_transfer"] == pytest.approx(1.0)
         assert band["mean_required_correction_dB"] == pytest.approx(0.0)
+
+
+
+def test_rc_relaxation_adds_two_passive_electrical_states() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    point = optimizer.tes_operating_point(candidate)
+    assert point["valid"] is True
+    assert point["stable"] is True
+    assert point["electrical_link_model"] == optimizer.ELECTRICAL_LINK_MODEL_RC
+    assert point["R_rc_ohm"] == pytest.approx(candidate["R_rc"])
+    assert point["f_rc_Hz"] == pytest.approx(candidate["f_rc_Hz"])
+    assert point["tau_rc_s"] == pytest.approx(
+        1.0 / (2.0 * np.pi * candidate["f_rc_Hz"])
+    )
+    matrix = optimizer.tes_linearized_matrix(candidate, 0.0)
+    assert matrix.shape == (9, 9)
+
+
+def test_rc_relaxation_keeps_tes_resistance_instantaneous_state_count() -> None:
+    result = optimizer.eigenmode_diagnostics(_stable_stycast_rc_candidate())
+    assert result["state_count"] == 9
+    assert result["state_order"] == [
+        "I1",
+        "Vrc1",
+        "TES1",
+        "Stycast1",
+        "Pb_center",
+        "Stycast2",
+        "TES2",
+        "Vrc2",
+        "I2",
+    ]
+    assert all("R_TES" not in name for name in result["state_order"])
+    assert result["stable"] is True
+
+
+def test_rc_relaxation_noise_includes_its_johnson_source_and_reconstructs() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    result = optimizer.post_analysis_source_class_asd(
+        candidate,
+        np.array([1_000.0, 40_000.0, 100_000.0, 200_000.0]),
+    )
+    assert "RC_branch_Johnson" in result["class_asd_A_rtHz"]
+    assert np.all(result["class_asd_A_rtHz"]["RC_branch_Johnson"] > 0.0)
+    assert result["reconstruction_max_relative_error"] < 1.0e-10
+
+
+def test_rc_relaxation_bounds_are_small_two_parameter_extension() -> None:
+    assert optimizer.R_RC_FIT_MIN_OHM > 0.0
+    assert optimizer.R_RC_FIT_MAX_OHM == pytest.approx(20.0e-3)
+    assert optimizer.F_RC_FIT_MIN_HZ == pytest.approx(5_000.0)
+    assert optimizer.F_RC_FIT_MAX_HZ == pytest.approx(500_000.0)
+
+
+
+def test_rc_ablation_reports_direct_score_gain() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    target, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.electrical_rc_ablation_diagnostics(
+        candidate,
+        target,
+        fit_freq,
+        args,
+    )
+    assert result["rc_shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert result["same_parameters_without_rc_shape_score"] > 0.0
+    assert result["score_improvement_from_rc_at_same_parameters"] > 0.0
+    assert result["tes_resistance_response"] == "instantaneous alpha/beta in both models"

@@ -34,6 +34,7 @@ import numpy as np
 from scipy.optimize import differential_evolution, least_squares, minimize
 
 from lib.tes_noise_model import (
+    ELECTRICAL_LINK_MODEL_RC,
     linearized_matrix as tes_linearized_matrix,
     noise_components as tes_noise_components,
     operating_point as tes_operating_point,
@@ -133,6 +134,12 @@ T_BATH_FIT_HALF_WIDTH_K = 0.002
 ALPHA_FIT_MAX = 200.0
 L_FIT_MIN_H = 1.0e-10
 L_FIT_MAX_H = 12.3e-9
+R_RC_FIT_MIN_OHM = 1.0e-6
+R_RC_FIT_MAX_OHM = 20.0e-3
+F_RC_FIT_MIN_HZ = 5_000.0
+F_RC_FIT_MAX_HZ = 500_000.0
+R_RC_INITIAL_OHM = 1.0e-3
+F_RC_INITIAL_HZ = 100_000.0
 
 # Broad effective-parameter priors from the Elmer single/dual-pixel geometry
 # and material table.  They are intentionally permissive: the hand-built
@@ -315,6 +322,8 @@ BEST_PARAMETER_KEYS = (
     "alpha",
     "beta",
     "L",
+    "R_rc",
+    "f_rc_Hz",
     "n",
     "C_tes",
     "C_stycast",
@@ -330,6 +339,7 @@ BEST_PARAMETER_KEYS = (
     "hardware_bessel_norm",
     "hardware_bessel_cutoff_Hz",
     "thermal_link_model",
+    "electrical_link_model",
     "rate",
     "samples",
     "cutoff",
@@ -385,6 +395,9 @@ def target_case_reference(case_dir: Path, explicit_reference: Path | None = None
     )
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference.setdefault("excess_johnson_M", 0.0)
+    reference.setdefault("R_rc", R_RC_INITIAL_OHM)
+    reference.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
+    reference["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
     return reference, envelope, reference_source
 
 
@@ -919,6 +932,8 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
         # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
         # Keep this logarithmic because the allowed interval spans >2 decades.
         "L": Bound(L_FIT_MIN_H, L_FIT_MAX_H),
+        "R_rc": Bound(R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM),
+        "f_rc_Hz": Bound(F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ),
         "n": Bound(N_FIT_MIN, N_FIT_MAX, logarithmic=False),
         "C_tes": Bound(C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K),
         "C_stycast": Bound(
@@ -1705,6 +1720,53 @@ def johnson_source_scale_diagnostics(
     }
 
 
+def electrical_rc_ablation_diagnostics(
+    candidate: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Compare the fitted RC model with the same parameters using plain R_l+L."""
+
+    rc_model, _ = deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    plain = candidate.copy()
+    plain["electrical_link_model"] = "rl"
+    plain_model, _ = deterministic_simulated_spectrum(
+        plain,
+        fit_freq,
+    )
+    rc_score = float(fit_score(rc_model, target, fit_freq, args))
+    plain_score = float(fit_score(plain_model, target, fit_freq, args))
+    return {
+        "diagnostic_only": True,
+        "tes_resistance_response": "instantaneous alpha/beta in both models",
+        "fitted_model": ELECTRICAL_LINK_MODEL_RC,
+        "comparison_model": "rl",
+        "R_rc_ohm": float(candidate["R_rc"]),
+        "f_rc_Hz": float(candidate["f_rc_Hz"]),
+        "rc_shape_score": rc_score,
+        "same_parameters_without_rc_shape_score": plain_score,
+        "score_improvement_from_rc_at_same_parameters": float(
+            plain_score - rc_score
+        ),
+        "rc_bands": band_fit_diagnostics(
+            rc_model,
+            target,
+            fit_freq,
+            args,
+        ),
+        "same_parameters_without_rc_bands": band_fit_diagnostics(
+            plain_model,
+            target,
+            fit_freq,
+            args,
+        ),
+    }
+
+
 def johnson_beta_audit(candidate: dict) -> dict:
     """Record the exact beta dependence used by the shared/production model."""
 
@@ -1741,6 +1803,19 @@ def johnson_beta_audit(candidate: dict) -> dict:
         "electrical_corner_Hz": float(
             1.0 / (2.0 * np.pi * tau_el)
         ),
+        "electrical_link_model": candidate.get(
+            "electrical_link_model",
+            "rl",
+        ),
+        "R_rc_ohm": (
+            float(candidate["R_rc"]) if "R_rc" in candidate else None
+        ),
+        "f_rc_Hz": (
+            float(candidate["f_rc_Hz"]) if "f_rc_Hz" in candidate else None
+        ),
+        "tau_rc_s": point.get("tau_rc_s"),
+        "C_rc_equivalent_F": point.get("C_rc_equivalent_F"),
+        "tes_resistance_response": "instantaneous alpha/beta",
         "note": (
             "This audit records the repository convention and code-path parity; "
             "it does not by itself establish the experimental beta convention."
@@ -1850,7 +1925,44 @@ def eigenmode_diagnostics(candidate: dict) -> dict:
     current_scale = float(point["current_A"])
     temperature_scale = float(candidate["T_c"])
 
-    if matrix.shape[0] == 7:
+    if matrix.shape[0] == 9:
+        voltage_scale = current_scale * max(
+            float(candidate.get("R_rc", 0.0)),
+            float(candidate.get("R_l", 0.0)),
+            1.0e-12,
+        )
+        state_names = (
+            "I1", "Vrc1", "TES1", "Stycast1", "Pb_center",
+            "Stycast2", "TES2", "Vrc2", "I2",
+        )
+        state_scales = np.asarray(
+            [
+                current_scale, voltage_scale, temperature_scale,
+                temperature_scale, temperature_scale, temperature_scale,
+                temperature_scale, voltage_scale, current_scale,
+            ],
+            dtype=float,
+        )
+    elif matrix.shape[0] == 7 and candidate.get(
+        "electrical_link_model"
+    ) == ELECTRICAL_LINK_MODEL_RC:
+        voltage_scale = current_scale * max(
+            float(candidate.get("R_rc", 0.0)),
+            float(candidate.get("R_l", 0.0)),
+            1.0e-12,
+        )
+        state_names = (
+            "I1", "Vrc1", "TES1", "Pb_center", "TES2", "Vrc2", "I2",
+        )
+        state_scales = np.asarray(
+            [
+                current_scale, voltage_scale, temperature_scale,
+                temperature_scale, temperature_scale, voltage_scale,
+                current_scale,
+            ],
+            dtype=float,
+        )
+    elif matrix.shape[0] == 7:
         state_names = ("I1", "TES1", "Stycast1", "Pb_center", "Stycast2", "TES2", "I2")
         state_scales = np.asarray(
             [current_scale, temperature_scale, temperature_scale, temperature_scale,
@@ -1902,6 +2014,7 @@ def eigenmode_diagnostics(candidate: dict) -> dict:
         "participation_scaling": {
             "current_states": "delta_I / operating_current",
             "thermal_states": "delta_T / T_c",
+            "RC_voltage_states": "delta_Vrc / (operating_current * max(R_rc, R_l))",
             "normalization": "sum(abs(scaled_eigenvector)**2) = 1 per mode",
         },
         "stable": bool(all(row["real_s_inv"] < 0.0 for row in rows)),
@@ -2006,6 +2119,7 @@ def decode(
     candidate["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     candidate["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
     candidate["thermal_link_model"] = "stycast_node"
+    candidate["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
     return candidate
 
 
@@ -2119,6 +2233,9 @@ def optimize_case(
     case_original["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     case_original["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
     case_original["thermal_link_model"] = "stycast_node"
+    case_original["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
+    case_original.setdefault("R_rc", R_RC_INITIAL_OHM)
+    case_original.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
     case_original.setdefault("C_stycast", C_STYCAST_PAD_MATERIAL_J_PER_K)
     case_original.setdefault("G_tes-stycast", G_ABS_TES_MATERIAL_W_PER_K)
     case_original.setdefault("G_stycast-abs", G_ABS_TES_MATERIAL_W_PER_K)
@@ -2273,6 +2390,9 @@ def optimize_case(
             "alpha": [bounds["alpha"].lower, bounds["alpha"].upper],
             "L_H": [L_FIT_MIN_H, L_FIT_MAX_H],
             "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
+            "R_rc_ohm": [R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM],
+            "f_rc_Hz": [F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ],
+            "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
             "n": [N_FIT_MIN, N_FIT_MAX],
             "C_tes_J_per_K": [C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K],
             "C_stycast_J_per_K": [
@@ -2522,6 +2642,12 @@ def optimize_case(
         fit_freq,
         args,
     )
+    electrical_rc_ablation_summary = electrical_rc_ablation_diagnostics(
+        best_candidate.copy(),
+        target,
+        fit_freq,
+        args,
+    )
     johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
     beta_sweep_summary = beta_sweep_diagnostics(
         best_candidate.copy(),
@@ -2560,6 +2686,8 @@ def optimize_case(
     print(json.dumps(source_ablation_summary, indent=2))
     print("Johnson source-scale diagnostics:")
     print(json.dumps(johnson_scale_summary, indent=2))
+    print("Electrical RC ablation diagnostics:")
+    print(json.dumps(electrical_rc_ablation_summary, indent=2))
     print("Johnson/beta audit:")
     print(json.dumps(johnson_audit_summary, indent=2))
     print("Beta sweep diagnostics:")
@@ -2589,6 +2717,7 @@ def optimize_case(
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
+        "electrical_rc_ablation_diagnostics": electrical_rc_ablation_summary,
         "johnson_beta_audit": johnson_audit_summary,
         "beta_sweep_diagnostics": beta_sweep_summary,
         "eigenmode_diagnostics": eigenmode_summary,
@@ -2785,6 +2914,8 @@ def main():
                     float(POST_FILTER_WHITE_FRACTION_MAX),
                 ],
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
+                "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+                "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
             },
             "T_c_fit_range_K": [
                 float(envelope["parameters"]["T_c"]["range"][0]),
@@ -2792,6 +2923,20 @@ def main():
             ],
             "alpha_fit_max": float(ALPHA_FIT_MAX),
             "thermal_link_model": "stycast_node",
+            "electrical_link_model": ELECTRICAL_LINK_MODEL_RC,
+            "electrical_rc_relaxation": {
+                "topology": "series R_l + L plus one passive R||C relaxation element per TES branch",
+                "fitted_parameters": ["R_rc", "f_rc_Hz"],
+                "R_rc_search_ohm": [
+                    float(R_RC_FIT_MIN_OHM),
+                    float(R_RC_FIT_MAX_OHM),
+                ],
+                "f_rc_search_Hz": [
+                    float(F_RC_FIT_MIN_HZ),
+                    float(F_RC_FIT_MAX_HZ),
+                ],
+                "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+            },
             "stycast_node": {
                 "topology": "TES <-> Stycast <-> Pb absorber center",
                 "symmetric_nodes": 2,
@@ -2879,6 +3024,9 @@ def main():
             "best_case_johnson_source_scale_diagnostics": best_case[
                 "johnson_source_scale_diagnostics"
             ],
+            "best_case_electrical_rc_ablation_diagnostics": best_case[
+                "electrical_rc_ablation_diagnostics"
+            ],
             "best_case_johnson_beta_audit": best_case[
                 "johnson_beta_audit"
             ],
@@ -2926,6 +3074,7 @@ def main():
                 TARGET_HARDWARE_BESSEL_CUTOFF_HZ
             )
             final_candidate["thermal_link_model"] = "stycast_node"
+            final_candidate["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
             print(
