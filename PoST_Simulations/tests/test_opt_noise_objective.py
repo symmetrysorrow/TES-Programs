@@ -137,3 +137,47 @@ def test_source_ablation_is_diagnostic_and_reports_band_residuals() -> None:
     assert johnson["shape_score"] > 0.0
     assert "40000-100000_Hz" in johnson["bands"]
     assert "100000-200000_Hz" in johnson["bands"]
+
+
+
+def test_johnson_beta_audit_reports_shared_convention() -> None:
+    candidate = _stable_stycast_candidate()
+    candidate["beta"] = 2.0
+    result = optimizer.johnson_beta_audit(candidate)
+    assert result["status"] == "shared_production_convention"
+    assert result["source_psd_beta_factor"] == pytest.approx(5.0)
+    assert result["source_asd_factor_vs_beta0_same_M"] == pytest.approx(
+        np.sqrt(5.0)
+    )
+    assert result["source_voltage_asd_V_rtHz"] > 0.0
+    assert result["electrical_corner_Hz"] > 0.0
+
+
+def test_beta_sweep_keeps_other_parameters_fixed_and_includes_best_beta() -> None:
+    candidate = _stable_stycast_candidate()
+    candidate["beta"] = 1.7
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 61)
+    model, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.beta_sweep_diagnostics(
+        candidate,
+        model,
+        fit_freq,
+        args,
+    )
+    betas = [row["beta"] for row in result["rows"]]
+    assert 1.7 in betas
+    matching = next(row for row in result["rows"] if row["beta"] == 1.7)
+    assert matching["stable"] is True
+    assert matching["shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert "40000-100000_Hz" in matching["bands"]
+    assert "100000-200000_Hz" in matching["bands"]
