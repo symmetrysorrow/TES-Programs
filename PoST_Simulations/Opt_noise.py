@@ -75,6 +75,10 @@ FIT_HIGH_FREQUENCY_WEIGHT = 4.0
 FIT_ROBUST_DELTA_DEX = 0.30
 FIT_POINTS = 601
 FIT_BAND_MEAN_PENALTY = 3.0
+ABSOLUTE_ASD_REFERENCE_HZ = 1_000.0
+ABSOLUTE_ASD_WEIGHT_DEFAULT = 1.0
+MEASURED_ASD_PA_TO_A = 1.0e-12
+PRODUCTION_ASD_UA_TO_A = 1.0e-6
 FIT_BANDS_HZ = (
     (1_000.0, 5_000.0, 1.0),
     (5_000.0, 15_000.0, 1.25),
@@ -124,13 +128,13 @@ C_TES_FIT_MAX_J_PER_K = 5.0 * C_TES_MATERIAL_J_PER_K
 
 # Pb absorber: 20 mm x 1 mm x 0.7 mm, rho=9860 kg/m3,
 # cp=3.26e-5 J/(kg K) -> 4.50e-9 J/K in the current Elmer table.
-# In a distributed/ballistic absorber, the heat capacity participating in the
-# 1--200 kHz small-signal mode can be much smaller than the total equilibrium
-# heat capacity, so allow a wide effective range rather than forcing the full
-# Pb volume into one lumped node.
+# The absorber machining/assembly uncertainty is large enough that roughly a
+# factor-of-two geometric heat-capacity variation is credible.  Keep this
+# quantity physical instead of allowing the normalized-noise fit to use a
+# 0.02x--6x effective heat capacity as a nuisance degree of freedom.
 C_ABS_MATERIAL_J_PER_K = 4.500104e-9
-C_ABS_FIT_MIN_J_PER_K = 0.02 * C_ABS_MATERIAL_J_PER_K
-C_ABS_FIT_MAX_J_PER_K = 6.0 * C_ABS_MATERIAL_J_PER_K
+C_ABS_FIT_MIN_J_PER_K = 0.50 * C_ABS_MATERIAL_J_PER_K
+C_ABS_FIT_MAX_J_PER_K = 2.00 * C_ABS_MATERIAL_J_PER_K
 
 # End-to-end Pb conductance from k*A/L using k=1.68e-2 W/(m K),
 # A=1 mm*0.7 mm and L=20 mm -> 5.88e-7 W/K.  At sub-kelvin temperature the
@@ -214,6 +218,16 @@ def arguments():
         type=int,
         default=FIT_POINTS,
         help="Number of log-spaced frequencies used by the objective.",
+    )
+    parser.add_argument(
+        "--absolute-asd-weight",
+        type=float,
+        default=ABSOLUTE_ASD_WEIGHT_DEFAULT,
+        help=(
+            "Penalty weight for the absolute CH0 ASD level at 1 kHz. "
+            "Measured modelnoise.txt is converted from pA/rtHz to A/rtHz "
+            "before comparison. Set 0 to recover the shape-only objective."
+        ),
     )
     parser.add_argument(
         "--case-dir",
@@ -563,6 +577,64 @@ def fit_score(
     return point_score + mean_score
 
 
+def absolute_level_residual(
+    model_reference_asd_A: float,
+    target_reference_asd_A: float,
+) -> float:
+    """Return log10(model/measurement) for the absolute ASD anchor."""
+
+    model = float(model_reference_asd_A)
+    target = float(target_reference_asd_A)
+    if (
+        not np.isfinite(model)
+        or not np.isfinite(target)
+        or model <= 0.0
+        or target <= 0.0
+    ):
+        raise ValueError("Absolute ASD levels must be finite and positive")
+    return float(np.log10(model) - np.log10(target))
+
+
+def combined_fit_score(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    model_reference_asd_A: float,
+    target_reference_asd_A: float,
+    args,
+) -> float:
+    """Shape loss plus one independent absolute-ASD level anchor."""
+
+    shape_score = fit_score(model, target, fit_freq, args)
+    level = absolute_level_residual(
+        model_reference_asd_A,
+        target_reference_asd_A,
+    )
+    return shape_score + float(args.absolute_asd_weight) * level**2
+
+
+def combined_residual_vector(
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    model_reference_asd_A: float,
+    target_reference_asd_A: float,
+    args,
+) -> np.ndarray:
+    """Least-squares residuals with a single absolute-level pseudo-observation."""
+
+    shape = weighted_residual_vector(model, target, fit_freq, args)
+    level = absolute_level_residual(
+        model_reference_asd_A,
+        target_reference_asd_A,
+    )
+    level_residual = np.asarray(
+        [level * np.sqrt(float(args.absolute_asd_weight))],
+        dtype=float,
+    )
+    return np.concatenate((shape, level_residual))
+
+
 def band_fit_diagnostics(
     model: np.ndarray,
     target: np.ndarray,
@@ -589,16 +661,29 @@ def band_fit_diagnostics(
 
 def target_spectrum(args):
     pulse_config = load_json(PULSE_CONFIG_PATH)
-    exp_asd = np.loadtxt(MODELNOISE_PATH)
+    # Analyze_Experimental_Data/noise_main.py writes modelnoise.txt in
+    # pA/rtHz after eta calibration.  Preserve that scale for normalization,
+    # but convert the absolute-level anchor explicitly to A/rtHz.
+    exp_asd_pA = np.asarray(np.loadtxt(MODELNOISE_PATH), dtype=float)
     exp_rate = float(pulse_config["Readout"]["Rate"])
-    exp_freq = np.arange(len(exp_asd)) * (exp_rate / 2.0) / len(exp_asd)
+    exp_freq = np.arange(len(exp_asd_pA)) * (exp_rate / 2.0) / len(exp_asd_pA)
     fit_freq = np.geomspace(
         float(args.fit_min_hz),
         float(args.fit_max_hz),
         int(args.fit_points),
     )
-    target = np.interp(fit_freq, exp_freq, normalize_at(exp_freq, exp_asd))
-    return fit_freq, target
+    target = np.interp(
+        fit_freq,
+        exp_freq,
+        normalize_at(exp_freq, exp_asd_pA),
+    )
+    target_reference_asd_A = float(
+        np.interp(ABSOLUTE_ASD_REFERENCE_HZ, exp_freq, exp_asd_pA)
+        * MEASURED_ASD_PA_TO_A
+    )
+    if not np.isfinite(target_reference_asd_A) or target_reference_asd_A <= 0.0:
+        raise ValueError("Invalid measured absolute ASD near 1 kHz")
+    return fit_freq, target, target_reference_asd_A
 
 
 def run_post(timeout_seconds: int, output_dir: Path, noise_path: Path):
@@ -626,10 +711,20 @@ def run_post(timeout_seconds: int, output_dir: Path, noise_path: Path):
 
 
 def simulated_spectrum(candidate: dict, fit_freq: np.ndarray, noise_path: Path):
-    sim_asd = np.loadtxt(noise_path)
+    # PoST_Simulation.py persists noise_total-bessel100k.dat in uA/rtHz.
+    sim_asd_uA = np.asarray(np.loadtxt(noise_path), dtype=float)
     sim_rate = float(candidate["rate"])
-    sim_freq = np.arange(len(sim_asd)) * (sim_rate / 2.0) / len(sim_asd)
-    return np.interp(fit_freq, sim_freq, normalize_at(sim_freq, sim_asd))
+    sim_freq = np.arange(len(sim_asd_uA)) * (sim_rate / 2.0) / len(sim_asd_uA)
+    normalized = np.interp(
+        fit_freq,
+        sim_freq,
+        normalize_at(sim_freq, sim_asd_uA),
+    )
+    reference_asd_A = float(
+        np.interp(ABSOLUTE_ASD_REFERENCE_HZ, sim_freq, sim_asd_uA)
+        * PRODUCTION_ASD_UA_TO_A
+    )
+    return normalized, reference_asd_A
 
 
 def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
@@ -751,10 +846,11 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
 def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
     """Target-case search box derived from the frozen proxy envelope.
 
-    T_bath and R are not fitted here: T_bath is fixed to the 215 mK target
-    setpoint and R is fixed by the same-campaign IV conversion for each R_SH
-    branch.  The remaining parameters cover the stable target-case region
-    already exercised by the repository's adaptive/correlated searches.
+    R is fixed by the same-campaign IV conversion for each R_SH branch.
+    T_bath is allowed a small offset around the 215 mK setpoint, while T_c is
+    kept inside the independent nearby-run RT envelope.  The remaining
+    parameters cover the stable target-case region already exercised by the
+    repository's adaptive/correlated searches.
     """
 
     sensitivity = envelope["sensitivity_reference"]
@@ -854,6 +950,46 @@ def encode(candidate: dict, keys, bounds):
     ], dtype=float)
 
 
+def parameter_boundary_diagnostics(
+    candidate: dict,
+    keys,
+    bounds: dict,
+    near_fraction: float = 0.01,
+) -> dict:
+    """Report where each fitted parameter lands inside its configured bound."""
+
+    diagnostics = {}
+    for key in keys:
+        bound = bounds[key]
+        value = float(candidate[key])
+        if bound.logarithmic:
+            value_t = np.log10(value)
+            lower_t = np.log10(bound.lower)
+            upper_t = np.log10(bound.upper)
+        else:
+            value_t = value
+            lower_t = float(bound.lower)
+            upper_t = float(bound.upper)
+        span = upper_t - lower_t
+        position = (value_t - lower_t) / span if span > 0.0 else 0.5
+        position = float(np.clip(position, 0.0, 1.0))
+        lower_distance = position
+        upper_distance = 1.0 - position
+        nearest = "lower" if lower_distance <= upper_distance else "upper"
+        nearest_distance = min(lower_distance, upper_distance)
+        diagnostics[key] = {
+            "value": value,
+            "position_fraction": position,
+            "distance_to_lower_fraction": lower_distance,
+            "distance_to_upper_fraction": upper_distance,
+            "nearest_bound": nearest,
+            "distance_to_nearest_bound_fraction": nearest_distance,
+            "within_1pct_of_bound": bool(nearest_distance <= near_fraction),
+            "logarithmic_position": bool(bound.logarithmic),
+        }
+    return diagnostics
+
+
 def g_tes_bath_from_joule_power(
     joule_power_w: float,
     t_c: float,
@@ -939,11 +1075,16 @@ def apply_post_filter_white_fraction(candidate: dict) -> float:
 def deterministic_simulated_spectrum(
     candidate: dict,
     fit_freq: np.ndarray,
-) -> np.ndarray:
-    """Expected normalized post-analysis ASD without finite-record Monte Carlo."""
+) -> tuple[np.ndarray, float]:
+    """Return normalized shape and absolute 1-kHz ASD in A/rtHz."""
 
     frequency = np.unique(
-        np.concatenate((np.asarray([1_000.0]), np.asarray(fit_freq, dtype=float)))
+        np.concatenate(
+            (
+                np.asarray([ABSOLUTE_ASD_REFERENCE_HZ]),
+                np.asarray(fit_freq, dtype=float),
+            )
+        )
     )
     rate = float(candidate["rate"])
     cutoff_hz = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
@@ -966,8 +1107,15 @@ def deterministic_simulated_spectrum(
         rate,
         cutoff_hz=SIM_ANALYSIS_CUTOFF_HZ,
     )
-    normalized = normalize_at(frequency, expected)
-    return np.interp(fit_freq, frequency, normalized)
+    normalized = normalize_at(
+        frequency,
+        expected,
+        reference_hz=ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    reference_asd_A = float(
+        np.interp(ABSOLUTE_ASD_REFERENCE_HZ, frequency, expected)
+    )
+    return np.interp(fit_freq, frequency, normalized), reference_asd_A
 
 
 def optimize_case(
@@ -977,6 +1125,7 @@ def optimize_case(
     envelope: dict,
     fit_freq: np.ndarray,
     target: np.ndarray,
+    target_reference_asd_A: float,
     experimental_rate: float,
     experimental_samples: int,
     post_filter_white_asd: float,
@@ -1109,8 +1258,18 @@ def optimize_case(
             return score
 
         try:
-            model = deterministic_simulated_spectrum(candidate, fit_freq)
-            score = fit_score(model, target, fit_freq, args)
+            model, model_reference_asd_A = deterministic_simulated_spectrum(
+                candidate,
+                fit_freq,
+            )
+            score = combined_fit_score(
+                model,
+                target,
+                fit_freq,
+                model_reference_asd_A,
+                target_reference_asd_A,
+                args,
+            )
             print(
                 f"R_SH={shunt_resistance_ohm * 1e3:.4f} mOhm, "
                 f"evaluation {evaluation_count:4d}: {score:.6g}"
@@ -1203,7 +1362,7 @@ def optimize_case(
 
     print("\nStage 3/3: robust residual least_squares")
     ls_cache = {}
-    least_squares_residual_size = len(fit_freq) + len(
+    least_squares_residual_size = 1 + len(fit_freq) + len(
         band_mean_residuals(
             np.zeros(len(fit_freq), dtype=float),
             fit_freq,
@@ -1247,14 +1406,26 @@ def optimize_case(
             return residual_vector
 
         try:
-            model = deterministic_simulated_spectrum(candidate, fit_freq)
-            residual_vector = weighted_residual_vector(
+            model, model_reference_asd_A = deterministic_simulated_spectrum(
+                candidate,
+                fit_freq,
+            )
+            residual_vector = combined_residual_vector(
                 model,
                 target,
                 fit_freq,
+                model_reference_asd_A,
+                target_reference_asd_A,
                 args,
             )
-            score = fit_score(model, target, fit_freq, args)
+            score = combined_fit_score(
+                model,
+                target,
+                fit_freq,
+                model_reference_asd_A,
+                target_reference_asd_A,
+                args,
+            )
             if score < best_score:
                 best_score = score
                 best_candidate = candidate.copy()
@@ -1300,18 +1471,23 @@ def optimize_case(
     validation_candidate["rate"] = float(experimental_rate)
     write_json_atomically(work_input_path, validation_candidate)
     run_post(args.timeout, work_dir, work_noise_path)
-    finite_model = simulated_spectrum(
+    finite_model, finite_reference_asd_A = simulated_spectrum(
         validation_candidate,
         fit_freq,
         work_noise_path,
     )
-    finite_validation_score = fit_score(
+    finite_validation_score = combined_fit_score(
         finite_model,
         target,
         fit_freq,
+        finite_reference_asd_A,
+        target_reference_asd_A,
         args,
     )
-    deterministic_best_model = deterministic_simulated_spectrum(
+    (
+        deterministic_best_model,
+        deterministic_reference_asd_A,
+    ) = deterministic_simulated_spectrum(
         best_candidate.copy(),
         fit_freq,
     )
@@ -1327,6 +1503,33 @@ def optimize_case(
         fit_freq,
         args,
     )
+    absolute_asd_diagnostics = {
+        "reference_Hz": float(ABSOLUTE_ASD_REFERENCE_HZ),
+        "weight": float(args.absolute_asd_weight),
+        "measurement_A_rtHz": float(target_reference_asd_A),
+        "measurement_pA_rtHz": float(
+            target_reference_asd_A / MEASURED_ASD_PA_TO_A
+        ),
+        "deterministic_model_A_rtHz": float(deterministic_reference_asd_A),
+        "deterministic_model_pA_rtHz": float(
+            deterministic_reference_asd_A / MEASURED_ASD_PA_TO_A
+        ),
+        "deterministic_model_over_measurement": float(
+            deterministic_reference_asd_A / target_reference_asd_A
+        ),
+        "finite_model_A_rtHz": float(finite_reference_asd_A),
+        "finite_model_pA_rtHz": float(
+            finite_reference_asd_A / MEASURED_ASD_PA_TO_A
+        ),
+        "finite_model_over_measurement": float(
+            finite_reference_asd_A / target_reference_asd_A
+        ),
+    }
+    boundary_diagnostics = parameter_boundary_diagnostics(
+        best_candidate,
+        keys,
+        bounds,
+    )
 
     print("\nObjective evaluations:", evaluation_count)
     print("Stability rejections:", stability_rejection_count)
@@ -1337,6 +1540,10 @@ def optimize_case(
     print(json.dumps(deterministic_band_diagnostics, indent=2))
     print("Full-record band diagnostics:")
     print(json.dumps(finite_band_diagnostics, indent=2))
+    print("Absolute ASD diagnostics:")
+    print(json.dumps(absolute_asd_diagnostics, indent=2))
+    print("Parameter boundary diagnostics:")
+    print(json.dumps(boundary_diagnostics, indent=2))
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
     print(
@@ -1353,6 +1560,8 @@ def optimize_case(
         "finite_validation_score": float(finite_validation_score),
         "deterministic_band_diagnostics": deterministic_band_diagnostics,
         "finite_band_diagnostics": finite_band_diagnostics,
+        "absolute_asd_diagnostics": absolute_asd_diagnostics,
+        "parameter_boundary_diagnostics": boundary_diagnostics,
         "least_squares": {
             "success": bool(least_squares_result.success),
             "status": int(least_squares_result.status),
@@ -1419,6 +1628,8 @@ def main():
         raise ValueError("--robust-delta-dex must be non-negative")
     if args.fit_points < 16:
         raise ValueError("--fit-points must be at least 16")
+    if args.absolute_asd_weight < 0.0:
+        raise ValueError("--absolute-asd-weight must be non-negative")
 
     original = load_json(INPUT_PATH)
     reference, envelope, reference_source = target_case_reference(
@@ -1460,9 +1671,9 @@ def main():
     print("backup:", backup)
     print("target-case reference:", reference_source)
     print(
-        "fixed acquisition:",
+        "fixed acquisition and calibration:",
         {
-            "T_bath_K": reference["T_bath"],
+            "T_bath_nominal_K": reference["T_bath"],
             "rate_Hz": experimental_rate,
             "samples": experimental_samples,
             "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
@@ -1475,7 +1686,7 @@ def main():
             "analysis_bessel_cutoff_Hz": SIM_ANALYSIS_CUTOFF_HZ,
         },
     )
-    fit_freq, target = target_spectrum(args)
+    fit_freq, target, target_reference_asd_A = target_spectrum(args)
 
     try:
         shunt_values_ohm = np.linspace(
@@ -1503,6 +1714,7 @@ def main():
                 envelope,
                 fit_freq,
                 target,
+                target_reference_asd_A,
                 experimental_rate,
                 experimental_samples,
                 post_filter_white_asd,
@@ -1570,11 +1782,18 @@ def main():
                 "robust_delta_dex": float(args.robust_delta_dex),
                 "points": int(args.fit_points),
                 "loss": (
-                    "band-balanced robust log10(model/measurement) residual; "
-                    "equalized broad bands plus high-frequency ramp and "
-                    "broad-band mean-ratio penalty"
+                    "band-balanced robust normalized log10(model/measurement) "
+                    "shape residual; equalized broad bands plus high-frequency "
+                    "ramp and broad-band mean-ratio penalty; plus one absolute "
+                    "ASD level anchor at 1 kHz"
                 ),
                 "band_mean_penalty": float(FIT_BAND_MEAN_PENALTY),
+                "absolute_asd_reference_Hz": float(
+                    ABSOLUTE_ASD_REFERENCE_HZ
+                ),
+                "absolute_asd_weight": float(args.absolute_asd_weight),
+                "measurement_modelnoise_units": "pA/rtHz",
+                "internal_absolute_asd_units": "A/rtHz",
                 "bands_Hz": [
                     {
                         "min": float(low),
