@@ -52,6 +52,50 @@ STYCAST_SOURCE_CLASS_INDICES = {
 }
 
 THERMAL_LINK_MODEL_STYCAST = "stycast_node"
+ELECTRICAL_LINK_MODEL_RC = "rl_rc_relaxation"
+
+RC_SOURCE_NAMES = (
+    "johnson_tes1",
+    "johnson_load1",
+    "johnson_rc1",
+    "phonon_tes1_bath",
+    "phonon_tes1_absorber_effective",
+    "phonon_tes2_absorber_effective",
+    "phonon_tes2_bath",
+    "johnson_rc2",
+    "johnson_load2",
+    "johnson_tes2",
+)
+RC_SOURCE_CLASS_INDICES = {
+    "TES_Johnson": (0, 9),
+    "load_Johnson": (1, 8),
+    "RC_branch_Johnson": (2, 7),
+    "TES_bath_TFN": (3, 6),
+    "TES_absorber_TFN": (4, 5),
+}
+
+STYCAST_RC_SOURCE_NAMES = (
+    "johnson_tes1",
+    "johnson_load1",
+    "johnson_rc1",
+    "phonon_tes1_bath",
+    "phonon_tes1_stycast",
+    "phonon_stycast1_absorber",
+    "phonon_stycast2_absorber",
+    "phonon_tes2_stycast",
+    "phonon_tes2_bath",
+    "johnson_rc2",
+    "johnson_load2",
+    "johnson_tes2",
+)
+STYCAST_RC_SOURCE_CLASS_INDICES = {
+    "TES_Johnson": (0, 11),
+    "load_Johnson": (1, 10),
+    "RC_branch_Johnson": (2, 9),
+    "TES_bath_TFN": (3, 8),
+    "TES_Stycast_TFN": (4, 7),
+    "Stycast_absorber_TFN": (5, 6),
+}
 
 
 def tes_johnson_voltage_asd(
@@ -90,6 +134,44 @@ def _use_stycast_node(parameters: dict) -> bool:
     return str(parameters.get("thermal_link_model", "effective")).lower() == THERMAL_LINK_MODEL_STYCAST
 
 
+def _use_rc_relaxation(parameters: dict) -> bool:
+    return (
+        str(parameters.get("electrical_link_model", "rl")).lower()
+        == ELECTRICAL_LINK_MODEL_RC
+    )
+
+
+def _rc_values(parameters: dict) -> dict:
+    if not _use_rc_relaxation(parameters):
+        return {}
+    resistance = float(parameters["R_rc"])
+    corner_hz = float(parameters["f_rc_Hz"])
+    if not math.isfinite(resistance) or resistance <= 0.0:
+        raise ValueError("R_rc must be positive and finite")
+    if not math.isfinite(corner_hz) or corner_hz <= 0.0:
+        raise ValueError("f_rc_Hz must be positive and finite")
+    tau = 1.0 / (2.0 * math.pi * corner_hz)
+    capacitance = tau / resistance
+    return {
+        "R_rc_ohm": resistance,
+        "f_rc_Hz": corner_hz,
+        "tau_rc_s": tau,
+        "C_rc_equivalent_F": capacitance,
+    }
+
+
+def _source_layout(parameters: dict):
+    stycast = _use_stycast_node(parameters)
+    rc = _use_rc_relaxation(parameters)
+    if stycast and rc:
+        return STYCAST_RC_SOURCE_NAMES, STYCAST_RC_SOURCE_CLASS_INDICES, 8
+    if stycast:
+        return STYCAST_SOURCE_NAMES, STYCAST_SOURCE_CLASS_INDICES, 6
+    if rc:
+        return RC_SOURCE_NAMES, RC_SOURCE_CLASS_INDICES, 6
+    return SOURCE_NAMES, SOURCE_CLASS_INDICES, 4
+
+
 def _operating_values(parameters: dict) -> dict:
     c_tes = float(parameters["C_tes"])
     g_tes_bath = float(parameters["G_tes-bath"])
@@ -106,6 +188,7 @@ def _operating_values(parameters: dict) -> dict:
         / (exponent * resistance)
     )
     tau_el = inductance / (load_resistance + resistance * (1.0 + beta))
+    rc_values = _rc_values(parameters)
     loop_gain = alpha * current**2 * resistance / (g_tes_bath * t_c)
     tau_i = c_tes / ((1.0 - loop_gain) * g_tes_bath)
 
@@ -137,6 +220,10 @@ def _operating_values(parameters: dict) -> dict:
         "tau_i_s": tau_i,
         "G_eff_W_per_K": g_eff,
         "joule_power_W": current**2 * resistance,
+        "electrical_link_model": (
+            ELECTRICAL_LINK_MODEL_RC if _use_rc_relaxation(parameters) else "rl"
+        ),
+        **rc_values,
         **extra,
     }
 
@@ -162,36 +249,82 @@ def operating_point(parameters: dict) -> dict:
 
 
 def linearized_matrix(parameters: dict, frequency_hz: float) -> np.ndarray:
-    """Return the frequency-domain matrix for the selected thermal model."""
+    """Return the frequency-domain matrix for the selected model.
+
+    The optional rl_rc_relaxation electrical model keeps the TES alpha/beta
+    resistance response instantaneous. It only augments each load branch with
+    one passive relaxation voltage state obeying
+
+        tau_rc * dV_rc/dt + V_rc = R_rc * dI + e_rc,
+
+    equivalent to a series two-terminal impedance
+    Z_rc(s) = R_rc / (1 + s*tau_rc), i.e. a parallel R-C element.
+    """
+
     c_abs = float(parameters["C_abs"])
     c_tes = float(parameters["C_tes"])
     g_tes_bath = float(parameters["G_tes-bath"])
     resistance = float(parameters["R"])
+    load_resistance = float(parameters["R_l"])
     beta = float(parameters["beta"])
     inductance = float(parameters["L"])
     values = _operating_values(parameters)
     current = values["current_A"]
-    tau_el = values["tau_el_s"]
     loop_gain = values["loop_gain"]
     tau_i = values["tau_i_s"]
     omega = 2.0 * math.pi * float(frequency_hz)
+    electrical_rate = (
+        load_resistance + resistance * (1.0 + beta)
+    ) / inductance
+    thermal_electrical_coupling = (
+        loop_gain * g_tes_bath / (current * inductance)
+    )
+    rc = _use_rc_relaxation(parameters)
 
     if not _use_stycast_node(parameters):
         g_eff = values["G_eff_W_per_K"]
-        matrix = np.zeros((5, 5), dtype=np.complex128)
-        matrix[0, 0] = 1.0 / tau_el + 1j * omega
-        matrix[0, 1] = loop_gain * g_tes_bath / (current * inductance)
-        matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
-        matrix[1, 1] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
-        matrix[1, 2] = -g_eff / c_tes
-        matrix[2, 1] = -g_eff / c_abs
-        matrix[2, 2] = 2.0 * g_eff / c_abs + 1j * omega
-        matrix[2, 3] = -g_eff / c_abs
-        matrix[3, 2] = -g_eff / c_tes
-        matrix[3, 3] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
-        matrix[3, 4] = -current * resistance * (2.0 + beta) / c_tes
-        matrix[4, 3] = loop_gain * g_tes_bath / (current * inductance)
-        matrix[4, 4] = 1.0 / tau_el + 1j * omega
+        if not rc:
+            matrix = np.zeros((5, 5), dtype=np.complex128)
+            matrix[0, 0] = electrical_rate + 1j * omega
+            matrix[0, 1] = thermal_electrical_coupling
+            matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
+            matrix[1, 1] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
+            matrix[1, 2] = -g_eff / c_tes
+            matrix[2, 1] = -g_eff / c_abs
+            matrix[2, 2] = 2.0 * g_eff / c_abs + 1j * omega
+            matrix[2, 3] = -g_eff / c_abs
+            matrix[3, 2] = -g_eff / c_tes
+            matrix[3, 3] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
+            matrix[3, 4] = -current * resistance * (2.0 + beta) / c_tes
+            matrix[4, 3] = thermal_electrical_coupling
+            matrix[4, 4] = electrical_rate + 1j * omega
+            return matrix
+
+        # I1, Vrc1, TES1, absorber center, TES2, Vrc2, I2.
+        r_rc = values["R_rc_ohm"]
+        tau_rc = values["tau_rc_s"]
+        matrix = np.zeros((7, 7), dtype=np.complex128)
+        matrix[0, 0] = electrical_rate + 1j * omega
+        matrix[0, 1] = 1.0 / inductance
+        matrix[0, 2] = thermal_electrical_coupling
+        matrix[1, 0] = -r_rc / tau_rc
+        matrix[1, 1] = 1.0 / tau_rc + 1j * omega
+
+        matrix[2, 0] = -current * resistance * (2.0 + beta) / c_tes
+        matrix[2, 2] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
+        matrix[2, 3] = -g_eff / c_tes
+        matrix[3, 2] = -g_eff / c_abs
+        matrix[3, 3] = 2.0 * g_eff / c_abs + 1j * omega
+        matrix[3, 4] = -g_eff / c_abs
+        matrix[4, 3] = -g_eff / c_tes
+        matrix[4, 4] = 1.0 / tau_i + g_eff / c_tes + 1j * omega
+        matrix[4, 6] = -current * resistance * (2.0 + beta) / c_tes
+
+        matrix[5, 5] = 1.0 / tau_rc + 1j * omega
+        matrix[5, 6] = -r_rc / tau_rc
+        matrix[6, 4] = thermal_electrical_coupling
+        matrix[6, 5] = 1.0 / inductance
+        matrix[6, 6] = electrical_rate + 1j * omega
         return matrix
 
     c_stycast = float(parameters["C_stycast"])
@@ -200,33 +333,71 @@ def linearized_matrix(parameters: dict, frequency_hz: float) -> np.ndarray:
     g_tes_stycast = values["G_tes_stycast_W_per_K"]
     g_stycast_center = values["G_stycast_center_W_per_K"]
 
-    # I1, TES1, Stycast1, absorber center, Stycast2, TES2, I2.
-    matrix = np.zeros((7, 7), dtype=np.complex128)
-    matrix[0, 0] = 1.0 / tau_el + 1j * omega
-    matrix[0, 1] = loop_gain * g_tes_bath / (current * inductance)
+    if not rc:
+        # I1, TES1, Stycast1, absorber center, Stycast2, TES2, I2.
+        matrix = np.zeros((7, 7), dtype=np.complex128)
+        matrix[0, 0] = electrical_rate + 1j * omega
+        matrix[0, 1] = thermal_electrical_coupling
 
-    matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
-    matrix[1, 1] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
-    matrix[1, 2] = -g_tes_stycast / c_tes
+        matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
+        matrix[1, 1] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
+        matrix[1, 2] = -g_tes_stycast / c_tes
 
-    matrix[2, 1] = -g_tes_stycast / c_stycast
-    matrix[2, 2] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
-    matrix[2, 3] = -g_stycast_center / c_stycast
+        matrix[2, 1] = -g_tes_stycast / c_stycast
+        matrix[2, 2] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
+        matrix[2, 3] = -g_stycast_center / c_stycast
 
-    matrix[3, 2] = -g_stycast_center / c_abs
-    matrix[3, 3] = 2.0 * g_stycast_center / c_abs + 1j * omega
-    matrix[3, 4] = -g_stycast_center / c_abs
+        matrix[3, 2] = -g_stycast_center / c_abs
+        matrix[3, 3] = 2.0 * g_stycast_center / c_abs + 1j * omega
+        matrix[3, 4] = -g_stycast_center / c_abs
 
-    matrix[4, 3] = -g_stycast_center / c_stycast
-    matrix[4, 4] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
-    matrix[4, 5] = -g_tes_stycast / c_stycast
+        matrix[4, 3] = -g_stycast_center / c_stycast
+        matrix[4, 4] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
+        matrix[4, 5] = -g_tes_stycast / c_stycast
 
-    matrix[5, 4] = -g_tes_stycast / c_tes
-    matrix[5, 5] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
-    matrix[5, 6] = -current * resistance * (2.0 + beta) / c_tes
+        matrix[5, 4] = -g_tes_stycast / c_tes
+        matrix[5, 5] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
+        matrix[5, 6] = -current * resistance * (2.0 + beta) / c_tes
 
-    matrix[6, 5] = loop_gain * g_tes_bath / (current * inductance)
-    matrix[6, 6] = 1.0 / tau_el + 1j * omega
+        matrix[6, 5] = thermal_electrical_coupling
+        matrix[6, 6] = electrical_rate + 1j * omega
+        return matrix
+
+    # I1, Vrc1, TES1, Stycast1, absorber center, Stycast2, TES2, Vrc2, I2.
+    r_rc = values["R_rc_ohm"]
+    tau_rc = values["tau_rc_s"]
+    matrix = np.zeros((9, 9), dtype=np.complex128)
+    matrix[0, 0] = electrical_rate + 1j * omega
+    matrix[0, 1] = 1.0 / inductance
+    matrix[0, 2] = thermal_electrical_coupling
+    matrix[1, 0] = -r_rc / tau_rc
+    matrix[1, 1] = 1.0 / tau_rc + 1j * omega
+
+    matrix[2, 0] = -current * resistance * (2.0 + beta) / c_tes
+    matrix[2, 2] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
+    matrix[2, 3] = -g_tes_stycast / c_tes
+
+    matrix[3, 2] = -g_tes_stycast / c_stycast
+    matrix[3, 3] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
+    matrix[3, 4] = -g_stycast_center / c_stycast
+
+    matrix[4, 3] = -g_stycast_center / c_abs
+    matrix[4, 4] = 2.0 * g_stycast_center / c_abs + 1j * omega
+    matrix[4, 5] = -g_stycast_center / c_abs
+
+    matrix[5, 4] = -g_stycast_center / c_stycast
+    matrix[5, 5] = (g_tes_stycast + g_stycast_center) / c_stycast + 1j * omega
+    matrix[5, 6] = -g_tes_stycast / c_stycast
+
+    matrix[6, 5] = -g_tes_stycast / c_tes
+    matrix[6, 6] = 1.0 / tau_i + g_tes_stycast / c_tes + 1j * omega
+    matrix[6, 8] = -current * resistance * (2.0 + beta) / c_tes
+
+    matrix[7, 7] = 1.0 / tau_rc + 1j * omega
+    matrix[7, 8] = -r_rc / tau_rc
+    matrix[8, 6] = thermal_electrical_coupling
+    matrix[8, 7] = 1.0 / inductance
+    matrix[8, 8] = electrical_rate + 1j * omega
     return matrix
 
 def source_matrix(parameters: dict) -> np.ndarray:
@@ -243,6 +414,7 @@ def source_matrix(parameters: dict) -> np.ndarray:
     excess_m = float(parameters.get("excess_johnson_M", 0.0))
     values = _operating_values(parameters)
     current = values["current_A"]
+    rc = _use_rc_relaxation(parameters)
 
     tes_johnson = tes_johnson_voltage_asd(
         t_c,
@@ -252,23 +424,46 @@ def source_matrix(parameters: dict) -> np.ndarray:
     )
     load_johnson = math.sqrt(4.0 * K_B * t_bath * load_resistance)
     tes_bath_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_tes_bath * F_LINK)
+    if rc:
+        rc_johnson = math.sqrt(
+            4.0 * K_B * t_bath * values["R_rc_ohm"]
+        )
+        tau_rc = values["tau_rc_s"]
 
     if not _use_stycast_node(parameters):
         g_eff = values["G_eff_W_per_K"]
         effective_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_eff * F_LINK)
-        sources = np.zeros((5, 8), dtype=np.complex128)
+        if not rc:
+            sources = np.zeros((5, 8), dtype=np.complex128)
+            sources[0, 0] = -tes_johnson / inductance
+            sources[1, 0] = current * tes_johnson / c_tes
+            sources[0, 1] = load_johnson / inductance
+            sources[1, 2] = tes_bath_tfn / c_tes
+            sources[1, 3] = effective_tfn / c_tes
+            sources[2, 3] = -effective_tfn / c_abs
+            sources[2, 4] = -effective_tfn / c_abs
+            sources[3, 4] = effective_tfn / c_tes
+            sources[3, 5] = tes_bath_tfn / c_tes
+            sources[4, 6] = load_johnson / inductance
+            sources[4, 7] = -tes_johnson / inductance
+            sources[3, 7] = current * tes_johnson / c_tes
+            return sources
+
+        sources = np.zeros((7, 10), dtype=np.complex128)
         sources[0, 0] = -tes_johnson / inductance
-        sources[1, 0] = current * tes_johnson / c_tes
+        sources[2, 0] = current * tes_johnson / c_tes
         sources[0, 1] = load_johnson / inductance
-        sources[1, 2] = tes_bath_tfn / c_tes
-        sources[1, 3] = effective_tfn / c_tes
-        sources[2, 3] = -effective_tfn / c_abs
-        sources[2, 4] = -effective_tfn / c_abs
-        sources[3, 4] = effective_tfn / c_tes
-        sources[3, 5] = tes_bath_tfn / c_tes
-        sources[4, 6] = load_johnson / inductance
-        sources[4, 7] = -tes_johnson / inductance
-        sources[3, 7] = current * tes_johnson / c_tes
+        sources[1, 2] = rc_johnson / tau_rc
+        sources[2, 3] = tes_bath_tfn / c_tes
+        sources[2, 4] = effective_tfn / c_tes
+        sources[3, 4] = -effective_tfn / c_abs
+        sources[3, 5] = -effective_tfn / c_abs
+        sources[4, 5] = effective_tfn / c_tes
+        sources[4, 6] = tes_bath_tfn / c_tes
+        sources[5, 7] = rc_johnson / tau_rc
+        sources[6, 8] = load_johnson / inductance
+        sources[6, 9] = -tes_johnson / inductance
+        sources[4, 9] = current * tes_johnson / c_tes
         return sources
 
     c_stycast = float(parameters["C_stycast"])
@@ -277,28 +472,45 @@ def source_matrix(parameters: dict) -> np.ndarray:
     tes_stycast_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_tes_stycast * F_LINK)
     stycast_abs_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_stycast_center * F_LINK)
 
-    sources = np.zeros((7, 10), dtype=np.complex128)
+    if not rc:
+        sources = np.zeros((7, 10), dtype=np.complex128)
+        sources[0, 0] = -tes_johnson / inductance
+        sources[1, 0] = current * tes_johnson / c_tes
+        sources[0, 1] = load_johnson / inductance
+        sources[1, 2] = tes_bath_tfn / c_tes
+        sources[1, 3] = tes_stycast_tfn / c_tes
+        sources[2, 3] = -tes_stycast_tfn / c_stycast
+        sources[2, 4] = stycast_abs_tfn / c_stycast
+        sources[3, 4] = -stycast_abs_tfn / c_abs
+        sources[3, 5] = -stycast_abs_tfn / c_abs
+        sources[4, 5] = stycast_abs_tfn / c_stycast
+        sources[4, 6] = -tes_stycast_tfn / c_stycast
+        sources[5, 6] = tes_stycast_tfn / c_tes
+        sources[5, 7] = tes_bath_tfn / c_tes
+        sources[6, 8] = load_johnson / inductance
+        sources[6, 9] = -tes_johnson / inductance
+        sources[5, 9] = current * tes_johnson / c_tes
+        return sources
+
+    sources = np.zeros((9, 12), dtype=np.complex128)
     sources[0, 0] = -tes_johnson / inductance
-    sources[1, 0] = current * tes_johnson / c_tes
+    sources[2, 0] = current * tes_johnson / c_tes
     sources[0, 1] = load_johnson / inductance
-    sources[1, 2] = tes_bath_tfn / c_tes
-
-    sources[1, 3] = tes_stycast_tfn / c_tes
-    sources[2, 3] = -tes_stycast_tfn / c_stycast
-
-    sources[2, 4] = stycast_abs_tfn / c_stycast
-    sources[3, 4] = -stycast_abs_tfn / c_abs
-
-    sources[3, 5] = -stycast_abs_tfn / c_abs
-    sources[4, 5] = stycast_abs_tfn / c_stycast
-
-    sources[4, 6] = -tes_stycast_tfn / c_stycast
-    sources[5, 6] = tes_stycast_tfn / c_tes
-
-    sources[5, 7] = tes_bath_tfn / c_tes
-    sources[6, 8] = load_johnson / inductance
-    sources[6, 9] = -tes_johnson / inductance
-    sources[5, 9] = current * tes_johnson / c_tes
+    sources[1, 2] = rc_johnson / tau_rc
+    sources[2, 3] = tes_bath_tfn / c_tes
+    sources[2, 4] = tes_stycast_tfn / c_tes
+    sources[3, 4] = -tes_stycast_tfn / c_stycast
+    sources[3, 5] = stycast_abs_tfn / c_stycast
+    sources[4, 5] = -stycast_abs_tfn / c_abs
+    sources[4, 6] = -stycast_abs_tfn / c_abs
+    sources[5, 6] = stycast_abs_tfn / c_stycast
+    sources[5, 7] = -tes_stycast_tfn / c_stycast
+    sources[6, 7] = tes_stycast_tfn / c_tes
+    sources[6, 8] = tes_bath_tfn / c_tes
+    sources[7, 9] = rc_johnson / tau_rc
+    sources[8, 10] = load_johnson / inductance
+    sources[8, 11] = -tes_johnson / inductance
+    sources[6, 11] = current * tes_johnson / c_tes
     return sources
 
 def noise_components(parameters: dict, frequencies_hz) -> dict:
@@ -308,9 +520,9 @@ def noise_components(parameters: dict, frequencies_hz) -> dict:
         raise ValueError(point["reason"])
 
     stycast = _use_stycast_node(parameters)
-    source_names = STYCAST_SOURCE_NAMES if stycast else SOURCE_NAMES
-    source_class_indices = STYCAST_SOURCE_CLASS_INDICES if stycast else SOURCE_CLASS_INDICES
-    ch1_state_index = 6 if stycast else 4
+    source_names, source_class_indices, ch1_state_index = _source_layout(
+        parameters
+    )
 
     frequencies = np.asarray(frequencies_hz, dtype=float)
     sources = source_matrix(parameters)
@@ -360,5 +572,8 @@ def noise_components(parameters: dict, frequencies_hz) -> dict:
         "operating_point": point,
         "F_LINK": F_LINK,
         "thermal_link_model": THERMAL_LINK_MODEL_STYCAST if stycast else "effective",
+        "electrical_link_model": (
+            ELECTRICAL_LINK_MODEL_RC if _use_rc_relaxation(parameters) else "rl"
+        ),
     }
 
