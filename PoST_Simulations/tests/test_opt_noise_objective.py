@@ -181,3 +181,75 @@ def test_beta_sweep_keeps_other_parameters_fixed_and_includes_best_beta() -> Non
     assert matching["shape_score"] == pytest.approx(0.0, abs=1.0e-12)
     assert "40000-100000_Hz" in matching["bands"]
     assert "100000-200000_Hz" in matching["bands"]
+
+
+
+def test_johnson_source_scale_diagnostic_recovers_full_model_at_scale_one() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    curves = optimizer.post_analysis_source_class_asd(candidate, fit_freq)
+    target = optimizer.normalize_at(
+        fit_freq,
+        curves["total_asd_A_rtHz"],
+        reference_hz=optimizer.ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.johnson_source_scale_diagnostics(
+        curves,
+        target,
+        fit_freq,
+        args,
+    )
+    scales = [row["TES_Johnson_asd_scale"] for row in result["rows"]]
+    assert scales == pytest.approx(np.linspace(0.0, 1.0, 11))
+    best = result["best_global_shape_score_row"]
+    assert best["TES_Johnson_asd_scale"] == pytest.approx(1.0)
+    assert best["shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert result["best_scale_by_band_mean_ratio"][
+        "100000-200000_Hz"
+    ]["TES_Johnson_asd_scale"] == pytest.approx(1.0)
+
+
+def test_johnson_source_scale_zero_matches_source_ablation_total() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    curves = optimizer.post_analysis_source_class_asd(candidate, fit_freq)
+    target = optimizer.normalize_at(
+        fit_freq,
+        curves["total_asd_A_rtHz"],
+        reference_hz=optimizer.ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    scale_result = optimizer.johnson_source_scale_diagnostics(
+        curves,
+        target,
+        fit_freq,
+        args,
+    )
+    ablation_result = optimizer.source_ablation_diagnostics(
+        curves,
+        target,
+        fit_freq,
+        args,
+    )
+    zero = next(
+        row for row in scale_result["rows"]
+        if row["TES_Johnson_asd_scale"] == 0.0
+    )
+    assert zero["shape_score"] == pytest.approx(
+        ablation_result["remove_one_source_class"]["TES_Johnson"][
+            "shape_score"
+        ]
+    )
