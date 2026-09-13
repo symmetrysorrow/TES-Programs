@@ -33,10 +33,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import differential_evolution, least_squares, minimize
 
-from lib.tes_noise_model import operating_point as tes_operating_point
+from lib.tes_noise_model import (
+    linearized_matrix as tes_linearized_matrix,
+    noise_components as tes_noise_components,
+    operating_point as tes_operating_point,
+)
 from subScript.noise_measurement_model import (
     HARDWARE_BESSEL_CUTOFF_HZ,
     analysis_filter_magnitude,
+    hardware_filter_magnitude,
     hardware_sampled_asd,
 )
 
@@ -83,6 +88,17 @@ ABSOLUTE_ASD_REFERENCE_HZ = 1_000.0
 ABSOLUTE_ASD_WEIGHT_DEFAULT = 0.0
 MEASURED_ASD_PA_TO_A = 1.0e-12
 PRODUCTION_ASD_UA_TO_A = 1.0e-6
+SOURCE_DIAGNOSTIC_FREQUENCIES_HZ = (
+    1_000.0,
+    5_000.0,
+    10_000.0,
+    20_000.0,
+    40_000.0,
+    70_000.0,
+    100_000.0,
+    150_000.0,
+    200_000.0,
+)
 FIT_BANDS_HZ = (
     (1_000.0, 5_000.0, 1.0),
     (5_000.0, 15_000.0, 1.25),
@@ -995,6 +1011,262 @@ def parameter_boundary_diagnostics(
     return diagnostics
 
 
+def post_analysis_source_class_asd(
+    candidate: dict,
+    frequencies_hz: np.ndarray,
+) -> dict:
+    """Decompose CH0 ASD by physical source class through the full filters.
+
+    Each intrinsic source class is propagated through the same 100 kHz analog
+    Bessel, first ADC alias fold, and 10 kHz digital analysis response used by
+    the deterministic optimizer. The empirical post-filter white term is kept
+    as its own class so the PSD fractions reconstruct the full model.
+    """
+
+    frequency = np.asarray(frequencies_hz, dtype=float)
+    rate = float(candidate["rate"])
+    if np.any(frequency < 0.0) or np.any(frequency > rate / 2.0):
+        raise ValueError("source-diagnostic frequencies must lie below Nyquist")
+
+    diagnostic_candidate = candidate.copy()
+    apply_post_filter_white_fraction(diagnostic_candidate)
+    alias_frequency = rate - frequency
+    query = np.unique(np.concatenate((frequency, alias_frequency)))
+    intrinsic = tes_noise_components(diagnostic_candidate, query)
+
+    main_response = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=TARGET_HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )
+    alias_response = hardware_filter_magnitude(
+        alias_frequency,
+        cutoff_hz=TARGET_HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )
+    analysis_response = analysis_filter_magnitude(
+        frequency,
+        rate,
+        cutoff_hz=SIM_ANALYSIS_CUTOFF_HZ,
+    )
+    same_bin = np.isclose(
+        alias_frequency,
+        frequency,
+        rtol=0.0,
+        atol=max(rate, 1.0) * 1e-12,
+    )
+
+    class_asd = {}
+    for name, intrinsic_asd in intrinsic["aggregated_components_ch0"].items():
+        intrinsic_asd = np.asarray(intrinsic_asd, dtype=float)
+        main = np.interp(frequency, query, intrinsic_asd) * main_response
+        alias = np.interp(alias_frequency, query, intrinsic_asd) * alias_response
+        alias = np.where(same_bin, 0.0, alias)
+        class_asd[name] = np.sqrt(main**2 + alias**2) * analysis_response
+
+    white = float(diagnostic_candidate.get("post_filter_white_asd_A_rtHz", 0.0))
+    class_asd["post_filter_white"] = np.full_like(
+        frequency,
+        white,
+        dtype=float,
+    ) * analysis_response
+
+    reconstructed = np.sqrt(
+        np.sum(
+            np.asarray([curve**2 for curve in class_asd.values()], dtype=float),
+            axis=0,
+        )
+    )
+    detector = hardware_sampled_asd(
+        diagnostic_candidate,
+        frequency,
+        rate_hz=rate,
+        cutoff_hz=TARGET_HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )
+    expected = np.sqrt(detector**2 + white**2) * analysis_response
+    denominator = np.maximum(expected, np.finfo(float).tiny)
+    consistency = float(np.max(np.abs(reconstructed - expected) / denominator))
+
+    return {
+        "frequencies_Hz": frequency,
+        "class_asd_A_rtHz": class_asd,
+        "total_asd_A_rtHz": reconstructed,
+        "reconstruction_max_relative_error": consistency,
+    }
+
+
+def source_class_diagnostics(
+    candidate: dict,
+    fit_freq: np.ndarray,
+    args,
+) -> tuple[dict, dict]:
+    """Summarize which physical noise classes dominate the fitted spectrum."""
+
+    curves = post_analysis_source_class_asd(candidate, fit_freq)
+    frequency = curves["frequencies_Hz"]
+    class_asd = curves["class_asd_A_rtHz"]
+    total_asd = curves["total_asd_A_rtHz"]
+    total_psd = np.maximum(total_asd**2, np.finfo(float).tiny)
+    fractions = {
+        name: np.asarray(asd, dtype=float) ** 2 / total_psd
+        for name, asd in class_asd.items()
+    }
+
+    points = {}
+    for requested in SOURCE_DIAGNOSTIC_FREQUENCIES_HZ:
+        if requested < frequency[0] or requested > frequency[-1]:
+            continue
+        source_rows = {}
+        for name in class_asd:
+            asd_value = float(np.interp(requested, frequency, class_asd[name]))
+            fraction_value = float(np.interp(requested, frequency, fractions[name]))
+            source_rows[name] = {
+                "asd_A_rtHz": asd_value,
+                "psd_fraction": fraction_value,
+            }
+        dominant = max(
+            source_rows,
+            key=lambda name: source_rows[name]["psd_fraction"],
+        )
+        points[f"{requested:g}_Hz"] = {
+            "total_model_asd_A_rtHz": float(
+                np.interp(requested, frequency, total_asd)
+            ),
+            "dominant_source_class": dominant,
+            "dominant_psd_fraction": float(
+                source_rows[dominant]["psd_fraction"]
+            ),
+            "sources": source_rows,
+        }
+
+    bands = {}
+    for low, high, _weight in FIT_BANDS_HZ:
+        low_eff = max(float(low), float(args.fit_min_hz))
+        high_eff = min(float(high), float(args.fit_max_hz))
+        mask = (frequency >= low_eff) & (frequency <= high_eff)
+        if not np.any(mask):
+            continue
+        source_rows = {}
+        for name in class_asd:
+            source_rows[name] = {
+                "mean_psd_fraction": float(np.mean(fractions[name][mask])),
+                "median_psd_fraction": float(np.median(fractions[name][mask])),
+                "rms_asd_A_rtHz": float(
+                    np.sqrt(np.mean(class_asd[name][mask] ** 2))
+                ),
+            }
+        dominant = max(
+            source_rows,
+            key=lambda name: source_rows[name]["mean_psd_fraction"],
+        )
+        bands[f"{low_eff:g}-{high_eff:g}_Hz"] = {
+            "dominant_source_class": dominant,
+            "dominant_mean_psd_fraction": float(
+                source_rows[dominant]["mean_psd_fraction"]
+            ),
+            "sources": source_rows,
+        }
+
+    summary = {
+        "measurement_chain": (
+            "intrinsic source class -> fixed 100 kHz 4th-order mag Bessel "
+            "-> first ADC alias fold -> fixed 10 kHz digital analysis response"
+        ),
+        "source_classes": list(class_asd),
+        "reconstruction_max_relative_error": float(
+            curves["reconstruction_max_relative_error"]
+        ),
+        "representative_frequencies": points,
+        "fit_bands": bands,
+    }
+    return summary, curves
+
+
+def eigenmode_diagnostics(candidate: dict) -> dict:
+    """Return seven-state small-signal eigenmodes as physical frequencies."""
+
+    matrix = tes_linearized_matrix(candidate, 0.0)
+    eigenvalues = np.linalg.eigvals(-matrix)
+    rows = []
+    for value in eigenvalues:
+        real = float(np.real(value))
+        imag = float(np.imag(value))
+        magnitude = float(np.abs(value))
+        decay_rate = max(-real, 0.0)
+        rows.append(
+            {
+                "real_s_inv": real,
+                "imag_s_inv": imag,
+                "time_constant_s": (
+                    float(1.0 / decay_rate) if decay_rate > 0.0 else None
+                ),
+                "decay_corner_Hz": float(decay_rate / (2.0 * np.pi)),
+                "oscillation_Hz": float(abs(imag) / (2.0 * np.pi)),
+                "natural_frequency_Hz": float(magnitude / (2.0 * np.pi)),
+                "damping_ratio": (
+                    float(decay_rate / magnitude) if magnitude > 0.0 else None
+                ),
+            }
+        )
+    rows.sort(key=lambda row: row["natural_frequency_Hz"])
+    return {
+        "state_count": int(matrix.shape[0]),
+        "stable": bool(all(row["real_s_inv"] < 0.0 for row in rows)),
+        "modes_sorted_by_natural_frequency": rows,
+    }
+
+
+def plot_source_class_diagnostics(curves: dict, output_path: Path) -> Path:
+    """Plot best-fit source-class ASD and their fractional PSD contributions."""
+
+    frequency = np.asarray(curves["frequencies_Hz"], dtype=float)
+    class_asd = curves["class_asd_A_rtHz"]
+    total_asd = np.asarray(curves["total_asd_A_rtHz"], dtype=float)
+    total_psd = np.maximum(total_asd**2, np.finfo(float).tiny)
+
+    fig, (asd_axis, fraction_axis) = plt.subplots(
+        2,
+        1,
+        figsize=(10, 8),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 2]},
+    )
+    asd_axis.loglog(
+        frequency,
+        total_asd,
+        linewidth=2.4,
+        label="total model",
+    )
+    for name, asd in class_asd.items():
+        asd = np.asarray(asd, dtype=float)
+        asd_axis.loglog(frequency, asd, linewidth=1.4, label=name)
+        fraction_axis.semilogx(
+            frequency,
+            asd**2 / total_psd,
+            linewidth=1.4,
+            label=name,
+        )
+
+    asd_axis.set_ylabel("Model ASD [A/rtHz]")
+    asd_axis.set_title("Best-fit CH0 source-class decomposition")
+    asd_axis.grid(True, which="both", alpha=0.25)
+    asd_axis.legend(fontsize=8, ncol=2)
+    fraction_axis.set_xlabel("Frequency [Hz]")
+    fraction_axis.set_ylabel("PSD fraction")
+    fraction_axis.set_ylim(0.0, 1.05)
+    fraction_axis.grid(True, which="both", alpha=0.25)
+    fraction_axis.legend(fontsize=8, ncol=2)
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
 def g_tes_bath_from_joule_power(
     joule_power_w: float,
     t_c: float,
@@ -1535,6 +1807,16 @@ def optimize_case(
         keys,
         bounds,
     )
+    source_diagnostics, source_curves = source_class_diagnostics(
+        best_candidate.copy(),
+        fit_freq,
+        args,
+    )
+    eigenmode_summary = eigenmode_diagnostics(best_candidate.copy())
+    source_plot_path = plot_source_class_diagnostics(
+        source_curves,
+        work_dir / "source_contributions.png",
+    )
 
     print("\nObjective evaluations:", evaluation_count)
     print("Stability rejections:", stability_rejection_count)
@@ -1549,6 +1831,10 @@ def optimize_case(
     print(json.dumps(absolute_asd_diagnostics, indent=2))
     print("Parameter boundary diagnostics:")
     print(json.dumps(boundary_diagnostics, indent=2))
+    print("Source-class diagnostics:")
+    print(json.dumps(source_diagnostics, indent=2))
+    print("Eigenmode diagnostics:")
+    print(json.dumps(eigenmode_summary, indent=2))
     print("Best fitted parameters:")
     print(json.dumps({key: best_candidate[key] for key in keys}, indent=2))
     print(
@@ -1567,6 +1853,9 @@ def optimize_case(
         "finite_band_diagnostics": finite_band_diagnostics,
         "absolute_asd_diagnostics": absolute_asd_diagnostics,
         "parameter_boundary_diagnostics": boundary_diagnostics,
+        "source_class_diagnostics": source_diagnostics,
+        "eigenmode_diagnostics": eigenmode_summary,
+        "source_contribution_plot": str(source_plot_path),
         "least_squares": {
             "success": bool(least_squares_result.success),
             "status": int(least_squares_result.status),
@@ -1838,6 +2127,15 @@ def main():
             "best_case_parameters": best_parameters_for_summary(
                 best_case["best_candidate"]
             ),
+            "best_case_source_class_diagnostics": best_case[
+                "source_class_diagnostics"
+            ],
+            "best_case_eigenmode_diagnostics": best_case[
+                "eigenmode_diagnostics"
+            ],
+            "best_case_source_contribution_plot": best_case[
+                "source_contribution_plot"
+            ],
             "hardware_bessel_cutoff_Hz": float(
                 TARGET_HARDWARE_BESSEL_CUTOFF_HZ
             ),
