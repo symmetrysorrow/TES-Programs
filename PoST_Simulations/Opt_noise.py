@@ -1263,6 +1263,315 @@ def source_ablation_diagnostics(
     return result
 
 
+def required_transfer_diagnostics(
+    candidate: dict,
+    model: np.ndarray,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> tuple[dict, dict]:
+    """Infer the multiplicative ASD correction required after the current model.
+
+    The diagnostic compares the normalized measured target with the normalized
+    deterministic best-fit model.  It does not fit or apply a new transfer
+    function.  H_required = measured / model, so values below unity mean that
+    the present model would need additional attenuation at that frequency.
+
+    Existing hardware/analysis responses and the first alias-fold fraction are
+    reported only as context; they are already included in the model.
+    """
+
+    frequency = np.asarray(fit_freq, dtype=float)
+    model = np.asarray(model, dtype=float)
+    target = np.asarray(target, dtype=float)
+    if model.shape != frequency.shape or target.shape != frequency.shape:
+        raise ValueError(
+            "required-transfer model, target, and frequency must have identical shapes"
+        )
+    if (
+        np.any(~np.isfinite(model))
+        or np.any(~np.isfinite(target))
+        or np.any(model <= 0.0)
+        or np.any(target <= 0.0)
+    ):
+        raise ValueError(
+            "required-transfer model and target must be finite and positive"
+        )
+
+    required = target / model
+    correction_db = 20.0 * np.log10(required)
+    model_over_measurement = model / target
+
+    rate = float(candidate["rate"])
+    hardware_main = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=TARGET_HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )
+    analysis = analysis_filter_magnitude(
+        frequency,
+        rate,
+        cutoff_hz=SIM_ANALYSIS_CUTOFF_HZ,
+    )
+    combined_direct = hardware_main * analysis
+
+    def normalized_response(response: np.ndarray) -> np.ndarray:
+        response = np.asarray(response, dtype=float)
+        reference = float(
+            np.interp(ABSOLUTE_ASD_REFERENCE_HZ, frequency, response)
+        )
+        if not np.isfinite(reference) or reference <= 0.0:
+            raise ValueError("invalid transfer response at normalization frequency")
+        return response / reference
+
+    hardware_main_normalized = normalized_response(hardware_main)
+    analysis_normalized = normalized_response(analysis)
+    combined_direct_normalized = normalized_response(combined_direct)
+
+    alias_frequency = rate - frequency
+    query = np.unique(np.concatenate((frequency, alias_frequency)))
+    intrinsic = tes_noise_components(candidate, query)
+    intrinsic_total = np.asarray(intrinsic["total_ch0"], dtype=float)
+    main_intrinsic = np.interp(frequency, query, intrinsic_total)
+    alias_intrinsic = np.interp(alias_frequency, query, intrinsic_total)
+    alias_hardware = hardware_filter_magnitude(
+        alias_frequency,
+        cutoff_hz=TARGET_HARDWARE_BESSEL_CUTOFF_HZ,
+        order=TARGET_HARDWARE_BESSEL_ORDER,
+        norm=TARGET_HARDWARE_BESSEL_NORM,
+    )
+    main_after_hardware = main_intrinsic * hardware_main
+    alias_after_hardware = alias_intrinsic * alias_hardware
+    same_bin = np.isclose(
+        alias_frequency,
+        frequency,
+        rtol=0.0,
+        atol=max(rate, 1.0) * 1e-12,
+    )
+    alias_after_hardware = np.where(same_bin, 0.0, alias_after_hardware)
+    folded_psd = main_after_hardware**2 + alias_after_hardware**2
+    alias_psd_fraction = np.divide(
+        alias_after_hardware**2,
+        folded_psd,
+        out=np.zeros_like(folded_psd),
+        where=folded_psd > 0.0,
+    )
+
+    points = {}
+    for requested in SOURCE_DIAGNOSTIC_FREQUENCIES_HZ:
+        if requested < frequency[0] or requested > frequency[-1]:
+            continue
+        correction = float(np.interp(requested, frequency, required))
+        points[f"{requested:g}_Hz"] = {
+            "required_ASD_transfer_measurement_over_model": correction,
+            "required_correction_dB": float(20.0 * np.log10(correction)),
+            "model_over_measurement": float(
+                np.interp(requested, frequency, model_over_measurement)
+            ),
+            "already_modeled_hardware_main_normalized": float(
+                np.interp(
+                    requested,
+                    frequency,
+                    hardware_main_normalized,
+                )
+            ),
+            "already_modeled_analysis_normalized": float(
+                np.interp(
+                    requested,
+                    frequency,
+                    analysis_normalized,
+                )
+            ),
+            "already_modeled_combined_direct_normalized": float(
+                np.interp(
+                    requested,
+                    frequency,
+                    combined_direct_normalized,
+                )
+            ),
+            "first_alias_fold_psd_fraction": float(
+                np.interp(
+                    requested,
+                    frequency,
+                    alias_psd_fraction,
+                )
+            ),
+        }
+
+    bands = {}
+    log_required = np.log10(required)
+    for low, high, _weight in FIT_BANDS_HZ:
+        low_eff = max(float(low), float(args.fit_min_hz))
+        high_eff = min(float(high), float(args.fit_max_hz))
+        mask = (frequency >= low_eff) & (frequency <= high_eff)
+        if not np.any(mask):
+            continue
+        mean_log = float(np.mean(log_required[mask]))
+        bands[f"{low_eff:g}-{high_eff:g}_Hz"] = {
+            "geometric_mean_required_ASD_transfer": float(10.0 ** mean_log),
+            "mean_required_correction_dB": float(20.0 * mean_log),
+            "median_required_ASD_transfer": float(np.median(required[mask])),
+            "min_required_ASD_transfer": float(np.min(required[mask])),
+            "max_required_ASD_transfer": float(np.max(required[mask])),
+            "mean_first_alias_fold_psd_fraction": float(
+                np.mean(alias_psd_fraction[mask])
+            ),
+        }
+
+    deviation_onset = {}
+    for fractional_deviation in (0.10, 0.20, 0.50):
+        mask = np.abs(required - 1.0) >= fractional_deviation
+        indices = np.flatnonzero(mask)
+        deviation_onset[
+            f"{int(round(fractional_deviation * 100.0))}pct"
+        ] = (
+            float(frequency[indices[0]]) if len(indices) else None
+        )
+
+    sample_indices = np.unique(
+        np.linspace(
+            0,
+            len(frequency) - 1,
+            min(81, len(frequency)),
+            dtype=int,
+        )
+    )
+    curve_sample = [
+        {
+            "frequency_Hz": float(frequency[index]),
+            "required_ASD_transfer": float(required[index]),
+            "required_correction_dB": float(correction_db[index]),
+            "first_alias_fold_psd_fraction": float(
+                alias_psd_fraction[index]
+            ),
+        }
+        for index in sample_indices
+    ]
+
+    summary = {
+        "diagnostic_only": True,
+        "definition": "H_required(f) = measured_normalized_ASD / model_normalized_ASD",
+        "interpretation": (
+            "H_required < 1 means additional attenuation would be required; "
+            "H_required > 1 means additional gain would be required. "
+            "No correction is applied to the optimizer."
+        ),
+        "normalization_Hz": float(ABSOLUTE_ASD_REFERENCE_HZ),
+        "known_chain_context": (
+            "100 kHz 4th-order mag Bessel, first ADC alias fold, and "
+            "10 kHz digital analysis response are already included"
+        ),
+        "representative_frequencies": points,
+        "fit_bands": bands,
+        "first_frequency_exceeding_fractional_deviation_from_unity_Hz": (
+            deviation_onset
+        ),
+        "curve_sample": curve_sample,
+    }
+    curves = {
+        "frequencies_Hz": frequency,
+        "required_ASD_transfer": required,
+        "required_correction_dB": correction_db,
+        "hardware_main_normalized": hardware_main_normalized,
+        "analysis_normalized": analysis_normalized,
+        "combined_direct_normalized": combined_direct_normalized,
+        "first_alias_fold_psd_fraction": alias_psd_fraction,
+    }
+    return summary, curves
+
+
+def plot_required_transfer_diagnostics(
+    curves: dict,
+    output_path: Path,
+) -> Path:
+    """Plot the inferred residual transfer beside already-modeled responses."""
+
+    frequency = np.asarray(curves["frequencies_Hz"], dtype=float)
+    correction_db = np.asarray(
+        curves["required_correction_dB"],
+        dtype=float,
+    )
+    hardware = np.asarray(
+        curves["hardware_main_normalized"],
+        dtype=float,
+    )
+    analysis = np.asarray(
+        curves["analysis_normalized"],
+        dtype=float,
+    )
+    combined = np.asarray(
+        curves["combined_direct_normalized"],
+        dtype=float,
+    )
+    alias_fraction = np.asarray(
+        curves["first_alias_fold_psd_fraction"],
+        dtype=float,
+    )
+
+    fig, (correction_axis, context_axis) = plt.subplots(
+        2,
+        1,
+        figsize=(10, 8),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 2]},
+    )
+    correction_axis.semilogx(
+        frequency,
+        correction_db,
+        linewidth=2.0,
+        label="required residual ASD transfer",
+    )
+    correction_axis.axhline(0.0, linewidth=1.0)
+    correction_axis.set_ylabel("Required correction [dB]")
+    correction_axis.set_title(
+        "Required residual transfer: measured / best-fit model"
+    )
+    correction_axis.grid(True, which="both", alpha=0.25)
+    correction_axis.legend(fontsize=9)
+
+    context_axis.semilogx(
+        frequency,
+        20.0 * np.log10(np.maximum(hardware, np.finfo(float).tiny)),
+        linewidth=1.4,
+        label="modeled 100 kHz hardware Bessel",
+    )
+    context_axis.semilogx(
+        frequency,
+        20.0 * np.log10(np.maximum(analysis, np.finfo(float).tiny)),
+        linewidth=1.4,
+        label="modeled 10 kHz analysis response",
+    )
+    context_axis.semilogx(
+        frequency,
+        20.0 * np.log10(np.maximum(combined, np.finfo(float).tiny)),
+        linewidth=1.8,
+        label="modeled direct-path product",
+    )
+    context_axis.set_xlabel("Frequency [Hz]")
+    context_axis.set_ylabel("Normalized modeled response [dB]")
+    context_axis.grid(True, which="both", alpha=0.25)
+    context_axis.legend(fontsize=8, loc="lower left")
+
+    alias_axis = context_axis.twinx()
+    alias_axis.semilogx(
+        frequency,
+        alias_fraction,
+        linewidth=1.2,
+        linestyle="--",
+        label="first alias PSD fraction",
+    )
+    alias_axis.set_ylabel("Alias PSD fraction")
+    alias_axis.set_ylim(0.0, 1.0)
+    alias_axis.legend(fontsize=8, loc="upper right")
+
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
 def johnson_source_scale_diagnostics(
     curves: dict,
     target: np.ndarray,
@@ -2192,6 +2501,15 @@ def optimize_case(
         fit_freq,
         args,
     )
+    required_transfer_summary, required_transfer_curves = (
+        required_transfer_diagnostics(
+            best_candidate.copy(),
+            deterministic_best_model,
+            target,
+            fit_freq,
+            args,
+        )
+    )
     source_ablation_summary = source_ablation_diagnostics(
         source_curves,
         target,
@@ -2216,6 +2534,10 @@ def optimize_case(
         source_curves,
         work_dir / "source_contributions.png",
     )
+    required_transfer_plot_path = plot_required_transfer_diagnostics(
+        required_transfer_curves,
+        work_dir / "required_transfer.png",
+    )
 
     print("\nObjective evaluations:", evaluation_count)
     print("Stability rejections:", stability_rejection_count)
@@ -2230,6 +2552,8 @@ def optimize_case(
     print(json.dumps(absolute_asd_diagnostics, indent=2))
     print("Parameter boundary diagnostics:")
     print(json.dumps(boundary_diagnostics, indent=2))
+    print("Required-transfer diagnostics:")
+    print(json.dumps(required_transfer_summary, indent=2))
     print("Source-class diagnostics:")
     print(json.dumps(source_diagnostics, indent=2))
     print("Source-ablation diagnostics:")
@@ -2260,6 +2584,8 @@ def optimize_case(
         "finite_band_diagnostics": finite_band_diagnostics,
         "absolute_asd_diagnostics": absolute_asd_diagnostics,
         "parameter_boundary_diagnostics": boundary_diagnostics,
+        "required_transfer_diagnostics": required_transfer_summary,
+        "required_transfer_plot": str(required_transfer_plot_path),
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
@@ -2538,6 +2864,12 @@ def main():
             "best_case_parameters": best_parameters_for_summary(
                 best_case["best_candidate"]
             ),
+            "best_case_required_transfer_diagnostics": best_case[
+                "required_transfer_diagnostics"
+            ],
+            "best_case_required_transfer_plot": best_case[
+                "required_transfer_plot"
+            ],
             "best_case_source_class_diagnostics": best_case[
                 "source_class_diagnostics"
             ],

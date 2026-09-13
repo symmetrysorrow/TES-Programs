@@ -253,3 +253,59 @@ def test_johnson_source_scale_zero_matches_source_ablation_total() -> None:
             "shape_score"
         ]
     )
+
+
+
+def test_required_transfer_diagnostic_is_measurement_over_model() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    model = np.ones_like(fit_freq)
+    target = np.geomspace(1.0, 0.25, len(fit_freq))
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+    )
+    summary, curves = optimizer.required_transfer_diagnostics(
+        candidate,
+        model,
+        target,
+        fit_freq,
+        args,
+    )
+    np.testing.assert_allclose(
+        curves["required_ASD_transfer"],
+        target / model,
+    )
+    np.testing.assert_allclose(
+        curves["required_correction_dB"],
+        20.0 * np.log10(target / model),
+    )
+    alias = curves["first_alias_fold_psd_fraction"]
+    assert np.all(alias >= 0.0)
+    assert np.all(alias <= 1.0)
+    assert summary["diagnostic_only"] is True
+    assert "40000-100000_Hz" in summary["fit_bands"]
+    assert "100000-200000_Hz" in summary["fit_bands"]
+
+
+def test_required_transfer_unity_target_reports_zero_db_correction() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 41)
+    model = 1.0 + 0.2 * np.log10(fit_freq / fit_freq[0])
+    target = model.copy()
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+    )
+    summary, curves = optimizer.required_transfer_diagnostics(
+        candidate,
+        model,
+        target,
+        fit_freq,
+        args,
+    )
+    np.testing.assert_allclose(curves["required_ASD_transfer"], 1.0)
+    np.testing.assert_allclose(curves["required_correction_dB"], 0.0)
+    for band in summary["fit_bands"].values():
+        assert band["geometric_mean_required_ASD_transfer"] == pytest.approx(1.0)
+        assert band["mean_required_correction_dB"] == pytest.approx(0.0)
