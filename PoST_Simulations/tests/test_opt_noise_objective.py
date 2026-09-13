@@ -35,3 +35,7 @@ def test_boundary_diagnostics_uses_log_position_for_log_bound() -> None:
     assert result["position_fraction"] == pytest.approx(0.5)
     assert result["nearest_bound"] == "lower"
     assert result["within_1pct_of_bound"] is False
+
+
+def test_absolute_asd_anchor_is_disabled_by_default() -> None:
+    assert optimizer.ABSOLUTE_ASD_WEIGHT_DEFAULT == 0.0
