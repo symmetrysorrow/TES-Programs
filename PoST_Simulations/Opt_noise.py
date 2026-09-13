@@ -89,6 +89,8 @@ TARGET_HARDWARE_BESSEL_ORDER = 4
 # scipy's magnitude-normalized Bessel convention over the legacy phase norm.
 TARGET_HARDWARE_BESSEL_NORM = "mag"
 TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
+T_C_FIT_MIN_K = 0.235
+T_C_FIT_MAX_K = 0.275
 L_FIT_MIN_H = 1.0e-10
 L_FIT_MAX_H = 12.3e-9
 
@@ -706,13 +708,15 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
     """
 
     sensitivity = envelope["sensitivity_reference"]
-    tc_low, tc_high = map(float, envelope["parameters"]["T_c"]["range"])
 
     def ref(name):
         return float(sensitivity[name])
 
     return {
-        "T_c": Bound(tc_low, tc_high, logarithmic=False),
+        # Slightly wider than the proxy-envelope range so the optimizer can
+        # test whether the residual curvature is driven by the assumed
+        # transition temperature before adding another thermal state.
+        "T_c": Bound(T_C_FIT_MIN_K, T_C_FIT_MAX_K, logarithmic=False),
         # Do not let the noise fit replace a missing electrical transfer
         # function with a tens-of-mOhm effective load.
         "R_l": Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM),
@@ -1066,6 +1070,7 @@ def optimize_case(
     print(
         "Physical fit bounds:",
         {
+            "T_c_K": [T_C_FIT_MIN_K, T_C_FIT_MAX_K],
             "L_H": [L_FIT_MIN_H, L_FIT_MAX_H],
             "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
             "n": [N_FIT_MIN, N_FIT_MAX],
