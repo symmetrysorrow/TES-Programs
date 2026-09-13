@@ -64,6 +64,7 @@ def noise_components(params: dict, frequencies_hz: np.ndarray) -> tuple[np.ndarr
         "cross_psd": result["cross_psd"],
         "operating_point": result["operating_point"],
         "thermal_link_model": result.get("thermal_link_model", "effective"),
+        "electrical_link_model": result.get("electrical_link_model", "rl"),
         "F_LINK": F_LINK,
         "units": "production-model output ASD; normalized shape only",
     }
