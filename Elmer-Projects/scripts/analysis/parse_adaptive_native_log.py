@@ -28,7 +28,7 @@ _EVENT_AUDIT_RE = re.compile(
 
 _TRIAL_START_RE = re.compile(
     r"Adaptive trial start id=(?P<id>\d+) t0/t1/dt=\s*(?P<t0>\S+)\s+(?P<t1>\S+)\s+(?P<dt>\S+),"
-    r" order=(?P<order>\d+), event=(?P<event>[TF]), landing=(?P<landing>[TF])"
+    r" order=(?P<order>\d+), event=(?P<event>[TF])(?:, landing=(?P<landing>[TF]))?"
 )
 
 _ACCEPT_RE = re.compile(
@@ -136,8 +136,21 @@ def parse_native_solver_log(log_path: str | Path) -> list[NativeTrialRecord]:
 
         m = _TRIAL_START_RE.search(line)
         if m:
-            if pending is None or pending["id"] != int(m.group("id")):
-                raise ValueError(f"trial start id={m.group('id')} without matching event audit")
+            trial_id = int(m.group("id"))
+            if pending is None or pending["id"] != trial_id:
+                # Cases with no physical events at all (physical_event_times=[])
+                # never print "Adaptive event audit", so there is nothing to
+                # match here; synthesize a no-event pending record instead of
+                # treating this as a malformed log.
+                pending = {
+                    "id": trial_id,
+                    "event_clipped": False,
+                    "event_landing": False,
+                    "event_endpoint_snapped": False,
+                    "event_forced": False,
+                    "proposed_dt": _f(m.group("dt")),
+                }
+                pending_linear = []
             pending["time"] = _f(m.group("t0"))
             pending["final_dt"] = _f(m.group("dt"))
             pending["trial_order"] = int(m.group("order"))

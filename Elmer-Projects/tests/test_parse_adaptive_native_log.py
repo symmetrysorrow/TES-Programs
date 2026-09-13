@@ -10,6 +10,9 @@ from scripts.analysis.parse_adaptive_native_log import (
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "adaptive_native_log_snippet.txt"
+NO_EVENT_AUDIT_FIXTURE = (
+    Path(__file__).parent / "fixtures" / "adaptive_native_log_no_event_audit_snippet.txt"
+)
 
 
 def test_fixture_is_a_verbatim_prefix_of_the_frozen_20ns_baseline() -> None:
@@ -75,6 +78,21 @@ def test_summary_line_matches_known_20ns_baseline() -> None:
         "bdf1": 14,
         "bdf2": 28,
     }
+
+
+def test_parses_trials_with_no_physical_events_configured() -> None:
+    """Cases with physical_event_times=[] (e.g. the local_dt/dtmin probes and
+    ADAPTIVE_RECOVERY_CASE) never print 'Adaptive event audit', and their
+    'Adaptive trial start' lines omit the trailing ', landing=' field
+    entirely -- both must parse without raising, from
+    results/case_phase24_adaptive_post_event_dt_recovery_10ns/solver.log
+    (trials 1-3, restart_position=3 anchor)."""
+    records = parse_native_solver_log(NO_EVENT_AUDIT_FIXTURE)
+    assert [r.trial_id for r in records] == [1, 2, 3]
+    assert [r.accepted for r in records] == [True, False, True]
+    assert [r.event_landing for r in records] == [False, False, False]
+    assert [r.bdf_order for r in records] == [1, 2, 1]
+    assert records[1].estimator_control_error == pytest.approx(2.423130907247)
 
 
 def test_missing_summary_line_returns_none(tmp_path) -> None:

@@ -1,0 +1,1065 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/09/13 00:42:05
+ParCommInit: Initialize #PEs: 1
+MAIN: OMP_NUM_THREADS not set. Using only 1 thread per task.
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: 9916c3f05, Compiled: 2026-09-06)
+MAIN:  Running one task without MPI parallelization.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  MUMPS library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: D:\Github\TES-Programs\Elmer-Projects\generated\cases\case_phase24_adaptive_post_event_dt_recovery_10ns.sif
+ Caught LUA error:...l-stage11/share/elmersolver/lua-scripts/defaults.lua:58: r
+LoadInputFile: Scanning input file: D:\Github\TES-Programs\Elmer-Projects\generated\cases\case_phase24_adaptive_post_event_dt_recovery_10ns.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+LoadInputFile: Loading input file: D:\Github\TES-Programs\Elmer-Projects\generated\cases\case_phase24_adaptive_post_event_dt_recovery_10ns.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [adaptive output decoupling] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive relative tolerance] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive absolute tolerance] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive initial timestep] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive max growth] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive max shrink] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive step ratio min] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive step ratio max] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive max rejected] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [requested output times] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [physical event times] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [adaptive debug] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse energy] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse start time] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse duration] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse transition zone] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse sigma] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse shape] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse radius] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center x] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center y] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center z] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse discrete norm] in section: [constants]
+CheckKeyword:  Unlisted keyword: [phase24 vector assembly] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 wall profiling] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 static matrix reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Operator Lagging] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Operator Lag Threshold] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Operator Lag Max Reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Operator Lag Residual Growth] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Preconditioner Lagging] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Preconditioner Lag Threshold] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Preconditioner Lag Max Age] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Preconditioner Lag Krylov Relative Growth] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Preconditioner Lag Nonlinear Threshold] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 hypre reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Step Commit] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+Loading user function library: [tes_transient_heat_source_t0]...[AbsorberWindowPulseHeatSource]
+LoadInputFile: Number of BCs: 7
+LoadInputFile: Number of Body Forces: 2
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend
+LoadMesh: Elapsed REAL time:     2.3730 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 3564
+OptimizeBandwidth: Optimized bandwidth for heat equation: 1632
+LoadRestartFile: 
+LoadRestartFile: --------------------------------------------
+LoadRestartFile: Reading data from file: mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_phase24_adaptive_event_rejection_progression_2ns.result
+LoadRestartFile: ASCII 3
+LoadRestartFile: Reading ascii restart file version 3
+LoadRestartFile: Total number of dofs in restart file: 1
+LoadRestartFile: Reading time sequence:    2.000E-02
+LoadRestartFile: Reading variables on timestep: 1
+LoadRestartFile: Reading time sequence:    2.002E-02
+LoadRestartFile: Reading variables on timestep: 2
+LoadRestartFile: Reading time sequence:    2.002E-02
+LoadRestartFile: Reading variables on timestep: 3
+LoadRestartFile: Time spent for restart (s):      2.5190E+00
+LoadRestartFile: All done
+LoadRestartFile: --------------------------------------------
+MAIN: Number of timesteps to be saved: 1
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 1/1:   2.002E-02
+MAIN: -------------------------------------
+MAIN: 
+Adaptive epochs structure matrix rhs hypre preconditioner=-1-1-1-1-1
+Adaptive trial start id=1 t0/t1/dt=  2.002000100000E-02  2.002000150000E-02  5.000000000000E-10, order=1, event=F
+Adaptive trial lifecycle: id=1, accepted=0, t0/proposal/ratio_dt/clipped_dt/event/previous_dt/trial_dt=  2.002000100000E-02  5.000000000000E-10  5.000000000000E-10  5.000000000000E-10  1.797693134862+308 -1.000000000000E+00  5.000000000000E-10, event_before/forced=FF, order=1
+Adaptive history previous_dt/dt= -1.000000000000E+00  5.000000000000E-10, rejected=0
+Adaptive trial phase id=1: full
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     1.8510 (s)
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     1.0370 (s)
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000        1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     2.0730 (s)
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 metadata: static=0, dynamic=125972, generic=2134
+HeatSolve: Phase24 element accounting: total=223718, fast_tet=125972, fast_prism=95612, generic_prism=2134, generic_other=0, accounted=223718, fast_percent=  99.046%
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  5.00000000E-10, h_old=  5.00000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  2.00000000E+09 -2.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=F, valid=F, cached_a0= -1.00000000E+00, current_a0=  2.00000000E+09, epoch=1
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache built
+: ...Elapsed REAL time:     3.0760 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2270 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 2 1  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=F, setup_epochs=-1 -1
+HypreSolver: Phase24 production CSR symmetry metric=  7.56206586E-03
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=87534 local_size=87534 matrix_epoch=2 rounds=2000
+SolveHypre: Required iterations 4 (method 901) to norm 1.55895e-07
+SolveHypre: Solution time (method 901): 0.023
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=1 0 0 1 1 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 4
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484857      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.4640 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=95612, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5590000000008768E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7399999999998528E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2329999999991372E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1000000000000121E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.2700000000000031E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6464000000000002E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.0000000000003411E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=1 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.38    3.38
+HeatSolve: iter:    1 Solve:    (s)   16.46   16.46
+HeatSolve:  Result Norm   :   0.15484856575136943
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.684288E-01 I=  1.473640E-04 P=  3.258910E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0120 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  5.00000000E-10, h_old=  5.00000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  2.00000000E+09 -2.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  2.00000000E+09, current_a0=  2.00000000E+09, epoch=2
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9670 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2120 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 3 2  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 2
+HypreSolver: Phase24 preconditioner decision: reuse=F, setup=T, age=0, max_age=2, reason=2
+SolveHypre: Required iterations 0 (method 901) to norm 1.55895e-07
+SolveHypre: Solution time (method 901): 0.003
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=1 0 1 2 2 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 2 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484857      0.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.0100 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=95612, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4800000000000679E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.5700000000001779E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2259999999999422E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0399999999997078E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1200000000000330E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6009999999999998E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.2000000000000455E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=2 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.26    6.63
+HeatSolve: iter:    2 Solve:    (s)   16.01   32.48
+HeatSolve:  Result Norm   :   0.15484856575136943
+HeatSolve:  Relative Change :    0.0000000000000000
+Adaptive trial phase id=1: half-1
+PeriodicProjector: Elapsed REAL time:     1.8480 (s)
+PeriodicProjector: Elapsed REAL time:     1.0320 (s)
+PeriodicProjector: Elapsed REAL time:     2.0190 (s)
+HeatSolver: Solving the energy equation for temperature
+Phase24 UDF Circuit: Elapsed REAL time:     0.0120 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=F, valid=T, cached_a0=  2.00000000E+09, current_a0=  4.00000000E+09, epoch=3
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache built
+: ..Elapsed REAL time:     2.9980 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2100 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 4 3  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 3
+SolveHypre: Required iterations 2 (method 901) to norm 4.99095e-07
+SolveHypre: Solution time (method 901): 0.012
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=2 0 1 3 3 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 2
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484650      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.0620 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=191224, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4960000000000946E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.8499999999988859E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2230000000000558E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  9.3999999999958561E-02
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1000000000000085E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6062000000000005E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.2000000000000455E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=3 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.28    3.28
+HeatSolve: iter:    1 Solve:    (s)   16.06   16.06
+HeatSolve:  Result Norm   :   0.15484650306409395
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.684288E-01 I=  1.473618E-04 P=  3.258903E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0100 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=4
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9750 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2100 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 5 4  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 4
+HypreSolver: Phase24 preconditioner decision: reuse=F, setup=T, age=0, max_age=2, reason=2
+SolveHypre: Required iterations 0 (method 901) to norm 4.99095e-07
+SolveHypre: Solution time (method 901): 0.002
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=2 0 2 4 4 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 2 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484650      0.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.3170 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=191224, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4429999999999552E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.0499999999984198E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2260000000001980E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0099999999999909E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1000000000000796E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6316999999999993E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.0000000000005116E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=4 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.27    6.55
+HeatSolve: iter:    2 Solve:    (s)   16.32   32.38
+HeatSolve:  Result Norm   :   0.15484650306409395
+HeatSolve:  Relative Change :    0.0000000000000000
+Adaptive trial phase id=1: half-2
+PeriodicProjector: Elapsed REAL time:     1.8390 (s)
+PeriodicProjector: Elapsed REAL time:     1.0270 (s)
+PeriodicProjector: Elapsed REAL time:     2.0090 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684290E-01 I=  1.473617E-04 P=  3.207334E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0100 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=5
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9340 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2160 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 6 5  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 5
+SolveHypre: Required iterations 3 (method 901) to norm 3.38555e-07
+SolveHypre: Solution time (method 901): 0.016
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=3 0 2 5 5 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 3
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484866     0.13920863E-04 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.3850 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=191224, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4230000000000160E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7199999999988336E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2399999999999949E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  9.9000000000103228E-02
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1600000000000819E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6385000000000005E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.9999999999909051E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=5 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.22    3.22
+HeatSolve: iter:    1 Solve:    (s)   16.39   16.39
+HeatSolve:  Result Norm   :   0.15484865867603528
+HeatSolve:  Relative Change :    1.3920862884796604E-005
+TESInnerCircuit: T=  1.684290E-01 I=  1.473617E-04 P=  3.162082E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=6
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9310 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2140 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 7 6  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 6
+HypreSolver: Phase24 preconditioner decision: reuse=T, setup=F, age=0, max_age=2, reason=0
+SolveHypre: Required iterations 0 (method 901) to norm 3.38555e-07
+SolveHypre: Solution time (method 901): 0.002
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=3 0 3 5 6 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 1 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484866     0.71697297E-15 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    15.8030 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=191224, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4479999999997943E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.5199999999997260E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2210000000001315E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1000000000009891E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1399999999999864E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.5803000000000011E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.0000000000003411E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=6 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.22    6.44
+HeatSolve: iter:    2 Solve:    (s)   15.80   32.19
+HeatSolve:  Result Norm   :   0.15484865867603517
+HeatSolve:  Relative Change :    7.1697296839225222E-016
+Adaptive solver error index=1, maxdiff/maxvalue/error=  3.430019922415E-04  3.809147184156E-01  9.725116346252E-01
+Adaptive maxdiff entry=73378, full/half=  2.499351558217E-01  2.495921538295E-01
+Adaptive trial estimate id=1, error=  9.725116346252E-01
+Adaptive accept: t0/attempted_dt/error/raw_maxdiff/h_old=  2.002000100000E-02  5.000000000000E-10  9.725116346252E-01  3.430019922415E-04 -1.000000000000E+00, order=1, event=F
+Adaptive accept ratio: h_new=  5.000000000000E-10, h_new_over_h_old=  5.000000000000E-10
+Adaptive accept flags: dt_is_min/ordinary_error/forced_floor/previous_rejected=TTFF, rejection_streak_before/after=00
+Adaptive accept cooldown: before/after=00
+Adaptive accept growth: accepted_dt/next_dt/factor=  5.000000000000E-10  7.500000000000E-10  1.500000000000E+00, event_forced=F
+WARNING:: SaveCurrent: > Output File < for restart should not include directory: ../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_phase24_adaptive_post_event_dt_recovery_10ns.result
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_phase24_adaptive_post_event_dt_recovery_10ns.result
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+Adaptive(cum,ddt,err):   0.500000000000E-09  0.750000000000E-09  0.972511634625E+00
+Adaptive epochs structure matrix rhs hypre preconditioner=17676
+Adaptive trial start id=2 t0/t1/dt=  2.002000150000E-02  2.002000225000E-02  7.500000000000E-10, order=2, event=F
+Adaptive trial lifecycle: id=2, accepted=1, t0/proposal/ratio_dt/clipped_dt/event/previous_dt/trial_dt=  2.002000150000E-02  7.500000000000E-10  7.500000000000E-10  7.500000000000E-10  1.797693134862+308  5.000000000000E-10  7.500000000000E-10, event_before/forced=FF, order=2
+Adaptive history previous_dt/dt=  5.000000000000E-10  7.500000000000E-10, rejected=0
+Adaptive trial phase id=2: full
+PeriodicProjector: Elapsed REAL time:     1.8960 (s)
+PeriodicProjector: Elapsed REAL time:     1.0370 (s)
+PeriodicProjector: Elapsed REAL time:     2.0460 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684287E-01 I=  1.473662E-04 P=  3.127830E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0100 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  7.50000000E-10, h_old=  5.00000000E-10, r=  1.50000000E+00, order=2, a0/a1/a2=  2.13333333E+09 -3.33333333E+09  1.20000000E+09
+HeatSolve: Phase24 static cache decision: hit=F, valid=T, cached_a0=  4.00000000E+09, current_a0=  2.13333333E+09, epoch=7
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache built
+: ...Elapsed REAL time:     3.0480 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2210 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 8 7  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 7
+SolveHypre: Required iterations 4 (method 901) to norm 1.2307e-07
+SolveHypre: Solution time (method 901): 0.023
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=4 0 3 6 7 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 4
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484612     0.16364031E-04 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.4190 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=286836, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5379999999993004E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7500000000029559E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2270000000003165E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0800000000008936E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.2100000000000364E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6419000000000011E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.9999999999909051E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=7 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.34    3.34
+HeatSolve: iter:    1 Solve:    (s)   16.42   16.42
+HeatSolve:  Result Norm   :   0.15484612474859077
+HeatSolve:  Relative Change :    1.6364030523069994E-005
+TESInnerCircuit: T=  1.684287E-01 I=  1.473662E-04 P=  3.107759E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  7.50000000E-10, h_old=  5.00000000E-10, r=  1.50000000E+00, order=2, a0/a1/a2=  2.13333333E+09 -3.33333333E+09  1.20000000E+09
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  2.13333333E+09, current_a0=  2.13333333E+09, epoch=8
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9950 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2130 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 9 8  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 8
+HypreSolver: Phase24 preconditioner decision: reuse=T, setup=F, age=0, max_age=2, reason=0
+SolveHypre: Required iterations 0 (method 901) to norm 1.2307e-07
+SolveHypre: Solution time (method 901): 0.003
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=4 0 4 6 8 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 1 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484612     0.35849235E-15 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    15.8820 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=286836, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4770000000004870E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.6099999999974557E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2509999999996921E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0600000000007981E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1299999999999386E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.5882000000000005E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  8.9999999999861302E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=8 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.28    6.62
+HeatSolve: iter:    2 Solve:    (s)   15.88   32.30
+HeatSolve:  Result Norm   :   0.15484612474859072
+HeatSolve:  Relative Change :    3.5849235052789419E-016
+Adaptive trial phase id=2: half-1
+PeriodicProjector: Elapsed REAL time:     1.8300 (s)
+PeriodicProjector: Elapsed REAL time:     1.0490 (s)
+PeriodicProjector: Elapsed REAL time:     1.9960 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684287E-01 I=  1.473629E-04 P=  3.127535E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0100 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  3.75000000E-10, h_old=  5.00000000E-10, r=  7.50000000E-01, order=2, a0/a1/a2=  3.80952381E+09 -4.66666667E+09  8.57142857E+08
+HeatSolve: Phase24 static cache decision: hit=F, valid=T, cached_a0=  2.13333333E+09, current_a0=  3.80952381E+09, epoch=9
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache built
+: ...Elapsed REAL time:     3.0650 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2490 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 10 9  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 9
+SolveHypre: Required iterations 2 (method 901) to norm 2.84019e-07
+SolveHypre: Solution time (method 901): 0.012
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=5 0 4 7 9 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 2
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484509      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.2600 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=382448, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5310000000000912E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7399999999989291E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2479999999998768E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1200000000013688E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.4899999999999523E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6259999999999991E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.0000000000019327E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=9 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.39    3.39
+HeatSolve: iter:    1 Solve:    (s)   16.26   16.26
+HeatSolve:  Result Norm   :   0.15484508703732444
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.684287E-01 I=  1.473629E-04 P=  3.107291E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  3.75000000E-10, h_old=  5.00000000E-10, r=  7.50000000E-01, order=2, a0/a1/a2=  3.80952381E+09 -4.66666667E+09  8.57142857E+08
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  3.80952381E+09, current_a0=  3.80952381E+09, epoch=10
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ...Elapsed REAL time:     3.0170 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2210 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 11 10  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 10
+HypreSolver: Phase24 preconditioner decision: reuse=F, setup=T, age=0, max_age=2, reason=2
+SolveHypre: Required iterations 0 (method 901) to norm 2.84019e-07
+SolveHypre: Solution time (method 901): 0.002
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=5 0 5 8 10 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 2 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484509     0.35849475E-15 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.1190 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=382448, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4799999999994213E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.6100000000011505E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2640000000002658E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1200000000019372E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.2100000000000364E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6119000000000000E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  8.9999999999861302E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=10 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.31    6.70
+HeatSolve: iter:    2 Solve:    (s)   16.12   32.38
+HeatSolve:  Result Norm   :   0.15484508703732439
+HeatSolve:  Relative Change :    3.5849475300354359E-016
+Adaptive trial phase id=2: half-2
+PeriodicProjector: Elapsed REAL time:     1.8290 (s)
+PeriodicProjector: Elapsed REAL time:     1.0440 (s)
+PeriodicProjector: Elapsed REAL time:     2.0830 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684289E-01 I=  1.473629E-04 P=  3.100442E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  3.75000000E-10, h_old=  3.75000000E-10, r=  1.00000000E+00, order=2, a0/a1/a2=  4.00000000E+09 -5.33333333E+09  1.33333333E+09
+HeatSolve: Phase24 static cache decision: hit=F, valid=T, cached_a0=  3.80952381E+09, current_a0=  4.00000000E+09, epoch=11
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache built
+: ...Elapsed REAL time:     3.0670 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2150 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 12 11  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 11
+SolveHypre: Required iterations 2 (method 901) to norm 3.73086e-07
+SolveHypre: Solution time (method 901): 0.012
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=6 0 5 9 11 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 2
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484417     0.59404865E-05 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    15.9640 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=478060, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5599999999996612E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7599999999993088E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2220000000002358E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0900000000017940E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1500000000000341E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.5963999999999999E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  8.9999999999861302E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=11 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.36    3.36
+HeatSolve: iter:    1 Solve:    (s)   15.97   15.97
+HeatSolve:  Result Norm   :   0.15484416718490512
+HeatSolve:  Relative Change :    5.9404865149250787E-006
+TESInnerCircuit: T=  1.684289E-01 I=  1.473629E-04 P=  3.099913E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  3.75000000E-10, h_old=  3.75000000E-10, r=  1.00000000E+00, order=2, a0/a1/a2=  4.00000000E+09 -5.33333333E+09  1.33333333E+09
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=12
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=2
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9810 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2210 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 13 12  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 12
+HypreSolver: Phase24 preconditioner decision: reuse=T, setup=F, age=0, max_age=2, reason=0
+SolveHypre: Required iterations 0 (method 901) to norm 3.73086e-07
+SolveHypre: Solution time (method 901): 0.003
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=6 0 6 9 12 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 1 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484417      0.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    15.8820 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=478060, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4640000000103157E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.5499999999997272E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2529999999897257E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0899999999998045E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.2100000000000364E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.5881999999999977E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  8.9999999999861302E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=12 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.28    6.63
+HeatSolve: iter:    2 Solve:    (s)   15.88   31.85
+HeatSolve:  Result Norm   :   0.15484416718490512
+HeatSolve:  Relative Change :    0.0000000000000000
+Adaptive solver error index=1, maxdiff/maxvalue/error=  1.815113450384E-03  3.745693417219E-01  2.423130907247E+00
+Adaptive maxdiff entry=77273, full/half=  3.745338755009E-01  3.727187620505E-01
+Adaptive trial estimate id=2, error=  2.423130907247E+00
+Adaptive rejection: index=1, consecutive=1, t0/hnew/hold/r/error/maxdiff=  2.002000150000E-02  7.500000000000E-10  5.000000000000E-10  1.500000000000E+00  2.423130907247E+00  1.815113450384E-03, order=2, event=F
+Adaptive rejection event/distance/maxvalue= -1.000000000000E+00 -1.000000000000E+00  3.745693417219E-01, abs_tol/rel_tol=  1.000000000000E-08  2.000000000000E-03
+Adaptive reject lifecycle: id=2, trial_dt/error/controller_next_dt/rollback_start_dt/rollback_end_dt=  7.500000000000E-10  2.423130907247E+00  5.000000000000E-10  7.500000000000E-10  7.500000000000E-10, dt_min_clamp=T, event_before/after_reject/after_rollback=FFF
+Adaptive(cum,ddt,err):   0.500000000000E-09  0.500000000000E-09  0.242313090725E+01
+Adaptive epochs structure matrix rhs hypre preconditioner=113121312
+Adaptive trial start id=3 t0/t1/dt=  2.002000150000E-02  2.002000200000E-02  5.000000000000E-10, order=1, event=F
+Adaptive trial lifecycle: id=3, accepted=1, t0/proposal/ratio_dt/clipped_dt/event/previous_dt/trial_dt=  2.002000150000E-02  5.000000000000E-10  5.000000000000E-10  5.000000000000E-10  1.797693134862+308  5.000000000000E-10  5.000000000000E-10, event_before/forced=FF, order=1
+Adaptive history previous_dt/dt=  5.000000000000E-10  5.000000000000E-10, rejected=1
+Adaptive trial phase id=3: full
+PeriodicProjector: Elapsed REAL time:     1.8340 (s)
+PeriodicProjector: Elapsed REAL time:     1.0460 (s)
+PeriodicProjector: Elapsed REAL time:     1.9990 (s)
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 adaptive retry: numeric lifecycle epochs invalidated
+TESInnerCircuit: T=  1.684287E-01 I=  1.473640E-04 P=  3.127634E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0100 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  5.00000000E-10, h_old=  5.00000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  2.00000000E+09 -2.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=F, valid=F, cached_a0=  4.00000000E+09, current_a0=  2.00000000E+09, epoch=14
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache built
+: ...Elapsed REAL time:     3.0780 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2150 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=T, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 15 1  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 13
+SolveHypre: Required iterations 4 (method 901) to norm 1.37207e-07
+SolveHypre: Solution time (method 901): 0.023
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=7 0 6 10 13 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 4
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484594     0.17584198E-04 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.0600 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=573672, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4670000000005530E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.6400000000021464E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.3309999999990509E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1600000000021282E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1499999999997499E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6060000000000002E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.9999999999909051E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=13 0 1 0
+HeatSolve: iter:    1 Assembly: (s)    3.36    3.36
+HeatSolve: iter:    1 Solve:    (s)   16.06   16.06
+HeatSolve:  Result Norm   :   0.15484593581056555
+HeatSolve:  Relative Change :    1.7584197581085000E-005
+TESInnerCircuit: T=  1.684287E-01 I=  1.473640E-04 P=  3.107448E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=full, h_new=  5.00000000E-10, h_old=  5.00000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  2.00000000E+09 -2.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  2.00000000E+09, current_a0=  2.00000000E+09, epoch=15
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9600 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2110 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 16 2  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 15
+HypreSolver: Phase24 preconditioner decision: reuse=T, setup=F, age=0, max_age=2, reason=0
+SolveHypre: Required iterations 0 (method 901) to norm 1.37207e-07
+SolveHypre: Solution time (method 901): 0.003
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=7 0 7 10 14 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 1 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484594     0.53773918E-15 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    15.9100 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=573672, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4050000000006548E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.7999999999983629E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2689999999992665E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0600000000022192E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1100000000001273E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.5910000000000025E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.0000000000145519E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=14 0 1 0
+HeatSolve: iter:    2 Assembly: (s)    3.25    6.61
+HeatSolve: iter:    2 Solve:    (s)   15.91   31.97
+HeatSolve:  Result Norm   :   0.15484593581056547
+HeatSolve:  Relative Change :    5.3773918192307672E-016
+Adaptive trial phase id=3: half-1
+PeriodicProjector: Elapsed REAL time:     1.9080 (s)
+PeriodicProjector: Elapsed REAL time:     1.0430 (s)
+PeriodicProjector: Elapsed REAL time:     2.0260 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684287E-01 I=  1.473618E-04 P=  3.127436E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0110 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=F, valid=T, cached_a0=  2.00000000E+09, current_a0=  4.00000000E+09, epoch=16
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache built
+: ..Elapsed REAL time:     2.9710 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2120 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 17 3  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 16
+SolveHypre: Required iterations 2 (method 901) to norm 2.72699e-07
+SolveHypre: Solution time (method 901): 0.012
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=8 0 7 11 15 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 2
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484514      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.3460 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=669284, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4240000000003192E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.9600000000070850E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2509999999986690E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0000000000030695E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1199999999998909E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6345999999999947E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.0999999999967258E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=15 0 1 0
+HeatSolve: iter:    1 Assembly: (s)    3.26    3.26
+HeatSolve: iter:    1 Solve:    (s)   16.35   16.35
+HeatSolve:  Result Norm   :   0.15484513633381508
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.684287E-01 I=  1.473618E-04 P=  3.107135E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0090 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half1, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=17
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9410 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2130 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 18 4  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 17
+HypreSolver: Phase24 preconditioner decision: reuse=F, setup=T, age=0, max_age=2, reason=2
+SolveHypre: Required iterations 0 (method 901) to norm 2.72699e-07
+SolveHypre: Solution time (method 901): 0.003
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=8 0 8 12 16 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 2 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484514     0.53774196E-15 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.4050 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=669284, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4699999999990041E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.6200000000043246E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2050000000003820E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.0400000000021237E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1299999999996544E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6405000000000030E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  9.0000000000145519E-03
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=16 0 1 0
+HeatSolve: iter:    2 Assembly: (s)    3.23    6.49
+HeatSolve: iter:    2 Solve:    (s)   16.41   32.75
+HeatSolve:  Result Norm   :   0.15484513633381500
+HeatSolve:  Relative Change :    5.3774195830975535E-016
+Adaptive trial phase id=3: half-2
+PeriodicProjector: Elapsed REAL time:     1.8460 (s)
+PeriodicProjector: Elapsed REAL time:     1.0500 (s)
+PeriodicProjector: Elapsed REAL time:     2.0530 (s)
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.684289E-01 I=  1.473618E-04 P=  3.100237E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0120 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=18
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ..Elapsed REAL time:     2.9500 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2130 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 19 5  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=T, matrix_refresh=F, exact_reuse=F, container=T, setup_epochs=1 18
+SolveHypre: Required iterations 2 (method 901) to norm 3.45796e-07
+SolveHypre: Solution time (method 901): 0.012
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=9 0 8 13 17 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=0 1 1 1 0 0 2
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15484445     0.44413024E-05 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.0480 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=669284, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4650000000000318E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.5699999999986858E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.2160000000004629E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.1199999999962529E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1299999999996544E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6048000000000002E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.2000000000000455E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=17 0 1 0
+HeatSolve: iter:    1 Assembly: (s)    3.24    3.24
+HeatSolve: iter:    1 Solve:    (s)   16.05   16.05
+HeatSolve:  Result Norm   :   0.15484444862126515
+HeatSolve:  Relative Change :    4.4413024090004353E-006
+TESInnerCircuit: T=  1.684289E-01 I=  1.473618E-04 P=  3.099704E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0120 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 adaptive coefficients: kind=half2, h_new=  2.50000000E-10, h_old=  2.50000000E-10, r=  1.00000000E+00, order=1, a0/a1/a2=  4.00000000E+09 -4.00000000E+09  0.00000000E+00
+HeatSolve: Phase24 static cache decision: hit=T, valid=T, cached_a0=  4.00000000E+09, current_a0=  4.00000000E+09, epoch=19
+HeatSolve: Phase24 fast prism assembly entered: elements=95612, order=1
+HeatSolve: Phase24 static matrix cache hit; RHS history refreshed
+: ...Elapsed REAL time:     3.5000 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.2150 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SaveLinearSystem: Saving matrix to: case_phase24_hypre_cpu_smoke_7step_a.dat
+SaveLinearSystem: Saving matrix rhs to: case_phase24_hypre_cpu_smoke_7step_b.dat
+SaveLinearSystem: Saving matrix sizes to: case_phase24_hypre_cpu_smoke_7step_sizes.dat
+HypreSolver: Phase24 epochs found=T values=1 20 6  flags=T T T
+HypreSolver: Phase24 HYPRE lifecycle: full_setup=F, matrix_refresh=T, exact_reuse=F, container=T, setup_epochs=1 19
+HypreSolver: Phase24 preconditioner decision: reuse=T, setup=F, age=0, max_age=2, reason=0
+SolveHypre: Required iterations 0 (method 901) to norm 3.45796e-07
+SolveHypre: Solution time (method 901): 0.002
+HypreSolver: Phase24 HYPRE counters: full caseA caseB amg solves recovery=9 0 9 13 18 0
+HypreSolver: Phase24 native counters: refresh krylov_setup amg_setup solves caseA recovery_setup last_iters=1 2 1 2 0 0 0
+HypreSolver: Phase24 GPU counters: backend matrix_H2D rhs_H2D solution_H2D solution_D2H migrations allocations=0 0 0 0 0 0 0
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15484445      0.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:    16.0120 (s)
+HeatSolve: Phase24 CSR cache: builds=95612, hits=669284, invalidations=2
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.6579999999992765E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  1.8399999999991223E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.5210000000004129E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.3700000000039836E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.1500000000003183E-01
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  1.6012000000000000E+01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.2000000000000455E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=18 0 1 0
+HeatSolve: iter:    2 Assembly: (s)    3.79    7.03
+HeatSolve: iter:    2 Solve:    (s)   16.01   32.06
+HeatSolve:  Result Norm   :   0.15484444862126515
+HeatSolve:  Relative Change :    0.0000000000000000
+Adaptive solver error index=1, maxdiff/maxvalue/error=  6.707774452939E-04  3.742876115545E-01  1.982191750749E+00
+Adaptive maxdiff entry=34687, full/half=  1.691959476481E-01  1.685251702028E-01
+Adaptive trial estimate id=3, error=  1.982191750749E+00
+Adaptive accept: t0/attempted_dt/error/raw_maxdiff/h_old=  2.002000150000E-02  5.000000000000E-10  1.982191750749E+00  6.707774452939E-04  5.000000000000E-10, order=1, event=F
+Adaptive accept ratio: h_new=  5.000000000000E-10, h_new_over_h_old=  1.000000000000E+00
+Adaptive accept flags: dt_is_min/ordinary_error/forced_floor/previous_rejected=TFTT, rejection_streak_before/after=10
+Adaptive accept cooldown: before/after=11
+Adaptive accept growth: accepted_dt/next_dt/factor=  5.000000000000E-10  5.000000000000E-10  1.000000000000E+00, event_forced=F
+Adaptive(cum,ddt,err):   0.100000000000E-08  0.500000000000E-09  0.198219175075E+01
+Adaptive epochs structure matrix rhs hypre preconditioner=12062019
