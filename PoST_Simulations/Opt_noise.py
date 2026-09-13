@@ -157,6 +157,14 @@ RC_DEGENERACY_PROFILE_MAXFEV = 120
 # explicit Stycast heat-capacity node.
 R_L_FIT_MIN_OHM = 2.5e-3
 R_L_FIT_MAX_OHM = 12.0e-3
+
+# Static effective-series model used by default after the RC profile showed
+# that f_rc runs to its 500 kHz ceiling and R_l/R_rc are strongly degenerate.
+# This parameter is deliberately named separately from the physical load:
+# it is an effective total series resistance, not a claimed decomposition of
+# shunt/load/wiring/readout contributions.
+R_SERIES_EFF_FIT_MIN_OHM = 2.5e-3
+R_SERIES_EFF_FIT_MAX_OHM = 30.0e-3
 N_FIT_MIN = 1.5
 N_FIT_MAX = 6.0
 
@@ -227,6 +235,14 @@ def arguments():
     parser.add_argument("--least-squares-max-nfev", type=int, default=350)
     parser.add_argument("--skip-de", action="store_true")
     parser.add_argument("--apply-final", action="store_true")
+    parser.add_argument(
+        "--use-rc-relaxation",
+        action="store_true",
+        help=(
+            "Use the previous two-parameter passive RC relaxation branch. "
+            "Default is the simpler static effective-series-resistance model."
+        ),
+    )
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--seed", type=int, default=20260818)
     parser.add_argument(
@@ -328,6 +344,7 @@ BEST_PARAMETER_KEYS = (
     "R",
     "R_SH",
     "R_l",
+    "R_series_eff",
     "alpha",
     "beta",
     "L",
@@ -370,7 +387,11 @@ def best_parameters_for_summary(candidate: dict) -> dict:
     return result
 
 
-def target_case_reference(case_dir: Path, explicit_reference: Path | None = None):
+def target_case_reference(
+    case_dir: Path,
+    explicit_reference: Path | None = None,
+    use_rc_relaxation: bool = False,
+):
     """Return a target-consistent starting point and the frozen envelope."""
 
     envelope_path = case_dir / "proxy_parameter_envelope.json"
@@ -404,9 +425,15 @@ def target_case_reference(case_dir: Path, explicit_reference: Path | None = None
     )
     reference["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
     reference.setdefault("excess_johnson_M", 0.0)
-    reference.setdefault("R_rc", R_RC_INITIAL_OHM)
-    reference.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
-    reference["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
+    if use_rc_relaxation:
+        reference.setdefault("R_rc", R_RC_INITIAL_OHM)
+        reference.setdefault("f_rc_Hz", F_RC_INITIAL_HZ)
+        reference["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
+    else:
+        reference["R_series_eff"] = float(reference["R_l"])
+        reference.pop("R_rc", None)
+        reference.pop("f_rc_Hz", None)
+        reference["electrical_link_model"] = "rl"
     return reference, envelope, reference_source
 
 
@@ -902,7 +929,12 @@ def plot_sweep_comparison(summary: dict, output_path: Path) -> Path:
     return output_path
 
 
-def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
+def parameter_bounds(
+    reference: dict,
+    envelope: dict,
+    fixed_r_ohm: float,
+    use_rc_relaxation: bool = False,
+):
     """Target-case search box derived from the frozen proxy envelope.
 
     R is fixed by the same-campaign IV conversion for each R_SH branch.
@@ -919,30 +951,17 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
     def ref(name):
         return float(sensitivity[name])
 
-    return {
+    bounds = {
         # Keep T_c inside the independently motivated nearby-run RT envelope.
-        # The previous 235--275 mK search was intentionally broad, but it let
-        # the noise-only fit push T_c to the artificial upper boundary.
         "T_c": Bound(tc_low, tc_high, logarithmic=False),
-        # The 215 mK value is a setpoint label rather than an in-situ absolute
-        # TES-stage thermometer. Allow a small +/-2 mK offset while preserving
-        # the measured operating-point Joule power through the derived G.
         "T_bath": Bound(
             tbath_nominal - T_BATH_FIT_HALF_WIDTH_K,
             tbath_nominal + T_BATH_FIT_HALF_WIDTH_K,
             logarithmic=False,
         ),
-        # Do not let the noise fit replace a missing electrical transfer
-        # function with a tens-of-mOhm effective load.
-        "R_l": Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM),
         "alpha": Bound(ref("alpha") * 0.05, ALPHA_FIT_MAX, logarithmic=False),
         "beta": Bound(0.0, 12.0, logarithmic=False),
-        # Circuit inductance is independently constrained by the hardware:
-        # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
-        # Keep this logarithmic because the allowed interval spans >2 decades.
         "L": Bound(L_FIT_MIN_H, L_FIT_MAX_H),
-        "R_rc": Bound(R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM),
-        "f_rc_Hz": Bound(F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ),
         "n": Bound(N_FIT_MIN, N_FIT_MAX, logarithmic=False),
         "C_tes": Bound(C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K),
         "C_stycast": Bound(
@@ -950,8 +969,6 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
             C_STYCAST_FIT_MAX_J_PER_K,
         ),
         "C_abs": Bound(C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K),
-        # G_tes-bath is not a free noise-fit parameter. It is recalculated
-        # from the target IV Joule power for every (T_c, n) candidate.
         "G_tes-stycast": Bound(
             G_TES_STYCAST_FIT_MIN_W_PER_K,
             G_TES_STYCAST_FIT_MAX_W_PER_K,
@@ -965,15 +982,21 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
             G_ABS_ABS_FIT_MAX_W_PER_K,
         ),
         "excess_johnson_M": Bound(0.0, EXCESS_JOHNSON_MAX, logarithmic=False),
-        # Empirical white readout floor added after the fixed 100 kHz analog
-        # hardware stage and before the software analysis filter. It is parameterized as a
-        # fraction of the detector ASD near 1 kHz so the search scale remains
-        # well conditioned while the final candidate stores the absolute ASD.
         "post_filter_white_fraction": Bound(
             POST_FILTER_WHITE_FRACTION_MIN,
             POST_FILTER_WHITE_FRACTION_MAX,
         ),
     }
+    if use_rc_relaxation:
+        bounds["R_l"] = Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM)
+        bounds["R_rc"] = Bound(R_RC_FIT_MIN_OHM, R_RC_FIT_MAX_OHM)
+        bounds["f_rc_Hz"] = Bound(F_RC_FIT_MIN_HZ, F_RC_FIT_MAX_HZ)
+    else:
+        bounds["R_series_eff"] = Bound(
+            R_SERIES_EFF_FIT_MIN_OHM,
+            R_SERIES_EFF_FIT_MAX_OHM,
+        )
+    return bounds
 
 
 def vector_bounds(bounds: dict):
@@ -2415,6 +2438,7 @@ def decode(
     bounds,
     sample_rate: float,
     post_filter_white_asd: float,
+    electrical_link_model: str = "rl",
 ):
     candidate = original.copy()
     for key, value in zip(keys, vector):
@@ -2440,7 +2464,11 @@ def decode(
     candidate["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     candidate["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
     candidate["thermal_link_model"] = "stycast_node"
-    candidate["electrical_link_model"] = ELECTRICAL_LINK_MODEL_RC
+    candidate["electrical_link_model"] = electrical_link_model
+    if electrical_link_model == "rl":
+        candidate["R_l"] = float(candidate["R_series_eff"])
+        candidate.pop("R_rc", None)
+        candidate.pop("f_rc_Hz", None)
     return candidate
 
 
