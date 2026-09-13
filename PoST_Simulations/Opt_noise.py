@@ -114,10 +114,13 @@ C_TES_MATERIAL_J_PER_K = 7.8475e-13
 # act as an effective local heat capacity ranging from mostly-bare TES to
 # TES plus roughly one glue pad.
 C_STYCAST_PAD_MATERIAL_J_PER_K = 1.1407e-11
+C_STYCAST_FIT_MIN_J_PER_K = 0.03 * C_STYCAST_PAD_MATERIAL_J_PER_K
+C_STYCAST_FIT_MAX_J_PER_K = 10.0 * C_STYCAST_PAD_MATERIAL_J_PER_K
+
+# With Stycast represented explicitly, keep the TES heat capacity tied more
+# closely to the bilayer rather than letting it absorb the glue heat capacity.
 C_TES_FIT_MIN_J_PER_K = 0.25 * C_TES_MATERIAL_J_PER_K
-C_TES_FIT_MAX_J_PER_K = 1.5 * (
-    C_TES_MATERIAL_J_PER_K + C_STYCAST_PAD_MATERIAL_J_PER_K
-)
+C_TES_FIT_MAX_J_PER_K = 5.0 * C_TES_MATERIAL_J_PER_K
 
 # Pb absorber: 20 mm x 1 mm x 0.7 mm, rho=9860 kg/m3,
 # cp=3.26e-5 J/(kg K) -> 4.50e-9 J/K in the current Elmer table.
@@ -142,8 +145,10 @@ G_ABS_ABS_FIT_MAX_W_PER_K = 30.0 * G_ABS_ABS_MATERIAL_W_PER_K
 # contact area, cracks/voids, and low-T transport are poorly known, so permit
 # a similarly broad effective TES--absorber conductance.
 G_ABS_TES_MATERIAL_W_PER_K = 2.622e-8
-G_ABS_TES_FIT_MIN_W_PER_K = 0.03 * G_ABS_TES_MATERIAL_W_PER_K
-G_ABS_TES_FIT_MAX_W_PER_K = 30.0 * G_ABS_TES_MATERIAL_W_PER_K
+G_TES_STYCAST_FIT_MIN_W_PER_K = 0.03 * G_ABS_TES_MATERIAL_W_PER_K
+G_TES_STYCAST_FIT_MAX_W_PER_K = 30.0 * G_ABS_TES_MATERIAL_W_PER_K
+G_STYCAST_ABS_FIT_MIN_W_PER_K = 0.03 * G_ABS_TES_MATERIAL_W_PER_K
+G_STYCAST_ABS_FIT_MAX_W_PER_K = 30.0 * G_ABS_TES_MATERIAL_W_PER_K
 
 POST_FILTER_WHITE_FRACTION_MIN = 1.0e-6
 POST_FILTER_WHITE_FRACTION_MAX = 1.0
@@ -160,10 +165,10 @@ class Bound:
 
 def arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--de-maxiter", type=int, default=35)
-    parser.add_argument("--de-popsize", type=int, default=8)
-    parser.add_argument("--powell-maxfev", type=int, default=800)
-    parser.add_argument("--least-squares-max-nfev", type=int, default=250)
+    parser.add_argument("--de-maxiter", type=int, default=45)
+    parser.add_argument("--de-popsize", type=int, default=10)
+    parser.add_argument("--powell-maxfev", type=int, default=1000)
+    parser.add_argument("--least-squares-max-nfev", type=int, default=350)
     parser.add_argument("--skip-de", action="store_true")
     parser.add_argument("--apply-final", action="store_true")
     parser.add_argument("--timeout", type=int, default=1800)
@@ -728,12 +733,20 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
         "L": Bound(L_FIT_MIN_H, L_FIT_MAX_H),
         "n": Bound(N_FIT_MIN, N_FIT_MAX, logarithmic=False),
         "C_tes": Bound(C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K),
+        "C_stycast": Bound(
+            C_STYCAST_FIT_MIN_J_PER_K,
+            C_STYCAST_FIT_MAX_J_PER_K,
+        ),
         "C_abs": Bound(C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K),
         # G_tes-bath is not a free noise-fit parameter. It is recalculated
         # from the target IV Joule power for every (T_c, n) candidate.
-        "G_abs-tes": Bound(
-            G_ABS_TES_FIT_MIN_W_PER_K,
-            G_ABS_TES_FIT_MAX_W_PER_K,
+        "G_tes-stycast": Bound(
+            G_TES_STYCAST_FIT_MIN_W_PER_K,
+            G_TES_STYCAST_FIT_MAX_W_PER_K,
+        ),
+        "G_stycast-abs": Bound(
+            G_STYCAST_ABS_FIT_MIN_W_PER_K,
+            G_STYCAST_ABS_FIT_MAX_W_PER_K,
         ),
         "G_abs-abs": Bound(
             G_ABS_ABS_FIT_MIN_W_PER_K,
@@ -835,6 +848,7 @@ def decode(
     candidate["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     candidate["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     candidate["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+    candidate["thermal_link_model"] = "stycast_node"
     return candidate
 
 
@@ -934,6 +948,10 @@ def optimize_case(
     case_original["hardware_bessel_order"] = TARGET_HARDWARE_BESSEL_ORDER
     case_original["hardware_bessel_norm"] = TARGET_HARDWARE_BESSEL_NORM
     case_original["hardware_bessel_cutoff_Hz"] = TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+    case_original["thermal_link_model"] = "stycast_node"
+    case_original.setdefault("C_stycast", C_STYCAST_PAD_MATERIAL_J_PER_K)
+    case_original.setdefault("G_tes-stycast", G_ABS_TES_MATERIAL_W_PER_K)
+    case_original.setdefault("G_stycast-abs", G_ABS_TES_MATERIAL_W_PER_K)
     case_original.setdefault(
         "post_filter_white_fraction",
         POST_FILTER_WHITE_FRACTION_INITIAL,
@@ -1075,11 +1093,19 @@ def optimize_case(
             "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
             "n": [N_FIT_MIN, N_FIT_MAX],
             "C_tes_J_per_K": [C_TES_FIT_MIN_J_PER_K, C_TES_FIT_MAX_J_PER_K],
+            "C_stycast_J_per_K": [
+                C_STYCAST_FIT_MIN_J_PER_K,
+                C_STYCAST_FIT_MAX_J_PER_K,
+            ],
             "C_stycast_pad_reference_J_per_K": C_STYCAST_PAD_MATERIAL_J_PER_K,
             "C_abs_J_per_K": [C_ABS_FIT_MIN_J_PER_K, C_ABS_FIT_MAX_J_PER_K],
-            "G_abs_tes_W_per_K": [
-                G_ABS_TES_FIT_MIN_W_PER_K,
-                G_ABS_TES_FIT_MAX_W_PER_K,
+            "G_tes_stycast_W_per_K": [
+                G_TES_STYCAST_FIT_MIN_W_PER_K,
+                G_TES_STYCAST_FIT_MAX_W_PER_K,
+            ],
+            "G_stycast_abs_W_per_K": [
+                G_STYCAST_ABS_FIT_MIN_W_PER_K,
+                G_STYCAST_ABS_FIT_MAX_W_PER_K,
             ],
             "G_abs_abs_W_per_K": [
                 G_ABS_ABS_FIT_MIN_W_PER_K,
@@ -1536,6 +1562,7 @@ def main():
             final_candidate["hardware_bessel_cutoff_Hz"] = (
                 TARGET_HARDWARE_BESSEL_CUTOFF_HZ
             )
+            final_candidate["thermal_link_model"] = "stycast_node"
             write_json_atomically(INPUT_PATH, final_candidate)
             run_post(args.timeout, INPUT_PATH.parent, NOISE_DAT_PATH)
             print(
