@@ -164,7 +164,24 @@ def parse_native_solver_log(log_path: str | Path) -> list[NativeTrialRecord]:
         m = _ACCEPT_RE.search(line)
         if m:
             if pending is None:
-                raise ValueError("accept line with no pending trial (event audit missing)")
+                # Cases without adaptive_time.debug never print "Adaptive
+                # event audit" or "Adaptive trial start" at all; "Adaptive
+                # accept:"/"Adaptive rejection:" are the only unconditional
+                # per-trial lines there (gated by AdaptiveDebug OR
+                # AdaptiveForcedFloor OR AdaptivePreviousRejected). Synthesize
+                # a bare pending record instead of raising.
+                dt = _f(m.group("dt"))
+                pending = {
+                    "id": len(records) + 1,
+                    "event_clipped": False,
+                    "event_landing": False,
+                    "event_endpoint_snapped": False,
+                    "event_forced": m.group("event") == "T",
+                    "proposed_dt": dt,
+                    "time": _f(m.group("t0")),
+                    "final_dt": dt,
+                }
+                pending_linear = []
             state = dict(pending)
             state["accepted"] = True
             state["estimator_control_error"] = _f(m.group("error"))
@@ -231,7 +248,20 @@ def parse_native_solver_log(log_path: str | Path) -> list[NativeTrialRecord]:
         m = _REJECT_RE.search(line)
         if m:
             if pending is None:
-                raise ValueError("rejection line with no pending trial (event audit missing)")
+                # Same non-debug case as the accept branch above: no trial
+                # marker lines exist at all, only "Adaptive rejection:" itself.
+                rejected_dt = _f(m.group("hnew"))
+                pending = {
+                    "id": len(records) + 1,
+                    "event_clipped": False,
+                    "event_landing": False,
+                    "event_endpoint_snapped": False,
+                    "event_forced": m.group("event") == "T",
+                    "proposed_dt": rejected_dt,
+                    "time": _f(m.group("t0")),
+                    "final_dt": rejected_dt,
+                }
+                pending_linear = []
             records.append(
                 NativeTrialRecord(
                     trial_id=pending["id"],

@@ -13,6 +13,9 @@ FIXTURE = Path(__file__).parent / "fixtures" / "adaptive_native_log_snippet.txt"
 NO_EVENT_AUDIT_FIXTURE = (
     Path(__file__).parent / "fixtures" / "adaptive_native_log_no_event_audit_snippet.txt"
 )
+FULLY_BARE_FIXTURE = (
+    Path(__file__).parent / "fixtures" / "adaptive_native_log_fully_bare_snippet.txt"
+)
 
 
 def test_fixture_is_a_verbatim_prefix_of_the_frozen_20ns_baseline() -> None:
@@ -93,6 +96,23 @@ def test_parses_trials_with_no_physical_events_configured() -> None:
     assert [r.event_landing for r in records] == [False, False, False]
     assert [r.bdf_order for r in records] == [1, 2, 1]
     assert records[1].estimator_control_error == pytest.approx(2.423130907247)
+
+
+def test_parses_trials_with_no_debug_and_no_trial_markers_at_all() -> None:
+    """Cases without adaptive_time.debug never print 'Adaptive event audit' OR
+    'Adaptive trial start' -- 'Adaptive accept:'/'Adaptive rejection:' are the
+    only unconditional per-trial lines (gated by AdaptiveDebug OR
+    AdaptiveForcedFloor OR AdaptivePreviousRejected), from
+    results/case_phase24_adaptive_post_event_cooldown_2ns/solver.log (trials
+    1-2, both event-forced accepts hence logged despite no debug flag)."""
+    records = parse_native_solver_log(FULLY_BARE_FIXTURE)
+    assert [r.trial_id for r in records] == [1, 2]
+    assert [r.accepted for r in records] == [True, True]
+    assert [r.bdf_order for r in records] == [1, 1]
+    assert records[0].final_dt == pytest.approx(9.999999994736e-10)
+    assert records[1].final_dt == pytest.approx(1e-9)
+    assert records[0].event_forced is True
+    assert records[1].event_forced is False
 
 
 def test_missing_summary_line_returns_none(tmp_path) -> None:

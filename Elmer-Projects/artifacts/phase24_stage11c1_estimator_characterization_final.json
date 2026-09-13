@@ -1,0 +1,55 @@
+{
+  "stage": "Stage 11C-1 Estimator Characterization",
+  "status": "GATE_11C1_PARTIAL_PASS",
+  "commit": "909ee0d6 (parser fixes) / 319f0c6d (--toolchain-bin) / e0c49f44 (Logical-prefix SIF fix) -- see git log for the full chain",
+  "purpose": "Determine whether the BDF2-reject-driving estimator error is real temporal discretization error or an artifact of order/history/step-doubling handling near a physical event, and whether a Richardson-style correction is justified, before Stage 11C-2 touches the recovery state machine.",
+  "supersedes": "artifacts/phase24_stage11c1_estimator_characterization_interim.json (BDF1-only interim finding; still valid, folded in below with independent state-level validation added)",
+  "environment_note": "This work required two blocking environment issues to be found and fixed first (see artifacts/phase24_stage11_native_environment_blocker.json): a Logical-type-prefix SIF generation bug in build_cases.py, and a missing --toolchain-bin (C:\\msys64\\ucrt64\\bin) PATH entry for the MinGW-UCRT64-built install-stage11 solver (root-caused by the user, not this session). All native runs below used the corrected environment.",
+
+  "finding_1_fine_reference_self_convergence": {
+    "method": "Two independent fixed-dt (dt_min=dt_max=dt_initial, cannot adapt) references were run from the same restart anchor (ADAPTIVE_POST_EVENT_CASE position 3, t=20.020001ms, right after both physical events) across the same 5ns window: case_phase24_stage11c1_fixed_dt_reference_0p25ns (dt=0.25ns, 20 steps) and _0p125ns (dt=0.125ns, 40 steps). Both completed ALL DONE, exit 0, 0 rejections.",
+    "result": "Comparing tes_temperature_K at every time point common to both series: max absolute difference 1.264e-6 K, max relative difference 7.50e-6. Expressed against the production weighted tolerance (atol=1e-8 + rtol=2e-3 * |T|~0.168) = 3.360e-4, the self-convergence ratio is 0.00376 -- under 0.4% of the production error budget.",
+    "conclusion": "PASS. The 0.25ns (and a fortiori the 0.125ns) fixed-dt trajectory is a trustworthy ground truth at production tolerance for this window: refining further changes the state by a negligible fraction of what the production tolerance would even notice. This directly satisfies Stage 11C-1's 'reference itself must show its own convergence' requirement."
+  },
+
+  "finding_2_bdf1_estimator_scaling_non_asymptotic": {
+    "carried_over_from": "phase24_stage11c1_estimator_characterization_interim.json, unchanged",
+    "method": "7 local-dt probes (1.5, 1.25, 1.0, 0.875, 0.75, 0.625, 0.5 ns) plus a dt_min=0.25ns probe, all BDF1 (fresh restart forces order=1), same restart anchor as above.",
+    "result": "Local log-log slope of raw embedded-diff vs dt rises monotonically from 0.72 (1.5->1.25ns) to 1.39 (0.5->0.375ns) with no sign of settling at any tested dt, including below the production dt_min=0.5ns floor.",
+    "conclusion": "The immediate post-event window is not in an asymptotic step-doubling regime at any dt reachable under the production floor. A fixed Richardson correction factor for BDF1 here is not justified by this data (there is no stable asymptotic factor to divide by)."
+  },
+
+  "finding_3_bdf2_reentry_and_stable_from_real_trajectory": {
+    "method": "Re-ran case_phase24_adaptive_post_event_dt_recovery_10ns (production tolerances, dt_min=0.5ns, real adaptive control, NOT a fixed-dt probe) end-to-end in the corrected environment: 25 trials, accepted=20, rejected=5, bdf1=6, bdf2=14, ALL DONE. Classified every accepted BDF2 trial as re-entry (previous accepted trial was BDF1) or stable (previous accepted trial was also BDF2).",
+    "reentry_trials": [
+      {"trial": 4, "dt_ns": 0.5, "raw_error": 1.0668e-3, "weighted_error": 2.754},
+      {"trial": 18, "dt_ns": 0.5, "raw_error": 5.994e-4, "weighted_error": 1.777},
+      {"trial": 22, "dt_ns": 0.6, "raw_error": 6.212e-4, "weighted_error": 0.982},
+      {"trial": 25, "dt_ns": 0.4, "raw_error": 3.621e-4, "weighted_error": 0.578}
+    ],
+    "reentry_log_log_slope": 1.453,
+    "stable_trials_count": 10,
+    "stable_trials_dt_ns": "ALL exactly 0.5ns (the floor) -- trials 5,6,7,8,9,10,11,12,13,19",
+    "key_finding": "Within this 10ns recovery window, EVERY 'stable BDF2' trial (BDF2 following another BDF2, i.e. not a re-entry) sits exactly at dt_min. There is no natural occurrence of a stable, above-floor BDF2 state to sample a controlled dt sweep from -- the system does not sustain BDF2 above the floor long enough to produce one. The BDF2 re-entry trials that DO occasionally reach dt=0.6ns or dt=0.4ns (trials 22, 25) show the same kind of non-converged, still-rising log-log slope (1.45) as the BDF1 data, consistent with finding 2, not contradicting it.",
+    "implication_for_stage_11c2": "This reframes the priority. The estimator's own scaling behavior is inconclusive at every order/state tested (BDF1, re-entry-BDF2), and 'stable BDF2 above floor' is not an available regime to calibrate a correction against -- it doesn't exist yet under the current policy. This is evidence FOR Stage 11C-0's original hypothesis (the reject/floor/re-entry state-machine interaction, not the estimator formula per se, is the primary blocker) and AGAINST spending further effort on an estimator correction before the state machine itself is fixed. Stage 11C-2 should proceed on the state-machine track; estimator correction (if still needed) should be revisited only after Stage 11C-2's fix has produced runs with genuine sustained above-floor BDF2 to characterize."
+  },
+
+  "known_gap_not_pursued": {
+    "description": "The 7 local-dt probes (finding 2) were re-run in the corrected environment with full run.py output collection, but their TES Series File output was not written/collected (no case_phase24_adaptive_local_dt_*ns_series.csv appeared anywhere, unlike the fixed-dt reference cases which did produce one). Root cause not investigated (out of scope for this pass) -- likely tied to how few trials/output writes a single-trial probe performs. As a result, local-dt-probe accuracy was only cross-checked via the internal full/half embedded estimator (a real, physically-dimensioned local-truncation-error measure, but not independently cross-validated state-by-state against the fine reference the way the reference-vs-reference check in finding 1 was).",
+    "why_not_blocking": "Finding 1 already validates that the fine reference itself is trustworthy, and finding 2's conclusion (non-asymptotic BDF1 scaling) rests on the estimator's own internal self-consistency across dt, not on an external reference comparison -- so this gap does not undermine either finding. It would matter for a future attempt to fit or validate a specific correction formula against true state error."
+  },
+
+  "gate_criteria": {
+    "estimator_raw_vs_reference_error_relationship_explainable": {"required": true, "observed": true, "status": "PASS", "detail": "Both the BDF1 scaling behavior and the reference's own self-convergence are now explained and quantified."},
+    "bdf2_stable_vs_reentry_distinguished": {"required": true, "observed": true, "status": "PASS_WITH_CAVEAT", "detail": "Distinguished using real trajectory data rather than a controlled same-state dt sweep (building the latter requires a 2-stage bootstrap probe not yet built, since a fresh restart always forces order=1 for its first post-restart trial regardless of anchor -- see remaining_work). The key qualitative finding (stable-above-floor BDF2 does not occur) is robust regardless."},
+    "event_contract_unaffected": {"required": true, "observed": true, "status": "PASS"},
+    "correction_formula_and_conditions_recorded": {"required": true, "observed": true, "status": "PASS", "detail": "Explicit conclusion recorded: no Richardson correction is justified yet for BDF1 or BDF2-re-entry in this near-event regime, and no natural stable-BDF2-above-floor data exists to calibrate one against. This is itself the required documented conclusion."}
+  },
+  "gate_result": "PARTIAL PASS -- sufficient to unblock Stage 11C-2 (state-machine track), with one documented infrastructure gap (local-dt probe series collection) and one documented follow-up (controlled stable-BDF2 dt sweep via a 2-stage bootstrap probe) left for later, not blocking.",
+  "remaining_work_deferred_not_blocking": [
+    "Controlled same-state dt sweep AT a genuine stable-BDF2 state (not floor-pinned): requires a 2-stage probe (a fixed bootstrap step to re-establish order=2 post-restart, since DoneTime-style history resets to order=1 on any restart regardless of anchor, THEN the candidate dt as a second trial) -- not yet built. Lower priority now given finding 3's implication.",
+    "Investigate why local_dt probes don't produce a TES Series File under run.py's standard collection, if true state-level (not just estimator-internal) validation of the BDF1 sweep is later needed.",
+    "0.875ns weighted-error anomaly noted in the interim artifact (non-monotonic vs neighbors) remains unresolved; still attributed to worst-error-DOF migration, not re-investigated this pass."
+  ],
+  "next_allowed_stage": "Stage 11C-2: BDF2 Recovery State Machine. Proceed on the reject/floor/re-entry + growth-timing track identified in Stage 11C-0, informed by finding 3 above."
+}
