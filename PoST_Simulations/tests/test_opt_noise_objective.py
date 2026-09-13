@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -87,8 +88,52 @@ def test_source_class_diagnostics_reconstructs_total_model_psd() -> None:
 def test_eigenmode_diagnostics_reports_stable_seven_state_modes() -> None:
     result = optimizer.eigenmode_diagnostics(_stable_stycast_candidate())
     assert result["state_count"] == 7
+    assert result["state_order"] == [
+        "I1",
+        "TES1",
+        "Stycast1",
+        "Pb_center",
+        "Stycast2",
+        "TES2",
+        "I2",
+    ]
     assert result["stable"] is True
     modes = result["modes_sorted_by_natural_frequency"]
     assert len(modes) == 7
     assert all(mode["real_s_inv"] < 0.0 for mode in modes)
     assert all(mode["natural_frequency_Hz"] > 0.0 for mode in modes)
+    for mode in modes:
+        assert sum(mode["state_participation"].values()) == pytest.approx(1.0)
+        assert mode["dominant_state"] in result["state_order"]
+        assert 0.0 <= mode["dominant_state_participation"] <= 1.0
+
+
+def test_source_ablation_is_diagnostic_and_reports_band_residuals() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 121)
+    curves = optimizer.post_analysis_source_class_asd(candidate, fit_freq)
+    target = optimizer.normalize_at(
+        fit_freq,
+        curves["total_asd_A_rtHz"],
+        reference_hz=optimizer.ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.source_ablation_diagnostics(
+        curves,
+        target,
+        fit_freq,
+        args,
+    )
+    assert result["diagnostic_only"] is True
+    assert result["full_model_shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert "TES_Johnson" in result["remove_one_source_class"]
+    johnson = result["remove_one_source_class"]["TES_Johnson"]
+    assert johnson["shape_score"] > 0.0
+    assert "40000-100000_Hz" in johnson["bands"]
+    assert "100000-200000_Hz" in johnson["bands"]
