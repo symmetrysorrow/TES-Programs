@@ -1388,14 +1388,28 @@ def MakeNoise():
             "thermal_link_model",
             "effective",
         )
-        f.attrs[
-            "noise_model"
-        ] = (
-            "seven_state_stycast_node"
-            if thermal_link_model == "stycast_node"
-            else "five_state_effective_conductance"
+        electrical_link_model = shared_noise.get(
+            "electrical_link_model",
+            "rl",
+        )
+        if thermal_link_model == "stycast_node":
+            noise_state_count = 9 if electrical_link_model == "rl_rc_relaxation" else 7
+            base_noise_model = "stycast_node"
+        else:
+            noise_state_count = 7 if electrical_link_model == "rl_rc_relaxation" else 5
+            base_noise_model = "effective_conductance"
+        f.attrs["noise_model"] = (
+            f"{noise_state_count}_state_{base_noise_model}"
         )
         f.attrs["thermal_link_model"] = thermal_link_model
+        f.attrs["electrical_link_model"] = electrical_link_model
+        f.attrs["tes_resistance_response"] = "instantaneous_alpha_beta"
+        if electrical_link_model == "rl_rc_relaxation":
+            point = shared_noise["operating_point"]
+            f.attrs["R_rc_ohm"] = float(point["R_rc_ohm"])
+            f.attrs["f_rc_Hz"] = float(point["f_rc_Hz"])
+            f.attrs["tau_rc_s"] = float(point["tau_rc_s"])
+            f.attrs["C_rc_equivalent_F"] = float(point["C_rc_equivalent_F"])
 
         f.attrs["excess_johnson_M"] = excess_johnson_M
         f.attrs["johnson_model"] = "standard_tes_johnson_with_excess_factor"
