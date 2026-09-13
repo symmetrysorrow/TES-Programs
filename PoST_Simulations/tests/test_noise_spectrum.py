@@ -10,12 +10,23 @@ SIMULATION_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIMULATION_ROOT))
 
 import PoST_Simulation as simulation  # noqa: E402
+from lib.tes_noise_model import (  # noqa: E402
+    tes_johnson_voltage_asd as shared_tes_johnson_voltage_asd,
+)
 
 
 def test_tes_johnson_m_zero_is_standard_expression():
     expected = np.sqrt(4 * simulation.k_b * 0.1 * 0.01 * (1 + 2 * 1.6))
     np.testing.assert_allclose(
         simulation.tes_johnson_voltage_asd(0.1, 0.01, 1.6, 0.0), expected
+    )
+
+
+def test_production_johnson_wrapper_matches_shared_model():
+    args = (0.24, 0.0175, 2.4, 0.3)
+    np.testing.assert_allclose(
+        simulation.tes_johnson_voltage_asd(*args),
+        shared_tes_johnson_voltage_asd(*args),
     )
 
 
