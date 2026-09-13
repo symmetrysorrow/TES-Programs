@@ -1186,35 +1186,130 @@ def source_class_diagnostics(
     return summary, curves
 
 
+def source_ablation_diagnostics(
+    curves: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Report the normalized fit if one source class is removed in PSD."""
+
+    frequency = np.asarray(curves["frequencies_Hz"], dtype=float)
+    total_asd = np.asarray(curves["total_asd_A_rtHz"], dtype=float)
+    target = np.asarray(target, dtype=float)
+    fit_freq = np.asarray(fit_freq, dtype=float)
+    if frequency.shape != fit_freq.shape or not np.allclose(
+        frequency, fit_freq, rtol=0.0, atol=1e-9
+    ):
+        raise ValueError("source-ablation curves must use the optimizer fit grid")
+    if target.shape != fit_freq.shape:
+        raise ValueError("source-ablation target must use the optimizer fit grid")
+
+    full_normalized = normalize_at(
+        frequency, total_asd, reference_hz=ABSOLUTE_ASD_REFERENCE_HZ
+    )
+    full_score = float(fit_score(full_normalized, target, fit_freq, args))
+    result = {
+        "diagnostic_only": True,
+        "normalization_Hz": float(ABSOLUTE_ASD_REFERENCE_HZ),
+        "full_model_shape_score": full_score,
+        "remove_one_source_class": {},
+    }
+
+    total_psd = total_asd**2
+    tiny = np.finfo(float).tiny
+    for name, class_asd in curves["class_asd_A_rtHz"].items():
+        class_asd = np.asarray(class_asd, dtype=float)
+        ablated_asd = np.sqrt(np.maximum(total_psd - class_asd**2, tiny))
+        ablated_normalized = normalize_at(
+            frequency, ablated_asd, reference_hz=ABSOLUTE_ASD_REFERENCE_HZ
+        )
+        residual = log_ratio_residual(ablated_normalized, target)
+        score = float(fit_score(ablated_normalized, target, fit_freq, args))
+        bands = {}
+        for low, high, _weight in FIT_BANDS_HZ:
+            low_eff = max(float(low), float(args.fit_min_hz))
+            high_eff = min(float(high), float(args.fit_max_hz))
+            mask = (fit_freq >= low_eff) & (fit_freq <= high_eff)
+            if not np.any(mask):
+                continue
+            mean_log = float(np.mean(residual[mask]))
+            bands[f"{low_eff:g}-{high_eff:g}_Hz"] = {
+                "rms_log10_ratio": float(np.sqrt(np.mean(residual[mask] ** 2))),
+                "mean_log10_ratio": mean_log,
+                "geometric_mean_model_over_measurement": float(10.0 ** mean_log),
+            }
+        result["remove_one_source_class"][name] = {
+            "shape_score": score,
+            "score_change_vs_full": float(score - full_score),
+            "bands": bands,
+        }
+    return result
+
+
 def eigenmode_diagnostics(candidate: dict) -> dict:
-    """Return seven-state small-signal eigenmodes as physical frequencies."""
+    """Return eigenfrequencies and scaled state participation for each mode."""
 
     matrix = tes_linearized_matrix(candidate, 0.0)
-    eigenvalues = np.linalg.eigvals(-matrix)
+    eigenvalues, eigenvectors = np.linalg.eig(-matrix)
+    point = tes_operating_point(candidate)
+    current_scale = float(point["current_A"])
+    temperature_scale = float(candidate["T_c"])
+
+    if matrix.shape[0] == 7:
+        state_names = ("I1", "TES1", "Stycast1", "Pb_center", "Stycast2", "TES2", "I2")
+        state_scales = np.asarray(
+            [current_scale, temperature_scale, temperature_scale, temperature_scale,
+             temperature_scale, temperature_scale, current_scale],
+            dtype=float,
+        )
+    elif matrix.shape[0] == 5:
+        state_names = ("I1", "TES1", "Pb_center", "TES2", "I2")
+        state_scales = np.asarray(
+            [current_scale, temperature_scale, temperature_scale,
+             temperature_scale, current_scale],
+            dtype=float,
+        )
+    else:
+        raise ValueError(f"Unsupported TES state count: {matrix.shape[0]}")
+
     rows = []
-    for value in eigenvalues:
+    for index, value in enumerate(eigenvalues):
         real = float(np.real(value))
         imag = float(np.imag(value))
         magnitude = float(np.abs(value))
         decay_rate = max(-real, 0.0)
+        scaled = eigenvectors[:, index] / state_scales
+        raw = np.abs(scaled) ** 2
+        norm = float(np.sum(raw))
+        participation = raw / norm if np.isfinite(norm) and norm > 0.0 else np.zeros_like(raw)
+        state_participation = {
+            name: float(part) for name, part in zip(state_names, participation)
+        }
+        dominant_state = max(state_participation, key=state_participation.get)
         rows.append(
             {
                 "real_s_inv": real,
                 "imag_s_inv": imag,
-                "time_constant_s": (
-                    float(1.0 / decay_rate) if decay_rate > 0.0 else None
-                ),
+                "time_constant_s": float(1.0 / decay_rate) if decay_rate > 0.0 else None,
                 "decay_corner_Hz": float(decay_rate / (2.0 * np.pi)),
                 "oscillation_Hz": float(abs(imag) / (2.0 * np.pi)),
                 "natural_frequency_Hz": float(magnitude / (2.0 * np.pi)),
-                "damping_ratio": (
-                    float(decay_rate / magnitude) if magnitude > 0.0 else None
-                ),
+                "damping_ratio": float(decay_rate / magnitude) if magnitude > 0.0 else None,
+                "dominant_state": dominant_state,
+                "dominant_state_participation": float(state_participation[dominant_state]),
+                "state_participation": state_participation,
             }
         )
     rows.sort(key=lambda row: row["natural_frequency_Hz"])
     return {
         "state_count": int(matrix.shape[0]),
+        "state_order": list(state_names),
+        "participation_scaling": {
+            "current_states": "delta_I / operating_current",
+            "thermal_states": "delta_T / T_c",
+            "normalization": "sum(abs(scaled_eigenvector)**2) = 1 per mode",
+        },
         "stable": bool(all(row["real_s_inv"] < 0.0 for row in rows)),
         "modes_sorted_by_natural_frequency": rows,
     }
@@ -1812,6 +1907,12 @@ def optimize_case(
         fit_freq,
         args,
     )
+    source_ablation_summary = source_ablation_diagnostics(
+        source_curves,
+        target,
+        fit_freq,
+        args,
+    )
     eigenmode_summary = eigenmode_diagnostics(best_candidate.copy())
     source_plot_path = plot_source_class_diagnostics(
         source_curves,
@@ -1833,6 +1934,8 @@ def optimize_case(
     print(json.dumps(boundary_diagnostics, indent=2))
     print("Source-class diagnostics:")
     print(json.dumps(source_diagnostics, indent=2))
+    print("Source-ablation diagnostics:")
+    print(json.dumps(source_ablation_summary, indent=2))
     print("Eigenmode diagnostics:")
     print(json.dumps(eigenmode_summary, indent=2))
     print("Best fitted parameters:")
@@ -1854,6 +1957,7 @@ def optimize_case(
         "absolute_asd_diagnostics": absolute_asd_diagnostics,
         "parameter_boundary_diagnostics": boundary_diagnostics,
         "source_class_diagnostics": source_diagnostics,
+        "source_ablation_diagnostics": source_ablation_summary,
         "eigenmode_diagnostics": eigenmode_summary,
         "source_contribution_plot": str(source_plot_path),
         "least_squares": {
@@ -2129,6 +2233,9 @@ def main():
             ),
             "best_case_source_class_diagnostics": best_case[
                 "source_class_diagnostics"
+            ],
+            "best_case_source_ablation_diagnostics": best_case[
+                "source_ablation_diagnostics"
             ],
             "best_case_eigenmode_diagnostics": best_case[
                 "eigenmode_diagnostics"
