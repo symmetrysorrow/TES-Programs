@@ -89,8 +89,8 @@ TARGET_HARDWARE_BESSEL_ORDER = 4
 # scipy's magnitude-normalized Bessel convention over the legacy phase norm.
 TARGET_HARDWARE_BESSEL_NORM = "mag"
 TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
-T_C_FIT_MIN_K = 0.235
-T_C_FIT_MAX_K = 0.275
+T_BATH_FIT_HALF_WIDTH_K = 0.002
+ALPHA_FIT_MAX = 200.0
 L_FIT_MIN_H = 1.0e-10
 L_FIT_MAX_H = 12.3e-9
 
@@ -319,9 +319,9 @@ def target_case_reference(case_dir: Path, explicit_reference: Path | None = None
         reference = load_json(explicit_reference)
         reference_source = str(explicit_reference)
 
-    # The target acquisition is the 215 mK case.  Keep the measured/setpoint
-    # bath condition fixed instead of inheriting the unrelated 136 mK generic
-    # PoST input.
+    # The target acquisition is the 215 mK case. Use the setpoint as the
+    # starting value, while the optimizer may move it slightly within the
+    # configured target-stage uncertainty.
     reference["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
     reference["rate"] = 500_000.0
     reference["samples"] = 100_000
@@ -758,19 +758,29 @@ def parameter_bounds(reference: dict, envelope: dict, fixed_r_ohm: float):
     """
 
     sensitivity = envelope["sensitivity_reference"]
+    tc_low, tc_high = map(float, envelope["parameters"]["T_c"]["range"])
+    tbath_nominal = float(envelope["parameters"]["T_bath"]["nominal"])
 
     def ref(name):
         return float(sensitivity[name])
 
     return {
-        # Slightly wider than the proxy-envelope range so the optimizer can
-        # test whether the residual curvature is driven by the assumed
-        # transition temperature before adding another thermal state.
-        "T_c": Bound(T_C_FIT_MIN_K, T_C_FIT_MAX_K, logarithmic=False),
+        # Keep T_c inside the independently motivated nearby-run RT envelope.
+        # The previous 235--275 mK search was intentionally broad, but it let
+        # the noise-only fit push T_c to the artificial upper boundary.
+        "T_c": Bound(tc_low, tc_high, logarithmic=False),
+        # The 215 mK value is a setpoint label rather than an in-situ absolute
+        # TES-stage thermometer. Allow a small +/-2 mK offset while preserving
+        # the measured operating-point Joule power through the derived G.
+        "T_bath": Bound(
+            tbath_nominal - T_BATH_FIT_HALF_WIDTH_K,
+            tbath_nominal + T_BATH_FIT_HALF_WIDTH_K,
+            logarithmic=False,
+        ),
         # Do not let the noise fit replace a missing electrical transfer
         # function with a tens-of-mOhm effective load.
         "R_l": Bound(R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM),
-        "alpha": Bound(ref("alpha") * 0.05, 100.0, logarithmic=False),
+        "alpha": Bound(ref("alpha") * 0.05, ALPHA_FIT_MAX, logarithmic=False),
         "beta": Bound(0.0, 12.0, logarithmic=False),
         # Circuit inductance is independently constrained by the hardware:
         # allow the optimizer to move freely only from 0.1 nH to 12.3 nH.
@@ -1077,7 +1087,6 @@ def optimize_case(
         )
         candidate["R"] = fixed_r_ohm
         candidate["R_SH"] = shunt_resistance_ohm
-        candidate["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
         candidate["samples"] = int(experimental_samples)
         evaluation_count += 1
 
@@ -1126,14 +1135,17 @@ def optimize_case(
         f"R_TES={fixed_r_ohm * 1e3:.6f} mOhm ==="
     )
     print(
-        f"Target assumptions: T_bath={case_original['T_bath']:.6g} K, "
+        f"Target assumptions: T_bath search="
+        f"{bounds['T_bath'].lower:.6g}--{bounds['T_bath'].upper:.6g} K, "
         f"T_c search={bounds['T_c'].lower:.6g}--{bounds['T_c'].upper:.6g} K, "
         f"P_J={case_original['_target_joule_power_W']:.6g} W"
     )
     print(
         "Physical fit bounds:",
         {
-            "T_c_K": [T_C_FIT_MIN_K, T_C_FIT_MAX_K],
+            "T_c_K": [bounds["T_c"].lower, bounds["T_c"].upper],
+            "T_bath_K": [bounds["T_bath"].lower, bounds["T_bath"].upper],
+            "alpha": [bounds["alpha"].lower, bounds["alpha"].upper],
             "L_H": [L_FIT_MIN_H, L_FIT_MAX_H],
             "R_l_ohm": [R_L_FIT_MIN_OHM, R_L_FIT_MAX_OHM],
             "n": [N_FIT_MIN, N_FIT_MAX],
@@ -1220,7 +1232,6 @@ def optimize_case(
         )
         candidate["R"] = fixed_r_ohm
         candidate["R_SH"] = shunt_resistance_ohm
-        candidate["T_bath"] = float(envelope["parameters"]["T_bath"]["nominal"])
         candidate["samples"] = int(experimental_samples)
         evaluation_count += 1
 
@@ -1512,8 +1523,13 @@ def main():
                 float(value * 1e3) for value in shunt_values_ohm
             ],
             "tes_resistance_is_fitted": False,
+            "T_bath_is_fitted": True,
+            "T_bath_nominal_K": float(reference["T_bath"]),
+            "T_bath_search_K": [
+                float(reference["T_bath"] - T_BATH_FIT_HALF_WIDTH_K),
+                float(reference["T_bath"] + T_BATH_FIT_HALF_WIDTH_K),
+            ],
             "fixed_target_assumptions": {
-                "T_bath_K": float(reference["T_bath"]),
                 "rate_Hz": experimental_rate,
                 "samples": experimental_samples,
                 "hardware_bessel_order": TARGET_HARDWARE_BESSEL_ORDER,
@@ -1527,10 +1543,11 @@ def main():
                 ],
                 "analysis_bessel_cutoff_Hz": float(SIM_ANALYSIS_CUTOFF_HZ),
             },
-            "T_c_proxy_range_K": [
+            "T_c_fit_range_K": [
                 float(envelope["parameters"]["T_c"]["range"][0]),
                 float(envelope["parameters"]["T_c"]["range"][1]),
             ],
+            "alpha_fit_max": float(ALPHA_FIT_MAX),
             "thermal_link_model": "stycast_node",
             "stycast_node": {
                 "topology": "TES <-> Stycast <-> Pb absorber center",
@@ -1616,7 +1633,6 @@ def main():
             final_candidate = best_case["best_candidate"].copy()
             final_candidate["samples"] = experimental_samples
             final_candidate["rate"] = experimental_rate
-            final_candidate["T_bath"] = float(reference["T_bath"])
             final_candidate["cutoff"] = SIM_ANALYSIS_CUTOFF_HZ
             final_candidate["hardware_bessel_order"] = (
                 TARGET_HARDWARE_BESSEL_ORDER
