@@ -76,7 +76,11 @@ FIT_ROBUST_DELTA_DEX = 0.30
 FIT_POINTS = 601
 FIT_BAND_MEAN_PENALTY = 3.0
 ABSOLUTE_ASD_REFERENCE_HZ = 1_000.0
-ABSOLUTE_ASD_WEIGHT_DEFAULT = 1.0
+# The exact target CH0 readout gain/current calibration is unresolved in the
+# target-case provenance, so absolute ASD must not influence the production fit
+# by default.  Keep the diagnostic path available for a future independently
+# calibrated CH0 scale.
+ABSOLUTE_ASD_WEIGHT_DEFAULT = 0.0
 MEASURED_ASD_PA_TO_A = 1.0e-12
 PRODUCTION_ASD_UA_TO_A = 1.0e-6
 FIT_BANDS_HZ = (
@@ -224,9 +228,10 @@ def arguments():
         type=float,
         default=ABSOLUTE_ASD_WEIGHT_DEFAULT,
         help=(
-            "Penalty weight for the absolute CH0 ASD level at 1 kHz. "
-            "Measured modelnoise.txt is converted from pA/rtHz to A/rtHz "
-            "before comparison. Set 0 to recover the shape-only objective."
+            "Optional penalty weight for the reported CH0 ASD level at 1 kHz. "
+            "The target-case absolute readout calibration is unresolved, so the "
+            "default is 0 (diagnostic only). Use a positive value only after an "
+            "independent CH0 current calibration has been established."
         ),
     )
     parser.add_argument(
@@ -1792,7 +1797,14 @@ def main():
                     ABSOLUTE_ASD_REFERENCE_HZ
                 ),
                 "absolute_asd_weight": float(args.absolute_asd_weight),
-                "measurement_modelnoise_units": "pA/rtHz",
+                "absolute_asd_used_in_objective": bool(
+                    args.absolute_asd_weight > 0.0
+                ),
+                "absolute_asd_calibration_status": (
+                    "unresolved_for_exact_target; diagnostic only unless "
+                    "--absolute-asd-weight is explicitly set > 0"
+                ),
+                "measurement_modelnoise_reported_units": "pA/rtHz",
                 "internal_absolute_asd_units": "A/rtHz",
                 "bands_Hz": [
                     {
