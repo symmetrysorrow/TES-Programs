@@ -2064,6 +2064,28 @@ def electrical_rc_degeneracy_diagnostics(
     }
 
 
+def effective_series_resistance_diagnostics(candidate: dict) -> dict:
+    """Describe the one-parameter static electrical fit without over-interpreting it."""
+
+    effective = float(candidate["R_l"])
+    return {
+        "diagnostic_only": False,
+        "electrical_fit_model": "static_effective_series_resistance",
+        "R_series_eff_ohm": effective,
+        "R_series_eff_mOhm": float(effective * 1.0e3),
+        "core_model_parameter": "R_l",
+        "electrical_link_model": "rl",
+        "extra_electrical_state_count": 0,
+        "load_johnson_temperature_K": float(candidate["T_bath"]),
+        "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+        "interpretation_guardrail": (
+            "R_series_eff is the total effective series resistance required by "
+            "the reduced noise model. It is not a decomposition into physical "
+            "load, wiring, SQUID-input, or other hardware resistances."
+        ),
+    }
+
+
 def electrical_rc_ablation_diagnostics(
     candidate: dict,
     target: np.ndarray,
@@ -3036,18 +3058,32 @@ def optimize_case(
         fit_freq,
         args,
     )
-    electrical_rc_ablation_summary = electrical_rc_ablation_diagnostics(
-        best_candidate.copy(),
-        target,
-        fit_freq,
-        args,
-    )
-    electrical_rc_degeneracy_summary = electrical_rc_degeneracy_diagnostics(
-        best_candidate.copy(),
-        target,
-        fit_freq,
-        args,
-    )
+    if use_rc_relaxation:
+        electrical_rc_ablation_summary = electrical_rc_ablation_diagnostics(
+            best_candidate.copy(),
+            target,
+            fit_freq,
+            args,
+        )
+        electrical_rc_degeneracy_summary = electrical_rc_degeneracy_diagnostics(
+            best_candidate.copy(),
+            target,
+            fit_freq,
+            args,
+        )
+        effective_series_summary = {
+            "status": "not_applicable_rc_relaxation_enabled",
+        }
+    else:
+        electrical_rc_ablation_summary = {
+            "status": "not_applicable_static_effective_series_model",
+        }
+        electrical_rc_degeneracy_summary = {
+            "status": "not_applicable_static_effective_series_model",
+        }
+        effective_series_summary = effective_series_resistance_diagnostics(
+            best_candidate.copy()
+        )
     johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
     beta_sweep_summary = beta_sweep_diagnostics(
         best_candidate.copy(),
@@ -3086,6 +3122,8 @@ def optimize_case(
     print(json.dumps(source_ablation_summary, indent=2))
     print("Johnson source-scale diagnostics:")
     print(json.dumps(johnson_scale_summary, indent=2))
+    print("Effective series resistance diagnostics:")
+    print(json.dumps(effective_series_summary, indent=2))
     print("Electrical RC ablation diagnostics:")
     print(json.dumps(electrical_rc_ablation_summary, indent=2))
     print("Electrical RC degeneracy diagnostics:")
@@ -3119,6 +3157,7 @@ def optimize_case(
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
+        "effective_series_resistance_diagnostics": effective_series_summary,
         "electrical_rc_ablation_diagnostics": electrical_rc_ablation_summary,
         "electrical_rc_degeneracy_diagnostics": electrical_rc_degeneracy_summary,
         "johnson_beta_audit": johnson_audit_summary,
