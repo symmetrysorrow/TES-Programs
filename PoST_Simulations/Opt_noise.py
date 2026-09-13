@@ -1720,6 +1720,53 @@ def johnson_source_scale_diagnostics(
     }
 
 
+def electrical_rc_ablation_diagnostics(
+    candidate: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Compare the fitted RC model with the same parameters using plain R_l+L."""
+
+    rc_model, _ = deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    plain = candidate.copy()
+    plain["electrical_link_model"] = "rl"
+    plain_model, _ = deterministic_simulated_spectrum(
+        plain,
+        fit_freq,
+    )
+    rc_score = float(fit_score(rc_model, target, fit_freq, args))
+    plain_score = float(fit_score(plain_model, target, fit_freq, args))
+    return {
+        "diagnostic_only": True,
+        "tes_resistance_response": "instantaneous alpha/beta in both models",
+        "fitted_model": ELECTRICAL_LINK_MODEL_RC,
+        "comparison_model": "rl",
+        "R_rc_ohm": float(candidate["R_rc"]),
+        "f_rc_Hz": float(candidate["f_rc_Hz"]),
+        "rc_shape_score": rc_score,
+        "same_parameters_without_rc_shape_score": plain_score,
+        "score_improvement_from_rc_at_same_parameters": float(
+            plain_score - rc_score
+        ),
+        "rc_bands": band_fit_diagnostics(
+            rc_model,
+            target,
+            fit_freq,
+            args,
+        ),
+        "same_parameters_without_rc_bands": band_fit_diagnostics(
+            plain_model,
+            target,
+            fit_freq,
+            args,
+        ),
+    }
+
+
 def johnson_beta_audit(candidate: dict) -> dict:
     """Record the exact beta dependence used by the shared/production model."""
 
@@ -1766,6 +1813,8 @@ def johnson_beta_audit(candidate: dict) -> dict:
         "f_rc_Hz": (
             float(candidate["f_rc_Hz"]) if "f_rc_Hz" in candidate else None
         ),
+        "tau_rc_s": point.get("tau_rc_s"),
+        "C_rc_equivalent_F": point.get("C_rc_equivalent_F"),
         "tes_resistance_response": "instantaneous alpha/beta",
         "note": (
             "This audit records the repository convention and code-path parity; "
@@ -2593,6 +2642,12 @@ def optimize_case(
         fit_freq,
         args,
     )
+    electrical_rc_ablation_summary = electrical_rc_ablation_diagnostics(
+        best_candidate.copy(),
+        target,
+        fit_freq,
+        args,
+    )
     johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
     beta_sweep_summary = beta_sweep_diagnostics(
         best_candidate.copy(),
@@ -2631,6 +2686,8 @@ def optimize_case(
     print(json.dumps(source_ablation_summary, indent=2))
     print("Johnson source-scale diagnostics:")
     print(json.dumps(johnson_scale_summary, indent=2))
+    print("Electrical RC ablation diagnostics:")
+    print(json.dumps(electrical_rc_ablation_summary, indent=2))
     print("Johnson/beta audit:")
     print(json.dumps(johnson_audit_summary, indent=2))
     print("Beta sweep diagnostics:")
@@ -2660,6 +2717,7 @@ def optimize_case(
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
+        "electrical_rc_ablation_diagnostics": electrical_rc_ablation_summary,
         "johnson_beta_audit": johnson_audit_summary,
         "beta_sweep_diagnostics": beta_sweep_summary,
         "eigenmode_diagnostics": eigenmode_summary,
@@ -2965,6 +3023,9 @@ def main():
             ],
             "best_case_johnson_source_scale_diagnostics": best_case[
                 "johnson_source_scale_diagnostics"
+            ],
+            "best_case_electrical_rc_ablation_diagnostics": best_case[
+                "electrical_rc_ablation_diagnostics"
             ],
             "best_case_johnson_beta_audit": best_case[
                 "johnson_beta_audit"
