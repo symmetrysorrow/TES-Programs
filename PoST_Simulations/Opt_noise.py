@@ -1486,6 +1486,16 @@ def main():
                 float(envelope["parameters"]["T_c"]["range"][0]),
                 float(envelope["parameters"]["T_c"]["range"][1]),
             ],
+            "thermal_link_model": "stycast_node",
+            "stycast_node": {
+                "topology": "TES <-> Stycast <-> Pb absorber center",
+                "symmetric_nodes": 2,
+                "fitted_parameters": [
+                    "C_stycast",
+                    "G_tes-stycast",
+                    "G_stycast-abs",
+                ],
+            },
             "optimization_evaluator": (
                 "deterministic expected post-analysis ASD; full-record "
                 "production validation only for each branch winner"
