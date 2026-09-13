@@ -373,3 +373,30 @@ def test_rc_relaxation_bounds_are_small_two_parameter_extension() -> None:
     assert optimizer.R_RC_FIT_MAX_OHM == pytest.approx(20.0e-3)
     assert optimizer.F_RC_FIT_MIN_HZ == pytest.approx(5_000.0)
     assert optimizer.F_RC_FIT_MAX_HZ == pytest.approx(500_000.0)
+
+
+
+def test_rc_ablation_reports_direct_score_gain() -> None:
+    candidate = _stable_stycast_rc_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    target, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.electrical_rc_ablation_diagnostics(
+        candidate,
+        target,
+        fit_freq,
+        args,
+    )
+    assert result["rc_shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    assert result["same_parameters_without_rc_shape_score"] > 0.0
+    assert result["score_improvement_from_rc_at_same_parameters"] > 0.0
+    assert result["tes_resistance_response"] == "instantaneous alpha/beta in both models"
