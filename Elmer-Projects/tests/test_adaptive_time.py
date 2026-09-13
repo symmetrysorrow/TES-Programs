@@ -10,6 +10,7 @@ from scripts.support.adaptive_time import (
     bdf1_coefficients,
     dense_linear,
     is_event_landing,
+    TrialMetadata,
     variable_bdf2_coefficients,
     weighted_error,
 )
@@ -41,10 +42,11 @@ def test_schedules_are_independent_of_internal_steps() -> None:
 def test_events_clip_but_outputs_do_not() -> None:
     config = AdaptiveConfig(0.1, 0.01, 0.5)
     controller = AdaptiveController(config)
-    dt, forced = controller.propose(0.0, 1.0, next_event=0.25)
-    assert (dt, forced) == pytest.approx((0.1, False))
-    dt, forced = controller.propose(0.2, 1.0, next_event=0.25)
-    assert (dt, forced) == pytest.approx((0.05, True))
+    trial = controller.propose(0.0, 1.0, next_event=0.25)
+    assert isinstance(trial, TrialMetadata)
+    assert (trial.final_dt, trial.event_forced) == pytest.approx((0.1, False))
+    trial = controller.propose(0.2, 1.0, next_event=0.25)
+    assert (trial.final_dt, trial.event_forced) == pytest.approx((0.05, True))
     assert controller.last_event_clipped is True
     assert controller.last_event_landing is True
 
@@ -56,14 +58,52 @@ def test_exact_event_landing_without_clipping_resets_to_bdf1() -> None:
     controller = AdaptiveController(AdaptiveConfig(dt, 0.5e-9, 1.0e-4))
     controller.dt = dt
 
-    proposed, forced = controller.propose(t0, event, next_event=event)
+    trial = controller.propose(t0, event, next_event=event)
 
-    assert proposed == pytest.approx(dt)
-    assert forced is False
+    assert trial.final_dt == pytest.approx(dt)
+    assert trial.event_forced is False
     assert controller.last_event_clipped is False
     assert controller.last_event_landing is True
-    controller.accept(proposed, 25.0, event_forced=forced)
+    controller.accept(trial, 25.0)
     assert controller.bdf_order == 1
+    assert trial.final_dt + t0 == pytest.approx(event)
+
+
+@pytest.mark.parametrize("offset", (-1.1, -1.0, -0.5, 0.0, 0.5, 1.0, 1.1))
+def test_event_epsilon_contract(offset: float) -> None:
+    event = 1.0
+    t0 = 0.0
+    epsilon = 1.0e-12
+    endpoint = event + offset * epsilon
+    controller = AdaptiveController(AdaptiveConfig(1.0, 0.1, 2.0))
+    trial = controller.propose(t0, 2.0, next_event=event)
+    # Drive the final endpoint through the public controller using a fresh
+    # controller whose proposal is the requested boundary case.
+    controller.dt = endpoint
+    trial = controller.propose(t0, 2.0, next_event=event)
+    within = abs(offset) <= 1.0
+    clipped = offset > 1.0
+    assert trial.event_clipped is clipped
+    assert trial.event_forced is clipped
+    assert trial.event_landing is (within or clipped)
+    assert trial.event_endpoint_snapped is (within and offset != 0.0)
+    assert trial.final_dt <= event
+    if within or clipped:
+        assert trial.final_dt == pytest.approx(event)
+    else:
+        assert trial.event_endpoint_snapped is False
+
+
+def test_event_landing_holds_bdf1_for_immediate_post_event_trial() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.5e-9, 0.5e-9, 1.0e-4))
+    trial = controller.propose(0.5e-9, 1.0e-9, next_event=1.0e-9)
+    controller.accept(trial, 0.1)
+    assert controller.bdf_order == 1
+    post = controller.propose(1.0e-9, 2.0e-9)
+    assert post.bdf_order == 1
+    controller.accept(post, 0.1)
+    following = controller.propose(1.0e-9 + post.final_dt, 2.0e-9)
+    assert following.bdf_order == 2
 
 
 def test_event_landing_requires_endpoint_at_event() -> None:

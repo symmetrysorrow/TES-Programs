@@ -1,71 +1,326 @@
 {
-  "target_iv": "G:\\tagawa\\20241206\\room1-ch1-iv3\\calibration\\IV_215mK.txt",
-  "target_bias_uA": 1400.0,
-  "r_shunt_sweep_mOhm": [
-    3.8,
-    3.85,
-    3.9
-  ],
-  "tes_resistance_is_fitted": false,
-  "alpha_bounds": [
-    50.0,
-    100.0
-  ],
-  "cases": [
-    {
-      "R_SH_ohm": 0.0038,
-      "R_TES_ohm": 0.017323886698759824,
-      "iv_operating_point": {
-        "R_SH_ohm": 0.0038,
-        "I_bias_uA": 1400.0,
-        "I_TES_uA": 251.84759205853607,
-        "V_TES_V": 4.362979150177563e-06,
-        "R_TES_ohm": 0.017323886698759824,
-        "P_J_W": 1.098805793173817e-09,
-        "eta_uA_per_V": 100.72533700916726,
-        "iv_point_index": 104
-      },
-      "best_score": 0.0034112448459866678,
-      "evaluations": 493,
-      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p8000mohm"
+    "target_case_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\cases\\tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+    "target_case_reference": "D:\\Github\\TES-Programs\\PoST_Simulations\\cases\\tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2\\proxy_scenarios.json:pulse_consistent_scenarios[0]",
+    "target_iv": "G:\\tagawa\\20241206\\room1-ch1-iv3\\calibration\\IV_215mK.txt",
+    "target_bias_uA": 1400.0,
+    "r_shunt_sweep_mOhm": [
+        3.85
+    ],
+    "tes_resistance_is_fitted": false,
+    "fixed_target_assumptions": {
+        "T_bath_K": 0.215,
+        "rate_Hz": 500000.0,
+        "samples": 100000,
+        "hardware_bessel_order": 4,
+        "hardware_bessel_norm": "mag",
+        "hardware_bessel_cutoff_Hz": 100000.0,
+        "post_filter_white_fraction_search": [
+            1e-06,
+            1.0
+        ],
+        "analysis_bessel_cutoff_Hz": 10000.0
     },
-    {
-      "R_SH_ohm": 0.00385,
-      "R_TES_ohm": 0.017551832576375086,
-      "iv_operating_point": {
-        "R_SH_ohm": 0.00385,
-        "I_bias_uA": 1400.0,
-        "I_TES_uA": 251.84759205853607,
-        "V_TES_V": 4.420386770574637e-06,
-        "R_TES_ohm": 0.017551832576375086,
-        "P_J_W": 1.1132637641366307e-09,
-        "eta_uA_per_V": 100.72533700916726,
-        "iv_point_index": 104
-      },
-      "best_score": 0.003370102961198276,
-      "evaluations": 492,
-      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p8500mohm"
+    "T_c_proxy_range_K": [
+        0.2412532357693213,
+        0.2653066839227378
+    ],
+    "thermal_link_model": "stycast_node",
+    "stycast_node": {
+        "topology": "TES <-> Stycast <-> Pb absorber center",
+        "symmetric_nodes": 2,
+        "fitted_parameters": [
+            "C_stycast",
+            "G_tes-stycast",
+            "G_stycast-abs"
+        ]
     },
-    {
-      "R_SH_ohm": 0.0039,
-      "R_TES_ohm": 0.017779778453990345,
-      "iv_operating_point": {
-        "R_SH_ohm": 0.0039,
-        "I_bias_uA": 1400.0,
-        "I_TES_uA": 251.84759205853607,
-        "V_TES_V": 4.477794390971709e-06,
-        "R_TES_ohm": 0.017779778453990345,
-        "P_J_W": 1.127721735099444e-09,
-        "eta_uA_per_V": 100.72533700916726,
-        "iv_point_index": 104
-      },
-      "best_score": 0.0033946030178134533,
-      "evaluations": 493,
-      "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p9000mohm"
-    }
-  ],
-  "best_case_R_SH_ohm": 0.00385,
-  "best_case_R_TES_ohm": 0.017551832576375086,
-  "best_case_score": 0.003370102961198276,
-  "comparison_plot": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\noise_comparison.png"
+    "optimization_evaluator": "deterministic expected post-analysis ASD; full-record production validation only for each branch winner",
+    "fit": {
+        "min_hz": 1000.0,
+        "max_hz": 200000.0,
+        "weight_start_hz": 40000.0,
+        "high_frequency_weight": 4.0,
+        "robust_delta_dex": 0.3,
+        "points": 601,
+        "loss": "band-balanced robust log10(model/measurement) residual; equalized broad bands plus high-frequency ramp and broad-band mean-ratio penalty",
+        "band_mean_penalty": 3.0,
+        "bands_Hz": [
+            {
+                "min": 1000.0,
+                "max": 5000.0,
+                "weight": 1.0
+            },
+            {
+                "min": 5000.0,
+                "max": 15000.0,
+                "weight": 1.25
+            },
+            {
+                "min": 15000.0,
+                "max": 40000.0,
+                "weight": 1.25
+            },
+            {
+                "min": 40000.0,
+                "max": 100000.0,
+                "weight": 1.5
+            },
+            {
+                "min": 100000.0,
+                "max": 200000.0,
+                "weight": 2.0
+            }
+        ],
+        "frequencies_outside_fit_band_ignored": true
+    },
+    "cases": [
+        {
+            "R_SH_ohm": 0.00385,
+            "R_TES_ohm": 0.017551832576375086,
+            "iv_operating_point": {
+                "R_SH_ohm": 0.00385,
+                "I_bias_uA": 1400.0,
+                "I_TES_uA": 251.84759205853607,
+                "V_TES_V": 4.420386770574637e-06,
+                "R_TES_ohm": 0.017551832576375086,
+                "P_J_W": 1.1132637641366307e-09,
+                "eta_uA_per_V": 100.72533700916726,
+                "iv_point_index": 104
+            },
+            "best_score": 0.4314761418338554,
+            "finite_validation_score": 0.4347362848794568,
+            "deterministic_band_diagnostics": {
+                "1000-5000_Hz": {
+                    "rms_log10_ratio": 0.030313640924530084,
+                    "mean_log10_ratio": -0.0037858199441267158,
+                    "max_abs_log10_ratio": 0.0749466552297941,
+                    "band_weight": 1.0
+                },
+                "5000-15000_Hz": {
+                    "rms_log10_ratio": 0.12017298529052434,
+                    "mean_log10_ratio": -0.1179718966694888,
+                    "max_abs_log10_ratio": 0.17141243618261903,
+                    "band_weight": 1.25
+                },
+                "15000-40000_Hz": {
+                    "rms_log10_ratio": 0.153538967942535,
+                    "mean_log10_ratio": 0.09137183805249117,
+                    "max_abs_log10_ratio": 0.3361918672142483,
+                    "band_weight": 1.25
+                },
+                "40000-100000_Hz": {
+                    "rms_log10_ratio": 0.5588554041630425,
+                    "mean_log10_ratio": 0.5486296861910803,
+                    "max_abs_log10_ratio": 0.6865526880693498,
+                    "band_weight": 1.5
+                },
+                "100000-200000_Hz": {
+                    "rms_log10_ratio": 0.47873217910332755,
+                    "mean_log10_ratio": 0.45690183508078697,
+                    "max_abs_log10_ratio": 0.6640326306390163,
+                    "band_weight": 2.0
+                }
+            },
+            "finite_band_diagnostics": {
+                "1000-5000_Hz": {
+                    "rms_log10_ratio": 0.031588044692323354,
+                    "mean_log10_ratio": -0.002654108136853617,
+                    "max_abs_log10_ratio": 0.07896244363534874,
+                    "band_weight": 1.0
+                },
+                "5000-15000_Hz": {
+                    "rms_log10_ratio": 0.11859695563090045,
+                    "mean_log10_ratio": -0.11602930594178644,
+                    "max_abs_log10_ratio": 0.189600266670241,
+                    "band_weight": 1.25
+                },
+                "15000-40000_Hz": {
+                    "rms_log10_ratio": 0.1534512670812189,
+                    "mean_log10_ratio": 0.09210350284628967,
+                    "max_abs_log10_ratio": 0.34104433976578186,
+                    "band_weight": 1.25
+                },
+                "40000-100000_Hz": {
+                    "rms_log10_ratio": 0.5609112626107605,
+                    "mean_log10_ratio": 0.5507766047254224,
+                    "max_abs_log10_ratio": 0.6861603999665888,
+                    "band_weight": 1.5
+                },
+                "100000-200000_Hz": {
+                    "rms_log10_ratio": 0.48137532312850956,
+                    "mean_log10_ratio": 0.4594473601964814,
+                    "max_abs_log10_ratio": 0.6637372976331992,
+                    "band_weight": 2.0
+                }
+            },
+            "least_squares": {
+                "success": true,
+                "status": 2,
+                "cost": 24.845231228058935,
+                "optimality": 0.0016720509101769692,
+                "nfev": 33
+            },
+            "evaluations": 7473,
+            "stability_rejections": 0,
+            "simulation_failures": 0,
+            "best_hardware_bessel_cutoff_Hz": 100000.0,
+            "best_post_filter_white_fraction": 1.000147792593262e-06,
+            "best_post_filter_white_asd_A_rtHz": 1.8706349112235246e-16,
+            "target_joule_power_W": 1.1132637641366307e-09,
+            "derived_G_tes_bath_W_per_K": 3.119094423776783e-08,
+            "searched_parameters": [
+                "T_c",
+                "R_l",
+                "alpha",
+                "beta",
+                "L",
+                "n",
+                "C_tes",
+                "C_stycast",
+                "C_abs",
+                "G_tes-stycast",
+                "G_stycast-abs",
+                "G_abs-abs",
+                "excess_johnson_M",
+                "post_filter_white_fraction"
+            ],
+            "search_bounds": {
+                "T_c": {
+                    "lower": 0.235,
+                    "upper": 0.275,
+                    "logarithmic": false
+                },
+                "R_l": {
+                    "lower": 0.0025,
+                    "upper": 0.012,
+                    "logarithmic": true
+                },
+                "alpha": {
+                    "lower": 3.5700000000000003,
+                    "upper": 100.0,
+                    "logarithmic": false
+                },
+                "beta": {
+                    "lower": 0.0,
+                    "upper": 12.0,
+                    "logarithmic": false
+                },
+                "L": {
+                    "lower": 1e-10,
+                    "upper": 1.23e-08,
+                    "logarithmic": true
+                },
+                "n": {
+                    "lower": 1.5,
+                    "upper": 6.0,
+                    "logarithmic": false
+                },
+                "C_tes": {
+                    "lower": 1.961875e-13,
+                    "upper": 3.92375e-12,
+                    "logarithmic": true
+                },
+                "C_stycast": {
+                    "lower": 3.4220999999999996e-13,
+                    "upper": 1.1407e-10,
+                    "logarithmic": true
+                },
+                "C_abs": {
+                    "lower": 9.000208e-11,
+                    "upper": 2.7000623999999997e-08,
+                    "logarithmic": true
+                },
+                "G_tes-stycast": {
+                    "lower": 7.866e-10,
+                    "upper": 7.866e-07,
+                    "logarithmic": true
+                },
+                "G_stycast-abs": {
+                    "lower": 7.866e-10,
+                    "upper": 7.866e-07,
+                    "logarithmic": true
+                },
+                "G_abs-abs": {
+                    "lower": 1.764e-08,
+                    "upper": 1.764e-05,
+                    "logarithmic": true
+                },
+                "excess_johnson_M": {
+                    "lower": 0.0,
+                    "upper": 5.0,
+                    "logarithmic": false
+                },
+                "post_filter_white_fraction": {
+                    "lower": 1e-06,
+                    "upper": 1.0,
+                    "logarithmic": true
+                }
+            },
+            "work_dir": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\rsh_3p8500mohm",
+            "best_parameters": {
+                "T_c": 0.2749566028882914,
+                "T_bath": 0.215,
+                "R": 0.017551832576375086,
+                "R_SH": 0.00385,
+                "R_l": 0.0119989076715546,
+                "alpha": 99.99993443966522,
+                "beta": 3.819699801083361e-05,
+                "L": 1.0001318304409614e-10,
+                "n": 5.897914949368028,
+                "C_tes": 3.923274133229727e-12,
+                "C_stycast": 3.4226020055630987e-13,
+                "C_abs": 2.699700251031136e-08,
+                "G_tes-bath": 3.119094423776783e-08,
+                "G_tes-stycast": 1.9081816687261168e-08,
+                "G_stycast-abs": 7.86524028650698e-07,
+                "G_abs-abs": 1.7638506741107053e-05,
+                "excess_johnson_M": 4.4693247059302e-05,
+                "post_filter_white_fraction": 1.000147792593262e-06,
+                "post_filter_white_asd_A_rtHz": 1.8706349112235246e-16,
+                "hardware_bessel_order": 4,
+                "hardware_bessel_norm": "mag",
+                "hardware_bessel_cutoff_Hz": 100000.0,
+                "thermal_link_model": "stycast_node",
+                "rate": 500000.0,
+                "samples": 100000,
+                "cutoff": 10000.0
+            }
+        }
+    ],
+    "best_case_R_SH_ohm": 0.00385,
+    "best_case_R_TES_ohm": 0.017551832576375086,
+    "best_case_score": 0.4314761418338554,
+    "best_case_finite_validation_score": 0.4347362848794568,
+    "best_case_parameters": {
+        "T_c": 0.2749566028882914,
+        "T_bath": 0.215,
+        "R": 0.017551832576375086,
+        "R_SH": 0.00385,
+        "R_l": 0.0119989076715546,
+        "alpha": 99.99993443966522,
+        "beta": 3.819699801083361e-05,
+        "L": 1.0001318304409614e-10,
+        "n": 5.897914949368028,
+        "C_tes": 3.923274133229727e-12,
+        "C_stycast": 3.4226020055630987e-13,
+        "C_abs": 2.699700251031136e-08,
+        "G_tes-bath": 3.119094423776783e-08,
+        "G_tes-stycast": 1.9081816687261168e-08,
+        "G_stycast-abs": 7.86524028650698e-07,
+        "G_abs-abs": 1.7638506741107053e-05,
+        "excess_johnson_M": 4.4693247059302e-05,
+        "post_filter_white_fraction": 1.000147792593262e-06,
+        "post_filter_white_asd_A_rtHz": 1.8706349112235246e-16,
+        "hardware_bessel_order": 4,
+        "hardware_bessel_norm": "mag",
+        "hardware_bessel_cutoff_Hz": 100000.0,
+        "thermal_link_model": "stycast_node",
+        "rate": 500000.0,
+        "samples": 100000,
+        "cutoff": 10000.0
+    },
+    "hardware_bessel_cutoff_Hz": 100000.0,
+    "best_case_post_filter_white_fraction": 1.000147792593262e-06,
+    "best_case_post_filter_white_asd_A_rtHz": 1.8706349112235246e-16,
+    "comparison_plot": "D:\\Github\\TES-Programs\\PoST_Simulations\\.noise_optimization_work_rsh_sweep\\noise_comparison.png"
 }

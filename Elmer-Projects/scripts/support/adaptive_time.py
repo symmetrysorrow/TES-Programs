@@ -17,6 +17,11 @@ _TIME_EPS = 1.0e-12
 _POST_REJECT_MAX_GROWTH = 1.2
 
 
+def _event_time_tolerance(event: float, endpoint: float) -> float:
+    """Allow a couple of ulps when testing a decimal epsilon boundary."""
+    return _TIME_EPS + 2.0 * math.ulp(max(1.0, abs(event), abs(endpoint)))
+
+
 def is_event_landing(time: float, dt: float, event: float | None) -> bool:
     """Return whether the trial endpoint lands on a physical event.
 
@@ -26,7 +31,8 @@ def is_event_landing(time: float, dt: float, event: float | None) -> bool:
     """
     if event is None or time >= event or dt <= 0.0:
         return False
-    return abs((time + dt) - event) <= _TIME_EPS
+    endpoint = time + dt
+    return abs(endpoint - event) <= _event_time_tolerance(event, endpoint)
 
 
 def _finite_times(values: Iterable[float], *, name: str) -> tuple[float, ...]:
@@ -219,6 +225,27 @@ class StepCounters:
     recoveries: int = 0
 
 
+@dataclass(frozen=True)
+class TrialMetadata:
+    """Immutable proposal facts consumed by one accepted or rejected trial."""
+
+    proposed_dt: float
+    final_dt: float
+    event_clipped: bool
+    event_landing: bool
+    event_endpoint_snapped: bool
+    event_forced: bool
+    bdf_order: int
+
+    def __iter__(self):
+        """Preserve the historical ``dt, event_forced = propose(...)`` API."""
+        yield self.final_dt
+        yield self.event_forced
+
+    def __getitem__(self, index: int):
+        return (self.final_dt, self.event_forced)[index]
+
+
 @dataclass
 class AdaptiveController:
     """Small policy object used by the native driver and unit tests."""
@@ -232,17 +259,19 @@ class AdaptiveController:
     counters: StepCounters = field(default_factory=StepCounters)
     last_event_clipped: bool = field(default=False, init=False)
     last_event_landing: bool = field(default=False, init=False)
+    last_event_endpoint_snapped: bool = field(default=False, init=False)
+    force_bdf1_steps_remaining: int = 0
 
     def __post_init__(self) -> None:
         if self.dt is None:
             self.dt = self.config.dt_initial
         self.dt = min(max(self.dt, self.config.dt_min), self.config.dt_max)
 
-    def propose(self, time: float, end: float, *, next_event: float | None = None) -> tuple[float, bool]:
-        """Return ``(dt, event_forced)``; output times are never considered.
+    def propose(self, time: float, end: float, *, next_event: float | None = None) -> TrialMetadata:
+        """Return immutable trial facts; output times are never considered.
 
-        ``last_event_clipped`` and ``last_event_landing`` expose the two
-        distinct event-boundary facts for callers that need BDF semantics.
+        ``event_forced`` retains its historical meaning: only event clipping
+        sets it.  A numerical endpoint snap is reported separately.
         """
         if end < time:
             raise ValueError("integration end must not precede current time")
@@ -250,6 +279,7 @@ class AdaptiveController:
         forced = False
         self.last_event_clipped = False
         self.last_event_landing = False
+        self.last_event_endpoint_snapped = False
         if self.previous_dt is not None:
             dt = min(dt, self.previous_dt * self.config.r_max)
             # A rejected retry owns the shrunken controller dt.  The
@@ -258,6 +288,7 @@ class AdaptiveController:
             # event-landing step.
             if self.rejected_in_row == 0:
                 dt = max(dt, min(end - time, self.previous_dt * self.config.r_min))
+        proposed_dt = dt
         if next_event is not None and time < next_event < time + dt - _TIME_EPS:
             dt = next_event - time
             forced = True
@@ -265,11 +296,31 @@ class AdaptiveController:
             raise ValueError("proposed timestep is not positive")
         self.last_event_clipped = forced
         self.last_event_landing = is_event_landing(time, dt, next_event)
-        return dt, forced
+        snapped = False
+        if self.last_event_landing and next_event is not None:
+            snapped = (time + dt) != next_event
+            dt = next_event - time
+            self.last_event_endpoint_snapped = snapped
+        trial_bdf_order = (
+            1
+            if self.force_bdf1_steps_remaining > 0
+            or self.rejected_in_row > 0
+            or self.previous_dt is None
+            else 2
+        )
+        return TrialMetadata(
+            proposed_dt=proposed_dt,
+            final_dt=dt,
+            event_clipped=forced,
+            event_landing=self.last_event_landing,
+            event_endpoint_snapped=snapped,
+            event_forced=forced,
+            bdf_order=trial_bdf_order,
+        )
 
     def accept(
         self,
-        dt: float,
+        dt: float | TrialMetadata,
         error: float,
         *,
         event_forced: bool = False,
@@ -277,16 +328,27 @@ class AdaptiveController:
         nonlinear_difficulty: float = 0.0,
         discontinuity: bool = False,
     ) -> None:
+        trial = dt if isinstance(dt, TrialMetadata) else None
+        if trial is not None:
+            if event_landing is None:
+                event_landing = trial.event_landing
+            event_forced = trial.event_forced
+            dt = trial.final_dt
         if dt <= 0.0:
             raise ValueError("accepted timestep must be positive")
         had_history = self.previous_dt is not None
         if event_landing is None:
-            event_landing = self.last_event_landing
+            event_landing = False
         self.previous_dt = dt
         self.counters.accepted_internal_steps += 1
         self.counters.event_forced_steps += int(event_forced)
         self.counters.event_landing_steps += int(event_landing)
-        self.bdf_order = 1 if event_forced or event_landing or discontinuity or not had_history else 2
+        held_bdf1 = self.force_bdf1_steps_remaining > 0
+        self.bdf_order = 1 if event_forced or event_landing or discontinuity or held_bdf1 or not had_history else 2
+        if held_bdf1:
+            self.force_bdf1_steps_remaining -= 1
+        if event_forced or event_landing or discontinuity:
+            self.force_bdf1_steps_remaining = 1
         forced_floor = dt <= self.config.dt_min * (1.0 + 1.0e-10) and error > 1.0
         self.rejected_in_row = 0
         if forced_floor:
@@ -325,6 +387,9 @@ class AdaptiveController:
         self.dt = max(self.config.dt_min, dt * self.config.max_shrink)
         self.growth_cooldown_remaining = 1
         self.bdf_order = 1
+        self.last_event_clipped = False
+        self.last_event_landing = False
+        self.last_event_endpoint_snapped = False
         return self.dt
 
 
