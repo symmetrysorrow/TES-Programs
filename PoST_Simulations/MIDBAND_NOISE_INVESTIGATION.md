@@ -224,13 +224,16 @@ voltage/current noise shaped by source impedance, or channel-specific readout
 pole/zero.  Thus an independently measured 5--30 kHz injected-signal transfer
 function can be compared directly against the correction below.
 
-One amplitude audit item is not capable of explaining the shoulder but should
-be resolved: the TES Johnson source uses
-`4 k_B T R (1 + beta)^2`.  If the intended convention is the usual
-non-equilibrium Johnson correction, its voltage-noise PSD factor is
-`1 + 2 beta`, without `beta^2`.  With the current `beta=3.994`, the code's
-source PSD is 2.77 times that convention, but TES Johnson noise is only a few
-tenths of one percent of total modeled power in this band.
+The earlier Johnson-amplitude audit item is now resolved in code.  Production
+and the shared optimizer model both use the same centralized convention
+
+`S_V,J = 4 k_B T R (1 + 2 beta) (1 + M^2)`
+
+through `lib/tes_noise_model.py::tes_johnson_voltage_asd`.  The production
+wrapper delegates to that helper, and regression tests enforce parity.  The
+remaining beta question is therefore not a production/optimizer formula
+mismatch; it is whether the fitted beta and the corresponding electrothermal
+transfer are physically appropriate for the target detector.
 
 ### Stability finding (must be resolved before another unconstrained sweep)
 
