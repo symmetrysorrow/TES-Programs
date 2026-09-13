@@ -1,0 +1,35 @@
+--- a/scripts/support/adaptive_time.py
++++ b/scripts/support/adaptive_time.py
+@@
++def is_event_landing(time, dt, event):
++    return event is not None and time < event and abs((time + dt) - event) <= _TIME_EPS
+@@
+-        if next_event is not None and time < next_event < time + dt + _TIME_EPS:
++        if next_event is not None and time < next_event < time + dt - _TIME_EPS:
+             dt = next_event - time
+             forced = True
++        self.last_event_clipped = forced
++        self.last_event_landing = is_event_landing(time, dt, next_event)
+@@
+-        self.bdf_order = 1 if event_forced or discontinuity or not had_history else 2
++        self.bdf_order = 1 if event_forced or event_landing or discontinuity or not had_history else 2
+
+--- a/tools/elmer-hypre/src/fem/src/ElmerSolver.F90
++++ b/tools/elmer-hypre/src/fem/src/ElmerSolver.F90
+@@
++     LOGICAL :: AdaptiveEventClipped, AdaptiveEventLanding
++     REAL(KIND=dp), PARAMETER :: AdaptiveTimeEpsilon = 1.0e-12_dp
+@@
+-                IF (AdaptiveNextEvent < AdaptiveStepStart + ddt - 1.0d-12) THEN
++                IF (AdaptiveNextEvent < AdaptiveStepStart + ddt - AdaptiveTimeEpsilon) THEN
+                   ddt = AdaptiveNextEvent - AdaptiveStepStart
++                  AdaptiveEventClipped = .TRUE.
+                   AdaptiveEventForced = .TRUE.
+                 END IF
+@@
++              IF (ABS((AdaptiveStepStart + ddt) - AdaptiveNextEvent) <= AdaptiveTimeEpsilon) &
++                   AdaptiveEventLanding = .TRUE.
++              IF (AdaptiveEventLanding) AdaptiveForceBDF1 = .TRUE.
+@@
+-                 AdaptiveDiscontinuity = AdaptiveEventForced
++                 AdaptiveDiscontinuity = AdaptiveEventForced .OR. AdaptiveEventLanding

@@ -9,6 +9,7 @@ from scripts.support.adaptive_time import (
     add_output_counters,
     bdf1_coefficients,
     dense_linear,
+    is_event_landing,
     variable_bdf2_coefficients,
     weighted_error,
 )
@@ -44,6 +45,32 @@ def test_events_clip_but_outputs_do_not() -> None:
     assert (dt, forced) == pytest.approx((0.1, False))
     dt, forced = controller.propose(0.2, 1.0, next_event=0.25)
     assert (dt, forced) == pytest.approx((0.05, True))
+    assert controller.last_event_clipped is True
+    assert controller.last_event_landing is True
+
+
+def test_exact_event_landing_without_clipping_resets_to_bdf1() -> None:
+    t0 = 0.0200200005
+    event = 0.020020001
+    dt = 0.5e-9
+    controller = AdaptiveController(AdaptiveConfig(dt, 0.5e-9, 1.0e-4))
+    controller.dt = dt
+
+    proposed, forced = controller.propose(t0, event, next_event=event)
+
+    assert proposed == pytest.approx(dt)
+    assert forced is False
+    assert controller.last_event_clipped is False
+    assert controller.last_event_landing is True
+    controller.accept(proposed, 25.0, event_forced=forced)
+    assert controller.bdf_order == 1
+
+
+def test_event_landing_requires_endpoint_at_event() -> None:
+    t0 = 0.0200200005
+    event = 0.020020001
+    assert is_event_landing(t0, 0.5e-9, event) is True
+    assert is_event_landing(t0, 0.25e-9, event) is False
 
 
 def test_step_ratio_bounds_and_event_restart_bdf1() -> None:

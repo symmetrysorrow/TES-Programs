@@ -17,6 +17,18 @@ _TIME_EPS = 1.0e-12
 _POST_REJECT_MAX_GROWTH = 1.2
 
 
+def is_event_landing(time: float, dt: float, event: float | None) -> bool:
+    """Return whether the trial endpoint lands on a physical event.
+
+    Landing is independent of whether the proposal had to be clipped.  In
+    particular, a proposal whose endpoint is already within ``_TIME_EPS`` of
+    the event is a landing even when no clipping is required.
+    """
+    if event is None or time >= event or dt <= 0.0:
+        return False
+    return abs((time + dt) - event) <= _TIME_EPS
+
+
 def _finite_times(values: Iterable[float], *, name: str) -> tuple[float, ...]:
     result = tuple(float(value) for value in values)
     if any(not math.isfinite(value) for value in result):
@@ -198,6 +210,7 @@ class StepCounters:
     requested_outputs: int = 0
     interpolation_only_outputs: int = 0
     event_forced_steps: int = 0
+    event_landing_steps: int = 0
     bdf1_steps: int = 0
     bdf2_steps: int = 0
     matrix_refreshes: int = 0
@@ -217,6 +230,8 @@ class AdaptiveController:
     rejected_in_row: int = 0
     growth_cooldown_remaining: int = 0
     counters: StepCounters = field(default_factory=StepCounters)
+    last_event_clipped: bool = field(default=False, init=False)
+    last_event_landing: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.dt is None:
@@ -224,11 +239,17 @@ class AdaptiveController:
         self.dt = min(max(self.dt, self.config.dt_min), self.config.dt_max)
 
     def propose(self, time: float, end: float, *, next_event: float | None = None) -> tuple[float, bool]:
-        """Return ``(dt, event_forced)``; output times are never considered."""
+        """Return ``(dt, event_forced)``; output times are never considered.
+
+        ``last_event_clipped`` and ``last_event_landing`` expose the two
+        distinct event-boundary facts for callers that need BDF semantics.
+        """
         if end < time:
             raise ValueError("integration end must not precede current time")
         dt = min(self.dt or self.config.dt_initial, end - time)
         forced = False
+        self.last_event_clipped = False
+        self.last_event_landing = False
         if self.previous_dt is not None:
             dt = min(dt, self.previous_dt * self.config.r_max)
             # A rejected retry owns the shrunken controller dt.  The
@@ -237,11 +258,13 @@ class AdaptiveController:
             # event-landing step.
             if self.rejected_in_row == 0:
                 dt = max(dt, min(end - time, self.previous_dt * self.config.r_min))
-        if next_event is not None and time < next_event < time + dt + _TIME_EPS:
+        if next_event is not None and time < next_event < time + dt - _TIME_EPS:
             dt = next_event - time
             forced = True
         if dt <= 0.0:
             raise ValueError("proposed timestep is not positive")
+        self.last_event_clipped = forced
+        self.last_event_landing = is_event_landing(time, dt, next_event)
         return dt, forced
 
     def accept(
@@ -250,16 +273,20 @@ class AdaptiveController:
         error: float,
         *,
         event_forced: bool = False,
+        event_landing: bool | None = None,
         nonlinear_difficulty: float = 0.0,
         discontinuity: bool = False,
     ) -> None:
         if dt <= 0.0:
             raise ValueError("accepted timestep must be positive")
         had_history = self.previous_dt is not None
+        if event_landing is None:
+            event_landing = self.last_event_landing
         self.previous_dt = dt
         self.counters.accepted_internal_steps += 1
         self.counters.event_forced_steps += int(event_forced)
-        self.bdf_order = 1 if event_forced or discontinuity or not had_history else 2
+        self.counters.event_landing_steps += int(event_landing)
+        self.bdf_order = 1 if event_forced or event_landing or discontinuity or not had_history else 2
         forced_floor = dt <= self.config.dt_min * (1.0 + 1.0e-10) and error > 1.0
         self.rejected_in_row = 0
         if forced_floor:

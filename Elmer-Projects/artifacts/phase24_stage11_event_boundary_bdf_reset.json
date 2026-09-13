@@ -1,0 +1,228 @@
+{
+  "stage": "Stage 11",
+  "case": "case_phase24_adaptive_continuous_post_event_5ns_light",
+  "scope": "Exact event landing recognition and BDF reset semantics only",
+  "run": {
+    "started_local": "2026-09-13 13:55:59",
+    "finished_local": "2026-09-13 14:05:09",
+    "runtime_seconds": 550,
+    "omp_threads": 8,
+    "completed": true,
+    "post_event_observed_ns": 5.0,
+    "production_31us_rerun": false
+  },
+  "restart": {
+    "post_event_restart_used": false,
+    "restart_from": null,
+    "restart_position": null,
+    "initial_source": "20-ms steady-state source only"
+  },
+  "settings_unchanged": {
+    "linear_solver": "FlexGMRES + BoomerAMG",
+    "strong_threshold": 0.5,
+    "kdim": 100,
+    "sweeps": 1,
+    "linear_tolerance": 5.0e-7,
+    "max_iterations": 2000,
+    "adaptive_rtol": 0.002,
+    "adaptive_atol": 1.0e-8,
+    "dt_min_ns": 0.5,
+    "dt_max_us": 20.0,
+    "r_min": 0.5,
+    "r_max": 2.0,
+    "max_growth": 1.5,
+    "max_shrink": 0.5,
+    "max_rejected": 8,
+    "estimator_changed": false,
+    "floor_semantics_changed": false,
+    "cooldown_changed": false,
+    "solver_tuning_changed": false
+  },
+  "event_detection": {
+    "old_clipping_condition": "AdaptiveNextEvent < AdaptiveStepStart + ddt - 1.0d-12",
+    "new_clipping_condition": "AdaptiveNextEvent < AdaptiveStepStart + ddt - AdaptiveTimeEpsilon",
+    "new_landing_condition": "ABS((AdaptiveStepStart + ddt) - AdaptiveNextEvent) <= AdaptiveTimeEpsilon",
+    "time_epsilon_seconds": 1.0e-12,
+    "event_clipped": "proposal endpoint was beyond event by more than epsilon",
+    "event_landing": "final trial endpoint is within epsilon of the physical event, whether clipped or not",
+    "event_forced_meaning_preserved": true
+  },
+  "root_cause": {
+    "confirmed": true,
+    "description": "The old native path used event_forced, which only became true when dt was shortened. An exact endpoint at the event satisfied neither the clipping branch nor the BDF reset trigger, so the event boundary could be accepted with BDF2.",
+    "affected_pre_fix_trial": {
+      "trial": 4,
+      "start_s": 0.0200200005,
+      "event_s": 0.020020001,
+      "event_distance_ns": 0.4999999997368,
+      "proposed_dt_ns": 0.5,
+      "proposed_end_s": 0.020020001,
+      "abs_proposed_end_gap_s": 0.0,
+      "event_clipped": false,
+      "event_landing": false,
+      "event_forced": false,
+      "bdf_order": 2,
+      "error": 25.66606371497,
+      "result": "accepted_floor"
+    }
+  },
+  "code_change": {
+    "native": [
+      "Added separate AdaptiveEventClipped and AdaptiveEventLanding flags.",
+      "Computed landing after final dt selection using the shared 1e-12 s epsilon.",
+      "Applied existing AdaptiveForceBDF1 and discontinuity reset semantics to landing as well as clipping.",
+      "Added per-trial event audit log with start/event/distance/proposal/proposed-end gap/final-end/clipped/landing/forced."
+    ],
+    "python_reference": [
+      "Added is_event_landing(time, dt, event).",
+      "Changed clipping to require endpoint beyond event by more than _TIME_EPS.",
+      "Exposed last_event_clipped and last_event_landing and let landing reset BDF1 without changing event_forced meaning."
+    ],
+    "policy_changes": false
+  },
+  "after_event_trial": {
+    "trial": 4,
+    "start_s": 0.0200200005,
+    "event_s": 0.020020001,
+    "event_distance_ns": 0.4999999997368,
+    "proposed_dt_ns": 0.5,
+    "proposed_end_s": 0.020020001,
+    "abs_proposed_end_gap_s": 0.0,
+    "final_end_s": 0.020020001,
+    "event_clipped": false,
+    "event_landing": true,
+    "event_forced": false,
+    "bdf_order": 1,
+    "error": 2.353602675667,
+    "result": "accepted_floor"
+  },
+  "continuous_trace": {
+    "trials": 14,
+    "accepted": 13,
+    "rejected": 1,
+    "bdf2_rejections": 0,
+    "event_trial_rejection": {
+      "trial": 2,
+      "bdf_order": 1,
+      "dt_ns": 0.9999999994736,
+      "error": 4.1752341607,
+      "event_clipped": true,
+      "event_landing": true,
+      "event_forced": true,
+      "result": "rejected"
+    },
+    "accepted_bdf_sequence": [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "accepted_dt_sequence_ns": [20000.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.4999999999875],
+    "post_second_event_dt_sequence_ns": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.4999999999875],
+    "post_second_event_error_sequence": [
+      1.565112134205,
+      1.618566174972,
+      3.240867854038,
+      1.407411406408,
+      1.331344730721,
+      1.265821560903,
+      2.98887276395,
+      1.159404560637,
+      1.115798267236,
+      1.075863827034
+    ],
+    "post_second_event_bdf_sequence": [1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "forced_floor_accepts": 12,
+    "first_error_below_one_post_event": null,
+    "first_accepted_dt_above_0p5ns_post_event": null,
+    "first_accepted_dt_at_least_1ns_post_event": null,
+    "maximum_accepted_dt_ns_overall": 20000.0,
+    "maximum_accepted_dt_ns_post_event": 0.5,
+    "dt_growth_post_event": false
+  },
+  "history_reset_audit": {
+    "trial_1": {
+      "previous_dt_s": -1.0,
+      "previous_bdf_order": null,
+      "accepted_history_length": 0,
+      "bdf_order": 1,
+      "event_landing": true
+    },
+    "trial_2_event": {
+      "previous_dt_ns": 20000.0,
+      "previous_bdf_order": 1,
+      "accepted_history_length": 1,
+      "bdf_order": 1,
+      "event_landing": true,
+      "rejected_in_row_after": 1
+    },
+    "trial_4_exact_second_event": {
+      "previous_dt_ns": 0.5,
+      "previous_bdf_order": 1,
+      "accepted_history_length": 2,
+      "bdf_order": 1,
+      "event_landing": true,
+      "rejected_in_row": 0,
+      "cooldown": 1,
+      "reset_applied": true
+    },
+    "trial_5_after_second_event": {
+      "previous_dt_ns": 0.5,
+      "previous_bdf_order": 1,
+      "accepted_history_length": 3,
+      "bdf_order": 1,
+      "event_landing": false,
+      "reset_hold_applied": true
+    }
+  },
+  "linear": {
+    "solve_records": 84,
+    "all_trials_max_iterations": 283,
+    "post_event_max_iterations": 6,
+    "max_final_residual": 4.99254e-7,
+    "failed_solves": 0
+  },
+  "tests": {
+    "python_pytest": "127 passed",
+    "python_cases": [
+      "proposal > event distance clips and lands",
+      "proposal == event distance does not clip and lands",
+      "proposal < event distance does not land",
+      "production-scale t0=0.0200200005, dt=0.5e-9 selects BDF1"
+    ],
+    "native_bounded_case": "completed with event audit and ALL DONE",
+    "native_capture_enter": 0,
+    "matrix_save": 0,
+    "rhs_save": 0
+  },
+  "runtime": {
+    "seconds": 550,
+    "accepted_steps": 13,
+    "wall_seconds_per_accepted_step": 42.3076923077,
+    "post_event_ns_per_minute_end_to_end": 0.5454545455,
+    "naive_31us_projection_seconds": 852.244326702,
+    "projection_note": "The 31-us estimate is linear scaling only and is optimistic while the post-event floor persists."
+  },
+  "comparison": {
+    "pre_fix": {
+      "trial_4_bdf": 2,
+      "trial_4_dt_ns": 0.5,
+      "trial_4_error": 25.66606371497,
+      "trial_4_event_forced": false,
+      "post_event_dt_growth": false
+    },
+    "post_fix": {
+      "trial_4_bdf": 1,
+      "trial_4_dt_ns": 0.5,
+      "trial_4_error": 2.353602675667,
+      "trial_4_event_landing": true,
+      "trial_4_event_forced": false,
+      "post_event_dt_growth": false
+    },
+    "interpretation": "Exact landing recognition and BDF1 reset are validated. The event-step estimator improves substantially, but the following 5-ns tail still stays at the 0.5-ns floor with E>1, so the estimator/floor recovery issue remains."
+  },
+  "classification": "EVENT_BOUNDARY_FIX_PASS_POST_EVENT_ESTIMATOR_BLOCKER_REMAINS",
+  "remaining_blocker": "Post-event estimator/floor semantics still prevent dt growth within the observed 5-ns tail; no BDF2 policy change is justified by this task.",
+  "stage_status": "VALIDATION_IN_PROGRESS",
+  "provenance": {
+    "project_sha256": "203d452c7f5853de731c6743ee94978f31cef27b9bc604170d13ec049d207712",
+    "sif_sha256": "5f56ef0922458dc5775049f1b0d3f55eb6ffebe34b81feec0c6701632d454ea9",
+    "installed_libelmersolver_sha256": "340392e7a1787c6547249bdb011819767f034609b3ef0e35b8e28a9886834060",
+    "native_solvehypre_source_sha256": "2e8b9d48f57564fa64add6b59c2076f794475db23c0a9864bcdf8ec26266c196"
+  }
+}
