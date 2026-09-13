@@ -101,6 +101,9 @@ BETA_DIAGNOSTIC_GRID = (
     8.0,
     12.0,
 )
+JOHNSON_SOURCE_SCALE_DIAGNOSTIC_GRID = tuple(
+    float(value) for value in np.linspace(0.0, 1.0, 11)
+)
 SOURCE_DIAGNOSTIC_FREQUENCIES_HZ = (
     1_000.0,
     5_000.0,
@@ -1260,6 +1263,139 @@ def source_ablation_diagnostics(
     return result
 
 
+def johnson_source_scale_diagnostics(
+    curves: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Scale only TES Johnson ASD after transfer, for diagnosis only.
+
+    A scale s multiplies the TES Johnson ASD, so its PSD contribution is
+    multiplied by s^2.  Every other source class and every transfer function
+    remains exactly at the best-fit value.  The resulting total is normalized
+    at 1 kHz exactly like the production shape objective.
+    """
+
+    frequency = np.asarray(curves["frequencies_Hz"], dtype=float)
+    fit_freq = np.asarray(fit_freq, dtype=float)
+    target = np.asarray(target, dtype=float)
+    total_asd = np.asarray(curves["total_asd_A_rtHz"], dtype=float)
+    johnson_asd = np.asarray(
+        curves["class_asd_A_rtHz"]["TES_Johnson"],
+        dtype=float,
+    )
+    if frequency.shape != fit_freq.shape or not np.allclose(
+        frequency,
+        fit_freq,
+        rtol=0.0,
+        atol=1e-9,
+    ):
+        raise ValueError(
+            "Johnson-scale diagnostic curves must use the optimizer fit grid"
+        )
+    if target.shape != fit_freq.shape:
+        raise ValueError(
+            "Johnson-scale diagnostic target must use the optimizer fit grid"
+        )
+
+    total_psd = total_asd**2
+    johnson_psd = johnson_asd**2
+    other_psd = np.maximum(
+        total_psd - johnson_psd,
+        0.0,
+    )
+    tiny = np.finfo(float).tiny
+    rows = []
+
+    for scale in JOHNSON_SOURCE_SCALE_DIAGNOSTIC_GRID:
+        scaled_johnson_psd = (float(scale) ** 2) * johnson_psd
+        scaled_total_psd = np.maximum(
+            other_psd + scaled_johnson_psd,
+            tiny,
+        )
+        scaled_asd = np.sqrt(scaled_total_psd)
+        normalized = normalize_at(
+            frequency,
+            scaled_asd,
+            reference_hz=ABSOLUTE_ASD_REFERENCE_HZ,
+        )
+        residual = log_ratio_residual(normalized, target)
+        score = float(fit_score(normalized, target, fit_freq, args))
+
+        bands = {}
+        for low, high, _weight in FIT_BANDS_HZ:
+            low_eff = max(float(low), float(args.fit_min_hz))
+            high_eff = min(float(high), float(args.fit_max_hz))
+            mask = (fit_freq >= low_eff) & (fit_freq <= high_eff)
+            if not np.any(mask):
+                continue
+            mean_log = float(np.mean(residual[mask]))
+            bands[f"{low_eff:g}-{high_eff:g}_Hz"] = {
+                "rms_log10_ratio": float(
+                    np.sqrt(np.mean(residual[mask] ** 2))
+                ),
+                "mean_log10_ratio": mean_log,
+                "geometric_mean_model_over_measurement": float(
+                    10.0 ** mean_log
+                ),
+                "TES_Johnson_mean_psd_fraction_after_scaling": float(
+                    np.mean(
+                        scaled_johnson_psd[mask]
+                        / scaled_total_psd[mask]
+                    )
+                ),
+            }
+
+        rows.append(
+            {
+                "TES_Johnson_asd_scale": float(scale),
+                "TES_Johnson_psd_scale": float(scale) ** 2,
+                "shape_score": score,
+                "bands": bands,
+            }
+        )
+
+    best_global = min(rows, key=lambda row: row["shape_score"])
+    active_band_names = list(rows[0]["bands"]) if rows else []
+    best_by_band = {}
+    for band_name in active_band_names:
+        best_row = min(
+            rows,
+            key=lambda row: abs(
+                row["bands"][band_name]["mean_log10_ratio"]
+            ),
+        )
+        best_by_band[band_name] = {
+            "TES_Johnson_asd_scale": float(
+                best_row["TES_Johnson_asd_scale"]
+            ),
+            "TES_Johnson_psd_scale": float(
+                best_row["TES_Johnson_psd_scale"]
+            ),
+            "geometric_mean_model_over_measurement": float(
+                best_row["bands"][band_name][
+                    "geometric_mean_model_over_measurement"
+                ]
+            ),
+            "mean_log10_ratio": float(
+                best_row["bands"][band_name]["mean_log10_ratio"]
+            ),
+        }
+
+    return {
+        "diagnostic_only": True,
+        "held_fixed_except": "TES_Johnson source amplitude after transfer",
+        "scale_semantics": (
+            "ASD_J -> s_J * ASD_J; PSD_J -> s_J^2 * PSD_J"
+        ),
+        "normalization_Hz": float(ABSOLUTE_ASD_REFERENCE_HZ),
+        "rows": rows,
+        "best_global_shape_score_row": best_global,
+        "best_scale_by_band_mean_ratio": best_by_band,
+    }
+
+
 def johnson_beta_audit(candidate: dict) -> dict:
     """Record the exact beta dependence used by the shared/production model."""
 
@@ -2062,6 +2198,12 @@ def optimize_case(
         fit_freq,
         args,
     )
+    johnson_scale_summary = johnson_source_scale_diagnostics(
+        source_curves,
+        target,
+        fit_freq,
+        args,
+    )
     johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
     beta_sweep_summary = beta_sweep_diagnostics(
         best_candidate.copy(),
@@ -2092,6 +2234,8 @@ def optimize_case(
     print(json.dumps(source_diagnostics, indent=2))
     print("Source-ablation diagnostics:")
     print(json.dumps(source_ablation_summary, indent=2))
+    print("Johnson source-scale diagnostics:")
+    print(json.dumps(johnson_scale_summary, indent=2))
     print("Johnson/beta audit:")
     print(json.dumps(johnson_audit_summary, indent=2))
     print("Beta sweep diagnostics:")
@@ -2118,6 +2262,7 @@ def optimize_case(
         "parameter_boundary_diagnostics": boundary_diagnostics,
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
+        "johnson_source_scale_diagnostics": johnson_scale_summary,
         "johnson_beta_audit": johnson_audit_summary,
         "beta_sweep_diagnostics": beta_sweep_summary,
         "eigenmode_diagnostics": eigenmode_summary,
@@ -2398,6 +2543,9 @@ def main():
             ],
             "best_case_source_ablation_diagnostics": best_case[
                 "source_ablation_diagnostics"
+            ],
+            "best_case_johnson_source_scale_diagnostics": best_case[
+                "johnson_source_scale_diagnostics"
             ],
             "best_case_johnson_beta_audit": best_case[
                 "johnson_beta_audit"
