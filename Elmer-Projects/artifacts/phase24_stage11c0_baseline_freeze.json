@@ -1,0 +1,106 @@
+{
+  "stage": "Stage 11C-0 baseline freeze / observability",
+  "status": "GATE_11C0_PASS",
+  "commit": "6dcb396f01a48f11786d63d24b500be545e87b0d",
+  "purpose": "Freeze a reproducible reading of the current 20 ns continuous baseline, and demonstrate that a full per-trial observability record (trial id, absolute time, proposed/final dt, previous accepted dt, step ratio, BDF order, event clipped/landing, force-BDF1 state, rejection streak, cooldown state, floor-accept state, estimator raw/control error, accept/reject, proposed next dt, applied growth factor, accepted-history length, BDF2 re-entry state, linear iterations, final linear residual) can be produced WITHOUT changing solver behavior.",
+  "method": {
+    "summary": "No native rebuild and no new native run were performed for this gate. The native ElmerSolver.F90 already unconditionally logs 'Adaptive event audit'/'Adaptive trial start' per trial, and logs the full 'Adaptive accept: ...'/'Adaptive accept flags/cooldown/growth' block whenever AdaptiveDebug is set OR the trial is a forced-floor accept OR follows a rejection (this case runs with adaptive_time.debug=true, so every trial's full block is present). scripts/analysis/parse_adaptive_native_log.py was written this session to turn that existing, previously-unparsed log text into structured per-trial records (NativeTrialRecord), deriving accepted_history_length and bdf2_reentry (order 1 -> 2 transition between consecutive accepted trials) which are not printed directly but are fully determined by already-logged facts.",
+    "input_log": "results/case_phase24_adaptive_continuous_post_event_20ns_baseline/solver.log (git-ignored per repository convention; not modified, re-run, or regenerated for this gate)",
+    "input_log_sha256": "82a80b577aff22f1a32b8a03f29489ba24f2fb2efbfd480b8ca3e1b2fa409f5b",
+    "parser": "scripts/analysis/parse_adaptive_native_log.py",
+    "parser_tests": "tests/test_parse_adaptive_native_log.py (fixture: tests/fixtures/adaptive_native_log_snippet.log, trials 1-8 verbatim from the same archived log)",
+    "python_reference_changes": "scripts/support/adaptive_time.py gained TrialLogEntry plus AdaptiveController.log/accept()/reject() side-channel recording (see tests/test_adaptive_time.py::test_observability_log_does_not_change_accepted_trajectory). No control-flow branch, tolerance, or default was changed; all 26 pre-existing adaptive_time tests pass unmodified."
+  },
+  "native_provenance": {
+    "case": "case_phase24_adaptive_continuous_post_event_20ns_baseline",
+    "started_local": "2026-09-13 17:37:57",
+    "finished_local": "2026-09-13 18:11:21",
+    "wall_time_seconds": 2003.93,
+    "exit_code": 0,
+    "solver_binary": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+    "runtime_artifacts_sha256": {
+      "solver": "331c91d17e49e9b150835543693f93bfe132752a61706de5a9285dddd9984225",
+      "libelmersolver": "5d8bd243f1512ba63c0a24a792ce9071eb06de8b26d8ed978eef10960f37f123",
+      "HeatSolve": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+    },
+    "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+    "manifest": "results/case_phase24_adaptive_continuous_post_event_20ns_baseline/manifest.json"
+  },
+  "case": "case_phase24_adaptive_continuous_post_event_20ns_baseline",
+  "settings": {
+    "dt_initial": "20[us]",
+    "dt_min": "0.5[ns]",
+    "dt_max": "20[us]",
+    "relative_tolerance": 0.002,
+    "absolute_tolerance": 1.0e-8,
+    "r_min": 0.5,
+    "r_max": 2.0,
+    "max_growth": 1.5,
+    "max_shrink": 0.5,
+    "max_rejected": 8,
+    "physical_event_times": ["20.02[ms]", "20.020001[ms]"],
+    "linear_system_convergence_tolerance": 5.0e-7,
+    "adaptive_debug": true,
+    "note": "Identical rtol/atol/dt_min/linear tolerance to the 31us production case; only the window length (20.020021ms - 20ms) and adaptive_debug differ, per the do-not-touch list."
+  },
+  "wall_time": 2003.93,
+  "accepted": 42,
+  "rejected": 11,
+  "bdf1": 14,
+  "bdf2": 28,
+  "bdf1_rejected": 1,
+  "bdf2_rejected": 10,
+  "forced_floor_accepts": 24,
+  "bdf2_reentry_events": 10,
+  "dt_min": 5.0e-10,
+  "dt_max_observed": 2.0e-5,
+  "dt_percentiles": {
+    "all_accepted_ns": {"p10": 0.5, "p50": 0.5, "p90": 0.6, "min": 0.49999999995370004, "max": 20000.0},
+    "post_second_event_accepted_ns": {"p10": 0.5, "p50": 0.5, "p90": 0.6, "min": 0.49999999995370004, "max": 0.6}
+  },
+  "final_dt": 4.999999999537e-10,
+  "estimator_statistics": {
+    "post_second_event_control_error": {"min": 0.2204070178134, "max": 3.58973246189, "mean": 1.5012727971977717},
+    "post_second_event_error_below_one_accepts": 17,
+    "note": "estimator_raw_error == estimator_control_error in this artifact: no Richardson/order correction exists yet (that split is Stage 11C-1's job). The TrialLogEntry/NativeTrialRecord schema already carries both fields separately so 11C-1 can populate a distinct raw value without a further schema change."
+  },
+  "linear_statistics": {
+    "max_linear_iterations_any_trial": 3,
+    "max_linear_residual_any_trial": 4.98399e-07,
+    "failed_solves": 0
+  },
+  "event_audit": {
+    "flags_first_four_trials": ["FTFF", "TTFT", "FFFF", "FTFF"],
+    "contract_status": "PASS",
+    "bdf_sequence_trials_1_to_6": [1, 1, 1, 1, 1, 2],
+    "bdf_sequence_interpretation": "event landing BDF1 (trial 1, lands on first event) -> forced BDF1 retry rejected (trial 2, targets second event 1ns later) -> BDF1 floor retry accepted (trial 3) -> second-event landing BDF1 (trial 4) -> immediate post-event BDF1 hold (trial 5) -> ordinary BDF2 resumes (trial 6). Matches the regression-locked Stage 11A contract."
+  },
+  "accuracy_comparison": {
+    "performed": false,
+    "reason": "Stage 11C-0 is an observability/reproduction gate only. No estimator or state-trajectory change was made, so there is nothing new to compare against a fine reference; that work belongs to Stage 11C-1."
+  },
+  "runtime_projection": {
+    "performed": false,
+    "reason": "Unchanged from the existing NO-GO production-readiness-gate projection (artifacts/phase24_stage11_production_readiness_gate.json); this gate does not add a new runtime estimate because no policy changed."
+  },
+  "gate_criteria": {
+    "stage11a_event_audit_matches": {"required": true, "observed": true, "status": "PASS", "detail": "FTFF/TTFT/FFFF/FTFF reproduced exactly from the archived log."},
+    "event_landing_bdf_sequence_matches_contract": {"required": true, "observed": true, "status": "PASS"},
+    "observability_does_not_change_trajectory": {"required": true, "observed": true, "status": "PASS", "detail": "No native rebuild or rerun occurred; the parser only reads the already-archived, untouched solver.log. The Python-reference logging addition is proven non-perturbing by tests/test_adaptive_time.py::test_observability_log_does_not_change_accepted_trajectory (identical dt/bdf_order/cooldown/rejected_in_row whether or not .log is read after every call)."},
+    "baseline_numbers_reproduced": {
+      "required": true,
+      "observed": true,
+      "status": "PASS",
+      "detail": "accepted=42, rejected=11, bdf2_rejected=10, post_event_accepted=39, dt_min=0.5ns, dt>dt_min_accepted=5, max_post_event_dt=0.6ns, final_accepted_dt=0.4999999999537ns, post_event_E<1_accepts=17 -- all reproduced to full floating-point precision from artifacts/phase24_stage11_production_readiness_gate.json and artifacts/phase24_stage11b_20ns_baseline.json."
+    },
+    "python_and_native_tests_pass": {"required": true, "observed": true, "status": "PASS", "detail": "145/145 Python tests pass (140 pre-existing + 5 new parser tests + upgrades to test_adaptive_time.py); no native regression was re-run because no native code changed."}
+  },
+  "gate_result": "PASS",
+  "remaining_blockers": [
+    "Python-reference parity gap (found while writing this gate's observability tests, not caused by them, and NOT fixed here per Stage 11C-0's observability-only scope): AdaptiveController.accept()'s own bdf_order recomputation checks event_forced/event_landing/discontinuity/held_bdf1 but not rejected_in_row, unlike propose()'s trial_bdf_order. A non-event post-reject retry is proposed and (in native) solved at BDF1, but this Python reference's self.bdf_order/counters can label it BDF2. Native does not have this specific bug (it counts from AdaptiveStepOrder, the value actually used to build the trial's stencil). Needs resolution before Stage 11C-2's BDF2 state machine is designed in the Python reference, or the reference must stay clearly marked non-authoritative for order bookkeeping until then.",
+    "CONFIRMED Python-reference bug (reproduced directly, not just inferred from the log): AdaptiveController.propose()'s trial_bdf_order only forces BDF1 from PRIOR state (force_bdf1_steps_remaining>0, rejected_in_row>0, or previous_dt is None) -- it never checks whether THIS proposal itself is landing on the event (self.last_event_landing). Native forces BDF1 proactively and correctly for the landing trial itself ('IF (AdaptiveEventLanding) AdaptiveForceBDF1 = .TRUE.' evaluated before AdaptiveStepOrder is chosen, per artifacts/phase24_stage11_event_boundary_bdf_reset.patch). Repro: a controller with ordinary prior history (one accepted step, no active reject/force state) proposing a trial whose endpoint lands exactly on next_event returns trial.event_landing=True but trial.bdf_order=2 -- exactly the case Stage 11A's contract requires to be BDF1. This explains the real 20ns trace's 3-step BDF1 hold after the second event (trial 3: post-reject retry hold; trial 4: this bug's correct native counterpart -- landing forces BDF1 directly; trial 5: post-landing accept-side hold via AdaptiveForceBDF1=AdaptiveDiscontinuity; trial 6: first ordinary BDF2). It does not affect production correctness (native's actual solve is unaffected; the bug is confined to this Python reference module), but it means the reference's own trial.bdf_order cannot yet be trusted to mirror native's landing-trial order, and must be fixed (adding the missing self.last_event_landing check to propose(), mirroring the already-correct accept()-side condition) before Stage 11C-1/11C-2 build any Python-side design or test harness on top of propose()'s reported order. Left unfixed here strictly because Stage 11C-0 is observability-only.",
+    "Native StepControl/SmallestCount/AdaptiveKeepSmallest growth-throttle mechanism (ElmerSolver.F90) has no Python-reference equivalent. Currently inert in production because 'Adaptive Keep Smallest' is not set (defaults to 0), but this should be confirmed explicitly for the 31us production project file before relying on it staying inert through Stage 11F.",
+    "No committed, reusable log-parsing tooling existed before this session for the rich Stage 11 native diagnostic log format; prior Stage 11 validation JSONs with per-trial trial_trace data appear to have been hand-authored rather than produced by a checked-in script. scripts/analysis/parse_adaptive_native_log.py now fills that gap and is regression-tested, but earlier Stage 11 artifacts should not be assumed machine-reproducible unless re-derived through it."
+  ],
+  "next_allowed_stage": "Stage 11C-1: Estimator Characterization -- may proceed, but must first fix the confirmed propose()-side event-landing BDF1 bug in scripts/support/adaptive_time.py (see remaining_blockers) before using this Python reference's TrialMetadata.bdf_order for any 11C-1/11C-2 probe design or state-machine prototyping, since it currently mislabels a from-ordinary-history landing trial as BDF2. That fix is itself observability/correctness-only (it makes propose() match the already-correct accept()-side condition and native's actual behavior) and does not touch growth/shrink/tolerance policy, so it is in scope to land at the start of 11C-1 rather than requiring a further gate."
+}

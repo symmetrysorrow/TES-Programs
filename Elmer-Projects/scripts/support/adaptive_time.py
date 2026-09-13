@@ -226,6 +226,39 @@ class StepCounters:
 
 
 @dataclass(frozen=True)
+class TrialLogEntry:
+    """Stage 11C-0 observability record for one propose/accept-or-reject cycle.
+
+    Populated by :meth:`AdaptiveController.accept`/``reject`` as a pure
+    side-channel: nothing here feeds back into a control decision, so adding
+    or reading fields cannot change accepted trajectories.
+    """
+
+    trial_id: int
+    time: float | None
+    proposed_dt: float
+    final_dt: float
+    previous_accepted_dt: float | None
+    step_ratio: float | None
+    bdf_order: int
+    event_clipped: bool
+    event_landing: bool
+    force_bdf1_active: bool
+    rejection_streak_before: int
+    cooldown_before: int
+    floor_accept: bool
+    estimator_raw_error: float | None
+    estimator_control_error: float | None
+    accepted: bool
+    proposed_next_dt: float | None
+    applied_growth_factor: float | None
+    accepted_history_length_before: int
+    bdf2_reentry: bool
+    linear_iterations: int | None
+    linear_residual: float | None
+
+
+@dataclass(frozen=True)
 class TrialMetadata:
     """Immutable proposal facts consumed by one accepted or rejected trial."""
 
@@ -261,6 +294,9 @@ class AdaptiveController:
     last_event_landing: bool = field(default=False, init=False)
     last_event_endpoint_snapped: bool = field(default=False, init=False)
     force_bdf1_steps_remaining: int = 0
+    log: list[TrialLogEntry] = field(default_factory=list, repr=False, compare=False)
+    _last_proposed_time: float | None = field(default=None, init=False, repr=False)
+    _next_trial_id: int = field(default=1, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.dt is None:
@@ -306,8 +342,10 @@ class AdaptiveController:
             if self.force_bdf1_steps_remaining > 0
             or self.rejected_in_row > 0
             or self.previous_dt is None
+            or self.last_event_landing
             else 2
         )
+        self._last_proposed_time = time
         return TrialMetadata(
             proposed_dt=proposed_dt,
             final_dt=dt,
@@ -327,8 +365,13 @@ class AdaptiveController:
         event_landing: bool | None = None,
         nonlinear_difficulty: float = 0.0,
         discontinuity: bool = False,
+        raw_error: float | None = None,
+        linear_iterations: int | None = None,
+        linear_residual: float | None = None,
     ) -> None:
         trial = dt if isinstance(dt, TrialMetadata) else None
+        proposed_dt = trial.proposed_dt if trial is not None else dt
+        event_clipped = trial.event_clipped if trial is not None else False
         if trial is not None:
             if event_landing is None:
                 event_landing = trial.event_landing
@@ -336,6 +379,13 @@ class AdaptiveController:
             dt = trial.final_dt
         if dt <= 0.0:
             raise ValueError("accepted timestep must be positive")
+        # --- Stage 11C-0 observability: snapshot pre-mutation state only. ---
+        previous_dt_before = self.previous_dt
+        rejected_in_row_before = self.rejected_in_row
+        cooldown_before = self.growth_cooldown_remaining
+        history_length_before = self.counters.accepted_internal_steps
+        force_bdf1_active_before = self.force_bdf1_steps_remaining > 0
+        previous_bdf_order = self.bdf_order
         had_history = self.previous_dt is not None
         if event_landing is None:
             event_landing = False
@@ -376,10 +426,59 @@ class AdaptiveController:
             self.counters.bdf1_steps += 1
         else:
             self.counters.bdf2_steps += 1
+        bdf2_reentry = self.bdf_order == 2 and previous_bdf_order == 1 and had_history
+        self.log.append(
+            TrialLogEntry(
+                trial_id=self._next_trial_id,
+                time=self._last_proposed_time,
+                proposed_dt=proposed_dt,
+                final_dt=dt,
+                previous_accepted_dt=previous_dt_before,
+                step_ratio=(dt / previous_dt_before) if previous_dt_before else None,
+                bdf_order=self.bdf_order,
+                event_clipped=event_clipped,
+                event_landing=event_landing,
+                force_bdf1_active=force_bdf1_active_before,
+                rejection_streak_before=rejected_in_row_before,
+                cooldown_before=cooldown_before,
+                floor_accept=forced_floor,
+                estimator_raw_error=raw_error if raw_error is not None else error,
+                estimator_control_error=error,
+                accepted=True,
+                proposed_next_dt=self.dt,
+                applied_growth_factor=(self.dt / dt) if dt else None,
+                accepted_history_length_before=history_length_before,
+                bdf2_reentry=bdf2_reentry,
+                linear_iterations=linear_iterations,
+                linear_residual=linear_residual,
+            )
+        )
+        self._next_trial_id += 1
 
-    def reject(self, dt: float) -> float:
+    def reject(
+        self,
+        dt: float | TrialMetadata,
+        *,
+        raw_error: float | None = None,
+        linear_iterations: int | None = None,
+        linear_residual: float | None = None,
+        error: float | None = None,
+    ) -> float:
+        trial = dt if isinstance(dt, TrialMetadata) else None
+        proposed_dt = trial.proposed_dt if trial is not None else dt
+        event_clipped = trial.event_clipped if trial is not None else False
+        event_landing = trial.event_landing if trial is not None else False
+        trial_bdf_order = trial.bdf_order if trial is not None else self.bdf_order
+        if trial is not None:
+            dt = trial.final_dt
         if dt <= 0.0:
             raise ValueError("rejected timestep must be positive")
+        # --- Stage 11C-0 observability: snapshot pre-mutation state only. ---
+        previous_dt_before = self.previous_dt
+        rejected_in_row_before = self.rejected_in_row
+        cooldown_before = self.growth_cooldown_remaining
+        history_length_before = self.counters.accepted_internal_steps
+        force_bdf1_active_before = self.force_bdf1_steps_remaining > 0
         self.counters.rejected_internal_steps += 1
         self.rejected_in_row += 1
         if self.rejected_in_row > self.config.max_rejected:
@@ -390,6 +489,33 @@ class AdaptiveController:
         self.last_event_clipped = False
         self.last_event_landing = False
         self.last_event_endpoint_snapped = False
+        self.log.append(
+            TrialLogEntry(
+                trial_id=self._next_trial_id,
+                time=self._last_proposed_time,
+                proposed_dt=proposed_dt,
+                final_dt=dt,
+                previous_accepted_dt=previous_dt_before,
+                step_ratio=(dt / previous_dt_before) if previous_dt_before else None,
+                bdf_order=trial_bdf_order,
+                event_clipped=event_clipped,
+                event_landing=event_landing,
+                force_bdf1_active=force_bdf1_active_before,
+                rejection_streak_before=rejected_in_row_before,
+                cooldown_before=cooldown_before,
+                floor_accept=False,
+                estimator_raw_error=raw_error if raw_error is not None else error,
+                estimator_control_error=error,
+                accepted=False,
+                proposed_next_dt=self.dt,
+                applied_growth_factor=(self.dt / dt) if dt else None,
+                accepted_history_length_before=history_length_before,
+                bdf2_reentry=False,
+                linear_iterations=linear_iterations,
+                linear_residual=linear_residual,
+            )
+        )
+        self._next_trial_id += 1
         return self.dt
 
 

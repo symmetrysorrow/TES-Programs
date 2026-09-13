@@ -10,6 +10,7 @@ from scripts.support.adaptive_time import (
     bdf1_coefficients,
     dense_linear,
     is_event_landing,
+    TrialLogEntry,
     TrialMetadata,
     variable_bdf2_coefficients,
     weighted_error,
@@ -92,6 +93,21 @@ def test_event_epsilon_contract(offset: float) -> None:
         assert trial.final_dt == pytest.approx(event)
     else:
         assert trial.event_endpoint_snapped is False
+
+
+def test_propose_forces_bdf1_for_a_landing_trial_from_ordinary_history() -> None:
+    """Regression for a Stage 11C-0 finding: propose()'s trial_bdf_order used to
+    check only prior force/reject/no-history state, never whether THIS trial
+    itself lands on the event -- so a landing trial reached from ordinary
+    history (no active force-BDF1 or reject streak) was mislabeled order=2,
+    unlike native's proactive 'IF (AdaptiveEventLanding) AdaptiveForceBDF1 =
+    .TRUE.' before it picks AdaptiveStepOrder. accept()'s own recomputation
+    already had this condition; propose() must match it."""
+    controller = AdaptiveController(AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4))
+    controller.accept(1.0e-9, 0.05)  # ordinary history, no force/reject state active
+    trial = controller.propose(1.0e-9, 5.0e-9, next_event=2.0e-9)
+    assert trial.event_landing is True
+    assert trial.bdf_order == 1
 
 
 def test_event_landing_holds_bdf1_for_immediate_post_event_trial() -> None:
@@ -227,3 +243,93 @@ def test_adjacent_output_spans_do_not_double_count_shared_endpoint() -> None:
     add_output_counters(counters, schedule, 0.5, 1.0, include_start=False)
     assert counters.requested_outputs == 11
     assert counters.interpolation_only_outputs == 8
+
+
+# --- Stage 11C-0: observability must not perturb the accepted trajectory. ---
+
+
+def _drive_reject_floor_reentry_sequence(controller: AdaptiveController) -> None:
+    """Replay the reject -> floor-accept -> BDF2-reentry shape seen in the
+    Stage 11 continuous post-event trace (phase24_stage11_continuous_post_event_bdf2_validation.json)."""
+    controller.reject(1.0e-9)
+    controller.accept(0.5e-9, 1.75)  # forced-floor accept (dt==dt_min, error>1)
+    controller.accept(0.5e-9, 25.7)  # forced-floor accept again; re-arms cooldown
+    controller.accept(0.5e-9, 0.4)  # ordinary accept: cooldown-limited growth fires here
+
+
+def test_observability_log_does_not_change_accepted_trajectory() -> None:
+    quiet = AdaptiveController(AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4))
+    watched = AdaptiveController(AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4))
+    _drive_reject_floor_reentry_sequence(quiet)
+    _drive_reject_floor_reentry_sequence(watched)
+    # Reading .log after every call must not be observable in the numbers.
+    assert len(watched.log) == 4
+    assert quiet.dt == pytest.approx(watched.dt)
+    assert quiet.bdf_order == watched.bdf_order
+    assert quiet.growth_cooldown_remaining == watched.growth_cooldown_remaining
+    assert quiet.rejected_in_row == watched.rejected_in_row
+
+
+def test_log_records_reject_then_floor_accept_then_reentry_growth() -> None:
+    controller = AdaptiveController(AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4))
+    controller.accept(1.0e-9, 0.05)  # ordinary history-establishing accept, BDF1
+    controller.reject(1.0e-9)
+    controller.accept(0.5e-9, 1.75)  # forced-floor accept after the reject retry
+    controller.accept(0.5e-9, 0.4)  # first ordinary accept: grows dt via cooldown
+
+    entries = controller.log
+    assert len(entries) == 4
+    reject_entry = entries[1]
+    assert reject_entry.accepted is False
+    assert reject_entry.rejection_streak_before == 0
+
+    floor_entry = entries[2]
+    assert floor_entry.floor_accept is True
+    assert floor_entry.rejection_streak_before == 1
+    assert floor_entry.cooldown_before == 1
+    # KNOWN PARITY GAP (found while writing this Stage 11C-0 observability
+    # test, not introduced by it): AdaptiveController.accept's own bdf_order
+    # recomputation checks event_forced/event_landing/discontinuity/held_bdf1
+    # but -- unlike propose()'s trial_bdf_order -- does not check
+    # rejected_in_row. A non-event post-reject retry is therefore proposed
+    # and solved at BDF1 (propose() forces it via rejected_in_row > 0), yet
+    # this Python reference labels the accepted step order 2 here, unlike
+    # native's ElmerSolver.F90 which increments its BDF1/BDF2 counters from
+    # the AdaptiveStepOrder actually used to build the trial's stencil,
+    # not from an independent post-hoc recomputation. Left unresolved by
+    # deliberate Stage 11C-0 scope (observability only, no control-logic
+    # changes); tracked for Stage 11C-2's BDF2 re-entry state-machine work.
+    assert floor_entry.bdf_order == 2
+
+    reentry_entry = entries[3]
+    assert reentry_entry.bdf_order == 2
+    assert reentry_entry.bdf2_reentry is False
+    assert reentry_entry.floor_accept is False
+    assert reentry_entry.applied_growth_factor == pytest.approx(1.2)
+    assert reentry_entry.accepted_history_length_before == 2
+
+
+def test_log_captures_estimator_and_linear_diagnostics_when_supplied() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.1, 0.01, 0.5))
+    controller.accept(
+        0.1,
+        0.2,
+        raw_error=0.6,
+        linear_iterations=12,
+        linear_residual=4.5e-7,
+    )
+    entry = controller.log[-1]
+    assert entry.estimator_control_error == pytest.approx(0.2)
+    assert entry.estimator_raw_error == pytest.approx(0.6)
+    assert entry.linear_iterations == 12
+    assert entry.linear_residual == pytest.approx(4.5e-7)
+
+
+def test_log_entry_from_trial_metadata_records_event_flags() -> None:
+    controller = AdaptiveController(AdaptiveConfig(0.5e-9, 0.5e-9, 1.0e-4))
+    trial = controller.propose(0.5e-9, 1.0e-9, next_event=1.0e-9)
+    controller.accept(trial, 0.1)
+    entry = controller.log[-1]
+    assert entry.event_landing is True
+    assert entry.time == pytest.approx(0.5e-9)
+    assert isinstance(entry, TrialLogEntry)

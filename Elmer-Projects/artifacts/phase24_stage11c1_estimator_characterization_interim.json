@@ -1,0 +1,55 @@
+{
+  "stage": "Stage 11C-1 Estimator Characterization (interim)",
+  "status": "IN_PROGRESS",
+  "commit": "6dcb396f01a48f11786d63d24b500be545e87b0d",
+  "purpose": "Determine whether the BDF2-reject-driving estimator error is real temporal discretization error or an artifact of order/history/step-doubling handling near a physical event, before considering any Richardson-style order correction.",
+  "data_source": {
+    "description": "7 same-nominal-state local-dt probes (case_phase24_adaptive_local_dt_{1p5,1p25,1p0,0p875,0p75,0p625,0p5}ns) plus 3 dt_min sensitivity probes (case_phase24_adaptive_dtmin_{1p0,0p5,0p25}ns), all defined in scripts/prep/prepare_phase24_production.py and already run in a prior session (logs dated 2026-09-11, under results/case_phase24_adaptive_*_ns/native_stage11_*_debug.log). This session did not re-run them; it read and analyzed the existing logs, which were not previously reduced to a structured dataset.",
+    "restart_caveat": "IMPORTANT: every probe restarts from ADAPTIVE_POST_EVENT_CASE at restart_position=3 (the accepted state at 20.020001ms). The production-readiness-gate work already found restart-based post-event recovery does not exactly match continuous-history behavior (artifacts/phase24_stage11_continuous_post_event_bdf2_validation.json's restart_case_comparison section: continuous case reached only 1 BDF2 reject in its first 5ns tail vs the restart case's 5). This dataset is therefore useful for characterizing the estimator's LOCAL behavior at a representative post-event state, but must not be read as reproducing the exact continuous-trajectory reject/accept sequence. Restart-history fidelity itself is Stage 11E-R's job, not resolved here.",
+    "all_probe_trials_are_order_1": "All 7 local-dt probes and all first-trial dtmin probes are BDF1 (previous_dt is None on a fresh restart, so propose() cannot select order 2). This dataset therefore characterizes BDF1 estimator behavior only. It does NOT yet cover stable BDF2 or BDF2-re-entry trials, which the full Stage 11C-1 gate also requires (see remaining_work)."
+  },
+  "raw_probe_data": {
+    "note": "raw_maxdiff is the unweighted max |full_step - two_half_steps| difference across all DOFs; error is the production-weighted infinity-norm estimator (atol=1e-8, rtol=2e-3) actually used for accept/reject. maxvalue is the max |field value| at whichever DOF the maxdiff was measured, not necessarily the DOF that maximizes the weighted error, so error is NOT simply raw_maxdiff/(atol+rtol*maxvalue) -- error's own weighted max can be attained at a different DOF than maxdiff's.",
+    "points": [
+      {"dt_ns": 1.5,   "raw_maxdiff": 1.069746087811e-3, "weighted_error": 2.127659643030, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_1p5ns"},
+      {"dt_ns": 1.25,  "raw_maxdiff": 9.382620527781e-4, "weighted_error": 1.858903915914, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_1p25ns"},
+      {"dt_ns": 1.0,   "raw_maxdiff": 7.775590403901e-4, "weighted_error": 1.533544227645, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_1p0ns"},
+      {"dt_ns": 0.875, "raw_maxdiff": 6.842496585666e-4, "weighted_error": 1.982310774249, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_0p875ns", "flag": "non-monotonic weighted_error (higher than both its 1.0ns and 0.75ns neighbors) despite raw_maxdiff decreasing monotonically -- see analysis"},
+      {"dt_ns": 0.75,  "raw_maxdiff": 5.825750576369e-4, "weighted_error": 1.142766903070, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_0p75ns"},
+      {"dt_ns": 0.625, "raw_maxdiff": 4.721742530477e-4, "weighted_error": 0.9232847057487, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_0p625ns"},
+      {"dt_ns": 0.5,   "raw_maxdiff": 3.552336547352e-4, "weighted_error": 0.6921589287477, "bdf_order": 1, "source": "case_phase24_adaptive_local_dt_0p5ns"},
+      {"dt_ns": 0.375, "raw_maxdiff": 2.380981407890e-4, "weighted_error": 0.4620577941205, "bdf_order": 1, "source": "case_phase24_adaptive_dtmin_0p25ns final accepted trial (1.5ns proposal shrunk twice by max_shrink=0.5 to 0.375ns)"}
+    ]
+  },
+  "analysis": {
+    "log_log_regression_all_points": {"slope_p_plus_1": 1.0830, "interpretation": "average local order-of-accuracy exponent across the whole 0.375-1.5ns range, treating raw_maxdiff ~ C*dt^(p+1)"},
+    "log_log_regression_excluding_0p875_anomaly": {"slope_p_plus_1": 1.0787, "interpretation": "excluding the single non-monotonic point barely changes the global fit -- the anomaly is local, not a global regression driver"},
+    "pairwise_local_slopes": [
+      {"from_ns": 1.5, "to_ns": 1.25, "local_slope": 0.719},
+      {"from_ns": 1.25, "to_ns": 1.0, "local_slope": 0.842},
+      {"from_ns": 1.0, "to_ns": 0.875, "local_slope": 0.957},
+      {"from_ns": 0.875, "to_ns": 0.75, "local_slope": 1.044},
+      {"from_ns": 0.75, "to_ns": 0.625, "local_slope": 1.152},
+      {"from_ns": 0.625, "to_ns": 0.5, "local_slope": 1.275},
+      {"from_ns": 0.5, "to_ns": 0.375, "local_slope": 1.391}
+    ],
+    "key_finding": "The local log-log slope is NOT constant: it rises monotonically from 0.72 (at the coarsest pair) to 1.39 (at the finest pair tested), and is still climbing at dt=0.375ns -- smaller than the production dt_min=0.5ns floor. A converged asymptotic BDF1 step-doubling estimator should approach a STABLE slope (theoretically near 1-2 depending on the exact embedded-pair construction) well before dt shrinks below the production floor. Instead the slope has not stabilized anywhere in the tested range, including below the floor. This is direct empirical evidence -- not just the theoretical concern already raised in the task brief -- that the immediate post-second-event window (this probe state is ~0-1.5ns after the 20.020001ms event) is NOT in the asymptotic step-doubling regime at any dt currently reachable under the production floor.",
+    "implication_for_richardson_correction": "A fixed 'BDF1: divide by 1' treatment (i.e. no correction) is not contradicted by this data, precisely because there is no evidence of a converged asymptotic factor to divide by in the first place. Introducing ANY constant Richardson correction factor for BDF1 trials in this near-event window would be applying an asymptotic formula outside its regime of validity, which the task explicitly warns against generalizing from 'BDF2 needs /3'. This interim finding extends that same caution to BDF1 in the immediate post-event window.",
+    "0p875_anomaly": "The weighted_error at dt=0.875ns (1.982) exceeds both its 1.0ns (1.534) and 0.75ns (1.143) neighbors even though raw_maxdiff is perfectly monotonic through that point. Because maxvalue (the field magnitude at whichever DOF has maxdiff) and the DOF that maximizes the WEIGHTED ratio are not guaranteed to coincide, this is consistent with the worst-error DOF migrating to a different mesh location between trials -- a spatial, not temporal, effect. This needs confirming against the DOF index the estimator actually reports (not captured in the current log format) before treating it as fully explained; flagged as remaining_work, not resolved."
+  },
+  "gate_criteria": {
+    "estimator_raw_vs_reference_error_relationship_explainable": {"required": true, "observed": "PARTIAL", "status": "IN_PROGRESS", "detail": "Explained the raw estimator's own scaling behavior (non-asymptotic, rising local slope) but have NOT YET compared it against an independent fine-reference trajectory's true state error, because no such reference exists yet."},
+    "bdf2_stable_vs_reentry_distinguished": {"required": true, "observed": false, "status": "NOT_STARTED", "detail": "All 7 local-dt probes are BDF1 only (fresh restart forces order=1). No stable-BDF2 or BDF2-re-entry probe data exists yet."},
+    "event_contract_unaffected": {"required": true, "observed": true, "status": "PASS", "detail": "This work only reads existing logs and computes statistics; no controller code was changed in this artifact's scope."},
+    "correction_formula_and_conditions_recorded": {"required": true, "observed": "N/A", "status": "NOT_APPLICABLE_YET", "detail": "No correction is proposed yet -- the data so far argues against applying one in this specific near-event regime, which is itself the required documented conclusion for THIS regime, but stable-BDF2 regions (well after recovery, away from any event) still need their own characterization before Stage 11C-1 can close overall."}
+  },
+  "gate_result": "IN_PROGRESS -- not a pass or fail yet; this is an interim characterization artifact, not the Stage 11C-1 closing gate.",
+  "remaining_work": [
+    "Build an independent fine reference (dt <= 0.25ns, fixed-step, no adaptivity) spanning the same post-event window, to compare candidate-dt STATE error against ground truth, not just the internal full/half embedded estimate against itself. User has approved a small (~5ns) window first. Not yet started this session.",
+    "Repeat an equivalent probe sweep from a STABLE BDF2 accepted state (i.e., a point well into ordinary BDF2 stepping, away from any event or reject/floor history) to test whether the Richardson /3 candidate is more justified there than in this near-event BDF1 data.",
+    "Repeat again from a BDF2 RE-ENTRY trial specifically (the first BDF2 trial after a reject/floor run, per the Stage 11C-0 bdf2_reentry flag) since the task explicitly requires treating re-entry BDF2 differently from stable BDF2.",
+    "Resolve the 0.875ns weighted-error anomaly's DOF-migration hypothesis with actual per-DOF index data, not just aggregate maxdiff/maxvalue.",
+    "Only after the above: decide on a correction formula (if any) per BDF1 / stable-BDF2 / re-entry-BDF2, each justified against its own reference comparison, per Gate 11C-1's requirements."
+  ],
+  "next_allowed_stage": "Still Stage 11C-1 -- this artifact is an interim checkpoint, not a pass. Gate 11C-1 cannot close, and Stage 11C-2 cannot start, until the remaining_work items above are done."
+}
