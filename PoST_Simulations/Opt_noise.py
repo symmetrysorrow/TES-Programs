@@ -37,6 +37,7 @@ from lib.tes_noise_model import (
     linearized_matrix as tes_linearized_matrix,
     noise_components as tes_noise_components,
     operating_point as tes_operating_point,
+    tes_johnson_voltage_asd,
 )
 from subScript.noise_measurement_model import (
     HARDWARE_BESSEL_CUTOFF_HZ,
@@ -88,6 +89,18 @@ ABSOLUTE_ASD_REFERENCE_HZ = 1_000.0
 ABSOLUTE_ASD_WEIGHT_DEFAULT = 0.0
 MEASURED_ASD_PA_TO_A = 1.0e-12
 PRODUCTION_ASD_UA_TO_A = 1.0e-6
+BETA_DIAGNOSTIC_GRID = (
+    0.0,
+    0.5,
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+    8.0,
+    12.0,
+)
 SOURCE_DIAGNOSTIC_FREQUENCIES_HZ = (
     1_000.0,
     5_000.0,
@@ -1247,6 +1260,142 @@ def source_ablation_diagnostics(
     return result
 
 
+def johnson_beta_audit(candidate: dict) -> dict:
+    """Record the exact beta dependence used by the shared/production model."""
+
+    beta = float(candidate["beta"])
+    excess_m = float(candidate.get("excess_johnson_M", 0.0))
+    temperature = float(candidate["T_c"])
+    resistance = float(candidate["R"])
+    voltage_asd = tes_johnson_voltage_asd(
+        temperature,
+        resistance,
+        beta,
+        excess_m,
+    )
+    point = tes_operating_point(candidate)
+    tau_el = float(point["tau_el_s"])
+    return {
+        "status": "shared_production_convention",
+        "source_voltage_psd_expression": (
+            "4*k_B*T_c*R*(1+2*beta)*(1+excess_johnson_M^2)"
+        ),
+        "source_voltage_asd_expression": (
+            "sqrt(4*k_B*T_c*R*(1+2*beta)*(1+excess_johnson_M^2))"
+        ),
+        "electrical_tau_denominator": "R_l + R*(1+beta)",
+        "joule_coupling_factor": "2+beta",
+        "beta": beta,
+        "excess_johnson_M": excess_m,
+        "source_psd_beta_factor": float(1.0 + 2.0 * beta),
+        "source_asd_factor_vs_beta0_same_M": float(
+            np.sqrt(1.0 + 2.0 * beta)
+        ),
+        "source_voltage_asd_V_rtHz": float(voltage_asd),
+        "tau_el_s": tau_el,
+        "electrical_corner_Hz": float(
+            1.0 / (2.0 * np.pi * tau_el)
+        ),
+        "note": (
+            "This audit records the repository convention and code-path parity; "
+            "it does not by itself establish the experimental beta convention."
+        ),
+    }
+
+
+def beta_sweep_diagnostics(
+    candidate: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Sweep beta only, holding every other best-fit parameter fixed."""
+
+    beta_values = sorted(
+        set(BETA_DIAGNOSTIC_GRID + (float(candidate["beta"]),))
+    )
+    rows = []
+    for beta in beta_values:
+        trial = candidate.copy()
+        trial["beta"] = float(beta)
+        point = tes_operating_point(trial)
+        row = {
+            "beta": float(beta),
+            "stable": bool(point.get("stable", False)),
+            "valid": bool(point.get("valid", False)),
+            "reason": point.get("reason"),
+        }
+        if not row["stable"] or not row["valid"]:
+            rows.append(row)
+            continue
+
+        model, _reference_asd = deterministic_simulated_spectrum(
+            trial.copy(),
+            fit_freq,
+        )
+        score = float(fit_score(model, target, fit_freq, args))
+        band_diag = band_fit_diagnostics(model, target, fit_freq, args)
+        source_summary, _curves = source_class_diagnostics(
+            trial.copy(),
+            fit_freq,
+            args,
+        )
+
+        band_rows = {}
+        for band_name, diagnostics in band_diag.items():
+            mean_log = float(diagnostics["mean_log10_ratio"])
+            source_band = source_summary["fit_bands"][band_name]["sources"]
+            band_rows[band_name] = {
+                "rms_log10_ratio": float(
+                    diagnostics["rms_log10_ratio"]
+                ),
+                "mean_log10_ratio": mean_log,
+                "geometric_mean_model_over_measurement": float(
+                    10.0 ** mean_log
+                ),
+                "TES_Johnson_mean_psd_fraction": float(
+                    source_band["TES_Johnson"]["mean_psd_fraction"]
+                ),
+            }
+
+        audit = johnson_beta_audit(trial)
+        row.update(
+            {
+                "shape_score": score,
+                "source_psd_beta_factor": audit[
+                    "source_psd_beta_factor"
+                ],
+                "source_asd_factor_vs_beta0_same_M": audit[
+                    "source_asd_factor_vs_beta0_same_M"
+                ],
+                "TES_Johnson_voltage_asd_V_rtHz": audit[
+                    "source_voltage_asd_V_rtHz"
+                ],
+                "tau_el_s": audit["tau_el_s"],
+                "electrical_corner_Hz": audit["electrical_corner_Hz"],
+                "bands": band_rows,
+            }
+        )
+        rows.append(row)
+
+    stable_rows = [
+        row for row in rows
+        if row.get("stable") and "shape_score" in row
+    ]
+    best_row = min(
+        stable_rows,
+        key=lambda row: row["shape_score"],
+    ) if stable_rows else None
+
+    return {
+        "diagnostic_only": True,
+        "held_fixed_except": "beta",
+        "grid_includes_best_fit_beta": float(candidate["beta"]),
+        "rows": rows,
+        "best_fixed_other_parameters_row": best_row,
+    }
+
+
 def eigenmode_diagnostics(candidate: dict) -> dict:
     """Return eigenfrequencies and scaled state participation for each mode."""
 
@@ -1913,6 +2062,13 @@ def optimize_case(
         fit_freq,
         args,
     )
+    johnson_audit_summary = johnson_beta_audit(best_candidate.copy())
+    beta_sweep_summary = beta_sweep_diagnostics(
+        best_candidate.copy(),
+        target,
+        fit_freq,
+        args,
+    )
     eigenmode_summary = eigenmode_diagnostics(best_candidate.copy())
     source_plot_path = plot_source_class_diagnostics(
         source_curves,
@@ -1936,6 +2092,10 @@ def optimize_case(
     print(json.dumps(source_diagnostics, indent=2))
     print("Source-ablation diagnostics:")
     print(json.dumps(source_ablation_summary, indent=2))
+    print("Johnson/beta audit:")
+    print(json.dumps(johnson_audit_summary, indent=2))
+    print("Beta sweep diagnostics:")
+    print(json.dumps(beta_sweep_summary, indent=2))
     print("Eigenmode diagnostics:")
     print(json.dumps(eigenmode_summary, indent=2))
     print("Best fitted parameters:")
@@ -1958,6 +2118,8 @@ def optimize_case(
         "parameter_boundary_diagnostics": boundary_diagnostics,
         "source_class_diagnostics": source_diagnostics,
         "source_ablation_diagnostics": source_ablation_summary,
+        "johnson_beta_audit": johnson_audit_summary,
+        "beta_sweep_diagnostics": beta_sweep_summary,
         "eigenmode_diagnostics": eigenmode_summary,
         "source_contribution_plot": str(source_plot_path),
         "least_squares": {
@@ -2236,6 +2398,12 @@ def main():
             ],
             "best_case_source_ablation_diagnostics": best_case[
                 "source_ablation_diagnostics"
+            ],
+            "best_case_johnson_beta_audit": best_case[
+                "johnson_beta_audit"
+            ],
+            "best_case_beta_sweep_diagnostics": best_case[
+                "beta_sweep_diagnostics"
             ],
             "best_case_eigenmode_diagnostics": best_case[
                 "eigenmode_diagnostics"
