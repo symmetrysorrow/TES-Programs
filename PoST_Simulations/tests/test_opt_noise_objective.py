@@ -472,3 +472,50 @@ def test_rc_degeneracy_constant_sum_sweep_contains_best_decomposition() -> None:
     assert result["constant_dc_sum_partition_sweep"][
         "shape_score_span"
     ] >= 0.0
+
+
+
+def test_static_effective_series_decode_maps_to_plain_rl_model() -> None:
+    original = _stable_stycast_candidate()
+    original["R_series_eff"] = original["R_l"]
+    bounds = {
+        "R_series_eff": optimizer.Bound(
+            optimizer.R_SERIES_EFF_FIT_MIN_OHM,
+            optimizer.R_SERIES_EFF_FIT_MAX_OHM,
+        )
+    }
+    target_resistance = 20.0e-3
+    vector = np.asarray([np.log10(target_resistance)])
+    candidate = optimizer.decode(
+        vector,
+        original,
+        ["R_series_eff"],
+        bounds,
+        sample_rate=500_000.0,
+        post_filter_white_asd=0.0,
+        electrical_link_model="rl",
+    )
+    assert candidate["electrical_link_model"] == "rl"
+    assert candidate["R_series_eff"] == pytest.approx(target_resistance)
+    assert candidate["R_l"] == pytest.approx(target_resistance)
+    assert "R_rc" not in candidate
+    assert "f_rc_Hz" not in candidate
+
+
+def test_effective_series_resistance_diagnostic_does_not_claim_decomposition() -> None:
+    candidate = _stable_stycast_candidate()
+    candidate["R_series_eff"] = 20.5e-3
+    candidate["R_l"] = candidate["R_series_eff"]
+    result = optimizer.effective_series_resistance_diagnostics(candidate)
+    assert result["electrical_fit_model"] == "static_effective_series_resistance"
+    assert result["R_series_eff_ohm"] == pytest.approx(20.5e-3)
+    assert result["extra_electrical_state_count"] == 0
+    assert "not a decomposition" in result["interpretation_guardrail"]
+
+
+def test_static_effective_series_range_covers_rc_profile_total() -> None:
+    assert optimizer.R_SERIES_EFF_FIT_MIN_OHM == pytest.approx(2.5e-3)
+    assert optimizer.R_SERIES_EFF_FIT_MAX_OHM == pytest.approx(30.0e-3)
+    assert optimizer.R_SERIES_EFF_FIT_MAX_OHM > (
+        optimizer.R_L_FIT_MAX_OHM + 8.8e-3
+    )

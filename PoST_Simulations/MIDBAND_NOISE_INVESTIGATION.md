@@ -408,3 +408,21 @@ scripts added during this work are:
 - `PoST_Simulations/subScript/distributed_noise_300.py`
 
 Do not discard unrelated existing worktree changes.
+
+
+## Electrical RC degeneracy result
+
+A one-state passive electrical relaxation branch,
+`Z_rc(s) = R_rc / (1 + s*tau_rc)`, was tested without changing the
+instantaneous TES alpha/beta resistance response.  The optimized corner ran to
+the 500 kHz search ceiling and fixed-`R_l` profiles preserved nearly the same
+shape score by trading `R_l` against `R_rc`.  The result therefore does not
+identify an in-band RC relaxation.  It identifies an effective total series
+resistance of roughly 20--21 mOhm in this reduced, normalized-shape model.
+
+The default optimizer now uses one parameter, `R_series_eff`, mapped onto the
+plain `R_l + L` core model with no extra electrical state.  This parameter is
+explicitly treated as an effective total series resistance; the fit must not be
+used to infer a physical decomposition into load, wiring, SQUID-input, or other
+hardware resistances.  The previous RC model remains available through
+`--use-rc-relaxation` for controlled comparison.
