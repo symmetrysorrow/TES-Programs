@@ -465,6 +465,30 @@ def test_genuine_reentry_success_uses_error_aware_growth_not_fixed_cooldown() ->
     assert controller.growth_cooldown_remaining == 0
 
 
+def test_genuine_reentry_growth_never_drops_below_dt_min() -> None:
+    """Found in the real Stage 11C-2 20ns qualification run: for error just
+    under 1 (e.g. 0.89), 0.9*error**(-1/3) is itself just under 1, so the
+    error-aware factor can be < 1 -- shrinking dt below dt_min if not
+    clamped. dt_min is a hard, do-not-touch production floor; the growth
+    branch must clamp like the ordinary branch already does."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=0.5e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.reject(trial2)
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.accept(trial3, 0.05)
+
+    trial4 = controller.propose(trial1.final_dt + trial3.final_dt, 10.0e-9)
+    assert trial4.final_dt == pytest.approx(0.5e-9)
+    near_one_error = 0.89  # 0.9 * 0.89**(-1/3) < 1: would shrink if unclamped
+    controller.accept(trial4, near_one_error)
+    assert controller.bdf2_reentry_pending is False
+    assert controller.dt >= config.dt_min
+    assert controller.dt == pytest.approx(config.dt_min)
+
+
 def test_floor_forced_reentry_accept_does_not_count_as_success() -> None:
     """A same-dt BDF2 trial accepted only because dt<=dt_min (error still
     >1) is not real evidence BDF2 is safe -- must stay pending and hold dt,

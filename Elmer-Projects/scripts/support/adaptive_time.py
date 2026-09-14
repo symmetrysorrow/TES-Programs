@@ -450,7 +450,7 @@ class AdaptiveController:
             # fixed post-reject cooldown factor.
             p = 2.0  # BDF2
             factor = min(self.config.max_growth, max(self.config.max_shrink, 0.9 * error ** (-1.0 / (p + 1.0))))
-            self.dt = min(self.config.dt_max, dt * factor)
+            self.dt = min(self.config.dt_max, max(self.config.dt_min, dt * factor))
             self.growth_cooldown_remaining = 0
         elif reentry_hold:
             # Either the BDF1 recovery retry, or a same-dt BDF2 trial that
