@@ -346,6 +346,33 @@ five-state model and the residual-derived *provisional* candidate are labeled
 separately; the 1--30 kHz region is explicitly identified as a fit/comparison
 region rather than independent validation.
 
+## Source-class transfer-shape diagnostic (2026-09-14)
+
+`Opt_noise.py` now writes
+`best_case_source_class_transfer_shape_diagnostics` into `summary.json`.
+This is a post-fit diagnostic: the current best-fit parameters are held fixed,
+the production optimizer and production noise model are unchanged, and the TES
+resistance response remains the instantaneous `alpha`/`beta` response.
+
+For every source class after the complete modeled measurement chain, the
+summary records:
+
+- the source-only ASD shape normalized at 1 kHz;
+- that normalized source shape divided by the normalized total shape;
+- the source PSD fraction `p_j(f)`;
+- the ASD-scale sensitivity `p_j(f) - p_j(1 kHz)`;
+- representative-frequency values, fit-band means/medians, and a compact curve
+  sample.
+
+The sensitivity follows directly from scaling only source-class `j` ASD by a
+small factor: it is the local derivative of normalized total ASD with respect
+to the logarithm of that source ASD scale.  Therefore a source is reported as
+a simultaneous candidate for the observed residual only when its sensitivity
+can raise the 5--15 kHz model ASD and lower the 40--100 kHz model ASD (or the
+opposite signs for decreasing the source), while the current residual is in
+fact a 5--15 kHz deficit and a 40--100 kHz excess.  This sign test is a
+screening diagnostic, not a source rescaling applied to production.
+
 ## Stable internal-source-only existence test (2026-08-20)
 
 Because independent SQUID/off-TES noise is expected to be small, a subsequent

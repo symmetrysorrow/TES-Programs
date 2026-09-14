@@ -1274,6 +1274,261 @@ def source_class_diagnostics(
     return summary, curves
 
 
+def source_class_transfer_shape_diagnostics(
+    curves: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Diagnose source-class shape leverage at fixed best-fit parameters.
+
+    For a source-class ASD scale ``s_j``, the local derivative of the
+    normalized total ASD with respect to ``log(s_j)`` is
+
+        p_j(f) - p_j(f_ref),
+
+    where ``p_j`` is that class's PSD fraction of the total and ``f_ref`` is
+    1 kHz.  This is a post-fit sensitivity only: no source scale is applied
+    to the production model or optimizer.
+    """
+
+    frequency = np.asarray(curves["frequencies_Hz"], dtype=float)
+    fit_freq = np.asarray(fit_freq, dtype=float)
+    target = np.asarray(target, dtype=float)
+    total_asd = np.asarray(curves["total_asd_A_rtHz"], dtype=float)
+    class_asd = {
+        name: np.asarray(asd, dtype=float)
+        for name, asd in curves["class_asd_A_rtHz"].items()
+    }
+    if (
+        frequency.shape != fit_freq.shape
+        or total_asd.shape != fit_freq.shape
+        or target.shape != fit_freq.shape
+        or any(asd.shape != fit_freq.shape for asd in class_asd.values())
+        or not np.allclose(frequency, fit_freq, rtol=0.0, atol=1.0e-9)
+    ):
+        raise ValueError(
+            "source transfer-shape curves, target, and fit frequency must "
+            "use the optimizer fit grid"
+        )
+    if (
+        np.any(~np.isfinite(total_asd))
+        or np.any(total_asd <= 0.0)
+        or np.any(~np.isfinite(target))
+        or np.any(target <= 0.0)
+    ):
+        raise ValueError("source transfer-shape inputs must be finite and positive")
+
+    total_shape = normalize_at(
+        frequency,
+        total_asd,
+        reference_hz=ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    total_psd = np.maximum(total_asd**2, np.finfo(float).tiny)
+    fractions = {
+        name: asd**2 / total_psd
+        for name, asd in class_asd.items()
+    }
+    reference_index = int(
+        np.argmin(np.abs(frequency - ABSOLUTE_ASD_REFERENCE_HZ))
+    )
+    reference_frequency = float(frequency[reference_index])
+    if not np.isclose(
+        reference_frequency,
+        ABSOLUTE_ASD_REFERENCE_HZ,
+        rtol=0.0,
+        atol=1.0e-9,
+    ):
+        raise ValueError("source transfer-shape grid must contain the 1 kHz reference")
+
+    source_shapes = {
+        name: normalize_at(
+            frequency,
+            asd,
+            reference_hz=ABSOLUTE_ASD_REFERENCE_HZ,
+        )
+        for name, asd in class_asd.items()
+    }
+    relative_shapes = {
+        name: source_shapes[name] / np.maximum(total_shape, np.finfo(float).tiny)
+        for name in class_asd
+    }
+    sensitivities = {
+        name: fractions[name] - fractions[name][reference_index]
+        for name in class_asd
+    }
+
+    model_over_measurement = total_shape / target
+    band_key = lambda low, high: f"{low:g}-{high:g}_Hz"
+    bands = {}
+    for low, high, band_weight in FIT_BANDS_HZ:
+        low_eff = max(float(low), float(args.fit_min_hz))
+        high_eff = min(float(high), float(args.fit_max_hz))
+        mask = (frequency >= low_eff) & (frequency <= high_eff)
+        if not np.any(mask):
+            continue
+        key = band_key(low_eff, high_eff)
+        band_result = {
+            "current_mean_log10_model_over_measurement": float(
+                np.mean(np.log10(model_over_measurement[mask]))
+            ),
+            "current_geometric_mean_model_over_measurement": float(
+                10.0 ** np.mean(np.log10(model_over_measurement[mask]))
+            ),
+            "band_weight": float(band_weight),
+            "sources": {},
+        }
+        for name in class_asd:
+            band_result["sources"][name] = {
+                "mean_source_only_shape_1k_normalized": float(
+                    np.mean(source_shapes[name][mask])
+                ),
+                "mean_relative_to_total_shape": float(
+                    np.mean(relative_shapes[name][mask])
+                ),
+                "mean_psd_fraction_p_j": float(
+                    np.mean(fractions[name][mask])
+                ),
+                "mean_asd_scale_sensitivity_delta_p_j": float(
+                    np.mean(sensitivities[name][mask])
+                ),
+                "median_asd_scale_sensitivity_delta_p_j": float(
+                    np.median(sensitivities[name][mask])
+                ),
+            }
+        bands[key] = band_result
+
+    midband_key = band_key(5_000.0, 15_000.0)
+    highband_key = band_key(40_000.0, 100_000.0)
+    if midband_key not in bands or highband_key not in bands:
+        raise ValueError(
+            "source transfer-shape diagnostic requires 5-15 kHz and 40-100 kHz bands"
+        )
+    midband_residual = bands[midband_key][
+        "current_mean_log10_model_over_measurement"
+    ]
+    highband_residual = bands[highband_key][
+        "current_mean_log10_model_over_measurement"
+    ]
+
+    candidates = []
+    direction_checks = {}
+    for name in class_asd:
+        mid_delta = bands[midband_key]["sources"][name][
+            "mean_asd_scale_sensitivity_delta_p_j"
+        ]
+        high_delta = bands[highband_key]["sources"][name][
+            "mean_asd_scale_sensitivity_delta_p_j"
+        ]
+        checks = {
+            "increase_source_ASD": {
+                "midband_delta_p_j": mid_delta,
+                "highband_delta_p_j": high_delta,
+                "moves_5_15k_toward_higher_ASD": bool(mid_delta > 0.0),
+                "moves_40_100k_toward_lower_ASD": bool(high_delta < 0.0),
+                "passes_correct_direction_test": bool(
+                    mid_delta > 0.0 and high_delta < 0.0
+                ),
+            },
+            "decrease_source_ASD": {
+                "midband_delta_p_j": mid_delta,
+                "highband_delta_p_j": high_delta,
+                "moves_5_15k_toward_lower_ASD": bool(mid_delta < 0.0),
+                "moves_40_100k_toward_higher_ASD": bool(high_delta > 0.0),
+                "passes_correct_direction_test": bool(
+                    mid_delta < 0.0 and high_delta > 0.0
+                ),
+            },
+        }
+        direction_checks[name] = checks
+        for direction, check in checks.items():
+            if check["passes_correct_direction_test"]:
+                candidates.append(
+                    {
+                        "source_class": name,
+                        "asd_scale_direction": direction,
+                        "midband_delta_p_j": float(mid_delta),
+                        "highband_delta_p_j": float(high_delta),
+                    }
+                )
+
+    representative_frequencies = {}
+    for requested in SOURCE_DIAGNOSTIC_FREQUENCIES_HZ:
+        if requested < frequency[0] or requested > frequency[-1]:
+            continue
+        index = int(np.argmin(np.abs(frequency - requested)))
+        point = {
+            "frequency_Hz": float(frequency[index]),
+            "total_shape_1k_normalized": float(total_shape[index]),
+            "sources": {},
+        }
+        for name in class_asd:
+            point["sources"][name] = {
+                "source_only_shape_1k_normalized": float(
+                    source_shapes[name][index]
+                ),
+                "relative_to_total_shape": float(relative_shapes[name][index]),
+                "psd_fraction_p_j": float(fractions[name][index]),
+                "asd_scale_sensitivity_delta_p_j": float(
+                    sensitivities[name][index]
+                ),
+            }
+        representative_frequencies[f"{requested:g}_Hz"] = point
+
+    sample_indices = np.unique(
+        np.linspace(0, len(frequency) - 1, min(121, len(frequency)), dtype=int)
+    )
+    curve_sample = []
+    for index in sample_indices:
+        point = {
+            "frequency_Hz": float(frequency[index]),
+            "total_shape_1k_normalized": float(total_shape[index]),
+            "sources": {},
+        }
+        for name in class_asd:
+            point["sources"][name] = {
+                "source_only_shape_1k_normalized": float(
+                    source_shapes[name][index]
+                ),
+                "relative_to_total_shape": float(relative_shapes[name][index]),
+                "psd_fraction_p_j": float(fractions[name][index]),
+                "asd_scale_sensitivity_delta_p_j": float(
+                    sensitivities[name][index]
+                ),
+            }
+        curve_sample.append(point)
+
+    return {
+        "diagnostic_only": True,
+        "production_optimizer_unchanged": True,
+        "tes_resistance_response": "instantaneous alpha/beta (unchanged)",
+        "best_fit_parameters_held_fixed": True,
+        "normalization_Hz": float(ABSOLUTE_ASD_REFERENCE_HZ),
+        "sensitivity_definition": (
+            "p_j(f) = source-class j PSD / total PSD; "
+            "d log ASD_normalized(f) / d log ASD_j = "
+            "p_j(f) - p_j(1 kHz)"
+        ),
+        "source_classes": list(class_asd),
+        "representative_frequencies": representative_frequencies,
+        "fit_bands": bands,
+        "curve_sample": curve_sample,
+        "current_residual_direction": {
+            "5_15kHz_mean_log10_model_over_measurement": float(midband_residual),
+            "40_100kHz_mean_log10_model_over_measurement": float(highband_residual),
+            "5_15kHz_is_deficit": bool(midband_residual < 0.0),
+            "40_100kHz_is_excess": bool(highband_residual > 0.0),
+        },
+        "source_class_direction_checks": direction_checks,
+        "source_candidates_for_simultaneous_correct_direction": candidates,
+        "can_move_5_15kHz_deficit_and_40_100kHz_excess_simultaneously": bool(
+            midband_residual < 0.0
+            and highband_residual > 0.0
+            and len(candidates) > 0
+        ),
+    }
+
+
 def source_ablation_diagnostics(
     curves: dict,
     target: np.ndarray,
@@ -3601,6 +3856,14 @@ def optimize_case(
         fit_freq,
         args,
     )
+    source_transfer_shape_diagnostics = (
+        source_class_transfer_shape_diagnostics(
+            source_curves,
+            target,
+            fit_freq,
+            args,
+        )
+    )
     required_transfer_summary, required_transfer_curves = (
         required_transfer_diagnostics(
             best_candidate.copy(),
@@ -3704,6 +3967,8 @@ def optimize_case(
     print(json.dumps(required_transfer_summary, indent=2))
     print("Source-class diagnostics:")
     print(json.dumps(source_diagnostics, indent=2))
+    print("Source-class transfer-shape diagnostics:")
+    print(json.dumps(source_transfer_shape_diagnostics, indent=2))
     print("Source-ablation diagnostics:")
     print(json.dumps(source_ablation_summary, indent=2))
     print("Johnson source-scale diagnostics:")
@@ -3745,6 +4010,9 @@ def optimize_case(
         "required_transfer_diagnostics": required_transfer_summary,
         "required_transfer_plot": str(required_transfer_plot_path),
         "source_class_diagnostics": source_diagnostics,
+        "source_class_transfer_shape_diagnostics": (
+            source_transfer_shape_diagnostics
+        ),
         "source_ablation_diagnostics": source_ablation_summary,
         "johnson_source_scale_diagnostics": johnson_scale_summary,
         "effective_series_resistance_diagnostics": effective_series_summary,
@@ -4084,6 +4352,9 @@ def main():
             ],
             "best_case_source_class_diagnostics": best_case[
                 "source_class_diagnostics"
+            ],
+            "best_case_source_class_transfer_shape_diagnostics": best_case[
+                "source_class_transfer_shape_diagnostics"
             ],
             "best_case_source_ablation_diagnostics": best_case[
                 "source_ablation_diagnostics"

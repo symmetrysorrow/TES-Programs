@@ -127,6 +127,81 @@ def test_source_class_diagnostics_reconstructs_total_model_psd() -> None:
     assert np.all(result["total_asd_A_rtHz"] > 0.0)
 
 
+def test_source_class_transfer_shape_reports_normalized_shapes_and_delta_p() -> None:
+    frequency = np.asarray([1_000.0, 10_000.0, 70_000.0, 150_000.0])
+    class_asd = {
+        "source_A": np.asarray([2.0, 3.0, 1.0, 1.0]),
+        "source_B": np.asarray([1.0, 1.0, 1.0, 1.0]),
+    }
+    total_asd = np.sqrt(sum(asd**2 for asd in class_asd.values()))
+    curves = {
+        "frequencies_Hz": frequency,
+        "class_asd_A_rtHz": class_asd,
+        "total_asd_A_rtHz": total_asd,
+    }
+    target = np.asarray([1.0, 1.6, 0.5, 0.5])
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+    )
+
+    result = optimizer.source_class_transfer_shape_diagnostics(
+        curves,
+        target,
+        frequency,
+        args,
+    )
+
+    mid = result["fit_bands"]["5000-15000_Hz"]["sources"]["source_A"]
+    high = result["fit_bands"]["40000-100000_Hz"]["sources"]["source_A"]
+    assert mid["mean_psd_fraction_p_j"] == pytest.approx(0.9)
+    assert mid["mean_asd_scale_sensitivity_delta_p_j"] == pytest.approx(0.1)
+    assert high["mean_psd_fraction_p_j"] == pytest.approx(0.5)
+    assert high["mean_asd_scale_sensitivity_delta_p_j"] == pytest.approx(-0.3)
+    assert result["current_residual_direction"]["5_15kHz_is_deficit"] is True
+    assert result["current_residual_direction"]["40_100kHz_is_excess"] is True
+    assert result[
+        "can_move_5_15kHz_deficit_and_40_100kHz_excess_simultaneously"
+    ] is True
+    assert {
+        "source_class": "source_A",
+        "asd_scale_direction": "increase_source_ASD",
+        "midband_delta_p_j": pytest.approx(0.1),
+        "highband_delta_p_j": pytest.approx(-0.3),
+    } in result["source_candidates_for_simultaneous_correct_direction"]
+
+
+def test_source_class_transfer_shape_is_zero_for_self_target() -> None:
+    candidate = _stable_stycast_candidate()
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 81)
+    curves = optimizer.post_analysis_source_class_asd(candidate, fit_freq)
+    target = optimizer.normalize_at(
+        fit_freq,
+        curves["total_asd_A_rtHz"],
+        reference_hz=optimizer.ABSOLUTE_ASD_REFERENCE_HZ,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+    )
+    result = optimizer.source_class_transfer_shape_diagnostics(
+        curves,
+        target,
+        fit_freq,
+        args,
+    )
+    assert result["production_optimizer_unchanged"] is True
+    assert result["best_fit_parameters_held_fixed"] is True
+    assert result[
+        "can_move_5_15kHz_deficit_and_40_100kHz_excess_simultaneously"
+    ] is False
+    for band in result["fit_bands"].values():
+        assert band["current_mean_log10_model_over_measurement"] == pytest.approx(
+            0.0,
+            abs=1.0e-12,
+        )
+
+
 def test_eigenmode_diagnostics_reports_stable_seven_state_modes() -> None:
     result = optimizer.eigenmode_diagnostics(_stable_stycast_candidate())
     assert result["state_count"] == 7
