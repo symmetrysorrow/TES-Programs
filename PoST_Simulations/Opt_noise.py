@@ -36,6 +36,7 @@ from scipy.optimize import differential_evolution, least_squares, minimize
 from lib.tes_noise_model import (
     ELECTRICAL_LINK_MODEL_RC,
     THERMAL_EXTENSION_TES_HANGING,
+    THERMAL_EXTENSION_TES_STYCAST_SERIES,
     linearized_matrix as tes_linearized_matrix,
     noise_components as tes_noise_components,
     operating_point as tes_operating_point,
@@ -181,6 +182,13 @@ HANGING_CORNER_GRID_HZ = (
     50_000.0,
     100_000.0,
 )
+
+# Diagnostic-only series thermalization-node screen.  The original fitted
+# TES--Stycast DC conductance is preserved exactly:
+#   1/G_tes-stycast = 1/G_tes-series + 1/G_series-stycast.
+# Only the inserted heat capacity and the conductance split are varied.
+SERIES_NODE_C_RATIO_GRID = (0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
+SERIES_NODE_G_RATIO_GRID = (0.1, 0.3, 1.0, 3.0, 10.0)
 
 N_FIT_MIN = 1.5
 N_FIT_MAX = 6.0
@@ -2307,6 +2315,274 @@ def hanging_thermal_body_sweep_diagnostics(
     }
 
 
+def series_thermalization_node_sweep_diagnostics(
+    candidate: dict,
+    target: np.ndarray,
+    fit_freq: np.ndarray,
+    args,
+) -> dict:
+    """Screen one symmetric thermalization node between TES and Stycast.
+
+    This is diagnostic-only.  All parameters of the static-series best fit are
+    frozen.  The original fitted TES--Stycast DC conductance is preserved
+    exactly while the inserted heat capacity and the conductance partition are
+    scanned.  Thus any improvement must come from an added thermal time scale,
+    not from changing the DC TES--Stycast link.
+    """
+
+    if candidate.get("electrical_link_model", "rl") != "rl":
+        return {
+            "status": "not_applicable_with_rc_relaxation",
+            "diagnostic_only": True,
+        }
+
+    baseline = candidate.copy()
+    for key in (
+        "thermal_extension",
+        "C_series",
+        "G_tes-series",
+        "G_series-stycast",
+        "C_hanging",
+        "G_tes-hanging",
+    ):
+        baseline.pop(key, None)
+    baseline_model, _ = deterministic_simulated_spectrum(
+        baseline.copy(),
+        fit_freq,
+    )
+    baseline_score = float(fit_score(baseline_model, target, fit_freq, args))
+    baseline_bands = band_fit_diagnostics(
+        baseline_model,
+        target,
+        fit_freq,
+        args,
+    )
+
+    def compact_bands(diagnostics):
+        result = {}
+        for name, values in diagnostics.items():
+            mean_log = float(values["mean_log10_ratio"])
+            result[name] = {
+                "rms_log10_ratio": float(values["rms_log10_ratio"]),
+                "mean_log10_ratio": mean_log,
+                "geometric_mean_model_over_measurement": float(10.0 ** mean_log),
+                "abs_mean_log10_ratio": float(abs(mean_log)),
+            }
+        return result
+
+    baseline_compact = compact_bands(baseline_bands)
+    mid_name = "5000-15000_Hz"
+    high_name = "40000-100000_Hz"
+    tail_name = "100000-200000_Hz"
+    base_g = float(candidate["G_tes-stycast"])
+    rows = []
+
+    for capacity_ratio in SERIES_NODE_C_RATIO_GRID:
+        c_series = float(capacity_ratio * candidate["C_tes"])
+        for conductance_ratio in SERIES_NODE_G_RATIO_GRID:
+            ratio = float(conductance_ratio)
+            # r = G_tes-series/G_series-stycast, while preserving the
+            # baseline series-equivalent conductance exactly.
+            g_tes_series = float(base_g * (1.0 + ratio))
+            g_series_stycast = float(base_g * (1.0 + ratio) / ratio)
+            equivalent = float(
+                1.0 / (1.0 / g_tes_series + 1.0 / g_series_stycast)
+            )
+            corner_hz = float(
+                (g_tes_series + g_series_stycast)
+                / (2.0 * np.pi * c_series)
+            )
+
+            trial = candidate.copy()
+            trial["thermal_extension"] = THERMAL_EXTENSION_TES_STYCAST_SERIES
+            trial["C_series"] = c_series
+            trial["G_tes-series"] = g_tes_series
+            trial["G_series-stycast"] = g_series_stycast
+            trial.pop("C_hanging", None)
+            trial.pop("G_tes-hanging", None)
+
+            point = tes_operating_point(trial)
+            row = {
+                "C_series_over_C_tes": float(capacity_ratio),
+                "C_series_J_per_K": c_series,
+                "G_tes_series_over_G_series_stycast": ratio,
+                "G_tes_series_W_per_K": g_tes_series,
+                "G_series_stycast_W_per_K": g_series_stycast,
+                "G_series_equivalent_W_per_K": equivalent,
+                "G_series_equivalent_over_baseline": float(equivalent / base_g),
+                "f_series_node_Hz": corner_hz,
+                "stable": bool(point.get("stable", False)),
+                "valid": bool(point.get("valid", False)),
+                "reason": point.get("reason"),
+            }
+            if row["stable"] and row["valid"]:
+                try:
+                    model, _ = deterministic_simulated_spectrum(
+                        trial.copy(),
+                        fit_freq,
+                    )
+                    score = float(fit_score(model, target, fit_freq, args))
+                    compact = compact_bands(
+                        band_fit_diagnostics(model, target, fit_freq, args)
+                    )
+                    row.update(
+                        {
+                            "shape_score": score,
+                            "score_change_vs_baseline": float(
+                                score - baseline_score
+                            ),
+                            "bands": compact,
+                            "midband_abs_mean_log_improvement": float(
+                                baseline_compact[mid_name][
+                                    "abs_mean_log10_ratio"
+                                ]
+                                - compact[mid_name]["abs_mean_log10_ratio"]
+                            ),
+                            "highband_abs_mean_log_change": float(
+                                compact[high_name]["abs_mean_log10_ratio"]
+                                - baseline_compact[high_name][
+                                    "abs_mean_log10_ratio"
+                                ]
+                            ),
+                            "tail_abs_mean_log_change": float(
+                                compact[tail_name]["abs_mean_log10_ratio"]
+                                - baseline_compact[tail_name][
+                                    "abs_mean_log10_ratio"
+                                ]
+                            ),
+                        }
+                    )
+                except Exception as error:
+                    row["stable"] = False
+                    row["valid"] = False
+                    row["reason"] = f"evaluation_failed:{error}"
+            rows.append(row)
+
+    finite_rows = [row for row in rows if "shape_score" in row]
+    best_global = (
+        min(finite_rows, key=lambda row: row["shape_score"])
+        if finite_rows
+        else None
+    )
+    mid_improving = [
+        row for row in finite_rows
+        if row["midband_abs_mean_log_improvement"] > 0.0
+    ]
+    mid_no_high_worse = [
+        row for row in mid_improving
+        if row["highband_abs_mean_log_change"] <= 0.0
+    ]
+    mid_no_high_or_tail_worse = [
+        row for row in mid_no_high_worse
+        if row["tail_abs_mean_log_change"] <= 0.0
+    ]
+    best_mid_no_high = (
+        max(
+            mid_no_high_worse,
+            key=lambda row: row["midband_abs_mean_log_improvement"],
+        )
+        if mid_no_high_worse
+        else None
+    )
+    best_mid_no_high_or_tail = (
+        max(
+            mid_no_high_or_tail_worse,
+            key=lambda row: row["midband_abs_mean_log_improvement"],
+        )
+        if mid_no_high_or_tail_worse
+        else None
+    )
+
+    best_source_summary = None
+    best_eigenmodes = None
+    if best_global is not None:
+        best_trial = candidate.copy()
+        best_trial["thermal_extension"] = THERMAL_EXTENSION_TES_STYCAST_SERIES
+        best_trial["C_series"] = float(best_global["C_series_J_per_K"])
+        best_trial["G_tes-series"] = float(
+            best_global["G_tes_series_W_per_K"]
+        )
+        best_trial["G_series-stycast"] = float(
+            best_global["G_series_stycast_W_per_K"]
+        )
+        best_trial.pop("C_hanging", None)
+        best_trial.pop("G_tes-hanging", None)
+        curves = post_analysis_source_class_asd(best_trial, fit_freq)
+        total_asd = np.asarray(curves["total_asd_A_rtHz"], dtype=float)
+        source_fraction = {}
+        for source_class in ("TES_series_TFN", "series_Stycast_TFN"):
+            asd = np.asarray(
+                curves["class_asd_A_rtHz"][source_class],
+                dtype=float,
+            )
+            source_fraction[source_class] = np.divide(
+                asd**2,
+                total_asd**2,
+                out=np.zeros_like(asd),
+                where=total_asd > 0.0,
+            )
+        source_fraction["combined_series_node_TFN"] = (
+            source_fraction["TES_series_TFN"]
+            + source_fraction["series_Stycast_TFN"]
+        )
+        best_source_summary = {
+            f"{frequency:g}_Hz": {
+                name: float(np.interp(frequency, fit_freq, fraction))
+                for name, fraction in source_fraction.items()
+            }
+            for frequency in SOURCE_DIAGNOSTIC_FREQUENCIES_HZ
+            if fit_freq[0] <= frequency <= fit_freq[-1]
+        }
+        best_eigenmodes = eigenmode_diagnostics(best_trial)
+
+    return {
+        "diagnostic_only": True,
+        "production_model_unchanged": True,
+        "symmetric_series_nodes": 2,
+        "shared_diagnostic_parameters": [
+            "C_series",
+            "G_tes-series/G_series-stycast",
+        ],
+        "dc_conductance_constraint": (
+            "1/G_tes-stycast = "
+            "1/G_tes-series + 1/G_series-stycast"
+        ),
+        "held_fixed": "all parameters of the static-series best fit",
+        "TES_resistance_response": "instantaneous alpha/beta (unchanged)",
+        "capacity_ratio_grid": [
+            float(value) for value in SERIES_NODE_C_RATIO_GRID
+        ],
+        "conductance_ratio_grid": [
+            float(value) for value in SERIES_NODE_G_RATIO_GRID
+        ],
+        "baseline_G_tes_stycast_W_per_K": base_g,
+        "baseline_shape_score": baseline_score,
+        "baseline_bands": baseline_compact,
+        "stable_grid_points": int(len(finite_rows)),
+        "total_grid_points": int(len(rows)),
+        "best_global_shape_score_row": best_global,
+        "best_midband_improvement_without_40_100k_worsening": best_mid_no_high,
+        "best_midband_improvement_without_40_200k_worsening": (
+            best_mid_no_high_or_tail
+        ),
+        "can_improve_5_15k_without_worsening_40_100k": bool(
+            mid_no_high_worse
+        ),
+        "can_improve_5_15k_without_worsening_40_200k": bool(
+            mid_no_high_or_tail_worse
+        ),
+        "best_global_series_node_TFN_psd_fraction": best_source_summary,
+        "best_global_eigenmode_diagnostics": best_eigenmodes,
+        "rows": rows,
+        "interpretation_guardrail": (
+            "This screen preserves the fitted DC TES--Stycast conductance and "
+            "tests only an added series thermal time scale.  A positive result "
+            "would motivate a constrained physical model; it is not evidence "
+            "that a distinct physical interfacial body exists."
+        ),
+    }
+
+
 def effective_series_resistance_diagnostics(candidate: dict) -> dict:
     """Describe the one-parameter static electrical fit without over-interpreting it."""
 
@@ -2535,6 +2811,29 @@ def eigenmode_diagnostics(candidate: dict) -> dict:
     temperature_scale = float(candidate["T_c"])
 
     if (
+        matrix.shape[0] == 9
+        and candidate.get("thermal_extension")
+        == THERMAL_EXTENSION_TES_STYCAST_SERIES
+    ):
+        state_names = (
+            "I1", "TES1", "Series1", "Stycast1", "Pb_center",
+            "Stycast2", "Series2", "TES2", "I2",
+        )
+        state_scales = np.asarray(
+            [
+                current_scale,
+                temperature_scale,
+                temperature_scale,
+                temperature_scale,
+                temperature_scale,
+                temperature_scale,
+                temperature_scale,
+                temperature_scale,
+                current_scale,
+            ],
+            dtype=float,
+        )
+    elif (
         matrix.shape[0] == 9
         and candidate.get("thermal_extension") == THERMAL_EXTENSION_TES_HANGING
     ):
@@ -3354,8 +3653,18 @@ def optimize_case(
             "status": "not_applicable_with_rc_relaxation",
             "diagnostic_only": True,
         }
+        series_thermal_summary = {
+            "status": "not_applicable_with_rc_relaxation",
+            "diagnostic_only": True,
+        }
     else:
         hanging_thermal_summary = hanging_thermal_body_sweep_diagnostics(
+            best_candidate.copy(),
+            target,
+            fit_freq,
+            args,
+        )
+        series_thermal_summary = series_thermalization_node_sweep_diagnostics(
             best_candidate.copy(),
             target,
             fit_freq,
@@ -3403,6 +3712,8 @@ def optimize_case(
     print(json.dumps(effective_series_summary, indent=2))
     print("TES hanging thermal-body sweep diagnostics:")
     print(json.dumps(hanging_thermal_summary, indent=2))
+    print("TES-Stycast series thermalization-node sweep diagnostics:")
+    print(json.dumps(series_thermal_summary, indent=2))
     print("Electrical RC ablation diagnostics:")
     print(json.dumps(electrical_rc_ablation_summary, indent=2))
     print("Electrical RC degeneracy diagnostics:")
@@ -3438,6 +3749,7 @@ def optimize_case(
         "johnson_source_scale_diagnostics": johnson_scale_summary,
         "effective_series_resistance_diagnostics": effective_series_summary,
         "hanging_thermal_body_sweep_diagnostics": hanging_thermal_summary,
+        "series_thermalization_node_sweep_diagnostics": series_thermal_summary,
         "electrical_rc_ablation_diagnostics": electrical_rc_ablation_summary,
         "electrical_rc_degeneracy_diagnostics": electrical_rc_degeneracy_summary,
         "johnson_beta_audit": johnson_audit_summary,
@@ -3784,6 +4096,9 @@ def main():
             ],
             "best_case_hanging_thermal_body_sweep_diagnostics": best_case[
                 "hanging_thermal_body_sweep_diagnostics"
+            ],
+            "best_case_series_thermalization_node_sweep_diagnostics": best_case[
+                "series_thermalization_node_sweep_diagnostics"
             ],
             "best_case_electrical_rc_ablation_diagnostics": best_case[
                 "electrical_rc_ablation_diagnostics"

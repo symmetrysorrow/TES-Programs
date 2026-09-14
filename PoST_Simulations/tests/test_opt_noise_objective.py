@@ -93,6 +93,21 @@ def _stable_stycast_hanging_candidate() -> dict:
     return candidate
 
 
+def _stable_stycast_series_candidate() -> dict:
+    candidate = _stable_stycast_candidate()
+    base_g = candidate["G_tes-stycast"]
+    candidate.update(
+        {
+            "thermal_extension": optimizer.THERMAL_EXTENSION_TES_STYCAST_SERIES,
+            "C_series": candidate["C_tes"],
+            "G_tes-series": 2.0 * base_g,
+            "G_series-stycast": 2.0 * base_g,
+            "electrical_link_model": "rl",
+        }
+    )
+    return candidate
+
+
 
 def test_source_class_diagnostics_reconstructs_total_model_psd() -> None:
     candidate = _stable_stycast_candidate()
@@ -606,5 +621,87 @@ def test_hanging_thermal_body_sweep_is_diagnostic_only() -> None:
     best = result["best_global_shape_score_row"]
     assert best is not None
     assert best["shape_score"] >= 0.0
+    assert "5000-15000_Hz" in best["bands"]
+    assert "40000-100000_Hz" in best["bands"]
+
+
+
+def test_series_thermalization_node_preserves_dc_link() -> None:
+    candidate = _stable_stycast_series_candidate()
+    point = optimizer.tes_operating_point(candidate)
+    assert point["valid"] is True
+    assert point["stable"] is True
+    assert point["thermal_extension"] == (
+        optimizer.THERMAL_EXTENSION_TES_STYCAST_SERIES
+    )
+    assert point["G_series_equivalent_W_per_K"] == pytest.approx(
+        candidate["G_tes-stycast"]
+    )
+    matrix = optimizer.tes_linearized_matrix(candidate, 0.0)
+    assert matrix.shape == (9, 9)
+
+    modes = optimizer.eigenmode_diagnostics(candidate)
+    assert modes["state_order"] == [
+        "I1",
+        "TES1",
+        "Series1",
+        "Stycast1",
+        "Pb_center",
+        "Stycast2",
+        "Series2",
+        "TES2",
+        "I2",
+    ]
+    assert modes["stable"] is True
+
+
+def test_series_thermalization_node_noise_reconstructs_with_two_tfn_classes() -> None:
+    candidate = _stable_stycast_series_candidate()
+    result = optimizer.post_analysis_source_class_asd(
+        candidate,
+        np.array([1_000.0, 10_000.0, 40_000.0, 100_000.0]),
+    )
+    assert "TES_series_TFN" in result["class_asd_A_rtHz"]
+    assert "series_Stycast_TFN" in result["class_asd_A_rtHz"]
+    assert np.all(result["class_asd_A_rtHz"]["TES_series_TFN"] > 0.0)
+    assert np.all(result["class_asd_A_rtHz"]["series_Stycast_TFN"] > 0.0)
+    assert result["reconstruction_max_relative_error"] < 1.0e-10
+
+
+def test_series_thermalization_sweep_preserves_baseline_dc_conductance() -> None:
+    candidate = _stable_stycast_candidate()
+    candidate["electrical_link_model"] = "rl"
+    fit_freq = np.geomspace(1_000.0, 200_000.0, 31)
+    target, _ = optimizer.deterministic_simulated_spectrum(
+        candidate.copy(),
+        fit_freq,
+    )
+    args = SimpleNamespace(
+        fit_min_hz=1_000.0,
+        fit_max_hz=200_000.0,
+        fit_weight_start_hz=40_000.0,
+        high_frequency_weight=4.0,
+        robust_delta_dex=0.3,
+    )
+    result = optimizer.series_thermalization_node_sweep_diagnostics(
+        candidate,
+        target,
+        fit_freq,
+        args,
+    )
+    assert result["diagnostic_only"] is True
+    assert result["production_model_unchanged"] is True
+    assert result["total_grid_points"] == (
+        len(optimizer.SERIES_NODE_C_RATIO_GRID)
+        * len(optimizer.SERIES_NODE_G_RATIO_GRID)
+    )
+    assert result["stable_grid_points"] > 0
+    assert result["baseline_shape_score"] == pytest.approx(0.0, abs=1.0e-12)
+    for row in result["rows"]:
+        if "shape_score" not in row:
+            continue
+        assert row["G_series_equivalent_over_baseline"] == pytest.approx(1.0)
+    best = result["best_global_shape_score_row"]
+    assert best is not None
     assert "5000-15000_Hz" in best["bands"]
     assert "40000-100000_Hz" in best["bands"]

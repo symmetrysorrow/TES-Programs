@@ -444,3 +444,25 @@ the 5--15 kHz deficit can improve without worsening 40--100 kHz, and more
 strictly without worsening either 40--100 or 100--200 kHz.  A positive screen
 only motivates a later physical interpretation or constrained fit; it is not
 evidence that a real hanging body exists.
+
+
+## TES--Stycast series thermalization-node diagnostic
+
+The hanging-body screen did not find a point that improved the 5--15 kHz
+deficit without worsening the 40--100 kHz excess.  The next diagnostic inserts
+one symmetric thermalization node in series between each TES and Stycast:
+
+`TES <-> C_series <-> Stycast`.
+
+This is not admitted to the production optimizer.  All static-series best-fit
+parameters remain frozen.  The existing fitted TES--Stycast DC conductance is
+preserved exactly by enforcing
+
+`1/G_tes-stycast = 1/G_tes-series + 1/G_series-stycast`.
+
+The diagnostic scans `C_series/C_tes = 0.1 ... 100` and the conductance
+partition `G_tes-series/G_series-stycast = 0.1 ... 10`.  This separates an
+added thermal time scale from a trivial change in DC thermal conductance.  The
+summary reports whether 5--15 kHz can improve without worsening 40--100 kHz,
+and more strictly without worsening either 40--100 or 100--200 kHz.  TES
+alpha/beta resistance response remains instantaneous.

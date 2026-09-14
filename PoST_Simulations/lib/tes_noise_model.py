@@ -53,6 +53,7 @@ STYCAST_SOURCE_CLASS_INDICES = {
 
 THERMAL_LINK_MODEL_STYCAST = "stycast_node"
 THERMAL_EXTENSION_TES_HANGING = "tes_hanging_body"
+THERMAL_EXTENSION_TES_STYCAST_SERIES = "tes_stycast_series_node"
 ELECTRICAL_LINK_MODEL_RC = "rl_rc_relaxation"
 
 STYCAST_HANGING_SOURCE_NAMES = (
@@ -75,6 +76,29 @@ STYCAST_HANGING_SOURCE_CLASS_INDICES = {
     "TES_bath_TFN": (2, 9),
     "TES_hanging_TFN": (3, 8),
     "TES_Stycast_TFN": (4, 7),
+    "Stycast_absorber_TFN": (5, 6),
+}
+
+STYCAST_SERIES_SOURCE_NAMES = (
+    "johnson_tes1",
+    "johnson_load1",
+    "phonon_tes1_bath",
+    "phonon_tes1_series",
+    "phonon_series1_stycast",
+    "phonon_stycast1_absorber",
+    "phonon_stycast2_absorber",
+    "phonon_stycast2_series",
+    "phonon_series2_tes2",
+    "phonon_tes2_bath",
+    "johnson_load2",
+    "johnson_tes2",
+)
+STYCAST_SERIES_SOURCE_CLASS_INDICES = {
+    "TES_Johnson": (0, 11),
+    "load_Johnson": (1, 10),
+    "TES_bath_TFN": (2, 9),
+    "TES_series_TFN": (3, 8),
+    "series_Stycast_TFN": (4, 7),
     "Stycast_absorber_TFN": (5, 6),
 }
 
@@ -165,6 +189,13 @@ def _use_hanging_tes(parameters: dict) -> bool:
     )
 
 
+def _use_series_thermalizer(parameters: dict) -> bool:
+    return (
+        str(parameters.get("thermal_extension", "none")).lower()
+        == THERMAL_EXTENSION_TES_STYCAST_SERIES
+    )
+
+
 def _use_rc_relaxation(parameters: dict) -> bool:
     return (
         str(parameters.get("electrical_link_model", "rl")).lower()
@@ -194,7 +225,16 @@ def _rc_values(parameters: dict) -> dict:
 def _source_layout(parameters: dict):
     stycast = _use_stycast_node(parameters)
     hanging = _use_hanging_tes(parameters)
+    series = _use_series_thermalizer(parameters)
     rc = _use_rc_relaxation(parameters)
+    if hanging and series:
+        raise ValueError("Select only one TES thermal extension")
+    if series:
+        if not stycast:
+            raise ValueError("TES-Stycast series-node extension requires stycast_node")
+        if rc:
+            raise ValueError("TES-Stycast series-node diagnostic does not support RC relaxation")
+        return STYCAST_SERIES_SOURCE_NAMES, STYCAST_SERIES_SOURCE_CLASS_INDICES, 8
     if hanging:
         if not stycast:
             raise ValueError("TES hanging-body extension requires stycast_node")
@@ -231,6 +271,29 @@ def _operating_values(parameters: dict) -> dict:
     tau_i = c_tes / ((1.0 - loop_gain) * g_tes_bath)
 
     extra = {}
+    if _use_series_thermalizer(parameters):
+        c_series = float(parameters["C_series"])
+        g_tes_series = float(parameters["G_tes-series"])
+        g_series_stycast = float(parameters["G_series-stycast"])
+        if c_series <= 0.0 or g_tes_series <= 0.0 or g_series_stycast <= 0.0:
+            raise ValueError("TES-Stycast series-node C and G values must be positive")
+        g_series_equivalent = 1.0 / (
+            1.0 / g_tes_series + 1.0 / g_series_stycast
+        )
+        extra.update(
+            {
+                "C_series_J_per_K": c_series,
+                "G_tes_series_W_per_K": g_tes_series,
+                "G_series_stycast_W_per_K": g_series_stycast,
+                "G_series_equivalent_W_per_K": g_series_equivalent,
+                "tau_series_node_s": c_series / (g_tes_series + g_series_stycast),
+                "f_series_node_Hz": (
+                    (g_tes_series + g_series_stycast)
+                    / (2.0 * math.pi * c_series)
+                ),
+                "thermal_extension": THERMAL_EXTENSION_TES_STYCAST_SERIES,
+            }
+        )
     if _use_hanging_tes(parameters):
         c_hanging = float(parameters["C_hanging"])
         g_tes_hanging = float(parameters["G_tes-hanging"])
@@ -387,6 +450,59 @@ def linearized_matrix(parameters: dict, frequency_hz: float) -> np.ndarray:
     g_tes_stycast = values["G_tes_stycast_W_per_K"]
     g_stycast_center = values["G_stycast_center_W_per_K"]
     hanging = _use_hanging_tes(parameters)
+    series = _use_series_thermalizer(parameters)
+
+    if series:
+        if rc:
+            raise ValueError("TES-Stycast series-node diagnostic does not support RC relaxation")
+        c_series = float(parameters["C_series"])
+        g_tes_series = float(parameters["G_tes-series"])
+        g_series_stycast = float(parameters["G_series-stycast"])
+        # I1, TES1, Series1, Stycast1, Pb center,
+        # Stycast2, Series2, TES2, I2.
+        matrix = np.zeros((9, 9), dtype=np.complex128)
+        matrix[0, 0] = electrical_rate + 1j * omega
+        matrix[0, 1] = thermal_electrical_coupling
+
+        matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
+        matrix[1, 1] = 1.0 / tau_i + g_tes_series / c_tes + 1j * omega
+        matrix[1, 2] = -g_tes_series / c_tes
+
+        matrix[2, 1] = -g_tes_series / c_series
+        matrix[2, 2] = (
+            (g_tes_series + g_series_stycast) / c_series + 1j * omega
+        )
+        matrix[2, 3] = -g_series_stycast / c_series
+
+        matrix[3, 2] = -g_series_stycast / c_stycast
+        matrix[3, 3] = (
+            (g_series_stycast + g_stycast_center) / c_stycast + 1j * omega
+        )
+        matrix[3, 4] = -g_stycast_center / c_stycast
+
+        matrix[4, 3] = -g_stycast_center / c_abs
+        matrix[4, 4] = 2.0 * g_stycast_center / c_abs + 1j * omega
+        matrix[4, 5] = -g_stycast_center / c_abs
+
+        matrix[5, 4] = -g_stycast_center / c_stycast
+        matrix[5, 5] = (
+            (g_series_stycast + g_stycast_center) / c_stycast + 1j * omega
+        )
+        matrix[5, 6] = -g_series_stycast / c_stycast
+
+        matrix[6, 5] = -g_series_stycast / c_series
+        matrix[6, 6] = (
+            (g_tes_series + g_series_stycast) / c_series + 1j * omega
+        )
+        matrix[6, 7] = -g_tes_series / c_series
+
+        matrix[7, 6] = -g_tes_series / c_tes
+        matrix[7, 7] = 1.0 / tau_i + g_tes_series / c_tes + 1j * omega
+        matrix[7, 8] = -current * resistance * (2.0 + beta) / c_tes
+
+        matrix[8, 7] = thermal_electrical_coupling
+        matrix[8, 8] = electrical_rate + 1j * omega
+        return matrix
 
     if hanging:
         if rc:
@@ -584,6 +700,46 @@ def source_matrix(parameters: dict) -> np.ndarray:
     tes_stycast_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_tes_stycast * F_LINK)
     stycast_abs_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_stycast_center * F_LINK)
     hanging = _use_hanging_tes(parameters)
+    series = _use_series_thermalizer(parameters)
+
+    if series:
+        if rc:
+            raise ValueError("TES-Stycast series-node diagnostic does not support RC relaxation")
+        c_series = float(parameters["C_series"])
+        g_tes_series = float(parameters["G_tes-series"])
+        g_series_stycast = float(parameters["G_series-stycast"])
+        tes_series_tfn = math.sqrt(
+            4.0 * K_B * t_c**2 * g_tes_series * F_LINK
+        )
+        series_stycast_tfn = math.sqrt(
+            4.0 * K_B * t_c**2 * g_series_stycast * F_LINK
+        )
+        sources = np.zeros((9, 12), dtype=np.complex128)
+        sources[0, 0] = -tes_johnson / inductance
+        sources[1, 0] = current * tes_johnson / c_tes
+        sources[0, 1] = load_johnson / inductance
+        sources[1, 2] = tes_bath_tfn / c_tes
+
+        sources[1, 3] = tes_series_tfn / c_tes
+        sources[2, 3] = -tes_series_tfn / c_series
+        sources[2, 4] = series_stycast_tfn / c_series
+        sources[3, 4] = -series_stycast_tfn / c_stycast
+
+        sources[3, 5] = stycast_abs_tfn / c_stycast
+        sources[4, 5] = -stycast_abs_tfn / c_abs
+        sources[4, 6] = -stycast_abs_tfn / c_abs
+        sources[5, 6] = stycast_abs_tfn / c_stycast
+
+        sources[5, 7] = -series_stycast_tfn / c_stycast
+        sources[6, 7] = series_stycast_tfn / c_series
+        sources[6, 8] = -tes_series_tfn / c_series
+        sources[7, 8] = tes_series_tfn / c_tes
+
+        sources[7, 9] = tes_bath_tfn / c_tes
+        sources[8, 10] = load_johnson / inductance
+        sources[8, 11] = -tes_johnson / inductance
+        sources[7, 11] = current * tes_johnson / c_tes
+        return sources
 
     if hanging:
         if rc:
@@ -719,7 +875,13 @@ def noise_components(parameters: dict, frequencies_hz) -> dict:
         "F_LINK": F_LINK,
         "thermal_link_model": THERMAL_LINK_MODEL_STYCAST if stycast else "effective",
         "thermal_extension": (
-            THERMAL_EXTENSION_TES_HANGING if _use_hanging_tes(parameters) else "none"
+            THERMAL_EXTENSION_TES_STYCAST_SERIES
+            if _use_series_thermalizer(parameters)
+            else (
+                THERMAL_EXTENSION_TES_HANGING
+                if _use_hanging_tes(parameters)
+                else "none"
+            )
         ),
         "electrical_link_model": (
             ELECTRICAL_LINK_MODEL_RC if _use_rc_relaxation(parameters) else "rl"
