@@ -1,0 +1,86 @@
+--- a/tools/elmer-hypre/src/fem/src/SolveHypre.c
++++ b/tools/elmer-hypre/src/fem/src/SolveHypre.c
+@@
+ (tools/ is gitignored in the TES-Programs repo, so this file has no git
+ history of its own; this patch is the authoritative record of the fix for
+ the native crash recorded in
+ artifacts/phase24_stage11c2_40ns_window_check_crash.json. Root cause
+ identified by the user, not this session: the persistent IJ matrix/vector
+ refresh paths called HYPRE_IJMatrixSetValues()/Assemble() and
+ HYPRE_IJVectorSetValues()/Assemble() on already-assembled IJ objects
+ without first calling HYPRE_IJMatrixInitialize()/HYPRE_IJVectorInitialize(),
+ which the HYPRE 2.33 IJ interface specification requires even when only
+ replacing existing fixed-pattern values. See
+ artifacts/phase24_stage11c2_hypre_ij_initialize_20ns_40ns_validation.json
+ for the build/validation record.)
+@@
+   struct fields (grouped with the other ij_vector_* counters):
++  long long ij_vector_initialize_calls;
+@@
+   Persistent RHS refresh path (runs on every persistent-path solve):
+-  HYPRE_IJVectorSetValues(Container->b, local_size, Container->index_buf, rhsvec);
++  /* HYPRE 2.33's IJ interface requires Initialize() before SetValues()/
++     Assemble() to modify an already-assembled vector, even when only
++     replacing existing entries -- this call was missing here (every
++     persistent-path solve refreshes the RHS, so this ran unconditionally
++     on every one of the ~324+ solves observed before the Stage 11C-2 40ns
++     window-length check crashed after 705 matrix refreshes; suspected to
++     leave the IJ vector's internal assembly bookkeeping in an
++     undefined/stale state that eventually corrupts a later HYPRE AMG
++     setup rather than failing immediately). */
++  {
++    HYPRE_Int ierr_init_b = HYPRE_IJVectorInitialize(Container->b);
++    Container->ij_vector_initialize_calls++;
++    if (ierr_init_b != 0 && myverb)
++      fprintf(stderr, "SolveHypre: HYPRE_IJVectorInitialize(b) returned %d before RHS refresh\n",
++              (int)ierr_init_b);
++  }
++  HYPRE_IJVectorSetValues(Container->b, local_size, Container->index_buf, rhsvec);
+   Container->ij_vector_set_values_calls++;
+   HYPRE_IJVectorAssemble(Container->b);
+   Container->ij_vector_assemble_calls++;
+@@
+   Persistent matrix refresh path (runs on every accepted matrix-coefficient
+   change; this is the path whose accumulated call count -- 705 in the run
+   that crashed -- best matched the crash's internal epoch counter):
+   /* Re-open the assembled IJ matrix for coefficient replacement. */
+-  /* The production HYPRE build keeps the assembled ParCSR object live inside
+-     the solver/preconditioner.  Re-initializing that IJ handle here invalidates
+-     the live object before the numeric refresh.  SetValues updates the existing
+-     fixed-pattern ParCSR values in place; the following Assemble is retained as
+-     the collective completion point. */
++  /* CORRECTED (Stage 11C-2 40ns window-length check crash investigation):
++     the previous version of this comment argued that re-Initializing the
++     IJ handle here would invalidate the live ParCSR object used by the
++     solver/preconditioner, and omitted the call on that basis. Per the
++     HYPRE 2.33 IJ interface specification, HYPRE_IJMatrixInitialize() IS
++     required before SetValues()/Assemble() on an already-assembled
++     matrix, even when only replacing existing fixed-pattern values -- it
++     resets the matrix's internal assembly bookkeeping (not the underlying
++     ParCSR data this call intentionally keeps live) for the new round of
++     SetValues calls. Running this refresh path repeatedly without it
++     (every accepted matrix-coefficient-change epoch; the crash was
++     reproduced after 705 refreshes in a 40ns run that never happens in
++     the ~50-trial bounded regressions) is suspected to leave that
++     bookkeeping stale until a subsequent HYPRE AMG setup call reads it
++     and crashes. HYPRE_IJMatrixGetObject() below still returns the same
++     live parcsr_A either way -- Initialize() does not tear that down. */
++  {
++    HYPRE_Int ierr_init_A = HYPRE_IJMatrixInitialize(Container->A);
++    Container->ij_matrix_initialize_calls++;
++    if (ierr_init_A != 0 && myverb)
++      fprintf(stderr, "SolveHypre: HYPRE_IJMatrixInitialize(A) returned %d before matrix refresh\n",
++              (int)ierr_init_A);
++  }
+   for (i = 0; i < local_size; i++) {
+     nnz = rows[i+1] - rows[i];
+     if (nnz <= 0) continue;
+     irow = globaldofs[i];
+     for (k = 0, j = rows[i]; j < rows[i+1]; j++, k++)
+       Container->index_buf[k] = globaldofs[cols[j-1]-1];
+     HYPRE_IJMatrixSetValues(Container->A, 1, &nnz, &irow,
+                             Container->index_buf, &vals[rows[i]-1]);
+     Container->ij_matrix_set_values_calls++;
+   }
+   HYPRE_IJMatrixAssemble(Container->A);
+   Container->ij_matrix_assemble_calls++;
