@@ -255,11 +255,13 @@ def _operating_values(parameters: dict) -> dict:
             1.0 / g_stycast_abs + 1.0 / (2.0 * g_abs_abs)
         )
         g_eff = 1.0 / (1.0 / g_tes_stycast + 1.0 / g_stycast_center)
-        extra = {
-            "G_tes_stycast_W_per_K": g_tes_stycast,
-            "G_stycast_abs_W_per_K": g_stycast_abs,
-            "G_stycast_center_W_per_K": g_stycast_center,
-        }
+        extra.update(
+            {
+                "G_tes_stycast_W_per_K": g_tes_stycast,
+                "G_stycast_abs_W_per_K": g_stycast_abs,
+                "G_stycast_center_W_per_K": g_stycast_center,
+            }
+        )
     else:
         g_abs_tes = float(parameters["G_abs-tes"])
         g_abs_abs = float(parameters["G_abs-abs"])
