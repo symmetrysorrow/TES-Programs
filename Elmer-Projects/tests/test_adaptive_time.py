@@ -287,18 +287,19 @@ def test_log_records_reject_then_floor_accept_then_reentry_growth() -> None:
     assert floor_entry.floor_accept is True
     assert floor_entry.rejection_streak_before == 1
     assert floor_entry.cooldown_before == 1
-    # KNOWN PARITY GAP (found while writing this Stage 11C-0 observability
-    # test, not introduced by it): AdaptiveController.accept's own bdf_order
-    # recomputation checks event_forced/event_landing/discontinuity/held_bdf1
-    # but -- unlike propose()'s trial_bdf_order -- does not check
-    # rejected_in_row. A non-event post-reject retry is therefore proposed
-    # and solved at BDF1 (propose() forces it via rejected_in_row > 0), yet
-    # this Python reference labels the accepted step order 2 here, unlike
-    # native's ElmerSolver.F90 which increments its BDF1/BDF2 counters from
-    # the AdaptiveStepOrder actually used to build the trial's stencil,
-    # not from an independent post-hoc recomputation. Left unresolved by
-    # deliberate Stage 11C-0 scope (observability only, no control-logic
-    # changes); tracked for Stage 11C-2's BDF2 re-entry state-machine work.
+    # This test drives accept() with plain floats (dt, error), not the
+    # TrialMetadata propose() itself returns. That low-level path was, until
+    # Stage 11C-2, the ONLY path -- accept() recomputed bdf_order from
+    # event_forced/event_landing/discontinuity/held_bdf1 and, unlike
+    # propose()'s trial_bdf_order, never checked rejected_in_row, so a
+    # non-event post-reject retry (genuinely solved at BDF1) got mislabeled
+    # order=2 the instant it was accepted. Fixed for real (TrialMetadata-
+    # driven) usage in Stage 11C-2 by trusting trial.bdf_order directly, the
+    # same way native counts from AdaptiveStepOrder rather than re-deriving
+    # it -- see test_bdf2_reentry_pending_holds_dt_until_same_dt_bdf2_accepted
+    # below for the fixed, realistic-usage version of this exact scenario.
+    # The plain-float API itself still has no rejected_in_row of its own to
+    # consult, so this low-level test keeps documenting that narrower gap.
     assert floor_entry.bdf_order == 2
 
     reentry_entry = entries[3]
@@ -333,3 +334,104 @@ def test_log_entry_from_trial_metadata_records_event_flags() -> None:
     assert entry.event_landing is True
     assert entry.time == pytest.approx(0.5e-9)
     assert isinstance(entry, TrialLogEntry)
+
+
+# --- Stage 11C-2 Candidate A: same-dt BDF2 re-entry. ---
+
+
+def test_accept_trusts_trial_bdf_order_for_a_post_reject_bdf1_retry() -> None:
+    """Fixed parity gap: when accept() is given the TrialMetadata propose()
+    produced, it must label the accepted order the same way the trial was
+    actually solved -- including a non-event post-reject BDF1 retry, which
+    propose() forces via rejected_in_row > 0 even though none of
+    event_forced/event_landing/discontinuity/held_bdf1/no-history apply."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=1.0e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial2.bdf_order == 2
+    controller.reject(trial2)
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial3.bdf_order == 1
+    controller.accept(trial3, 0.05)
+    assert controller.bdf_order == 1
+
+
+def test_bdf2_reentry_pending_holds_dt_until_same_dt_bdf2_accepted() -> None:
+    """The realistic-usage version of the reject/floor/re-entry cycle Stage
+    11C-0 root-caused: a BDF2 trial rejects, the BDF1 retry is accepted with
+    an ordinary (non-floor) error so the OLD code would have grown dt via
+    the cooldown branch on this very step -- simultaneously flipping order
+    back to BDF2 with an unvalidated, larger dt. Candidate A must hold dt
+    exactly where it is instead, and only resume growth once a same-dt BDF2
+    trial has actually been accepted."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=1.0e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)  # BDF1 (no history yet), dt grows to 1.5ns
+
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial2.bdf_order == 2
+    controller.reject(trial2)  # BDF2 reject -> arms bdf2_reentry_pending
+    assert controller.bdf2_reentry_pending is True
+
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial3.bdf_order == 1
+    recovery_dt = trial3.final_dt
+    controller.accept(trial3, 0.05)  # ordinary accept, NOT floor-forced
+    assert controller.bdf_order == 1
+    assert controller.bdf2_reentry_pending is True
+    # Candidate A: dt must be held, not grown by the cooldown branch.
+    assert controller.dt == pytest.approx(recovery_dt)
+
+    trial4 = controller.propose(trial1.final_dt + recovery_dt, 10.0e-9)
+    assert trial4.bdf_order == 2
+    assert trial4.final_dt == pytest.approx(recovery_dt), "re-entry trial must test the SAME dt"
+    controller.accept(trial4, 0.05)  # same-dt BDF2 validation succeeds
+    assert controller.bdf2_reentry_pending is False
+    assert controller.dt > recovery_dt, "ordinary growth resumes only after re-entry succeeds"
+
+
+def test_bdf2_reentry_pending_survives_repeated_bdf2_rejects() -> None:
+    """If the same-dt BDF2 validation trial itself rejects, the controller
+    must go back through another BDF1 retry with reentry still pending, not
+    give up and grow anyway."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=1.0e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.reject(trial2)
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.accept(trial3, 0.05)
+    recovery_dt = controller.dt
+
+    trial4 = controller.propose(trial1.final_dt + recovery_dt, 10.0e-9)
+    assert trial4.bdf_order == 2
+    controller.reject(trial4)  # same-dt BDF2 validation itself fails
+    assert controller.bdf2_reentry_pending is True
+
+    trial5 = controller.propose(trial1.final_dt + recovery_dt, 10.0e-9)
+    assert trial5.bdf_order == 1
+    controller.accept(trial5, 0.05)
+    assert controller.bdf2_reentry_pending is True
+    assert controller.dt == pytest.approx(trial5.final_dt)
+
+
+def test_event_boundary_clears_stale_bdf2_reentry_pending() -> None:
+    """An event boundary always takes priority: a stale re-entry attempt
+    from before the event no longer applies once the physics has moved on,
+    and must not suppress this event step's own (event-driven) BDF1 hold or
+    the ordinary growth that follows it."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=1.0e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.reject(trial2)
+    assert controller.bdf2_reentry_pending is True
+
+    event_trial = controller.propose(trial1.final_dt, 10.0e-9, next_event=trial1.final_dt + 0.5e-9)
+    controller.accept(event_trial, 0.05, event_forced=True)
+    assert controller.bdf2_reentry_pending is False

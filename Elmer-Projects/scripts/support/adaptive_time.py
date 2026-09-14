@@ -254,6 +254,7 @@ class TrialLogEntry:
     applied_growth_factor: float | None
     accepted_history_length_before: int
     bdf2_reentry: bool
+    bdf2_reentry_pending_before: bool
     linear_iterations: int | None
     linear_residual: float | None
 
@@ -294,6 +295,7 @@ class AdaptiveController:
     last_event_landing: bool = field(default=False, init=False)
     last_event_endpoint_snapped: bool = field(default=False, init=False)
     force_bdf1_steps_remaining: int = 0
+    bdf2_reentry_pending: bool = False
     log: list[TrialLogEntry] = field(default_factory=list, repr=False, compare=False)
     _last_proposed_time: float | None = field(default=None, init=False, repr=False)
     _next_trial_id: int = field(default=1, init=False, repr=False)
@@ -386,6 +388,7 @@ class AdaptiveController:
         history_length_before = self.counters.accepted_internal_steps
         force_bdf1_active_before = self.force_bdf1_steps_remaining > 0
         previous_bdf_order = self.bdf_order
+        reentry_pending_before = self.bdf2_reentry_pending
         had_history = self.previous_dt is not None
         if event_landing is None:
             event_landing = False
@@ -394,14 +397,46 @@ class AdaptiveController:
         self.counters.event_forced_steps += int(event_forced)
         self.counters.event_landing_steps += int(event_landing)
         held_bdf1 = self.force_bdf1_steps_remaining > 0
-        self.bdf_order = 1 if event_forced or event_landing or discontinuity or held_bdf1 or not had_history else 2
+        is_event_boundary = event_forced or event_landing or discontinuity
+        if trial is not None:
+            # Trust the order the trial actually used -- propose()'s
+            # trial_bdf_order already accounts for rejected_in_row (a
+            # post-reject retry) as well as force_bdf1/no-history/landing.
+            # Recomputing independently here (as below) previously missed
+            # the rejected_in_row case: a non-event post-reject BDF1 retry
+            # would be mislabeled order=2 the instant it was accepted, which
+            # silently defeated Stage 11C-2 Candidate A's same-dt re-entry
+            # check. Native avoids this by counting from AdaptiveStepOrder,
+            # the value actually used to build the trial's stencil, instead
+            # of a second guess made at accept time -- mirrored here.
+            self.bdf_order = trial.bdf_order
+        else:
+            self.bdf_order = 1 if is_event_boundary or held_bdf1 or not had_history else 2
         if held_bdf1:
             self.force_bdf1_steps_remaining -= 1
-        if event_forced or event_landing or discontinuity:
+        if is_event_boundary:
             self.force_bdf1_steps_remaining = 1
         forced_floor = dt <= self.config.dt_min * (1.0 + 1.0e-10) and error > 1.0
         self.rejected_in_row = 0
-        if forced_floor:
+        # Stage 11C-2 Candidate A: same-dt BDF2 re-entry.  A BDF2 reject sets
+        # bdf2_reentry_pending (see reject()).  While it is pending, the
+        # accepted BDF1 recovery step must not also grow dt -- otherwise the
+        # very next trial both flips back to BDF2 AND tries a larger,
+        # unvalidated dt in the same step, which is the reject/floor/re-entry
+        # cycle this candidate exists to break.  An event boundary always
+        # takes priority and clears any stale pending state, since the old
+        # recovery attempt no longer applies once the physics has moved on.
+        if is_event_boundary:
+            self.bdf2_reentry_pending = False
+        elif reentry_pending_before and self.bdf_order == 2:
+            # The same-dt BDF2 validation trial was just accepted: re-entry
+            # succeeded.  Only now does ordinary growth policy resume.
+            self.bdf2_reentry_pending = False
+        if reentry_pending_before and self.bdf_order == 1 and not is_event_boundary:
+            # Hold dt exactly where it is; the next trial must test BDF2 at
+            # this same dt, not a grown one.
+            self.dt = dt
+        elif forced_floor:
             # A floor accept is a safety valve, not evidence that the error
             # target was met.  Hold the floor until an ordinary accept gives
             # the controller a reliable recovery point.
@@ -444,6 +479,7 @@ class AdaptiveController:
                 floor_accept=forced_floor,
                 estimator_raw_error=raw_error if raw_error is not None else error,
                 estimator_control_error=error,
+                bdf2_reentry_pending_before=reentry_pending_before,
                 accepted=True,
                 proposed_next_dt=self.dt,
                 applied_growth_factor=(self.dt / dt) if dt else None,
@@ -479,6 +515,7 @@ class AdaptiveController:
         cooldown_before = self.growth_cooldown_remaining
         history_length_before = self.counters.accepted_internal_steps
         force_bdf1_active_before = self.force_bdf1_steps_remaining > 0
+        reentry_pending_before = self.bdf2_reentry_pending
         self.counters.rejected_internal_steps += 1
         self.rejected_in_row += 1
         if self.rejected_in_row > self.config.max_rejected:
@@ -486,6 +523,11 @@ class AdaptiveController:
         self.dt = max(self.config.dt_min, dt * self.config.max_shrink)
         self.growth_cooldown_remaining = 1
         self.bdf_order = 1
+        if trial_bdf_order == 2:
+            # Stage 11C-2 Candidate A: a rejected BDF2 trial arms same-dt
+            # re-entry validation (see accept()). Stays armed across repeated
+            # BDF2 rejects during the same recovery attempt.
+            self.bdf2_reentry_pending = True
         self.last_event_clipped = False
         self.last_event_landing = False
         self.last_event_endpoint_snapped = False
@@ -506,6 +548,7 @@ class AdaptiveController:
                 floor_accept=False,
                 estimator_raw_error=raw_error if raw_error is not None else error,
                 estimator_control_error=error,
+                bdf2_reentry_pending_before=reentry_pending_before,
                 accepted=False,
                 proposed_next_dt=self.dt,
                 applied_growth_factor=(self.dt / dt) if dt else None,
