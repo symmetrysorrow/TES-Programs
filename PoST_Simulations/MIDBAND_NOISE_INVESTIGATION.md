@@ -426,3 +426,21 @@ explicitly treated as an effective total series resistance; the fit must not be
 used to infer a physical decomposition into load, wiring, SQUID-input, or other
 hardware resistances.  The previous RC model remains available through
 `--use-rc-relaxation` for controlled comparison.
+
+
+## TES hanging-body diagnostic
+
+After the RC profile collapsed to an effectively static series resistance, the
+next structural test is deliberately thermal and diagnostic-only.  The shared
+noise model can temporarily add one symmetric hanging thermal body to each TES,
+using two shared parameters: `C_hanging` and `G_tes-hanging`.  The TES
+alpha/beta resistance response remains instantaneous and the production
+optimizer does not fit these parameters.
+
+`Opt_noise.py` scans `C_hanging/C_tes = 0.1 ... 100` and the isolated
+hanging-body corner `f_h = G/(2*pi*C_h) = 1 ... 100 kHz` while holding every
+parameter of the static-series best fit fixed.  The summary reports whether
+the 5--15 kHz deficit can improve without worsening 40--100 kHz, and more
+strictly without worsening either 40--100 or 100--200 kHz.  A positive screen
+only motivates a later physical interpretation or constrained fit; it is not
+evidence that a real hanging body exists.
