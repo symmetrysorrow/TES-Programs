@@ -3,20 +3,25 @@
 @@
  (tools/ is gitignored in the TES-Programs repo, so this file has no git
  history of its own; this patch is the authoritative record of the Stage
- 11C-2 Candidate A change, hand-verified against the working tree at the
- time it was applied and rebuilt -- see
- artifacts/phase24_stage11c2_candidate_a_20ns_validation.json for the
- build/validation record.)
+ 11C-2 change (Candidate A same-dt BDF2 re-entry, PLUS the error-aware
+ growth refinement added after the first 20ns qualification run), hand-
+ verified against the working tree at the time it was applied and rebuilt.
+ See artifacts/phase24_stage11c2_candidate_a_20ns_validation.json
+ (Candidate A alone) and
+ artifacts/phase24_stage11c2_error_aware_growth_20ns_validation.json (this
+ full version) for the build/validation records.)
 @@
       LOGICAL :: AdaptiveForceBDF1, AdaptiveAcceptedAtFloor, AdaptiveAcceptedByError, &
            AdaptiveForcedFloor, AdaptivePreviousRejected
-+     ! Stage 11C-2 Candidate A: same-dt BDF2 re-entry.  A rejected BDF2 trial
-+     ! arms this; while armed, an accepted BDF1 recovery retry holds dt
-+     ! exactly where it is instead of growing, so the next trial tests BDF2
-+     ! at that same dt rather than a larger, unvalidated one.  Only a
-+     ! same-dt BDF2 accept (or a new event boundary, which supersedes a
-+     ! stale attempt) clears it.
-+     LOGICAL :: AdaptiveBdf2ReentryPending, AdaptiveBdf2ReentryPendingBeforeAccept
++     ! Stage 11C-2 same-dt BDF2 re-entry.  A rejected BDF2 trial arms this;
++     ! while armed, an accepted BDF1 recovery retry holds dt exactly where
++     ! it is instead of growing, so the next trial tests BDF2 at that same
++     ! dt rather than a larger, unvalidated one.  Only a GENUINE same-dt
++     ! BDF2 accept (error<=1 on its own merits, not merely forced through by
++     ! dt<=dt_min) or a new event boundary (which supersedes a stale
++     ! attempt) clears it.
++     LOGICAL :: AdaptiveBdf2ReentryPending, AdaptiveBdf2ReentryPendingBeforeAccept, &
++          AdaptiveBdf2ReentrySucceeded
 @@
       AdaptiveGrowthCooldownRemaining = 0
 +     AdaptiveBdf2ReentryPending = .FALSE.
@@ -30,21 +35,45 @@
                   AdaptiveForceBDF1 = AdaptiveDiscontinuity
                   RealTimestep = RealTimestep+1
 -                 IF ( AdaptiveForcedFloor ) THEN
-+                 ! Stage 11C-2 Candidate A: same-dt BDF2 re-entry.  An event
-+                 ! boundary always takes priority: a stale re-entry attempt
-+                 ! from before the event no longer applies once the physics
-+                 ! has moved on.  Otherwise, a same-dt BDF2 accept while
-+                 ! pending means re-entry succeeded; only then does ordinary
-+                 ! growth policy resume.
++                 ! Stage 11C-2 same-dt BDF2 re-entry.  An event boundary
++                 ! always takes priority: a stale re-entry attempt from
++                 ! before the event no longer applies once the physics has
++                 ! moved on.  Otherwise, only a GENUINE same-dt BDF2 success
++                 ! (error<=1 on its own merits, not merely accepted via the
++                 ! dt<=dt_min safety valve) counts as re-entry succeeding --
++                 ! the first 20ns qualification run showed that at
++                 ! dt==dt_min every trial is unconditionally accepted
++                 ! regardless of error, so treating that as success let a
++                 ! fixed 1.2x growth jump straight into a dt with error~3,
++                 ! re-rejecting every time.
++                 AdaptiveBdf2ReentrySucceeded = AdaptiveBdf2ReentryPendingBeforeAccept &
++                      .AND. AdaptiveStepOrder == 2 .AND. AdaptiveAcceptedByError
 +                 IF (AdaptiveDiscontinuity) THEN
 +                   AdaptiveBdf2ReentryPending = .FALSE.
-+                 ELSE IF (AdaptiveBdf2ReentryPendingBeforeAccept .AND. AdaptiveStepOrder == 2) THEN
++                 ELSE IF (AdaptiveBdf2ReentrySucceeded) THEN
 +                   AdaptiveBdf2ReentryPending = .FALSE.
 +                 END IF
-+                 IF ( AdaptiveBdf2ReentryPendingBeforeAccept .AND. AdaptiveStepOrder == 1 &
-+                      .AND. .NOT. AdaptiveDiscontinuity ) THEN
-+                   ! Hold dt exactly where it is; the next trial must test
-+                   ! BDF2 at this same dt, not a grown one.
++                 IF ( AdaptiveBdf2ReentrySucceeded .AND. .NOT. AdaptiveDiscontinuity ) THEN
++                   ! Grow from the trial's own error instead of replaying the
++                   ! fixed post-reject cooldown multiplier, which reliably
++                   ! overshot in the first 20ns qualification run.  p=2 for
++                   ! BDF2.  For error just under 1, 0.9*error**(-1/3) is
++                   ! itself just under 1 -- clamp against AdaptiveMinTimestep
++                   ! too, or an error close to (but under) the tolerance
++                   ! shrinks dt below the production floor (confirmed: this
++                   ! happened in the first attempt at this refinement, before
++                   ! this clamp was added).
++                   ddt = MAX( AdaptiveMinTimestep, MIN( AdaptiveMaxTimestep, AdaptiveAcceptedDt * &
++                        MAX( AdaptiveMaxShrink, MIN( AdaptiveMaxGrowth, 0.9_dp * MaxErr**(-1.0_dp/3.0_dp) ) ) ) )
++                   StepControl = 0
++                   SmallestCount = 0
++                   AdaptiveGrowthCooldownRemaining = 0
++                 ELSE IF ( AdaptiveBdf2ReentryPendingBeforeAccept .AND. .NOT. AdaptiveDiscontinuity &
++                      .AND. .NOT. AdaptiveBdf2ReentrySucceeded ) THEN
++                   ! Either the BDF1 recovery retry, or a same-dt BDF2 trial
++                   ! that only survived via the floor safety valve: neither
++                   ! is real evidence BDF2 is safe to grow from.  Hold dt
++                   ! exactly where it is and keep re-entry pending.
 +                   ddt = AdaptiveAcceptedDt
 +                   StepControl = 0
 +                   SmallestCount = 0
@@ -66,9 +95,9 @@
                   AdaptiveForceBDF1 = .TRUE.
                   StepControl = -1
                   AdaptiveGrowthCooldownRemaining = 1
-+                 ! Stage 11C-2 Candidate A: a rejected BDF2 trial arms
-+                 ! same-dt re-entry validation (see the accept branch above).
-+                 ! Stays armed across repeated BDF2 rejects during the same
-+                 ! recovery attempt.
++                 ! Stage 11C-2: a rejected BDF2 trial arms same-dt re-entry
++                 ! validation (see the accept branch above).  Stays armed
++                 ! across repeated BDF2 rejects during the same recovery
++                 ! attempt.
 +                 IF (AdaptiveStepOrder == 2) AdaptiveBdf2ReentryPending = .TRUE.
                   AdaptiveEventForcedAfterRollback = AdaptiveEventForced

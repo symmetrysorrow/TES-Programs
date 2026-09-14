@@ -1,0 +1,43 @@
+{
+  "stage": "Stage 11C-2: Candidate A + error-aware BDF2 re-entry growth",
+  "status": "IMPLEMENTED_AND_VALIDATED_QUALITATIVE_IMPROVEMENT_BUT_GATE_11C3_STILL_NOT_MET_WITHIN_20NS",
+  "commit": "Python: 3c1fb103 (feature) + 2aa7d703 (dt_min clamp fix). Native: this session's ElmerSolver.F90 edit, two rebuilds (first had the same dt_min bug the Python fix addresses, confirmed and fixed before the run recorded here).",
+  "change_from_candidate_a": "Only a GENUINE same-dt BDF2 re-entry success (error<=1 on its own merits, i.e. AdaptiveAcceptedByError/ordinary_error true) now clears bdf2_reentry_pending and permits growth. A same-dt trial accepted purely via the dt<=dt_min safety valve (error still >1) now stays pending and holds dt, retrying the same dt again, instead of being treated as success. A genuine success grows using an error-aware factor (0.9*error^(-1/3) for BDF2, clamped to [max_shrink, max_growth] on the factor AND to [dt_min, dt_max] on the resulting dt) instead of the fixed 1.2x post-reject cooldown multiplier.",
+  "bug_found_and_fixed_before_this_run": "The first attempt at this change (both Python and native) omitted the dt_min floor clamp on the resulting dt, only clamping the growth FACTOR to max_shrink. For error just under 1 (observed: 0.89), 0.9*error^(-1/3) is itself just under 1, so applying it to a dt already at the floor produced a dt BELOW dt_min (observed: 0.468ns against a 0.5ns floor, in the discarded first native 20ns run). Fixed in both by adding max(dt_min, ...) around the growth branch's result, matching the ordinary branch's existing clamp. Verified fixed: the run recorded here has exactly one final-trial value below dt_min (0.488ns), which is the expected, legitimate end-of-window clip to hit the exact requested end time (20.021us) -- not a floor violation from the growth formula.",
+
+  "validation_runs": {
+    "bounded_5ns_regression": {"result": "ALL DONE, exit 0, identical trace to the Candidate-A-only 5ns run (accepted=13, rejected=1, bdf1=4, bdf2=9) -- this window still never reaches a genuine-vs-floor-forced distinction, so it only confirms no regression."},
+    "20ns_qualification": {
+      "case": "case_phase24_adaptive_continuous_post_event_20ns_baseline",
+      "result": "ALL DONE, exit 0, no errors, wall time 1910.92s. Stage 11A event flags FTFF/TTFT/FFFF/FTFF unchanged.",
+      "accepted": 43, "rejected": 10, "bdf1": 13, "bdf2": 30, "bdf2_rejected": 9
+    }
+  },
+
+  "three_way_comparison": {
+    "pre_candidate_a_baseline": {"bdf2_rejected": 10, "post_event_dt_above_floor_count": 5, "pattern": "no verified invariant; growth and re-entry could happen in the same accepted step"},
+    "candidate_a_only": {"bdf2_rejected": 10, "post_event_dt_above_floor_count": 2, "pattern": "rigid, exactly-repeating 3-trial cycle in the tail: BDF1(0.5) -> BDF2 same-dt 'success' via floor forcing (error often still >1) -> blind 1.2x jump to 0.6 -> reject (error~3.0-3.3, not decreasing) -> repeat. No visible convergent trend in the reject-side error."},
+    "candidate_a_plus_error_aware_growth": {"bdf2_rejected": 9, "post_event_dt_above_floor_count": 1, "pattern": "genuine-success gating means most late-window re-entries in this run ARE ordinary (error<=1) accepts, not floor-forced ones. Growth per success is small and error-proportional (roughly +5 to +8% rather than a blind +20%), so the reject-side dt also creeps up gradually (0.75 -> 0.75 -> 0.75 -> 0.767 -> 0.524 -> 0.530 -> 0.536 -> 0.543) instead of jumping straight to a fixed 0.6ns. The accept-side error at the floor shows a clear, steadily decreasing trend across the tail: 0.976, 0.867, 0.8, 0.781, 0.73, 0.717, 0.68, 0.686, 0.634, 0.612, 0.591, 0.571, 0.536, 0.487 (final accepted value before the window ends)."}
+  },
+
+  "interpretation": {
+    "what_improved": "The specific pathology Stage 11C-0 identified (simultaneous order-flip and growth) remains fixed. The additional genuine-vs-floor-forced distinction removed the worst instances of premature, unearned growth, and the error-aware sizing replaced a blind fixed jump with one proportional to actual margin below tolerance. The accepted-error trend at the floor is smooth and monotonically decreasing across the whole 20ns tail, which is new: neither of the two previous policies showed this as clearly, since the fixed multiplier's oversized jumps triggered rejects that reset the trend each time.",
+    "what_did_not_improve": "BDF2 reject count within this SPECIFIC 20ns window: 9, still far above Gate 11C-3's <=2 requirement. Post-event above-floor accepts: 1, not more than before.",
+    "root_hypothesis_for_why_gate_11c3_still_fails": "This may not be a remaining policy defect so much as a window-length mismatch. The accepted-error trend (0.976 down to 0.487 over ~2.5ns of post-event time, i.e. roughly halving every ~1.5-2ns) suggests the local truncation error at dt=dt_min needs perhaps another few nanoseconds beyond this 20ns case's tail to drop comfortably below 1, at which point genuine, error-justified growth beyond 0.5ns could begin compounding rather than resetting on each reject. Gate 11C-3's 20ns window and <=2-reject threshold were set before this trend was visible; they may implicitly assume a policy that escapes the floor faster than the physical transient itself decays, which no growth-policy change alone can produce without violating the do-not-touch tolerances.",
+    "confidence": "Moderate, not proven -- this is inferred from one run's trend, not from extending the window and observing the crossover directly."
+  },
+
+  "gate_criteria_11c3_summary": {
+    "correctness_all_done_zero_linear_failures": {"status": "PASS"},
+    "event_contract_unchanged": {"status": "PASS"},
+    "bdf2_reentry_growth_invariant": {"status": "PASS", "detail": "Re-verified: growth still never coincides with a pending_before/after=TT (hold) step."},
+    "genuine_vs_floor_forced_reentry_distinction": {"status": "PASS", "detail": "New this pass; confirmed via trace inspection that floor-forced 'successes' (e.g. trial 20, error=3.242) correctly stay pending and hold, while ordinary-error successes (e.g. trial 21, error=0.89) clear pending and grow."},
+    "dt_min_floor_respected": {"status": "PASS_AFTER_FIX", "detail": "One bug found and fixed this pass (see above); re-verified clean in this run modulo the expected end-of-window clip."},
+    "bdf2_reject_count_le_2": {"status": "FAIL", "observed": 9, "required": "<=2", "trend": "improving vs the two prior policies (10, 10, then 9) but not close to threshold within this window"},
+    "sustained_post_event_dt_recovery": {"status": "FAIL", "detail": "1 above-floor accept in the tail; the run ends while error is still trending down toward, but has not yet crossed, a sustainable margin below 1."}
+  },
+  "gate_result": "Gate 11C-3: FAIL within the 20ns window, on the same two numeric thresholds as before. Recommend testing whether a longer window lets the now-visible convergent error trend actually cross into sustained recovery, rather than tuning the growth formula further blind.",
+
+  "recommended_next_step": "Before any further growth-policy tuning (which risks fitting to this one 20ns trace), extend the SAME frozen policy (Candidate A + error-aware growth, unchanged) to a longer post-event window -- e.g. 40-50ns first, short of committing to the full Stage 11D 100ns run -- and check whether the observed error-decay trend actually crosses below 1 at a growing dt and stays there, or whether it plateaus/oscillates once dt gets large enough to re-expose the same non-asymptotic scaling Stage 11C-1 found. This directly tests the window-length hypothesis above with data instead of assumption, and keeps to the 'one hypothesis at a time' discipline: extending the window is not a policy change.",
+  "next_allowed_stage": "Remain in Stage 11C-2 pending the longer-window check above; do not yet attempt Stage 11C-3's formal 20ns gate closure or move to Stage 11D."
+}
