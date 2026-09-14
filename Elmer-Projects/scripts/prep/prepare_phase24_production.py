@@ -439,6 +439,41 @@ def main() -> None:
     }
     project["cases"][ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE] = adaptive_continuous_20ns
 
+    # Stage 11C-2 window-length check: same frozen policy (Candidate A +
+    # error-aware BDF2 re-entry growth), same continuous no-restart path,
+    # extended from a 20-ns to a 40-ns post-event tail. Not a policy change
+    # -- this tests whether the error-decay trend seen at the end of the
+    # 20ns run (0.976 down to 0.487 over ~2.5ns of post-event time) actually
+    # crosses below 1 at a growing dt and stays there given more time, or
+    # plateaus/oscillates instead.
+    ADAPTIVE_CONTINUOUS_BASELINE_40NS_CASE = "case_phase24_adaptive_continuous_post_event_40ns_window_check"
+    adaptive_continuous_40ns = copy.deepcopy(adaptive_continuous_light)
+    adaptive_continuous_40ns["series_file"] = f"{ADAPTIVE_CONTINUOUS_BASELINE_40NS_CASE}_series.csv"
+    adaptive_continuous_40ns["iteration_series_file"] = f"{ADAPTIVE_CONTINUOUS_BASELINE_40NS_CASE}_iterations.csv"
+    adaptive_continuous_40ns["output_file_path"] = (
+        f"../work/meshes/{adaptive_continuous_40ns['mesh']}/{ADAPTIVE_CONTINUOUS_BASELINE_40NS_CASE}.result"
+    )
+    adaptive_continuous_40ns["timesteps"] = [["40.021[us]", 1]]
+    adaptive_continuous_40ns["adaptive_time"] = dict(adaptive_continuous_light["adaptive_time"])
+    adaptive_continuous_40ns["adaptive_time"]["end"] = "20.040021[ms]"
+    adaptive_continuous_40ns["adaptive_time"]["requested_output_times"] = {
+        "mode": "explicit",
+        "times": [
+            "20[ms]",
+            "20.02[ms]",
+            "20.020001[ms]",
+            "20.040021[ms]",
+        ],
+    }
+    adaptive_continuous_40ns["phase24_smoke"] = {
+        "purpose": "Stage 11C-2 window-length check: same frozen Candidate A + error-aware-growth policy, 40-ns post-event tail instead of 20-ns",
+        "reference_case": ADAPTIVE_CONTINUOUS_BASELINE_20NS_CASE,
+        "path": "same normal 20-ms source, native runtime, solver, adaptive policy, and both physical events; 40-ns tail",
+        "no_midrun_restart": True,
+        "policy_comparison_target": "Stage 11C-2 error-aware-growth 20-ns run",
+    }
+    project["cases"][ADAPTIVE_CONTINUOUS_BASELINE_40NS_CASE] = adaptive_continuous_40ns
+
     # Fixed-dt local scaling probes.  All probes restart from output position
     # 3 of the bounded case (the accepted state at 20.020001 ms), so their
     # embedded estimators are directly comparable across dt.
