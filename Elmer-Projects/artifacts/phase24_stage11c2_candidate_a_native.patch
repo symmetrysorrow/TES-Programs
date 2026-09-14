@@ -1,0 +1,74 @@
+--- a/tools/elmer-hypre/src/fem/src/ElmerSolver.F90
++++ b/tools/elmer-hypre/src/fem/src/ElmerSolver.F90
+@@
+ (tools/ is gitignored in the TES-Programs repo, so this file has no git
+ history of its own; this patch is the authoritative record of the Stage
+ 11C-2 Candidate A change, hand-verified against the working tree at the
+ time it was applied and rebuilt -- see
+ artifacts/phase24_stage11c2_candidate_a_20ns_validation.json for the
+ build/validation record.)
+@@
+      LOGICAL :: AdaptiveForceBDF1, AdaptiveAcceptedAtFloor, AdaptiveAcceptedByError, &
+           AdaptiveForcedFloor, AdaptivePreviousRejected
++     ! Stage 11C-2 Candidate A: same-dt BDF2 re-entry.  A rejected BDF2 trial
++     ! arms this; while armed, an accepted BDF1 recovery retry holds dt
++     ! exactly where it is instead of growing, so the next trial tests BDF2
++     ! at that same dt rather than a larger, unvalidated one.  Only a
++     ! same-dt BDF2 accept (or a new event boundary, which supersedes a
++     ! stale attempt) clears it.
++     LOGICAL :: AdaptiveBdf2ReentryPending, AdaptiveBdf2ReentryPendingBeforeAccept
+@@
+      AdaptiveGrowthCooldownRemaining = 0
++     AdaptiveBdf2ReentryPending = .FALSE.
+      AdaptiveInterpolationCount = 0
+@@
+                AdaptiveRejectedBeforeAccept = AdaptiveRejectedInRow
+                AdaptiveCooldownBeforeAccept = AdaptiveGrowthCooldownRemaining
+                AdaptivePreviousRejected = AdaptiveRejectedBeforeAccept > 0
++               AdaptiveBdf2ReentryPendingBeforeAccept = AdaptiveBdf2ReentryPending
+@@
+                  AdaptiveForceBDF1 = AdaptiveDiscontinuity
+                  RealTimestep = RealTimestep+1
+-                 IF ( AdaptiveForcedFloor ) THEN
++                 ! Stage 11C-2 Candidate A: same-dt BDF2 re-entry.  An event
++                 ! boundary always takes priority: a stale re-entry attempt
++                 ! from before the event no longer applies once the physics
++                 ! has moved on.  Otherwise, a same-dt BDF2 accept while
++                 ! pending means re-entry succeeded; only then does ordinary
++                 ! growth policy resume.
++                 IF (AdaptiveDiscontinuity) THEN
++                   AdaptiveBdf2ReentryPending = .FALSE.
++                 ELSE IF (AdaptiveBdf2ReentryPendingBeforeAccept .AND. AdaptiveStepOrder == 2) THEN
++                   AdaptiveBdf2ReentryPending = .FALSE.
++                 END IF
++                 IF ( AdaptiveBdf2ReentryPendingBeforeAccept .AND. AdaptiveStepOrder == 1 &
++                      .AND. .NOT. AdaptiveDiscontinuity ) THEN
++                   ! Hold dt exactly where it is; the next trial must test
++                   ! BDF2 at this same dt, not a grown one.
++                   ddt = AdaptiveAcceptedDt
++                   StepControl = 0
++                   SmallestCount = 0
++                 ELSE IF ( AdaptiveForcedFloor ) THEN
+                    ! Reaching dt_min while the estimator is still above the
+                    ! target is a safety-valve accept.  Hold the floor until
+                    ! an ordinary accept provides evidence that growth is safe.
+@@
+                    WRITE(*,'(A,3ES20.12,A,L1)') &
+                         'Adaptive accept growth: accepted_dt/next_dt/factor=', &
+                         AdaptiveAcceptedDt,AdaptiveProposedNextDt,AdaptiveAppliedGrowthFactor, &
+                         ', event_forced=',AdaptiveEventForced
++                   WRITE(*,'(A,2L1)') &
++                        'Adaptive accept bdf2 reentry: pending_before/after=', &
++                        AdaptiveBdf2ReentryPendingBeforeAccept,AdaptiveBdf2ReentryPending
+                  END IF
+@@
+                  ddt = AdaptiveRejectNextDt
+                  AdaptiveForceBDF1 = .TRUE.
+                  StepControl = -1
+                  AdaptiveGrowthCooldownRemaining = 1
++                 ! Stage 11C-2 Candidate A: a rejected BDF2 trial arms
++                 ! same-dt re-entry validation (see the accept branch above).
++                 ! Stays armed across repeated BDF2 rejects during the same
++                 ! recovery attempt.
++                 IF (AdaptiveStepOrder == 2) AdaptiveBdf2ReentryPending = .TRUE.
+                  AdaptiveEventForcedAfterRollback = AdaptiveEventForced

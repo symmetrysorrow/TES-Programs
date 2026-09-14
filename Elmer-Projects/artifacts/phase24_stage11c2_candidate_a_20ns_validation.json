@@ -1,0 +1,51 @@
+{
+  "stage": "Stage 11C-2 Candidate A (same-dt BDF2 re-entry)",
+  "status": "IMPLEMENTED_AND_VALIDATED_INVARIANT_HOLDS_BUT_GATE_11C3_NOT_MET",
+  "commit": "Python reference: 6954a248. Native: this session's ElmerSolver.F90 edit, rebuilt via tools/elmer-hypre/build (ninja + cmake --install --prefix install-stage11), Sep 14 09:28 local.",
+  "candidate_design": "A rejected BDF2 trial arms bdf2_reentry_pending. While pending, an accepted BDF1 recovery retry holds dt exactly where it is (no growth from any branch: forced-floor, cooldown, or ordinary) instead of growing on the same step it flips order back to BDF2. The next trial then tests BDF2 at that same dt. Only a same-dt BDF2 accept clears the pending flag and allows ordinary growth to resume; a new event boundary always takes priority and clears any stale pending state. Implemented identically in scripts/support/adaptive_time.py (with unit tests) and tools/elmer-hypre/src/fem/src/ElmerSolver.F90 (new AdaptiveBdf2ReentryPending/AdaptiveBdf2ReentryPendingBeforeAccept state, gated growth-decision branch, and a new 'Adaptive accept bdf2 reentry: pending_before/after=' diagnostic line).",
+  "prerequisite_fix": "Found and fixed while implementing Candidate A (not a separate session): AdaptiveController.accept() in the Python reference recomputed bdf_order independently of propose()'s trial_bdf_order and didn't check rejected_in_row, so a non-event post-reject BDF1 retry was mislabeled order=2 the instant it was accepted -- which would have silently defeated Candidate A's same-dt check. Fixed by trusting trial.bdf_order directly when a TrialMetadata is passed (native was never affected: it always counted from AdaptiveStepOrder, the value actually used to build the trial's stencil).",
+
+  "validation_runs": {
+    "bounded_5ns_regression": {
+      "case": "case_phase24_adaptive_continuous_post_event_5ns_light",
+      "result": "ALL DONE, exit 0, Stage 11A event flags FTFF/TTFT/FFFF/FTFF unchanged. accepted=13, rejected=1, bdf1=4, bdf2=9. No BDF2 reject occurred in this short window, so Candidate A's new branch was never exercised here -- this run only confirms no regression, not the fix itself."
+    },
+    "20ns_qualification": {
+      "case": "case_phase24_adaptive_continuous_post_event_20ns_baseline",
+      "result": "ALL DONE, exit 0, no errors. Stage 11A event flags FTFF/TTFT/FFFF/FTFF unchanged (confirmed at all 4 pre-second-event audit ids). accepted=43, rejected=11, bdf1=14, bdf2=29, wall time 2049.73s.",
+      "comparison_to_pre_candidate_a_baseline": {
+        "accepted": "43 (was 42)",
+        "rejected": "11 (was 11, unchanged)",
+        "bdf2_rejected": "10 (was 10, UNCHANGED)",
+        "post_event_accepted": "40 (was 39)",
+        "max_post_event_dt_ns": "0.6 (was 0.6, unchanged)",
+        "post_event_dt_above_floor_count": "2 (was 5 -- FEWER sustained above-floor accepts than before Candidate A)",
+        "final_accepted_dt_ns": "0.3 (was 0.5 -- but this is an artifact of landing exactly on the window's final requested time, not a steady-state value; the second-to-last trial was 0.5ns)"
+      }
+    }
+  },
+
+  "invariant_verification": {
+    "claim": "BDF2 re-entry and dt growth never happen in the same accepted step.",
+    "method": "Cross-referenced every 'Adaptive accept bdf2 reentry: pending_before/after=' line against the immediately preceding 'Adaptive accept growth: ...factor=' line for all 43 accepted trials in the 20ns run.",
+    "result": "CONFIRMED, no exceptions. Every trial with pending_before/after=TT (the BDF1 hold step) has growth factor exactly 1.0. Growth (1.2x or 1.5x) only ever occurs on pending_before/after=TF (the step immediately after a successful same-dt BDF2 re-entry) or FF (ordinary, non-recovery) trials. This is the specific pathology Stage 11C-0 root-caused, and Candidate A eliminates it as designed."
+  },
+
+  "why_gate_11c3_still_fails": {
+    "observed_cycle": "From roughly trial 40 onward the trace settles into a tight, repeating 3-trial period: BDF1 retry accepted at floor (0.5ns) -> same-dt BDF2 re-entry accepted at floor (0.5ns, error still >1 but forced through because dt<=dt_min unconditionally accepts) -> grown BDF2 trial at 0.6ns REJECTED (error consistently ~3.0-3.3, not decreasing) -> back to BDF1 retry. This repeats at least 6 times late in the run (trials ~42-53).",
+    "root_finding": "The same-dt BDF2 're-entry success' check as implemented only requires the trial to be ACCEPTED, and at dt==dt_min every trial is unconditionally accepted regardless of error (native's own accept condition is 'MaxErr <= 1 .OR. ddt <= AdaptiveMinTimestep'). So at the floor, re-entry trivially 'succeeds' every time even when the underlying error is still well above 1 (observed 0.5ns re-entry errors: 3.242, 0.89, 0.84, ..., 0.555 -- decreasing but often still >1), which is not genuine evidence that BDF2 is safe to grow from. The subsequent 1.2x growth to 0.6ns then reliably fails: 0.6ns error stays ~3.0-3.3 (not decreasing), while 0.5ns error is slowly decreasing toward 1 -- consistent with Stage 11C-1's finding that the local error-vs-dt relationship is still steep/non-asymptotic in this window (an apparent effective local order in the range of 8-10 between 0.5 and 0.6ns, not a mild 1-2), so even a 20% dt increase reliably overshoots the tolerance here.",
+    "conclusion": "Candidate A successfully fixes the specific coupling bug it targeted (verified above) but is NOT sufficient by itself to meet Gate 11C-3's BDF2-reject-count requirement (observed 10, required <=2), because the growth step size (1.2x fixed) is too coarse for how steeply error actually rises with dt in this regime, and floor-forced acceptance is not a reliable re-entry-success signal."
+  },
+
+  "gate_criteria_11c3_summary": {
+    "correctness_all_done_zero_linear_failures": {"status": "PASS"},
+    "event_contract_unchanged": {"status": "PASS"},
+    "bdf2_reentry_growth_invariant": {"status": "PASS", "detail": "Newly added and specifically verified this pass; not part of the original Gate 11C-3 checklist but directly required by Stage 11C-2's own design goal."},
+    "bdf2_reject_count_le_2": {"status": "FAIL", "observed": 10, "required": "<=2"},
+    "sustained_post_event_dt_recovery": {"status": "FAIL", "detail": "2 above-floor accepts in the tail (fewer than the 5 seen before Candidate A); no sustained recovery."}
+  },
+  "gate_result": "Gate 11C-3: FAIL (unchanged from before Candidate A on the numeric thresholds). Candidate A alone is not sufficient.",
+
+  "recommended_next_step": "Candidate C (A + error-aware recovery growth), per the task's own escalation ladder -- skip a separate Candidate B (A + estimator correction alone) because Stage 11C-1 finding 3 already found no natural stable-BDF2-above-floor state exists to calibrate a Richardson correction against, so an estimator-only change has no validated target; growth-rate tuning is directly motivated by this run's own data (fixed 1.2x growth reliably overshoots; the re-entry trial's own error value, when informative, should size the next step instead of an unconditional 1.2x multiply). Recommended concrete change: when the same-dt BDF2 re-entry trial succeeds WITH ordinary_error true (error<=1 on its own merits, not forced by dt<=dt_min), use an error-aware growth factor (e.g. safety*error^(-1/(p+1))) instead of the fixed AdaptivePostRejectMaxGrowth=1.2; when it succeeds only via the floor safety valve (error>1 forced through), do NOT grow at all next step -- retry the same dt again rather than assuming readiness. This directly targets the observed failure mode (floor-forced 're-entry success' being treated as real evidence) without touching tolerances, dt_min, or event handling.",
+  "next_allowed_stage": "Remain in Stage 11C-2: implement and validate the error-aware/floor-aware growth refinement above (single additional change, same 5ns-then-20ns validation sequence) before re-attempting Gate 11C-3."
+}
