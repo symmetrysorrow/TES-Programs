@@ -426,15 +426,37 @@ class AdaptiveController:
         # cycle this candidate exists to break.  An event boundary always
         # takes priority and clears any stale pending state, since the old
         # recovery attempt no longer applies once the physics has moved on.
+        #
+        # Error-aware re-entry growth (added after the 20ns qualification
+        # run showed Candidate A alone still fails Gate 11C-3): at dt==dt_min
+        # the accept condition is "error<=1 OR dt<=dt_min", so a same-dt
+        # BDF2 trial can be accepted purely by the floor safety valve while
+        # its own error is still >1 -- that is not real evidence BDF2 is
+        # safe to grow from. Only a GENUINE success (error<=1 on its own
+        # merits) clears the pending flag; only then is growth applied, and
+        # it is sized from the actual error rather than the fixed
+        # post-reject cooldown multiplier, which the 20ns run showed
+        # reliably overshoots in this regime (observed: floor errors
+        # decaying slowly toward 1 while a blind 1.2x jump to the next dt
+        # repeatedly re-rejected around error~3).
+        genuine_reentry_success = reentry_pending_before and self.bdf_order == 2 and error <= 1.0
         if is_event_boundary:
             self.bdf2_reentry_pending = False
-        elif reentry_pending_before and self.bdf_order == 2:
-            # The same-dt BDF2 validation trial was just accepted: re-entry
-            # succeeded.  Only now does ordinary growth policy resume.
+        elif genuine_reentry_success:
             self.bdf2_reentry_pending = False
-        if reentry_pending_before and self.bdf_order == 1 and not is_event_boundary:
-            # Hold dt exactly where it is; the next trial must test BDF2 at
-            # this same dt, not a grown one.
+        reentry_hold = reentry_pending_before and not is_event_boundary and not genuine_reentry_success
+        if genuine_reentry_success:
+            # Grow from the trial's own error instead of replaying the
+            # fixed post-reject cooldown factor.
+            p = 2.0  # BDF2
+            factor = min(self.config.max_growth, max(self.config.max_shrink, 0.9 * error ** (-1.0 / (p + 1.0))))
+            self.dt = min(self.config.dt_max, dt * factor)
+            self.growth_cooldown_remaining = 0
+        elif reentry_hold:
+            # Either the BDF1 recovery retry, or a same-dt BDF2 trial that
+            # only survived via the floor safety valve: neither is real
+            # evidence BDF2 is safe to grow from. Hold dt exactly where it
+            # is and keep re-entry pending.
             self.dt = dt
         elif forced_floor:
             # A floor accept is a safety valve, not evidence that the error

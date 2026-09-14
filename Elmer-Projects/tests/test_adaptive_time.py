@@ -435,3 +435,54 @@ def test_event_boundary_clears_stale_bdf2_reentry_pending() -> None:
     event_trial = controller.propose(trial1.final_dt, 10.0e-9, next_event=trial1.final_dt + 0.5e-9)
     controller.accept(event_trial, 0.05, event_forced=True)
     assert controller.bdf2_reentry_pending is False
+
+
+def test_genuine_reentry_success_uses_error_aware_growth_not_fixed_cooldown() -> None:
+    """Found from the real Stage 11C-2 20ns qualification run: a fixed 1.2x
+    cooldown jump after re-entry success reliably overshot and re-rejected.
+    A genuine success (error<=1 on its own merits) must size the next dt
+    from that error instead of blindly reusing the fixed multiplier."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0, max_growth=1.5, max_shrink=0.5)
+    controller = AdaptiveController(config, dt=1.0e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.reject(trial2)
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    controller.accept(trial3, 0.05)
+    recovery_dt = controller.dt
+
+    trial4 = controller.propose(trial1.final_dt + recovery_dt, 10.0e-9)
+    assert trial4.bdf_order == 2
+    genuine_error = 0.6  # <= 1: a real success, not floor-forced
+    controller.accept(trial4, genuine_error)
+    assert controller.bdf2_reentry_pending is False
+    expected_factor = min(1.5, max(0.5, 0.9 * genuine_error ** (-1.0 / 3.0)))
+    assert controller.dt == pytest.approx(recovery_dt * expected_factor)
+    # The fixed post-reject cooldown multiplier (1.2x) must NOT have been
+    # used instead.
+    assert controller.dt != pytest.approx(recovery_dt * 1.2)
+    assert controller.growth_cooldown_remaining == 0
+
+
+def test_floor_forced_reentry_accept_does_not_count_as_success() -> None:
+    """A same-dt BDF2 trial accepted only because dt<=dt_min (error still
+    >1) is not real evidence BDF2 is safe -- must stay pending and hold dt,
+    not grow, so the next trial retries the same dt again."""
+    config = AdaptiveConfig(1.0e-9, 0.5e-9, 1.0e-4, r_max=2.0)
+    controller = AdaptiveController(config, dt=0.5e-9)
+    trial1 = controller.propose(0.0, 10.0e-9)
+    controller.accept(trial1, 0.05)  # establishes history at dt_min
+    trial2 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial2.bdf_order == 2
+    controller.reject(trial2)
+    trial3 = controller.propose(trial1.final_dt, 10.0e-9)
+    assert trial3.final_dt == pytest.approx(0.5e-9)  # clamped at the floor
+    controller.accept(trial3, 0.05)
+
+    trial4 = controller.propose(trial1.final_dt + trial3.final_dt, 10.0e-9)
+    assert trial4.bdf_order == 2
+    assert trial4.final_dt == pytest.approx(0.5e-9)
+    controller.accept(trial4, 2.5)  # error > 1, only accepted via the floor
+    assert controller.bdf2_reentry_pending is True, "not a genuine success"
+    assert controller.dt == pytest.approx(0.5e-9), "must not grow"
