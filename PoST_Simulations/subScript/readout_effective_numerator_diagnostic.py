@@ -214,31 +214,31 @@ def vector_spec(order, optimizer):
         ),
     ]
     if order == 1:
-        names += ["log10_v"]
+        names += ["v"]
         bounds += [
             (
-                np.log10(float(optimizer["v_min"])),
-                np.log10(float(optimizer["v_max"])),
+                float(optimizer["v_min"]),
+                float(optimizer["v_max"]),
             )
         ]
     elif order in {2, 3}:
-        names += ["u", "log10_v"]
+        names += ["u", "v"]
         bounds += [
             (
                 float(optimizer["u_min"]),
                 float(optimizer["u_max"]),
             ),
             (
-                np.log10(float(optimizer["v_min"])),
-                np.log10(float(optimizer["v_max"])),
+                float(optimizer["v_min"]),
+                float(optimizer["v_max"]),
             ),
         ]
         if order == 3:
-            names += ["log10_w"]
+            names += ["w"]
             bounds += [
                 (
-                    np.log10(float(optimizer["w_min"])),
-                    np.log10(float(optimizer["w_max"])),
+                    float(optimizer["w_min"]),
+                    float(optimizer["w_max"]),
                 )
             ]
     elif order != 0:
@@ -261,12 +261,12 @@ def decode_vector(order, vector):
         "latent": {},
     }
     if order == 1:
-        result["latent"]["v"] = float(10.0 ** vector[2])
+        result["latent"]["v"] = float(vector[2])
     elif order in {2, 3}:
         result["latent"]["u"] = float(vector[2])
-        result["latent"]["v"] = float(10.0 ** vector[3])
+        result["latent"]["v"] = float(vector[3])
         if order == 3:
-            result["latent"]["w"] = float(10.0 ** vector[4])
+            result["latent"]["w"] = float(vector[4])
     return result
 
 
@@ -280,11 +280,11 @@ def warm_vector(order, hybrid_parameters, scale_hz):
     order = int(order)
     if order == 1:
         v = np.sqrt(max(float(coeff["c2"]), 1.0e-12))
-        values.append(np.log10(v))
+        values.append(float(v))
     elif order in {2, 3}:
-        values += [float(latent["u"]), np.log10(float(latent["v"]))]
+        values += [float(latent["u"]), float(latent["v"])]
         if order == 3:
-            values.append(np.log10(float(latent["w"])))
+            values.append(float(latent["w"]))
     return np.asarray(values, dtype=float)
 
 
