@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = ROOT.parent
 CONFIG_DIR = ROOT / "config"
 DEFAULT_MANIFEST = CONFIG_DIR / "shared_readout_cross_dataset_manifest.json"
 DEFAULT_REFERENCE_PROFILE = CONFIG_DIR / "shared_readout_reference_transfer.json"
@@ -33,10 +34,15 @@ DEFAULT_OUTPUT = (
 )
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 import Opt_noise as opt  # noqa: E402
 from subScript import preanalysis_readout_biquad_diagnostic as base  # noqa: E402
 from subScript import preanalysis_hybrid_pole_profile_diagnostic as profile  # noqa: E402
+from Analyze_Experimental_Data.tes_analysis.noise_utils import (  # noqa: E402
+    accepted_noise_indices,
+)
 
 REFERENCE_HZ = 1_000.0
 RMS_SCREEN_DB_DEFAULT = 1.0
@@ -136,14 +142,21 @@ def normalize_manifest(manifest: dict, manifest_path: Path):
             raise ValueError(f"duplicate case label: {label}")
         seen.add(label)
 
-        if "summary" not in raw or "comparison_summary" not in raw:
+        if "summary" not in raw:
+            raise ValueError(f"case {label} requires summary")
+        comparison_summary = raw.get("comparison_summary")
+        comparison_spec = raw.get("comparison_spec")
+        if (comparison_summary is None) == (comparison_spec is None):
             raise ValueError(
-                f"case {label} requires summary and comparison_summary"
+                f"case {label} requires exactly one of "
+                "comparison_summary or comparison_spec"
             )
         role = str(raw.get("role", "validation")).strip().lower()
-        if role not in {"reference", "validation"}:
+        allowed_roles = {"reference", "validation", "repeat_validation"}
+        if role not in allowed_roles:
             raise ValueError(
-                f"case {label} role must be reference or validation"
+                f"case {label} role must be reference, validation, "
+                "or repeat_validation"
             )
 
         row = {
@@ -152,8 +165,18 @@ def normalize_manifest(manifest: dict, manifest_path: Path):
             "summary": resolve_manifest_path(
                 raw["summary"], manifest_path
             ),
-            "comparison_summary": resolve_manifest_path(
-                raw["comparison_summary"], manifest_path
+            "comparison_summary": (
+                resolve_manifest_path(comparison_summary, manifest_path)
+                if comparison_summary is not None
+                else None
+            ),
+            "comparison_spec": (
+                resolve_manifest_path(comparison_spec, manifest_path)
+                if comparison_spec is not None
+                else None
+            ),
+            "allow_missing_raw_data": bool(
+                raw.get("allow_missing_raw_data", False)
             ),
         }
         if raw.get("experiment_path") is not None:
@@ -162,6 +185,88 @@ def normalize_manifest(manifest: dict, manifest_path: Path):
             row["experiment_path"] = None
         cases.append(row)
     return cases
+
+
+def build_comparison_from_spec(spec_path: Path):
+    """Build the minimal comparison-summary contract from a tracked spec.
+
+    This reproduces the production noise-record acceptance mask from raw
+    records, so repeat-validation datasets do not require an untracked
+    generated comparison_summary.json.
+    """
+
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    experiment_path = Path(spec["experiment_path"])
+    acquisition = spec["acquisition"]
+    rate = float(acquisition["rate_Hz"])
+    samples = int(acquisition["samples"])
+    cutoff = float(acquisition["cutoff_Hz"])
+    channel = str(acquisition.get("channel", "CH0"))
+    acceptance = spec.get("acceptance", {})
+    max_peak_to_peak = float(
+        acceptance.get("max_peak_to_peak_raw_units", 0.04)
+    )
+    remove_mean = bool(acceptance.get("remove_mean", True))
+    apply_raw_range = bool(
+        acceptance.get("apply_to_raw", True)
+    )
+    apply_processed_range = bool(
+        acceptance.get("apply_to_processed", True)
+    )
+
+    raw_dir = experiment_path / f"{channel}_noise" / "rawdata"
+    paths = sorted(raw_dir.glob(f"{channel}_*.dat"))
+    if not paths:
+        raise FileNotFoundError(
+            f"no {channel} raw records found in {raw_dir}"
+        )
+
+    def records():
+        for path in paths:
+            yield base.read_record(path)
+
+    def range_ok(values):
+        values = np.asarray(values, dtype=float)
+        return float(np.max(values) - np.min(values)) <= max_peak_to_peak
+
+    accepted_indices = accepted_noise_indices(
+        records(),
+        samples,
+        rate,
+        cutoff=cutoff,
+        remove_mean=remove_mean,
+        accept_raw=range_ok if apply_raw_range else None,
+        accept_processed=(
+            range_ok if apply_processed_range else None
+        ),
+    )
+    if not accepted_indices:
+        raise ValueError(
+            f"comparison spec {spec_path} accepted no records"
+        )
+
+    return {
+        "status": "generated_in_memory_from_git_tracked_spec",
+        "experiment_path": str(experiment_path),
+        "comparison_spec": str(spec_path),
+        "acquisition": {
+            "rate_Hz": rate,
+            "samples": samples,
+            "cutoff_Hz": cutoff,
+            "channel": channel,
+            "accepted_records": int(len(accepted_indices)),
+            "accepted_record_indices": [
+                int(value) for value in accepted_indices
+            ],
+        },
+        "acceptance": {
+            "max_peak_to_peak_raw_units": max_peak_to_peak,
+            "remove_mean": remove_mean,
+            "apply_to_raw": apply_raw_range,
+            "apply_to_processed": apply_processed_range,
+            "selection_function": "accepted_noise_indices",
+        },
+    }
 
 
 def normalized_model_from_components(frequency, components):
@@ -323,9 +428,16 @@ def evaluate_case(
     summary = json.loads(
         case["summary"].read_text(encoding="utf-8")
     )
-    comparison = json.loads(
-        case["comparison_summary"].read_text(encoding="utf-8")
-    )
+    if case["comparison_summary"] is not None:
+        comparison = json.loads(
+            case["comparison_summary"].read_text(encoding="utf-8")
+        )
+        comparison_source = "tracked_comparison_summary"
+    else:
+        comparison = build_comparison_from_spec(
+            case["comparison_spec"]
+        )
+        comparison_source = "tracked_comparison_spec_recomputed_mask"
     fit_args = base.fit_args(summary)
     frequency = np.geomspace(
         fit_args.fit_min_hz,
@@ -482,10 +594,21 @@ def evaluate_case(
     )
 
     return {
+        "status": "evaluated",
         "label": case["label"],
         "role": case["role"],
         "summary": str(case["summary"]),
-        "comparison_summary": str(case["comparison_summary"]),
+        "comparison_summary": (
+            str(case["comparison_summary"])
+            if case["comparison_summary"] is not None
+            else None
+        ),
+        "comparison_spec": (
+            str(case["comparison_spec"])
+            if case["comparison_spec"] is not None
+            else None
+        ),
+        "comparison_source": comparison_source,
         "experiment_path": str(experiment_path),
         "accepted_records": int(target_context["accepted_records"]),
         "acquisition": {
