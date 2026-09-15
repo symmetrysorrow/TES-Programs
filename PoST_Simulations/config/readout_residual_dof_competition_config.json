@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked residual readout degree-of-freedom competition after allowing the best profiled R_TES plus detector-state nuisance baseline",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "residual_baseline_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/stability_aware_rtes_profile_snapshot.json",
+  "fit_region_Hz": {
+    "min": 1000,
+    "max_exclusive": 40000
+  },
+  "holdout_region_Hz": {
+    "min": 40000,
+    "max": 200000
+  },
+  "detector_nuisance": {
+    "fixed_R_source": "residual_baseline_snapshot.best_profiled_detector_dc_baseline.R_TES_Ohm",
+    "parameters": [
+      "alpha",
+      "beta",
+      "C_tes",
+      "L",
+      "T_bath"
+    ],
+    "bounds_source": "same production-style bounds as readout_detector_state_competition_diagnostic"
+  },
+  "fixed_white_floor": {
+    "source": "residual_baseline_snapshot.fixed_repeat_white_asd_A_rtHz"
+  },
+  "readout_parameterization": {
+    "order": 2,
+    "reference_scale_Hz": 40000,
+    "canonical_numerator": "P(x)=1+c2*x^2+c4*x^4",
+    "reference_source": "residual_baseline_snapshot.fixed_reference_order2_readout",
+    "local_comparator_source": "residual_baseline_snapshot.repeat_local_order2_readout"
+  },
+  "readout_bounds": {
+    "pole_Hz": [
+      5000,
+      30000
+    ],
+    "pole_Q": [
+      0.1,
+      5
+    ],
+    "c2": [
+      0,
+      300
+    ],
+    "c4": [
+      0,
+      150
+    ]
+  },
+  "residual_readout_families": [
+    {
+      "name": "fixed_reference_readout",
+      "readout_parameters": []
+    },
+    {
+      "name": "pole_frequency_only",
+      "readout_parameters": [
+        "pole_Hz"
+      ]
+    },
+    {
+      "name": "pole_section",
+      "readout_parameters": [
+        "pole_Hz",
+        "pole_Q"
+      ]
+    },
+    {
+      "name": "c2_only",
+      "readout_parameters": [
+        "c2"
+      ]
+    },
+    {
+      "name": "pole_frequency_plus_c2",
+      "readout_parameters": [
+        "pole_Hz",
+        "c2"
+      ]
+    },
+    {
+      "name": "pole_section_plus_c2",
+      "readout_parameters": [
+        "pole_Hz",
+        "pole_Q",
+        "c2"
+      ]
+    },
+    {
+      "name": "full_order2",
+      "readout_parameters": [
+        "pole_Hz",
+        "pole_Q",
+        "c2",
+        "c4"
+      ]
+    }
+  ],
+  "optimizer": {
+    "DE_maxiter": 140,
+    "seed": 20260916,
+    "least_squares_max_nfev": 5000,
+    "instability_penalty": 1000000
+  },
+  "comparison_screen": {
+    "near_repeat_local_score_ratio": 5,
+    "near_repeat_local_rms_delta_dB": 0.05,
+    "material_score_improvement_ratio_to_previous_nested": 0.8
+  },
+  "guardrail": "Every family re-optimizes alpha, beta, C_tes, L, and T_bath at fixed R_TES=1.25 times the inherited resistance. Readout parameters are effective order-2 magnitude-shape coordinates only. The c2-only and pole_frequency_plus_c2 cases are branch diagnostics; the main nested ladder is fixed_reference_readout -> pole_frequency_only -> pole_section -> pole_section_plus_c2 -> full_order2. A residual readout degree being necessary does not identify a physical electronics component."
+}
