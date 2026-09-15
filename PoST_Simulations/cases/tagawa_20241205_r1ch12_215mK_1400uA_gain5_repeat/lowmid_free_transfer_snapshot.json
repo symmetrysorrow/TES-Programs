@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked derived low/mid-only free fit used as the reference optimum for transfer-parameter identifiability profiling",
+  "provenance": {
+    "source_diagnostic": "readout_lowmid_holdout_diagnostic.json",
+    "source_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "accepted_records": 1731,
+    "strict_fit_region_Hz": [
+      1000,
+      40000
+    ],
+    "optimizer_received_holdout_points": false,
+    "free_fit_shape_score": 0.00003321534071448298,
+    "free_fit_rms_residual_dB": 0.11044857969361807,
+    "free_fit_max_abs_residual_dB": 0.37483979129805023,
+    "note": "Diagnostic-only low/mid optimum. Large out-of-band parameter motion in this fit motivates fixed-parameter profiles rather than physical interpretation."
+  },
+  "white_floor": {
+    "scale": 1.3635953106605805,
+    "white_asd_A_rtHz": 5.994841960426966e-11
+  },
+  "transfer": {
+    "fixed_leadlag_pole_Hz": null,
+    "leadlag_pole_is_infinite": true,
+    "parameters": {
+      "pole_Hz": 11820.989566184204,
+      "pole_Q": 0.6569188322650389,
+      "zero_Hz": 29821.758720326587,
+      "zero_Q": 0.14308634813973375,
+      "leadlag_zero_Hz": 81127.75255825827
+    },
+    "equivalent_zero_real_roots_Hz": [
+      4358.221190655215,
+      204059.69643768185
+    ]
+  },
+  "guardrail": "The free-fit parameter values are not hardware identifications. They are retained only as a numerical reference for profile likelihood-style diagnostics."
+}
