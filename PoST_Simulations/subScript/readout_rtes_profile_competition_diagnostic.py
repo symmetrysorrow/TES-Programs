@@ -170,40 +170,25 @@ def profile_point(
             ),
         },
     }
-    if not point.get("valid") or not point.get("stable"):
-        base.update(
-            {
-                "status": "invalid_profile_operating_point",
-                "family_fits": [],
-                "best_family": None,
-            }
-        )
-        return base
-
-    try:
-        baseline_model = full_model(
-            profiled_candidate,
-            fit_frequency,
-            reference_transfer,
-            scale_hz,
-            white_asd,
-        )
-        baseline_metrics = holdout.model_metrics(
-            baseline_model,
-            fit_target,
-            fit_frequency,
-            fit_args,
-        )
-    except Exception as exc:
-        base.update(
-            {
-                "status": "baseline_model_error",
-                "error": str(exc),
-                "family_fits": [],
-                "best_family": None,
-            }
-        )
-        return base
+    baseline_metrics = None
+    baseline_model_error = None
+    if point.get("valid") and point.get("stable"):
+        try:
+            baseline_model = full_model(
+                profiled_candidate,
+                fit_frequency,
+                reference_transfer,
+                scale_hz,
+                white_asd,
+            )
+            baseline_metrics = holdout.model_metrics(
+                baseline_model,
+                fit_target,
+                fit_frequency,
+                fit_args,
+            )
+        except Exception as exc:
+            baseline_model_error = str(exc)
 
     family_rows = []
     previous = list(warm_candidates)
@@ -224,6 +209,7 @@ def profile_point(
                 optimizer_cfg=optimizer_cfg,
                 seed=int(seed) + family_index,
                 warm_candidates=previous,
+                allow_unstable_baseline=True,
             )
         except Exception as exc:
             family_rows.append(
@@ -295,7 +281,11 @@ def profile_point(
             "status": (
                 "evaluated"
                 if evaluated
-                else "no_stable_family_fit"
+                else "no_stable_solution_at_fixed_R"
+            ),
+            "baseline_model_error": baseline_model_error,
+            "inherited_nuisance_state_was_stable": bool(
+                point.get("valid") and point.get("stable")
             ),
             "fixed_reference_readout_inherited_nuisance_metrics": (
                 baseline_metrics
@@ -589,6 +579,14 @@ def run(config, config_path: Path):
             )
         )
 
+    stable_ratios = [
+        float(row["R_ratio_to_inherited"])
+        for row in evaluated
+    ]
+    unresolved = [
+        row for row in rows
+        if row.get("status") != "evaluated"
+    ]
     any_near_local = any(
         row["best_family"][
             "near_repeat_local_readout_comparator"
@@ -673,6 +671,20 @@ def run(config, config_path: Path):
         "R_TES_profile": {
             "ratios": profile_ratios,
             "rows": rows,
+            "stability_summary": {
+                "n_profile_points": int(len(rows)),
+                "n_points_with_stable_fitted_solution": int(len(evaluated)),
+                "n_points_without_stable_fitted_solution": int(len(unresolved)),
+                "stable_solution_R_ratio_min": float(min(stable_ratios)),
+                "stable_solution_R_ratio_max": float(max(stable_ratios)),
+                "low_R_below_inherited_stable_solution_found": bool(
+                    any(value < 1.0 for value in stable_ratios)
+                ),
+                "unresolved_R_ratios": [
+                    float(row["R_ratio_to_inherited"])
+                    for row in unresolved
+                ],
+            },
             "R1_regression_anchor": {
                 "tracked_best_shape_score": detector_snapshot[
                     "best_shape_score"
@@ -714,6 +726,12 @@ def run(config, config_path: Path):
             ),
             "best_R_profile_point_is_at_tested_edge": (
                 best_at_profile_edge
+            ),
+            "low_R_stable_nuisance_solution_found": bool(
+                any(value < 1.0 for value in stable_ratios)
+            ),
+            "all_tested_R_points_have_stable_nuisance_solution": bool(
+                len(unresolved) == 0
             ),
             "profiled_R_TES_can_compete_with_day_specific_readout_shape": bool(
                 any_near_local
