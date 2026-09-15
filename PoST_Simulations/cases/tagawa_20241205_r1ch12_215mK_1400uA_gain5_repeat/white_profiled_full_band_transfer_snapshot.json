@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked derived white-floor-separated repeat fit used as the full-band comparator for low/mid-fit high-frequency holdout validation",
+  "provenance": {
+    "source_diagnostic": "readout_white_floor_separation_diagnostic.json",
+    "source_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "accepted_records": 1731,
+    "stage0_shared_shape_score": 0.01104851738727614,
+    "stage1_shared_profiled_white_shape_score": 0.0043112985877867705,
+    "stage2_full_band_local_shape_score": 0.0015245494971326866,
+    "note": "Derived diagnostic snapshot. It is not a physical electronics calibration."
+  },
+  "white_floor": {
+    "baseline_white_asd_A_rtHz": 4.396349792023576e-11,
+    "best_white_scale": 1.3635953106605805,
+    "best_white_asd_A_rtHz": 5.994841960426966e-11,
+    "stage1_score_ratio_to_baseline_white": 0.3902151244973206
+  },
+  "full_band_transfer_fit": {
+    "fit_min_Hz": 1000,
+    "fit_max_Hz": 200000,
+    "fixed_leadlag_pole_Hz": null,
+    "leadlag_pole_is_infinite": true,
+    "parameters": {
+      "pole_Hz": 12372.961468572734,
+      "pole_Q": 0.6001419010485337,
+      "zero_Hz": 75531.41541552101,
+      "zero_Q": 0.8648235699943011,
+      "leadlag_zero_Hz": 4068.5879496836537
+    },
+    "shared_over_local_score_ratio": 2.827916440820907
+  },
+  "guardrail": "The full-band local transfer remains diagnostic. The low/mid holdout diagnostic tests whether its high-frequency parameter shifts are required when 40-200 kHz is excluded from fitting."
+}
