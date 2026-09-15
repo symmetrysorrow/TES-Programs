@@ -246,3 +246,107 @@ def test_fit_and_holdout_regions_are_disjoint():
         & (frequency <= float(hold["max"]))
     )
     assert not np.any(fit_mask & hold_mask)
+
+
+def test_fit_nuisance_family_can_start_from_unstable_baseline(monkeypatch):
+    baseline = {
+        "alpha": 100.0,
+        "beta": 2.0,
+        "C_tes": 2.0e-13,
+        "L": 1.0e-8,
+        "T_bath": 0.215,
+    }
+    stable_trial = dict(baseline)
+    stable_trial["alpha"] = 80.0
+
+    def fake_model(candidate, frequency, fixed_transfer, scale_hz, white_asd):
+        if candidate["alpha"] >= 99.0:
+            return None, {
+                "valid": True,
+                "stable": False,
+                "current_A": 1.0,
+                "joule_power_W": 2.0,
+            }
+        return np.ones_like(np.asarray(frequency, dtype=float)), {
+            "valid": True,
+            "stable": True,
+            "current_A": 1.0,
+            "joule_power_W": 2.0,
+        }
+
+    monkeypatch.setattr(diag, "model_for_candidate", fake_model)
+    monkeypatch.setattr(
+        diag.opt,
+        "fit_score",
+        lambda model, target, frequency, args: float(
+            np.sum((np.asarray(model) - 1.0) ** 2)
+        ),
+    )
+    monkeypatch.setattr(
+        diag.opt,
+        "weighted_residual_vector",
+        lambda model, target, frequency, args: (
+            np.asarray(model) - 1.0
+        ),
+    )
+    monkeypatch.setattr(
+        diag,
+        "differential_evolution",
+        lambda objective, bounds, **kwargs: SimpleNamespace(
+            x=np.asarray([80.0]),
+            success=True,
+            nfev=1,
+        ),
+    )
+    monkeypatch.setattr(
+        diag,
+        "least_squares",
+        lambda fun, x0, **kwargs: SimpleNamespace(
+            x=np.asarray(x0, dtype=float),
+            success=True,
+            nfev=1,
+        ),
+    )
+    monkeypatch.setattr(
+        diag,
+        "metrics",
+        lambda model, target, frequency, args: {
+            "shape_score": 0.0,
+            "residual_metrics": {"rms_residual_dB": 0.0},
+            "bands": {},
+        },
+    )
+    monkeypatch.setattr(
+        diag.opt,
+        "tes_operating_point",
+        lambda candidate: {
+            "valid": True,
+            "stable": candidate["alpha"] < 99.0,
+            "current_A": 1.0,
+            "joule_power_W": 2.0,
+        },
+    )
+
+    result = diag.fit_nuisance_family(
+        name="transition_sensitivity",
+        parameter_names=["alpha"],
+        baseline_candidate=baseline,
+        fixed_transfer={},
+        frequency=np.asarray([1.0]),
+        target=np.asarray([1.0]),
+        args=SimpleNamespace(),
+        scale_hz=40000.0,
+        white_asd=6.0e-11,
+        physical_bounds={"alpha": (10.0, 200.0)},
+        optimizer_cfg={
+            "instability_penalty": 1e6,
+            "DE_maxiter": 1,
+            "least_squares_max_nfev": 1,
+        },
+        seed=1,
+        allow_unstable_baseline=True,
+    )
+
+    assert result["baseline_was_stable"] is False
+    assert result["allow_unstable_baseline"] is True
+    assert result["candidate"]["alpha"] == pytest.approx(80.0)
