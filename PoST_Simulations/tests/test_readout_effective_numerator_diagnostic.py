@@ -196,3 +196,37 @@ def test_fit_and_holdout_regions_are_disjoint():
         & (frequency <= float(hold["max"]))
     )
     assert not np.any(fit_mask & hold_mask)
+
+
+def test_effective_numerator_families_are_exactly_nested():
+    frequency = np.geomspace(1000.0, 500000.0, 300)
+    scale = 40000.0
+
+    order0 = diag.effective_numerator_squared(
+        frequency, 0, {}, scale
+    )
+    order1_zero = diag.effective_numerator_squared(
+        frequency, 1, {"v": 0.0}, scale
+    )
+    np.testing.assert_allclose(order0, order1_zero, rtol=0.0, atol=0.0)
+
+    latent1 = {"v": 3.2}
+    order1 = diag.effective_numerator_squared(
+        frequency, 1, latent1, scale
+    )
+    order2_u_zero = diag.effective_numerator_squared(
+        frequency, 2, {"u": 0.0, "v": 3.2}, scale
+    )
+    np.testing.assert_allclose(order1, order2_u_zero, rtol=0.0, atol=0.0)
+
+    latent2 = {"u": -1.1, "v": 2.4}
+    order2 = diag.effective_numerator_squared(
+        frequency, 2, latent2, scale
+    )
+    order3_w_zero = diag.effective_numerator_squared(
+        frequency,
+        3,
+        {"u": -1.1, "v": 2.4, "w": 0.0},
+        scale,
+    )
+    np.testing.assert_allclose(order2, order3_w_zero, rtol=0.0, atol=0.0)
