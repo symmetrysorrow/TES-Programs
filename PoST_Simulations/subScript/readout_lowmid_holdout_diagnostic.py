@@ -304,7 +304,7 @@ def run(config, config_path: Path):
     fit_max = float(fit_cfg["max_Hz"])
     fit_mask = (
         (frequency >= fit_min)
-        & (frequency <= fit_max)
+        & (frequency < fit_max)
     )
     if np.count_nonzero(fit_mask) < 10:
         raise ValueError("low/mid fit mask contains too few points")
@@ -368,6 +368,10 @@ def run(config, config_path: Path):
         (frequency >= hold_min)
         & (frequency <= hold_max)
     )
+    if np.any(fit_mask & hold_mask):
+        raise RuntimeError(
+            "fit and holdout masks overlap; strict holdout violated"
+        )
     if np.count_nonzero(hold_mask) < 10:
         raise ValueError("holdout mask contains too few points")
     hold_frequency = frequency[hold_mask]
