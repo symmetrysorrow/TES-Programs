@@ -110,17 +110,43 @@ diagnostic: the fit definition and frozen `best_case_parameters`.  This avoids
 depending on a separate local optimizer-summary file whose contents may drift
 from the diagnostic result being cross-validated.
 
-The existing case `comparison_summary.json` is already Git tracked and is
-referenced directly by the manifest.
+The reference case uses its existing Git-tracked `comparison_summary.json`.
 
-When a new same-readout validation dataset is added, add its detector snapshot
-and comparison summary under `PoST_Simulations/cases/`, then add a
-`role: "validation"` entry to the tracked manifest.  The raw CH0 records may
-remain on the acquisition drive; `experiment_path` can stay in the tracked
-comparison summary or be overridden in the manifest if the mount point differs.
+For the adjacent-day repeat, the accepted-record mask did not previously exist
+as a tracked comparison summary.  Instead the repository now tracks:
 
-Relative `summary` and `comparison_summary` paths are resolved relative to
-the tracked manifest location.
+```text
+PoST_Simulations/cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/shared_readout_comparison_spec.json
+```
+
+The diagnostic deterministically recomputes the accepted CH0 record mask from
+the raw records using the same production selection contract:
+
+- per-record mean removal;
+- 10 kHz digital Bessel preprocessing for the processed-domain check;
+- peak-to-peak <= 0.04 in both raw and processed domains;
+- `accepted_noise_indices` as the selection implementation.
+
+Thus no generated comparison JSON outside Git is required.  The raw CH0
+records themselves remain on the acquisition drive.
+
+The repeat detector snapshot is also tracked:
+
+```text
+PoST_Simulations/cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/shared_readout_detector_snapshot.json
+```
+
+It intentionally inherits the reference detector parameters because this is a
+same-nominal-condition repeatability test, not an independently fitted detector
+operating point.  That inheritance is recorded explicitly in its provenance.
+
+When a new independent same-readout validation dataset is added, add its
+detector snapshot and comparison summary/spec under
+`PoST_Simulations/cases/`, then add a `role: "validation"` entry to the
+tracked manifest.
+
+Relative `summary`, `comparison_summary`, and `comparison_spec` paths
+are resolved relative to the tracked manifest location.
 
 ### Roles
 
@@ -128,11 +154,19 @@ Use:
 
 - `reference` for the dataset from which the shared transfer was originally
   inferred;
-- `validation` for independent bias, bath, or detector conditions that use
+- `repeat_validation` for a repeated acquisition at the same nominal
+  detector operating condition;
+- `validation` for an independent bias, bath, or detector condition using
   the same readout chain.
 
-A manifest containing only reference cases can exercise the code, but the
-diagnostic explicitly refuses to call that cross-validation.
+`repeat_validation` is useful evidence for day-to-day/readout repeatability,
+but it is deliberately not counted as independent operating-point
+cross-validation.
+
+The tracked manifest now includes the adjacent-day 2024-12-05
+`r1ch12 / 215 mK / 1400 uA / gain5` repeat as
+`repeat_validation`.  Existing-data provenance records the same
+PXI2Slot2/ai0:1 two-channel acquisition convention for that run.
 
 ## Reference transfer
 
@@ -229,7 +263,8 @@ wanted.
 
 ## Aggregate interpretation
 
-The aggregate output separately counts reference and validation cases.
+The aggregate output separately counts reference, same-condition repeat, and
+independent validation cases.
 
 The flag:
 
@@ -244,19 +279,30 @@ requires all validation cases to:
 3. when local refits are enabled, keep the shared score within the configured
    shared/local tolerance.
 
-If no validation case is present:
+The repeatability flag is reported separately:
+
+```text
+supports_same_condition_repeatability
+```
+
+It can become true from `repeat_validation` cases, but it never satisfies the
+independent cross-validation requirement.
+
+If no independent `validation` case is present:
 
 ```text
 validation_dataset_required_for_cross_validation_claim = true
 supports_shared_readout_transfer_across_validation_cases = false
 ```
 
-This prevents the reference dataset from validating itself.
+This prevents either the reference dataset or an adjacent-day same-condition
+repeat from being promoted into a cross-bias/bath validation claim.
 
 ## Run
 
 With the tracked defaults, run from the repository root with no input-JSON
-arguments:
+arguments.  The command evaluates the reference case and, when its raw-data
+directory is mounted, the tracked 2024-12-05 repeatability case:
 
 ```powershell
 python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py
@@ -277,6 +323,10 @@ python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py --s
 `--manifest` and `--reference-profile` remain available only as explicit
 overrides for diagnostic experiments.  They are not required for the standard
 Git-reproducible workflow.
+
+The adjacent-day repeat is marked `allow_missing_raw_data: true`.  If that
+acquisition directory is not mounted, the repeat case is reported as
+`skipped_missing_raw_data` rather than breaking the reference-case run.
 
 ## How to interpret the result
 
