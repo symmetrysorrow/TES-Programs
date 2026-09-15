@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked R_TES profile with nested detector-state nuisance refits while the 2024-12-06 order-2 effective readout shape and 2024-12-05 white floor remain fixed",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "order2_day_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/order2_day_comparison_snapshot.json",
+  "detector_state_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/detector_state_competition_snapshot.json",
+  "fit_region_Hz": {
+    "min": 1000,
+    "max_exclusive": 40000
+  },
+  "holdout_region_Hz": {
+    "min": 40000,
+    "max": 200000
+  },
+  "fixed_readout": {
+    "effective_numerator_order": 2,
+    "reference_scale_Hz": 40000,
+    "source": "order2_day_snapshot.reference_order2"
+  },
+  "fixed_white_floor": {
+    "source": "order2_day_snapshot.repeat_full_order2.white_asd_A_rtHz"
+  },
+  "R_TES_profile": {
+    "baseline_source": "repeat detector snapshot best_case_parameters.R",
+    "ratios": [
+      0.75,
+      0.85,
+      0.9,
+      0.95,
+      1,
+      1.05,
+      1.1,
+      1.15,
+      1.25
+    ],
+    "interpretation": "outer fixed profile only; R_TES is never a simultaneous continuous optimizer coordinate"
+  },
+  "nuisance_families": [
+    {
+      "name": "transition_sensitivity",
+      "parameters": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "name": "transition_plus_local_dynamics",
+      "parameters": [
+        "alpha",
+        "beta",
+        "C_tes",
+        "L"
+      ]
+    },
+    {
+      "name": "transition_local_plus_bath",
+      "parameters": [
+        "alpha",
+        "beta",
+        "C_tes",
+        "L",
+        "T_bath"
+      ]
+    }
+  ],
+  "bounds": {
+    "alpha": {
+      "minimum_fraction_of_inherited_baseline": 0.05,
+      "maximum": 200
+    },
+    "beta": {
+      "min": 0,
+      "max": 12
+    },
+    "C_tes": {
+      "mode": "production_constants"
+    },
+    "L": {
+      "mode": "production_constants"
+    },
+    "T_bath": {
+      "half_width_K": 0.002
+    }
+  },
+  "optimizer": {
+    "DE_maxiter": 100,
+    "seed": 20260916,
+    "least_squares_max_nfev": 4000,
+    "instability_penalty": 1000000
+  },
+  "comparison_screen": {
+    "near_repeat_local_score_ratio": 5,
+    "near_repeat_local_rms_delta_dB": 0.05,
+    "materially_better_than_R1_detector_nuisance_score_ratio": 0.8,
+    "modest_R_shift_ratio_min": 0.9,
+    "modest_R_shift_ratio_max": 1.1
+  },
+  "guardrail": "R_TES is profiled because no independently linked 2024-12-05 IV operating point is available. A good profile point shows that an R_TES operating-point shift can mimic the day-specific low/mid shape under the tested nuisance model; it does not establish the true 2024-12-05 resistance. A poor profile does not exclude other untested detector-state differences. No result identifies physical electronics drift."
+}
