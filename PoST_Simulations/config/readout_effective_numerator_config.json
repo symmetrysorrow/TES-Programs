@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked nested effective-numerator complexity ladder for the 2024-12-05 repeat, fit on 1-40 kHz after white-floor separation",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "lowmid_free_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/lowmid_free_transfer_snapshot.json",
+  "fit_region_Hz": {
+    "min": 1000,
+    "max_exclusive": 40000
+  },
+  "holdout_region_Hz": {
+    "min": 40000,
+    "max": 200000
+  },
+  "effective_numerator": {
+    "reference_scale_Hz": 40000,
+    "orders": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "semantics": {
+      "0": "pole denominator only; numerator magnitude squared P(x)=1",
+      "1": "one numerator degree; P(x)=1+v^2*x^2",
+      "2": "two numerator degrees; P(x)=(1+u*x^2)^2+v^2*x^2",
+      "3": "three numerator degrees; P(x)=[(1+u*x^2)^2+v^2*x^2]*(1+w^2*x^2), algebraically equivalent to the infinity-lead-pole hybrid numerator"
+    }
+  },
+  "optimizer": {
+    "pole_min_Hz": 1000,
+    "pole_max_Hz": 300000,
+    "pole_Q_min": 0.1,
+    "pole_Q_max": 20,
+    "u_min": -30,
+    "u_max": 30,
+    "v_min": 0.001,
+    "v_max": 30,
+    "w_min": 0.001,
+    "w_max": 30,
+    "DE_maxiter": 100,
+    "seed": 20260916
+  },
+  "minimal_order_screen": {
+    "near_free_rms_delta_dB": 0.05,
+    "near_free_score_ratio": 5
+  },
+  "guardrail": "The effective numerator coefficients describe only the required magnitude-shape complexity. They are not physical component values. The order-3 family is an algebraic reparameterization of the current five-parameter infinity-pole hybrid, while lower orders intentionally remove numerator degrees of freedom."
+}
