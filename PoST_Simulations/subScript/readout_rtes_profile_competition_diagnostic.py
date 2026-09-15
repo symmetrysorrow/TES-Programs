@@ -308,6 +308,12 @@ def profile_point(
 
 
 def run(config, config_path: Path):
+    if int(config["fixed_readout"]["effective_numerator_order"]) != 2:
+        raise ValueError("R_TES profile diagnostic requires order-2 fixed readout")
+    for family in config["nuisance_families"]:
+        if "R" in family["parameters"]:
+            raise ValueError("R_TES must remain an outer fixed profile coordinate")
+
     manifest_path = resolve_config_path(
         config["manifest"],
         config_path,
@@ -456,6 +462,10 @@ def run(config, config_path: Path):
         float(value)
         for value in config["R_TES_profile"]["ratios"]
     ]
+    if any(value <= 0.0 for value in profile_ratios):
+        raise ValueError("R_TES profile ratios must be positive")
+    if len(set(profile_ratios)) != len(profile_ratios):
+        raise ValueError("R_TES profile ratios must be unique")
     if 1.0 not in profile_ratios:
         raise ValueError("R_TES profile must include ratio 1.0")
 
