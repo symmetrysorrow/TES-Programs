@@ -441,9 +441,20 @@ def evaluate_case(
             de_maxiter=de_maxiter,
             rms_screen_db=rms_screen_db,
             max_screen_db=max_screen_db,
+            initial_parameters=shared_transfer["parameters"],
         )
         local_model = local["_model"]
         local_score = float(local["shape_score"])
+        local_score_tolerance = max(
+            1.0e-12,
+            abs(shared_score) * 1.0e-9,
+        )
+        if local_score > shared_score + local_score_tolerance:
+            raise RuntimeError(
+                f"{case['label']}: warm-started local fit "
+                f"({local_score}) is worse than the included shared "
+                f"candidate ({shared_score})"
+            )
         local_clean = {
             key: value
             for key, value in local.items()
@@ -452,6 +463,13 @@ def evaluate_case(
         drift = parameter_drift(
             shared_transfer["parameters"],
             local["_parameters_raw"],
+        )
+        local_clean["shared_candidate_score"] = shared_score
+        local_clean["local_not_worse_than_shared"] = bool(
+            local_score <= shared_score + local_score_tolerance
+        )
+        local_clean["local_minus_shared_score"] = float(
+            local_score - shared_score
         )
 
     flags = evaluation_flags(
