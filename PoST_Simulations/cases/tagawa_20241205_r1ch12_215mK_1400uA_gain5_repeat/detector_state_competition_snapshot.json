@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked detector-state competition result at inherited R_TES, used as the R/R0=1 regression anchor for the R_TES profile diagnostic",
+  "provenance": {
+    "source_diagnostic": "readout_detector_state_competition_diagnostic.json",
+    "repeat_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "fit_region_Hz": [
+      1000,
+      40000
+    ],
+    "holdout_region_Hz": [
+      40000,
+      200000
+    ],
+    "inherited_R_TES_Ohm": 0.017551832576375086
+  },
+  "fixed_reference_readout_baseline": {
+    "shape_score": 0.003165732944525607,
+    "rms_residual_dB": 0.5786604094873736
+  },
+  "repeat_local_readout_comparator": {
+    "shape_score": 0.00003309316879681855,
+    "rms_residual_dB": 0.11046624584893718
+  },
+  "best_detector_state_family": {
+    "name": "transition_local_plus_bath",
+    "candidate": {
+      "alpha": 64.489584563167,
+      "beta": 1.809447437300978e-8,
+      "C_tes": 1.9618750013696008e-13,
+      "L": 1.22999999945805e-8,
+      "T_bath": 0.21770195619338853
+    },
+    "shape_score": 0.0002407895643704409,
+    "rms_residual_dB": 0.2604362037563215,
+    "score_ratio_to_repeat_local_readout_comparator": 7.276110844773181,
+    "rms_delta_to_repeat_local_readout_comparator_dB": 0.14996995790738432
+  },
+  "interpretation": {
+    "detector_state_nuisance_materially_improves_fixed_reference_readout": true,
+    "detector_state_nuisance_reaches_near_repeat_local_readout_fit": false,
+    "limited_detector_state_nuisance_can_compete_with_day_specific_readout_shape": false
+  },
+  "guardrail": "This is a numerical regression anchor only. Its boundary-hitting detector nuisance values are not physical day-state measurements."
+}
