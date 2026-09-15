@@ -183,10 +183,31 @@ Its only purpose is to ask:
 > How much fit quality is lost by forcing the reference transfer to remain
 > shared?
 
+The local optimizer is warm-started from the exact shared parameters.  The
+candidate set explicitly contains:
+
+- the differential-evolution result;
+- the DE -> least-squares result;
+- the exact shared parameter vector;
+- the shared-vector -> least-squares result.
+
+Therefore the local comparator has the invariant:
+
+```text
+local_best_score <= shared_fixed_score
+```
+
+up to a tiny numerical tolerance.  The diagnostic raises an error if this
+invariant is violated.  This prevents a failed local optimizer from being
+misinterpreted as physical parameter drift.
+
 The output reports:
 
 - local best score;
+- which candidate produced the local best;
+- whether a warm start was used;
 - shared / local-best score ratio;
+- `local_not_worse_than_shared`;
 - local parameter drift relative to the shared transfer;
 - RMS and maximum log10 parameter-ratio drift.
 
@@ -195,6 +216,11 @@ The default diagnostic tolerance is:
 ```text
 shared score <= 1.25 x local best score
 ```
+
+Because local best now includes the exact shared solution, this ratio should
+be >= 1 by construction.  Values near 1 mean the fixed shared transfer is
+already close to the case-specific optimum; larger values mean the local case
+can improve substantially by moving its transfer parameters.
 
 This is a pragmatic diagnostic tolerance, not a statistical confidence level.
 
