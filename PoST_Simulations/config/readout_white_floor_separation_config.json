@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked configuration for separating repeat-case high-frequency white-floor drift from pre-ADC transfer drift",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "previous_repeat_local_transfer": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/local_readout_transfer_snapshot.json",
+  "white_floor_profile": {
+    "scale_reference": "repeat detector snapshot post_filter_white_asd_A_rtHz after normal production white-fraction conversion",
+    "min_positive_scale": 0.01,
+    "max_scale": 30,
+    "grid_points": 41,
+    "include_exact_zero": true,
+    "include_baseline_scale_one": true
+  },
+  "transfer_refit": {
+    "center_min_Hz": 1000,
+    "center_max_Hz": 300000,
+    "general_Q_min": 0.1,
+    "Q_max": 20,
+    "DE_maxiter": 100,
+    "seed": 20260915,
+    "RMS_screen_dB": 1,
+    "max_screen_dB": 3,
+    "shared_local_score_tolerance": 1.25
+  },
+  "guardrail": "The post-filter white floor is a diagnostic nuisance amplitude with unresolved absolute CH0 calibration. Improvement after profiling does not identify a physical white-noise source. The transfer refit is performed only after fixing the profiled white floor, so remaining transfer drift can be separated from high-frequency-floor leverage."
+}
