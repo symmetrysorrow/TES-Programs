@@ -23,9 +23,9 @@
     ],
     "semantics": {
       "0": "pole denominator only; numerator magnitude squared P(x)=1",
-      "1": "one numerator degree; P(x)=1+v^2*x^2",
-      "2": "two numerator degrees; P(x)=(1+u*x^2)^2+v^2*x^2",
-      "3": "three numerator degrees; P(x)=[(1+u*x^2)^2+v^2*x^2]*(1+w^2*x^2), algebraically equivalent to the infinity-lead-pole hybrid numerator"
+      "1": "one numerator degree; P(x)=1+v^2*x^2 with v>=0; v=0 recovers order 0 exactly",
+      "2": "two numerator degrees; P(x)=(1+u*x^2)^2+v^2*x^2; u=0 recovers order 1 exactly",
+      "3": "three numerator degrees; P(x)=[(1+u*x^2)^2+v^2*x^2]*(1+w^2*x^2); w=0 recovers order 2 exactly and the full family is algebraically equivalent to the infinity-lead-pole hybrid numerator"
     }
   },
   "optimizer": {
@@ -35,9 +35,9 @@
     "pole_Q_max": 20,
     "u_min": -30,
     "u_max": 30,
-    "v_min": 0.001,
+    "v_min": 0,
     "v_max": 30,
-    "w_min": 0.001,
+    "w_min": 0,
     "w_max": 30,
     "DE_maxiter": 100,
     "seed": 20260916
