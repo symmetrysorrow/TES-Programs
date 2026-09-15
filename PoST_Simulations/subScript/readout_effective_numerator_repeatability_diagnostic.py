@@ -427,6 +427,11 @@ def parameter_repeatability(
 
 
 def run(config, config_path: Path):
+    if int(config["effective_numerator_order"]) != 2:
+        raise ValueError(
+            "this repeatability diagnostic requires effective_numerator_order=2"
+        )
+
     manifest_path = ident.resolve_config_path(
         config["manifest"],
         config_path,
@@ -573,8 +578,7 @@ def run(config, config_path: Path):
 
     block_fits = []
     for index, indices in enumerate(blocks):
-        block_fits.append(
-            fit_dataset(
+        block_fit = fit_dataset(
                 label=(
                     repeat_case["label"]
                     + f":block_{index + 1}"
@@ -593,7 +597,17 @@ def run(config, config_path: Path):
                 ],
                 seed=seed + 100 + index,
             )
+        if block_fit["accepted_records"] != len(indices):
+            raise RuntimeError(
+                "block target did not preserve the supplied accepted-record mask"
+            )
+        np.testing.assert_allclose(
+            reference_fit["_frequency_Hz"],
+            block_fit["_frequency_Hz"],
+            rtol=0.0,
+            atol=1.0e-12,
         )
+        block_fits.append(block_fit)
 
     frequency = reference_fit["_frequency_Hz"]
     fit_mask = reference_fit["_fit_mask"]
