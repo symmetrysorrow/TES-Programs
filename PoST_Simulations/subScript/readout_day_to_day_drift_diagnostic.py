@@ -319,7 +319,7 @@ def compare_day_to_block(
         ratio = (
             abs(day_value) / max_abs
             if max_abs > 0.0
-            else (float("inf") if abs(day_value) > 0.0 else 0.0)
+            else (None if abs(day_value) > 0.0 else 0.0)
         )
         is_reference = np.isclose(
             float(anchor),
@@ -336,7 +336,9 @@ def compare_day_to_block(
                 "frequency_Hz": float(frequency[index]),
                 "empirical_day_ratio_dB": day_value,
                 "within_repeat_max_abs_block_ratio_dB": max_abs,
-                "day_over_block_max_abs_ratio": float(ratio),
+                "day_over_block_max_abs_ratio": (
+                    None if ratio is None else float(ratio)
+                ),
                 "day_exceeds_all_block_variation": exceeds_here,
             }
         )
@@ -357,10 +359,10 @@ def compare_day_to_block(
         "max_within_repeat_block_fit_band_rms_dB": float(
             block_rms_max
         ),
-        "day_rms_over_block_rms_max_ratio": float(
-            day_rms / block_rms_max
+        "day_rms_over_block_rms_max_ratio": (
+            float(day_rms / block_rms_max)
             if block_rms_max > 0.0
-            else float("inf")
+            else None
         ),
         "day_fit_band_rms_exceeds_all_blocks": bool(
             day_rms > block_rms_max
@@ -503,12 +505,17 @@ def run(config, config_path: Path):
         envelope["fit_band_rms_max_dB"],
     )
 
-    corr = float(
-        np.corrcoef(
-            empirical_db[fit_mask],
-            transfer_db[fit_mask],
-        )[0, 1]
-    )
+    empirical_fit = empirical_db[fit_mask]
+    transfer_fit = transfer_db[fit_mask]
+    if (
+        np.std(empirical_fit) > 0.0
+        and np.std(transfer_fit) > 0.0
+    ):
+        corr = float(
+            np.corrcoef(empirical_fit, transfer_fit)[0, 1]
+        )
+    else:
+        corr = None
     model_mismatch_rms = float(
         np.sqrt(np.mean(unexplained_db[fit_mask] ** 2))
     )
@@ -596,7 +603,9 @@ def run(config, config_path: Path):
                 ]
             ),
             "transfer_ratio_tracks_day_shape_broadly": bool(
-                corr >= 0.8 and model_mismatch_rms <= 1.0
+                corr is not None
+                and corr >= 0.8
+                and model_mismatch_rms <= 1.0
             ),
             "strong_electronics_drift_claim_allowed": False,
         },
