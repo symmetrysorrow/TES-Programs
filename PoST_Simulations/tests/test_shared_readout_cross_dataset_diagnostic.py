@@ -257,3 +257,53 @@ def test_default_manifest_reference_paths_stay_inside_repo():
     for row in rows:
         assert root in row["summary"].resolve().parents
         assert root in row["comparison_summary"].resolve().parents
+
+
+def test_all_default_tracked_json_files_parse_and_have_model_keys():
+    import json
+
+    manifest = json.loads(
+        diag.DEFAULT_MANIFEST.read_text(encoding="utf-8")
+    )
+    reference = json.loads(
+        diag.DEFAULT_REFERENCE_PROFILE.read_text(encoding="utf-8")
+    )
+    shared = diag.load_shared_transfer(reference)
+    assert shared["parameters"]["pole_Hz"] > 0.0
+
+    rows = diag.normalize_manifest(
+        manifest,
+        diag.DEFAULT_MANIFEST,
+    )
+    required_detector_keys = {
+        "T_c",
+        "T_bath",
+        "R",
+        "R_SH",
+        "R_l",
+        "alpha",
+        "beta",
+        "L",
+        "n",
+        "C_tes",
+        "C_stycast",
+        "C_abs",
+        "G_tes-bath",
+        "G_tes-stycast",
+        "G_stycast-abs",
+        "G_abs-abs",
+        "rate",
+        "thermal_link_model",
+    }
+    for row in rows:
+        summary = json.loads(
+            row["summary"].read_text(encoding="utf-8")
+        )
+        comparison = json.loads(
+            row["comparison_summary"].read_text(encoding="utf-8")
+        )
+        assert required_detector_keys <= set(
+            summary["best_case_parameters"]
+        )
+        assert "fit" in summary
+        assert comparison["acquisition"]["accepted_record_indices"]
