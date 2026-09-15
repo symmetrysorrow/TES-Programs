@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked configuration for model-free adjacent-day pre-analysis ASD drift and block-repeatability diagnostic",
+  "reference_case_label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "repeat_local_transfer": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/local_readout_transfer_snapshot.json",
+  "block_size": {
+    "mode": "reference_accepted_record_count",
+    "fallback_records": 345,
+    "use_only_full_nonoverlapping_blocks": true
+  },
+  "comparison": {
+    "normalization_reference_Hz": 1000,
+    "fit_min_Hz": 1000,
+    "fit_max_Hz": 200000,
+    "anchors_Hz": [
+      1000,
+      5000,
+      10000,
+      20000,
+      40000,
+      70000,
+      100000,
+      150000,
+      200000
+    ],
+    "bands_Hz": [
+      {
+        "name": "1000-5000_Hz",
+        "min": 1000,
+        "max": 5000
+      },
+      {
+        "name": "5000-15000_Hz",
+        "min": 5000,
+        "max": 15000
+      },
+      {
+        "name": "15000-40000_Hz",
+        "min": 15000,
+        "max": 40000
+      },
+      {
+        "name": "40000-100000_Hz",
+        "min": 40000,
+        "max": 100000
+      },
+      {
+        "name": "100000-200000_Hz",
+        "min": 100000,
+        "max": 200000
+      }
+    ]
+  },
+  "guardrail": "The empirical day-to-day ASD ratio is model-free. Agreement with the tracked transfer-ratio shape is diagnostic evidence only; disagreement or agreement does not by itself identify physical electronics drift because the repeat detector operating point was not independently refit."
+}
