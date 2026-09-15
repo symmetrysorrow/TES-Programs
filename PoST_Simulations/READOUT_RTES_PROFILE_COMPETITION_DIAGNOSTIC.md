@@ -42,10 +42,42 @@ R0 = 0.017551832576375086 ohm
 The default fixed profile is:
 
 ```text
-R/R0 = 0.75, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.25
+R/R0 = 0.75, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.25, 1.35, 1.50
 ```
 
-The denser +/-15 percent region is intended to answer whether a modest DC operating-point shift is sufficient before interpreting more extreme profile points.
+The denser +/-15 percent region is intended to answer whether a modest DC operating-point shift is sufficient before interpreting more extreme profile points. The upper extension to 1.35 and 1.50 is included because the first profile had its best evaluated point at the former 1.25 upper edge.
+
+## Stability-aware fixed-R semantics
+
+A fixed-R point is **not** rejected merely because the inherited nuisance state at that resistance is unstable.
+
+For every R point, the diagnostic records the inherited-state operating-point stability for provenance, then runs the nuisance optimizer. Every optimizer trial is screened by the TES validity/stability test.
+
+Therefore:
+
+```text
+inherited nuisance state unstable
+    !=
+fixed R ruled out
+```
+
+A profile point is reported as:
+
+```text
+no_stable_solution_at_fixed_R
+```
+
+only when none of the configured nuisance-family searches produces a stable fitted candidate.
+
+The output summarizes this explicitly under:
+
+```text
+R_TES_profile.stability_summary
+interpretation_flags.low_R_stable_nuisance_solution_found
+interpretation_flags.all_tested_R_points_have_stable_nuisance_solution
+```
+
+This change completes the low-R half of the profile that the original pre-screen could not evaluate.
 
 ## Nested nuisance refits
 
@@ -158,7 +190,7 @@ True when the best R profile point reduces score to <=0.8 times the best R=1 det
 
 ### `best_R_profile_point_is_at_tested_edge`
 
-True when the best point is 0.75 or 1.25 times R0. This is a warning that the selected profile range did not bracket the optimum.
+True when the best point is at the minimum or maximum tested R ratio. With the current profile that means 0.75 or 1.50 times R0. This is a warning that the selected profile range still did not bracket the optimum.
 
 ### `profiled_R_TES_can_compete_with_day_specific_readout_shape`
 
@@ -213,5 +245,7 @@ PoST_Simulations/.noise_optimization_work_rsh_sweep/readout_rtes_profile_competi
 If a modest R shift reaches the repeat-local comparator without severe nuisance-boundary stress, an independently linked 2024-12-05 IV/R_TES constraint becomes the highest-priority missing measurement.
 
 If only an extreme edge R point works, the result is an existence proof rather than a plausible operating-point explanation.
+
+If low-R inherited states are unstable but stable nuisance solutions are found after optimization, those fixed-R points must be judged by their fitted score, boundary stress, operating point, and holdout rather than by the inherited-state pre-screen.
 
 If no R point works and the best nuisance solutions remain boundary-stressed, the day-specific effective readout freedom survives the major detector-state confounds tested so far.
