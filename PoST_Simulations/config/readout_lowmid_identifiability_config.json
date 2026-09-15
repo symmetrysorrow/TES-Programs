@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked fixed-parameter profiles and reduced-topology fits for 1-40 kHz hybrid-transfer identifiability after white-floor separation",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "lowmid_free_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/lowmid_free_transfer_snapshot.json",
+  "fit_region_Hz": {
+    "min": 1000,
+    "max_exclusive": 40000
+  },
+  "optimizer": {
+    "center_min_Hz": 1000,
+    "center_max_Hz": 300000,
+    "general_Q_min": 0.1,
+    "Q_max": 20,
+    "DE_maxiter": 80,
+    "seed": 20260915
+  },
+  "fixed_profiles": {
+    "zero_Hz": [
+      30000,
+      40000,
+      50000,
+      60000,
+      68501.71356666459,
+      80000,
+      100000,
+      150000,
+      300000
+    ],
+    "leadlag_zero_Hz": [
+      3000,
+      4000,
+      4939.584368021103,
+      6000,
+      8000,
+      10000,
+      20000,
+      50000,
+      80000
+    ],
+    "pole_Hz": [
+      9000,
+      10000,
+      11000,
+      11820.989566184204,
+      13000,
+      13342.736968385007,
+      15000,
+      18000
+    ]
+  },
+  "reduced_topologies": [
+    {
+      "name": "shared_zero_section_fixed",
+      "fixed_parameters": [
+        "zero_Hz",
+        "zero_Q"
+      ]
+    },
+    {
+      "name": "shared_lead_zero_fixed",
+      "fixed_parameters": [
+        "leadlag_zero_Hz"
+      ]
+    },
+    {
+      "name": "shared_zero_section_and_lead_zero_fixed",
+      "fixed_parameters": [
+        "zero_Hz",
+        "zero_Q",
+        "leadlag_zero_Hz"
+      ]
+    }
+  ],
+  "identifiability_screen": {
+    "near_free_rms_delta_dB": 0.05,
+    "near_free_score_ratio": 5
+  },
+  "guardrail": "A flat fixed-parameter profile means the 1-40 kHz data do not identify that parameter within the tested range. Profile minima or reduced fits are diagnostic only and do not identify physical electronics components."
+}
