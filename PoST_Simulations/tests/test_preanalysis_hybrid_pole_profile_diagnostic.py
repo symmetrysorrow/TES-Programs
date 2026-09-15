@@ -146,3 +146,108 @@ def test_parse_pole_grid():
     ) == pytest.approx((150000.0, 300000.0, 1000000.0))
     with pytest.raises(ValueError):
         diag.parse_pole_grid("150000,-1")
+
+
+def test_fit_fixed_pole_keeps_exact_warm_start_candidate(monkeypatch):
+    from types import SimpleNamespace
+
+    target = np.asarray([10.0, 1.0, 20.0, 2.0, 5.0])
+    warm = {
+        "pole_Hz": 10.0,
+        "pole_Q": 1.0,
+        "zero_Hz": 20.0,
+        "zero_Q": 2.0,
+        "leadlag_zero_Hz": 5.0,
+    }
+    bad_vector = np.log10(
+        np.asarray([100.0, 3.0, 100.0, 3.0, 100.0])
+    )
+
+    monkeypatch.setattr(
+        diag,
+        "pre_analysis_model",
+        lambda context, parameters, fixed_pole_hz: np.asarray(
+            [
+                parameters["pole_Hz"],
+                parameters["pole_Q"],
+                parameters["zero_Hz"],
+                parameters["zero_Q"],
+                parameters["leadlag_zero_Hz"],
+            ],
+            dtype=float,
+        ),
+    )
+    monkeypatch.setattr(
+        diag.opt,
+        "fit_score",
+        lambda model, target_value, frequency, args: float(
+            np.sum(
+                np.log10(
+                    np.asarray(model) / np.asarray(target_value)
+                )
+                ** 2
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        diag.opt,
+        "weighted_residual_vector",
+        lambda model, target_value, frequency, args: np.log10(
+            np.asarray(model) / np.asarray(target_value)
+        ),
+    )
+    monkeypatch.setattr(
+        diag,
+        "differential_evolution",
+        lambda *args, **kwargs: SimpleNamespace(
+            x=bad_vector.copy(),
+            success=True,
+            nfev=1,
+        ),
+    )
+    monkeypatch.setattr(
+        diag,
+        "least_squares",
+        lambda fun, x0, **kwargs: SimpleNamespace(
+            x=np.asarray(x0, dtype=float).copy(),
+            success=True,
+            nfev=1,
+        ),
+    )
+    monkeypatch.setattr(
+        diag.base,
+        "residual_db_metrics",
+        lambda *args, **kwargs: {},
+    )
+    monkeypatch.setattr(
+        diag.base,
+        "band_summary",
+        lambda *args, **kwargs: {},
+    )
+    monkeypatch.setattr(
+        diag.topology,
+        "named_boundary_positions",
+        lambda *args, **kwargs: {},
+    )
+
+    result = diag.fit_fixed_pole(
+        None,
+        {},
+        target,
+        np.arange(1.0, 6.0),
+        SimpleNamespace(),
+        center_min_hz=1.0,
+        center_max_hz=300_000.0,
+        general_q_min=0.1,
+        q_max=20.0,
+        seed=1,
+        de_maxiter=1,
+        rms_screen_db=1.0,
+        max_screen_db=3.0,
+        initial_parameters=warm,
+    )
+
+    assert result["warm_start_used"] is True
+    assert result["best_candidate_source"] == "warm_start_exact"
+    assert result["shape_score"] == pytest.approx(0.0, abs=1e-15)
+    assert result["_parameters_raw"] == pytest.approx(warm)
