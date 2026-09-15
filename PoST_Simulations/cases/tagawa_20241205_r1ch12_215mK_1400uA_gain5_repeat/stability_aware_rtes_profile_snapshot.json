@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked stability-aware R_TES profile result used as the detector/DC-confound baseline for residual order-2 readout degree-of-freedom competition",
+  "provenance": {
+    "source_diagnostic": "readout_rtes_profile_competition_diagnostic.json",
+    "repeat_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "accepted_records": 1731,
+    "fit_region_Hz": [
+      1000,
+      40000
+    ],
+    "holdout_region_Hz": [
+      40000,
+      200000
+    ],
+    "all_tested_R_points_have_stable_nuisance_solution": true,
+    "tested_R_ratio_range": [
+      0.75,
+      1.5
+    ]
+  },
+  "repeat_local_readout_comparator": {
+    "shape_score": 0.00003309316879681855,
+    "rms_residual_dB": 0.11046624584893718
+  },
+  "best_profiled_detector_dc_baseline": {
+    "R_ratio_to_inherited": 1.25,
+    "R_TES_Ohm": 0.02193979072046886,
+    "R_TES_mOhm": 21.93979072046886,
+    "detector_nuisance_family": "transition_local_plus_bath",
+    "candidate": {
+      "alpha": 181.61596143395718,
+      "beta": 0.005173313646112443,
+      "C_tes": 3.4418107170397315e-13,
+      "L": 1.2299967867307925e-8,
+      "T_bath": 0.21570195622948088
+    },
+    "shape_score": 0.00021461327801482766,
+    "rms_residual_dB": 0.2544565190896944,
+    "holdout_shape_score": 0.20902391965469963,
+    "holdout_rms_residual_dB": 4.398584387387281,
+    "score_ratio_to_repeat_local_readout_comparator": 6.485123238952558,
+    "rms_delta_to_repeat_local_readout_comparator_dB": 0.14399027324075725
+  },
+  "fixed_reference_order2_readout": {
+    "pole_Hz": 12300.466033419732,
+    "pole_Q": 0.7907430449734433,
+    "c2": 42.02138174753799,
+    "c4": 34.229916419004724,
+    "reference_scale_Hz": 40000
+  },
+  "repeat_local_order2_readout": {
+    "pole_Hz": 11823.836983199863,
+    "pole_Q": 0.6572556775191355,
+    "c2": 84.38120676117717,
+    "c4": 24.17752469373208,
+    "reference_scale_Hz": 40000
+  },
+  "fixed_repeat_white_asd_A_rtHz": 5.994841960426966e-11,
+  "guardrail": "The R=1.25 detector/DC solution is a diagnostic confound baseline, not an identified 2024-12-05 operating point. Residual readout freedom tested from this baseline remains an effective magnitude-shape description, not a physical electronics component identification."
+}
