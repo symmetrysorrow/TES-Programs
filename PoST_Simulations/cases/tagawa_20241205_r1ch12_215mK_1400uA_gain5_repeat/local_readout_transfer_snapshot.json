@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked derived local readout-transfer snapshot for the 2024-12-05 same-condition repeat",
+  "provenance": {
+    "source_diagnostic": "shared_readout_cross_dataset_diagnostic.json",
+    "source_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "source_shape_score": 0.0024857531043020564,
+    "source_shared_score": 0.01104851738727614,
+    "best_candidate_source": "de",
+    "note": "Derived from the warm-started local comparator. This is diagnostic-only and is used only to compare transfer-ratio shape against the model-free day-to-day ASD ratio."
+  },
+  "transfer": {
+    "fixed_leadlag_pole_Hz": null,
+    "leadlag_pole_is_infinite": true,
+    "parameters": {
+      "pole_Hz": 12760.729851816477,
+      "pole_Q": 0.5405524288796113,
+      "zero_Hz": 64643.223376079855,
+      "zero_Q": 1.065193300461043,
+      "leadlag_zero_Hz": 3749.6911078305343
+    }
+  },
+  "guardrail": "This snapshot is not evidence that electronics physically changed. The local transfer may absorb detector operating-point or stationarity differences."
+}
