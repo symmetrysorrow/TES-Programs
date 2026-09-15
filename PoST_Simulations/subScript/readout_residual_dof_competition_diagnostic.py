@@ -752,25 +752,7 @@ def run(config, config_path: Path):
     detector_bounds = competition.nuisance_bounds(
         inherited_candidate,
         {
-            "bounds": {
-                "alpha": {
-                    "minimum_fraction_of_baseline": 0.05,
-                    "maximum": 200.0,
-                },
-                "beta": {
-                    "min": 0.0,
-                    "max": 12.0,
-                },
-                "C_tes": {
-                    "mode": "production_constants",
-                },
-                "L": {
-                    "mode": "production_constants",
-                },
-                "T_bath": {
-                    "half_width_K": 0.002,
-                },
-            }
+            "bounds": config["detector_bounds"],
         },
     )
     readout_bounds = {
