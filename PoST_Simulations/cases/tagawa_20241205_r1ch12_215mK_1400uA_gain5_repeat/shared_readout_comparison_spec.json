@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked raw-record selection specification for adjacent-day shared-readout repeatability validation",
+  "experiment_path": "G:/tagawa/20241205/r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5",
+  "provenance": {
+    "source_evidence": [
+      "../tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/existing_data_search_manifest.json",
+      "../tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/detector_linkage_evidence.json"
+    ],
+    "acquisition_evidence": "Adjacent-day r1ch12 run is documented as using the same PXI2Slot2/ai0:1 two-channel acquisition convention.",
+    "validation_class": "same_condition_adjacent_day_repeatability"
+  },
+  "acquisition": {
+    "rate_Hz": 500000,
+    "samples": 100000,
+    "cutoff_Hz": 10000,
+    "channel": "CH0"
+  },
+  "acceptance": {
+    "selection_function": "accepted_noise_indices",
+    "remove_mean": true,
+    "max_peak_to_peak_raw_units": 0.04,
+    "apply_to_raw": true,
+    "apply_to_processed": true,
+    "note": "Matches target_case_report.py production record-selection path."
+  },
+  "guardrail": "The accepted-record mask is recomputed deterministically from raw records at runtime. This repeat case is not an independent operating-point validation."
+}
