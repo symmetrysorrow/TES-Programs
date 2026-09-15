@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked order-2 effective-numerator block stability and adjacent-day repeatability diagnostic",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "reference_case_label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "lowmid_free_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/lowmid_free_transfer_snapshot.json",
+  "effective_numerator_order": 2,
+  "reference_scale_Hz": 40000,
+  "white_floor": {
+    "reference_scale_from_detector_snapshot": 1,
+    "repeat_scale_source": "lowmid_free_snapshot.white_floor.scale"
+  },
+  "fit_region_Hz": {
+    "min": 1000,
+    "max_exclusive": 40000
+  },
+  "holdout_region_Hz": {
+    "min": 40000,
+    "max": 200000
+  },
+  "block_size": {
+    "mode": "reference_accepted_record_count",
+    "fallback_records": 345,
+    "use_only_full_nonoverlapping_blocks": true
+  },
+  "optimizer": {
+    "pole_min_Hz": 1000,
+    "pole_max_Hz": 300000,
+    "pole_Q_min": 0.1,
+    "pole_Q_max": 20,
+    "u_min": -30,
+    "u_max": 30,
+    "v_min": 0,
+    "v_max": 30,
+    "DE_maxiter": 100,
+    "seed": 20260916
+  },
+  "repeatability_screen": {
+    "day_shape_rms_over_block_max_threshold": 1,
+    "parameter_shift_sigma_threshold": 2
+  },
+  "guardrail": "This is a descriptive repeatability diagnostic, not a formal confidence-interval or electronics-drift test. The 2024-12-05 detector snapshot is inherited from the reference operating-point fit, and day-specific white floors are fixed rather than jointly re-estimated per block. Compare canonical order-2 coefficients c2/c4 and normalized transfer shapes, not latent u/v values as physical components."
+}
