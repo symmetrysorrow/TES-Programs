@@ -81,38 +81,46 @@ case-specific frozen intrinsic detector ASD
 The diagnostic checks that the acquisition rate in the case comparison summary
 matches the rate used by the case-specific detector summary.
 
-## Manifest
+## Git-tracked inputs
 
-The diagnostic accepts one JSON manifest so local datasets that are not
-committed to the repository can be included directly.
+The standard diagnostic no longer requires user-created JSON files outside the
+repository.  Its required configuration is tracked in Git.
 
-Example:
+Default manifest:
 
-```json
-{
-  "cases": [
-    {
-      "label": "215mK_1400uA_reference",
-      "role": "reference",
-      "summary": "D:/work/215mK_1400uA/summary.json",
-      "comparison_summary": "D:/Github/TES-Programs/PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/comparison_summary.json"
-    },
-    {
-      "label": "same_readout_other_bias",
-      "role": "validation",
-      "summary": "D:/work/other_bias/summary.json",
-      "comparison_summary": "D:/work/other_bias/comparison_summary.json",
-      "experiment_path": "G:/tagawa/20241206/<raw-data-directory>"
-    }
-  ]
-}
+```text
+PoST_Simulations/config/shared_readout_cross_dataset_manifest.json
 ```
 
-`experiment_path` is optional.  When omitted, it is read from that case's
-`comparison_summary.json`.
+Default shared-transfer reference:
+
+```text
+PoST_Simulations/config/shared_readout_reference_transfer.json
+```
+
+The reference detector/fit snapshot currently used by the manifest is also
+tracked with the case:
+
+```text
+PoST_Simulations/cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/shared_readout_detector_snapshot.json
+```
+
+That compact snapshot intentionally stores only the fields required by this
+diagnostic: the fit definition and frozen `best_case_parameters`.  This avoids
+depending on a separate local optimizer-summary file whose contents may drift
+from the diagnostic result being cross-validated.
+
+The existing case `comparison_summary.json` is already Git tracked and is
+referenced directly by the manifest.
+
+When a new same-readout validation dataset is added, add its detector snapshot
+and comparison summary under `PoST_Simulations/cases/`, then add a
+`role: "validation"` entry to the tracked manifest.  The raw CH0 records may
+remain on the acquisition drive; `experiment_path` can stay in the tracked
+comparison summary or be overridden in the manifest if the mount point differs.
 
 Relative `summary` and `comparison_summary` paths are resolved relative to
-the manifest location.
+the tracked manifest location.
 
 ### Roles
 
@@ -126,19 +134,21 @@ Use:
 A manifest containing only reference cases can exercise the code, but the
 diagnostic explicitly refuses to call that cross-validation.
 
-## Reference profile
+## Reference transfer
 
-Pass the latest pole-profile JSON:
+The current accepted transfer is frozen in the tracked file:
 
 ```text
-PoST_Simulations/.noise_optimization_work_rsh_sweep/preanalysis_hybrid_pole_profile_diagnostic.json
+PoST_Simulations/config/shared_readout_reference_transfer.json
 ```
 
-The diagnostic reads `best_profile_row` and preserves the exact finite or
-infinite lead/lag-pole state.
+It records the exact best infinity-pole result from the latest pole-profile
+diagnostic, including provenance and the source shape score.  The diagnostic
+reads its `best_profile_row` and therefore preserves the exact infinite
+lead/lag-pole state rather than approximating it with a multi-MHz finite pole.
 
-For the present result, the infinity limit is therefore reused exactly rather
-than approximated with a multi-MHz finite pole.
+A later diagnostic result should update this tracked reference file in the same
+commit series that updates the cross-dataset assumptions.
 
 ## Shared fixed evaluation
 
@@ -219,29 +229,28 @@ This prevents the reference dataset from validating itself.
 
 ## Run
 
-Create a manifest, for example:
-
-```text
-D:/work/shared_readout_manifest.json
-```
-
-Then run from the repository root:
+With the tracked defaults, run from the repository root with no input-JSON
+arguments:
 
 ```powershell
-python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py --manifest D:/work/shared_readout_manifest.json --reference-profile PoST_Simulations/.noise_optimization_work_rsh_sweep/preanalysis_hybrid_pole_profile_diagnostic.json
+python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py
 ```
 
-Default output is written beside the manifest:
+Default output:
 
 ```text
-shared_readout_cross_dataset_diagnostic.json
+PoST_Simulations/.noise_optimization_work_rsh_sweep/shared_readout_cross_dataset_diagnostic.json
 ```
 
 For a cheaper fixed-transfer-only run:
 
 ```powershell
-python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py --manifest D:/work/shared_readout_manifest.json --reference-profile PoST_Simulations/.noise_optimization_work_rsh_sweep/preanalysis_hybrid_pole_profile_diagnostic.json --skip-local-refit
+python PoST_Simulations/subScript/shared_readout_cross_dataset_diagnostic.py --skip-local-refit
 ```
+
+`--manifest` and `--reference-profile` remain available only as explicit
+overrides for diagnostic experiments.  They are not required for the standard
+Git-reproducible workflow.
 
 ## How to interpret the result
 
