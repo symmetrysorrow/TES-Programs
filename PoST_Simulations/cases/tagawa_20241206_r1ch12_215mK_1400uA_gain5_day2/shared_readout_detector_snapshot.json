@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "purpose": "Compact Git-tracked detector/fit snapshot used by shared readout cross-dataset validation",
+  "provenance": {
+    "source": "user-produced production optimizer summary used by the pre-analysis readout diagnostics",
+    "best_case_score": 0.08259383271718165,
+    "best_case_finite_validation_score": 0.08274943727580919,
+    "R_SH_ohm": 0.00385,
+    "note": "This compact snapshot intentionally contains only fields required by the cross-dataset diagnostic."
+  },
+  "fit": {
+    "min_hz": 1000,
+    "max_hz": 200000,
+    "weight_start_hz": 40000,
+    "high_frequency_weight": 4,
+    "robust_delta_dex": 0.3,
+    "points": 601,
+    "loss": "band-balanced robust normalized log10(model/measurement) shape residual; equalized broad bands plus high-frequency ramp and broad-band mean-ratio penalty; plus one absolute ASD level anchor at 1 kHz",
+    "band_mean_penalty": 3,
+    "absolute_asd_reference_Hz": 1000,
+    "absolute_asd_weight": 0,
+    "absolute_asd_used_in_objective": false,
+    "absolute_asd_calibration_status": "unresolved_for_exact_target; diagnostic only unless absolute ASD weighting is explicitly enabled",
+    "measurement_modelnoise_reported_units": "pA/rtHz",
+    "internal_absolute_asd_units": "A/rtHz",
+    "bands_Hz": [
+      {
+        "min": 1000,
+        "max": 5000,
+        "weight": 1
+      },
+      {
+        "min": 5000,
+        "max": 15000,
+        "weight": 1.25
+      },
+      {
+        "min": 15000,
+        "max": 40000,
+        "weight": 1.25
+      },
+      {
+        "min": 40000,
+        "max": 100000,
+        "weight": 1.5
+      },
+      {
+        "min": 100000,
+        "max": 200000,
+        "weight": 2
+      }
+    ],
+    "frequencies_outside_fit_band_ignored": true
+  },
+  "best_case_parameters": {
+    "T_c": 0.24194477220095292,
+    "T_bath": 0.21570195622948088,
+    "R": 0.017551832576375086,
+    "R_SH": 0.00385,
+    "R_l": 0.02444950597728903,
+    "R_series_eff": 0.02444950597728903,
+    "alpha": 199.99509910576424,
+    "beta": 5.5385653081447455,
+    "L": 1.1000218526482164e-8,
+    "n": 2.2978482062463366,
+    "C_tes": 1.9625060425255218e-13,
+    "C_stycast": 1.0452067590580686e-10,
+    "C_abs": 3.5298484000601895e-9,
+    "G_tes-bath": 4.5595728223782954e-8,
+    "G_tes-stycast": 3.1192825848862786e-9,
+    "G_stycast-abs": 1.4219915147408813e-9,
+    "G_abs-abs": 3.484004881396425e-8,
+    "excess_johnson_M": 0.0014664636354934455,
+    "post_filter_white_fraction": 0.013547312486264377,
+    "post_filter_white_asd_A_rtHz": 4.396349792023576e-11,
+    "hardware_bessel_order": 4,
+    "hardware_bessel_norm": "mag",
+    "hardware_bessel_cutoff_Hz": 100000,
+    "thermal_link_model": "stycast_node",
+    "electrical_link_model": "rl",
+    "rate": 500000,
+    "samples": 100000,
+    "cutoff": 10000
+  }
+}\n
