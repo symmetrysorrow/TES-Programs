@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked configuration for fitting the repeat transfer only on 1-40 kHz and validating 40-200 kHz as a strict holdout after white-floor separation",
+  "manifest": "shared_readout_cross_dataset_manifest.json",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "reference_transfer": "shared_readout_reference_transfer.json",
+  "white_profiled_full_band_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/white_profiled_full_band_transfer_snapshot.json",
+  "low_mid_fit": {
+    "min_Hz": 1000,
+    "max_Hz": 40000,
+    "center_min_Hz": 1000,
+    "center_max_Hz": 300000,
+    "general_Q_min": 0.1,
+    "Q_max": 20,
+    "DE_maxiter": 100,
+    "seed": 20260915
+  },
+  "high_frequency_holdout": {
+    "min_Hz": 40000,
+    "max_Hz": 200000,
+    "relative_score_tolerance_to_shared": 1.25
+  },
+  "screen": {
+    "RMS_dB": 1,
+    "max_abs_dB": 3
+  },
+  "guardrail": "Only 1-40 kHz data may influence the low/mid transfer fit. All 40-200 kHz metrics are computed afterward as a strict holdout. The white floor is frozen to the preceding Git-tracked best value. Parameter movement is diagnostic and does not identify a physical electronics component."
+}
