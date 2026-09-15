@@ -7,7 +7,14 @@
       "role": "reference",
       "summary": "../cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/shared_readout_detector_snapshot.json",
       "comparison_summary": "../cases/tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2/comparison_summary.json"
+    },
+    {
+      "label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+      "role": "repeat_validation",
+      "summary": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/shared_readout_detector_snapshot.json",
+      "comparison_spec": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/shared_readout_comparison_spec.json",
+      "allow_missing_raw_data": true
     }
   ],
-  "note": "Add same-readout independent bias/bath cases here as role=validation. Keep each required detector snapshot and comparison summary inside the repository."
+  "note": "reference = source case; repeat_validation = same-condition repeatability only; validation = independent bias/bath case. Keep required detector snapshots and comparison summaries/specs in Git."
 }
