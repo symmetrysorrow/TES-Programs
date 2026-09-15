@@ -302,3 +302,19 @@ def test_detector_nuisance_never_contains_R():
         "L",
         "T_bath",
     ]
+
+
+def test_detector_bounds_are_git_tracked():
+    config = json.loads(
+        diag.DEFAULT_CONFIG.read_text(
+            encoding="utf-8"
+        )
+    )
+    bounds = config["detector_bounds"]
+    assert bounds["alpha"]["minimum_fraction_of_baseline"] == pytest.approx(
+        0.05
+    )
+    assert bounds["alpha"]["maximum"] == pytest.approx(200.0)
+    assert bounds["beta"]["min"] == pytest.approx(0.0)
+    assert bounds["beta"]["max"] == pytest.approx(12.0)
+    assert bounds["T_bath"]["half_width_K"] == pytest.approx(0.002)
