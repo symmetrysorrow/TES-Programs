@@ -111,5 +111,24 @@
     "near_repeat_local_rms_delta_dB": 0.05,
     "material_score_improvement_ratio_to_previous_nested": 0.8
   },
-  "guardrail": "Every family re-optimizes alpha, beta, C_tes, L, and T_bath at fixed R_TES=1.25 times the inherited resistance. Readout parameters are effective order-2 magnitude-shape coordinates only. The c2-only and pole_frequency_plus_c2 cases are branch diagnostics; the main nested ladder is fixed_reference_readout -> pole_frequency_only -> pole_section -> pole_section_plus_c2 -> full_order2. A residual readout degree being necessary does not identify a physical electronics component."
+  "guardrail": "Every family re-optimizes alpha, beta, C_tes, L, and T_bath at fixed R_TES=1.25 times the inherited resistance. Readout parameters are effective order-2 magnitude-shape coordinates only. The c2-only and pole_frequency_plus_c2 cases are branch diagnostics; the main nested ladder is fixed_reference_readout -> pole_frequency_only -> pole_section -> pole_section_plus_c2 -> full_order2. A residual readout degree being necessary does not identify a physical electronics component.",
+  "detector_bounds": {
+    "alpha": {
+      "minimum_fraction_of_baseline": 0.05,
+      "maximum": 200
+    },
+    "beta": {
+      "min": 0,
+      "max": 12
+    },
+    "C_tes": {
+      "mode": "production_constants"
+    },
+    "L": {
+      "mode": "production_constants"
+    },
+    "T_bath": {
+      "half_width_K": 0.002
+    }
+  }
 }
