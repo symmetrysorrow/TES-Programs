@@ -256,7 +256,10 @@ def test_default_manifest_reference_paths_stay_inside_repo():
     root = diag.ROOT.resolve()
     for row in rows:
         assert root in row["summary"].resolve().parents
-        assert root in row["comparison_summary"].resolve().parents
+        if row["comparison_summary"] is not None:
+            assert root in row["comparison_summary"].resolve().parents
+        if row["comparison_spec"] is not None:
+            assert root in row["comparison_spec"].resolve().parents
 
 
 def test_all_default_tracked_json_files_parse_and_have_model_keys():
@@ -299,11 +302,123 @@ def test_all_default_tracked_json_files_parse_and_have_model_keys():
         summary = json.loads(
             row["summary"].read_text(encoding="utf-8")
         )
-        comparison = json.loads(
-            row["comparison_summary"].read_text(encoding="utf-8")
-        )
         assert required_detector_keys <= set(
             summary["best_case_parameters"]
         )
         assert "fit" in summary
-        assert comparison["acquisition"]["accepted_record_indices"]
+        if row["comparison_summary"] is not None:
+            comparison = json.loads(
+                row["comparison_summary"].read_text(encoding="utf-8")
+            )
+            assert comparison["acquisition"]["accepted_record_indices"]
+        else:
+            spec = json.loads(
+                row["comparison_spec"].read_text(encoding="utf-8")
+            )
+            assert spec["acquisition"]["rate_Hz"] > 0.0
+            assert spec["acquisition"]["samples"] > 0
+
+
+def test_normalize_manifest_accepts_repeat_validation_spec(tmp_path):
+    manifest = {
+        "cases": [
+            {
+                "label": "repeat",
+                "role": "repeat_validation",
+                "summary": "repeat/summary.json",
+                "comparison_spec": "repeat/spec.json",
+                "allow_missing_raw_data": True,
+            }
+        ]
+    }
+    rows = diag.normalize_manifest(manifest, tmp_path / "manifest.json")
+    assert rows[0]["role"] == "repeat_validation"
+    assert rows[0]["comparison_summary"] is None
+    assert rows[0]["comparison_spec"] == (
+        tmp_path / "repeat/spec.json"
+    ).resolve()
+    assert rows[0]["allow_missing_raw_data"] is True
+
+
+def test_build_comparison_from_spec_recomputes_acceptance(tmp_path):
+    import json
+
+    experiment = tmp_path / "experiment"
+    raw_dir = experiment / "CH0_noise" / "rawdata"
+    raw_dir.mkdir(parents=True)
+
+    samples = 100
+    good = np.linspace(0.0, 0.01, samples)
+    bad = np.linspace(0.0, 0.10, samples)
+    for index, values in enumerate((good, bad)):
+        payload = b"HEAD" + np.asarray(
+            values, dtype=np.float64
+        ).tobytes()
+        (raw_dir / f"CH0_{index}.dat").write_bytes(payload)
+
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(
+        json.dumps(
+            {
+                "experiment_path": str(experiment),
+                "acquisition": {
+                    "rate_Hz": 500000.0,
+                    "samples": samples,
+                    "cutoff_Hz": 10000.0,
+                    "channel": "CH0",
+                },
+                "acceptance": {
+                    "max_peak_to_peak_raw_units": 0.04,
+                    "remove_mean": True,
+                    "apply_to_raw": True,
+                    "apply_to_processed": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    comparison = diag.build_comparison_from_spec(spec_path)
+    assert comparison["acquisition"]["accepted_record_indices"] == [0]
+    assert comparison["acquisition"]["accepted_records"] == 1
+
+
+def test_repeat_validation_does_not_count_as_independent_validation():
+    repeat = {
+        "status": "evaluated",
+        "role": "repeat_validation",
+        "label": "repeat",
+        "shared_transfer": {"score_ratio_to_baseline": 0.2},
+        "flags": {
+            "shared_improves_shape_score": True,
+            "shared_improves_5_15k": True,
+            "shared_improves_40_100k": True,
+            "shared_over_local_best_score_ratio": 1.05,
+            "shared_within_local_score_tolerance": True,
+        },
+    }
+    result = diag.aggregate_results([repeat], 1.25)
+    assert result["n_repeat_validation_cases"] == 1
+    assert result["n_validation_cases"] == 0
+    assert result["interpretation_flags"][
+        "supports_same_condition_repeatability"
+    ] is True
+    assert result["interpretation_flags"][
+        "supports_shared_readout_transfer_across_validation_cases"
+    ] is False
+    assert result["interpretation_flags"][
+        "validation_dataset_required_for_cross_validation_claim"
+    ] is True
+
+
+def test_skipped_repeat_case_is_excluded_from_evaluated_metrics():
+    row = {
+        "status": "skipped_missing_raw_data",
+        "role": "repeat_validation",
+        "label": "repeat",
+        "reason": "missing",
+    }
+    result = diag.aggregate_results([row], 1.25)
+    assert result["n_cases_configured"] == 1
+    assert result["n_cases_evaluated"] == 0
+    assert result["n_cases_skipped"] == 1
+    assert result["n_repeat_validation_cases"] == 0
