@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "purpose": "Git-tracked order-2 effective-numerator day-comparison snapshot used to hold the 2024-12-06 readout shape fixed while testing 2024-12-05 detector-state nuisance freedom",
+  "provenance": {
+    "source_diagnostic": "readout_effective_numerator_repeatability_diagnostic.json",
+    "reference_case": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+    "repeat_case": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "reference_accepted_records": 345,
+    "repeat_accepted_records": 1731,
+    "fit_region_Hz": [
+      1000,
+      40000
+    ],
+    "holdout_region_Hz": [
+      40000,
+      200000
+    ],
+    "note": "Derived diagnostic snapshot. Effective numerator coefficients are magnitude-shape coordinates, not identified hardware components."
+  },
+  "reference_order2": {
+    "white_scale": 1,
+    "white_asd_A_rtHz": 4.396349792023576e-11,
+    "pole_Hz": 12300.466033419732,
+    "pole_Q": 0.7907430449734433,
+    "latent": {
+      "u": 5.850633847627513,
+      "v": 5.506370315578399
+    },
+    "canonical": {
+      "c2": 42.02138174753799,
+      "c4": 34.229916419004724
+    },
+    "lowmid_shape_score": 0.0004140273692639384,
+    "lowmid_rms_residual_dB": 0.3641096038315766
+  },
+  "repeat_full_order2": {
+    "white_scale": 1.3635953106605805,
+    "white_asd_A_rtHz": 5.994841960426966e-11,
+    "pole_Hz": 11823.836983199863,
+    "pole_Q": 0.6572556775191355,
+    "latent": {
+      "u": 4.917064642012761,
+      "v": 8.63406494515484
+    },
+    "canonical": {
+      "c2": 84.38120676117717,
+      "c4": 24.17752469373208
+    },
+    "lowmid_shape_score": 0.00003309316879681855,
+    "lowmid_rms_residual_dB": 0.11046624584893718
+  },
+  "day_shape_repeatability": {
+    "reference_vs_repeat_full_fit_region_rms_dB": 0.5634,
+    "max_repeat_block_fit_region_rms_dB": 0.2937,
+    "approximate_ratio": 1.918,
+    "note": "Rounded descriptive values retained only for provenance; the detector-state diagnostic recomputes its own model-vs-target metrics."
+  },
+  "guardrail": "Use the reference_order2 transfer as a fixed effective readout shape only. The snapshot does not identify a physical electronics transfer, and the repeat detector operating point remains inherited rather than independently measured."
+}
