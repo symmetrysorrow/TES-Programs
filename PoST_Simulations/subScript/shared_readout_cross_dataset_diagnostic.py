@@ -1,10 +1,12 @@
 """Cross-validate one shared pre-ADC readout transfer across multiple datasets.
 
-A reference hybrid transfer is loaded from
-preanalysis_hybrid_pole_profile_diagnostic.json.  For every manifest case, the
-case-specific detector candidate is loaded from its own optimizer summary and
-held fixed.  The experimental target is reconstructed from that case's exact
+A Git-tracked reference transfer and Git-tracked case manifest are used by
+default.  For every manifest case, the case-specific detector snapshot is held
+fixed.  The experimental target is reconstructed from that case's exact
 accepted CH0 raw-record mask with no 10 kHz digital analysis filter.
+
+Command-line overrides remain available, but the standard run requires no
+external JSON files outside the repository.
 
 The shared transfer is never refit per case.  Optionally, the same topology is
 also refit locally for each case to quantify how close the shared transfer is to
@@ -21,6 +23,14 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+CONFIG_DIR = ROOT / "config"
+DEFAULT_MANIFEST = CONFIG_DIR / "shared_readout_cross_dataset_manifest.json"
+DEFAULT_REFERENCE_PROFILE = CONFIG_DIR / "shared_readout_reference_transfer.json"
+DEFAULT_OUTPUT = (
+    ROOT
+    / ".noise_optimization_work_rsh_sweep"
+    / "shared_readout_cross_dataset_diagnostic.json"
+)
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -685,14 +695,22 @@ def run(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=DEFAULT_MANIFEST,
+        help=(
+            "Git-tracked case manifest; defaults to "
+            "PoST_Simulations/config/shared_readout_cross_dataset_manifest.json"
+        ),
+    )
     parser.add_argument(
         "--reference-profile",
         type=Path,
-        required=True,
+        default=DEFAULT_REFERENCE_PROFILE,
         help=(
-            "preanalysis_hybrid_pole_profile_diagnostic.json containing "
-            "the shared best_profile_row"
+            "Git-tracked shared transfer; defaults to "
+            "PoST_Simulations/config/shared_readout_reference_transfer.json"
         ),
     )
     parser.add_argument("--output", type=Path)
@@ -741,9 +759,8 @@ def main():
     result["manifest"] = str(args.manifest)
     result["reference_profile"] = str(args.reference_profile)
 
-    output = args.output or args.manifest.with_name(
-        "shared_readout_cross_dataset_diagnostic.json"
-    )
+    output = args.output or DEFAULT_OUTPUT
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(result, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
