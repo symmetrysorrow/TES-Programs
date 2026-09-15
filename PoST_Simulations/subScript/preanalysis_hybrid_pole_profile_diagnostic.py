@@ -251,6 +251,7 @@ def fit_fixed_pole(
     de_maxiter,
     rms_screen_db,
     max_screen_db,
+    initial_parameters=None,
 ):
     names, bounds = parameter_bounds(
         center_min_hz,
@@ -289,18 +290,56 @@ def fit_fixed_pole(
     )
     lower = np.asarray([item[0] for item in bounds], dtype=float)
     upper = np.asarray([item[1] for item in bounds], dtype=float)
+    residual_vector = lambda vector: opt.weighted_residual_vector(
+        model_from_vector(vector),
+        target,
+        frequency,
+        args,
+    )
     ls = least_squares(
-        lambda vector: opt.weighted_residual_vector(
-            model_from_vector(vector),
-            target,
-            frequency,
-            args,
-        ),
+        residual_vector,
         de.x,
         bounds=(lower, upper),
         max_nfev=3000,
     )
-    best_vector = min((de.x, ls.x), key=objective)
+
+    candidate_vectors = [
+        ("de", de.x),
+        ("de_least_squares", ls.x),
+    ]
+    warm_ls = None
+    if initial_parameters is not None:
+        warm_vector = np.log10(
+            np.asarray(
+                [
+                    float(initial_parameters["pole_Hz"]),
+                    float(initial_parameters["pole_Q"]),
+                    float(initial_parameters["zero_Hz"]),
+                    float(initial_parameters["zero_Q"]),
+                    float(initial_parameters["leadlag_zero_Hz"]),
+                ],
+                dtype=float,
+            )
+        )
+        if np.any(warm_vector < lower) or np.any(warm_vector > upper):
+            raise ValueError("initial_parameters lie outside profile bounds")
+        warm_ls = least_squares(
+            residual_vector,
+            warm_vector,
+            bounds=(lower, upper),
+            max_nfev=3000,
+        )
+        candidate_vectors.extend(
+            [
+                ("warm_start_exact", warm_vector),
+                ("warm_start_least_squares", warm_ls.x),
+            ]
+        )
+
+    best_source, best_vector = min(
+        candidate_vectors,
+        key=lambda item: objective(item[1]),
+    )
     parameters = decode(best_vector)
     model = model_from_vector(best_vector)
     score = float(opt.fit_score(model, target, frequency, args))
@@ -336,8 +375,18 @@ def fit_fixed_pole(
         ),
         "leadlag_pole_is_infinite": bool(fixed_pole_hz is None),
         "n_refit_parameters": 5,
-        "success": bool(de.success or ls.success),
-        "evaluations": int(de.nfev + ls.nfev),
+        "success": bool(
+            de.success
+            or ls.success
+            or (warm_ls is not None and warm_ls.success)
+        ),
+        "evaluations": int(
+            de.nfev
+            + ls.nfev
+            + (0 if warm_ls is None else warm_ls.nfev)
+        ),
+        "best_candidate_source": best_source,
+        "warm_start_used": bool(initial_parameters is not None),
         "parameters": describe_parameters(
             parameters,
             fixed_pole_hz,
