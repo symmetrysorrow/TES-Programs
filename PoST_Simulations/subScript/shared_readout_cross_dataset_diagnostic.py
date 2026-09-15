@@ -660,45 +660,100 @@ def geometric_mean(values):
 
 
 def aggregate_results(rows, shared_local_tolerance):
-    validation = [row for row in rows if row["role"] == "validation"]
-    reference = [row for row in rows if row["role"] == "reference"]
+    evaluated = [
+        row for row in rows
+        if row.get("status", "evaluated") == "evaluated"
+    ]
+    skipped = [
+        row for row in rows
+        if row.get("status", "evaluated") != "evaluated"
+    ]
+    validation = [
+        row for row in evaluated
+        if row["role"] == "validation"
+    ]
+    repeat_validation = [
+        row for row in evaluated
+        if row["role"] == "repeat_validation"
+    ]
+    reference = [
+        row for row in evaluated
+        if row["role"] == "reference"
+    ]
     score_ratios = [
         row["shared_transfer"]["score_ratio_to_baseline"]
-        for row in rows
+        for row in evaluated
     ]
     validation_ratios = [
         row["shared_transfer"]["score_ratio_to_baseline"]
         for row in validation
     ]
+    repeat_ratios = [
+        row["shared_transfer"]["score_ratio_to_baseline"]
+        for row in repeat_validation
+    ]
     local_ratios = [
         row["flags"]["shared_over_local_best_score_ratio"]
-        for row in rows
+        for row in evaluated
         if row["flags"]["shared_over_local_best_score_ratio"]
         is not None
     ]
 
-    all_score_improve = all(
-        row["flags"]["shared_improves_shape_score"] for row in rows
-    )
-    all_validation_score_improve = bool(validation) and all(
+    def group_flags(group):
+        score_improve = bool(group) and all(
+            row["flags"]["shared_improves_shape_score"]
+            for row in group
+        )
+        mid_high = bool(group) and all(
+            row["flags"]["shared_improves_5_15k"]
+            and row["flags"]["shared_improves_40_100k"]
+            for row in group
+        )
+        local_values = [
+            row["flags"]["shared_within_local_score_tolerance"]
+            for row in group
+        ]
+        close_local = bool(group) and (
+            all(value is True for value in local_values)
+            if any(value is not None for value in local_values)
+            else True
+        )
+        return score_improve, mid_high, close_local
+
+    (
+        all_validation_score_improve,
+        all_validation_mid_high,
+        all_validation_close_local,
+    ) = group_flags(validation)
+    (
+        all_repeat_score_improve,
+        all_repeat_mid_high,
+        all_repeat_close_local,
+    ) = group_flags(repeat_validation)
+
+    all_score_improve = bool(evaluated) and all(
         row["flags"]["shared_improves_shape_score"]
-        for row in validation
-    )
-    all_validation_mid_high = bool(validation) and all(
-        row["flags"]["shared_improves_5_15k"]
-        and row["flags"]["shared_improves_40_100k"]
-        for row in validation
-    )
-    all_validation_close_local = bool(validation) and all(
-        row["flags"]["shared_within_local_score_tolerance"] is True
-        for row in validation
+        for row in evaluated
     )
 
     return {
-        "n_cases": int(len(rows)),
+        "n_cases_configured": int(len(rows)),
+        "n_cases_evaluated": int(len(evaluated)),
+        "n_cases_skipped": int(len(skipped)),
         "n_reference_cases": int(len(reference)),
         "n_validation_cases": int(len(validation)),
+        "n_repeat_validation_cases": int(len(repeat_validation)),
         "has_validation_cases": bool(validation),
+        "has_repeat_validation_cases": bool(repeat_validation),
+        "skipped_cases": [
+            {
+                "label": row["label"],
+                "role": row["role"],
+                "status": row["status"],
+                "reason": row.get("reason"),
+            }
+            for row in skipped
+        ],
         "all_cases_shared_improve_score": bool(all_score_improve),
         "all_validation_cases_shared_improve_score": bool(
             all_validation_score_improve
@@ -709,15 +764,31 @@ def aggregate_results(rows, shared_local_tolerance):
         "all_validation_cases_within_local_score_tolerance": bool(
             all_validation_close_local
         ),
+        "all_repeat_validation_cases_shared_improve_score": bool(
+            all_repeat_score_improve
+        ),
+        "all_repeat_validation_cases_improve_mid_and_high": bool(
+            all_repeat_mid_high
+        ),
+        "all_repeat_validation_cases_within_local_score_tolerance": bool(
+            all_repeat_close_local
+        ),
         "shared_local_score_tolerance": float(
             shared_local_tolerance
         ),
         "geometric_mean_shared_score_ratio_to_baseline": (
             geometric_mean(score_ratios)
+            if score_ratios
+            else None
         ),
         "validation_geometric_mean_shared_score_ratio_to_baseline": (
             geometric_mean(validation_ratios)
             if validation_ratios
+            else None
+        ),
+        "repeat_validation_geometric_mean_shared_score_ratio_to_baseline": (
+            geometric_mean(repeat_ratios)
+            if repeat_ratios
             else None
         ),
         "median_shared_over_local_best_score_ratio": (
@@ -735,17 +806,20 @@ def aggregate_results(rows, shared_local_tolerance):
                 validation
                 and all_validation_score_improve
                 and all_validation_mid_high
-                and (
-                    not local_ratios
-                    or all_validation_close_local
-                )
+                and all_validation_close_local
+            ),
+            "supports_same_condition_repeatability": bool(
+                repeat_validation
+                and all_repeat_score_improve
+                and all_repeat_mid_high
+                and all_repeat_close_local
             ),
             "validation_dataset_required_for_cross_validation_claim": bool(
                 not validation
             ),
+            "repeat_validation_is_not_independent_operating_point_validation": True,
         },
     }
-
 
 def run(
     manifest,
@@ -763,8 +837,8 @@ def run(
     cases = normalize_manifest(manifest, manifest_path)
     rows = []
     for index, case in enumerate(cases):
-        rows.append(
-            evaluate_case(
+        try:
+            row = evaluate_case(
                 case,
                 shared,
                 local_refit=local_refit,
@@ -774,7 +848,27 @@ def run(
                 rms_screen_db=rms_screen_db,
                 max_screen_db=max_screen_db,
             )
-        )
+        except FileNotFoundError as exc:
+            if not case.get("allow_missing_raw_data", False):
+                raise
+            row = {
+                "status": "skipped_missing_raw_data",
+                "label": case["label"],
+                "role": case["role"],
+                "summary": str(case["summary"]),
+                "comparison_summary": (
+                    str(case["comparison_summary"])
+                    if case["comparison_summary"] is not None
+                    else None
+                ),
+                "comparison_spec": (
+                    str(case["comparison_spec"])
+                    if case["comparison_spec"] is not None
+                    else None
+                ),
+                "reason": str(exc),
+            }
+        rows.append(row)
 
     return {
         "diagnostic_only": True,
@@ -826,10 +920,11 @@ def run(
         ),
         "guardrail": (
             "A shared-transfer improvement on the reference case alone is "
-            "not cross-validation. A readout-origin claim requires one or "
-            "more independent validation cases acquired through the same "
-            "readout chain. Large local-transfer drift across cases weakens "
-            "the interpretation even if every case can be fit individually."
+            "not cross-validation. A same-condition repeat_validation tests "
+            "repeatability only and does not replace an independent bias/bath "
+            "validation case. A readout-origin claim requires one or more "
+            "independent validation cases acquired through the same readout "
+            "chain."
         ),
     }
 
@@ -912,9 +1007,13 @@ def main():
         json.dumps(
             {
                 "output": str(output),
-                "n_cases": aggregate["n_cases"],
+                "n_cases_configured": aggregate["n_cases_configured"],
+                "n_cases_evaluated": aggregate["n_cases_evaluated"],
                 "n_validation_cases": aggregate[
                     "n_validation_cases"
+                ],
+                "n_repeat_validation_cases": aggregate[
+                    "n_repeat_validation_cases"
                 ],
                 "shared_transfer": result["shared_transfer"][
                     "parameters"
@@ -930,6 +1029,9 @@ def main():
                 ][
                     "supports_shared_readout_transfer_across_validation_cases"
                 ],
+                "supports_same_condition_repeatability": aggregate[
+                    "interpretation_flags"
+                ]["supports_same_condition_repeatability"],
                 "needs_validation_dataset": aggregate[
                     "interpretation_flags"
                 ][
