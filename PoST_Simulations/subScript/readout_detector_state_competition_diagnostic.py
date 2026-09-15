@@ -284,6 +284,7 @@ def fit_nuisance_family(
     optimizer_cfg,
     seed,
     warm_candidates=(),
+    allow_unstable_baseline=False,
 ):
     parameter_names = tuple(parameter_names)
     bounds = vector_bounds(
@@ -301,12 +302,22 @@ def fit_nuisance_family(
         scale_hz,
         white_asd,
     )
-    if baseline_model is None:
+    baseline_was_stable = bool(
+        baseline_model is not None
+        and baseline_point.get("valid")
+        and baseline_point.get("stable")
+    )
+    if baseline_model is None and not allow_unstable_baseline:
         raise ValueError(
             "baseline detector candidate is invalid or unstable"
         )
+    residual_template_model = (
+        baseline_model
+        if baseline_model is not None
+        else np.ones_like(np.asarray(target, dtype=float))
+    )
     residual_template = opt.weighted_residual_vector(
-        baseline_model,
+        residual_template_model,
         target,
         frequency,
         args,
@@ -479,6 +490,10 @@ def fit_nuisance_family(
         "parameters_varied": list(parameter_names),
         "n_free_parameters": len(parameter_names),
         "best_candidate_source": source,
+        "baseline_was_stable": baseline_was_stable,
+        "allow_unstable_baseline": bool(
+            allow_unstable_baseline
+        ),
         "candidate": {
             key: float(trial[key])
             for key in parameter_names
