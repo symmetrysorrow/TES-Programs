@@ -222,3 +222,38 @@ def test_normalized_model_from_components():
         components,
     )
     np.testing.assert_allclose(result, np.ones_like(result))
+
+
+def test_default_inputs_are_repo_tracked_paths():
+    assert diag.DEFAULT_MANIFEST == (
+        diag.ROOT
+        / "config"
+        / "shared_readout_cross_dataset_manifest.json"
+    )
+    assert diag.DEFAULT_REFERENCE_PROFILE == (
+        diag.ROOT
+        / "config"
+        / "shared_readout_reference_transfer.json"
+    )
+    assert diag.DEFAULT_OUTPUT == (
+        diag.ROOT
+        / ".noise_optimization_work_rsh_sweep"
+        / "shared_readout_cross_dataset_diagnostic.json"
+    )
+
+
+def test_default_manifest_reference_paths_stay_inside_repo():
+    import json
+
+    manifest = json.loads(
+        diag.DEFAULT_MANIFEST.read_text(encoding="utf-8")
+    )
+    rows = diag.normalize_manifest(
+        manifest,
+        diag.DEFAULT_MANIFEST,
+    )
+    assert len(rows) >= 1
+    root = diag.ROOT.resolve()
+    for row in rows:
+        assert root in row["summary"].resolve().parents
+        assert root in row["comparison_summary"].resolve().parents
