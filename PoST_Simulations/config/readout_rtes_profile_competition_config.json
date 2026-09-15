@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "purpose": "Git-tracked R_TES profile with nested detector-state nuisance refits while the 2024-12-06 order-2 effective readout shape and 2024-12-05 white floor remain fixed",
+  "schema_version": 2,
+  "purpose": "Git-tracked stability-aware R_TES profile with nested detector-state nuisance refits while the 2024-12-06 order-2 effective readout shape and 2024-12-05 white floor remain fixed",
   "manifest": "shared_readout_cross_dataset_manifest.json",
   "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
   "order2_day_snapshot": "../cases/tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat/order2_day_comparison_snapshot.json",
@@ -32,9 +32,12 @@
       1.05,
       1.1,
       1.15,
-      1.25
+      1.25,
+      1.35,
+      1.5
     ],
-    "interpretation": "outer fixed profile only; R_TES is never a simultaneous continuous optimizer coordinate"
+    "interpretation": "outer fixed profile only; R_TES is never a simultaneous continuous optimizer coordinate",
+    "stability_semantics": "an unstable inherited nuisance state at fixed R does not reject the R point; nuisance optimization searches for stable candidates and only no stable fitted candidate marks the point unresolved"
   },
   "nuisance_families": [
     {
@@ -94,7 +97,8 @@
     "near_repeat_local_rms_delta_dB": 0.05,
     "materially_better_than_R1_detector_nuisance_score_ratio": 0.8,
     "modest_R_shift_ratio_min": 0.9,
-    "modest_R_shift_ratio_max": 1.1
+    "modest_R_shift_ratio_max": 1.1,
+    "extended_upper_profile_ratio_max": 1.5
   },
-  "guardrail": "R_TES is profiled because no independently linked 2024-12-05 IV operating point is available. A good profile point shows that an R_TES operating-point shift can mimic the day-specific low/mid shape under the tested nuisance model; it does not establish the true 2024-12-05 resistance. A poor profile does not exclude other untested detector-state differences. No result identifies physical electronics drift."
+  "guardrail": "R_TES is profiled because no independently linked 2024-12-05 IV operating point is available. Fixed-R points are not rejected merely because the inherited nuisance state is unstable; the nuisance optimizer must search for stable candidates. A good profile point shows only that an R_TES operating-point shift can mimic the day-specific low/mid shape under the tested nuisance model. A poor profile does not exclude other untested detector-state differences. No result identifies physical electronics drift."
 }
