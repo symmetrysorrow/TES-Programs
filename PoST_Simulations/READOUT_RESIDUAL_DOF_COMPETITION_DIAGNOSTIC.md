@@ -65,6 +65,8 @@ This avoids overestimating readout freedom by freezing detector nuisance values 
 
 The post-filter white ASD remains fixed to the tracked 2024-12-05 profiled value.
 
+The detector nuisance bounds are also stored explicitly in the config, including the alpha fraction/max, beta range, T_bath half-width, and the use of production C_tes/L bounds.
+
 ## Readout parameterization
 
 The readout is kept in the reduced order-2 effective form:
