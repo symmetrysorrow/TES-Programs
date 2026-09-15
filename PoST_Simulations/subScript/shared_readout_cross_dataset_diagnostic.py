@@ -875,7 +875,8 @@ def run(
         "production_optimizer_unchanged": True,
         "production_noise_model_unchanged": True,
         "shared_readout_transfer_held_fixed_across_cases": True,
-        "detector_parameters_are_case_specific_and_frozen": True,
+        "detector_parameters_are_manifest_frozen": True,
+        "repeat_validation_may_inherit_reference_detector_snapshot": True,
         "digital_analysis_filter_applied": False,
         "target_semantics": (
             "for every case: fresh pre-analysis ASD from that case's exact "
