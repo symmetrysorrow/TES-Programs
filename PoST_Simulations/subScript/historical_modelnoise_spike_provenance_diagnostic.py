@@ -130,6 +130,7 @@ def discover_historical_settings(
         "presamples": None,
         "cutoff_Hz": None,
         "eta_uA_per_V": None,
+        "output_name": None,
         "sources": {},
     }
 
@@ -144,6 +145,7 @@ def discover_historical_settings(
         eta = _float_or_none(config.get("eta_uA_per_V"))
         if eta is None:
             eta = _float_or_none(config.get("eta"))
+        output_name = config.get("output")
         if threshold is not None:
             result["threshold"] = threshold
             result["sources"]["threshold"] = str(setting_json)
@@ -156,6 +158,9 @@ def discover_historical_settings(
         if eta is not None:
             result["eta_uA_per_V"] = eta
             result["sources"]["eta_uA_per_V"] = str(setting_json)
+        if output_name is not None:
+            result["output_name"] = str(output_name)
+            result["sources"]["output_name"] = str(setting_json)
 
     setting_txt = experiment_path / "Setting.txt"
     if setting_txt.exists():
@@ -341,6 +346,76 @@ def shape_audit(stored, fresh, frequency, smooth_width_hz):
         np.asarray(frequency, dtype=float),
         smooth_width_hz=float(smooth_width_hz),
     )
+
+
+def discover_stored_modelnoise_path(
+    experiment_path: Path,
+    settings: dict,
+    explicit_path: Path | None,
+):
+    if explicit_path is not None:
+        return explicit_path, {
+            "source": "CLI --stored-modelnoise",
+            "candidates": [str(explicit_path)],
+        }
+
+    candidates = []
+    direct = experiment_path / "CH0_noise" / "modelnoise.txt"
+    candidates.append(direct)
+    output_name = settings.get("output_name")
+    if output_name:
+        candidates.append(
+            experiment_path
+            / "CH0_noise"
+            / "output"
+            / str(output_name)
+            / "modelnoise.txt"
+        )
+    output_root = experiment_path / "CH0_noise" / "output"
+    if output_root.exists():
+        candidates.extend(sorted(output_root.glob("*/modelnoise.txt")))
+
+    unique = []
+    seen = set()
+    for path in candidates:
+        key = str(path)
+        if key not in seen:
+            unique.append(path)
+            seen.add(key)
+
+    existing = [path for path in unique if path.exists()]
+    if direct in existing:
+        chosen = direct
+        source = "direct CH0_noise/modelnoise.txt"
+    elif output_name:
+        exact = (
+            experiment_path
+            / "CH0_noise"
+            / "output"
+            / str(output_name)
+            / "modelnoise.txt"
+        )
+        if exact in existing:
+            chosen = exact
+            source = "setting.json Config.output"
+        elif len(existing) == 1:
+            chosen = existing[0]
+            source = "single discovered CH0_noise/output/*/modelnoise.txt"
+        else:
+            chosen = None
+            source = "ambiguous_or_missing"
+    elif len(existing) == 1:
+        chosen = existing[0]
+        source = "single discovered CH0_noise/output/*/modelnoise.txt"
+    else:
+        chosen = None
+        source = "ambiguous_or_missing"
+
+    return chosen, {
+        "source": source,
+        "candidates": [str(path) for path in unique],
+        "existing_candidates": [str(path) for path in existing],
+    }
 
 
 def load_stored_modelnoise(path, frequency):
@@ -649,12 +724,16 @@ def run(args):
                     }
                 )
 
-    stored_path = (
-        args.stored_modelnoise
-        if args.stored_modelnoise is not None
-        else experiment_path / "CH0_noise" / "modelnoise.txt"
+    stored_path, stored_discovery = discover_stored_modelnoise_path(
+        experiment_path,
+        settings,
+        args.stored_modelnoise,
     )
-    stored = load_stored_modelnoise(stored_path, frequency)
+    stored = (
+        load_stored_modelnoise(stored_path, frequency)
+        if stored_path is not None
+        else None
+    )
     stored_units = "pA/rtHz" if stored is not None else "unavailable"
 
     pathway_output = {}
@@ -685,7 +764,7 @@ def run(args):
             "record_count": None,
             "units": stored_units,
             "available": True,
-            "path": str(stored_path),
+            "path": str(stored_path) if stored_path is not None else None,
             "line_metrics": {
                 f"{f:g}": local_line_metric(
                     frequency,
@@ -702,7 +781,7 @@ def run(args):
             "record_count": None,
             "units": stored_units,
             "available": False,
-            "path": str(stored_path),
+            "path": str(stored_path) if stored_path is not None else None,
             "line_metrics": {},
         }
 
@@ -959,8 +1038,9 @@ def run(args):
         "selection_evidence": selection_evidence,
         "bessel_evidence": bessel_evidence,
         "stored_modelnoise": {
-            "path": str(stored_path),
+            "path": str(stored_path) if stored_path is not None else None,
             "available": bool(stored is not None),
+            "discovery": stored_discovery,
             "stored_vs_reconstructed_shape_audits": stored_shape_audits,
         },
         "interpretation_guardrails": [
