@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "purpose": "Profile the line-robust continuum solution against only the c2 upper bound.",
+  "base_continuum_config": "line_robust_continuum_fit_config.json",
+  "c2_upper_bounds": [300, 600, 1000],
+  "interpretation": {
+    "interior_fraction_threshold": 0.9,
+    "material_total_rms_improvement_dB": 0.05,
+    "negligible_last_step_rms_improvement_dB": 0.01
+  },
+  "guardrail": "Only the c2 upper bound changes across the profile. The line mask, continuum target construction, detector nuisance family, R_TES, white-floor profiling, optimizer settings, and other readout bounds remain unchanged. This is a diagnostic of effective shape freedom, not a physical identification of c2."
+}
