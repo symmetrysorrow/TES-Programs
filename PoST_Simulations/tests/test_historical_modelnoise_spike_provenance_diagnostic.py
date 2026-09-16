@@ -117,3 +117,17 @@ def test_theoretical_bessel_filtfilt_suppresses_100k_more_than_10k():
     )
     assert values[1] < values[0] - 50.0
     assert values[1] < -70.0
+
+
+def test_discover_stored_modelnoise_uses_setting_output(tmp_path):
+    output = tmp_path / "CH0_noise" / "output" / "run01"
+    output.mkdir(parents=True)
+    modelnoise = output / "modelnoise.txt"
+    modelnoise.write_text("1\n2\n", encoding="utf-8")
+    path, meta = diag.discover_stored_modelnoise_path(
+        tmp_path,
+        {"output_name": "run01"},
+        None,
+    )
+    assert path == modelnoise
+    assert meta["source"] == "setting.json Config.output"
