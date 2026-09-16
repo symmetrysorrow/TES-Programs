@@ -55,34 +55,45 @@ def _at_upper(value, upper, *, relative_tolerance=1.0e-4):
 
 
 def _profile_row(c2_upper, result):
-    recommended = result["recommended"]
-    selected_family = recommended["family"]
-    fit_row = result["fits"][selected_family]
-    c2_value = float(recommended["readout"]["c2"])
+    # Hold the model family fixed across the profile.  Using the globally
+    # recommended family here would allow c4 selection to change between grid
+    # points and would no longer be a one-variable c2-bound diagnostic.
+    fit_row = result["fits"]["pole_section_plus_c2"]
+    readout = fit_row["readout"]
+    c2_value = float(readout["c2"])
+    white = float(fit_row["profiled_white_asd_A_rtHz"])
 
     return {
         "c2_upper_bound": float(c2_upper),
-        "selected_family": selected_family,
+        "profiled_family": "pole_section_plus_c2",
         "c2_value": c2_value,
         "c2_fraction_of_upper_bound": float(c2_value / float(c2_upper)),
         "c2_at_upper_bound": _at_upper(c2_value, c2_upper),
-        "pole_Hz": float(recommended["readout"]["pole_Hz"]),
-        "pole_Q": float(recommended["readout"]["pole_Q"]),
-        "c4": float(recommended["readout"]["c4"]),
-        "white_asd_A_rtHz": float(recommended["white_asd_A_rtHz"]),
-        "continuum_rms_dB": float(recommended["continuum_rms_dB"]),
+        "pole_Hz": float(readout["pole_Hz"]),
+        "pole_Q": float(readout["pole_Q"]),
+        "c4_fixed_value": float(readout["c4"]),
+        "white_asd_A_rtHz": white,
+        "continuum_rms_dB": float(
+            fit_row["continuum_metrics_full"]["residual_metrics"][
+                "rms_residual_dB"
+            ]
+        ),
         "continuum_1_40k_rms_dB": float(
-            recommended["continuum_1_40k_rms_dB"]
+            fit_row["continuum_metrics_1_40k"]["residual_metrics"][
+                "rms_residual_dB"
+            ]
         ),
         "continuum_40_200k_rms_dB": float(
-            recommended["continuum_40_200k_rms_dB"]
+            fit_row["continuum_metrics_40_200k"]["residual_metrics"][
+                "rms_residual_dB"
+            ]
         ),
         "shape_score": float(fit_row["shape_score"]),
         "detector_candidate": {
             key: float(value)
-            for key, value in recommended["detector_candidate"].items()
+            for key, value in fit_row["detector_candidate"].items()
         },
-        "selection": result["selection"],
+        "full_order2_selection_for_context": result["selection"],
     }
 
 
@@ -183,52 +194,14 @@ def run(config, config_path: Path, experiment_path_override=None):
         raise ValueError("c2_upper_bounds must be strictly increasing and unique")
 
     rows = []
-    full_results = {}
     for upper in grid:
-        working_residual = json.loads(json.dumps(residual_config))
-        working_residual["readout_bounds"]["c2"] = [0.0, float(upper)]
-
-        # Write a temporary tracked-equivalent config next to the output so the
-        # existing continuum fitter can consume it without changing production
-        # config files.
-        temp_dir = DEFAULT_OUTPUT.parent
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        temp_residual_path = (
-            temp_dir / f"_c2_profile_residual_bound_{int(upper)}.json"
+        result = continuum.run(
+            base_config,
+            base_continuum_config_path,
+            experiment_path_override=experiment_path_override,
+            readout_bounds_override={"c2": (0.0, float(upper))},
         )
-        temp_continuum_path = (
-            temp_dir / f"_c2_profile_continuum_bound_{int(upper)}.json"
-        )
-        temp_residual_path.write_text(
-            json.dumps(working_residual, indent=2) + "\n",
-            encoding="utf-8",
-        )
-
-        working_continuum = json.loads(json.dumps(base_config))
-        working_continuum["base_residual_config"] = str(
-            temp_residual_path.resolve()
-        )
-        temp_continuum_path.write_text(
-            json.dumps(working_continuum, indent=2) + "\n",
-            encoding="utf-8",
-        )
-
-        try:
-            result = continuum.run(
-                working_continuum,
-                temp_continuum_path,
-                experiment_path_override=experiment_path_override,
-            )
-        finally:
-            for path in (temp_residual_path, temp_continuum_path):
-                try:
-                    path.unlink()
-                except FileNotFoundError:
-                    pass
-
-        row = _profile_row(upper, result)
-        rows.append(row)
-        full_results[str(int(upper))] = result
+        rows.append(_profile_row(upper, result))
 
     interpretation = classify_profile(rows, config)
 
