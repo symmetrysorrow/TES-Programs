@@ -1,0 +1,243 @@
+{
+  "diagnostic_only": true,
+  "tes_model_used": false,
+  "detector_parameters_used": false,
+  "comparison_summary": "PoST_Simulations\\cases\\tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2\\comparison_summary.json",
+  "experiment_path": "G:\\tagawa\\20241206\\r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+  "raw_record_semantics": "same accepted CH0 record indices as comparison_summary.json; no re-selection is performed",
+  "acquisition": {
+    "rate_Hz": 500000.0,
+    "samples": 100000,
+    "cutoff_Hz": 10000.0,
+    "accepted_records": 345
+  },
+  "empirical_transfer_definition": "power-averaged post-analysis ASD divided by power-averaged pre-analysis ASD from the same accepted raw records",
+  "production_digital_convention": {
+    "order": 2,
+    "passes": 2,
+    "implementation": "scipy.signal.bessel followed by filtfilt"
+  },
+  "proxy_from_measurement_chain_screen": {
+    "order": 4,
+    "passes": 1,
+    "interpretation": "shape proxy only; not claimed to be the actual analysis path"
+  },
+  "finite_record_simulation": {
+    "records": 345,
+    "seed": 20260914,
+    "input_spectrum": "empirical pre-analysis ASD; paired synthetic records are estimated before and after the production filter"
+  },
+  "comparisons_to_empirical_transfer": {
+    "production_analytic_order2_filtfilt": {
+      "absolute_rms_residual_dB": 0.00011230605194344533,
+      "absolute_max_abs_residual_dB": 0.002553750873443503,
+      "shape_normalized_rms_residual_dB": 0.00011288615897824199,
+      "shape_normalized_max_abs_residual_dB": 0.0025659093658553633,
+      "shape_normalized_mean_residual_dB": 1.1451441265689203e-05,
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_residual_dB": 1.2342383165101732e-05,
+          "rms_residual_dB": 6.910979335472018e-05,
+          "max_abs_residual_dB": 0.0002823066112006707
+        },
+        "5000-15000_Hz": {
+          "mean_residual_dB": 7.786191819824003e-06,
+          "rms_residual_dB": 0.00018394812190648086,
+          "max_abs_residual_dB": 0.0006627991372237292
+        },
+        "15000-40000_Hz": {
+          "mean_residual_dB": 9.212261519697993e-06,
+          "rms_residual_dB": 0.0001462343727312771,
+          "max_abs_residual_dB": 0.0008289058834135839
+        },
+        "40000-100000_Hz": {
+          "mean_residual_dB": 1.2233131976112579e-05,
+          "rms_residual_dB": 0.00013422671401932314,
+          "max_abs_residual_dB": 0.0025659093658553633
+        },
+        "100000-200000_Hz": {
+          "mean_residual_dB": 1.1858939659536705e-05,
+          "rms_residual_dB": 7.500978707024126e-05,
+          "max_abs_residual_dB": 0.0020763122138418833
+        }
+      }
+    },
+    "proxy_order4_single_pass": {
+      "absolute_rms_residual_dB": 0.4784594158427448,
+      "absolute_max_abs_residual_dB": 1.9964476426420972,
+      "shape_normalized_rms_residual_dB": 0.4684929886403012,
+      "shape_normalized_max_abs_residual_dB": 1.972902637846877,
+      "shape_normalized_mean_residual_dB": 0.18864648849966204,
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_residual_dB": 0.2528142458583883,
+          "rms_residual_dB": 0.3216284415045502,
+          "max_abs_residual_dB": 0.6770879243725835
+        },
+        "5000-15000_Hz": {
+          "mean_residual_dB": 1.6310026732800171,
+          "rms_residual_dB": 1.6706777212020558,
+          "max_abs_residual_dB": 1.972902637846877
+        },
+        "15000-40000_Hz": {
+          "mean_residual_dB": 0.6711454532559186,
+          "rms_residual_dB": 0.7681295009049184,
+          "max_abs_residual_dB": 1.5965255875665831
+        },
+        "40000-100000_Hz": {
+          "mean_residual_dB": 0.07682104795020286,
+          "rms_residual_dB": 0.09828333407832836,
+          "max_abs_residual_dB": 0.24546894959324422
+        },
+        "100000-200000_Hz": {
+          "mean_residual_dB": -0.011680482399644984,
+          "rms_residual_dB": 0.014505787451710325,
+          "max_abs_residual_dB": 0.02307689612984863
+        }
+      }
+    },
+    "production_finite_record": {
+      "absolute_rms_residual_dB": 0.00011617397631193284,
+      "absolute_max_abs_residual_dB": 0.0016542468556809157,
+      "shape_normalized_rms_residual_dB": 0.00011617625567798683,
+      "shape_normalized_max_abs_residual_dB": 0.0016548243571613786,
+      "shape_normalized_mean_residual_dB": 7.47287426976886e-07,
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_residual_dB": 4.1552753359517835e-07,
+          "rms_residual_dB": 8.54973768780405e-05,
+          "max_abs_residual_dB": 0.00042314894313738214
+        },
+        "5000-15000_Hz": {
+          "mean_residual_dB": 2.4365617979520746e-07,
+          "rms_residual_dB": 0.00021830792608641287,
+          "max_abs_residual_dB": 0.0009000493922546692
+        },
+        "15000-40000_Hz": {
+          "mean_residual_dB": 6.521696424864551e-07,
+          "rms_residual_dB": 0.00017217452554984497,
+          "max_abs_residual_dB": 0.0007178149497190291
+        },
+        "40000-100000_Hz": {
+          "mean_residual_dB": 1.0736255203312206e-06,
+          "rms_residual_dB": 0.00012047098138604168,
+          "max_abs_residual_dB": 0.0014118998780652424
+        },
+        "100000-200000_Hz": {
+          "mean_residual_dB": 5.953989578025641e-07,
+          "rms_residual_dB": 7.543536117304297e-05,
+          "max_abs_residual_dB": 0.0016548243571613786
+        }
+      }
+    }
+  },
+  "best_shape_match": "production_analytic_order2_filtfilt",
+  "stored_modelnoise_vs_recomputed_post_shape": {
+    "rms_shape_difference_dB": 0.21326745123545732,
+    "max_abs_shape_difference_dB": 8.102325221480541,
+    "mean_shape_difference_dB": 0.020092047279118896
+  },
+  "stored_modelnoise_path": "G:\\tagawa\\20241206\\r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2\\CH0_noise\\modelnoise.txt",
+  "curve_sample": [
+    {
+      "frequency_Hz": 1000.0,
+      "empirical_post_over_pre": 0.9900284141955907,
+      "empirical_transfer_dB": -0.08704681610419623,
+      "production_analytic_order2_filtfilt": 0.9900270283565992,
+      "production_analytic_order2_filtfilt_dB": -0.08705897459660827,
+      "proxy_order4_single_pass": 0.9927157435343666,
+      "proxy_order4_single_pass_dB": -0.06350181130897527,
+      "production_finite_record": 0.9900283483712619,
+      "production_finite_record_dB": -0.08704739360567693
+    },
+    {
+      "frequency_Hz": 5000.0,
+      "empirical_post_over_pre": 0.7623444578498295,
+      "empirical_transfer_dB": -2.356975052432023,
+      "production_analytic_order2_filtfilt": 0.7623346305134792,
+      "production_analytic_order2_filtfilt_dB": -2.3570870224323044,
+      "proxy_order4_single_pass": 0.826385891059678,
+      "proxy_order4_single_pass_dB": -1.656342123264218,
+      "production_finite_record": 0.7623216046441057,
+      "production_finite_record_dB": -2.3572354378733875
+    },
+    {
+      "frequency_Hz": 10000.0,
+      "empirical_post_over_pre": 0.3333295794057723,
+      "empirical_transfer_dB": -9.542522913545572,
+      "production_analytic_order2_filtfilt": 0.3333333333333347,
+      "production_analytic_order2_filtfilt_dB": -9.542425094393213,
+      "proxy_order4_single_pass": 0.41792142693294454,
+      "proxy_order4_single_pass_dB": -7.578107238042165,
+      "production_finite_record": 0.3333246331552667,
+      "production_finite_record_dB": -9.542651803711433
+    },
+    {
+      "frequency_Hz": 20000.0,
+      "empirical_post_over_pre": 0.04697528450203872,
+      "empirical_transfer_dB": -26.56261161899627,
+      "production_analytic_order2_filtfilt": 0.04697546093010413,
+      "production_analytic_order2_filtfilt_dB": -26.562578996909068,
+      "proxy_order4_single_pass": 0.05299863183649281,
+      "proxy_order4_single_pass_dB": -25.51470683195815,
+      "production_finite_record": 0.04697410956580364,
+      "production_finite_record_dB": -26.56282887141331
+    },
+    {
+      "frequency_Hz": 40000.0,
+      "empirical_post_over_pre": 0.0033894739633724353,
+      "empirical_transfer_dB": -49.39735395647805,
+      "production_analytic_order2_filtfilt": 0.0033894157424861127,
+      "production_analytic_order2_filtfilt_dB": -49.39750315500913,
+      "proxy_order4_single_pass": 0.003495759884376618,
+      "proxy_order4_single_pass_dB": -49.12916811383952,
+      "production_finite_record": 0.003389324365612876,
+      "production_finite_record_dB": -49.39773732520117
+    },
+    {
+      "frequency_Hz": 70000.0,
+      "empirical_post_over_pre": 0.00031383925494534836,
+      "empirical_transfer_dB": -70.06585471785515,
+      "production_analytic_order2_filtfilt": 0.00031383448854572566,
+      "production_analytic_order2_filtfilt_dB": -70.06598663486305,
+      "proxy_order4_single_pass": 0.000316728276420938,
+      "proxy_order4_single_pass_dB": -69.9862632513244,
+      "production_finite_record": 0.0003138387695716431,
+      "production_finite_record_dB": -70.06586815118328
+    },
+    {
+      "frequency_Hz": 100000.0,
+      "empirical_post_over_pre": 5.5807474553176374e-05,
+      "empirical_transfer_dB": -85.06615260196418,
+      "production_analytic_order2_filtfilt": 5.580778075997307e-05,
+      "production_analytic_order2_filtfilt_dB": -85.06610494399062,
+      "proxy_order4_single_pass": 5.60227544219439e-05,
+      "proxy_order4_single_pass_dB": -85.0327108481842,
+      "production_finite_record": 5.580751153972245e-05,
+      "production_finite_record_dB": -85.06614684537057
+    },
+    {
+      "frequency_Hz": 150000.0,
+      "empirical_post_over_pre": 4.3565295769185245e-06,
+      "empirical_transfer_dB": -107.21718666301749,
+      "production_analytic_order2_filtfilt": 4.3565570914411596e-06,
+      "production_analytic_order2_filtfilt_dB": -107.21713180573988,
+      "proxy_order4_single_pass": 4.361222389426015e-06,
+      "proxy_order4_single_pass_dB": -107.20783534042269,
+      "production_finite_record": 4.356525317744086e-06,
+      "production_finite_record_dB": -107.21719515480815
+    },
+    {
+      "frequency_Hz": 200000.0,
+      "empirical_post_over_pre": 1.745473086611193e-07,
+      "empirical_transfer_dB": -135.16173686339374,
+      "production_analytic_order2_filtfilt": 1.7455417774681097e-07,
+      "production_analytic_order2_filtfilt_dB": -135.16139504806173,
+      "proxy_order4_single_pass": 1.745915353115657e-07,
+      "proxy_order4_single_pass_dB": -135.15953631874783,
+      "production_finite_record": 1.745541084640911e-07,
+      "production_finite_record_dB": -135.16139849559983
+    }
+  ],
+  "guardrail": "The empirical post/pre ratio tests the digital analysis stage and finite-record estimator only. It does not identify analog hardware response or TES physics."
+}

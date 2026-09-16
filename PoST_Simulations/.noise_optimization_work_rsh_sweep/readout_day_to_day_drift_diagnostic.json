@@ -1,0 +1,309 @@
+{
+  "diagnostic_only": true,
+  "production_optimizer_unchanged": true,
+  "production_noise_model_unchanged": true,
+  "empirical_day_ratio_is_model_free": true,
+  "digital_analysis_filter_applied_to_empirical_asd": false,
+  "reference_case": {
+    "label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+    "comparison_source": "tracked_comparison_summary",
+    "experiment_path": "G:\\tagawa\\20241206\\r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5_day2",
+    "accepted_records": 345
+  },
+  "repeat_case": {
+    "label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "comparison_source": "tracked_comparison_spec_recomputed_mask",
+    "experiment_path": "G:\\tagawa\\20241205\\r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5",
+    "accepted_records": 1731
+  },
+  "normalization_reference_Hz": 1000.0,
+  "empirical_semantics": "each run: exact accepted raw CH0 mask -> mean removal -> Hann power average -> one-sided pre-analysis ASD -> independent normalization at 1 kHz; empirical ratio = repeat/reference",
+  "transfer_comparison_semantics": "diagnostic-only overlay: tracked repeat-local infinity-pole hybrid magnitude divided by tracked reference-shared hybrid magnitude, each independently normalized at 1 kHz",
+  "block_repeatability": {
+    "block_size_records": 345,
+    "n_full_nonoverlapping_blocks": 5,
+    "unused_remainder_records": 6,
+    "anchor_envelope": [
+      {
+        "frequency_Hz": 1000.0,
+        "min_dB": 0.0,
+        "p16_dB": 0.0,
+        "median_dB": 0.0,
+        "p84_dB": 0.0,
+        "max_dB": 0.0,
+        "max_abs_dB": 0.0
+      },
+      {
+        "frequency_Hz": 5000.0,
+        "min_dB": -0.4765685928171466,
+        "p16_dB": -0.41152681996297397,
+        "median_dB": -0.08630051186113215,
+        "p84_dB": 0.4270421706941251,
+        "max_dB": 0.5957799427108021,
+        "max_abs_dB": 0.5957799427108021
+      },
+      {
+        "frequency_Hz": 10000.0,
+        "min_dB": -0.26781533662138046,
+        "p16_dB": -0.22468216147685227,
+        "median_dB": -0.0058606318283560424,
+        "p84_dB": 0.21758865592976384,
+        "max_dB": 0.33723594582138444,
+        "max_abs_dB": 0.33723594582138444
+      },
+      {
+        "frequency_Hz": 20000.0,
+        "min_dB": -0.6344690003277149,
+        "p16_dB": -0.39691735592689226,
+        "median_dB": -0.09557468666842059,
+        "p84_dB": 0.44610837156852307,
+        "max_dB": 0.46519663551098844,
+        "max_abs_dB": 0.6344690003277149
+      },
+      {
+        "frequency_Hz": 40000.0,
+        "min_dB": -0.2742631339126159,
+        "p16_dB": -0.19310882953293032,
+        "median_dB": 0.024871298944483547,
+        "p84_dB": 0.1571497238485641,
+        "max_dB": 0.2733146049322899,
+        "max_abs_dB": 0.2742631339126159
+      },
+      {
+        "frequency_Hz": 70000.0,
+        "min_dB": -0.5257851868240311,
+        "p16_dB": -0.3074416828935869,
+        "median_dB": -0.11423350622800474,
+        "p84_dB": 0.29512098428186884,
+        "max_dB": 0.5543479282096985,
+        "max_abs_dB": 0.5543479282096985
+      },
+      {
+        "frequency_Hz": 100000.0,
+        "min_dB": -1.727794220501941,
+        "p16_dB": -1.6198363806071332,
+        "median_dB": -1.3936875143216396,
+        "p84_dB": 1.542533324146493,
+        "max_dB": 1.977086481274981,
+        "max_abs_dB": 1.977086481274981
+      },
+      {
+        "frequency_Hz": 150000.0,
+        "min_dB": -0.22615684931962554,
+        "p16_dB": -0.1775899963013136,
+        "median_dB": -0.06216772451865121,
+        "p84_dB": 0.147367684931531,
+        "max_dB": 0.35439651335758915,
+        "max_abs_dB": 0.35439651335758915
+      },
+      {
+        "frequency_Hz": 200000.0,
+        "min_dB": -0.34971771432146365,
+        "p16_dB": -0.3251207023862627,
+        "median_dB": 0.0251592358254345,
+        "p84_dB": 0.2393597937783524,
+        "max_dB": 0.5577322021530435,
+        "max_abs_dB": 0.5577322021530435
+      }
+    ],
+    "fit_band_rms_dB_per_block": [
+      0.30632742410925873,
+      0.38001373945832007,
+      0.3591206119912963,
+      0.29773245921899394,
+      0.3055552646233802
+    ],
+    "fit_band_rms_max_dB": 0.38001373945832007,
+    "fit_band_rms_median_dB": 0.30632742410925873
+  },
+  "day_vs_within_repeat": {
+    "anchors": [
+      {
+        "frequency_Hz": 1000.0,
+        "empirical_day_ratio_dB": 0.0,
+        "within_repeat_max_abs_block_ratio_dB": 0.0,
+        "day_over_block_max_abs_ratio": 0.0,
+        "day_exceeds_all_block_variation": false
+      },
+      {
+        "frequency_Hz": 5000.0,
+        "empirical_day_ratio_dB": 0.5913022931623737,
+        "within_repeat_max_abs_block_ratio_dB": 0.5957799427108021,
+        "day_over_block_max_abs_ratio": 0.9924843902464137,
+        "day_exceeds_all_block_variation": false
+      },
+      {
+        "frequency_Hz": 10000.0,
+        "empirical_day_ratio_dB": 0.7212635693102719,
+        "within_repeat_max_abs_block_ratio_dB": 0.33723594582138444,
+        "day_over_block_max_abs_ratio": 2.138750563951703,
+        "day_exceeds_all_block_variation": true
+      },
+      {
+        "frequency_Hz": 20000.0,
+        "empirical_day_ratio_dB": 1.0397633505443509,
+        "within_repeat_max_abs_block_ratio_dB": 0.6344690003277149,
+        "day_over_block_max_abs_ratio": 1.6387929906855874,
+        "day_exceeds_all_block_variation": true
+      },
+      {
+        "frequency_Hz": 40000.0,
+        "empirical_day_ratio_dB": 0.4841785015167337,
+        "within_repeat_max_abs_block_ratio_dB": 0.2742631339126159,
+        "day_over_block_max_abs_ratio": 1.7653794537001088,
+        "day_exceeds_all_block_variation": true
+      },
+      {
+        "frequency_Hz": 70000.0,
+        "empirical_day_ratio_dB": 1.0721080133704282,
+        "within_repeat_max_abs_block_ratio_dB": 0.5543479282096985,
+        "day_over_block_max_abs_ratio": 1.9339984129333152,
+        "day_exceeds_all_block_variation": true
+      },
+      {
+        "frequency_Hz": 100000.0,
+        "empirical_day_ratio_dB": 1.9131998318967165,
+        "within_repeat_max_abs_block_ratio_dB": 1.977086481274981,
+        "day_over_block_max_abs_ratio": 0.9676864669384287,
+        "day_exceeds_all_block_variation": false
+      },
+      {
+        "frequency_Hz": 150000.0,
+        "empirical_day_ratio_dB": 0.6484537196724196,
+        "within_repeat_max_abs_block_ratio_dB": 0.35439651335758915,
+        "day_over_block_max_abs_ratio": 1.8297406865798485,
+        "day_exceeds_all_block_variation": true
+      },
+      {
+        "frequency_Hz": 200000.0,
+        "empirical_day_ratio_dB": 0.5367914678440084,
+        "within_repeat_max_abs_block_ratio_dB": 0.5577322021530435,
+        "day_over_block_max_abs_ratio": 0.9624537829657379,
+        "day_exceeds_all_block_variation": false
+      }
+    ],
+    "n_nonreference_anchors": 8,
+    "n_anchors_day_exceeds_all_blocks": 5,
+    "fraction_anchors_day_exceeds_all_blocks": 0.625,
+    "empirical_day_fit_band_rms_dB": 1.43832544677229,
+    "max_within_repeat_block_fit_band_rms_dB": 0.38001373945832007,
+    "day_rms_over_block_rms_max_ratio": 3.7849301154808526,
+    "day_fit_band_rms_exceeds_all_blocks": true
+  },
+  "empirical_vs_transfer_shape": {
+    "fit_min_Hz": 1000.0,
+    "fit_max_Hz": 200000.0,
+    "correlation_coefficient_dB_shape": 0.27142202198097204,
+    "empirical_minus_transfer_rms_dB": 1.2196399614267115,
+    "bands": {
+      "1000-5000_Hz": {
+        "empirical_day_ratio_mean_dB": 0.5500783394690918,
+        "empirical_day_ratio_rms_dB": 0.6066572360440008,
+        "transfer_ratio_mean_dB": 0.43999259410876485,
+        "transfer_ratio_rms_dB": 0.4986979987585291,
+        "empirical_minus_transfer_mean_dB": 0.11008574536032688,
+        "empirical_minus_transfer_rms_dB": 0.35826090219587714
+      },
+      "5000-15000_Hz": {
+        "empirical_day_ratio_mean_dB": 0.5750362003574228,
+        "empirical_day_ratio_rms_dB": 0.6316990934290398,
+        "transfer_ratio_mean_dB": 0.5683770061995529,
+        "transfer_ratio_rms_dB": 0.583744703756072,
+        "empirical_minus_transfer_mean_dB": 0.006659194157869759,
+        "empirical_minus_transfer_rms_dB": 0.3038519855639182
+      },
+      "15000-40000_Hz": {
+        "empirical_day_ratio_mean_dB": 0.6763685451579143,
+        "empirical_day_ratio_rms_dB": 0.7283154518040978,
+        "transfer_ratio_mean_dB": 0.7348291580657534,
+        "transfer_ratio_rms_dB": 0.7520482405069058,
+        "empirical_minus_transfer_mean_dB": -0.058460612907839146,
+        "empirical_minus_transfer_rms_dB": 0.2806891944983479
+      },
+      "40000-100000_Hz": {
+        "empirical_day_ratio_mean_dB": 1.1914181005091125,
+        "empirical_day_ratio_rms_dB": 1.2838826738611562,
+        "transfer_ratio_mean_dB": 1.6330229751905638,
+        "transfer_ratio_rms_dB": 1.699646260952466,
+        "empirical_minus_transfer_mean_dB": -0.4416048746814516,
+        "empirical_minus_transfer_rms_dB": 0.7498186058107962
+      },
+      "100000-200000_Hz": {
+        "empirical_day_ratio_mean_dB": 1.3173800070636401,
+        "empirical_day_ratio_rms_dB": 1.7148414136526986,
+        "transfer_ratio_mean_dB": 2.480054075011133,
+        "transfer_ratio_rms_dB": 2.4805602305962764,
+        "empirical_minus_transfer_mean_dB": -1.1626740679474927,
+        "empirical_minus_transfer_rms_dB": 1.6089434899768102
+      }
+    },
+    "anchors": [
+      {
+        "frequency_Hz": 1000.0,
+        "empirical_repeat_over_reference_dB": 0.0,
+        "repeat_local_over_reference_shared_transfer_dB": 0.0,
+        "empirical_minus_transfer_dB": 0.0
+      },
+      {
+        "frequency_Hz": 5000.0,
+        "empirical_repeat_over_reference_dB": 0.5913022931623737,
+        "repeat_local_over_reference_shared_transfer_dB": 0.7508278395057839,
+        "empirical_minus_transfer_dB": -0.1595255463434102
+      },
+      {
+        "frequency_Hz": 10000.0,
+        "empirical_repeat_over_reference_dB": 0.7212635693102719,
+        "repeat_local_over_reference_shared_transfer_dB": 0.5379791063686763,
+        "empirical_minus_transfer_dB": 0.18328446294159562
+      },
+      {
+        "frequency_Hz": 20000.0,
+        "empirical_repeat_over_reference_dB": 1.0397633505443509,
+        "repeat_local_over_reference_shared_transfer_dB": 0.5592640787911205,
+        "empirical_minus_transfer_dB": 0.4804992717532304
+      },
+      {
+        "frequency_Hz": 40000.0,
+        "empirical_repeat_over_reference_dB": 0.4841785015167337,
+        "repeat_local_over_reference_shared_transfer_dB": 0.9384291453917373,
+        "empirical_minus_transfer_dB": -0.4542506438750036
+      },
+      {
+        "frequency_Hz": 70000.0,
+        "empirical_repeat_over_reference_dB": 1.0721080133704282,
+        "repeat_local_over_reference_shared_transfer_dB": 1.655498280806265,
+        "empirical_minus_transfer_dB": -0.5833902674358369
+      },
+      {
+        "frequency_Hz": 100000.0,
+        "empirical_repeat_over_reference_dB": 1.9131998318967165,
+        "repeat_local_over_reference_shared_transfer_dB": 2.320406034259459,
+        "empirical_minus_transfer_dB": -0.4072062023627425
+      },
+      {
+        "frequency_Hz": 150000.0,
+        "empirical_repeat_over_reference_dB": 0.6484537196724196,
+        "repeat_local_over_reference_shared_transfer_dB": 2.5019419178151248,
+        "empirical_minus_transfer_dB": -1.8534881981427052
+      },
+      {
+        "frequency_Hz": 200000.0,
+        "empirical_repeat_over_reference_dB": 0.5367914678440084,
+        "repeat_local_over_reference_shared_transfer_dB": 2.5230852920371687,
+        "empirical_minus_transfer_dB": -1.9862938241931603
+      }
+    ]
+  },
+  "interpretation_flags": {
+    "day_shape_exceeds_within_repeat_block_variation": true,
+    "transfer_ratio_tracks_day_shape_broadly": false,
+    "strong_electronics_drift_claim_allowed": false
+  },
+  "guardrail": "The empirical day-to-day ASD ratio is model-free. Agreement with the tracked transfer-ratio shape is diagnostic evidence only; disagreement or agreement does not by itself identify physical electronics drift because the repeat detector operating point was not independently refit.",
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\readout_day_to_day_drift_config.json",
+    "manifest": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\shared_readout_cross_dataset_manifest.json",
+    "reference_transfer": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\shared_readout_reference_transfer.json",
+    "repeat_local_transfer": "D:\\Github\\TES-Programs\\PoST_Simulations\\cases\\tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat\\local_readout_transfer_snapshot.json"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "case": "case_phase24_adaptive_continuous_post_event_40ns_window_check",
+  "started": "2026-09-15T12:30:27",
+  "finished": "2026-09-15T15:03:13",
+  "exit_code": 4294967295,
+  "inputs_sha256": {
+    "elmer_project_phase24_production.json": "689aa95c728d3471919fbd27bcf97bc7a9f9f81c999408dc260811c56dae6c8f",
+    "case_phase24_adaptive_continuous_post_event_40ns_window_check.sif": "d04dea3c05f579c5786a4a94155ad89c228ae5ee739b8fc5282d0b52a7f7ae44",
+    "mesh.header": "9e6fcfaf0f6095485eefd6e3b24c3adea113f5a234be65b8d11e17f4d23c5d6a",
+    "tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+    "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+  },
+  "preexisting_restart_inputs_sha256": {
+    "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend\\case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result": "8ab061806707bdbfe36881a97ac6b106b6a068d7ed5e288a5d7471df3615b265",
+    "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend\\phase19_steady.state": "04a9fa51c0641b0bbe2544f0c60e1998111d388a7202e1a45b515e4344093f7f"
+  },
+  "runtime_sif": null,
+  "runtime_sif_sha256": "d04dea3c05f579c5786a4a94155ad89c228ae5ee739b8fc5282d0b52a7f7ae44",
+  "runtime_override_applied": false,
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+  "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11",
+  "runtime_bin": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+  "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+  "amgx_config": null,
+  "amgx_config_sha256": null,
+  "runtime_artifacts_sha256": {
+    "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+    "libelmersolver": "c18683d6c190bbbb6eff059c36d9a04e6fa9223cb83a3dfcd7969755c38c142f",
+    "HeatSolve": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+  },
+  "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+  "restart_from": null,
+  "collected_outputs": [
+    "case_phase24_adaptive_continuous_post_event_40ns_window_check_iterations.csv"
+  ],
+  "result_file": null,
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15503124      0.0000000     ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15485909      2.0000000     ) :: heat equation",
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15485909      0.0000000     ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15486328     0.27073557E-04 ) :: heat equation"
+  ],
+  "solver_completed": false,
+  "errors": [
+    "solver did not report 'ALL DONE'",
+    "solver process exited with code 4294967295"
+  ]
+}

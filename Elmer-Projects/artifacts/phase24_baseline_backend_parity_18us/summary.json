@@ -1,0 +1,112 @@
+{
+  "generated_utc": "2026-09-16T03:22:51.528279+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\phase24_baseline_backend_parity.json",
+  "variants": {
+    "hypre": {
+      "run": {
+        "command": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+          "case_phase24_baseline_firstsolve_hypre_18us",
+          "--project",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\phase24_baseline_backend_parity.json",
+          "--skip-sync",
+          "--elmer-solver",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+          "--runtime-bin",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+          "--toolchain-bin",
+          "C:\\msys64\\ucrt64\\bin",
+          "--mpi-procs",
+          "1"
+        ],
+        "started": "2026-09-16T03:22:51.528424+00:00",
+        "finished": "2026-09-16T03:23:42.331550+00:00",
+        "elapsed_seconds": 50.803134099998715,
+        "exit_code": 0,
+        "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_baseline_firstsolve_hypre_18us\\backend_parity_launcher.log"
+      },
+      "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_baseline_firstsolve_hypre_18us\\solver.log",
+      "dump_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\hypre_firstsolve",
+      "audit": {
+        "log_exists": true,
+        "all_done": true,
+        "abort_markers": 0,
+        "mumps_markers": 1,
+        "hypre_markers": 2,
+        "linear_system_save_markers": 1
+      },
+      "first_series_row": null,
+      "dump_hashes": {
+        "_a.dat": "56ca1236f63f75b046708e38f7f84dc5ceaf3bb7654fcff5caf9752481d7efe9",
+        "_b.dat": "8c51c8f2b8865bbe8d00eb9020526deccc624c47ede58115cf8010b7fd0616bb",
+        "_sizes.dat": "f307270cac38928b3cf7f50904be09ededd4c111ffd5b09c3185f00bf9697abc"
+      }
+    },
+    "mumps": {
+      "run": {
+        "command": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+          "case_phase24_baseline_firstsolve_mumps_18us",
+          "--project",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\phase24_baseline_backend_parity.json",
+          "--skip-sync",
+          "--elmer-solver",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+          "--runtime-bin",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+          "--toolchain-bin",
+          "C:\\msys64\\ucrt64\\bin",
+          "--mpi-procs",
+          "1"
+        ],
+        "started": "2026-09-16T03:23:42.384498+00:00",
+        "finished": "2026-09-16T03:24:28.824782+00:00",
+        "elapsed_seconds": 46.44028740000067,
+        "exit_code": 0,
+        "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_baseline_firstsolve_mumps_18us\\backend_parity_launcher.log"
+      },
+      "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_baseline_firstsolve_mumps_18us\\solver.log",
+      "dump_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\mumps_firstsolve",
+      "audit": {
+        "log_exists": true,
+        "all_done": true,
+        "abort_markers": 0,
+        "mumps_markers": 1,
+        "hypre_markers": 0,
+        "linear_system_save_markers": 1
+      },
+      "first_series_row": null,
+      "dump_hashes": {
+        "_a.dat": "56ca1236f63f75b046708e38f7f84dc5ceaf3bb7654fcff5caf9752481d7efe9",
+        "_b.dat": "8c51c8f2b8865bbe8d00eb9020526deccc624c47ede58115cf8010b7fd0616bb",
+        "_sizes.dat": "f307270cac38928b3cf7f50904be09ededd4c111ffd5b09c3185f00bf9697abc"
+      }
+    }
+  },
+  "matrix_comparison": {
+    "matrix": {
+      "available": true,
+      "left": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\hypre_firstsolve_a.dat",
+      "right": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\mumps_firstsolve_a.dat",
+      "left_records": 1447196,
+      "right_records": 1447196,
+      "union_records": 1447196,
+      "nonzero_difference_records": 0,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    },
+    "rhs": {
+      "available": true,
+      "left": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\hypre_firstsolve_b.dat",
+      "right": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_baseline_backend_parity_18us\\dumps\\mumps_firstsolve_b.dat",
+      "left_records": 87534,
+      "right_records": 87534,
+      "union_records": 87534,
+      "nonzero_difference_records": 0,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    }
+  }
+}

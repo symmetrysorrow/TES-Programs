@@ -1,0 +1,89 @@
+{
+  "generated_utc": "2026-09-16T03:53:29.711329+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tolerance_diagnostic_1us\\phase24_hypre_tolerance_diagnostic.json",
+  "variants": {
+    "tol5e7": {
+      "tolerance": 5e-07,
+      "run": {
+        "command": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+          "case_phase24_short_hypre_tol5e7_1us",
+          "--project",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tolerance_diagnostic_1us\\phase24_hypre_tolerance_diagnostic.json",
+          "--skip-sync",
+          "--elmer-solver",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+          "--runtime-bin",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+          "--toolchain-bin",
+          "C:\\msys64\\ucrt64\\bin",
+          "--mpi-procs",
+          "1"
+        ],
+        "started": "2026-09-16T03:53:29.711452+00:00",
+        "finished": "2026-09-16T04:02:52.366917+00:00",
+        "elapsed_seconds": 562.6554969999997,
+        "exit_code": 0,
+        "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol5e7_1us\\tolerance_diagnostic_launcher.log"
+      },
+      "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol5e7_1us\\solver.log",
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol5e7_1us\\case_phase24_short_hypre_tol5e7_1us_series.csv",
+      "audit": {
+        "log_exists": true,
+        "all_done": true,
+        "abort_markers": 0,
+        "hypre_solve_calls": 46,
+        "required_iterations_zero": 23,
+        "required_iterations_max": 1258,
+        "required_iterations_sum": 7112,
+        "relative_change_samples": 46,
+        "relative_change_zero": 20,
+        "relative_change_max": 2.0
+      }
+    },
+    "tol1e10": {
+      "tolerance": 1e-10,
+      "run": {
+        "command": [
+          "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+          "case_phase24_short_hypre_tol1e10_1us",
+          "--project",
+          "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tolerance_diagnostic_1us\\phase24_hypre_tolerance_diagnostic.json",
+          "--skip-sync",
+          "--elmer-solver",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+          "--runtime-bin",
+          "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+          "--toolchain-bin",
+          "C:\\msys64\\ucrt64\\bin",
+          "--mpi-procs",
+          "1"
+        ],
+        "started": "2026-09-16T04:02:52.369370+00:00",
+        "finished": "2026-09-16T04:04:07.232220+00:00",
+        "elapsed_seconds": 74.86286100000143,
+        "exit_code": 1,
+        "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e10_1us\\tolerance_diagnostic_launcher.log"
+      },
+      "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e10_1us\\solver.log",
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e10_1us\\case_phase24_short_hypre_tol1e10_1us_series.csv",
+      "audit": {
+        "log_exists": true,
+        "all_done": false,
+        "abort_markers": 1,
+        "hypre_solve_calls": 0,
+        "required_iterations_zero": 0,
+        "required_iterations_max": null,
+        "required_iterations_sum": 0,
+        "relative_change_samples": 0,
+        "relative_change_zero": 0,
+        "relative_change_max": null
+      }
+    }
+  },
+  "comparisons": {
+    "error": "one or both candidate series are missing"
+  }
+}

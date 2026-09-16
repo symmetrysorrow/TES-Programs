@@ -1,0 +1,79 @@
+{
+  "generated_utc": "2026-09-15T15:20:04.002486+00:00",
+  "git_revision": "a14c9645536298ca2944f4a19018d3f93dd88d1d",
+  "comparison": {
+    "candidate_label": "native HYPRE",
+    "reference_label": "CPU/MUMPS",
+    "event_s": 0.02002,
+    "baseline_window_us": [
+      -2.0,
+      0.0
+    ],
+    "common_post_event_window_us": [
+      0.0,
+      595.0010000001712
+    ],
+    "common_rows": 138,
+    "candidate_baseline_uA": 147.80143942036347,
+    "reference_baseline_uA": 147.3752450422976,
+    "baseline_offset_candidate_minus_reference_uA": 0.42619437806587257,
+    "first_raw_abs_difference_ge_threshold_us": 0.011000000005878974,
+    "first_baseline_corrected_abs_difference_ge_threshold_us": 3.637978807091713e-12,
+    "first_raw_relative_difference_ge_threshold_us": 0.6010000000169384,
+    "threshold_uA": 0.1,
+    "relative_threshold_percent": 0.1,
+    "max_abs_raw_difference": {
+      "time_from_event_us": 595.0010000001712,
+      "difference_uA": -14.157778598808463
+    },
+    "max_abs_baseline_corrected_difference": {
+      "time_from_event_us": 595.0010000001712,
+      "difference_uA": -14.583972976874335
+    }
+  },
+  "inputs": {
+    "candidate": {
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_hypre_cpu_pulse_1ms_5us\\case_phase24_hypre_cpu_pulse_1ms_5us_series.csv",
+      "series_sha256": "ffa233e64d4b66be46728ae111b665f40b7a645a51c72b02c9006cfad12586ff",
+      "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_hypre_cpu_pulse_1ms_5us\\manifest.json",
+      "manifest_sha256": "5bb7d3ddf0b05025c2d2db2bec94c32292fa18582daf69c07e286f5ca1192ff1",
+      "case": "case_phase24_hypre_cpu_pulse_1ms_5us",
+      "exit_code": 0,
+      "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "started": "2026-09-15T22:06:03",
+      "finished": "2026-09-15T22:57:58",
+      "solver_completed": true,
+      "runtime_artifacts_sha256": {
+        "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+        "libelmersolver": "ceb8338062d238e7b5600edc94a3b0630e65d7880eda9c2963fa064880170215",
+        "HeatSolve": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+      }
+    },
+    "reference": {
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_p19_pulse_phase23_tight\\case_p19_pulse_phase23_tight_series.csv",
+      "series_sha256": "e03be9cfe53294c13301aa94b86181a6ca4745f79dd024209fcfd334f2f4ebc0",
+      "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_p19_pulse_phase23_tight\\manifest.json",
+      "manifest_sha256": "677ab4d1c05064b9067a90ef2313a45bf187399eee6ddc8c4a046d1764efa909",
+      "case": "case_p19_pulse_phase23_tight",
+      "exit_code": 0,
+      "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "started": "2026-07-30T18:51:02",
+      "finished": "2026-07-30T19:54:16",
+      "runtime_artifacts_sha256": {
+        "solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc",
+        "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78",
+        "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7",
+        "udf": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b"
+      }
+    }
+  },
+  "outputs": {
+    "aligned_difference_csv": "aligned_difference.csv",
+    "checkpoints_csv": "checkpoints.csv",
+    "plot": "comparison.png"
+  }
+}

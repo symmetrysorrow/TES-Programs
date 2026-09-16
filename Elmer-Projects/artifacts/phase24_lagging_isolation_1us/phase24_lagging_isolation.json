@@ -18523,6 +18523,99 @@
       },
       "output_result": true,
       "restart_position": 3
+    },
+    "case_phase24_short_bdf2_reuse_on_lagging_disabled_1us": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_phase24_short_bdf2_reuse_on_lagging_disabled_1us_series.csv",
+      "iteration_series_file": "case_phase24_short_bdf2_reuse_on_lagging_disabled_1us_iterations.csv",
+      "state_file": "work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ]
+      ],
+      "output_intervals": [
+        999999,
+        999999,
+        999999,
+        999999,
+        999999
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "Diagnostic: BDF2, HYPRE lifecycle reuse ON, preconditioner lagging disabled",
+      "solver": {
+        "nonlinear_max_iterations": 25,
+        "nonlinear_convergence_tolerance": 3e-07,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "eliminate_linear_constraints": false,
+        "boomer_amg_strong_threshold": 0.5,
+        "linear_system_convergence_tolerance": 5e-07
+      },
+      "comparison_time_grid": {
+        "mode": "Phase24 preconditioner-lagging isolation diagnostic",
+        "purpose": "approximately 1 us post-pulse comparison",
+        "post_pulse_end": "1[us]"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "preexisting_restart": true,
+      "restart_file_base": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "output_result": false,
+      "phase24_smoke": {
+        "purpose": "short isolation run; approximately 1 us after pulse",
+        "variant": "BDF2 / HYPRE reuse ON / preconditioner lagging disabled",
+        "no_matrix_dump": true,
+        "no_vtu": true
+      },
+      "phase24_vector_assembly": true,
+      "phase24_wall_profiling": true,
+      "phase24_static_matrix_reuse": true,
+      "phase24_operator_lagging": "disabled",
+      "phase24_operator_lag_threshold": 0.0001,
+      "phase24_operator_lag_max_reuse": 3,
+      "phase24_operator_lag_residual_growth": 1.25,
+      "phase24_preconditioner_lagging": "disabled",
+      "phase24_preconditioner_lag_threshold": 0.0001,
+      "phase24_preconditioner_lag_max_age": 20,
+      "phase24_preconditioner_lag_krylov_relative_growth": 10.0,
+      "phase24_preconditioner_lag_nonlinear_threshold": 0.01,
+      "phase24_hypre_reuse": true,
+      "bdf_order": 2,
+      "output_result_path": null,
+      "output_file_path": null
     }
   }
 }

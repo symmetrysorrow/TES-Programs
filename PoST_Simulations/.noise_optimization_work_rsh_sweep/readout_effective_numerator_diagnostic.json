@@ -1,0 +1,840 @@
+{
+  "diagnostic_only": true,
+  "production_optimizer_unchanged": true,
+  "production_noise_model_unchanged": true,
+  "fit_region": {
+    "min_Hz": 1000.0,
+    "max_Hz_exclusive": 40000.0,
+    "points": 418
+  },
+  "holdout_region": {
+    "min_Hz": 40000.0,
+    "max_Hz": 200000.0,
+    "points": 183,
+    "optimizer_received_holdout_points": false
+  },
+  "repeat_case": {
+    "label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "comparison_source": "tracked_comparison_spec_recomputed_mask",
+    "experiment_path": "G:\\tagawa\\20241205\\r1ch12_215mK_1400uA1400uA_difftrig5e-5_rate500k_samples100k_gain5",
+    "accepted_records": 1731
+  },
+  "white_floor_fixed": {
+    "scale": 1.3635953106605805,
+    "white_asd_A_rtHz": 5.994841960426966e-11
+  },
+  "effective_numerator_definition": {
+    "reference_scale_Hz": 40000.0,
+    "x_definition": "x = f / reference_scale_Hz",
+    "polynomial_definition": "P(x)=1+c2*x^2+c4*x^4+c6*x^6; transfer magnitude numerator=sqrt(P)",
+    "orders": {
+      "0": "pole denominator only; numerator magnitude squared P(x)=1",
+      "1": "one numerator degree; P(x)=1+v^2*x^2 with v>=0; v=0 recovers order 0 exactly",
+      "2": "two numerator degrees; P(x)=(1+u*x^2)^2+v^2*x^2; u=0 recovers order 1 exactly",
+      "3": "three numerator degrees; P(x)=[(1+u*x^2)^2+v^2*x^2]*(1+w^2*x^2); w=0 recovers order 2 exactly and the full family is algebraically equivalent to the infinity-lead-pole hybrid numerator"
+    }
+  },
+  "free_hybrid_reference": {
+    "parameters": {
+      "pole_Hz": 11820.989566184204,
+      "pole_Q": 0.6569188322650389,
+      "zero_Hz": 29821.758720326587,
+      "zero_Q": 0.14308634813973375,
+      "leadlag_zero_Hz": 81127.75255825827
+    },
+    "shape_score": 3.321534071448298e-05,
+    "rms_residual_dB": 0.11044857969361807,
+    "mapped_order3_latent": {
+      "u": -1.7990924391473624,
+      "v": 9.374077494699474,
+      "w": 0.4930495266866389
+    },
+    "mapped_order3_polynomial_coefficients_dimensionless": {
+      "c2": 84.51824183410235,
+      "c4": 23.723838719453937,
+      "c6": 0.7868429342284012
+    }
+  },
+  "order3_algebraic_equivalence_check": {
+    "max_abs_normalized_model_difference": 4.440892098500626e-16,
+    "rms_normalized_model_difference": 1.3143734591306124e-16,
+    "passes_1e-10": true
+  },
+  "complexity_ladder": [
+    {
+      "order": 0,
+      "n_total_fit_parameters": 2,
+      "n_numerator_parameters": 0,
+      "vector_names": [
+        "log10_pole_Hz",
+        "log10_pole_Q"
+      ],
+      "success": true,
+      "evaluations": 752,
+      "best_candidate_source": "de",
+      "parameters": {
+        "pole_Hz": 20084.544659751362,
+        "pole_Q": 2.5849714331551463,
+        "latent": {},
+        "polynomial_coefficients_dimensionless": {
+          "c2": 0.0,
+          "c4": 0.0,
+          "c6": 0.0
+        }
+      },
+      "shape_score": 0.04389610579787451,
+      "residual_metrics": {
+        "rms_residual_dB": 2.735407699495281,
+        "max_abs_residual_dB": 7.52055806394679,
+        "mean_residual_dB": -1.2727484539385658,
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_residual_dB": -0.8634730519055738,
+            "rms_residual_dB": 1.1727481647541254,
+            "max_abs_residual_dB": 2.6879516823783445
+          },
+          "5000-15000_Hz": {
+            "mean_residual_dB": -2.731341431560458,
+            "rms_residual_dB": 2.927948940678248,
+            "max_abs_residual_dB": 3.8182411095876825
+          },
+          "15000-40000_Hz": {
+            "mean_residual_dB": -0.31808061021715023,
+            "rms_residual_dB": 4.041386867211784,
+            "max_abs_residual_dB": 7.520558063946794
+          }
+        }
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_log10_ratio": -0.04317365259527869,
+          "mean_model_over_target_dB": -0.8634730519055738,
+          "geometric_mean_model_over_target": 0.9053705162234916,
+          "rms_log10_ratio": 0.058637408237706266,
+          "max_abs_log10_ratio": 0.13439758411891722
+        },
+        "5000-15000_Hz": {
+          "mean_log10_ratio": -0.1365670715780229,
+          "mean_model_over_target_dB": -2.731341431560458,
+          "geometric_mean_model_over_target": 0.7301850358370162,
+          "rms_log10_ratio": 0.1463974470339124,
+          "max_abs_log10_ratio": 0.1909120554793841
+        },
+        "15000-40000_Hz": {
+          "mean_log10_ratio": -0.015904030510857512,
+          "mean_model_over_target_dB": -0.31808061021715023,
+          "geometric_mean_model_over_target": 0.9640420320863224,
+          "rms_log10_ratio": 0.2020693433605892,
+          "max_abs_log10_ratio": 0.3760279031973397
+        }
+      },
+      "holdout_metrics": {
+        "shape_score": 0.15686529246653508,
+        "residual_metrics": {
+          "rms_residual_dB": 4.644093629051111,
+          "max_abs_residual_dB": 9.532117202400165,
+          "mean_residual_dB": -3.747678679296507,
+          "bands": {
+            "40000-100000_Hz": {
+              "mean_residual_dB": -5.490906797338974,
+              "rms_residual_dB": 5.872874714163631,
+              "max_abs_residual_dB": 9.532117202400165
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -1.4527960935190802,
+              "rms_residual_dB": 2.1342400325827806,
+              "max_abs_residual_dB": 8.839497137734313
+            }
+          }
+        },
+        "bands": {
+          "40000-100000_Hz": {
+            "mean_log10_ratio": -0.27454533986694873,
+            "mean_model_over_target_dB": -5.490906797338974,
+            "geometric_mean_model_over_target": 0.531440514804334,
+            "rms_log10_ratio": 0.29364373570818153,
+            "max_abs_log10_ratio": 0.4766058601200083
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.07263980467595402,
+            "mean_model_over_target_dB": -1.4527960935190802,
+            "geometric_mean_model_over_target": 0.8459801936553735,
+            "rms_log10_ratio": 0.10671200162913903,
+            "max_abs_log10_ratio": 0.4419748568867157
+          }
+        }
+      },
+      "full_1_200k_metrics": {
+        "shape_score": 0.0903596931527324,
+        "residual_metrics": {
+          "rms_residual_dB": 3.4309296265109506,
+          "max_abs_residual_dB": 9.532117202400165,
+          "mean_residual_dB": -2.0263461764685213,
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_residual_dB": -0.8634730519055738,
+              "rms_residual_dB": 1.1727481647541254,
+              "max_abs_residual_dB": 2.6879516823783445
+            },
+            "5000-15000_Hz": {
+              "mean_residual_dB": -2.731341431560458,
+              "rms_residual_dB": 2.927948940678248,
+              "max_abs_residual_dB": 3.8182411095876825
+            },
+            "15000-40000_Hz": {
+              "mean_residual_dB": -0.31808061021715023,
+              "rms_residual_dB": 4.041386867211784,
+              "max_abs_residual_dB": 7.520558063946794
+            },
+            "40000-100000_Hz": {
+              "mean_residual_dB": -5.490906797338974,
+              "rms_residual_dB": 5.872874714163631,
+              "max_abs_residual_dB": 9.532117202400165
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -1.4527960935190802,
+              "rms_residual_dB": 2.1342400325827806,
+              "max_abs_residual_dB": 8.839497137734313
+            }
+          }
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_log10_ratio": -0.04317365259527869,
+            "mean_model_over_target_dB": -0.8634730519055738,
+            "geometric_mean_model_over_target": 0.9053705162234916,
+            "rms_log10_ratio": 0.058637408237706266,
+            "max_abs_log10_ratio": 0.13439758411891722
+          },
+          "5000-15000_Hz": {
+            "mean_log10_ratio": -0.1365670715780229,
+            "mean_model_over_target_dB": -2.731341431560458,
+            "geometric_mean_model_over_target": 0.7301850358370162,
+            "rms_log10_ratio": 0.1463974470339124,
+            "max_abs_log10_ratio": 0.1909120554793841
+          },
+          "15000-40000_Hz": {
+            "mean_log10_ratio": -0.015904030510857512,
+            "mean_model_over_target_dB": -0.31808061021715023,
+            "geometric_mean_model_over_target": 0.9640420320863224,
+            "rms_log10_ratio": 0.2020693433605892,
+            "max_abs_log10_ratio": 0.3760279031973397
+          },
+          "40000-100000_Hz": {
+            "mean_log10_ratio": -0.27454533986694873,
+            "mean_model_over_target_dB": -5.490906797338974,
+            "geometric_mean_model_over_target": 0.531440514804334,
+            "rms_log10_ratio": 0.29364373570818153,
+            "max_abs_log10_ratio": 0.4766058601200083
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.07263980467595402,
+            "mean_model_over_target_dB": -1.4527960935190802,
+            "geometric_mean_model_over_target": 0.8459801936553735,
+            "rms_log10_ratio": 0.10671200162913903,
+            "max_abs_log10_ratio": 0.4419748568867157
+          }
+        }
+      },
+      "score_ratio_to_free_hybrid": 1321.561207973229,
+      "rms_delta_from_free_hybrid_dB": 2.6249591198016633,
+      "near_free_hybrid": false
+    },
+    {
+      "order": 1,
+      "n_total_fit_parameters": 3,
+      "n_numerator_parameters": 1,
+      "vector_names": [
+        "log10_pole_Hz",
+        "log10_pole_Q",
+        "v"
+      ],
+      "success": true,
+      "evaluations": 2327,
+      "best_candidate_source": "de",
+      "parameters": {
+        "pole_Hz": 12155.456882797524,
+        "pole_Q": 0.6237720994312616,
+        "latent": {
+          "v": 9.549406866940892
+        },
+        "polynomial_coefficients_dimensionless": {
+          "c2": 91.19117151037786,
+          "c4": 0.0,
+          "c6": 0.0
+        }
+      },
+      "shape_score": 5.227781831343249e-05,
+      "residual_metrics": {
+        "rms_residual_dB": 0.1285596151888601,
+        "max_abs_residual_dB": 0.6401195136040988,
+        "mean_residual_dB": 0.01762246999367855,
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_residual_dB": 0.05140796939294531,
+            "rms_residual_dB": 0.11447948876667977,
+            "max_abs_residual_dB": 0.36022977236481396
+          },
+          "5000-15000_Hz": {
+            "mean_residual_dB": -0.021765988054080296,
+            "rms_residual_dB": 0.10895664367555515,
+            "max_abs_residual_dB": 0.2767490205018236
+          },
+          "15000-40000_Hz": {
+            "mean_residual_dB": 0.005923572767158568,
+            "rms_residual_dB": 0.16544065426202378,
+            "max_abs_residual_dB": 0.6401195136040982
+          }
+        }
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_log10_ratio": 0.0025703984696472657,
+          "mean_model_over_target_dB": 0.05140796939294531,
+          "geometric_mean_model_over_target": 1.0059361104876956,
+          "rms_log10_ratio": 0.005723974438333989,
+          "max_abs_log10_ratio": 0.018011488618240697
+        },
+        "5000-15000_Hz": {
+          "mean_log10_ratio": -0.0010882994027040147,
+          "mean_model_over_target_dB": -0.021765988054080296,
+          "geometric_mean_model_over_target": 0.9974972351699778,
+          "rms_log10_ratio": 0.0054478321837777574,
+          "max_abs_log10_ratio": 0.01383745102509118
+        },
+        "15000-40000_Hz": {
+          "mean_log10_ratio": 0.0002961786383579284,
+          "mean_model_over_target_dB": 0.005923572767158568,
+          "geometric_mean_model_over_target": 1.000682209116404,
+          "rms_log10_ratio": 0.00827203271310119,
+          "max_abs_log10_ratio": 0.03200597568020491
+        }
+      },
+      "holdout_metrics": {
+        "shape_score": 0.014735901947904884,
+        "residual_metrics": {
+          "rms_residual_dB": 1.4551795215708427,
+          "max_abs_residual_dB": 8.492702456743524,
+          "mean_residual_dB": -0.9728936828532418,
+          "bands": {
+            "40000-100000_Hz": {
+              "mean_residual_dB": -0.6643899544229593,
+              "rms_residual_dB": 0.8122225907506633,
+              "max_abs_residual_dB": 3.7419844607723585
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -1.3790251734450063,
+              "rms_residual_dB": 2.00916194406098,
+              "max_abs_residual_dB": 8.492702456743523
+            }
+          }
+        },
+        "bands": {
+          "40000-100000_Hz": {
+            "mean_log10_ratio": -0.03321949772114797,
+            "mean_model_over_target_dB": -0.6643899544229593,
+            "geometric_mean_model_over_target": 0.92636151065266,
+            "rms_log10_ratio": 0.04061112953753317,
+            "max_abs_log10_ratio": 0.18709922303861792
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.06895125867225031,
+            "mean_model_over_target_dB": -1.3790251734450063,
+            "geometric_mean_model_over_target": 0.8531958637160854,
+            "rms_log10_ratio": 0.10045809720304899,
+            "max_abs_log10_ratio": 0.4246351228371761
+          }
+        }
+      },
+      "full_1_200k_metrics": {
+        "shape_score": 0.00651620612447607,
+        "residual_metrics": {
+          "rms_residual_dB": 0.8101064079638528,
+          "max_abs_residual_dB": 8.492702456743524,
+          "mean_residual_dB": -0.2839822820379128,
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_residual_dB": 0.05140796939294531,
+              "rms_residual_dB": 0.11447948876667977,
+              "max_abs_residual_dB": 0.36022977236481396
+            },
+            "5000-15000_Hz": {
+              "mean_residual_dB": -0.021765988054080296,
+              "rms_residual_dB": 0.10895664367555515,
+              "max_abs_residual_dB": 0.2767490205018236
+            },
+            "15000-40000_Hz": {
+              "mean_residual_dB": 0.005923572767158568,
+              "rms_residual_dB": 0.16544065426202378,
+              "max_abs_residual_dB": 0.6401195136040982
+            },
+            "40000-100000_Hz": {
+              "mean_residual_dB": -0.6643899544229593,
+              "rms_residual_dB": 0.8122225907506633,
+              "max_abs_residual_dB": 3.7419844607723585
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -1.3790251734450063,
+              "rms_residual_dB": 2.00916194406098,
+              "max_abs_residual_dB": 8.492702456743523
+            }
+          }
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_log10_ratio": 0.0025703984696472657,
+            "mean_model_over_target_dB": 0.05140796939294531,
+            "geometric_mean_model_over_target": 1.0059361104876956,
+            "rms_log10_ratio": 0.005723974438333989,
+            "max_abs_log10_ratio": 0.018011488618240697
+          },
+          "5000-15000_Hz": {
+            "mean_log10_ratio": -0.0010882994027040147,
+            "mean_model_over_target_dB": -0.021765988054080296,
+            "geometric_mean_model_over_target": 0.9974972351699778,
+            "rms_log10_ratio": 0.0054478321837777574,
+            "max_abs_log10_ratio": 0.01383745102509118
+          },
+          "15000-40000_Hz": {
+            "mean_log10_ratio": 0.0002961786383579284,
+            "mean_model_over_target_dB": 0.005923572767158568,
+            "geometric_mean_model_over_target": 1.000682209116404,
+            "rms_log10_ratio": 0.00827203271310119,
+            "max_abs_log10_ratio": 0.03200597568020491
+          },
+          "40000-100000_Hz": {
+            "mean_log10_ratio": -0.03321949772114797,
+            "mean_model_over_target_dB": -0.6643899544229593,
+            "geometric_mean_model_over_target": 0.92636151065266,
+            "rms_log10_ratio": 0.04061112953753317,
+            "max_abs_log10_ratio": 0.18709922303861792
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.06895125867225031,
+            "mean_model_over_target_dB": -1.3790251734450063,
+            "geometric_mean_model_over_target": 0.8531958637160854,
+            "rms_log10_ratio": 0.10045809720304899,
+            "max_abs_log10_ratio": 0.4246351228371761
+          }
+        }
+      },
+      "score_ratio_to_free_hybrid": 1.573905827515346,
+      "rms_delta_from_free_hybrid_dB": 0.01811103549524204,
+      "near_free_hybrid": true
+    },
+    {
+      "order": 2,
+      "n_total_fit_parameters": 4,
+      "n_numerator_parameters": 2,
+      "vector_names": [
+        "log10_pole_Hz",
+        "log10_pole_Q",
+        "u",
+        "v"
+      ],
+      "success": true,
+      "evaluations": 4061,
+      "best_candidate_source": "de",
+      "parameters": {
+        "pole_Hz": 11824.044806151307,
+        "pole_Q": 0.6573176133187656,
+        "latent": {
+          "u": 4.918894023773404,
+          "v": 8.632173657442252
+        },
+        "polynomial_coefficients_dimensionless": {
+          "c2": 84.35221009978675,
+          "c4": 24.195518417113703,
+          "c6": 0.0
+        }
+      },
+      "shape_score": 3.309284222751993e-05,
+      "residual_metrics": {
+        "rms_residual_dB": 0.11048569502922208,
+        "max_abs_residual_dB": 0.3768344934278952,
+        "mean_residual_dB": 0.0094344079228779,
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_residual_dB": 0.026647145327091143,
+            "rms_residual_dB": 0.10654256207103778,
+            "max_abs_residual_dB": 0.37683449342789493
+          },
+          "5000-15000_Hz": {
+            "mean_residual_dB": -0.006749582852017323,
+            "rms_residual_dB": 0.10892756260812905,
+            "max_abs_residual_dB": 0.28069845124414794
+          },
+          "15000-40000_Hz": {
+            "mean_residual_dB": -0.0008639352202213216,
+            "rms_residual_dB": 0.11832104324184359,
+            "max_abs_residual_dB": 0.36079513265796503
+          }
+        }
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_log10_ratio": 0.001332357266354557,
+          "mean_model_over_target_dB": 0.026647145327091143,
+          "geometric_mean_model_over_target": 1.003072576696937,
+          "rms_log10_ratio": 0.005327128103551889,
+          "max_abs_log10_ratio": 0.018841724671394746
+        },
+        "5000-15000_Hz": {
+          "mean_log10_ratio": -0.00033747914260086613,
+          "mean_model_over_target_dB": -0.006749582852017323,
+          "geometric_mean_model_over_target": 0.9992232274012056,
+          "rms_log10_ratio": 0.005446378130406453,
+          "max_abs_log10_ratio": 0.014034922562207397
+        },
+        "15000-40000_Hz": {
+          "mean_log10_ratio": -4.319676101106608e-05,
+          "mean_model_over_target_dB": -0.0008639352202213216,
+          "geometric_mean_model_over_target": 0.9999005407284316,
+          "rms_log10_ratio": 0.00591605216209218,
+          "max_abs_log10_ratio": 0.01803975663289825
+        }
+      },
+      "holdout_metrics": {
+        "shape_score": 0.007617062259263219,
+        "residual_metrics": {
+          "rms_residual_dB": 1.172941389124758,
+          "max_abs_residual_dB": 7.636365092070041,
+          "mean_residual_dB": -0.16415162810030665,
+          "bands": {
+            "40000-100000_Hz": {
+              "mean_residual_dB": 0.3978850533090249,
+              "rms_residual_dB": 0.5639363980851229,
+              "max_abs_residual_dB": 2.6248849733513335
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -0.9040480188163886,
+              "rms_residual_dB": 1.6638194650575526,
+              "max_abs_residual_dB": 7.636365092070041
+            }
+          }
+        },
+        "bands": {
+          "40000-100000_Hz": {
+            "mean_log10_ratio": 0.019894252665451244,
+            "mean_model_over_target_dB": 0.3978850533090249,
+            "geometric_mean_model_over_target": 1.046873611417997,
+            "rms_log10_ratio": 0.02819681990425614,
+            "max_abs_log10_ratio": 0.13124424866756668
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.04520240094081943,
+            "mean_model_over_target_dB": -0.9040480188163886,
+            "geometric_mean_model_over_target": 0.9011510624289479,
+            "rms_log10_ratio": 0.08319097325287764,
+            "max_abs_log10_ratio": 0.38181825460350205
+          }
+        }
+      },
+      "full_1_200k_metrics": {
+        "shape_score": 0.0034594108931573645,
+        "residual_metrics": {
+          "rms_residual_dB": 0.6537647381550971,
+          "max_abs_residual_dB": 7.636365092070041,
+          "mean_residual_dB": -0.04342124031712671,
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_residual_dB": 0.026647145327091143,
+              "rms_residual_dB": 0.10654256207103778,
+              "max_abs_residual_dB": 0.37683449342789493
+            },
+            "5000-15000_Hz": {
+              "mean_residual_dB": -0.006749582852017323,
+              "rms_residual_dB": 0.10892756260812905,
+              "max_abs_residual_dB": 0.28069845124414794
+            },
+            "15000-40000_Hz": {
+              "mean_residual_dB": -0.0008639352202213216,
+              "rms_residual_dB": 0.11832104324184359,
+              "max_abs_residual_dB": 0.36079513265796503
+            },
+            "40000-100000_Hz": {
+              "mean_residual_dB": 0.3978850533090249,
+              "rms_residual_dB": 0.5639363980851229,
+              "max_abs_residual_dB": 2.6248849733513335
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -0.9040480188163886,
+              "rms_residual_dB": 1.6638194650575526,
+              "max_abs_residual_dB": 7.636365092070041
+            }
+          }
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_log10_ratio": 0.001332357266354557,
+            "mean_model_over_target_dB": 0.026647145327091143,
+            "geometric_mean_model_over_target": 1.003072576696937,
+            "rms_log10_ratio": 0.005327128103551889,
+            "max_abs_log10_ratio": 0.018841724671394746
+          },
+          "5000-15000_Hz": {
+            "mean_log10_ratio": -0.00033747914260086613,
+            "mean_model_over_target_dB": -0.006749582852017323,
+            "geometric_mean_model_over_target": 0.9992232274012056,
+            "rms_log10_ratio": 0.005446378130406453,
+            "max_abs_log10_ratio": 0.014034922562207397
+          },
+          "15000-40000_Hz": {
+            "mean_log10_ratio": -4.319676101106608e-05,
+            "mean_model_over_target_dB": -0.0008639352202213216,
+            "geometric_mean_model_over_target": 0.9999005407284316,
+            "rms_log10_ratio": 0.00591605216209218,
+            "max_abs_log10_ratio": 0.01803975663289825
+          },
+          "40000-100000_Hz": {
+            "mean_log10_ratio": 0.019894252665451244,
+            "mean_model_over_target_dB": 0.3978850533090249,
+            "geometric_mean_model_over_target": 1.046873611417997,
+            "rms_log10_ratio": 0.02819681990425614,
+            "max_abs_log10_ratio": 0.13124424866756668
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.04520240094081943,
+            "mean_model_over_target_dB": -0.9040480188163886,
+            "geometric_mean_model_over_target": 0.9011510624289479,
+            "rms_log10_ratio": 0.08319097325287764,
+            "max_abs_log10_ratio": 0.38181825460350205
+          }
+        }
+      },
+      "score_ratio_to_free_hybrid": 0.9963119906546786,
+      "rms_delta_from_free_hybrid_dB": 3.711533560400715e-05,
+      "near_free_hybrid": true
+    },
+    {
+      "order": 3,
+      "n_total_fit_parameters": 5,
+      "n_numerator_parameters": 3,
+      "vector_names": [
+        "log10_pole_Hz",
+        "log10_pole_Q",
+        "u",
+        "v",
+        "w"
+      ],
+      "success": true,
+      "evaluations": 5114,
+      "best_candidate_source": "free_reference_exact",
+      "parameters": {
+        "pole_Hz": 11820.989566184204,
+        "pole_Q": 0.6569188322650389,
+        "latent": {
+          "u": -1.7990924391473624,
+          "v": 9.374077494699474,
+          "w": 0.4930495266866389
+        },
+        "polynomial_coefficients_dimensionless": {
+          "c2": 84.51824183410235,
+          "c4": 23.723838719453937,
+          "c6": 0.7868429342284012
+        }
+      },
+      "shape_score": 3.3215340714482885e-05,
+      "residual_metrics": {
+        "rms_residual_dB": 0.11044857969361796,
+        "max_abs_residual_dB": 0.37483979129804823,
+        "mean_residual_dB": 0.009727616483086345,
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_residual_dB": 0.027678526657291702,
+            "rms_residual_dB": 0.10666050455829455,
+            "max_abs_residual_dB": 0.37483979129804773
+          },
+          "5000-15000_Hz": {
+            "mean_residual_dB": -0.006975941825019701,
+            "rms_residual_dB": 0.10806812505319299,
+            "max_abs_residual_dB": 0.2786816508495471
+          },
+          "15000-40000_Hz": {
+            "mean_residual_dB": -0.0012072964148815148,
+            "rms_residual_dB": 0.11889436191127953,
+            "max_abs_residual_dB": 0.3568339991302727
+          }
+        }
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_log10_ratio": 0.001383926332864585,
+          "mean_model_over_target_dB": 0.027678526657291702,
+          "geometric_mean_model_over_target": 1.0031916907769398,
+          "rms_log10_ratio": 0.005333025227914728,
+          "max_abs_log10_ratio": 0.018741989564902386
+        },
+        "5000-15000_Hz": {
+          "mean_log10_ratio": -0.00034879709125098504,
+          "mean_model_over_target_dB": -0.006975941825019701,
+          "geometric_mean_model_over_target": 0.9991971874437829,
+          "rms_log10_ratio": 0.00540340625265965,
+          "max_abs_log10_ratio": 0.013934082542477355
+        },
+        "15000-40000_Hz": {
+          "mean_log10_ratio": -6.036482074407574e-05,
+          "mean_model_over_target_dB": -0.0012072964148815148,
+          "geometric_mean_model_over_target": 0.9998610145229898,
+          "rms_log10_ratio": 0.005944718095563977,
+          "max_abs_log10_ratio": 0.017841699956513635
+        }
+      },
+      "holdout_metrics": {
+        "shape_score": 0.006888451789129611,
+        "residual_metrics": {
+          "rms_residual_dB": 1.1518574759738915,
+          "max_abs_residual_dB": 7.4336082224489015,
+          "mean_residual_dB": -0.04908178227648748,
+          "bands": {
+            "40000-100000_Hz": {
+              "mean_residual_dB": 0.4953502265593761,
+              "rms_residual_dB": 0.643417207082191,
+              "max_abs_residual_dB": 2.5514433885026166
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -0.7658024015034471,
+              "rms_residual_dB": 1.5901016207502705,
+              "max_abs_residual_dB": 7.4336082224489
+            }
+          }
+        },
+        "bands": {
+          "40000-100000_Hz": {
+            "mean_log10_ratio": 0.024767511327968804,
+            "mean_model_over_target_dB": 0.4953502265593761,
+            "geometric_mean_model_over_target": 1.0586868319788565,
+            "rms_log10_ratio": 0.03217086035410955,
+            "max_abs_log10_ratio": 0.12757216942513083
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.03829012007517236,
+            "mean_model_over_target_dB": -0.7658024015034471,
+            "geometric_mean_model_over_target": 0.9156086352563048,
+            "rms_log10_ratio": 0.07950508103751353,
+            "max_abs_log10_ratio": 0.371680411122445
+          }
+        }
+      },
+      "full_1_200k_metrics": {
+        "shape_score": 0.003149103183550945,
+        "residual_metrics": {
+          "rms_residual_dB": 0.6422442433363018,
+          "max_abs_residual_dB": 7.4336082224489015,
+          "mean_residual_dB": -0.008179405102607541,
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_residual_dB": 0.027678526657291702,
+              "rms_residual_dB": 0.10666050455829455,
+              "max_abs_residual_dB": 0.37483979129804773
+            },
+            "5000-15000_Hz": {
+              "mean_residual_dB": -0.006975941825019701,
+              "rms_residual_dB": 0.10806812505319299,
+              "max_abs_residual_dB": 0.2786816508495471
+            },
+            "15000-40000_Hz": {
+              "mean_residual_dB": -0.0012072964148815148,
+              "rms_residual_dB": 0.11889436191127953,
+              "max_abs_residual_dB": 0.3568339991302727
+            },
+            "40000-100000_Hz": {
+              "mean_residual_dB": 0.4953502265593761,
+              "rms_residual_dB": 0.643417207082191,
+              "max_abs_residual_dB": 2.5514433885026166
+            },
+            "100000-200000_Hz": {
+              "mean_residual_dB": -0.7658024015034471,
+              "rms_residual_dB": 1.5901016207502705,
+              "max_abs_residual_dB": 7.4336082224489
+            }
+          }
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_log10_ratio": 0.001383926332864585,
+            "mean_model_over_target_dB": 0.027678526657291702,
+            "geometric_mean_model_over_target": 1.0031916907769398,
+            "rms_log10_ratio": 0.005333025227914728,
+            "max_abs_log10_ratio": 0.018741989564902386
+          },
+          "5000-15000_Hz": {
+            "mean_log10_ratio": -0.00034879709125098504,
+            "mean_model_over_target_dB": -0.006975941825019701,
+            "geometric_mean_model_over_target": 0.9991971874437829,
+            "rms_log10_ratio": 0.00540340625265965,
+            "max_abs_log10_ratio": 0.013934082542477355
+          },
+          "15000-40000_Hz": {
+            "mean_log10_ratio": -6.036482074407574e-05,
+            "mean_model_over_target_dB": -0.0012072964148815148,
+            "geometric_mean_model_over_target": 0.9998610145229898,
+            "rms_log10_ratio": 0.005944718095563977,
+            "max_abs_log10_ratio": 0.017841699956513635
+          },
+          "40000-100000_Hz": {
+            "mean_log10_ratio": 0.024767511327968804,
+            "mean_model_over_target_dB": 0.4953502265593761,
+            "geometric_mean_model_over_target": 1.0586868319788565,
+            "rms_log10_ratio": 0.03217086035410955,
+            "max_abs_log10_ratio": 0.12757216942513083
+          },
+          "100000-200000_Hz": {
+            "mean_log10_ratio": -0.03829012007517236,
+            "mean_model_over_target_dB": -0.7658024015034471,
+            "geometric_mean_model_over_target": 0.9156086352563048,
+            "rms_log10_ratio": 0.07950508103751353,
+            "max_abs_log10_ratio": 0.371680411122445
+          }
+        }
+      },
+      "score_ratio_to_free_hybrid": 0.9999999999999971,
+      "rms_delta_from_free_hybrid_dB": -1.1102230246251565e-16,
+      "near_free_hybrid": true
+    }
+  ],
+  "incremental_complexity_gain": [
+    {
+      "from_order": 0,
+      "to_order": 1,
+      "shape_score_ratio_new_over_old": 0.0011909443300996381,
+      "rms_improvement_dB": 2.6068480843064212,
+      "holdout_score_ratio_new_over_old": 0.09393984938413687
+    },
+    {
+      "from_order": 1,
+      "to_order": 2,
+      "shape_score_ratio_new_over_old": 0.6330188078835132,
+      "rms_improvement_dB": 0.018073920159638032,
+      "holdout_score_ratio_new_over_old": 0.5169050585564052
+    },
+    {
+      "from_order": 2,
+      "to_order": 3,
+      "shape_score_ratio_new_over_old": 1.003701661106071,
+      "rms_improvement_dB": 3.711533560411817e-05,
+      "holdout_score_ratio_new_over_old": 0.9043449501482629
+    }
+  ],
+  "minimal_order_screen": {
+    "near_free_rms_delta_dB": 0.05,
+    "near_free_score_ratio": 5
+  },
+  "minimal_order_near_free_hybrid": 1,
+  "numerator_dof_required_to_match_free": 1,
+  "interpretation_flags": {
+    "pole_only_sufficient": false,
+    "one_numerator_degree_sufficient": true,
+    "two_numerator_degrees_sufficient": true,
+    "three_numerator_degrees_required": false,
+    "order3_reproduces_free_hybrid": true,
+    "individual_physical_zero_corners_identified": false
+  },
+  "guardrail": "The effective numerator coefficients describe only the required magnitude-shape complexity. They are not physical component values. The order-3 family is an algebraic reparameterization of the current five-parameter infinity-pole hybrid, while lower orders intentionally remove numerator degrees of freedom.",
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\readout_effective_numerator_config.json",
+    "manifest": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\shared_readout_cross_dataset_manifest.json",
+    "reference_transfer": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\shared_readout_reference_transfer.json",
+    "lowmid_free_snapshot": "D:\\Github\\TES-Programs\\PoST_Simulations\\cases\\tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat\\lowmid_free_transfer_snapshot.json"
+  }
+}
