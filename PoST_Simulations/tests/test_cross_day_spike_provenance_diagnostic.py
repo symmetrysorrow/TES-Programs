@@ -106,3 +106,23 @@ def test_classify_mixed_when_day_and_stored_both_change():
         line_present_db=3.0,
     )
     assert result == "mixed_day_and_stored_difference"
+
+
+def test_cleaned_result_converts_path_and_numpy_types(tmp_path):
+    payload = {
+        "comparison": {
+            "repeat": {
+                "experiment_path": tmp_path / "run",
+                "count": np.int64(3),
+                "values": np.asarray([1.0, 2.0]),
+            }
+        },
+        "_plot": {"large": np.asarray([1.0])},
+    }
+    cleaned = diag.cleaned_result(payload)
+    assert cleaned["comparison"]["repeat"]["experiment_path"] == str(
+        tmp_path / "run"
+    )
+    assert cleaned["comparison"]["repeat"]["count"] == 3
+    assert cleaned["comparison"]["repeat"]["values"] == [1.0, 2.0]
+    assert "_plot" not in cleaned
