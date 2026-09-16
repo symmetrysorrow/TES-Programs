@@ -425,7 +425,12 @@ def clean_row(row):
     }
 
 
-def run(config, config_path: Path, experiment_path_override=None):
+def run(
+    config,
+    config_path: Path,
+    experiment_path_override=None,
+    readout_bounds_override=None,
+):
     base_config_path = resolve_config_path(
         config["base_residual_config"],
         config_path,
@@ -516,6 +521,26 @@ def run(config, config_path: Path, experiment_path_override=None):
         )
         for name in residual.READOUT_PARAMETER_NAMES
     }
+    if readout_bounds_override is not None:
+        unknown = sorted(
+            set(readout_bounds_override)
+            - set(residual.READOUT_PARAMETER_NAMES)
+        )
+        if unknown:
+            raise ValueError(
+                f"unknown readout bound overrides: {unknown}"
+            )
+        for name, values in readout_bounds_override.items():
+            if len(values) != 2:
+                raise ValueError(
+                    f"readout bound override for {name} must have two values"
+                )
+            lower, upper = (float(values[0]), float(values[1]))
+            if upper < lower:
+                raise ValueError(
+                    f"readout bound override for {name} is reversed"
+                )
+            readout_bounds[name] = (lower, upper)
     reference_readout = snapshot["reference_readout"]
     local_readout = snapshot["local_readout"]
     scale_hz = float(
