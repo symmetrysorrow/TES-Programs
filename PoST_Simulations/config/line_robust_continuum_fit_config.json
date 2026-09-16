@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "purpose": "Fit the repeat-case smooth continuum after replacing only data-defined narrow high-frequency lines with a local robust floor, while profiling the post-filter white floor and retaining stability/boundary diagnostics.",
+  "base_residual_config": "readout_residual_dof_competition_config.json",
+  "fit_region_Hz": {
+    "min": 1000,
+    "max": 200000
+  },
+  "line_repair": {
+    "detect_min_Hz": 40000,
+    "detect_max_Hz": 200000,
+    "baseline_width_Hz": 2000,
+    "minimum_excess_dB": 3.0,
+    "minimum_prominence_dB": 2.0,
+    "minimum_spacing_Hz": 250,
+    "max_detected_peaks": 64,
+    "max_line_width_Hz": 500,
+    "minimum_repair_half_width_Hz": 75,
+    "width_expansion_factor": 1.5
+  },
+  "white_profile": {
+    "min_scale": 0.2,
+    "max_scale": 5.0,
+    "outer_iterations": 2
+  },
+  "families": [
+    {
+      "name": "pole_section_plus_c2",
+      "readout_parameters": ["pole_Hz", "pole_Q", "c2"]
+    },
+    {
+      "name": "full_order2",
+      "readout_parameters": ["pole_Hz", "pole_Q", "c2", "c4"]
+    }
+  ],
+  "selection_screen": {
+    "full_order2_material_score_ratio": 0.8,
+    "full_order2_min_rms_improvement_dB": 0.05,
+    "reject_if_added_c4_at_bound": true
+  },
+  "guardrail": "The repaired target is diagnostic-only and changes only data-defined narrow-line intervals above 40 kHz. The optimizer never chooses the mask. Broad shoulders/humps remain in the target. White-floor and readout parameters remain effective nuisance/measurement-shape coordinates, not identified hardware components."
+}
