@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "purpose": "With c4 fixed to zero, profile the documented Magnicon XXF-1 10 kHz second-order Bessel cutoff across its +/-2.5% manual tolerance and test whether that physical filter plus only c2 can replace the previous free pole/Q effective readout model.",
+  "base_magnicon_config": "magnicon_xxf1_lpf_continuum_config.json",
+  "normalization_candidates": ["mag", "phase"],
+  "c2_upper_bound": 1000.0,
+  "comparison_screen": {
+    "max_rms_degradation_to_current_free_pole_dB": 0.05,
+    "max_shape_score_ratio_to_current_free_pole": 1.25,
+    "max_rms_degradation_to_free_pole_c4zero_dB": 0.05,
+    "cutoff_bound_relative_tolerance": 0.0001
+  },
+  "guardrail": "The Magnicon manual documents a second-order Bessel output LPF at 10 kHz +/-2.5%, but the filter state during the 2024-12-05/06 acquisition is not known. A successful fit establishes consistency with the LPF-ON hypothesis, not proof that it was ON. c4 is fixed to zero throughout the physical-filter branch. No production data or production noise model are modified."
+}
