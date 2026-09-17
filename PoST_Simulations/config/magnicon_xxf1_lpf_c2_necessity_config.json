@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the residual effective numerator coefficient c2 is materially required after the documented Magnicon XXF-1 10 kHz second-order Bessel LPF is explicit and c4 is fixed to zero.",
+  "base_profile_config": "magnicon_xxf1_lpf_c4zero_cutoff_profile_config.json",
+  "primary_normalization": "phase",
+  "normalization_candidates": ["phase", "mag"],
+  "c2_upper_bound": 1000.0,
+  "materiality_screen": {
+    "max_c2_free_shape_score_ratio_to_c2_zero": 0.80,
+    "min_c2_rms_improvement_dB": 0.05,
+    "max_no_c2_rms_degradation_to_current_free_pole_dB": 0.05,
+    "max_no_c2_shape_score_ratio_to_current_free_pole": 1.25,
+    "max_c2_free_rms_degradation_to_current_free_pole_dB": 0.05,
+    "max_c2_free_shape_score_ratio_to_current_free_pole": 1.25,
+    "cutoff_bound_relative_tolerance": 0.0001
+  },
+  "guardrail": "The XXF-1 manual documents the 10 kHz +/-2.5% second-order Bessel output LPF, but the filter state during the 2024-12-05/06 acquisition is still unknown. This diagnostic tests whether phenomenological c2 is needed conditional on the LPF-ON hypothesis. c4 is fixed to zero in every Magnicon branch. No production data or production noise model are modified."
+}
