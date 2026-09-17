@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the free ~12 kHz effective readout pole can be replaced by the documented Magnicon XXF-1 Connector Box anti-alias filter without materially degrading the line-robust 1-200 kHz continuum fit.",
+  "base_continuum_config": "line_robust_continuum_fit_config.json",
+  "manual_reference": {
+    "document": "Magnicon XXF-1 Manual",
+    "version": "v3.3.8",
+    "date": "07/2012",
+    "location": "Connector Box / Anti-alias filter, manual pp. 45-48",
+    "documented_filter": "three output-channel filters, second-order Bessel type, cutoff 10 kHz +/-2.5%",
+    "state_control": "Connector Box top switch or DB-15 pin 12 LPF; LED indicates actual on/off state",
+    "measurement_time_state": "unknown; this diagnostic tests the LPF-ON hypothesis only"
+  },
+  "magnicon_filter": {
+    "order": 2,
+    "nominal_cutoff_Hz": 10000.0,
+    "cutoff_tolerance_fraction": 0.025,
+    "normalization_candidates": ["mag", "phase"],
+    "primary_normalization": "mag",
+    "normalization_guardrail": "The manual states a 10 kHz cutoff but does not state the exact analog-Bessel normalization. 'mag' interprets 10 kHz as the -3 dB cutoff; 'phase' is included as a convention-sensitivity check."
+  },
+  "readout_profile": {
+    "c2_upper_bound": 1000.0,
+    "legacy_fixed_c4": true,
+    "also_test_c4_zero": true,
+    "also_test_filter_only": true,
+    "also_profile_cutoff_within_manual_tolerance": true
+  },
+  "comparison_screen": {
+    "known_filter_max_rms_degradation_dB": 0.05,
+    "known_filter_max_score_ratio_to_free_pole": 1.25,
+    "c4_zero_max_rms_degradation_dB": 0.05,
+    "filter_only_max_rms_degradation_dB": 0.10,
+    "cutoff_tolerance_material_rms_improvement_dB": 0.01
+  },
+  "guardrail": "A successful replacement supports consistency with the documented XXF-1 10 kHz output LPF, but does not prove that the filter was ON during the 2024-12-05/06 acquisition. Confirm the Connector Box LED/switch or historical wiring separately. No production model or data are changed by this diagnostic."
+}
