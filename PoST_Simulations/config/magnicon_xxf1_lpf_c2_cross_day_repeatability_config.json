@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the residual c2 required after the documented Magnicon XXF-1 10 kHz Bessel LPF is repeatable across the 2024-12-05 repeat and 2024-12-06 reference acquisitions.",
+  "base_c2_config": "magnicon_xxf1_lpf_c2_necessity_config.json",
+  "reference_case_label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+  "repeat_case_label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+  "normalization": "phase",
+  "cross_day_screen": {
+    "max_cross_applied_rms_degradation_dB": 0.05,
+    "max_cross_applied_shape_score_ratio": 1.25,
+    "max_equivalent_zero_fractional_difference": 0.20
+  },
+  "guardrail": "This is adjacent-day same-condition repeatability, not independent operating-point validation. Repeatable c2 or its magnitude-equivalent first-order zero supports a stable readout-shape candidate, but cannot by itself distinguish readout electronics from a detector-model deficiency that repeats under the same operating condition. The XXF-1 LPF state during the 2024-12-05/06 acquisition remains unverified. No production data or production noise model are modified."
+}
