@@ -123,6 +123,16 @@ def find_project(case_names: tuple[str, ...], explicit: Path | None) -> tuple[Pa
     return best[1], best[2]
 
 
+def find_project_for_case(case_name: str, explicit: Path | None = None) -> tuple[Path | None, dict[str, Any] | None]:
+    """Find a project that actually contains *case_name*.
+
+    Audit mode may combine evidence from separate generated projects.  Run mode,
+    however, must clone the real transient case definition rather than whichever
+    project happened to contain the steady case first.
+    """
+    return find_project((case_name,), explicit)
+
+
 def find_case_sif(case: str) -> Path | None:
     runtime = ROOT / "results" / case / "runtime.sif"
     generated = ROOT / "generated" / "cases" / f"{case}.sif"
@@ -621,15 +631,27 @@ def continuity_metrics(label: str, audit: dict[str, Any], reference_uA: float) -
     first_current = first.get("tes_current_uA")
     def delta(value: float | None) -> float | None:
         return None if value is None else value - reference_uA
+    state_temp_mK = (
+        state.get("temperature_K") * 1.0e3
+        if state.get("temperature_K") is not None
+        else None
+    )
+    first_temp_mK = first.get("tes_temperature_mK")
     return {
         "variant": label,
         "state_current_uA": current_state,
         "state_delta_uA": delta(current_state),
+        "state_temperature_mK": state_temp_mK,
         "first_iteration_current_uA": first_it_current,
         "first_iteration_delta_uA": delta(first_it_current),
         "first_accepted_current_uA": first_current,
         "first_accepted_delta_uA": delta(first_current),
-        "first_accepted_temperature_mK": first.get("tes_temperature_mK"),
+        "first_accepted_temperature_mK": first_temp_mK,
+        "first_accepted_temperature_delta_mK": (
+            first_temp_mK - state_temp_mK
+            if first_temp_mK is not None and state_temp_mK is not None
+            else None
+        ),
         "last_current_uA": audit.get("series", {}).get("last", {}).get("tes_current_uA"),
         "row_count": audit.get("series", {}).get("row_count", 0),
     }
@@ -735,9 +757,21 @@ def main() -> int:
     args = parser.parse_args()
 
     project_path, model = find_project((args.steady_case, args.transient_case), args.project)
-    steady = audit_case(args.steady_case, project_path, model)
-    transient = audit_case(args.transient_case, project_path, model)
-    old_good = audit_case(args.old_good_case, project_path, model)
+    steady_project_path, steady_model = find_project_for_case(args.steady_case, args.project)
+    transient_project_path, transient_model = find_project_for_case(args.transient_case, args.project)
+
+    steady = audit_case(args.steady_case, steady_project_path or project_path, steady_model or model)
+    transient = audit_case(
+        args.transient_case,
+        transient_project_path or project_path,
+        transient_model or model,
+    )
+    old_good_project_path, old_good_model = find_project_for_case(args.old_good_case, None)
+    old_good = audit_case(
+        args.old_good_case,
+        old_good_project_path or project_path,
+        old_good_model or model,
+    )
 
     source_state = transient.get("state", {})
     steady_state = steady.get("state", {})
@@ -747,6 +781,12 @@ def main() -> int:
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "project": relpath(project_path),
         "project_found": bool(project_path and model),
+        "source_projects": {
+            "combined": relpath(project_path),
+            "steady": relpath(steady_project_path),
+            "transient": relpath(transient_project_path),
+            "old_good": relpath(old_good_project_path),
+        },
         "steady_case": args.steady_case,
         "transient_case": args.transient_case,
         "old_good_case": args.old_good_case,
@@ -800,10 +840,12 @@ def main() -> int:
         "runs": {},
     }
 
-    if model and project_path and not args.audit_only:
+    run_project_path = transient_project_path or project_path
+    run_model = transient_model or model
+    if run_model and run_project_path and args.transient_case in run_model.get("cases", {}) and not args.audit_only:
         campaign_project, variants = build_campaign_project(
-            project_path,
-            model,
+            run_project_path,
+            run_model,
             args.steady_case,
             args.transient_case,
             args.include_state_fallback,
@@ -886,6 +928,12 @@ def main() -> int:
                     }
             summary["linear_system_comparison"] = comparisons
 
+    if not args.audit_only and not args.dry_run and not summary["runs"]:
+        summary["run_setup_error"] = (
+            "No project JSON containing the transient case was found. Pass --project "
+            "with the JSON used to generate the transient case."
+        )
+
     metrics = summary["first_step_metrics"]
     existing_jump = first_jump_location(existing_metrics, args.reference_current_uA)
     state_delta = source_state.get("current_uA")
@@ -905,7 +953,12 @@ def main() -> int:
         "mortar_status": "not isolated",
         "time_status": "not isolated",
         "backend_status": "not isolated",
-        "strongest": "restart/state handoff remains the first target",
+        "strongest": (
+            "first transient accepted-step evolution is the first demonstrated failure; "
+            "inspect first-step thermal/circuit equations, restart field continuity, BDF initialization, and mortar coupling"
+            if existing_jump == "first accepted timestep" and not state_bad
+            else "restart/state handoff remains the first target"
+        ),
     }
 
     by_variant = {row["variant"]: row for row in metrics}
@@ -945,6 +998,9 @@ def main() -> int:
                 "mutable TES State File provenance: the transient shares and can overwrite "
                 "the steady seed, and the currently observed state is off the Gate3 current"
             )
+
+    if summary.get("run_setup_error"):
+        diagnosis["strongest"] += "; short-run isolation still requires the transient source project JSON"
 
     summary["diagnosis"] = diagnosis
     write_artifacts(summary)
