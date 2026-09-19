@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "purpose": "Anchor both L and C_tes to independently motivated physical scales and test whether a material, cross-day-repeatable residual c2 remains after removing the two strongest TES/readout shape degeneracies.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "external_L_H": 1.0e-10,
+  "C_tes_anchor": {
+    "source": "Opt_noise.C_TES_MATERIAL_J_PER_K",
+    "source_semantics": "TES bilayer geometry x density x specific heat; independent of the noise fit but not direct calorimetry",
+    "multipliers": [0.25, 0.5, 1.0, 2.0],
+    "primary_multiplier": 1.0
+  },
+  "magnicon_filter": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "c4_fixed": 0.0
+  },
+  "transfer_normalization_reference_Hz": 1000.0,
+  "transfer_repeatability_screen": {
+    "max_full_band_rms_difference_dB": 0.5,
+    "max_abs_difference_dB": 1.5
+  },
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "guardrail": "L is externally anchored near the independently motivated circuit scale. C_tes is anchored to the repository material estimate derived from assumed TES geometry, density, and specific heat; it is not a direct calorimetric measurement. The C_tes multiplier grid is a sensitivity study, not an uncertainty interval. Magnicon is fixed to the nominal 10 kHz phase-normalized second-order Bessel response with c4=0. A repeatable c2 under these constraints supports a stable residual-shape candidate but does not identify a physical zero or its phase."
+}
