@@ -710,7 +710,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
     lines = [
         "# Phase24 restart-continuity campaign",
         "",
-        f"Generated: \`{summary.get('generated_utc')}\`",
+        f"Generated: `{summary.get('generated_utc')}`",
         "",
         "## Headline",
         "",
@@ -725,9 +725,9 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "## Evidence",
         "",
         f"- Reference Gate3 current: {summary.get('reference_current_uA')} uA",
-        f"- Source project: \`{summary.get('project')}\`",
-        f"- Existing transient case: \`{summary.get('transient_case')}\`",
-        f"- Existing steady case: \`{summary.get('steady_case')}\`",
+        f"- Source project: `{summary.get('project')}`",
+        f"- Existing transient case: `{summary.get('transient_case')}`",
+        f"- Existing steady case: `{summary.get('steady_case')}`",
         "",
         "Detailed machine-readable outputs are beside this file: provenance.json, "
         "input_diff.json, restart_audit.json, state_file_audit.json, case_matrix.csv, "
