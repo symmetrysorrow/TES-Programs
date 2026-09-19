@@ -41,7 +41,7 @@ python scripts/support/run_phase24_restart_continuity_campaign.py --dry-run
 # Test the T0/fallback circuit initialization path too.
 python scripts/support/run_phase24_restart_continuity_campaign.py --include-state-fallback
 
-# Add a no-mortar first-step control. Diagnostic only on a nonconforming mesh.
+# Add no-mortar matrix-capture + observable hold controls. Diagnostic only on a nonconforming mesh.
 python scripts/support/run_phase24_restart_continuity_campaign.py --include-no-mortar
 \`\`\`
 
@@ -57,6 +57,8 @@ variant has a unique case name and does not overwrite production results.
 | Gate3-state hold | MUMPS | 1 | 5 | on |
 | Gate3-state production-integrator hold | MUMPS | production | 5 | on |
 | Gate3-state backend comparison | HYPRE | 1 | 1 | on |
+| Gate3-state no-mortar matrix capture (`--include-no-mortar`) | MUMPS | 1 | 1 | off |
+| Gate3-state no-mortar observable hold (`--include-no-mortar`) | MUMPS | 1 | 5 | off |
 
 ## TES state-file safety
 
@@ -96,6 +98,8 @@ artifacts/phase24_restart_continuity_campaign/
   state_snapshots/
   dumps/
 \`\`\`
+
+TES series rows are committed when the following timestep begins. Therefore a one-step diagnostic can finish successfully with `row_count=0`; it is retained for matrix capture, while the hold5 cases are used for accepted-step BDF/mortar diagnosis.
 
 The summary classifies the earliest captured divergence as:
 
