@@ -124,3 +124,16 @@ def test_dict_diff_reports_nested_changes() -> None:
 
     assert "solver.linear_system" in keys
     assert "bdf_order" in keys
+
+
+def test_source_keeps_observable_nomortar_hold_variant() -> None:
+    source = MODULE_PATH.read_text(encoding="utf-8")
+    assert '"gate3_state_mumps_bdf1_hold5_nomortar"' in source
+    assert '"steps": 5' in source
+
+
+def test_diagnosis_uses_hold_case_for_mortar_comparison() -> None:
+    source = MODULE_PATH.read_text(encoding="utf-8")
+    assert 'by_variant.get("gate3_state_mumps_bdf1_hold5")' in source
+    assert 'by_variant.get("gate3_state_mumps_bdf1_hold5_nomortar")' in source
+    assert "one-step variants may legitimately have row_count=0" in source
