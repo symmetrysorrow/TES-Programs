@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "purpose": "Use the independently motivated circuit inductance scale near 1e-10 H to test whether the residual c2 remains necessary and/or becomes cross-day repeatable once L is prevented from drifting to fit-driven ~1e-8 H values.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "external_L_nominal_H": 1.0e-10,
+  "L_sensitivity_multipliers": [1.0, 3.0, 10.0],
+  "primary_L_multiplier": 1.0,
+  "magnicon_filter": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "c4_fixed": 0.0
+  },
+  "transfer_normalization_reference_Hz": 1000.0,
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "transfer_repeatability_screen": {
+    "max_full_band_rms_difference_dB": 0.5,
+    "max_abs_difference_dB": 1.5
+  },
+  "guardrail": "The external L scale is treated as an independent physical anchor, not as a fitted result. The 1x/3x/10x grid is a sensitivity test, not a confidence interval or claimed hardware tolerance. Magnicon is fixed to the documented nominal 10 kHz phase-normalized second-order Bessel form to avoid cutoff/c2 covariance. The current Connector Box LPF has been observed ON, but the 2024-12-05/06 measurement-time state remains unlogged. No production model is modified."
+}
