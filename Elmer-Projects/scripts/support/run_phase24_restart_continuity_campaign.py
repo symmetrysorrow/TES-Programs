@@ -472,49 +472,57 @@ def build_campaign_project(
     base = cases[transient_case]
     steady_spec = cases.get(steady_case, {})
 
-    transient_state = resolve_input(base.get("state_file"))
-    gate3_state = resolve_input(steady_spec.get("state_file")) if steady_spec.get("state_file") else None
-    current_copy = snapshot_state(transient_state, "source_transient_state")
-    gate3_copy = snapshot_state(gate3_state, "gate3_steady_state")
-    preferred = gate3_copy or current_copy
+    transient_state_source = resolve_input(base.get("state_file"))
+    gate3_state_source = (
+        resolve_input(steady_spec.get("state_file"))
+        if steady_spec.get("state_file")
+        else None
+    )
+    preferred_source = gate3_state_source or transient_state_source
 
     variants: dict[str, dict[str, Any]] = {
         "current_state_mumps_bdf1_1": {
-            "backend": "mumps", "bdf": 1, "steps": 1, "state": current_copy, "mortar": True, "dump": True,
+            "backend": "mumps", "bdf": 1, "steps": 1, "state_source": transient_state_source, "mortar": True, "dump": True,
         },
         "gate3_state_mumps_bdf1_1": {
-            "backend": "mumps", "bdf": 1, "steps": 1, "state": preferred, "mortar": True, "dump": True,
+            "backend": "mumps", "bdf": 1, "steps": 1, "state_source": preferred_source, "mortar": True, "dump": True,
         },
         "gate3_state_mumps_bdf1_hold5": {
-            "backend": "mumps", "bdf": 1, "steps": 5, "state": preferred, "mortar": True, "dump": False,
+            "backend": "mumps", "bdf": 1, "steps": 5, "state_source": preferred_source, "mortar": True, "dump": False,
         },
         "gate3_state_mumps_production_hold5": {
-            "backend": "mumps", "bdf": int(base.get("bdf_order", 2)), "steps": 5, "state": preferred, "mortar": True, "dump": False,
+            "backend": "mumps", "bdf": int(base.get("bdf_order", 2)), "steps": 5, "state_source": preferred_source, "mortar": True, "dump": False,
         },
         "gate3_state_hypre_bdf1_1": {
-            "backend": "iterative_hypre_flexgmres_boomeramg", "bdf": 1, "steps": 1, "state": preferred, "mortar": True, "dump": True,
+            "backend": "iterative_hypre_flexgmres_boomeramg", "bdf": 1, "steps": 1, "state_source": preferred_source, "mortar": True, "dump": True,
         },
     }
     if include_fallback:
         variants["no_state_mumps_bdf1_1"] = {
-            "backend": "mumps", "bdf": 1, "steps": 1, "state": None, "mortar": True, "dump": True,
+            "backend": "mumps", "bdf": 1, "steps": 1, "state_source": None, "mortar": True, "dump": True,
         }
     if include_no_mortar:
         variants["gate3_state_mumps_bdf1_1_nomortar"] = {
-            "backend": "mumps", "bdf": 1, "steps": 1, "state": preferred, "mortar": False, "dump": True,
+            "backend": "mumps", "bdf": 1, "steps": 1, "state_source": preferred_source, "mortar": False, "dump": True,
         }
 
     generated = copy.deepcopy(model)
     for suffix, options in variants.items():
         name = f"case_phase24_restartdiag_{suffix}"
         options["case"] = name
+        # The UDF writes transient checkpoints back into TES State File.
+        # Give every variant its own working copy so one diagnostic can never
+        # change another variant's initial electrical state.
+        working_state = snapshot_state(options["state_source"], f"{suffix}_working")
+        options["state"] = working_state
+        options["initial_state"] = read_state_file(resolve_input(working_state))
         generated["cases"][name] = set_short_variant(
             base,
             name,
             backend=options["backend"],
             bdf_order=options["bdf"],
             steps=options["steps"],
-            state_file=options["state"],
+            state_file=working_state,
             apply_mortar=options["mortar"],
             dump_matrix=options["dump"],
         )
@@ -764,6 +772,18 @@ def main() -> int:
                 steady_state.get("sha256")
                 and steady_state.get("sha256") == source_state.get("sha256")
             ),
+            "same_resolved_path": bool(
+                steady_state.get("path")
+                and steady_state.get("path") == source_state.get("path")
+            ),
+            "shared_path_risk": (
+                "A transient accepted step can overwrite the steady seed because the "
+                "UDF checkpoints to TES State File. Shared steady/transient paths are "
+                "therefore mutable provenance, not an immutable restart seed."
+                if steady_state.get("path")
+                and steady_state.get("path") == source_state.get("path")
+                else None
+            ),
         },
         "old_good_route_diff": {
             "spec_diff": dict_diff(old_good.get("spec"), transient.get("spec")),
@@ -814,6 +834,8 @@ def main() -> int:
                     "steps": options["steps"],
                     "mortar": options["mortar"],
                     "state_snapshot": options["state"],
+                    "initial_state_current_uA": options.get("initial_state", {}).get("current_uA"),
+                    "initial_state_sha256": options.get("initial_state", {}).get("sha256"),
                 }
             )
             command = command_for(case, campaign_project, solver, runtime_bin, toolchain_bin)
@@ -823,6 +845,15 @@ def main() -> int:
             if not args.dry_run:
                 audit = audit_case(case, campaign_project, json_load(campaign_project))
                 metrics = continuity_metrics(suffix, audit, args.reference_current_uA)
+                # audit_case sees the working state after the transient has had
+                # a chance to checkpoint it.  Restore the captured pre-run
+                # state here so the "before solver" checkpoint is truthful.
+                initial_state = options.get("initial_state", {})
+                if initial_state.get("current_uA") is not None:
+                    metrics["state_current_uA"] = initial_state["current_uA"]
+                    metrics["state_delta_uA"] = (
+                        initial_state["current_uA"] - args.reference_current_uA
+                    )
                 summary["first_step_metrics"].append(metrics)
 
         if not args.dry_run:
@@ -861,6 +892,7 @@ def main() -> int:
     state_bad = state_delta is not None and abs(state_delta - args.reference_current_uA) > abs(args.reference_current_uA) * CURRENT_GATE_REL
     restart_ok = transient.get("restart", {}).get("exists")
     same_state = summary["state_file_audit"].get("same_sha256")
+    shared_state_path = summary["state_file_audit"].get("same_resolved_path")
 
     diagnosis = {
         "first_jump": existing_jump,
@@ -906,6 +938,13 @@ def main() -> int:
             diagnosis["mortar_status"] = "no material first-step mortar effect observed"
     if same_state:
         diagnosis["state_status"] += "; steady/transient state hashes are identical"
+    if shared_state_path:
+        diagnosis["state_status"] += "; steady/transient share a mutable state-file path"
+        if state_bad:
+            diagnosis["strongest"] = (
+                "mutable TES State File provenance: the transient shares and can overwrite "
+                "the steady seed, and the currently observed state is off the Gate3 current"
+            )
 
     summary["diagnosis"] = diagnosis
     write_artifacts(summary)
