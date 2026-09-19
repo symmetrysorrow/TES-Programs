@@ -577,6 +577,31 @@ def read_numeric_dump(path: Path | None, columns: int) -> dict[Any, float]:
     return out
 
 
+def read_solution_vector(path: Path | None) -> dict[int, float]:
+    """Read SaveLinearSystem solution dumps in indexed or value-only form."""
+    if path is None or not path.is_file():
+        return {}
+    out: dict[int, float] = {}
+    implicit_index = 0
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if not fields:
+                continue
+            try:
+                if len(fields) >= 2:
+                    index = int(fields[0])
+                    value = float(fields[1])
+                else:
+                    implicit_index += 1
+                    index = implicit_index
+                    value = float(fields[0])
+            except ValueError:
+                continue
+            out[index] = value
+    return out
+
+
 def compare_dumps(left: Path | None, right: Path | None, columns: int) -> dict[str, Any]:
     a = read_numeric_dump(left, columns)
     b = read_numeric_dump(right, columns)
@@ -635,7 +660,7 @@ def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
         }
 
     b = read_numeric_dump(b_path, 2)
-    x = read_numeric_dump(x_path, 2)
+    x = read_solution_vector(x_path)
     if not b:
         return {"available": False, "reason": "empty RHS dump"}
 
