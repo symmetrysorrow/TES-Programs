@@ -137,3 +137,71 @@ def test_diagnosis_uses_hold_case_for_mortar_comparison() -> None:
     assert 'by_variant.get("gate3_state_mumps_bdf1_hold5")' in source
     assert 'by_variant.get("gate3_state_mumps_bdf1_hold5_nomortar")' in source
     assert "one-step variants may legitimately have row_count=0" in source
+
+
+def test_restart_candidate_residual_splits_zero_diagonal_constraint_rows(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "firstsolve"
+    # Saddle matrix [[2,0,1],[0,3,1],[1,1,0]], b=A*[1,2,0].
+    (tmp_path / "firstsolve_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "firstsolve_b.dat").write_text(
+        "1 2\n2 6\n3 3\n",
+        encoding="utf-8",
+    )
+    # SaveLinearSystem-style primal-only vector; multiplier is omitted.
+    (tmp_path / "firstsolve_sol.dat").write_text(
+        "1 1\n2 2\n",
+        encoding="utf-8",
+    )
+
+    result = campaign.restart_candidate_residual(prefix)
+
+    assert result["available"] is True
+    assert result["rows"] == 3
+    assert result["saved_solution_records"] == 2
+    assert result["missing_solution_entries_zero_extended"] == 1
+    assert result["primal_rows"] == 2
+    assert result["constraint_rows"] == 1
+    assert result["full"]["residual_l2"] == 0.0
+    assert result["primal"]["residual_l2"] == 0.0
+    assert result["constraint"]["residual_l2"] == 0.0
+
+
+def test_restart_candidate_residual_detects_constraint_violation(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "firstsolve"
+    (tmp_path / "firstsolve_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "firstsolve_b.dat").write_text(
+        "1 2\n2 6\n3 0\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "firstsolve_sol.dat").write_text(
+        "1 1\n2 2\n",
+        encoding="utf-8",
+    )
+
+    result = campaign.restart_candidate_residual(prefix)
+
+    assert result["constraint"]["residual_l2"] == 3.0
+    assert result["constraint"]["residual_max_abs"] == 3.0
+    assert result["constraint"]["backward_error"] > 0.0
