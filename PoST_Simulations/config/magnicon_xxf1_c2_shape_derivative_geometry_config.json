@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "purpose": "Compare the local ASD-shape derivatives of residual c2, C_tes, and L at each day's Magnicon+c2 best fit to expose readout/detector identifiability geometry.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "derivative_parameters": ["C_tes", "L"],
+  "finite_difference": {
+    "detector_log_step": 0.01,
+    "c2_relative_step": 0.01,
+    "c2_absolute_min_step": 0.01
+  },
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "similarity_screen": {
+    "strong_abs_cosine": 0.90,
+    "moderate_abs_cosine": 0.70
+  },
+  "guardrail": "Derivative alignment is an identifiability statement, not causal attribution. C_tes or L can align with the c2 shape because different model freedoms generate similar normalized ASD changes. The derivatives are local to each fitted operating point; the finite c2-removal comparison is included to expose nonlinearity. Magnicon pole/Q and white are frozen throughout the derivative calculation."
+}
