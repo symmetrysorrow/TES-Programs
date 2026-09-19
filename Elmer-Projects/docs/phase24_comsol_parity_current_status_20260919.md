@@ -16,10 +16,12 @@
    応答を再現せず、100 µs まで延長する意味がないことを 20 µs 時点で確認した。
 3. **GPU は原因ではない**。CPU-HYPRE と GPU-HYPRE は同じ遅い波形を生成し、GPU
    parity 自体は PASS している。
-4. **COMSOL に近い過渡波形の既知の実績は MUMPS**。旧 CPU MUMPS の 100 µs 実績は
-   waveform の最大差 0.028714 µA、RMSE 0.015865 µA で、Gate4 の目標内である。
-5. 今回の新しい非共形 32 層メッシュでの MUMPS 40 µs 再検証は、17:34 JST に開始し、
-   本文書作成時点では実行中で結果未確定である。
+4. **今回の新しい非共形32層+mortarでは、MUMPSも過渡parityに失敗**した。79 stepを
+   正常完走したが、pulse前から電流が定常基準と一致せず、最大差17.826591 µA、RMSE
+   12.445186 µAとなった。
+5. 旧 CPU MUMPS の良好な100 µs実績は、今回の新メッシュへそのまま移植できない。
+   COMSOLに近い波形を得るには、旧 hybrid/mortar ルートのメッシュ・界面処理・初期化を
+   同一条件で再現する必要がある。
 
 ## Gate 判定の現状
 
@@ -27,6 +29,7 @@
 |---|---|---|
 | Gate3 定常 HYPRE | **PASS** | 非共形 32 層 + mortar。143.567589 µA、COMSOL 差 +0.358282%。 |
 | Gate4 HYPRE 過渡 parity | **FAIL** | 40 µs 部分比較で最大差 0.617301 µA、RMSE 0.217332 µA。目標は各 0.05 / 0.03 µA 以下。 |
+| Gate4 MUMPS 過渡 parity | **FAIL** | 非共形32層+mortarで79 step完走。最大差17.826591 µA、RMSE 12.445186 µA。初期baseline自体が不一致。 |
 | Gate5 HYPRE 長時間安定性 | **物理parity未達のため採用不可** | 旧 refine20/no-mortar の完走記録はあるが、COMSOL波形parityを満たさないため現行物理ルートの成功根拠にはしない。 |
 | Gate6 GPU parity | **solver parity PASS、COMSOL 100 µs parity FAIL** | GPUはCPU-HYPREと一致するが、両者ともCOMSOLの遅い過渡応答を再現しない。 |
 
@@ -87,7 +90,27 @@ parity成功にはつながらないため、長時間計算を打ち切って�
 つまり、単に iteration 数を増やす、GPUを使う、内部境界面を削除する、という対策では
 解決していない。
 
-### 既知の MUMPS 過渡実績
+### MUMPS 40 µs: 今回の非共形32層+mortar
+
+対象ケースは `case_phase24_g45_s32m_40us_mumps_mortar_mumps`。ElmerSolverは79 stepを
+18:05:40 JSTに正常完走した。
+
+| 指標 | 値 |
+|---|---:|
+| pre-pulse baseline (COMSOL) | 143.055049 µA |
+| MUMPS baseline | 165.706588 µA (+15.834142%) |
+| 20 µs時点のCOMSOL電流低下 | +0.0004876 µA |
+| 20 µs時点のMUMPS電流低下 | -12.644986 µA |
+| 最大絶対波形差 | 17.826591 µA @ 38.75 µs |
+| RMSE | 12.445186 µA |
+| t10 / t50 | いずれも未到達 |
+
+最初のseries出力は pulse 前の `20.018 ms` で、TES温度 `167.9606 mK`、電流
+`165.1575 µA` だった。Gate3定常のTES温度 `168.5691 mK`、電流 `143.5676 µA` と
+一致していない。このため、今回のMUMPS波形はCOMSOLとの物理差を直接評価する前に、
+初期状態／restart／界面離散化の整合性で不合格と判断する。
+
+### 旧 MUMPS 過渡実績
 
 旧 CPU MUMPS + production-v2 hybrid/mortar 系の 100 µs 実績は次の通り。
 
@@ -99,14 +122,16 @@ parity成功にはつながらないため、長時間計算を打ち切って�
 | t10 (COMSOL / MUMPS) | 41.7428 / 41.2819 µs |
 | t50 (COMSOL / MUMPS) | 92.8374 / 92.8493 µs |
 
-この結果は「MUMPSの方がCOMSOLに近い」という観測を裏付ける。ただし、今回の
-非共形 32 層メッシュと同一条件での MUMPS 再検証結果はまだ出ていないため、これだけで
-新ルートの最終合格とはしない。
+この結果は旧ルートについては「MUMPSの方がCOMSOLに近い」ことを示す。しかし、今回の
+非共形32層+mortarでは同じ傾向が再現されなかった。したがって、MUMPSをbackendだけ
+差し替えれば解決する、とは判断できない。
 
 ## 原因の切り分け
 
-最も整合する原因は、**mortar を含む疎行列の条件性と、微小な過渡信号に対する
-HYPREの反復残差不足**である。
+HYPREの平坦な過渡については、**mortarを含む疎行列の条件性と、微小な過渡信号に
+対するHYPREの反復残差不足**が最も整合する。一方、今回のMUMPS結果はそれとは別に、
+**非共形32層+mortarの過渡初期化または界面離散化が、restart定常状態と一致していない**
+ことを示している。
 
 パルス後 20 µs の COMSOL の電流低下は約 0.0366 µA であり、定常電流 143 µA に
 対して非常に小さい。一方、HYPRE の定常 Gate3 は最終線形残差約 `2e-6` で成立して
@@ -125,20 +150,22 @@ HYPREの反復残差不足**である。
   が主因ではない。
 - 32 層 Stycast を導入しても HYPRE過渡は平坦なままであり、Stycast の z分割不足
   だけでは説明できない。
-- MUMPSの旧実績では同じ物理イベントの時間スケールがCOMSOLに近い。
+- 旧MUMPSの実績では同じ物理イベントの時間スケールがCOMSOLに近いが、今回の新メッシュ
+  ではpulse前から22.65 µAの電流オフセットが生じた。したがって、旧実績の再利用には
+  メッシュだけでなくrestartと界面処理の完全な再現が必要である。
 
 ## Sol に判断してほしい論点
 
-1. 物理結果を最優先する場合、過渡計算の実用 backend を MUMPS に戻し、HYPREは
-     Gate3 定常およびGPU parity/性能検証用として扱うか。
+1. 物理結果を最優先する場合、旧MUMPS良好ケースの構成をそのまま再現する専用ルートを
+   別途固定し、今回の32層非共形ルートを採用候補から外すか。
 2. HYPREを必須とする場合、次の調査対象を「solver許容値」ではなく、mortar連成を
    含む行列の条件数、スケーリング、ブロック前処理、回路自由度の扱いに限定するか。
 3. 現行の Gate4/5 の成功条件を、HYPRE専用ではなく「COMSOL parityを満たす採用
    backend」として定義し直すか。
 
-現時点の推奨は、**COMSOLとの差が小さい波形を得ることを優先し、MUMPSを過渡の
- 採用候補とする。ただし、新しい非共形32層メッシュでのMUMPS再検証結果を確認して
- から確定する**、である。
+現時点の推奨は、**今回の32層非共形+mortarルートを成功扱いにせず、旧MUMPS良好ケース
+との差分を、restart状態・pulse前定常・界面自由度の3点に分けて再現する**、である。
+HYPREのsolver調整だけでなく、MUMPSでも初期状態が崩れた事実を優先して扱う。
 
 ## 再現可能な成果物
 
@@ -146,12 +173,13 @@ HYPREの反復残差不足**である。
 - [共形32層 no-mortar HYPRE 過渡比較](../artifacts/phase24_gate4_5_nomortar/40us/comparison_s32nm_strip/summary.md)
 - [共形32層 mortar HYPRE 過渡比較](../artifacts/phase24_gate4_5_nomortar/40us/comparison_stycast32_mortar_partial/summary.md)
 - [旧 CPU MUMPS 100 µs 比較](../artifacts/comparison/comsol_cpu_singlepixel_prod_v2_hybrid_100us/summary.md)
+- [今回の非共形32層 MUMPS 40 µs 比較](../artifacts/phase24_gate4_5_nomortar/40us/comparison_s32m_mumps/summary.md)
 - [Gate6 GPU parity](../artifacts/phase24_gate6_gpu_parity/summary.md)
 - [Gate設計書（履歴・基準）](phase24_comsol_parity_gate_design.md)
 
-## 保留中の計算
+## MUMPS 40 µs の実行証跡
 
 `case_phase24_g45_s32m_40us_mumps_mortar_mumps` を 2026-09-19 17:34 JST に開始した。
-本文書作成時点では ElmerSolver は正常応答中で、最初の過渡 step の assembly/solve に
-入っているが、series.csv と最終比較結果はまだ生成されていない。したがって、本文書の
-MUMPS再検証については **pending** とする。
+2026-09-19 18:05:40 JSTに ElmerSolver が正常終了し、series.csv と manifest.json が
+生成された。比較結果は [summary.md](../artifacts/phase24_gate4_5_nomortar/40us/comparison_s32m_mumps/summary.md)
+に保存した。
