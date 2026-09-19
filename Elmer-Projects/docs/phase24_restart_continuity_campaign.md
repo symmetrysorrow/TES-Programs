@@ -119,3 +119,51 @@ Gate3 steady
 
 Only after this chain holds near the Gate3 operating point should the full
 COMSOL transient waveform be used as the solver/physics parity gate.
+
+
+## First-step restart residual decomposition
+
+For matrix-capture variants the campaign now evaluates the saved first-solve
+candidate against the assembled system:
+
+```text
+r = b - A x_saved
+```
+
+Rows with a nonzero diagonal are classified as primal thermal rows. Rows
+without a nonzero diagonal are classified as mortar constraint rows. This
+matches the explicit saddle structure currently observed on the nonconforming
+32-layer path.
+
+The Elmer SaveLinearSystem solution file is treated deliberately as an
+x0/restart **candidate**, not as proof of the exact native pre-solve vector.
+Existing Phase24 captures save only the primal temperature vector while the
+mortar multiplier tail can be absent. Missing solution entries are therefore
+extended with zero and this caveat is recorded in the artifact.
+
+The output is:
+
+```text
+artifacts/phase24_restart_continuity_campaign/
+  first_step_restart_residual.json
+```
+
+For each captured variant it reports full, primal, and constraint residual
+L2/max norms plus a backward-error style normalization:
+
+```text
+||r|| / (||A||_F ||x|| + ||b||)
+```
+
+Interpretation:
+
+- constraint block disproportionately large: inspect restart DOF
+  reconstruction / mortar initialization;
+- primal block large while constraint block is small: inspect steady-vs-
+  transient heat assembly, source, BC, or material evaluation;
+- both blocks small but the accepted TES state still jumps: inspect nonlinear
+  electrothermal update and solution-transfer/bookkeeping paths.
+
+The one-step mortar and no-mortar variants retain matrix/solution capture for
+this diagnostic; the corresponding hold5 variants remain the source for
+accepted-step physical continuity.
