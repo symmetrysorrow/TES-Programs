@@ -515,6 +515,12 @@ def build_campaign_project(
         variants["gate3_state_mumps_bdf1_1_nomortar"] = {
             "backend": "mumps", "bdf": 1, "steps": 1, "state_source": preferred_source, "mortar": False, "dump": True,
         }
+        # A one-step run is useful for matrix capture but the TES series is
+        # committed when the *next* timestep begins.  Keep a multi-step twin so
+        # the first accepted no-mortar state is always observable.
+        variants["gate3_state_mumps_bdf1_hold5_nomortar"] = {
+            "backend": "mumps", "bdf": 1, "steps": 5, "state_source": preferred_source, "mortar": False, "dump": False,
+        }
 
     generated = copy.deepcopy(model)
     for suffix, options in variants.items():
@@ -721,6 +727,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Time-integration initialization implicated: **{diagnosis.get('time_status', 'not yet isolated')}**",
         f"- MUMPS/HYPRE backend difference implicated: **{diagnosis.get('backend_status', 'not yet isolated')}**",
         f"- Strongest current explanation: **{diagnosis.get('strongest', 'insufficient evidence')}**",
+        f"- Series observability: {diagnosis.get('series_observability', 'unknown')}",
         "",
         "## Evidence",
         "",
@@ -963,14 +970,18 @@ def main() -> int:
 
     by_variant = {row["variant"]: row for row in metrics}
     cur = by_variant.get("current_state_mumps_bdf1_1")
-    gate = by_variant.get("gate3_state_mumps_bdf1_1")
+    gate_1 = by_variant.get("gate3_state_mumps_bdf1_1")
+    gate = by_variant.get("gate3_state_mumps_bdf1_hold5") or gate_1
     prod = by_variant.get("gate3_state_mumps_production_hold5")
     hypre = by_variant.get("gate3_state_hypre_bdf1_1")
-    nomortar = by_variant.get("gate3_state_mumps_bdf1_1_nomortar")
+    nomortar = (
+        by_variant.get("gate3_state_mumps_bdf1_hold5_nomortar")
+        or by_variant.get("gate3_state_mumps_bdf1_1_nomortar")
+    )
 
-    if cur and gate and cur.get("first_accepted_current_uA") is not None and gate.get("first_accepted_current_uA") is not None:
+    if cur and gate_1 and cur.get("first_accepted_current_uA") is not None and gate_1.get("first_accepted_current_uA") is not None:
         cur_err = abs(cur["first_accepted_current_uA"] - args.reference_current_uA)
-        gate_err = abs(gate["first_accepted_current_uA"] - args.reference_current_uA)
+        gate_err = abs(gate_1["first_accepted_current_uA"] - args.reference_current_uA)
         if gate_err < 0.2 * cur_err:
             diagnosis["state_status"] = "isolated: Gate3 state snapshot materially restores continuity"
             diagnosis["strongest"] = "TES State File mismatch/initialization"
@@ -1001,6 +1012,12 @@ def main() -> int:
 
     if summary.get("run_setup_error"):
         diagnosis["strongest"] += "; short-run isolation still requires the transient source project JSON"
+
+    diagnosis["series_observability"] = (
+        "TES accepted-step series is written when the next timestep begins; "
+        "one-step variants may legitimately have row_count=0. Hold5 variants "
+        "are used for BDF and mortar first-step diagnosis."
+    )
 
     summary["diagnosis"] = diagnosis
     write_artifacts(summary)
