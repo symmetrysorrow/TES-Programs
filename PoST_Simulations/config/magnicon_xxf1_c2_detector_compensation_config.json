@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "purpose": "Attribute the residual c2 compensation to TES nuisance freedoms by removing c2 while holding the fitted Magnicon Bessel and white floor fixed, then releasing detector nuisance parameters one at a time.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "detector_parameters": ["alpha", "beta", "C_tes", "L", "T_bath"],
+  "attribution_screen": {
+    "min_material_all_detector_rms_recovery_dB": 0.05,
+    "single_parameter_strong_fraction_of_all_recovery": 0.70,
+    "single_parameter_mixed_fraction_of_all_recovery": 0.40
+  },
+  "guardrail": "This is a local compensation/identifiability diagnostic, not a physical attribution of the residual to a TES parameter. A nuisance parameter that recovers fit quality when c2 is removed may simply be correlated with another missing transfer or detector-model term. Magnicon cutoff/Q and white are frozen within each day to isolate detector-nuisance compensation."
+}
