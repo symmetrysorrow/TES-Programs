@@ -596,6 +596,134 @@ def compare_dumps(left: Path | None, right: Path | None, columns: int) -> dict[s
     }
 
 
+def solution_dump_path(prefix: Path) -> Path | None:
+    """Return the Elmer SaveLinearSystem solution vector, when present.
+
+    SaveLinearSystem convention uses *_sol.dat. Older diagnostic code looked
+    for *_x.dat, so keep that as a compatibility fallback.
+    """
+    for suffix in ("_sol.dat", "_x.dat"):
+        found = dump_path(prefix, suffix)
+        if found is not None:
+            return found
+    return None
+
+
+def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
+    """Evaluate b-A*x_saved and split primal/constraint rows.
+
+    Linear System Save Solution is treated as an Elmer x0/restart candidate,
+    not as proof of the exact native solver vector. Mortar multipliers are
+    commonly absent from the saved solution vector, so missing trailing
+    entries are extended with zero. Constraint rows are identified
+    algebraically as rows without a nonzero diagonal entry.
+    """
+    a_path = dump_path(prefix, "_a.dat")
+    b_path = dump_path(prefix, "_b.dat")
+    x_path = solution_dump_path(prefix)
+    if a_path is None or b_path is None or x_path is None:
+        return {
+            "available": False,
+            "matrix": relpath(a_path),
+            "rhs": relpath(b_path),
+            "saved_solution": relpath(x_path),
+            "caveat": (
+                "Requires SaveLinearSystem A, b, and solution dumps. "
+                "The saved solution is an x0 candidate, not guaranteed to be "
+                "the exact native solver vector."
+            ),
+        }
+
+    b = read_numeric_dump(b_path, 2)
+    x = read_numeric_dump(x_path, 2)
+    if not b:
+        return {"available": False, "reason": "empty RHS dump"}
+
+    n = max(int(k) for k in b)
+    ax = [0.0] * (n + 1)
+    row_sq = [0.0] * (n + 1)
+    diag_nonzero = [False] * (n + 1)
+    nnz = 0
+
+    with a_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if len(fields) < 3:
+                continue
+            try:
+                row = int(fields[0])
+                col = int(fields[1])
+                value = float(fields[2])
+            except ValueError:
+                continue
+            if row < 1 or row > n:
+                continue
+            ax[row] += value * x.get(col, 0.0)
+            vv = value * value
+            row_sq[row] += vv
+            nnz += 1
+            if row == col and value != 0.0:
+                diag_nonzero[row] = True
+
+    primal_rows = [i for i in range(1, n + 1) if diag_nonzero[i]]
+    constraint_rows = [i for i in range(1, n + 1) if not diag_nonzero[i]]
+    residual = [0.0] * (n + 1)
+    for i in range(1, n + 1):
+        residual[i] = b.get(i, 0.0) - ax[i]
+
+    x2 = sum(value * value for value in x.values())
+    xnorm = math.sqrt(x2)
+
+    def block_stats(rows: list[int]) -> dict[str, Any]:
+        if not rows:
+            return {
+                "rows": 0,
+                "residual_l2": 0.0,
+                "residual_max_abs": 0.0,
+                "rhs_l2": 0.0,
+                "matrix_frobenius": 0.0,
+                "backward_error": 0.0,
+            }
+        r2 = sum(residual[i] * residual[i] for i in rows)
+        b2 = sum(b.get(i, 0.0) ** 2 for i in rows)
+        a2 = sum(row_sq[i] for i in rows)
+        rnorm = math.sqrt(r2)
+        bnorm = math.sqrt(b2)
+        anorm = math.sqrt(a2)
+        denom = anorm * xnorm + bnorm
+        return {
+            "rows": len(rows),
+            "residual_l2": rnorm,
+            "residual_max_abs": max(abs(residual[i]) for i in rows),
+            "rhs_l2": bnorm,
+            "matrix_frobenius": anorm,
+            "backward_error": rnorm / max(denom, 1.0e-300),
+        }
+
+    return {
+        "available": True,
+        "matrix": relpath(a_path),
+        "rhs": relpath(b_path),
+        "saved_solution": relpath(x_path),
+        "rows": n,
+        "matrix_records": nnz,
+        "saved_solution_records": len(x),
+        "saved_solution_l2": xnorm,
+        "missing_solution_entries_zero_extended": max(n - len(x), 0),
+        "primal_rows": len(primal_rows),
+        "constraint_rows": len(constraint_rows),
+        "full": block_stats(list(range(1, n + 1))),
+        "primal": block_stats(primal_rows),
+        "constraint": block_stats(constraint_rows),
+        "constraint_row_identification": "rows without a nonzero diagonal entry",
+        "caveat": (
+            "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. "
+            "It may omit mortar multipliers and is not asserted to be the exact "
+            "native pre-solve vector; missing entries are extended by zero."
+        ),
+    }
+
+
 def command_for(case: str, project: Path, solver: Path, runtime_bin: Path, toolchain_bin: Path) -> list[str]:
     return [
         sys.executable,
@@ -700,6 +828,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "state_file_audit",
         "field_continuity",
         "linear_system_comparison",
+        "first_step_restart_residual",
         "old_good_route_diff",
     ):
         payload = summary.get(name, {})
@@ -728,6 +857,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- MUMPS/HYPRE backend difference implicated: **{diagnosis.get('backend_status', 'not yet isolated')}**",
         f"- Strongest current explanation: **{diagnosis.get('strongest', 'insufficient evidence')}**",
         f"- Series observability: {diagnosis.get('series_observability', 'unknown')}",
+        f"- Restart/x0 residual: **{diagnosis.get('restart_residual_status', 'not captured')}**",
         "",
         "## Evidence",
         "",
@@ -739,7 +869,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "Detailed machine-readable outputs are beside this file: provenance.json, "
         "input_diff.json, restart_audit.json, state_file_audit.json, case_matrix.csv, "
         "first_step_metrics.csv, field_continuity.json, linear_system_comparison.json, "
-        "and old_good_route_diff.json.",
+        "first_step_restart_residual.json, and old_good_route_diff.json.",
         "",
         "The campaign deliberately does not run a 40 us or 100 us production trace.",
         "",
@@ -839,6 +969,7 @@ def main() -> int:
         },
         "case_matrix": [],
         "first_step_metrics": [existing_metrics],
+        "first_step_restart_residual": {},
         "field_continuity": {
             "note": "Scalar TES continuity is captured from state/iteration/series. Nodal field deltas require a text-exported result and are reported as unavailable rather than guessed.",
             "existing_transient_temperature_mK": transient.get("series", {}).get("first", {}).get("tes_temperature_mK"),
@@ -928,12 +1059,16 @@ def main() -> int:
                             2,
                         ),
                         "x": compare_dumps(
-                            dump_path(prefixes[left_name], "_x.dat"),
-                            dump_path(prefixes[right_name], "_x.dat"),
+                            solution_dump_path(prefixes[left_name]),
+                            solution_dump_path(prefixes[right_name]),
                             2,
                         ),
                     }
             summary["linear_system_comparison"] = comparisons
+            summary["first_step_restart_residual"] = {
+                suffix: restart_candidate_residual(prefix)
+                for suffix, prefix in prefixes.items()
+            }
 
     if not args.audit_only and not args.dry_run and not summary["runs"]:
         summary["run_setup_error"] = (
@@ -1012,6 +1147,37 @@ def main() -> int:
 
     if summary.get("run_setup_error"):
         diagnosis["strongest"] += "; short-run isolation still requires the transient source project JSON"
+
+    residuals = summary.get("first_step_restart_residual", {})
+    mortar_residual = residuals.get("gate3_state_mumps_bdf1_1", {})
+    nomortar_residual = residuals.get("gate3_state_mumps_bdf1_1_nomortar", {})
+    if mortar_residual.get("available"):
+        cblock = mortar_residual.get("constraint", {})
+        pblock = mortar_residual.get("primal", {})
+        diagnosis["restart_residual_status"] = (
+            "captured: "
+            f"constraint rows={mortar_residual.get('constraint_rows')}, "
+            f"constraint backward error={cblock.get('backward_error')}, "
+            f"primal backward error={pblock.get('backward_error')}"
+        )
+        if mortar_residual.get("constraint_rows", 0) > 0:
+            cbe = cblock.get("backward_error")
+            pbe = pblock.get("backward_error")
+            if cbe is not None and pbe is not None and cbe > 10.0 * max(pbe, 1.0e-300):
+                diagnosis["strongest"] = (
+                    "saved restart/x0 candidate disproportionately violates the "
+                    "mortar constraint block at the first transient solve; inspect "
+                    "nonconforming restart DOF reconstruction/mortar initialization"
+                )
+    else:
+        diagnosis["restart_residual_status"] = "not captured"
+
+    if mortar_residual.get("available") and nomortar_residual.get("available"):
+        diagnosis["restart_residual_comparison"] = (
+            "mortar and no-mortar first-solve residual candidates captured"
+        )
+    else:
+        diagnosis["restart_residual_comparison"] = "not fully captured"
 
     diagnosis["series_observability"] = (
         "TES accepted-step series is written when the next timestep begins; "
