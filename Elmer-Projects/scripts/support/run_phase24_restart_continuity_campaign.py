@@ -692,6 +692,156 @@ def system_row_partition(
     return primal, rows - primal
 
 
+def linear_dump_provenance(
+    prefix: Path, log_path: Path | None = None
+) -> dict[str, Any]:
+    """Classify SaveLinearSystem dumps before comparing them numerically.
+
+    Continuous numbering is call order, not a nonlinear-iteration identifier.
+    The first saved system is the reference outer candidate. Later dumps are
+    comparable only when their full structural fingerprint matches it.
+    Launcher-log markers are attached as supporting provenance, not used as
+    the sole classifier.
+    """
+    dumps = discover_linear_solve_dumps(prefix)
+
+    log_events: dict[str, dict[str, Any]] = {}
+    if log_path is not None and log_path.is_file():
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        computechange: list[tuple[int, int]] = []
+        for lineno, line in enumerate(lines, start=1):
+            match = re.search(r"ComputeChange:\s+NS\s+\(ITER=(\d+)\)", line)
+            if match:
+                computechange.append((lineno, int(match.group(1))))
+
+        def nearest_iters(lineno: int) -> tuple[int | None, int | None]:
+            previous = None
+            following = None
+            for event_line, iteration in computechange:
+                if event_line < lineno:
+                    previous = iteration
+                    continue
+                if event_line > lineno:
+                    following = iteration
+                    break
+            return previous, following
+
+        for lineno, line in enumerate(lines, start=1):
+            match = re.search(r"SaveLinearSystem:\s+Saving matrix to:\s+(.+)", line)
+            if not match:
+                continue
+            raw = match.group(1).strip().strip('"')
+            name = Path(raw).name
+            normalized = name[:-2] if name.endswith(".0") else name
+            if not normalized.endswith("_a.dat"):
+                continue
+            base = normalized[:-len("_a.dat")]
+            previous_iter, next_iter = nearest_iters(lineno)
+            context_start = max(0, lineno - 4)
+            context_end = min(len(lines), lineno + 3)
+            log_events[base] = {
+                "line": lineno,
+                "path": raw,
+                "previous_computechange_iter": previous_iter,
+                "next_computechange_iter": next_iter,
+                "context": lines[context_start:context_end],
+            }
+
+    records: list[dict[str, Any]] = []
+    reference_fingerprint: tuple[int, int, int] | None = None
+    for item in dumps:
+        matrix = read_numeric_dump(item.get("A_path"), 3)
+        dim = matrix_dump_dimension(item.get("A_path"))
+        n = int(dim.get("rows", 0))
+        primal, constraint = system_row_partition(matrix, n)
+        fingerprint = (n, len(primal), len(constraint))
+        if reference_fingerprint is None:
+            reference_fingerprint = fingerprint
+            role = "reference_outer_candidate"
+        elif fingerprint == reference_fingerprint:
+            role = "same_shape_outer_candidate"
+        else:
+            role = "heterogeneous_auxiliary_or_restricted"
+
+        rhs = read_numeric_dump(item.get("b_path"), 2)
+        event = log_events.get(item["base"])
+        records.append(
+            {
+                "ordinal": item["ordinal"],
+                "base": item["base"],
+                "A": relpath(item.get("A_path")),
+                "b": relpath(item.get("b_path")),
+                "x": relpath(item.get("x_path")),
+                "sizes": relpath(item.get("sizes_path")),
+                "dimension": dim,
+                "primal_rows": len(primal),
+                "constraint_rows": len(constraint),
+                "rhs_saved_records": len(rhs),
+                "fingerprint": {
+                    "rows": fingerprint[0],
+                    "primal_rows": fingerprint[1],
+                    "constraint_rows": fingerprint[2],
+                },
+                "role": role,
+                "log_event": event,
+            }
+        )
+
+    comparable = [
+        record["ordinal"]
+        for record in records
+        if record["role"] in ("reference_outer_candidate", "same_shape_outer_candidate")
+    ]
+    heterogeneous = [
+        record["ordinal"]
+        for record in records
+        if record["role"] == "heterogeneous_auxiliary_or_restricted"
+    ]
+    next_iters = [
+        record.get("log_event", {}).get("next_computechange_iter")
+        for record in records
+        if record.get("log_event")
+    ]
+    return {
+        "available": bool(records),
+        "dump_count": len(records),
+        "reference_fingerprint": (
+            {
+                "rows": reference_fingerprint[0],
+                "primal_rows": reference_fingerprint[1],
+                "constraint_rows": reference_fingerprint[2],
+            }
+            if reference_fingerprint is not None
+            else None
+        ),
+        "records": records,
+        "comparable_outer_candidate_ordinals": comparable,
+        "heterogeneous_ordinals": heterogeneous,
+        "heterogeneous_count": len(heterogeneous),
+        "log_path": relpath(log_path),
+        "log_save_event_count": len(log_events),
+        "next_computechange_iters": next_iters,
+        "interpretation": (
+            "Continuous SaveLinearSystem numbering is treated only as dispatch order. "
+            "Different structural fingerprints are not interpreted as adjacent "
+            "nonlinear iterations and are excluded from A/b transition and direct "
+            "sensitivity comparisons."
+        ),
+    }
+
+
+def comparable_outer_dumps(
+    prefix: Path, provenance: dict[str, Any], limit: int = 3
+) -> list[dict[str, Any]]:
+    allowed = set(provenance.get("comparable_outer_candidate_ordinals", []))
+    dumps = [
+        item
+        for item in discover_linear_solve_dumps(prefix)
+        if item.get("ordinal") in allowed
+    ]
+    return dumps[: max(limit, 0)]
+
+
 def _difference_stats(
     left: dict[Any, float], right: dict[Any, float], keys: set[Any] | None = None
 ) -> dict[str, Any]:
@@ -786,13 +936,20 @@ def compare_linear_solve_dump_pair(
     return result
 
 
-def nonlinear_linear_system_sequence(prefix: Path, limit: int = 3) -> dict[str, Any]:
-    """Analyze the first continuously-numbered linear systems of one timestep."""
-    dumps = discover_linear_solve_dumps(prefix)
-    selected = dumps[: max(limit, 0)]
+def nonlinear_linear_system_sequence(
+    prefix: Path, limit: int = 3, provenance: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Compare only structurally homogeneous outer-candidate saved systems."""
+    provenance = provenance or linear_dump_provenance(prefix)
+    selected = comparable_outer_dumps(prefix, provenance, limit=limit)
+    all_count = int(provenance.get("dump_count", 0))
     payload: dict[str, Any] = {
         "available": len(selected) >= 2,
-        "dump_count_discovered": len(dumps),
+        "dump_count_discovered": all_count,
+        "homogeneous_outer_candidate_count": len(
+            provenance.get("comparable_outer_candidate_ordinals", [])
+        ),
+        "heterogeneous_count": int(provenance.get("heterogeneous_count", 0)),
         "analyzed_count": len(selected),
         "sequence": [
             {
@@ -808,17 +965,15 @@ def nonlinear_linear_system_sequence(prefix: Path, limit: int = 3) -> dict[str, 
         ],
         "pairs": {},
         "caveat": (
-            "Ordinals are SaveLinearSystem dispatch order. In the single-step "
-            "MUMPS restart diagnostic they are expected to track nonlinear "
-            "linear solves, but they are deliberately not relabeled as Elmer "
-            "nonlinear iteration IDs without an explicit filename marker."
+            "Only dumps matching the first saved system's structural fingerprint "
+            "(rows, primal rows, constraint rows) are compared. Continuous numbering "
+            "is dispatch order and is not relabeled as nonlinear iteration."
         ),
     }
     for left, right in zip(selected, selected[1:]):
         key = f"solve{left['ordinal']}__vs__solve{right['ordinal']}"
         payload["pairs"][key] = compare_linear_solve_dump_pair(left, right)
     return payload
-
 
 def read_numeric_dump(path: Path | None, columns: int) -> dict[Any, float]:
     if path is None or not path.is_file():
@@ -1493,19 +1648,27 @@ def direct_solve_transition_sensitivity(
 
 
 def nonlinear_transition_direct_sensitivity(
-    prefix: Path, limit: int = 3
+    prefix: Path,
+    limit: int = 3,
+    provenance: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    dumps = discover_linear_solve_dumps(prefix)[: max(limit, 0)]
+    provenance = provenance or linear_dump_provenance(prefix)
+    dumps = comparable_outer_dumps(prefix, provenance, limit=limit)
     payload: dict[str, Any] = {
         "available": len(dumps) >= 2,
         "dump_count_analyzed": len(dumps),
+        "heterogeneous_count": int(provenance.get("heterogeneous_count", 0)),
         "pairs": {},
+        "reason": (
+            None
+            if len(dumps) >= 2
+            else "fewer than two structurally homogeneous outer-candidate dumps"
+        ),
     }
     for left, right in zip(dumps, dumps[1:]):
         key = f"solve{left['ordinal']}__vs__solve{right['ordinal']}"
         payload["pairs"][key] = direct_solve_transition_sensitivity(left, right)
     return payload
-
 
 def command_for(case: str, project: Path, solver: Path, runtime_bin: Path, toolchain_bin: Path) -> list[str]:
     return [
@@ -1615,6 +1778,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "first_step_matrix_blocks",
         "first_step_direct_solve",
         "primal_system_comparison",
+        "linear_dump_provenance",
         "nonlinear_linear_system_sequence",
         "nonlinear_transition_direct_sensitivity",
         "old_good_route_diff",
@@ -1649,6 +1813,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Matrix dimension audit: **{diagnosis.get('dimension_audit_status', 'not captured')}**",
         f"- Independent direct first solve: **{diagnosis.get('independent_direct_status', 'not captured')}**",
         f"- Mortar/no-mortar primal system: **{diagnosis.get('primal_system_status', 'not captured')}**",
+        f"- Linear dump provenance: **{diagnosis.get('linear_dump_provenance_status', 'not captured')}**",
         f"- Nonlinear A/b sequence: **{diagnosis.get('nonlinear_system_sequence_status', 'not captured')}**",
         f"- Direct solve1->2 sensitivity: **{diagnosis.get('direct_sensitivity_status', 'not captured')}**",
         "",
@@ -1664,7 +1829,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "first_step_metrics.csv, field_continuity.json, linear_system_comparison.json, "
         "first_step_restart_residual.json, first_step_matrix_blocks.json, "
         "first_step_direct_solve.json, primal_system_comparison.json, "
-        "nonlinear_linear_system_sequence.json, "
+        "linear_dump_provenance.json, nonlinear_linear_system_sequence.json, "
         "nonlinear_transition_direct_sensitivity.json, and old_good_route_diff.json.",
         "",
         "The campaign deliberately does not run a 40 us or 100 us production trace.",
@@ -1769,6 +1934,7 @@ def main() -> int:
         "first_step_matrix_blocks": {},
         "first_step_direct_solve": {},
         "primal_system_comparison": {},
+        "linear_dump_provenance": {},
         "nonlinear_linear_system_sequence": {},
         "nonlinear_transition_direct_sensitivity": {},
         "field_continuity": {
@@ -1887,11 +2053,19 @@ def main() -> int:
                 )
             gate_prefix = prefixes.get("gate3_state_mumps_bdf1_1")
             if gate_prefix is not None:
+                gate_run = summary.get("runs", {}).get("gate3_state_mumps_bdf1_1", {})
+                gate_log = resolve_input(gate_run.get("log"))
+                dump_provenance = linear_dump_provenance(gate_prefix, gate_log)
+                summary["linear_dump_provenance"] = dump_provenance
                 summary["nonlinear_linear_system_sequence"] = (
-                    nonlinear_linear_system_sequence(gate_prefix, limit=3)
+                    nonlinear_linear_system_sequence(
+                        gate_prefix, limit=3, provenance=dump_provenance
+                    )
                 )
                 summary["nonlinear_transition_direct_sensitivity"] = (
-                    nonlinear_transition_direct_sensitivity(gate_prefix, limit=3)
+                    nonlinear_transition_direct_sensitivity(
+                        gate_prefix, limit=3, provenance=dump_provenance
+                    )
                 )
 
     if not args.audit_only and not args.dry_run and not summary["runs"]:
@@ -2048,6 +2222,27 @@ def main() -> int:
     else:
         diagnosis["primal_system_status"] = "not captured"
 
+    dump_provenance = summary.get("linear_dump_provenance", {})
+    if dump_provenance.get("available"):
+        comparable_count = len(
+            dump_provenance.get("comparable_outer_candidate_ordinals", [])
+        )
+        heterogeneous_count = int(dump_provenance.get("heterogeneous_count", 0))
+        diagnosis["linear_dump_provenance_status"] = (
+            f"dumps={dump_provenance.get('dump_count')}, "
+            f"same-shape outer candidates={comparable_count}, "
+            f"heterogeneous={heterogeneous_count}, "
+            f"log save events={dump_provenance.get('log_save_event_count')}"
+        )
+        if heterogeneous_count > 0 and comparable_count < 2:
+            diagnosis["strongest"] = (
+                "SaveLinearSystem dumps are structurally heterogeneous and cannot "
+                "yet be mapped to adjacent outer nonlinear iterations; establish "
+                "dump provenance before attributing the thermal jump to A or RHS"
+            )
+    else:
+        diagnosis["linear_dump_provenance_status"] = "not captured"
+
     sequence = summary.get("nonlinear_linear_system_sequence", {})
     sequence_pairs = sequence.get("pairs", {})
     if sequence.get("available"):
@@ -2101,7 +2296,12 @@ def main() -> int:
                         "K/B/Bt/D versus primal/constraint RHS"
                     )
     else:
-        diagnosis["nonlinear_system_sequence_status"] = "not captured"
+        if dump_provenance.get("heterogeneous_count", 0) > 0:
+            diagnosis["nonlinear_system_sequence_status"] = (
+                "not compared: heterogeneous SaveLinearSystem dumps were excluded"
+            )
+        else:
+            diagnosis["nonlinear_system_sequence_status"] = "not captured"
 
     sensitivity = summary.get("nonlinear_transition_direct_sensitivity", {})
     sensitivity_pairs = sensitivity.get("pairs", {})
@@ -2142,7 +2342,19 @@ def main() -> int:
                 f"not captured: {sens12.get('reason', 'solve1->2 unavailable')}"
             )
     else:
-        diagnosis["direct_sensitivity_status"] = "not captured"
+        diagnosis["direct_sensitivity_status"] = (
+            "not compared: "
+            f"{sensitivity.get('reason', 'insufficient homogeneous saved systems')}"
+        )
+
+    if dump_provenance.get("heterogeneous_count", 0) > 0 and len(
+        dump_provenance.get("comparable_outer_candidate_ordinals", [])
+    ) < 2:
+        diagnosis["strongest"] = (
+            "SaveLinearSystem dumps are structurally heterogeneous and cannot "
+            "yet be mapped to adjacent outer nonlinear iterations; establish "
+            "dump provenance before attributing the thermal jump to A or RHS"
+        )
 
     diagnosis["series_observability"] = (
         "TES accepted-step series is written when the next timestep begins; "
