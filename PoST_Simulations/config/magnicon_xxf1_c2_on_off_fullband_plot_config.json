@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "purpose": "Plot full 1-200 kHz c2=0 versus c2-free fitted ASD curves against the line-repaired continuum target and raw experimental ASD for selected physically anchored C_tes cases on both adjacent days.",
+  "base_anchor_config": "magnicon_xxf1_physical_L_Ctes_anchor_c2_diagnostic_config.json",
+  "C_tes_multipliers_to_plot": [0.25, 1.0],
+  "include_raw_experimental_ASD": true,
+  "frequency_display_Hz": {
+    "min": 1000.0,
+    "max": 200000.0
+  },
+  "residual_reference": "line_repaired_continuum_target",
+  "guardrail": "These plots visualize the same nested fits used by the physical-L+C_tes anchor diagnostic. The fitted target is the line-repaired continuum ASD; the raw experimental ASD is shown only for visual provenance and includes narrow line features excluded from the smooth continuum objective. c2-free improvement is not by itself evidence that c2 is a physical electronics zero."
+}
