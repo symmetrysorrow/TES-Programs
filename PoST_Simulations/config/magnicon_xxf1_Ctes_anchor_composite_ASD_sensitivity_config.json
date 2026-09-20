@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "purpose": "Compare the observable fitted ASD shape across fixed C_tes anchors and determine whether the large C_tes-dependent Magnicon+c2 transfer changes are cancelled by the TES model and profiled white floor.",
+  "base_anchor_config": "magnicon_xxf1_physical_L_Ctes_anchor_c2_diagnostic_config.json",
+  "normalization_reference_Hz": 1000.0,
+  "comparison_reference_multiplier": 0.25,
+  "primary_material_multiplier": 1.0,
+  "exclude_c2_boundary_rows_from_primary_classification": true,
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "anchors_Hz": [1000, 5000, 10000, 20000, 40000, 70000, 100000, 150000, 200000],
+  "observable_shape_screen": {
+    "max_pairwise_full_band_rms_difference_dB": 0.5,
+    "max_pairwise_abs_difference_dB": 1.5
+  },
+  "guardrail": "The full fitted ASD is the observable model comparison; the zero-post-filter-white spectrum is a decomposition diagnostic, not a separately measured quantity. Small full-ASD anchor sensitivity alongside large readout-transfer sensitivity would demonstrate non-identifiability/cancellation, not identify which decomposition is physically correct. Rows where c2 hits a configured bound are censored and excluded from the primary finite-shape classification."
+}
