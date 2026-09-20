@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "purpose": "Jointly profile physically plausible shared L and C_tes across the 2024-12-05/06 adjacent-day datasets, then test whether a shared c2 remains materially necessary after allowing those TES shape degrees of freedom to move.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "shared_physical_profile": {
+    "L_H": {
+      "min": 1.0e-10,
+      "max": 1.0e-9,
+      "semantics": "physically restricted profile around the independently motivated circuit scale; not a measured tolerance interval"
+    },
+    "C_tes_material_multiplier": {
+      "min": 0.25,
+      "max": 1.0,
+      "semantics": "profile relative to Opt_noise.C_TES_MATERIAL_J_PER_K; material estimate is not direct low-temperature calorimetry"
+    }
+  },
+  "day_specific_detector_parameters": ["alpha", "beta", "T_bath"],
+  "white_floor": {
+    "mode": "independent_per_day_joint_fit",
+    "inherit_scale_bounds_from_continuum_config": true
+  },
+  "magnicon_filter": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "c4_fixed": 0.0
+  },
+  "c2": {
+    "mode": "shared_across_days",
+    "upper_bound": 1000.0
+  },
+  "optimizer": {
+    "DE_maxiter": 120,
+    "DE_popsize": 10,
+    "least_squares_max_nfev": 5000,
+    "seed_offset": 25100
+  },
+  "materiality_screen": {
+    "max_shared_c2_free_joint_score_ratio_to_c2_zero": 0.80,
+    "min_joint_rms_improvement_dB": 0.05
+  },
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "guardrail": "L and C_tes are shared across the two adjacent-day acquisitions and profiled only inside the stated physically motivated ranges. Those ranges are diagnostic priors, not confidence intervals. Alpha, beta, T_bath, and the post-filter white floor are day-specific nuisance freedoms. The Magnicon 10 kHz phase-normalized second-order Bessel response is held fixed with c4=0. A material shared c2 supports a residual common smooth-shape degree of freedom after this profile, but does not identify a physical electronics zero. A non-material c2 would show that moderate shared L/C_tes freedom can absorb the previously observed residual."
+}
