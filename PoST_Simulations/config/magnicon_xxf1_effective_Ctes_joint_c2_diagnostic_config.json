@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "purpose": "Re-test the shared-c2 requirement after interpreting C_tes as an effective local thermal-node heat capacity rather than a bare-TES-bilayer heat capacity. The profile explicitly includes the historical PoST C_tes = 7.9e-12 J/K reference.",
+  "base_joint_config": "magnicon_xxf1_shared_L_Ctes_joint_c2_diagnostic_config.json",
+  "effective_C_tes_profile_J_per_K": {
+    "min": 5.0e-13,
+    "max": 2.0e-11,
+    "historical_PoST_reference": 7.9e-12,
+    "historical_reference_source": "PoST_Simulations/input.json and Fitting_LSE.py",
+    "semantics": "effective heat capacity of the reduced TES thermal node; may include substrate/membrane material that thermalizes rapidly with the TES. The historical value is a simulation reference, not a direct low-temperature calorimetric measurement."
+  },
+  "shared_L_profile_H": {
+    "min": 1.0e-10,
+    "max": 1.0e-9,
+    "semantics": "physically restricted shared circuit inductance range around the independently motivated ~1e-10 H scale; not a measured tolerance interval"
+  },
+  "c2_test": "strictly nested shared c2=0 versus one shared c2 free across both adjacent days",
+  "guardrail": "This is a diagnostic reinterpretation of C_tes, not a claim that the historical 7.9e-12 J/K value was explicitly derived from silicon heat capacity. The repository does not currently document that derivation. The test asks whether allowing the reduced TES node to have an effective heat capacity spanning the historical PoST scale materially changes the need for the residual shared c2. A surviving c2 remains an unidentified smooth-shape degree of freedom, not proof of an electronics zero."
+}
