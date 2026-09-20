@@ -1211,6 +1211,194 @@ def independent_direct_solve(prefix: Path) -> dict[str, Any]:
     }
 
 
+def direct_solve_transition_sensitivity(
+    left: dict[str, Any], right: dict[str, Any]
+) -> dict[str, Any]:
+    """Decompose one saved-system transition into RHS/operator direct effects.
+
+    Solve the four combinations
+      x11 = A1^-1 b1
+      x12 = A1^-1 b2   (RHS-only change)
+      x21 = A2^-1 b1   (operator-only change)
+      x22 = A2^-1 b2
+    and report primal-temperature and constraint deltas. Two sparse LU
+    factorizations are reused for the four solves.
+    """
+    try:
+        import numpy as np
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.linalg import splu
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": "SciPy sparse direct solver unavailable",
+            "detail": f"{type(exc).__name__}: {exc}",
+        }
+
+    def load_system(item: dict[str, Any]) -> tuple[Any, Any, Any] | tuple[None, None, None]:
+        a_path = item.get("A_path")
+        b_path = item.get("b_path")
+        if a_path is None or b_path is None:
+            return None, None, None
+        rhs_map = read_numeric_dump(b_path, 2)
+        n = max((int(k) for k in rhs_map), default=0)
+        if n <= 0:
+            return None, None, None
+        rows: list[int] = []
+        cols: list[int] = []
+        vals: list[float] = []
+        diag_nonzero = np.zeros(n, dtype=bool)
+        with a_path.open(encoding="utf-8") as handle:
+            for line in handle:
+                fields = line.split()
+                if len(fields) < 3:
+                    continue
+                try:
+                    row, col, value = int(fields[0]), int(fields[1]), float(fields[2])
+                except ValueError:
+                    continue
+                if not (1 <= row <= n and 1 <= col <= n):
+                    continue
+                rows.append(row - 1)
+                cols.append(col - 1)
+                vals.append(value)
+                if row == col and value != 0.0:
+                    diag_nonzero[row - 1] = True
+        matrix = coo_matrix(
+            (np.asarray(vals), (np.asarray(rows), np.asarray(cols))),
+            shape=(n, n),
+        ).tocsc()
+        rhs = np.zeros(n, dtype=float)
+        for idx, value in rhs_map.items():
+            if 1 <= int(idx) <= n:
+                rhs[int(idx) - 1] = value
+        return matrix, rhs, diag_nonzero
+
+    A1, b1, mask1 = load_system(left)
+    A2, b2, mask2 = load_system(right)
+    if A1 is None or A2 is None or b1 is None or b2 is None:
+        return {"available": False, "reason": "missing or empty saved A/b system"}
+    if A1.shape != A2.shape or b1.shape != b2.shape:
+        return {
+            "available": False,
+            "reason": "saved systems have different dimensions",
+            "left_shape": list(A1.shape),
+            "right_shape": list(A2.shape),
+        }
+    if not np.array_equal(mask1, mask2):
+        return {
+            "available": False,
+            "reason": "primal/constraint row partition changes between saved systems",
+            "left_primal_rows": int(np.count_nonzero(mask1)),
+            "right_primal_rows": int(np.count_nonzero(mask2)),
+        }
+
+    try:
+        lu1 = splu(A1)
+        lu2 = splu(A2)
+        x11 = np.asarray(lu1.solve(b1), dtype=float)
+        x12 = np.asarray(lu1.solve(b2), dtype=float)
+        x21 = np.asarray(lu2.solve(b1), dtype=float)
+        x22 = np.asarray(lu2.solve(b2), dtype=float)
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": "SciPy sparse LU factorization/solve failed",
+            "detail": f"{type(exc).__name__}: {exc}",
+            "rows": int(A1.shape[0]),
+        }
+
+    if not all(np.all(np.isfinite(x)) for x in (x11, x12, x21, x22)):
+        return {"available": False, "reason": "direct sensitivity solution is non-finite"}
+
+    primal = mask1
+    constraint = ~mask1
+
+    def stats(delta: Any, mask: Any, *, temperature: bool = False) -> dict[str, Any]:
+        values = delta[mask]
+        if values.size == 0:
+            out = {"rows": 0, "delta_l2": 0.0, "delta_max_abs": 0.0}
+        else:
+            out = {
+                "rows": int(values.size),
+                "delta_l2": float(np.linalg.norm(values)),
+                "delta_max_abs": float(np.max(np.abs(values))),
+            }
+        if temperature:
+            out["delta_l2_mK_if_temperature"] = out["delta_l2"] * 1.0e3
+            out["delta_max_abs_mK_if_temperature"] = out["delta_max_abs"] * 1.0e3
+        return out
+
+    transitions = {
+        "full_A2b2_minus_A1b1": x22 - x11,
+        "rhs_only_A1b2_minus_A1b1": x12 - x11,
+        "operator_only_A2b1_minus_A1b1": x21 - x11,
+        "rhs_effect_on_A2_A2b2_minus_A2b1": x22 - x21,
+        "operator_effect_on_b2_A2b2_minus_A1b2": x22 - x12,
+        "interaction": x22 - x12 - x21 + x11,
+    }
+
+    rhs_effect = transitions["rhs_only_A1b2_minus_A1b1"][primal]
+    operator_effect = transitions["operator_only_A2b1_minus_A1b1"][primal]
+    full_effect = transitions["full_A2b2_minus_A1b1"][primal]
+    rhs_l2 = float(np.linalg.norm(rhs_effect))
+    op_l2 = float(np.linalg.norm(operator_effect))
+    full_l2 = float(np.linalg.norm(full_effect))
+
+    def rel_residual(A: Any, x: Any, b: Any) -> float:
+        residual = b - A.dot(x)
+        return float(np.linalg.norm(residual) / max(np.linalg.norm(b), 1.0e-300))
+
+    return {
+        "available": True,
+        "left_ordinal": left.get("ordinal"),
+        "right_ordinal": right.get("ordinal"),
+        "rows": int(A1.shape[0]),
+        "primal_rows": int(np.count_nonzero(primal)),
+        "constraint_rows": int(np.count_nonzero(constraint)),
+        "direct_relative_residuals": {
+            "A1_b1": rel_residual(A1, x11, b1),
+            "A1_b2": rel_residual(A1, x12, b2),
+            "A2_b1": rel_residual(A2, x21, b1),
+            "A2_b2": rel_residual(A2, x22, b2),
+        },
+        "primal": {
+            name: stats(delta, primal, temperature=True)
+            for name, delta in transitions.items()
+        },
+        "constraint": {
+            name: stats(delta, constraint)
+            for name, delta in transitions.items()
+        },
+        "primal_l2_ratios": {
+            "rhs_only_to_full": rhs_l2 / max(full_l2, 1.0e-300),
+            "operator_only_to_full": op_l2 / max(full_l2, 1.0e-300),
+            "rhs_only_to_operator_only": rhs_l2 / max(op_l2, 1.0e-300),
+        },
+        "interpretation_caveat": (
+            "This is a linear sensitivity decomposition of two saved assembled "
+            "systems. RHS-only and operator-only effects need not add exactly "
+            "because changing A and b has an interaction term, which is reported "
+            "explicitly. Primal entries are treated as scalar temperature DOFs."
+        ),
+    }
+
+
+def nonlinear_transition_direct_sensitivity(
+    prefix: Path, limit: int = 3
+) -> dict[str, Any]:
+    dumps = discover_linear_solve_dumps(prefix)[: max(limit, 0)]
+    payload: dict[str, Any] = {
+        "available": len(dumps) >= 2,
+        "dump_count_analyzed": len(dumps),
+        "pairs": {},
+    }
+    for left, right in zip(dumps, dumps[1:]):
+        key = f"solve{left['ordinal']}__vs__solve{right['ordinal']}"
+        payload["pairs"][key] = direct_solve_transition_sensitivity(left, right)
+    return payload
+
+
 def command_for(case: str, project: Path, solver: Path, runtime_bin: Path, toolchain_bin: Path) -> list[str]:
     return [
         sys.executable,
@@ -1320,6 +1508,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "first_step_direct_solve",
         "primal_system_comparison",
         "nonlinear_linear_system_sequence",
+        "nonlinear_transition_direct_sensitivity",
         "old_good_route_diff",
     ):
         payload = summary.get(name, {})
@@ -1352,6 +1541,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Independent direct first solve: **{diagnosis.get('independent_direct_status', 'not captured')}**",
         f"- Mortar/no-mortar primal system: **{diagnosis.get('primal_system_status', 'not captured')}**",
         f"- Nonlinear A/b sequence: **{diagnosis.get('nonlinear_system_sequence_status', 'not captured')}**",
+        f"- Direct solve1->2 sensitivity: **{diagnosis.get('direct_sensitivity_status', 'not captured')}**",
         "",
         "## Evidence",
         "",
@@ -1365,7 +1555,8 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "first_step_metrics.csv, field_continuity.json, linear_system_comparison.json, "
         "first_step_restart_residual.json, first_step_matrix_blocks.json, "
         "first_step_direct_solve.json, primal_system_comparison.json, "
-        "nonlinear_linear_system_sequence.json, and old_good_route_diff.json.",
+        "nonlinear_linear_system_sequence.json, "
+        "nonlinear_transition_direct_sensitivity.json, and old_good_route_diff.json.",
         "",
         "The campaign deliberately does not run a 40 us or 100 us production trace.",
         "",
@@ -1470,6 +1661,7 @@ def main() -> int:
         "first_step_direct_solve": {},
         "primal_system_comparison": {},
         "nonlinear_linear_system_sequence": {},
+        "nonlinear_transition_direct_sensitivity": {},
         "field_continuity": {
             "note": "Scalar TES continuity is captured from state/iteration/series. Nodal field deltas require a text-exported result and are reported as unavailable rather than guessed.",
             "existing_transient_temperature_mK": transient.get("series", {}).get("first", {}).get("tes_temperature_mK"),
@@ -1588,6 +1780,9 @@ def main() -> int:
             if gate_prefix is not None:
                 summary["nonlinear_linear_system_sequence"] = (
                     nonlinear_linear_system_sequence(gate_prefix, limit=3)
+                )
+                summary["nonlinear_transition_direct_sensitivity"] = (
+                    nonlinear_transition_direct_sensitivity(gate_prefix, limit=3)
                 )
 
     if not args.audit_only and not args.dry_run and not summary["runs"]:
@@ -1791,6 +1986,47 @@ def main() -> int:
                     )
     else:
         diagnosis["nonlinear_system_sequence_status"] = "not captured"
+
+    sensitivity = summary.get("nonlinear_transition_direct_sensitivity", {})
+    sensitivity_pairs = sensitivity.get("pairs", {})
+    if sensitivity.get("available"):
+        sens12 = sensitivity_pairs.get("solve1__vs__solve2", {})
+        if sens12.get("available"):
+            primal = sens12.get("primal", {})
+            full = primal.get("full_A2b2_minus_A1b1", {})
+            rhs_only = primal.get("rhs_only_A1b2_minus_A1b1", {})
+            op_only = primal.get("operator_only_A2b1_minus_A1b1", {})
+            diagnosis["direct_sensitivity_status"] = (
+                "solve1->2: "
+                f"full max={full.get('delta_max_abs_mK_if_temperature')} mK, "
+                f"RHS-only max={rhs_only.get('delta_max_abs_mK_if_temperature')} mK, "
+                f"operator-only max={op_only.get('delta_max_abs_mK_if_temperature')} mK"
+            )
+            ratios = sens12.get("primal_l2_ratios", {})
+            rhs_to_op = ratios.get("rhs_only_to_operator_only")
+            if rhs_to_op is not None and rhs_to_op > 10.0:
+                diagnosis["strongest"] = (
+                    "independent direct sensitivity shows the saved solve1->2 "
+                    "temperature correction is RHS-dominated; inspect transient-"
+                    "history/body-force/RHS-reuse assembly"
+                )
+            elif rhs_to_op is not None and rhs_to_op < 0.1:
+                diagnosis["strongest"] = (
+                    "independent direct sensitivity shows the saved solve1->2 "
+                    "temperature correction is operator-dominated; inspect material/"
+                    "mortar/matrix-reuse assembly"
+                )
+            elif rhs_to_op is not None:
+                diagnosis["strongest"] = (
+                    "independent direct sensitivity shows both RHS and operator "
+                    "contribute materially to the saved solve1->2 temperature correction"
+                )
+        else:
+            diagnosis["direct_sensitivity_status"] = (
+                f"not captured: {sens12.get('reason', 'solve1->2 unavailable')}"
+            )
+    else:
+        diagnosis["direct_sensitivity_status"] = "not captured"
 
     diagnosis["series_observability"] = (
         "TES accepted-step series is written when the next timestep begins; "
