@@ -555,6 +555,192 @@ def dump_path(prefix: Path, suffix: str) -> Path | None:
     return ranked if ranked.is_file() else None
 
 
+def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
+    """Discover continuously-numbered SaveLinearSystem A/b/x dump groups.
+
+    Elmer's exact filename convention varies across builds.  Group by the
+    basename preceding *_a.dat and accept an optional rank suffix (.0).
+    The unnumbered prefix sorts first; numbered siblings then sort by their
+    numeric suffix, which is the SaveLinearSystem call order for the current
+    single-rank diagnostic path.
+    """
+    parent = prefix.parent
+    groups: dict[str, dict[str, Path]] = {}
+    for path in parent.glob(prefix.name + "*"):
+        if not path.is_file():
+            continue
+        name = path.name
+        normalized = name[:-2] if name.endswith(".0") else name
+        kind = None
+        base = None
+        for marker, label in (
+            ("_a.dat", "A"),
+            ("_b.dat", "b"),
+            ("_sol.dat", "x"),
+            ("_x.dat", "x"),
+        ):
+            pos = normalized.rfind(marker)
+            if pos >= 0 and pos + len(marker) == len(normalized):
+                base = normalized[:pos]
+                kind = label
+                break
+        if base is None or kind is None or not base.startswith(prefix.name):
+            continue
+        groups.setdefault(base, {})[kind] = path
+
+    def order_key(base: str) -> tuple[Any, ...]:
+        tail = base[len(prefix.name):]
+        if not tail:
+            return (-1, base)
+        numbers = tuple(int(value) for value in re.findall(r"\d+", tail))
+        if numbers:
+            return (*numbers, base)
+        return (10**12, base)
+
+    out: list[dict[str, Any]] = []
+    for ordinal, base in enumerate(sorted(groups, key=order_key), start=1):
+        files = groups[base]
+        if "A" not in files or "b" not in files:
+            continue
+        out.append(
+            {
+                "ordinal": ordinal,
+                "base": base,
+                "A_path": files["A"],
+                "b_path": files["b"],
+                "x_path": files.get("x"),
+            }
+        )
+    return out
+
+
+def _difference_stats(
+    left: dict[Any, float], right: dict[Any, float], keys: set[Any] | None = None
+) -> dict[str, Any]:
+    use_keys = keys if keys is not None else (set(left) | set(right))
+    if not use_keys:
+        return {
+            "records": 0,
+            "difference_l2": 0.0,
+            "difference_max_abs": 0.0,
+            "left_l2": 0.0,
+            "relative_l2_to_left": 0.0,
+            "nonzero_difference_records": 0,
+        }
+    diffs = [left.get(key, 0.0) - right.get(key, 0.0) for key in use_keys]
+    left_values = [left.get(key, 0.0) for key in use_keys]
+    diff_l2 = math.sqrt(sum(value * value for value in diffs))
+    left_l2 = math.sqrt(sum(value * value for value in left_values))
+    return {
+        "records": len(use_keys),
+        "difference_l2": diff_l2,
+        "difference_max_abs": max(abs(value) for value in diffs),
+        "left_l2": left_l2,
+        "relative_l2_to_left": diff_l2 / max(left_l2, 1.0e-300),
+        "nonzero_difference_records": sum(value != 0.0 for value in diffs),
+    }
+
+
+def compare_linear_solve_dump_pair(
+    left: dict[str, Any], right: dict[str, Any]
+) -> dict[str, Any]:
+    """Compare two saved nonlinear linear systems, split by saddle blocks."""
+    left_a = read_numeric_dump(left.get("A_path"), 3)
+    right_a = read_numeric_dump(right.get("A_path"), 3)
+    left_b = read_numeric_dump(left.get("b_path"), 2)
+    right_b = read_numeric_dump(right.get("b_path"), 2)
+    if not left_a or not right_a or not left_b or not right_b:
+        return {"available": False}
+
+    def row_sets(matrix: dict[tuple[int, int], float], rhs: dict[int, float]) -> tuple[set[int], set[int]]:
+        rows = set(rhs)
+        diag = {
+            row
+            for (row, col), value in matrix.items()
+            if row == col and value != 0.0
+        }
+        return diag, rows - diag
+
+    lp, lc = row_sets(left_a, left_b)
+    rp, rc = row_sets(right_a, right_b)
+    same_partition = lp == rp and lc == rc
+
+    result: dict[str, Any] = {
+        "available": True,
+        "left_ordinal": left.get("ordinal"),
+        "right_ordinal": right.get("ordinal"),
+        "left_A": relpath(left.get("A_path")),
+        "right_A": relpath(right.get("A_path")),
+        "left_b": relpath(left.get("b_path")),
+        "right_b": relpath(right.get("b_path")),
+        "same_primal_constraint_partition": same_partition,
+        "left_primal_rows": len(lp),
+        "left_constraint_rows": len(lc),
+        "right_primal_rows": len(rp),
+        "right_constraint_rows": len(rc),
+        "A_full": _difference_stats(left_a, right_a),
+        "b_full": _difference_stats(left_b, right_b),
+    }
+
+    if same_partition:
+        all_a_keys = set(left_a) | set(right_a)
+        block_keys = {
+            "K": {key for key in all_a_keys if key[0] in lp and key[1] in lp},
+            "Bt": {key for key in all_a_keys if key[0] in lp and key[1] in lc},
+            "B": {key for key in all_a_keys if key[0] in lc and key[1] in lp},
+            "D": {key for key in all_a_keys if key[0] in lc and key[1] in lc},
+        }
+        result["A_blocks"] = {
+            name: _difference_stats(left_a, right_a, keys)
+            for name, keys in block_keys.items()
+        }
+        result["b_primal"] = _difference_stats(left_b, right_b, set(lp))
+        result["b_constraint"] = _difference_stats(left_b, right_b, set(lc))
+
+    left_x_path = left.get("x_path")
+    right_x_path = right.get("x_path")
+    if left_x_path is not None and right_x_path is not None:
+        left_x = read_solution_vector(left_x_path)
+        right_x = read_solution_vector(right_x_path)
+        result["x_saved"] = _difference_stats(left_x, right_x)
+        result["left_x"] = relpath(left_x_path)
+        result["right_x"] = relpath(right_x_path)
+
+    return result
+
+
+def nonlinear_linear_system_sequence(prefix: Path, limit: int = 3) -> dict[str, Any]:
+    """Analyze the first continuously-numbered linear systems of one timestep."""
+    dumps = discover_linear_solve_dumps(prefix)
+    selected = dumps[: max(limit, 0)]
+    payload: dict[str, Any] = {
+        "available": len(selected) >= 2,
+        "dump_count_discovered": len(dumps),
+        "analyzed_count": len(selected),
+        "sequence": [
+            {
+                "ordinal": item["ordinal"],
+                "base": item["base"],
+                "A": relpath(item["A_path"]),
+                "b": relpath(item["b_path"]),
+                "x": relpath(item.get("x_path")),
+            }
+            for item in selected
+        ],
+        "pairs": {},
+        "caveat": (
+            "Ordinals are SaveLinearSystem dispatch order. In the single-step "
+            "MUMPS restart diagnostic they are expected to track nonlinear "
+            "linear solves, but they are deliberately not relabeled as Elmer "
+            "nonlinear iteration IDs without an explicit filename marker."
+        ),
+    }
+    for left, right in zip(selected, selected[1:]):
+        key = f"solve{left['ordinal']}__vs__solve{right['ordinal']}"
+        payload["pairs"][key] = compare_linear_solve_dump_pair(left, right)
+    return payload
+
+
 def read_numeric_dump(path: Path | None, columns: int) -> dict[Any, float]:
     if path is None or not path.is_file():
         return {}
@@ -1133,6 +1319,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "first_step_matrix_blocks",
         "first_step_direct_solve",
         "primal_system_comparison",
+        "nonlinear_linear_system_sequence",
         "old_good_route_diff",
     ):
         payload = summary.get(name, {})
@@ -1164,6 +1351,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Restart/x0 residual: **{diagnosis.get('restart_residual_status', 'not captured')}**",
         f"- Independent direct first solve: **{diagnosis.get('independent_direct_status', 'not captured')}**",
         f"- Mortar/no-mortar primal system: **{diagnosis.get('primal_system_status', 'not captured')}**",
+        f"- Nonlinear A/b sequence: **{diagnosis.get('nonlinear_system_sequence_status', 'not captured')}**",
         "",
         "## Evidence",
         "",
@@ -1176,8 +1364,8 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "input_diff.json, restart_audit.json, state_file_audit.json, case_matrix.csv, "
         "first_step_metrics.csv, field_continuity.json, linear_system_comparison.json, "
         "first_step_restart_residual.json, first_step_matrix_blocks.json, "
-        "first_step_direct_solve.json, primal_system_comparison.json, and "
-        "old_good_route_diff.json.",
+        "first_step_direct_solve.json, primal_system_comparison.json, "
+        "nonlinear_linear_system_sequence.json, and old_good_route_diff.json.",
         "",
         "The campaign deliberately does not run a 40 us or 100 us production trace.",
         "",
@@ -1281,6 +1469,7 @@ def main() -> int:
         "first_step_matrix_blocks": {},
         "first_step_direct_solve": {},
         "primal_system_comparison": {},
+        "nonlinear_linear_system_sequence": {},
         "field_continuity": {
             "note": "Scalar TES continuity is captured from state/iteration/series. Nodal field deltas require a text-exported result and are reported as unavailable rather than guessed.",
             "existing_transient_temperature_mK": transient.get("series", {}).get("first", {}).get("tes_temperature_mK"),
@@ -1394,6 +1583,11 @@ def main() -> int:
             if mortar_prefix is not None and nomortar_prefix is not None:
                 summary["primal_system_comparison"] = compare_primal_systems(
                     mortar_prefix, nomortar_prefix
+                )
+            gate_prefix = prefixes.get("gate3_state_mumps_bdf1_1")
+            if gate_prefix is not None:
+                summary["nonlinear_linear_system_sequence"] = (
+                    nonlinear_linear_system_sequence(gate_prefix, limit=3)
                 )
 
     if not args.audit_only and not args.dry_run and not summary["runs"]:
@@ -1542,6 +1736,47 @@ def main() -> int:
         )
     else:
         diagnosis["primal_system_status"] = "not captured"
+
+    sequence = summary.get("nonlinear_linear_system_sequence", {})
+    sequence_pairs = sequence.get("pairs", {})
+    if sequence.get("available"):
+        diagnosis["nonlinear_system_sequence_status"] = (
+            f"captured {sequence.get('analyzed_count')} of "
+            f"{sequence.get('dump_count_discovered')} saved linear solves"
+        )
+        pair23 = sequence_pairs.get("solve2__vs__solve3")
+        pair12 = sequence_pairs.get("solve1__vs__solve2")
+        focus = pair23 or pair12
+        if focus and focus.get("available"):
+            afull = focus.get("A_full", {})
+            bfull = focus.get("b_full", {})
+            diagnosis["nonlinear_system_sequence_status"] += (
+                f"; focus A rel-L2={afull.get('relative_l2_to_left')}, "
+                f"b rel-L2={bfull.get('relative_l2_to_left')}"
+            )
+            a_rel = afull.get("relative_l2_to_left")
+            b_rel = bfull.get("relative_l2_to_left")
+            if a_rel is not None and b_rel is not None:
+                if b_rel > 10.0 * max(a_rel, 1.0e-300):
+                    diagnosis["strongest"] = (
+                        "the nonlinear linear-system sequence changes primarily in "
+                        "the RHS before the thermal jump; inspect transient-history, "
+                        "body-force, and RHS-reuse assembly"
+                    )
+                elif a_rel > 10.0 * max(b_rel, 1.0e-300):
+                    diagnosis["strongest"] = (
+                        "the nonlinear linear-system sequence changes primarily in "
+                        "the operator before the thermal jump; inspect temperature-"
+                        "dependent material, mortar, and matrix-reuse assembly"
+                    )
+                else:
+                    diagnosis["strongest"] = (
+                        "both operator and RHS materially change across the nonlinear "
+                        "linear-system sequence; use block-resolved A/b differences "
+                        "to isolate K/B/Bt/D versus primal/constraint RHS"
+                    )
+    else:
+        diagnosis["nonlinear_system_sequence_status"] = "not captured"
 
     diagnosis["series_observability"] = (
         "TES accepted-step series is written when the next timestep begins; "
