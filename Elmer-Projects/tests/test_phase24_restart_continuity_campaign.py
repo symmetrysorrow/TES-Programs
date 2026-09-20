@@ -634,3 +634,62 @@ def test_linear_dump_provenance_allows_same_shape_outer_candidates(
     assert provenance["comparable_outer_candidate_ordinals"] == [1, 2]
     assert sequence["available"] is True
     assert "solve1__vs__solve2" in sequence["pairs"]
+
+
+def test_discover_linear_solve_dumps_excludes_textual_sibling_variant(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "case_x"
+    for base in ("case_x", "case_x_1", "case_x_2", "case_x_nomortar", "case_x_hold5"):
+        (tmp_path / f"{base}_a.dat").write_text("1 1 1\n", encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text("1 1\n", encoding="utf-8")
+
+    dumps = campaign.discover_linear_solve_dumps(prefix)
+
+    assert [item["base"] for item in dumps] == ["case_x", "case_x_1", "case_x_2"]
+    assert [item["continuous_number"] for item in dumps] == [None, 1, 2]
+    assert dumps[0]["ignored_sibling_bases"] == ["case_x_hold5", "case_x_nomortar"]
+
+
+def test_discover_linear_solve_dumps_does_not_treat_numeric_case_prefix_as_suffix(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "case_1"
+    for base in ("case_1", "case_10", "case_1_2"):
+        (tmp_path / f"{base}_a.dat").write_text("1 1 1\n", encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text("1 1\n", encoding="utf-8")
+
+    dumps = campaign.discover_linear_solve_dumps(prefix)
+
+    assert [item["base"] for item in dumps] == ["case_1", "case_1_2"]
+    assert "case_10" in dumps[0]["ignored_sibling_bases"]
+
+
+def test_linear_dump_provenance_reads_solver_log_computechange_context(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+    for base in ("diag", "diag_1"):
+        (tmp_path / f"{base}_a.dat").write_text("1 1 2\n", encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text("1 1\n", encoding="utf-8")
+
+    log = tmp_path / "solver.log"
+    log.write_text(
+        "SaveLinearSystem: Saving matrix to: diag_a.dat\n"
+        "SaveLinearSystem: Saving matrix rhs to: diag_b.dat\n"
+        "ComputeChange: NS (ITER=1) (NRM,RELC): (1 1) :: heat equation\n"
+        "SaveLinearSystem: Saving matrix to: diag_1_a.dat\n"
+        "SaveLinearSystem: Saving matrix rhs to: diag_1_b.dat\n"
+        "ComputeChange: NS (ITER=2) (NRM,RELC): (1 1) :: heat equation\n",
+        encoding="utf-8",
+    )
+
+    provenance = campaign.linear_dump_provenance(prefix, log)
+
+    assert provenance["log_save_event_count"] == 2
+    assert provenance["records"][0]["log_event"]["next_computechange_iter"] == 1
+    assert provenance["records"][1]["log_event"]["previous_computechange_iter"] == 1
+    assert provenance["records"][1]["log_event"]["next_computechange_iter"] == 2
