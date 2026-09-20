@@ -555,17 +555,31 @@ def dump_path(prefix: Path, suffix: str) -> Path | None:
     return ranked if ranked.is_file() else None
 
 
-def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
-    """Discover continuously-numbered SaveLinearSystem A/b/x dump groups.
+def _linear_dump_base_suffix(prefix_name: str, base: str) -> tuple[bool, int | None]:
+    """Return whether *base* belongs to one SaveLinearSystem prefix.
 
-    Elmer's exact filename convention varies across builds.  Group by the
-    basename preceding *_a.dat and accept an optional rank suffix (.0).
-    The unnumbered prefix sorts first; numbered siblings then sort by their
-    numeric suffix, which is the SaveLinearSystem call order for the current
-    single-rank diagnostic path.
+    Accept the exact prefix and only explicitly delimited numeric continuous
+    numbering suffixes (e.g. _1, _0002, .3, -4). Textual sibling variants such
+    as _nomortar or _hold5 are different cases and must never be grouped.
     """
+    if base == prefix_name:
+        return True, None
+    if not base.startswith(prefix_name):
+        return False, None
+    tail = base[len(prefix_name):]
+    match = re.fullmatch(r"[_\-.](\d+)", tail)
+    if not match:
+        return False, None
+    return True, int(match.group(1))
+
+
+def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
+    """Discover only exact/numerically-numbered SaveLinearSystem dump groups."""
     parent = prefix.parent
     groups: dict[str, dict[str, Path]] = {}
+    sequence_numbers: dict[str, int | None] = {}
+    ignored_sibling_bases: set[str] = set()
+
     for path in parent.glob(prefix.name + "*"):
         if not path.is_file():
             continue
@@ -580,23 +594,27 @@ def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
             ("_x.dat", "x"),
             ("_sizes.dat", "sizes"),
         ):
-            pos = normalized.rfind(marker)
-            if pos >= 0 and pos + len(marker) == len(normalized):
-                base = normalized[:pos]
+            if normalized.endswith(marker):
+                base = normalized[:-len(marker)]
                 kind = label
                 break
-        if base is None or kind is None or not base.startswith(prefix.name):
+        if base is None or kind is None:
             continue
-        groups.setdefault(base, {})[kind] = path
 
-    def order_key(base: str) -> tuple[Any, ...]:
-        tail = base[len(prefix.name):]
-        if not tail:
-            return (0, (), base)
-        numbers = tuple(int(value) for value in re.findall(r"\d+", tail))
-        if numbers:
-            return (1, numbers, base)
-        return (2, (), base)
+        accepted, number = _linear_dump_base_suffix(prefix.name, base)
+        if not accepted:
+            if base.startswith(prefix.name):
+                ignored_sibling_bases.add(base)
+            continue
+
+        groups.setdefault(base, {})[kind] = path
+        sequence_numbers[base] = number
+
+    def order_key(base: str) -> tuple[int, int, str]:
+        number = sequence_numbers.get(base)
+        if number is None:
+            return (0, -1, base)
+        return (1, number, base)
 
     out: list[dict[str, Any]] = []
     for ordinal, base in enumerate(sorted(groups, key=order_key), start=1):
@@ -606,15 +624,16 @@ def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
         out.append(
             {
                 "ordinal": ordinal,
+                "continuous_number": sequence_numbers.get(base),
                 "base": base,
                 "A_path": files["A"],
                 "b_path": files["b"],
                 "x_path": files.get("x"),
                 "sizes_path": files.get("sizes"),
+                "ignored_sibling_bases": sorted(ignored_sibling_bases),
             }
         )
     return out
-
 
 def matrix_dump_dimension(a_path: Path | None) -> dict[str, Any]:
     """Derive the assembled square-system dimension from matrix indices.
@@ -768,6 +787,7 @@ def linear_dump_provenance(
         records.append(
             {
                 "ordinal": item["ordinal"],
+                "continuous_number": item.get("continuous_number"),
                 "base": item["base"],
                 "A": relpath(item.get("A_path")),
                 "b": relpath(item.get("b_path")),
@@ -805,6 +825,9 @@ def linear_dump_provenance(
     return {
         "available": bool(records),
         "dump_count": len(records),
+        "ignored_sibling_bases": (
+            dumps[0].get("ignored_sibling_bases", []) if dumps else []
+        ),
         "reference_fingerprint": (
             {
                 "rows": reference_fingerprint[0],
@@ -2053,9 +2076,19 @@ def main() -> int:
                 )
             gate_prefix = prefixes.get("gate3_state_mumps_bdf1_1")
             if gate_prefix is not None:
+                gate_case = variants["gate3_state_mumps_bdf1_1"]["case"]
+                solver_log = ROOT / "results" / gate_case / "solver.log"
                 gate_run = summary.get("runs", {}).get("gate3_state_mumps_bdf1_1", {})
-                gate_log = resolve_input(gate_run.get("log"))
-                dump_provenance = linear_dump_provenance(gate_prefix, gate_log)
+                launcher_log = resolve_input(gate_run.get("log"))
+                provenance_log = solver_log if solver_log.is_file() else launcher_log
+                dump_provenance = linear_dump_provenance(
+                    gate_prefix, provenance_log
+                )
+                dump_provenance["solver_log"] = relpath(solver_log)
+                dump_provenance["launcher_log"] = relpath(launcher_log)
+                dump_provenance["log_source"] = (
+                    "solver.log" if solver_log.is_file() else "launcher fallback"
+                )
                 summary["linear_dump_provenance"] = dump_provenance
                 summary["nonlinear_linear_system_sequence"] = (
                     nonlinear_linear_system_sequence(
@@ -2228,10 +2261,13 @@ def main() -> int:
             dump_provenance.get("comparable_outer_candidate_ordinals", [])
         )
         heterogeneous_count = int(dump_provenance.get("heterogeneous_count", 0))
+        ignored_count = len(dump_provenance.get("ignored_sibling_bases", []))
         diagnosis["linear_dump_provenance_status"] = (
             f"dumps={dump_provenance.get('dump_count')}, "
             f"same-shape outer candidates={comparable_count}, "
             f"heterogeneous={heterogeneous_count}, "
+            f"ignored sibling variants={ignored_count}, "
+            f"log source={dump_provenance.get('log_source')}, "
             f"log save events={dump_provenance.get('log_save_event_count')}"
         )
         if heterogeneous_count > 0 and comparable_count < 2:
@@ -2345,6 +2381,19 @@ def main() -> int:
         diagnosis["direct_sensitivity_status"] = (
             "not compared: "
             f"{sensitivity.get('reason', 'insufficient homogeneous saved systems')}"
+        )
+
+    if (
+        dump_provenance.get("available")
+        and dump_provenance.get("dump_count") == 1
+        and len(dump_provenance.get("ignored_sibling_bases", [])) > 0
+    ):
+        diagnosis["strongest"] = (
+            "only one SaveLinearSystem system was captured for the mortar case; "
+            "textual sibling variants were previously misclassified as numbered "
+            "dumps. The first linear system remains near the restart state, while "
+            "the later thermal jump still requires a true per-nonlinear-iteration "
+            "outer-system capture"
         )
 
     if dump_provenance.get("heterogeneous_count", 0) > 0 and len(
