@@ -578,6 +578,7 @@ def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
             ("_b.dat", "b"),
             ("_sol.dat", "x"),
             ("_x.dat", "x"),
+            ("_sizes.dat", "sizes"),
         ):
             pos = normalized.rfind(marker)
             if pos >= 0 and pos + len(marker) == len(normalized):
@@ -609,9 +610,86 @@ def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
                 "A_path": files["A"],
                 "b_path": files["b"],
                 "x_path": files.get("x"),
+                "sizes_path": files.get("sizes"),
             }
         )
     return out
+
+
+def matrix_dump_dimension(a_path: Path | None) -> dict[str, Any]:
+    """Derive the assembled square-system dimension from matrix indices.
+
+    SaveLinearSystem may omit zero RHS entries, so RHS max index is not a
+    reliable dimension for saddle systems. Matrix row/column indices remain
+    authoritative because multiplier rows/columns contain B/Bt couplings.
+    """
+    if a_path is None or not a_path.is_file():
+        return {"available": False, "rows": 0, "max_row": 0, "max_col": 0, "records": 0}
+    max_row = 0
+    max_col = 0
+    records = 0
+    with a_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if len(fields) < 3:
+                continue
+            try:
+                row = int(fields[0])
+                col = int(fields[1])
+                float(fields[2])
+            except ValueError:
+                continue
+            if row <= 0 or col <= 0:
+                continue
+            max_row = max(max_row, row)
+            max_col = max(max_col, col)
+            records += 1
+    n = max(max_row, max_col)
+    return {
+        "available": n > 0,
+        "rows": n,
+        "max_row": max_row,
+        "max_col": max_col,
+        "records": records,
+        "square_index_extent": max_row == max_col,
+    }
+
+
+def sizes_dump_metadata(path: Path | None) -> dict[str, Any]:
+    """Capture raw integer metadata from Elmer *_sizes.dat without guessing semantics."""
+    if path is None or not path.is_file():
+        return {"available": False, "path": relpath(path)}
+    integers: list[int] = []
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            for field in line.split():
+                try:
+                    integers.append(int(field))
+                except ValueError:
+                    continue
+    return {
+        "available": True,
+        "path": relpath(path),
+        "integer_count": len(integers),
+        "integers": integers[:64],
+        "caveat": (
+            "Recorded for provenance only. Matrix dimension is derived from "
+            "A row/column indices because *_sizes.dat semantics are build-specific."
+        ),
+    }
+
+
+def system_row_partition(
+    matrix: dict[tuple[int, int], float], n: int
+) -> tuple[set[int], set[int]]:
+    """Split rows by explicit nonzero diagonal over the full A-derived index range."""
+    rows = set(range(1, n + 1))
+    primal = {
+        row
+        for (row, col), value in matrix.items()
+        if row == col and value != 0.0 and 1 <= row <= n
+    }
+    return primal, rows - primal
 
 
 def _difference_stats(
@@ -652,17 +730,12 @@ def compare_linear_solve_dump_pair(
     if not left_a or not right_a or not left_b or not right_b:
         return {"available": False}
 
-    def row_sets(matrix: dict[tuple[int, int], float], rhs: dict[int, float]) -> tuple[set[int], set[int]]:
-        rows = set(rhs)
-        diag = {
-            row
-            for (row, col), value in matrix.items()
-            if row == col and value != 0.0
-        }
-        return diag, rows - diag
-
-    lp, lc = row_sets(left_a, left_b)
-    rp, rc = row_sets(right_a, right_b)
+    left_dim = matrix_dump_dimension(left.get("A_path"))
+    right_dim = matrix_dump_dimension(right.get("A_path"))
+    left_n = int(left_dim.get("rows", 0))
+    right_n = int(right_dim.get("rows", 0))
+    lp, lc = system_row_partition(left_a, left_n)
+    rp, rc = system_row_partition(right_a, right_n)
     same_partition = lp == rp and lc == rc
 
     result: dict[str, Any] = {
@@ -674,6 +747,10 @@ def compare_linear_solve_dump_pair(
         "left_b": relpath(left.get("b_path")),
         "right_b": relpath(right.get("b_path")),
         "same_primal_constraint_partition": same_partition,
+        "left_dimension": left_dim,
+        "right_dimension": right_dim,
+        "left_sizes_metadata": sizes_dump_metadata(left.get("sizes_path")),
+        "right_sizes_metadata": sizes_dump_metadata(right.get("sizes_path")),
         "left_primal_rows": len(lp),
         "left_constraint_rows": len(lc),
         "right_primal_rows": len(rp),
@@ -724,6 +801,8 @@ def nonlinear_linear_system_sequence(prefix: Path, limit: int = 3) -> dict[str, 
                 "A": relpath(item["A_path"]),
                 "b": relpath(item["b_path"]),
                 "x": relpath(item.get("x_path")),
+                "sizes": relpath(item.get("sizes_path")),
+                "dimension": matrix_dump_dimension(item.get("A_path")),
             }
             for item in selected
         ],
@@ -850,7 +929,10 @@ def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
     if not b:
         return {"available": False, "reason": "empty RHS dump"}
 
-    n = max(int(k) for k in b)
+    dimension = matrix_dump_dimension(a_path)
+    n = int(dimension.get("rows", 0))
+    if n <= 0:
+        return {"available": False, "reason": "empty matrix dump"}
     ax = [0.0] * (n + 1)
     row_sq = [0.0] * (n + 1)
     diag_nonzero = [False] * (n + 1)
@@ -917,6 +999,11 @@ def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
         "rhs": relpath(b_path),
         "saved_solution": relpath(x_path),
         "rows": n,
+        "dimension_source": "matrix A max row/column index",
+        "dimension": dimension,
+        "sizes_metadata": sizes_dump_metadata(dump_path(prefix, "_sizes.dat")),
+        "rhs_saved_records": len(b),
+        "rhs_implicit_zero_entries": max(n - len(b), 0),
         "matrix_records": nnz,
         "saved_solution_records": len(x),
         "saved_solution_l2": xnorm,
@@ -930,7 +1017,9 @@ def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
         "caveat": (
             "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. "
             "It may omit mortar multipliers and is not asserted to be the exact "
-            "native pre-solve vector; missing entries are extended by zero."
+            "native pre-solve vector; missing entries are extended by zero. Matrix "
+            "dimension is derived from A, not RHS, because Save Skip Zeros can omit "
+            "zero constraint RHS rows."
         ),
     }
 
@@ -949,7 +1038,10 @@ def matrix_block_decomposition(prefix: Path) -> dict[str, Any]:
     rhs = read_numeric_dump(b_path, 2)
     if not rhs:
         return {"available": False, "reason": "empty RHS dump"}
-    n = max(int(k) for k in rhs)
+    dimension = matrix_dump_dimension(a_path)
+    n = int(dimension.get("rows", 0))
+    if n <= 0:
+        return {"available": False, "reason": "empty matrix dump"}
 
     entries: list[tuple[int, int, float]] = []
     diag_nonzero = [False] * (n + 1)
@@ -1019,6 +1111,11 @@ def matrix_block_decomposition(prefix: Path) -> dict[str, Any]:
     return {
         "available": True,
         "rows": n,
+        "dimension_source": "matrix A max row/column index",
+        "dimension": dimension,
+        "sizes_metadata": sizes_dump_metadata(dump_path(prefix, "_sizes.dat")),
+        "rhs_saved_records": len(rhs),
+        "rhs_implicit_zero_entries": max(n - len(rhs), 0),
         "primal_rows": len(primal),
         "constraint_rows": len(constraint),
         "blocks": {name: finish(acc) for name, acc in block_acc.items()},
@@ -1041,7 +1138,7 @@ def compare_primal_systems(left_prefix: Path, right_prefix: Path) -> dict[str, A
 
     def load(path_a: Path, path_b: Path) -> tuple[dict[tuple[int, int], float], dict[int, float], set[int]]:
         rhs = read_numeric_dump(path_b, 2)
-        n = max((int(k) for k in rhs), default=0)
+        n = int(matrix_dump_dimension(path_a).get("rows", 0))
         diag_nonzero = [False] * (n + 1)
         entries: list[tuple[int, int, float]] = []
         with path_a.open(encoding="utf-8") as handle:
@@ -1112,9 +1209,10 @@ def independent_direct_solve(prefix: Path) -> dict[str, Any]:
 
     rhs_map = read_numeric_dump(b_path, 2)
     saved_map = read_solution_vector(x_path)
-    n = max((int(k) for k in rhs_map), default=0)
+    dimension = matrix_dump_dimension(a_path)
+    n = int(dimension.get("rows", 0))
     if n <= 0:
-        return {"available": False, "reason": "empty RHS"}
+        return {"available": False, "reason": "empty matrix"}
 
     rows: list[int] = []
     cols: list[int] = []
@@ -1193,6 +1291,10 @@ def independent_direct_solve(prefix: Path) -> dict[str, Any]:
     return {
         "available": True,
         "rows": n,
+        "dimension_source": "matrix A max row/column index",
+        "dimension": dimension,
+        "rhs_saved_records": len(rhs_map),
+        "rhs_implicit_zero_entries": max(n - len(rhs_map), 0),
         "matrix_records": len(vals),
         "saved_solution_records": len(saved_map),
         "missing_solution_entries_zero_extended": max(n - len(saved_map), 0),
@@ -1241,7 +1343,8 @@ def direct_solve_transition_sensitivity(
         if a_path is None or b_path is None:
             return None, None, None
         rhs_map = read_numeric_dump(b_path, 2)
-        n = max((int(k) for k in rhs_map), default=0)
+        dimension = matrix_dump_dimension(a_path)
+        n = int(dimension.get("rows", 0))
         if n <= 0:
             return None, None, None
         rows: list[int] = []
@@ -1354,6 +1457,11 @@ def direct_solve_transition_sensitivity(
         "left_ordinal": left.get("ordinal"),
         "right_ordinal": right.get("ordinal"),
         "rows": int(A1.shape[0]),
+        "dimension_source": "matrix A max row/column index",
+        "left_dimension": matrix_dump_dimension(left.get("A_path")),
+        "right_dimension": matrix_dump_dimension(right.get("A_path")),
+        "left_sizes_metadata": sizes_dump_metadata(left.get("sizes_path")),
+        "right_sizes_metadata": sizes_dump_metadata(right.get("sizes_path")),
         "primal_rows": int(np.count_nonzero(primal)),
         "constraint_rows": int(np.count_nonzero(constraint)),
         "direct_relative_residuals": {
