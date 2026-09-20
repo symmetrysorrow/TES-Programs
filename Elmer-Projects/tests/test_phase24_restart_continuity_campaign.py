@@ -465,3 +465,79 @@ def test_nonlinear_transition_direct_sensitivity_uses_adjacent_saved_solves(
     assert result["dump_count_analyzed"] == 3
     assert "solve1__vs__solve2" in result["pairs"]
     assert "solve2__vs__solve3" in result["pairs"]
+
+
+def test_matrix_dimension_comes_from_A_when_zero_rhs_tail_is_skipped(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "tail"
+    (tmp_path / "tail_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n",
+        encoding="utf-8",
+    )
+    # Row 3 is a zero-RHS multiplier row and is omitted by Save Skip Zeros.
+    (tmp_path / "tail_b.dat").write_text(
+        "1 2\n"
+        "2 6\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "tail_sol.dat").write_text(
+        "1 1\n"
+        "2 2\n",
+        encoding="utf-8",
+    )
+
+    dimension = campaign.matrix_dump_dimension(tmp_path / "tail_a.dat")
+    residual = campaign.restart_candidate_residual(prefix)
+    blocks = campaign.matrix_block_decomposition(prefix)
+
+    assert dimension["rows"] == 3
+    assert residual["rows"] == 3
+    assert residual["rhs_saved_records"] == 2
+    assert residual["rhs_implicit_zero_entries"] == 1
+    assert residual["constraint_rows"] == 1
+    assert blocks["rows"] == 3
+    assert blocks["constraint_rows"] == 1
+    assert blocks["rhs_implicit_zero_entries"] == 1
+
+
+def test_direct_sensitivity_accepts_different_rhs_max_indices_with_same_A_dimension(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    matrix = (
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n"
+    )
+    a1 = tmp_path / "s1_a.dat"
+    a2 = tmp_path / "s2_a.dat"
+    b1 = tmp_path / "s1_b.dat"
+    b2 = tmp_path / "s2_b.dat"
+    a1.write_text(matrix, encoding="utf-8")
+    a2.write_text(matrix, encoding="utf-8")
+    # Same 3x3 physical systems, but solve1 happens to save a nonzero row-3
+    # RHS while solve2 omits the now-zero trailing entry.
+    b1.write_text("1 2\n2 6\n3 0.5\n", encoding="utf-8")
+    b2.write_text("1 2.1\n2 6\n", encoding="utf-8")
+
+    result = campaign.direct_solve_transition_sensitivity(
+        {"ordinal": 1, "A_path": a1, "b_path": b1, "sizes_path": None},
+        {"ordinal": 2, "A_path": a2, "b_path": b2, "sizes_path": None},
+    )
+
+    assert "available" in result
+    if result["available"]:
+        assert result["rows"] == 3
+        assert result["constraint_rows"] == 1
+        assert result["left_dimension"]["rows"] == 3
+        assert result["right_dimension"]["rows"] == 3
