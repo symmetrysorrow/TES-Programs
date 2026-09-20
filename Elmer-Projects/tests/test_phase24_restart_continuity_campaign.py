@@ -306,3 +306,93 @@ def test_independent_direct_solve_is_best_effort_without_crashing(
     if result["available"]:
         assert result["direct_relative_residual"] < 1.0e-10
         assert result["primal"]["delta_max_abs"] < 1.0e-10
+
+
+def test_discover_linear_solve_dumps_orders_continuous_numbering(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+    for base in ("diag", "diag_2", "diag_10"):
+        (tmp_path / f"{base}_a.dat").write_text("1 1 1\n", encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text("1 1\n", encoding="utf-8")
+
+    dumps = campaign.discover_linear_solve_dumps(prefix)
+
+    assert [item["base"] for item in dumps] == ["diag", "diag_2", "diag_10"]
+    assert [item["ordinal"] for item in dumps] == [1, 2, 3]
+
+
+def test_compare_linear_solve_dump_pair_splits_rhs_and_matrix_blocks(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    left_a = tmp_path / "left_a.dat"
+    left_b = tmp_path / "left_b.dat"
+    right_a = tmp_path / "right_a.dat"
+    right_b = tmp_path / "right_b.dat"
+
+    left_a.write_text(
+        "1 1 2\n"
+        "1 3 4\n"
+        "2 2 3\n"
+        "2 3 5\n"
+        "3 1 4\n"
+        "3 2 5\n",
+        encoding="utf-8",
+    )
+    right_a.write_text(
+        "1 1 2.5\n"
+        "1 3 4\n"
+        "2 2 3\n"
+        "2 3 5\n"
+        "3 1 4\n"
+        "3 2 5\n",
+        encoding="utf-8",
+    )
+    left_b.write_text("1 7\n2 8\n3 0\n", encoding="utf-8")
+    right_b.write_text("1 7.25\n2 8\n3 0.5\n", encoding="utf-8")
+
+    result = campaign.compare_linear_solve_dump_pair(
+        {
+            "ordinal": 1,
+            "A_path": left_a,
+            "b_path": left_b,
+            "x_path": None,
+        },
+        {
+            "ordinal": 2,
+            "A_path": right_a,
+            "b_path": right_b,
+            "x_path": None,
+        },
+    )
+
+    assert result["available"] is True
+    assert result["same_primal_constraint_partition"] is True
+    assert result["A_blocks"]["K"]["difference_max_abs"] == 0.5
+    assert result["A_blocks"]["B"]["difference_max_abs"] == 0.0
+    assert result["A_blocks"]["Bt"]["difference_max_abs"] == 0.0
+    assert result["b_primal"]["difference_max_abs"] == 0.25
+    assert result["b_constraint"]["difference_max_abs"] == 0.5
+
+
+def test_nonlinear_linear_system_sequence_compares_first_three_solves(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+    for ordinal, rhs in ((1, 1.0), (2, 1.0), (3, 2.0)):
+        base = "diag" if ordinal == 1 else f"diag_{ordinal}"
+        (tmp_path / f"{base}_a.dat").write_text("1 1 2\n", encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text(f"1 {rhs}\n", encoding="utf-8")
+
+    result = campaign.nonlinear_linear_system_sequence(prefix, limit=3)
+
+    assert result["available"] is True
+    assert result["dump_count_discovered"] == 3
+    assert result["analyzed_count"] == 3
+    assert "solve1__vs__solve2" in result["pairs"]
+    assert "solve2__vs__solve3" in result["pairs"]
+    assert result["pairs"]["solve1__vs__solve2"]["b_full"]["difference_l2"] == 0.0
+    assert result["pairs"]["solve2__vs__solve3"]["b_full"]["difference_l2"] == 1.0
