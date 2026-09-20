@@ -541,3 +541,96 @@ def test_direct_sensitivity_accepts_different_rhs_max_indices_with_same_A_dimens
         assert result["constraint_rows"] == 1
         assert result["left_dimension"]["rows"] == 3
         assert result["right_dimension"]["rows"] == 3
+
+
+def test_linear_dump_provenance_excludes_heterogeneous_numbered_dump(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+
+    (tmp_path / "diag_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "diag_b.dat").write_text("1 2\n2 6\n3 0\n", encoding="utf-8")
+
+    # Continuously-numbered second dump is structurally different: it must
+    # not be interpreted as the next outer nonlinear iteration.
+    (tmp_path / "diag_2_a.dat").write_text(
+        "1 1 4\n"
+        "2 2 5\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "diag_2_b.dat").write_text("1 1\n2 1\n", encoding="utf-8")
+
+    log = tmp_path / "launcher.log"
+    log.write_text(
+        "HeatSolve: Assembly done\n"
+        "SaveLinearSystem: Saving matrix to: diag_a.dat\n"
+        "SaveLinearSystem: Saving matrix rhs to: diag_b.dat\n"
+        "SaveLinearSystem: Saving matrix to: diag_2_a.dat\n"
+        "SaveLinearSystem: Saving matrix rhs to: diag_2_b.dat\n"
+        "ComputeChange: NS (ITER=1) (NRM,RELC): (1 1) :: heat equation\n",
+        encoding="utf-8",
+    )
+
+    provenance = campaign.linear_dump_provenance(prefix, log)
+    sequence = campaign.nonlinear_linear_system_sequence(
+        prefix, provenance=provenance
+    )
+    sensitivity = campaign.nonlinear_transition_direct_sensitivity(
+        prefix, provenance=provenance
+    )
+
+    assert provenance["dump_count"] == 2
+    assert provenance["comparable_outer_candidate_ordinals"] == [1]
+    assert provenance["heterogeneous_ordinals"] == [2]
+    assert provenance["records"][0]["role"] == "reference_outer_candidate"
+    assert (
+        provenance["records"][1]["role"]
+        == "heterogeneous_auxiliary_or_restricted"
+    )
+    assert provenance["records"][0]["log_event"]["next_computechange_iter"] == 1
+    assert provenance["records"][1]["log_event"]["next_computechange_iter"] == 1
+    assert sequence["available"] is False
+    assert sequence["heterogeneous_count"] == 1
+    assert sensitivity["available"] is False
+    assert "fewer than two structurally homogeneous" in sensitivity["reason"]
+
+
+def test_linear_dump_provenance_allows_same_shape_outer_candidates(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+    matrix = (
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n"
+    )
+    for ordinal, rhs in ((1, 2.0), (2, 2.1)):
+        base = "diag" if ordinal == 1 else f"diag_{ordinal}"
+        (tmp_path / f"{base}_a.dat").write_text(matrix, encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text(
+            f"1 {rhs}\n2 6\n3 0\n",
+            encoding="utf-8",
+        )
+
+    provenance = campaign.linear_dump_provenance(prefix)
+    sequence = campaign.nonlinear_linear_system_sequence(
+        prefix, provenance=provenance
+    )
+
+    assert provenance["heterogeneous_count"] == 0
+    assert provenance["comparable_outer_candidate_ordinals"] == [1, 2]
+    assert sequence["available"] is True
+    assert "solve1__vs__solve2" in sequence["pairs"]
