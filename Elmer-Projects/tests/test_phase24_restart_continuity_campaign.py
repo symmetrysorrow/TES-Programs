@@ -396,3 +396,72 @@ def test_nonlinear_linear_system_sequence_compares_first_three_solves(
     assert "solve2__vs__solve3" in result["pairs"]
     assert result["pairs"]["solve1__vs__solve2"]["b_full"]["difference_l2"] == 0.0
     assert result["pairs"]["solve2__vs__solve3"]["b_full"]["difference_l2"] == 1.0
+
+
+def test_direct_solve_transition_sensitivity_isolates_rhs_effect(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    a1 = tmp_path / "s1_a.dat"
+    b1 = tmp_path / "s1_b.dat"
+    a2 = tmp_path / "s2_a.dat"
+    b2 = tmp_path / "s2_b.dat"
+    matrix = (
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n"
+    )
+    a1.write_text(matrix, encoding="utf-8")
+    a2.write_text(matrix, encoding="utf-8")
+    b1.write_text("1 2\n2 6\n3 3\n", encoding="utf-8")
+    b2.write_text("1 2.2\n2 6\n3 3\n", encoding="utf-8")
+
+    result = campaign.direct_solve_transition_sensitivity(
+        {"ordinal": 1, "A_path": a1, "b_path": b1},
+        {"ordinal": 2, "A_path": a2, "b_path": b2},
+    )
+
+    assert "available" in result
+    if result["available"]:
+        primal = result["primal"]
+        full = primal["full_A2b2_minus_A1b1"]
+        rhs = primal["rhs_only_A1b2_minus_A1b1"]
+        op = primal["operator_only_A2b1_minus_A1b1"]
+        interaction = primal["interaction"]
+        assert full["delta_l2"] > 0.0
+        assert abs(full["delta_l2"] - rhs["delta_l2"]) < 1.0e-12
+        assert op["delta_l2"] < 1.0e-12
+        assert interaction["delta_l2"] < 1.0e-12
+        assert result["primal_l2_ratios"]["rhs_only_to_full"] > 0.999999
+
+
+def test_nonlinear_transition_direct_sensitivity_uses_adjacent_saved_solves(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "diag"
+    matrix = (
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n"
+    )
+    for ordinal, rhs1 in ((1, 2.0), (2, 2.1), (3, 2.2)):
+        base = "diag" if ordinal == 1 else f"diag_{ordinal}"
+        (tmp_path / f"{base}_a.dat").write_text(matrix, encoding="utf-8")
+        (tmp_path / f"{base}_b.dat").write_text(
+            f"1 {rhs1}\n2 6\n3 3\n",
+            encoding="utf-8",
+        )
+
+    result = campaign.nonlinear_transition_direct_sensitivity(prefix, limit=3)
+
+    assert result["available"] is True
+    assert result["dump_count_analyzed"] == 3
+    assert "solve1__vs__solve2" in result["pairs"]
+    assert "solve2__vs__solve3" in result["pairs"]
