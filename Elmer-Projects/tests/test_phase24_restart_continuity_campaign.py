@@ -205,3 +205,104 @@ def test_restart_candidate_residual_detects_constraint_violation(
     assert result["constraint"]["residual_l2"] == 3.0
     assert result["constraint"]["residual_max_abs"] == 3.0
     assert result["constraint"]["backward_error"] > 0.0
+
+
+def test_matrix_block_decomposition_reports_saddle_blocks(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "blocks"
+    (tmp_path / "blocks_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 4\n"
+        "2 2 3\n"
+        "2 3 5\n"
+        "3 1 4\n"
+        "3 2 5\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "blocks_b.dat").write_text(
+        "1 7\n2 8\n3 0\n",
+        encoding="utf-8",
+    )
+
+    result = campaign.matrix_block_decomposition(prefix)
+
+    assert result["available"] is True
+    assert result["primal_rows"] == 2
+    assert result["constraint_rows"] == 1
+    assert result["blocks"]["K"]["records"] == 2
+    assert result["blocks"]["Bt"]["records"] == 2
+    assert result["blocks"]["B"]["records"] == 2
+    assert result["blocks"]["D"]["records"] == 0
+    assert result["B_minus_BtT_max_abs"] == 0.0
+
+
+def test_compare_primal_systems_ignores_added_constraint_block(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    mortar = tmp_path / "mortar"
+    nomortar = tmp_path / "nomortar"
+    (tmp_path / "mortar_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 4\n"
+        "2 2 3\n"
+        "2 3 5\n"
+        "3 1 4\n"
+        "3 2 5\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "mortar_b.dat").write_text(
+        "1 7\n2 8\n3 0\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "nomortar_a.dat").write_text(
+        "1 1 2\n"
+        "2 2 3\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "nomortar_b.dat").write_text(
+        "1 7\n2 8\n",
+        encoding="utf-8",
+    )
+
+    result = campaign.compare_primal_systems(mortar, nomortar)
+
+    assert result["available"] is True
+    assert result["same_primal_row_set"] is True
+    assert result["K_nonzero_difference_records"] == 0
+    assert result["K_max_absolute_difference"] == 0.0
+    assert result["rhs_nonzero_difference_records"] == 0
+    assert result["rhs_max_absolute_difference"] == 0.0
+
+
+def test_independent_direct_solve_is_best_effort_without_crashing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(campaign, "ROOT", tmp_path)
+    prefix = tmp_path / "direct"
+    (tmp_path / "direct_a.dat").write_text(
+        "1 1 2\n"
+        "1 3 1\n"
+        "2 2 3\n"
+        "2 3 1\n"
+        "3 1 1\n"
+        "3 2 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "direct_b.dat").write_text(
+        "1 2\n2 6\n3 3\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "direct_sol.dat").write_text(
+        "1 1\n2 2\n",
+        encoding="utf-8",
+    )
+
+    result = campaign.independent_direct_solve(prefix)
+
+    assert "available" in result
+    if result["available"]:
+        assert result["direct_relative_residual"] < 1.0e-10
+        assert result["primal"]["delta_max_abs"] < 1.0e-10
