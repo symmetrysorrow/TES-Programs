@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "purpose": "Determine whether the large c2 changes across fixed C_tes anchors are mostly a parameter-coordinate effect or correspond to materially different normalized Magnicon+c2 readout transfer shapes.",
+  "base_anchor_config": "magnicon_xxf1_physical_L_Ctes_anchor_c2_diagnostic_config.json",
+  "normalization_reference_Hz": 1000.0,
+  "comparison_reference_multiplier": 0.25,
+  "primary_material_multiplier": 1.0,
+  "exclude_c2_boundary_rows_from_primary_classification": true,
+  "bands_Hz": [
+    {"name": "1000-5000_Hz", "min": 1000.0, "max": 5000.0},
+    {"name": "5000-15000_Hz", "min": 5000.0, "max": 15000.0},
+    {"name": "15000-40000_Hz", "min": 15000.0, "max": 40000.0},
+    {"name": "40000-100000_Hz", "min": 40000.0, "max": 100000.0},
+    {"name": "100000-200000_Hz", "min": 100000.0, "max": 200000.0}
+  ],
+  "anchors_Hz": [1000, 5000, 10000, 20000, 40000, 70000, 100000, 150000, 200000],
+  "anchor_sensitivity_screen": {
+    "max_pairwise_full_band_rms_difference_dB": 0.5,
+    "max_pairwise_abs_difference_dB": 1.5
+  },
+  "guardrail": "This diagnostic compares effective normalized readout-transfer shapes implied by each externally fixed C_tes assumption. A large anchor dependence means c2 is not quantitatively identifiable without stronger C_tes information; it does not by itself prove that the residual is detector-side rather than readout-side. Rows where c2 hits its configured bound are censored and excluded from the primary finite-shape classification."
+}
