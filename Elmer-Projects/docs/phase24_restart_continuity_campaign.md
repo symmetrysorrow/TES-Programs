@@ -473,3 +473,70 @@ Direct solve sensitivity
 
 and the latter two remain uncomputed until at least two structurally
 homogeneous outer-candidate dumps are available.
+
+
+## Exact dump-prefix matching
+
+The dump discovery logic now rejects textual sibling case names before any
+structural comparison is attempted.
+
+For a configured prefix such as:
+
+```text
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1
+```
+
+the only accepted dump bases are:
+
+```text
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1_1
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1_2
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1.3
+case_phase24_restartdiag_gate3_state_mumps_bdf1_1-4
+```
+
+That is, the exact base or an explicitly delimited numeric continuous-number
+suffix. Textual siblings such as:
+
+```text
+..._nomortar
+..._hold5
+..._production_hold5
+```
+
+are separate cases and are excluded. They are retained only in the provenance
+field `ignored_sibling_bases` so accidental prefix collisions remain visible.
+
+This fixes the earlier false `solve1 -> solve2` comparison where the second
+"solve" was actually the no-mortar diagnostic case. The 96955-row mortar
+system and the 96769-row no-mortar system differ by exactly the 186 explicit
+constraint rows and must not be interpreted as two nonlinear solves.
+
+## Solver-log provenance
+
+The campaign now parses the actual Elmer log:
+
+```text
+results/<case>/solver.log
+```
+
+instead of the wrapper's `restart_continuity_launcher.log` when available.
+The launcher log only contains `run.py` console output because `run.py`
+redirects ElmerSolver stdout/stderr into `solver.log`.
+
+Therefore `linear_dump_provenance.json` now reports:
+
+```text
+log_source
+solver_log
+launcher_log
+log_save_event_count
+previous_computechange_iter
+next_computechange_iter
+```
+
+from the real solver stream. If only one exact/numerically-numbered A/b group
+exists for the mortar case, the campaign explicitly reports that no
+per-nonlinear-iteration A/b transition has yet been captured instead of
+reusing a sibling variant as a surrogate.
