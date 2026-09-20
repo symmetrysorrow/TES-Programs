@@ -167,3 +167,64 @@ Interpretation:
 The one-step mortar and no-mortar variants retain matrix/solution capture for
 this diagnostic; the corresponding hold5 variants remain the source for
 accepted-step physical continuity.
+
+
+## Independent first-step direct solve and block comparison
+
+The campaign now performs a best-effort independent sparse direct solve of the
+saved first transient system when NumPy/SciPy are available:
+
+```text
+A x_direct = b
+delta = x_direct - x_saved
+```
+
+This is intentionally separate from the Elmer/MUMPS solve. It answers whether
+the *saved first linear system itself* requires a material correction from the
+saved restart/x0 candidate.
+
+Outputs:
+
+```text
+first_step_matrix_blocks.json
+first_step_direct_solve.json
+primal_system_comparison.json
+```
+
+The matrix is partitioned algebraically as:
+
+```text
+A = [ K   Bt ]
+    [ B    D ]
+```
+
+using nonzero-diagonal rows as primal thermal rows and zero-diagonal rows as
+constraint rows. The block artifact reports row counts, record counts,
+Frobenius norms, maximum coefficients, B-vs-Bt-transpose mismatch, and primal
+versus constraint RHS norms.
+
+When `--include-no-mortar` is used, `primal_system_comparison.json`
+compares only the primal K block and primal RHS of the mortar and no-mortar
+one-step systems. If K and the primal RHS are unchanged, the first-step
+difference is isolated to the interface constraint coupling rather than the
+underlying thermal operator.
+
+For the independent direct solution, the key quantity is:
+
+```text
+primal.delta_max_abs_mK_if_temperature
+```
+
+Interpretation:
+
+- material direct-solve temperature correction: the assembled first transient
+  linear system itself moves the saved restart/x0 state;
+- tiny direct-solve correction but large accepted TES jump: focus on later
+  nonlinear electrothermal coupling or solution-transfer/bookkeeping;
+- identical primal K/RHS with mortar/no-mortar: focus on B/Bt/D coupling;
+- changed primal K or RHS: Apply Mortar BCs is changing more than an appended
+  constraint block on this path.
+
+The direct solve is optional at runtime. If SciPy is unavailable or the sparse
+factorization fails, the campaign records that status and still produces the
+matrix-block and primal-system diagnostics.
