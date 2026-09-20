@@ -591,11 +591,11 @@ def discover_linear_solve_dumps(prefix: Path) -> list[dict[str, Any]]:
     def order_key(base: str) -> tuple[Any, ...]:
         tail = base[len(prefix.name):]
         if not tail:
-            return (-1, base)
+            return (0, (), base)
         numbers = tuple(int(value) for value in re.findall(r"\d+", tail))
         if numbers:
-            return (*numbers, base)
-        return (10**12, base)
+            return (1, numbers, base)
+        return (2, (), base)
 
     out: list[dict[str, Any]] = []
     for ordinal, base in enumerate(sorted(groups, key=order_key), start=1):
@@ -1744,36 +1744,50 @@ def main() -> int:
             f"captured {sequence.get('analyzed_count')} of "
             f"{sequence.get('dump_count_discovered')} saved linear solves"
         )
-        pair23 = sequence_pairs.get("solve2__vs__solve3")
         pair12 = sequence_pairs.get("solve1__vs__solve2")
-        focus = pair23 or pair12
-        if focus and focus.get("available"):
-            afull = focus.get("A_full", {})
-            bfull = focus.get("b_full", {})
+        pair23 = sequence_pairs.get("solve2__vs__solve3")
+        available_pairs = [
+            (name, pair)
+            for name, pair in (("1->2", pair12), ("2->3", pair23))
+            if pair and pair.get("available")
+        ]
+        for name, pair in available_pairs:
+            afull = pair.get("A_full", {})
+            bfull = pair.get("b_full", {})
             diagnosis["nonlinear_system_sequence_status"] += (
-                f"; focus A rel-L2={afull.get('relative_l2_to_left')}, "
+                f"; {name} A rel-L2={afull.get('relative_l2_to_left')}, "
                 f"b rel-L2={bfull.get('relative_l2_to_left')}"
             )
+        if available_pairs:
+            def pair_magnitude(item: tuple[str, dict[str, Any]]) -> float:
+                pair = item[1]
+                a_rel = pair.get("A_full", {}).get("relative_l2_to_left") or 0.0
+                b_rel = pair.get("b_full", {}).get("relative_l2_to_left") or 0.0
+                return max(a_rel, b_rel)
+
+            focus_name, focus = max(available_pairs, key=pair_magnitude)
+            afull = focus.get("A_full", {})
+            bfull = focus.get("b_full", {})
             a_rel = afull.get("relative_l2_to_left")
             b_rel = bfull.get("relative_l2_to_left")
             if a_rel is not None and b_rel is not None:
                 if b_rel > 10.0 * max(a_rel, 1.0e-300):
                     diagnosis["strongest"] = (
-                        "the nonlinear linear-system sequence changes primarily in "
-                        "the RHS before the thermal jump; inspect transient-history, "
-                        "body-force, and RHS-reuse assembly"
+                        f"saved solve transition {focus_name} changes primarily in "
+                        "the RHS; inspect transient-history, body-force, and "
+                        "RHS-reuse assembly"
                     )
                 elif a_rel > 10.0 * max(b_rel, 1.0e-300):
                     diagnosis["strongest"] = (
-                        "the nonlinear linear-system sequence changes primarily in "
-                        "the operator before the thermal jump; inspect temperature-"
-                        "dependent material, mortar, and matrix-reuse assembly"
+                        f"saved solve transition {focus_name} changes primarily in "
+                        "the operator; inspect temperature-dependent material, "
+                        "mortar, and matrix-reuse assembly"
                     )
                 else:
                     diagnosis["strongest"] = (
-                        "both operator and RHS materially change across the nonlinear "
-                        "linear-system sequence; use block-resolved A/b differences "
-                        "to isolate K/B/Bt/D versus primal/constraint RHS"
+                        f"saved solve transition {focus_name} changes in both operator "
+                        "and RHS; use block-resolved A/b differences to isolate "
+                        "K/B/Bt/D versus primal/constraint RHS"
                     )
     else:
         diagnosis["nonlinear_system_sequence_status"] = "not captured"
