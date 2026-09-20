@@ -349,3 +349,58 @@ Interpretation:
 As with the earlier independent direct solve, this diagnostic is best-effort.
 If SciPy is unavailable or sparse LU fails, the campaign records the reason
 and continues with the non-direct diagnostics.
+
+
+## Matrix dimension and zero-RHS mortar rows
+
+SaveLinearSystem is configured with:
+
+```text
+Linear System Save Skip Zeros = True
+```
+
+For an explicit mortar saddle system,
+
+```text
+A = [ K   Bt ]
+    [ B    0 ]
+
+b = [ f ]
+    [ 0 ]
+```
+
+the multiplier rows can therefore be absent from the saved RHS even though
+they are present in the assembled matrix. Using `max(rhs_index)` as the
+system dimension truncates those rows and can make two equal-size nonlinear
+systems appear to have different dimensions.
+
+The campaign now derives the dimension from the saved matrix A:
+
+```text
+n = max(max(A row index), max(A column index))
+```
+
+and zero-extends omitted RHS and solution entries to that dimension. This rule
+is used by restart residual decomposition, K/B/Bt/D decomposition, independent
+direct solve, primal-system comparison, nonlinear A/b comparison, and the
+crossed direct sensitivity solve.
+
+The campaign also discovers `*_sizes.dat` files and records their integer
+contents as provenance metadata, but does not assume a build-specific semantic
+interpretation. A-derived index extent is the authoritative diagnostic
+dimension.
+
+Relevant output fields now include:
+
+```text
+dimension_source
+dimension.rows
+rhs_saved_records
+rhs_implicit_zero_entries
+sizes_metadata
+```
+
+This also means earlier constraint-row counts derived from RHS extent should
+be treated as provisional. Re-running the campaign after this change is
+required before interpreting the multiplier-row count or a previous
+"different dimensions" direct-sensitivity failure.
