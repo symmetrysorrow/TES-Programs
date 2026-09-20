@@ -295,3 +295,57 @@ The dump ordinal is intentionally described as SaveLinearSystem dispatch
 order. On this single-step direct-MUMPS diagnostic it is expected to track the
 nonlinear linear solves, but the artifact does not pretend the filename itself
 contains an authoritative Elmer nonlinear-iteration ID.
+
+
+## Direct sensitivity of the nonlinear solve transition
+
+The campaign now solves four combinations for each adjacent saved-system pair:
+
+```text
+x11 = A1^-1 b1
+x12 = A1^-1 b2
+x21 = A2^-1 b1
+x22 = A2^-1 b2
+```
+
+This separates the observed saved-system transition into:
+
+```text
+full change       = x22 - x11
+RHS-only effect   = x12 - x11
+operator-only     = x21 - x11
+RHS effect on A2  = x22 - x21
+A effect on b2    = x22 - x12
+interaction       = x22 - x12 - x21 + x11
+```
+
+The artifact is:
+
+```text
+artifacts/phase24_restart_continuity_campaign/
+  nonlinear_transition_direct_sensitivity.json
+```
+
+For scalar HeatSolve primal rows, all effects include both L2 and maximum
+temperature-equivalent changes in mK. The headline reports the solve1->solve2
+full, RHS-only, and operator-only maximum primal changes.
+
+The decomposition uses two sparse LU factorizations, one for A1 and one for A2,
+then reuses them for the crossed right-hand sides. It is therefore much more
+diagnostic than comparing raw relative A/b norms alone: a numerically small
+RHS perturbation can still produce a large temperature correction in an
+ill-conditioned transient saddle system.
+
+Interpretation:
+
+- RHS-only temperature effect nearly equals the full transition while the
+  operator-only effect is tiny: focus on transient-history/body-force/RHS
+  assembly and reuse;
+- operator-only effect nearly equals the full transition: focus on material,
+  mortar, and matrix assembly/reuse;
+- both are material: inspect the reported interaction and the block-resolved
+  A/b differences before assigning one subsystem as the cause.
+
+As with the earlier independent direct solve, this diagnostic is best-effort.
+If SciPy is unavailable or sparse LU fails, the campaign records the reason
+and continues with the non-direct diagnostics.
