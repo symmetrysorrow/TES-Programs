@@ -404,3 +404,72 @@ This also means earlier constraint-row counts derived from RHS extent should
 be treated as provisional. Re-running the campaign after this change is
 required before interpreting the multiplier-row count or a previous
 "different dimensions" direct-sensitivity failure.
+
+
+## SaveLinearSystem dump provenance
+
+Continuous SaveLinearSystem numbering is now treated strictly as **dispatch
+order**, not as a nonlinear-iteration number.
+
+The campaign writes:
+
+```text
+artifacts/phase24_restart_continuity_campaign/
+  linear_dump_provenance.json
+```
+
+For every saved A/b group it records:
+
+```text
+ordinal
+matrix dimension
+primal row count
+constraint row count
+RHS saved-record count
+structural fingerprint
+launcher-log SaveLinearSystem line
+previous ComputeChange NS iteration
+next ComputeChange NS iteration
+classification role
+```
+
+The first saved system is labeled `reference_outer_candidate`. A later dump
+is eligible for nonlinear A/b comparison only if its structural fingerprint
+
+```text
+(rows, primal_rows, constraint_rows)
+```
+
+matches the reference. Such dumps are labeled
+`same_shape_outer_candidate`. A numbered dump with a different fingerprint is
+labeled:
+
+```text
+heterogeneous_auxiliary_or_restricted
+```
+
+and is excluded from both the adjacent A/b comparison and the crossed direct
+sensitivity solve.
+
+This is deliberately conservative. A matching fingerprint does not by itself
+prove that two dumps are adjacent outer nonlinear iterations; the launcher-log
+markers are retained as supporting provenance. A mismatching fingerprint,
+however, is sufficient to reject the old assumption that continuous numbering
+means adjacent nonlinear iterations.
+
+In particular, if a one-timestep run has many nonlinear iteration records but
+only two SaveLinearSystem groups and those groups have different dimensions,
+the campaign now reports the dumps as heterogeneous/unmapped instead of
+claiming that `solve1 -> solve2` is an RHS- or operator-dominated nonlinear
+transition.
+
+The headline therefore distinguishes:
+
+```text
+Linear dump provenance
+Nonlinear A/b sequence
+Direct solve sensitivity
+```
+
+and the latter two remain uncomputed until at least two structurally
+homogeneous outer-candidate dumps are available.
