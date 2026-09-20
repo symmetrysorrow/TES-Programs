@@ -1646,6 +1646,7 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Strongest current explanation: **{diagnosis.get('strongest', 'insufficient evidence')}**",
         f"- Series observability: {diagnosis.get('series_observability', 'unknown')}",
         f"- Restart/x0 residual: **{diagnosis.get('restart_residual_status', 'not captured')}**",
+        f"- Matrix dimension audit: **{diagnosis.get('dimension_audit_status', 'not captured')}**",
         f"- Independent direct first solve: **{diagnosis.get('independent_direct_status', 'not captured')}**",
         f"- Mortar/no-mortar primal system: **{diagnosis.get('primal_system_status', 'not captured')}**",
         f"- Nonlinear A/b sequence: **{diagnosis.get('nonlinear_system_sequence_status', 'not captured')}**",
@@ -1984,6 +1985,12 @@ def main() -> int:
             f"constraint backward error={cblock.get('backward_error')}, "
             f"primal backward error={pblock.get('backward_error')}"
         )
+        diagnosis["dimension_audit_status"] = (
+            f"A-derived rows={mortar_residual.get('rows')}, "
+            f"saved RHS records={mortar_residual.get('rhs_saved_records')}, "
+            f"implicit-zero RHS entries={mortar_residual.get('rhs_implicit_zero_entries')}, "
+            f"constraint rows={mortar_residual.get('constraint_rows')}"
+        )
         if mortar_residual.get("constraint_rows", 0) > 0:
             cbe = cblock.get("backward_error")
             pbe = pblock.get("backward_error")
@@ -1995,6 +2002,7 @@ def main() -> int:
                 )
     else:
         diagnosis["restart_residual_status"] = "not captured"
+        diagnosis["dimension_audit_status"] = "not captured"
 
     if mortar_residual.get("available") and nomortar_residual.get("available"):
         diagnosis["restart_residual_comparison"] = (
