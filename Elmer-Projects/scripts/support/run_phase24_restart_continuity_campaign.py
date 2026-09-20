@@ -749,6 +749,282 @@ def restart_candidate_residual(prefix: Path) -> dict[str, Any]:
     }
 
 
+def matrix_block_decomposition(prefix: Path) -> dict[str, Any]:
+    """Describe K/B/Bt/D blocks using zero-diagonal rows as constraints."""
+    a_path = dump_path(prefix, "_a.dat")
+    b_path = dump_path(prefix, "_b.dat")
+    if a_path is None or b_path is None:
+        return {
+            "available": False,
+            "matrix": relpath(a_path),
+            "rhs": relpath(b_path),
+        }
+
+    rhs = read_numeric_dump(b_path, 2)
+    if not rhs:
+        return {"available": False, "reason": "empty RHS dump"}
+    n = max(int(k) for k in rhs)
+
+    entries: list[tuple[int, int, float]] = []
+    diag_nonzero = [False] * (n + 1)
+    with a_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if len(fields) < 3:
+                continue
+            try:
+                row = int(fields[0])
+                col = int(fields[1])
+                value = float(fields[2])
+            except ValueError:
+                continue
+            if not (1 <= row <= n and 1 <= col <= n):
+                continue
+            entries.append((row, col, value))
+            if row == col and value != 0.0:
+                diag_nonzero[row] = True
+
+    primal = {i for i in range(1, n + 1) if diag_nonzero[i]}
+    constraint = {i for i in range(1, n + 1) if not diag_nonzero[i]}
+    block_acc = {
+        "K": {"records": 0, "frob_sq": 0.0, "max_abs": 0.0},
+        "Bt": {"records": 0, "frob_sq": 0.0, "max_abs": 0.0},
+        "B": {"records": 0, "frob_sq": 0.0, "max_abs": 0.0},
+        "D": {"records": 0, "frob_sq": 0.0, "max_abs": 0.0},
+    }
+    k_values: dict[tuple[int, int], float] = {}
+    b_values: dict[tuple[int, int], float] = {}
+    bt_values: dict[tuple[int, int], float] = {}
+
+    for row, col, value in entries:
+        if row in primal and col in primal:
+            name = "K"
+            k_values[(row, col)] = value
+        elif row in primal and col in constraint:
+            name = "Bt"
+            bt_values[(row, col)] = value
+        elif row in constraint and col in primal:
+            name = "B"
+            b_values[(row, col)] = value
+        else:
+            name = "D"
+        acc = block_acc[name]
+        acc["records"] += 1
+        acc["frob_sq"] += value * value
+        acc["max_abs"] = max(acc["max_abs"], abs(value))
+
+    def finish(acc: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "records": acc["records"],
+            "frobenius": math.sqrt(acc["frob_sq"]),
+            "max_abs": acc["max_abs"],
+        }
+
+    transpose_keys = set(b_values) | {(col, row) for row, col in bt_values}
+    transpose_max = 0.0
+    transpose_l2_sq = 0.0
+    for row, col in transpose_keys:
+        diff = b_values.get((row, col), 0.0) - bt_values.get((col, row), 0.0)
+        transpose_max = max(transpose_max, abs(diff))
+        transpose_l2_sq += diff * diff
+
+    primal_rhs_l2 = math.sqrt(sum(rhs.get(i, 0.0) ** 2 for i in primal))
+    constraint_rhs_l2 = math.sqrt(sum(rhs.get(i, 0.0) ** 2 for i in constraint))
+    return {
+        "available": True,
+        "rows": n,
+        "primal_rows": len(primal),
+        "constraint_rows": len(constraint),
+        "blocks": {name: finish(acc) for name, acc in block_acc.items()},
+        "B_minus_BtT_max_abs": transpose_max,
+        "B_minus_BtT_l2": math.sqrt(transpose_l2_sq),
+        "primal_rhs_l2": primal_rhs_l2,
+        "constraint_rhs_l2": constraint_rhs_l2,
+        "constraint_row_identification": "rows without a nonzero diagonal entry",
+    }
+
+
+def compare_primal_systems(left_prefix: Path, right_prefix: Path) -> dict[str, Any]:
+    """Compare primal K and primal RHS between two first-solve systems."""
+    left_a = dump_path(left_prefix, "_a.dat")
+    right_a = dump_path(right_prefix, "_a.dat")
+    left_b = dump_path(left_prefix, "_b.dat")
+    right_b = dump_path(right_prefix, "_b.dat")
+    if None in (left_a, right_a, left_b, right_b):
+        return {"available": False}
+
+    def load(path_a: Path, path_b: Path) -> tuple[dict[tuple[int, int], float], dict[int, float], set[int]]:
+        rhs = read_numeric_dump(path_b, 2)
+        n = max((int(k) for k in rhs), default=0)
+        diag_nonzero = [False] * (n + 1)
+        entries: list[tuple[int, int, float]] = []
+        with path_a.open(encoding="utf-8") as handle:
+            for line in handle:
+                fields = line.split()
+                if len(fields) < 3:
+                    continue
+                try:
+                    row, col, value = int(fields[0]), int(fields[1]), float(fields[2])
+                except ValueError:
+                    continue
+                if not (1 <= row <= n and 1 <= col <= n):
+                    continue
+                entries.append((row, col, value))
+                if row == col and value != 0.0:
+                    diag_nonzero[row] = True
+        primal = {i for i in range(1, n + 1) if diag_nonzero[i]}
+        k = {(r, col): v for r, col, v in entries if r in primal and col in primal}
+        prhs = {i: rhs.get(i, 0.0) for i in primal}
+        return k, prhs, primal
+
+    lk, lb, lp = load(left_a, left_b)
+    rk, rb, rp = load(right_a, right_b)
+    if lp != rp:
+        return {
+            "available": True,
+            "same_primal_row_set": False,
+            "left_primal_rows": len(lp),
+            "right_primal_rows": len(rp),
+            "common_primal_rows": len(lp & rp),
+        }
+
+    k_keys = set(lk) | set(rk)
+    k_diffs = [abs(lk.get(key, 0.0) - rk.get(key, 0.0)) for key in k_keys]
+    rhs_keys = set(lb) | set(rb)
+    rhs_diffs = [abs(lb.get(key, 0.0) - rb.get(key, 0.0)) for key in rhs_keys]
+    return {
+        "available": True,
+        "same_primal_row_set": True,
+        "primal_rows": len(lp),
+        "K_left_records": len(lk),
+        "K_right_records": len(rk),
+        "K_nonzero_difference_records": sum(v != 0.0 for v in k_diffs),
+        "K_max_absolute_difference": max(k_diffs, default=0.0),
+        "rhs_nonzero_difference_records": sum(v != 0.0 for v in rhs_diffs),
+        "rhs_max_absolute_difference": max(rhs_diffs, default=0.0),
+    }
+
+
+def independent_direct_solve(prefix: Path) -> dict[str, Any]:
+    """Best-effort SciPy direct solve of the saved first transient system."""
+    a_path = dump_path(prefix, "_a.dat")
+    b_path = dump_path(prefix, "_b.dat")
+    x_path = solution_dump_path(prefix)
+    if a_path is None or b_path is None or x_path is None:
+        return {"available": False, "reason": "missing A, b, or saved solution dump"}
+
+    try:
+        import numpy as np
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.linalg import spsolve
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": "SciPy sparse direct solver unavailable",
+            "detail": f"{type(exc).__name__}: {exc}",
+        }
+
+    rhs_map = read_numeric_dump(b_path, 2)
+    saved_map = read_solution_vector(x_path)
+    n = max((int(k) for k in rhs_map), default=0)
+    if n <= 0:
+        return {"available": False, "reason": "empty RHS"}
+
+    rows: list[int] = []
+    cols: list[int] = []
+    vals: list[float] = []
+    diag_nonzero = np.zeros(n, dtype=bool)
+    with a_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if len(fields) < 3:
+                continue
+            try:
+                row, col, value = int(fields[0]), int(fields[1]), float(fields[2])
+            except ValueError:
+                continue
+            if not (1 <= row <= n and 1 <= col <= n):
+                continue
+            rows.append(row - 1)
+            cols.append(col - 1)
+            vals.append(value)
+            if row == col and value != 0.0:
+                diag_nonzero[row - 1] = True
+
+    A = coo_matrix((np.asarray(vals), (np.asarray(rows), np.asarray(cols))), shape=(n, n)).tocsc()
+    rhs = np.zeros(n, dtype=float)
+    for idx, value in rhs_map.items():
+        if 1 <= int(idx) <= n:
+            rhs[int(idx) - 1] = value
+    saved = np.zeros(n, dtype=float)
+    for idx, value in saved_map.items():
+        if 1 <= int(idx) <= n:
+            saved[int(idx) - 1] = value
+
+    try:
+        direct = np.asarray(spsolve(A, rhs), dtype=float)
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": "SciPy spsolve failed",
+            "detail": f"{type(exc).__name__}: {exc}",
+            "rows": n,
+            "matrix_records": len(vals),
+        }
+
+    if direct.shape != (n,) or not np.all(np.isfinite(direct)):
+        return {
+            "available": False,
+            "reason": "SciPy direct solution is non-finite or wrong-sized",
+            "rows": n,
+        }
+
+    residual = rhs - A.dot(direct)
+    rhs_norm = float(np.linalg.norm(rhs))
+    residual_norm = float(np.linalg.norm(residual))
+    delta = direct - saved
+    primal_mask = diag_nonzero
+    constraint_mask = ~diag_nonzero
+
+    def delta_stats(mask: Any) -> dict[str, Any]:
+        values = delta[mask]
+        direct_values = direct[mask]
+        saved_values = saved[mask]
+        if values.size == 0:
+            return {"rows": 0, "delta_l2": 0.0, "delta_max_abs": 0.0}
+        return {
+            "rows": int(values.size),
+            "delta_l2": float(np.linalg.norm(values)),
+            "delta_max_abs": float(np.max(np.abs(values))),
+            "direct_l2": float(np.linalg.norm(direct_values)),
+            "saved_l2": float(np.linalg.norm(saved_values)),
+        }
+
+    primal = delta_stats(primal_mask)
+    constraint = delta_stats(constraint_mask)
+    primal["delta_max_abs_mK_if_temperature"] = primal["delta_max_abs"] * 1.0e3
+
+    return {
+        "available": True,
+        "rows": n,
+        "matrix_records": len(vals),
+        "saved_solution_records": len(saved_map),
+        "missing_solution_entries_zero_extended": max(n - len(saved_map), 0),
+        "direct_residual_l2": residual_norm,
+        "direct_relative_residual": residual_norm / max(rhs_norm, 1.0e-300),
+        "full_delta_l2": float(np.linalg.norm(delta)),
+        "full_delta_max_abs": float(np.max(np.abs(delta))),
+        "primal": primal,
+        "constraint": constraint,
+        "interpretation_caveat": (
+            "The saved Elmer solution dump is an x0/restart candidate, not proven "
+            "to equal the exact native pre-solve vector. For this scalar HeatSolve, "
+            "primal entries are treated as temperature DOFs; multiplier entries "
+            "missing from the saved vector are zero-extended."
+        ),
+    }
+
+
 def command_for(case: str, project: Path, solver: Path, runtime_bin: Path, toolchain_bin: Path) -> list[str]:
     return [
         sys.executable,
@@ -854,6 +1130,9 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "field_continuity",
         "linear_system_comparison",
         "first_step_restart_residual",
+        "first_step_matrix_blocks",
+        "first_step_direct_solve",
+        "primal_system_comparison",
         "old_good_route_diff",
     ):
         payload = summary.get(name, {})
@@ -883,6 +1162,8 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         f"- Strongest current explanation: **{diagnosis.get('strongest', 'insufficient evidence')}**",
         f"- Series observability: {diagnosis.get('series_observability', 'unknown')}",
         f"- Restart/x0 residual: **{diagnosis.get('restart_residual_status', 'not captured')}**",
+        f"- Independent direct first solve: **{diagnosis.get('independent_direct_status', 'not captured')}**",
+        f"- Mortar/no-mortar primal system: **{diagnosis.get('primal_system_status', 'not captured')}**",
         "",
         "## Evidence",
         "",
@@ -894,7 +1175,9 @@ def write_artifacts(summary: dict[str, Any]) -> None:
         "Detailed machine-readable outputs are beside this file: provenance.json, "
         "input_diff.json, restart_audit.json, state_file_audit.json, case_matrix.csv, "
         "first_step_metrics.csv, field_continuity.json, linear_system_comparison.json, "
-        "first_step_restart_residual.json, and old_good_route_diff.json.",
+        "first_step_restart_residual.json, first_step_matrix_blocks.json, "
+        "first_step_direct_solve.json, primal_system_comparison.json, and "
+        "old_good_route_diff.json.",
         "",
         "The campaign deliberately does not run a 40 us or 100 us production trace.",
         "",
@@ -995,6 +1278,9 @@ def main() -> int:
         "case_matrix": [],
         "first_step_metrics": [existing_metrics],
         "first_step_restart_residual": {},
+        "first_step_matrix_blocks": {},
+        "first_step_direct_solve": {},
+        "primal_system_comparison": {},
         "field_continuity": {
             "note": "Scalar TES continuity is captured from state/iteration/series. Nodal field deltas require a text-exported result and are reported as unavailable rather than guessed.",
             "existing_transient_temperature_mK": transient.get("series", {}).get("first", {}).get("tes_temperature_mK"),
@@ -1094,6 +1380,21 @@ def main() -> int:
                 suffix: restart_candidate_residual(prefix)
                 for suffix, prefix in prefixes.items()
             }
+            summary["first_step_matrix_blocks"] = {
+                suffix: matrix_block_decomposition(prefix)
+                for suffix, prefix in prefixes.items()
+            }
+            summary["first_step_direct_solve"] = {
+                suffix: independent_direct_solve(prefix)
+                for suffix, prefix in prefixes.items()
+                if suffix.startswith("gate3_state_mumps_bdf1_1")
+            }
+            mortar_prefix = prefixes.get("gate3_state_mumps_bdf1_1")
+            nomortar_prefix = prefixes.get("gate3_state_mumps_bdf1_1_nomortar")
+            if mortar_prefix is not None and nomortar_prefix is not None:
+                summary["primal_system_comparison"] = compare_primal_systems(
+                    mortar_prefix, nomortar_prefix
+                )
 
     if not args.audit_only and not args.dry_run and not summary["runs"]:
         summary["run_setup_error"] = (
@@ -1122,7 +1423,8 @@ def main() -> int:
         "backend_status": "not isolated",
         "strongest": (
             "first transient accepted-step evolution is the first demonstrated failure; "
-            "inspect first-step thermal/circuit equations, restart field continuity, BDF initialization, and mortar coupling"
+            "BDF order is not materially implicated, so inspect the first transient "
+            "mortar/interface operator and electrothermal nonlinear update"
             if existing_jump == "first accepted timestep" and not state_bad
             else "restart/state handoff remains the first target"
         ),
@@ -1203,6 +1505,43 @@ def main() -> int:
         )
     else:
         diagnosis["restart_residual_comparison"] = "not fully captured"
+
+    direct_solves = summary.get("first_step_direct_solve", {})
+    mortar_direct = direct_solves.get("gate3_state_mumps_bdf1_1", {})
+    if mortar_direct.get("available"):
+        pd = mortar_direct.get("primal", {})
+        diagnosis["independent_direct_status"] = (
+            "captured: "
+            f"primal max |x_direct-x_saved|="
+            f"{pd.get('delta_max_abs_mK_if_temperature')} mK, "
+            f"direct relative residual={mortar_direct.get('direct_relative_residual')}"
+        )
+        max_mk = pd.get("delta_max_abs_mK_if_temperature")
+        if max_mk is not None and max_mk > 0.05:
+            diagnosis["strongest"] = (
+                "the saved first transient linear system itself requires a material "
+                "primal-temperature correction from the saved restart/x0 candidate; "
+                "inspect mortar/interface operator and primal RHS construction before "
+                "the nonlinear circuit update"
+            )
+        elif max_mk is not None:
+            diagnosis["strongest"] = (
+                "independent direct first-solve correction is small; the large accepted "
+                "TES jump is more likely generated after the first linear solve by the "
+                "nonlinear electrothermal/solution-transfer path"
+            )
+    else:
+        diagnosis["independent_direct_status"] = "not captured"
+
+    primal_cmp = summary.get("primal_system_comparison", {})
+    if primal_cmp.get("available"):
+        diagnosis["primal_system_status"] = (
+            f"same primal row set={primal_cmp.get('same_primal_row_set')}; "
+            f"K max diff={primal_cmp.get('K_max_absolute_difference')}; "
+            f"primal RHS max diff={primal_cmp.get('rhs_max_absolute_difference')}"
+        )
+    else:
+        diagnosis["primal_system_status"] = "not captured"
 
     diagnosis["series_observability"] = (
         "TES accepted-step series is written when the next timestep begins; "
