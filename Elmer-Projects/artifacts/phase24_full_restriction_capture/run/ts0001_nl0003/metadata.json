@@ -1,0 +1,61 @@
+{
+  "capture_kind": "solve_with_linear_restriction_full_system",
+  "capture_position": "SolveWithLinearRestriction after CollectionMatrix construction and immediately around SolveLinearSystem",
+  "timestep": 1,
+  "nonlinear_iteration": 3,
+  "raw_files": {
+    "full_A_before": "full_A_before.dat",
+    "full_b_before": "full_b_before.dat",
+    "full_x_before": "full_x_before.dat",
+    "full_A_after": "full_A_after.dat",
+    "full_b_after": "full_b_after.dat",
+    "full_x_after": "full_x_after.dat"
+  },
+  "runtime": {
+    "total_rows": 96955,
+    "matrix_nnz": 1329477,
+    "primal_rows": 96769,
+    "constraint_matrix_rows": 186,
+    "constraint_rows": 186,
+    "before_matrix_records": 1194063,
+    "after_matrix_records": 1194063
+  },
+  "provenance": {
+    "physical_time": 0.020018,
+    "dt": 1.8e-05,
+    "bdf_order": 1,
+    "solver_name": "direct",
+    "direct_method": "mumps",
+    "mumps_backend": "mumps",
+    "collection_matrix_construction_mode": "MATRIX_LIST assembled, then converted to CRS",
+    "eliminate_linear_constraints": 0,
+    "penalty_linear_constraints": 0,
+    "apply_mortar_bcs": "True",
+    "restriction_mortar_active": 1,
+    "log_event": {
+      "time": 0.020018,
+      "dt": 1.8e-05,
+      "bdf_order": 1,
+      "solver": "direct",
+      "direct_method": "mumps",
+      "total_rows": 96955,
+      "primal_rows": 96769,
+      "constraint_rows": 186,
+      "matrix_nnz": 1329477,
+      "constraint_matrix_rows": 186,
+      "eliminate": 0,
+      "penalty": 0,
+      "restriction_active": 1
+    }
+  },
+  "sha256": {
+    "matrix_before": "9c391a8cba87bd6ea681a8ebed41a82f5f42567dbc328e3ccc1e5f383350d944",
+    "matrix_after": "7b243bf7cac6165e08c3f97e0e27c1f9f7a13c82d6329345d0238e74ba0224b9",
+    "rhs_before": "aaa46b23dda53e2004b5ed486f93d282936476335ff3f7bd98f5cdf55bb408f9",
+    "rhs_after": "86b5ab0b7fb55cce771a3f6ea7e6e89da8f6778987f338ac1b461092ae31a6b1"
+  },
+  "matrix_sha_before": "9c391a8cba87bd6ea681a8ebed41a82f5f42567dbc328e3ccc1e5f383350d944",
+  "matrix_sha_after": "7b243bf7cac6165e08c3f97e0e27c1f9f7a13c82d6329345d0238e74ba0224b9",
+  "rhs_sha_before": "aaa46b23dda53e2004b5ed486f93d282936476335ff3f7bd98f5cdf55bb408f9",
+  "rhs_sha_after": "86b5ab0b7fb55cce771a3f6ea7e6e89da8f6778987f338ac1b461092ae31a6b1"
+}
