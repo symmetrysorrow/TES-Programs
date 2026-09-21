@@ -899,6 +899,20 @@ def run(config: dict, config_path: Path) -> dict:
                 "pole_Q": float(canonical["pole_Q"]),
                 "c4": 0.0,
             },
+            "external_analog_filter": {
+                "model": "SRS SIM965",
+                "front_panel_cutoff_Hz": float(
+                    opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+                ),
+                "mode": "Bessel",
+                "slope_dB_per_oct": 24,
+                "order": int(opt.TARGET_HARDWARE_BESSEL_ORDER),
+                "coupling": "DC",
+                "scipy_norm": str(opt.TARGET_HARDWARE_BESSEL_NORM),
+                "nominal_minus3dB_Hz": float(
+                    0.6604 * opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+                ),
+            },
             "objective": (
                 "equal-weight mean of the two day-specific continuum "
                 "shape scores over 1-200 kHz"
