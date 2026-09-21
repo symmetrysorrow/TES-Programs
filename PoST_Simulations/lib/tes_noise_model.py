@@ -54,6 +54,7 @@ STYCAST_SOURCE_CLASS_INDICES = {
 THERMAL_LINK_MODEL_STYCAST = "stycast_node"
 THERMAL_EXTENSION_TES_HANGING = "tes_hanging_body"
 THERMAL_EXTENSION_TES_STYCAST_SERIES = "tes_stycast_series_node"
+THERMAL_EXTENSION_TES_BATH_SERIES = "tes_bath_series_substrate_node"
 ELECTRICAL_LINK_MODEL_RC = "rl_rc_relaxation"
 
 STYCAST_HANGING_SOURCE_NAMES = (
@@ -75,6 +76,29 @@ STYCAST_HANGING_SOURCE_CLASS_INDICES = {
     "load_Johnson": (1, 10),
     "TES_bath_TFN": (2, 9),
     "TES_hanging_TFN": (3, 8),
+    "TES_Stycast_TFN": (4, 7),
+    "Stycast_absorber_TFN": (5, 6),
+}
+
+STYCAST_BATH_SERIES_SOURCE_NAMES = (
+    "johnson_tes1",
+    "johnson_load1",
+    "phonon_tes1_substrate",
+    "phonon_substrate1_bath",
+    "phonon_tes1_stycast",
+    "phonon_stycast1_absorber",
+    "phonon_stycast2_absorber",
+    "phonon_tes2_stycast",
+    "phonon_substrate2_bath",
+    "phonon_tes2_substrate",
+    "johnson_load2",
+    "johnson_tes2",
+)
+STYCAST_BATH_SERIES_SOURCE_CLASS_INDICES = {
+    "TES_Johnson": (0, 11),
+    "load_Johnson": (1, 10),
+    "TES_substrate_TFN": (2, 9),
+    "substrate_bath_TFN": (3, 8),
     "TES_Stycast_TFN": (4, 7),
     "Stycast_absorber_TFN": (5, 6),
 }
@@ -196,6 +220,13 @@ def _use_series_thermalizer(parameters: dict) -> bool:
     )
 
 
+def _use_bath_series_substrate(parameters: dict) -> bool:
+    return (
+        str(parameters.get("thermal_extension", "none")).lower()
+        == THERMAL_EXTENSION_TES_BATH_SERIES
+    )
+
+
 def _use_rc_relaxation(parameters: dict) -> bool:
     return (
         str(parameters.get("electrical_link_model", "rl")).lower()
@@ -226,9 +257,20 @@ def _source_layout(parameters: dict):
     stycast = _use_stycast_node(parameters)
     hanging = _use_hanging_tes(parameters)
     series = _use_series_thermalizer(parameters)
+    bath_series = _use_bath_series_substrate(parameters)
     rc = _use_rc_relaxation(parameters)
-    if hanging and series:
+    if sum(bool(value) for value in (hanging, series, bath_series)) > 1:
         raise ValueError("Select only one TES thermal extension")
+    if bath_series:
+        if not stycast:
+            raise ValueError("TES-bath substrate-node extension requires stycast_node")
+        if rc:
+            raise ValueError("TES-bath substrate-node diagnostic does not support RC relaxation")
+        return (
+            STYCAST_BATH_SERIES_SOURCE_NAMES,
+            STYCAST_BATH_SERIES_SOURCE_CLASS_INDICES,
+            8,
+        )
     if series:
         if not stycast:
             raise ValueError("TES-Stycast series-node extension requires stycast_node")
@@ -271,6 +313,40 @@ def _operating_values(parameters: dict) -> dict:
     tau_i = c_tes / ((1.0 - loop_gain) * g_tes_bath)
 
     extra = {}
+    if _use_bath_series_substrate(parameters):
+        c_substrate = float(parameters["C_substrate"])
+        g_tes_substrate = float(parameters["G_tes-substrate"])
+        g_substrate_bath = float(parameters["G_substrate-bath"])
+        if (
+            c_substrate <= 0.0
+            or g_tes_substrate <= 0.0
+            or g_substrate_bath <= 0.0
+        ):
+            raise ValueError(
+                "TES-bath substrate-node C and G values must be positive"
+            )
+        g_substrate_equivalent = 1.0 / (
+            1.0 / g_tes_substrate + 1.0 / g_substrate_bath
+        )
+        extra.update(
+            {
+                "C_substrate_J_per_K": c_substrate,
+                "G_tes_substrate_W_per_K": g_tes_substrate,
+                "G_substrate_bath_W_per_K": g_substrate_bath,
+                "G_substrate_equivalent_W_per_K": g_substrate_equivalent,
+                "G_substrate_equivalent_over_G_tes_bath": (
+                    g_substrate_equivalent / g_tes_bath
+                ),
+                "tau_substrate_node_s": (
+                    c_substrate / (g_tes_substrate + g_substrate_bath)
+                ),
+                "f_substrate_node_Hz": (
+                    (g_tes_substrate + g_substrate_bath)
+                    / (2.0 * math.pi * c_substrate)
+                ),
+                "thermal_extension": THERMAL_EXTENSION_TES_BATH_SERIES,
+            }
+        )
     if _use_series_thermalizer(parameters):
         c_series = float(parameters["C_series"])
         g_tes_series = float(parameters["G_tes-series"])
@@ -451,6 +527,79 @@ def linearized_matrix(parameters: dict, frequency_hz: float) -> np.ndarray:
     g_stycast_center = values["G_stycast_center_W_per_K"]
     hanging = _use_hanging_tes(parameters)
     series = _use_series_thermalizer(parameters)
+    bath_series = _use_bath_series_substrate(parameters)
+
+    if bath_series:
+        if rc:
+            raise ValueError(
+                "TES-bath substrate-node diagnostic does not support RC relaxation"
+            )
+        c_substrate = float(parameters["C_substrate"])
+        g_tes_substrate = float(parameters["G_tes-substrate"])
+        g_substrate_bath = float(parameters["G_substrate-bath"])
+        etf_rate = loop_gain * g_tes_bath / c_tes
+
+        # I1, TES1, Substrate1, Stycast1, Pb center,
+        # Stycast2, Substrate2, TES2, I2.
+        #
+        # G_tes-bath retains the measured/effective DC bath conductance used
+        # for the operating point.  The explicit substrate links are required
+        # by the diagnostic to have the same series-equivalent conductance.
+        matrix = np.zeros((9, 9), dtype=np.complex128)
+        matrix[0, 0] = electrical_rate + 1j * omega
+        matrix[0, 1] = thermal_electrical_coupling
+
+        matrix[1, 0] = -current * resistance * (2.0 + beta) / c_tes
+        matrix[1, 1] = (
+            (g_tes_substrate + g_tes_stycast) / c_tes
+            - etf_rate
+            + 1j * omega
+        )
+        matrix[1, 2] = -g_tes_substrate / c_tes
+        matrix[1, 3] = -g_tes_stycast / c_tes
+
+        matrix[2, 1] = -g_tes_substrate / c_substrate
+        matrix[2, 2] = (
+            (g_tes_substrate + g_substrate_bath) / c_substrate
+            + 1j * omega
+        )
+
+        matrix[3, 1] = -g_tes_stycast / c_stycast
+        matrix[3, 3] = (
+            (g_tes_stycast + g_stycast_center) / c_stycast
+            + 1j * omega
+        )
+        matrix[3, 4] = -g_stycast_center / c_stycast
+
+        matrix[4, 3] = -g_stycast_center / c_abs
+        matrix[4, 4] = 2.0 * g_stycast_center / c_abs + 1j * omega
+        matrix[4, 5] = -g_stycast_center / c_abs
+
+        matrix[5, 4] = -g_stycast_center / c_stycast
+        matrix[5, 5] = (
+            (g_tes_stycast + g_stycast_center) / c_stycast
+            + 1j * omega
+        )
+        matrix[5, 7] = -g_tes_stycast / c_stycast
+
+        matrix[6, 6] = (
+            (g_tes_substrate + g_substrate_bath) / c_substrate
+            + 1j * omega
+        )
+        matrix[6, 7] = -g_tes_substrate / c_substrate
+
+        matrix[7, 5] = -g_tes_stycast / c_tes
+        matrix[7, 6] = -g_tes_substrate / c_tes
+        matrix[7, 7] = (
+            (g_tes_substrate + g_tes_stycast) / c_tes
+            - etf_rate
+            + 1j * omega
+        )
+        matrix[7, 8] = -current * resistance * (2.0 + beta) / c_tes
+
+        matrix[8, 7] = thermal_electrical_coupling
+        matrix[8, 8] = electrical_rate + 1j * omega
+        return matrix
 
     if series:
         if rc:
@@ -701,6 +850,48 @@ def source_matrix(parameters: dict) -> np.ndarray:
     stycast_abs_tfn = math.sqrt(4.0 * K_B * t_c**2 * g_stycast_center * F_LINK)
     hanging = _use_hanging_tes(parameters)
     series = _use_series_thermalizer(parameters)
+    bath_series = _use_bath_series_substrate(parameters)
+
+    if bath_series:
+        if rc:
+            raise ValueError(
+                "TES-bath substrate-node diagnostic does not support RC relaxation"
+            )
+        c_substrate = float(parameters["C_substrate"])
+        g_tes_substrate = float(parameters["G_tes-substrate"])
+        g_substrate_bath = float(parameters["G_substrate-bath"])
+        tes_substrate_tfn = math.sqrt(
+            4.0 * K_B * t_c**2 * g_tes_substrate * F_LINK
+        )
+        substrate_bath_tfn = math.sqrt(
+            4.0 * K_B * t_c**2 * g_substrate_bath * F_LINK
+        )
+        sources = np.zeros((9, 12), dtype=np.complex128)
+        sources[0, 0] = -tes_johnson / inductance
+        sources[1, 0] = current * tes_johnson / c_tes
+        sources[0, 1] = load_johnson / inductance
+
+        sources[1, 2] = tes_substrate_tfn / c_tes
+        sources[2, 2] = -tes_substrate_tfn / c_substrate
+        sources[2, 3] = substrate_bath_tfn / c_substrate
+
+        sources[1, 4] = tes_stycast_tfn / c_tes
+        sources[3, 4] = -tes_stycast_tfn / c_stycast
+        sources[3, 5] = stycast_abs_tfn / c_stycast
+        sources[4, 5] = -stycast_abs_tfn / c_abs
+        sources[4, 6] = -stycast_abs_tfn / c_abs
+        sources[5, 6] = stycast_abs_tfn / c_stycast
+        sources[5, 7] = -tes_stycast_tfn / c_stycast
+        sources[7, 7] = tes_stycast_tfn / c_tes
+
+        sources[6, 8] = substrate_bath_tfn / c_substrate
+        sources[6, 9] = -tes_substrate_tfn / c_substrate
+        sources[7, 9] = tes_substrate_tfn / c_tes
+
+        sources[8, 10] = load_johnson / inductance
+        sources[8, 11] = -tes_johnson / inductance
+        sources[7, 11] = current * tes_johnson / c_tes
+        return sources
 
     if series:
         if rc:
@@ -875,12 +1066,16 @@ def noise_components(parameters: dict, frequencies_hz) -> dict:
         "F_LINK": F_LINK,
         "thermal_link_model": THERMAL_LINK_MODEL_STYCAST if stycast else "effective",
         "thermal_extension": (
-            THERMAL_EXTENSION_TES_STYCAST_SERIES
-            if _use_series_thermalizer(parameters)
+            THERMAL_EXTENSION_TES_BATH_SERIES
+            if _use_bath_series_substrate(parameters)
             else (
-                THERMAL_EXTENSION_TES_HANGING
-                if _use_hanging_tes(parameters)
-                else "none"
+                THERMAL_EXTENSION_TES_STYCAST_SERIES
+                if _use_series_thermalizer(parameters)
+                else (
+                    THERMAL_EXTENSION_TES_HANGING
+                    if _use_hanging_tes(parameters)
+                    else "none"
+                )
             )
         ),
         "electrical_link_model": (
