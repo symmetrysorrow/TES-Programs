@@ -410,7 +410,7 @@ def solver1_block(
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = BiCGStabl",
             "  Linear System Preconditioning = ILU2",
-            "  Linear System Max Iterations = 2000",
+            f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 2000)}",
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
         ]
     elif linear_system == "iterative_hypre_boomeramg":
@@ -422,7 +422,7 @@ def solver1_block(
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = BiCGStab",
             "  Linear System Preconditioning = BoomerAMG",
-            "  Linear System Max Iterations = 1000",
+            f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 1000)}",
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-10))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 20",
@@ -451,11 +451,11 @@ def solver1_block(
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = FlexGMRES",
             f"  Linear System Preconditioning = {hypre_preconditioning}",
-            "  Linear System Max Iterations = 2000",
+            f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 2000)}",
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-11))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
-            "  HYPRE GmRes Dimension = 100",
+            f"  HYPRE GmRes Dimension = {solver.get('hypre_gmres_dimension', 100)}",
             f"  HYPRE GPU = Logical {'True' if hypre_gpu else 'False'}",
             "  BoomerAMG Relax Type = 18",
             "  BoomerAMG Coarsen Type = 8",
@@ -491,7 +491,7 @@ def solver1_block(
             "  Linear System Solver = Iterative",
             "  Linear System Iterative Method = FlexGMRES",
             "  Linear System Preconditioning = BoomerAMG",
-            "  Linear System Max Iterations = 2000",
+            f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 2000)}",
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-11))}",
             "  Linear System Abort Not Converged = True",
             "  Linear System Residual Output = 1",
@@ -755,6 +755,24 @@ def resolve_mortar_pairs(
     suffix within a pair, matching the legacy single-pixel SIF's BC order.
     """
     suffixes = _present_suffixes(mesh_names, "TES")
+
+    def boundary_id(base: str, suffix: str, face: str) -> int:
+        """Resolve a mortar face across legacy and conformal mesh labels.
+
+        The conformal contact builder splits a membrane face into semantic
+        ``*_contact`` and ``*_free_*`` groups.  The legacy mesh kept the
+        unsplit ``Membrane_SiNx__zmax`` name, so retain that spelling as the
+        first choice and fall back to the contact group when present.
+        """
+        canonical = f"{base}{suffix}__{face}"
+        if canonical in mesh_names.boundaries:
+            return mesh_names.boundaries[canonical]
+        if base == "Membrane_SiNx" and face in {"zmin", "zmax"}:
+            contact = f"{base}{suffix}_contact__{face}"
+            if contact in mesh_names.boundaries:
+                return mesh_names.boundaries[contact]
+        raise KeyError(canonical)
+
     pairs = []
     for slave_base, slave_face, master_base, master_face, master_suffixed in _MORTAR_PAIRS:
         for sfx in suffixes:
@@ -776,9 +794,9 @@ def resolve_mortar_pairs(
             )
             pairs.append(
                 (
-                    mesh_names.boundaries[slave_name],
+                    boundary_id(slave_base, sfx, slave_face),
                     slave_label,
-                    mesh_names.boundaries[master_name],
+                    boundary_id(master_base, master_sfx, master_face),
                     master_label,
                 )
             )

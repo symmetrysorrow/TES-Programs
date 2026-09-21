@@ -1,0 +1,280 @@
+{
+  "nl1_to_nl2": {
+    "available": true,
+    "left_ordinal": 1,
+    "right_ordinal": 2,
+    "rows": 96769,
+    "dimension_source": "matrix A max row/column index",
+    "left_dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "right_dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "left_sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_outer_capture_build_audit\\run_v2\\ts0001_nl0001\\outer_before_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96769,
+        1322815,
+        0,
+        1,
+        96769
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "right_sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_outer_capture_build_audit\\run_v2\\ts0001_nl0002\\outer_before_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96769,
+        1322815,
+        0,
+        1,
+        96769
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "primal_rows": 96769,
+    "constraint_rows": 0,
+    "direct_relative_residuals": {
+      "A1_b1": 5.5382479150231486e-11,
+      "A1_b2": 5.543773636659675e-11,
+      "A2_b1": 6.461111406882221e-11,
+      "A2_b2": 6.359666272857715e-11
+    },
+    "primal": {
+      "full_A2b2_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 0.0007111601295380462,
+        "delta_max_abs": 3.159227115051566e-05,
+        "delta_l2_mK_if_temperature": 0.7111601295380462,
+        "delta_max_abs_mK_if_temperature": 0.03159227115051566
+      },
+      "rhs_only_A1b2_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 3.8460499649618704e-07,
+        "delta_max_abs": 1.1877427624762404e-08,
+        "delta_l2_mK_if_temperature": 0.00038460499649618703,
+        "delta_max_abs_mK_if_temperature": 1.1877427624762404e-05
+      },
+      "operator_only_A2b1_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 0.000710838033226285,
+        "delta_max_abs": 3.158058710392431e-05,
+        "delta_l2_mK_if_temperature": 0.710838033226285,
+        "delta_max_abs_mK_if_temperature": 0.03158058710392431
+      },
+      "rhs_effect_on_A2_A2b2_minus_A2b1": {
+        "rows": 96769,
+        "delta_l2": 3.8501726542083796e-07,
+        "delta_max_abs": 1.1893836637799637e-08,
+        "delta_l2_mK_if_temperature": 0.00038501726542083795,
+        "delta_max_abs_mK_if_temperature": 1.1893836637799637e-05
+      },
+      "operator_effect_on_b2_A2b2_minus_A1b2": {
+        "rows": 96769,
+        "delta_l2": 0.0007108385417816217,
+        "delta_max_abs": 3.158060745114821e-05,
+        "delta_l2_mK_if_temperature": 0.7108385417816218,
+        "delta_max_abs_mK_if_temperature": 0.03158060745114821
+      },
+      "interaction": {
+        "rows": 96769,
+        "delta_l2": 5.140758634819078e-10,
+        "delta_max_abs": 4.155431554409006e-11,
+        "delta_l2_mK_if_temperature": 5.140758634819078e-07,
+        "delta_max_abs_mK_if_temperature": 4.155431554409006e-08
+      }
+    },
+    "constraint": {
+      "full_A2b2_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "rhs_only_A1b2_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "operator_only_A2b1_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "rhs_effect_on_A2_A2b2_minus_A2b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "operator_effect_on_b2_A2b2_minus_A1b2": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "interaction": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      }
+    },
+    "primal_l2_ratios": {
+      "rhs_only_to_full": 0.0005408134968787098,
+      "operator_only_to_full": 0.9995470832821148,
+      "rhs_only_to_operator_only": 0.0005410585513419674
+    },
+    "interpretation_caveat": "This is a linear sensitivity decomposition of two saved assembled systems. RHS-only and operator-only effects need not add exactly because changing A and b has an interaction term, which is reported explicitly. Primal entries are treated as scalar temperature DOFs."
+  },
+  "nl2_to_nl3": {
+    "available": true,
+    "left_ordinal": 2,
+    "right_ordinal": 3,
+    "rows": 96769,
+    "dimension_source": "matrix A max row/column index",
+    "left_dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "right_dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "left_sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_outer_capture_build_audit\\run_v2\\ts0001_nl0002\\outer_before_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96769,
+        1322815,
+        0,
+        1,
+        96769
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "right_sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_outer_capture_build_audit\\run_v2\\ts0001_nl0003\\outer_before_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96769,
+        1322815,
+        0,
+        1,
+        96769
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "primal_rows": 96769,
+    "constraint_rows": 0,
+    "direct_relative_residuals": {
+      "A1_b1": 6.359666272857715e-11,
+      "A1_b2": 6.586610428332525e-11,
+      "A2_b1": 6.677059046899314e-11,
+      "A2_b2": 6.579160521516943e-11
+    },
+    "primal": {
+      "full_A2b2_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 0.00033931222634238703,
+        "delta_max_abs": 1.0419358893176689e-05,
+        "delta_l2_mK_if_temperature": 0.33931222634238706,
+        "delta_max_abs_mK_if_temperature": 0.010419358893176689
+      },
+      "rhs_only_A1b2_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 0.00032856174050163354,
+        "delta_max_abs": 1.0149876158549453e-05,
+        "delta_l2_mK_if_temperature": 0.32856174050163356,
+        "delta_max_abs_mK_if_temperature": 0.010149876158549453
+      },
+      "operator_only_A2b1_minus_A1b1": {
+        "rows": 96769,
+        "delta_l2": 1.1098646437871226e-05,
+        "delta_max_abs": 4.560626809813062e-07,
+        "delta_l2_mK_if_temperature": 0.011098646437871226,
+        "delta_max_abs_mK_if_temperature": 0.0004560626809813062
+      },
+      "rhs_effect_on_A2_A2b2_minus_A2b1": {
+        "rows": 96769,
+        "delta_l2": 0.0003285684220346175,
+        "delta_max_abs": 1.015006938037688e-05,
+        "delta_l2_mK_if_temperature": 0.3285684220346175,
+        "delta_max_abs_mK_if_temperature": 0.01015006938037688
+      },
+      "operator_effect_on_b2_A2b2_minus_A1b2": {
+        "rows": 96769,
+        "delta_l2": 1.1105546727833846e-05,
+        "delta_max_abs": 4.5633141168566205e-07,
+        "delta_l2_mK_if_temperature": 0.011105546727833846,
+        "delta_max_abs_mK_if_temperature": 0.00045633141168566205
+      },
+      "interaction": {
+        "rows": 96769,
+        "delta_l2": 6.9174386459971035e-09,
+        "delta_max_abs": 2.7361468646347475e-10,
+        "delta_l2_mK_if_temperature": 6.917438645997104e-06,
+        "delta_max_abs_mK_if_temperature": 2.7361468646347475e-07
+      }
+    },
+    "constraint": {
+      "full_A2b2_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "rhs_only_A1b2_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "operator_only_A2b1_minus_A1b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "rhs_effect_on_A2_A2b2_minus_A2b1": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "operator_effect_on_b2_A2b2_minus_A1b2": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      },
+      "interaction": {
+        "rows": 0,
+        "delta_l2": 0.0,
+        "delta_max_abs": 0.0
+      }
+    },
+    "primal_l2_ratios": {
+      "rhs_only_to_full": 0.9683168332699407,
+      "operator_only_to_full": 0.032709244100953806,
+      "rhs_only_to_operator_only": 29.60376676028733
+    },
+    "interpretation_caveat": "This is a linear sensitivity decomposition of two saved assembled systems. RHS-only and operator-only effects need not add exactly because changing A and b has an interaction term, which is reported explicitly. Primal entries are treated as scalar temperature DOFs."
+  }
+}

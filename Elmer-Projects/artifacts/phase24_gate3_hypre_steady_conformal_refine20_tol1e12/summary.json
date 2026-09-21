@@ -1,0 +1,101 @@
+{
+  "schema": "tes.phase24.gate3.v1",
+  "generated_utc": "2026-09-18T09:34:43.324033+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate3_hypre_steady_conformal_refine20_tol1e12\\phase24_gate3_hypre_steady.json",
+  "case": "case_phase24_g3_conformal_refine20_conformal_refine20",
+  "run": {
+    "command": [
+      "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+      "case_phase24_g3_conformal_refine20_conformal_refine20",
+      "--project",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate3_hypre_steady_conformal_refine20_tol1e12\\phase24_gate3_hypre_steady.json",
+      "--skip-sync",
+      "--elmer-solver",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver.exe",
+      "--runtime-bin",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin",
+      "--toolchain-bin",
+      "C:\\msys64\\ucrt64\\bin",
+      "--mpi-procs",
+      "1"
+    ],
+    "started": "2026-09-18T09:30:02.651761+00:00",
+    "finished": "2026-09-18T09:34:43.322153+00:00",
+    "elapsed_seconds": 280.67024519998813,
+    "exit_code": 4294967295,
+    "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g3_conformal_refine20_conformal_refine20\\gate3_launcher.log"
+  },
+  "audit": {
+    "log_exists": true,
+    "all_done": false,
+    "stop_1": 0,
+    "abort_markers": 0,
+    "hypre_markers": 0,
+    "telemetry_records": [],
+    "telemetry_missing": true,
+    "linear_residuals": [],
+    "linear_residual_final": null,
+    "nonlinear_residuals": [],
+    "nonlinear_residual_final": null,
+    "tolerance_failure": false
+  },
+  "iteration_last": {
+    "time_s": 1.0,
+    "time_step": 1.0,
+    "nonlinear_iter": 1.0,
+    "tes_temperature_K": 0.16857,
+    "previous_current_A": 0.00014353734493231094,
+    "raw_current_A": 0.00014353734493231094,
+    "tes_resistance_ohm": 0.015526999999999971,
+    "raw_power_W": 3.19902305721902e-10,
+    "residual_W": 0.0,
+    "omega": 0.5,
+    "omega_cap": 0.5,
+    "relaxed_power_W": 3.19902305721902e-10
+  },
+  "series_current_uA": null,
+  "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g3_conformal_refine20_conformal_refine20\\manifest.json",
+  "gate3": {
+    "status": "FAIL",
+    "criteria": {
+      "normal_exit": false,
+      "independent_initial_temperature": true,
+      "finite_observables": true,
+      "mumps_current_within_0p05_percent": false,
+      "comsol_current_within_0p6_percent": true,
+      "hypre_linear_residual_recorded": false,
+      "elmer_nonlinear_residual_recorded": false,
+      "tes_circuit_residual_recorded": true
+    },
+    "current_uA": 143.53734493231093,
+    "current_source": "iteration_series",
+    "stage11_mumps_current_uA": 144.71078126230952,
+    "comsol_current_uA": 143.055049,
+    "mumps_delta_percent": 0.810883833092967,
+    "comsol_delta_percent": 0.3371400979429485,
+    "linear_residual_final": null,
+    "nonlinear_residual_final": null,
+    "circuit_residual_W": 0.0
+  },
+  "provenance": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.3",
+    "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver.exe",
+    "runtime_bin": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin",
+    "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+    "runtime_artifacts_sha256": {
+      "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+      "libelmersolver": "b50a6a98a824bf5c16d9e33ce8b504b3d1b5ca9f286250722b28dfc465fecfaa",
+      "HeatSolve": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+    },
+    "files_sha256": {
+      "project": "5984d27070c79e8f652d530163f2a44af9c5197cc27660d50eec4f84a9ebdc1f",
+      "sif": "7e4ac4ebed9c936a008bcb5c3d23bad10504d49e5b352265c16592c8a9eff7b2",
+      "mesh_header": "97c2cc0c04b97589bd71753d33e6671a839ab19dcfd105d03675765454c0082d",
+      "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+      "solver_log": "a7282678f4f339944f36b5e7efc26c61a938671657c0c20ae1dddcb6754f8f55"
+    },
+    "environment_sha256": "c86ce39af7314d0316c0ac4867f6e6b6482fa65ada4592dcd77d6a41f2304c19"
+  }
+}

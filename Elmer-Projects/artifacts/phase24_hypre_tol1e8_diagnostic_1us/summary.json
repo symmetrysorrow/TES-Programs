@@ -1,0 +1,88 @@
+{
+  "generated_utc": "2026-09-16T05:16:54.691463+00:00",
+  "tolerance": 1e-08,
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tol1e8_diagnostic_1us\\phase24_hypre_tol1e8_diagnostic.json",
+  "run": {
+    "command": [
+      "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+      "case_phase24_short_hypre_tol1e8_1us",
+      "--project",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tol1e8_diagnostic_1us\\phase24_hypre_tol1e8_diagnostic.json",
+      "--skip-sync",
+      "--elmer-solver",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+      "--runtime-bin",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+      "--toolchain-bin",
+      "C:\\msys64\\ucrt64\\bin",
+      "--mpi-procs",
+      "1"
+    ],
+    "started": "2026-09-16T05:15:45.506954+00:00",
+    "finished": "2026-09-16T05:16:54.691438+00:00",
+    "elapsed_seconds": 69.18448139999964,
+    "exit_code": 1,
+    "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_1us\\tol1e8_diagnostic_launcher.log"
+  },
+  "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_1us\\solver.log",
+  "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_1us\\case_phase24_short_hypre_tol1e8_1us_series.csv",
+  "audit": {
+    "log_exists": true,
+    "all_done": false,
+    "abort_markers": 1,
+    "hypre_solve_calls": 0,
+    "required_iterations_zero": 0,
+    "required_iterations_max": null,
+    "required_iterations_sum": 0,
+    "relative_change_samples": 0,
+    "relative_change_zero": 0,
+    "relative_change_max": null,
+    "tolerance_failure_marker": true,
+    "native_xvec_selector_warning": true
+  },
+  "comparisons": {
+    "tol1e8_vs_cpu": {
+      "status": "skipped",
+      "reason": "input series missing",
+      "output": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol1e8_vs_cpu_1us"
+    },
+    "tol1e8_vs_tol5e7": {
+      "status": "skipped",
+      "reason": "input series missing",
+      "output": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol1e8_vs_tol5e7_1us"
+    },
+    "tol5e7_vs_cpu": {
+      "status": "completed",
+      "command": [
+        "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\scripts\\analysis\\phase24_difference_evidence.py",
+        "--candidate",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol5e7_1us\\case_phase24_short_hypre_tol5e7_1us_series.csv",
+        "--reference",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_p19_pulse_phase23_tight\\case_p19_pulse_phase23_tight_series.csv",
+        "--candidate-label",
+        "HYPRE tolerance 5e-7",
+        "--reference-label",
+        "CPU/MUMPS Phase23",
+        "--out",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol5e7_vs_cpu_1us",
+        "--checkpoint-us",
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.7",
+        "0.8",
+        "0.9",
+        "1.0"
+      ],
+      "exit_code": 0,
+      "stdout": "out=D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol5e7_vs_cpu_1us\ncommon_window_us=0..0.901\nfirst_raw_threshold_us=0.011\nfirst_corrected_threshold_us=3.63797881e-12\nfirst_relative_threshold_us=0.601\nsummary=D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol5e7_vs_cpu_1us\\summary.md\n",
+      "stderr": "",
+      "output": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol5e7_vs_cpu_1us"
+    }
+  }
+}

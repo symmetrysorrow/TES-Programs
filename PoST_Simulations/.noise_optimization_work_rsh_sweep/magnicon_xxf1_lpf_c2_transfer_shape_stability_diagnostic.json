@@ -1,0 +1,230 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "tested_question": "Are the locally fitted Magnicon+c2 readout transfer magnitudes themselves stable across 2024-12-05 and 2024-12-06, before detector nuisance or white-floor refits can absorb differences?",
+  "normalization_reference_Hz": 1000.0,
+  "readout_reference_scale_Hz": 40000.0,
+  "transfer_definition": "|H|=sqrt(1+c2*(f/f_ref)^2) / sqrt((1-(f/fp)^2)^2 + (f/(Q*fp))^2), with c4=0",
+  "reference_day": {
+    "label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+    "readout": {
+      "pole_Hz": 10249.999999999787,
+      "pole_Q": 0.5773502691896258,
+      "c2": 10.134301416549972,
+      "c4": 0.0
+    },
+    "profiled_cutoff_Hz": 10249.999999999789,
+    "profiled_c2": 10.134301416549972
+  },
+  "repeat_day": {
+    "label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+    "readout": {
+      "pole_Hz": 10242.91849366527,
+      "pole_Q": 0.5773502691896258,
+      "c2": 20.58895640441017,
+      "c4": 0.0
+    },
+    "profiled_cutoff_Hz": 10242.918493665271,
+    "profiled_c2": 20.58895640441017
+  },
+  "direct_transfer_difference": {
+    "semantics": "repeat_day / reference_day, each normalized at 1 kHz",
+    "full_1_200k": {
+      "mean_difference_dB": 1.6739738168120335,
+      "rms_difference_dB": 2.0596636561721544,
+      "max_abs_difference_dB": 3.0296864238092502
+    },
+    "bands": {
+      "1000-5000_Hz": {
+        "mean_difference_dB": 0.16042034221907306,
+        "rms_difference_dB": 0.22046779822393,
+        "max_abs_difference_dB": 0.541161197902963
+      },
+      "5000-15000_Hz": {
+        "mean_difference_dB": 1.2380303640474077,
+        "rms_difference_dB": 1.3139149620037085,
+        "max_abs_difference_dB": 2.0132652306828422
+      },
+      "15000-40000_Hz": {
+        "mean_difference_dB": 2.509873852336168,
+        "rms_difference_dB": 2.520999027310988,
+        "max_abs_difference_dB": 2.8335650027024433
+      },
+      "40000-100000_Hz": {
+        "mean_difference_dB": 2.9425915444437454,
+        "rms_difference_dB": 2.94297883192271,
+        "max_abs_difference_dB": 3.003697050656437
+      },
+      "100000-200000_Hz": {
+        "mean_difference_dB": 3.019747568412649,
+        "rms_difference_dB": 3.019756455511566,
+        "max_abs_difference_dB": 3.0296864238092502
+      }
+    },
+    "anchors": [
+      {
+        "frequency_Hz": 1000.0,
+        "total_repeat_over_reference_dB": 0.0,
+        "bessel_denominator_repeat_over_reference_dB": 0.0,
+        "numerator_repeat_over_reference_dB": 0.0
+      },
+      {
+        "frequency_Hz": 4988.604781956303,
+        "total_repeat_over_reference_dB": 0.541161197902963,
+        "bessel_denominator_repeat_over_reference_dB": -0.0015641821236671038,
+        "numerator_repeat_over_reference_dB": 0.5427253800266297
+      },
+      {
+        "frequency_Hz": 10021.853458494052,
+        "total_repeat_over_reference_dB": 1.4308328522930718,
+        "bessel_denominator_repeat_over_reference_dB": -0.005767916434989005,
+        "numerator_repeat_over_reference_dB": 1.436600768728058
+      },
+      {
+        "frequency_Hz": 15043.896877880403,
+        "total_repeat_over_reference_dB": 2.025160031731992,
+        "bessel_denominator_repeat_over_reference_dB": -0.008750971807087903,
+        "numerator_repeat_over_reference_dB": 2.03391100353908
+      },
+      {
+        "frequency_Hz": 19956.38838946397,
+        "total_repeat_over_reference_dB": 2.364130257116139,
+        "bessel_denominator_repeat_over_reference_dB": -0.01013526277583844,
+        "numerator_repeat_over_reference_dB": 2.3742655198919764
+      },
+      {
+        "frequency_Hz": 40091.36998051976,
+        "total_repeat_over_reference_dB": 2.836905535473569,
+        "bessel_denominator_repeat_over_reference_dB": -0.011533732630055341,
+        "numerator_repeat_over_reference_dB": 2.8484392681036237
+      },
+      {
+        "frequency_Hz": 69929.27835877384,
+        "total_repeat_over_reference_dB": 2.968955982103659,
+        "bessel_denominator_repeat_over_reference_dB": -0.011816696004632189,
+        "numerator_repeat_over_reference_dB": 2.9807726781082913
+      },
+      {
+        "frequency_Hz": 100437.54674352899,
+        "total_repeat_over_reference_dB": 3.0042966522225867,
+        "bessel_denominator_repeat_over_reference_dB": -0.011885114618652149,
+        "numerator_repeat_over_reference_dB": 3.0161817668412394
+      },
+      {
+        "frequency_Hz": 149442.23218810713,
+        "total_repeat_over_reference_dB": 3.0228695938935566,
+        "bessel_denominator_repeat_over_reference_dB": -0.011919876524334997,
+        "numerator_repeat_over_reference_dB": 3.0347894704178913
+      },
+      {
+        "frequency_Hz": 200000.0,
+        "total_repeat_over_reference_dB": 3.0296864238092502,
+        "bessel_denominator_repeat_over_reference_dB": -0.01193243118010952,
+        "numerator_repeat_over_reference_dB": 3.0416188549893635
+      }
+    ]
+  },
+  "decomposition": {
+    "bessel_denominator_contribution": {
+      "full_1_200k": {
+        "mean_difference_dB": -0.006670315431092651,
+        "rms_difference_dB": 0.008318034973185595,
+        "max_abs_difference_dB": 0.01193243118010952
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": -0.00040671122588020487,
+          "rms_difference_dB": 0.0005840700278726766,
+          "max_abs_difference_dB": 0.0015641821236671038
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": -0.004826828612862739,
+          "rms_difference_dB": 0.005301524109725868,
+          "max_abs_difference_dB": 0.008697083060520392
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": -0.010554657964655309,
+          "rms_difference_dB": 0.010584600111995962,
+          "max_abs_difference_dB": 0.011525998613003375
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": -0.011760860695130809,
+          "rms_difference_dB": 0.011761279560013604,
+          "max_abs_difference_dB": 0.01188397875656868
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": -0.011914026903611175,
+          "rms_difference_dB": 0.011914034706346447,
+          "max_abs_difference_dB": 0.01193243118010952
+        }
+      }
+    },
+    "residual_numerator_contribution": {
+      "full_1_200k": {
+        "mean_difference_dB": 1.6806441322431267,
+        "rms_difference_dB": 2.0679742291570435,
+        "max_abs_difference_dB": 3.0416188549893635
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": 0.1608270534449529,
+          "rms_difference_dB": 0.22105048478653797,
+          "max_abs_difference_dB": 0.5427253800266297
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": 1.2428571926602703,
+          "rms_difference_dB": 1.3191970949118672,
+          "max_abs_difference_dB": 2.0219623137433644
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": 2.5204285103008237,
+          "rms_difference_dB": 2.5315814947980533,
+          "max_abs_difference_dB": 2.845091001315447
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": 2.9543524051388763,
+          "rms_difference_dB": 2.9547397560732125,
+          "max_abs_difference_dB": 3.0155810294130077
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": 3.0316615953162613,
+          "rms_difference_dB": 3.031670480471372,
+          "max_abs_difference_dB": 3.0416188549893635
+        }
+      }
+    },
+    "max_abs_reconstruction_error_dB": 4.884981308350689e-15
+  },
+  "preceding_cross_application": {
+    "classification": "c2_requirement_not_reproduced_on_both_days",
+    "bidirectional_cross_application_passes": true,
+    "repeat_readout_on_reference": {
+      "shape_score_ratio": 1.1457092236896496,
+      "continuum_rms_delta_dB": 0.023592269813926148,
+      "continuum_1_40k_rms_delta_dB": 0.03947889172724517,
+      "continuum_40_200k_rms_delta_dB": -0.006597626393782585
+    },
+    "reference_readout_on_repeat": {
+      "shape_score_ratio": 1.1053644647642107,
+      "continuum_rms_delta_dB": 0.019125302479675366,
+      "continuum_1_40k_rms_delta_dB": 0.054254700020861524,
+      "continuum_40_200k_rms_delta_dB": 0.011158897497634768
+    }
+  },
+  "interpretation": {
+    "classification": "direct_readout_transfer_differs_but_detector_refit_absorbs_difference",
+    "direct_transfer_shape_passes_screen": false,
+    "bidirectional_cross_application_passes": true,
+    "max_band_rms_difference_dB": 3.019756455511566,
+    "stability_screen": {
+      "max_full_band_rms_difference_dB": 0.5,
+      "max_any_band_rms_difference_dB": 0.75,
+      "max_abs_difference_dB": 1.5
+    },
+    "guardrail": "This diagnostic compares the fitted effective readout transfer coordinates directly. Passing would support transfer-shape repeatability; failing does not identify the source of drift because the fitted c2/cutoff remain phenomenological and may compensate detector-model deficiencies. The current Connector Box LPF is observed ON, but the 2024-12-05/06 measurement-time state is not independently logged."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_transfer_shape_stability_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json"
+  }
+}

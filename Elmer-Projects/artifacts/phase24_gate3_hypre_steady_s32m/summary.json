@@ -1,0 +1,118 @@
+{
+  "schema": "tes.phase24.gate3.v1",
+  "generated_utc": "2026-09-19T08:05:34.770718+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate3_hypre_steady_s32m\\phase24_gate3_hypre_steady.json",
+  "case": "case_phase24_g3_s32m_s32m_dea252",
+  "run": {
+    "command": [
+      "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+      "case_phase24_g3_s32m_s32m_dea252",
+      "--project",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate3_hypre_steady_s32m\\phase24_gate3_hypre_steady.json",
+      "--skip-sync",
+      "--elmer-solver",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin\\ElmerSolver.exe",
+      "--runtime-bin",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin",
+      "--toolchain-bin",
+      "C:\\msys64\\ucrt64\\bin",
+      "--mpi-procs",
+      "1"
+    ],
+    "started": "2026-09-19T08:04:03.616046+00:00",
+    "finished": "2026-09-19T08:05:34.768054+00:00",
+    "elapsed_seconds": 91.15180110000074,
+    "exit_code": 1,
+    "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g3_s32m_s32m_dea252\\gate3_launcher.log"
+  },
+  "audit": {
+    "log_exists": true,
+    "all_done": false,
+    "stop_1": 1,
+    "abort_markers": 0,
+    "hypre_markers": 0,
+    "telemetry_records": [
+      {
+        "phase": "backend_status",
+        "method": 901,
+        "solve_status": 256,
+        "iterations": 4000,
+        "final_relative_residual": 1.8012078650071562e-06,
+        "requested_tolerance": 2e-08,
+        "max_iterations": 4000,
+        "matrix_epoch": 0,
+        "preconditioner_epoch": 0,
+        "case": 0,
+        "hypre_error": 256,
+        "hypre_global_error": 256
+      }
+    ],
+    "telemetry_missing": false,
+    "linear_residuals": [
+      1.8012078650071562e-06
+    ],
+    "linear_residual_final": 1.8012078650071562e-06,
+    "nonlinear_residuals": [],
+    "nonlinear_residual_final": null,
+    "tolerance_failure": true
+  },
+  "iteration_last": {
+    "time_s": 1.0,
+    "time_step": 1.0,
+    "nonlinear_iter": 1.0,
+    "tes_temperature_K": 0.16857,
+    "previous_current_A": 0.00014353734493231094,
+    "raw_current_A": 0.00014353734493231094,
+    "tes_resistance_ohm": 0.015526999999999971,
+    "raw_power_W": 3.19902305721902e-10,
+    "residual_W": 0.0,
+    "omega": 0.5,
+    "omega_cap": 0.5,
+    "relaxed_power_W": 3.19902305721902e-10
+  },
+  "series_current_uA": null,
+  "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g3_s32m_s32m_dea252\\manifest.json",
+  "gate3": {
+    "status": "FAIL",
+    "criteria": {
+      "normal_exit": false,
+      "independent_initial_temperature": true,
+      "finite_observables": true,
+      "mumps_reference_recorded": true,
+      "comsol_current_within_0p6_percent": true,
+      "hypre_linear_residual_recorded": true,
+      "elmer_nonlinear_residual_recorded": false,
+      "tes_circuit_residual_recorded": true
+    },
+    "current_uA": 143.53734493231093,
+    "current_source": "iteration_series",
+    "stage11_mumps_current_uA": 143.534427206063,
+    "comsol_current_uA": 143.055049,
+    "mumps_delta_percent": 0.0020327710255566987,
+    "comsol_delta_percent": 0.3371400979429485,
+    "linear_residual_final": 1.8012078650071562e-06,
+    "nonlinear_residual_final": null,
+    "circuit_residual_W": 0.0
+  },
+  "provenance": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.3",
+    "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin\\ElmerSolver.exe",
+    "runtime_bin": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin",
+    "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+    "runtime_artifacts_sha256": {
+      "solver": "87e687d44a8846da7fb3462130c2bdd4a47904319d899d7a8c0d6ece06186023",
+      "libelmersolver": "70952c4cfca3881fac2d37e89a74e5468b6976aeb4a32f8be2214ba515312a78",
+      "HeatSolve": "3bcd114f2813fdcf5eb9b40b189647e9cedd1b0008782c83ecb078737183ca94"
+    },
+    "files_sha256": {
+      "project": "922f31cc7b7e27a759a38a8273db94eea9fd258555a4a02cfc7c7aea1668567f",
+      "sif": "56457a8969cd990a1beba6bf4e3cfc7e6b54fd75081ff4c78b977dccb4426c51",
+      "mesh_header": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2",
+      "solver": "87e687d44a8846da7fb3462130c2bdd4a47904319d899d7a8c0d6ece06186023",
+      "solver_log": "4c925b79071294be4942034fd7d0d507d8a13e9fae270bc1ba1188f1e98c77a1"
+    },
+    "environment_sha256": "55a0bf29d5b2a21b7fcefb4e703c12adf042b6463b3ac32b5a2eb77204096e2a"
+  }
+}

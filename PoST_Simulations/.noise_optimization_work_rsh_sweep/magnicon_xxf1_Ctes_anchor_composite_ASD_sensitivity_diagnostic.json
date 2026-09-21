@@ -1,0 +1,2454 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "tested_question": "When fixed C_tes assumptions drive large changes in the fitted Magnicon+c2 transfer, is the final observable fitted ASD shape also anchor-sensitive, or do detector dynamics/white compensate?",
+  "normalization_reference_Hz": 1000.0,
+  "physical_anchor_context": {
+    "fixed_L_H": 1e-10,
+    "C_tes_material_J_per_K": 7.8475e-13,
+    "C_tes_multipliers": [
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "C_tes_source_semantics": "TES bilayer geometry x density x specific heat; independent of the noise fit but not direct calorimetry"
+  },
+  "layer_semantics": {
+    "full_fitted_ASD": "best-fit pre-analysis ASD including the independently profiled post-filter white floor",
+    "zero_post_filter_white_ASD": "same best-fit detector/readout state with only the profiled post-filter white term set to zero",
+    "readout_transfer": "Magnicon 10 kHz Bessel times phenomenological c2 numerator"
+  },
+  "anchor_rows": {
+    "0.25x": {
+      "C_tes_multiplier": 0.25,
+      "fixed_C_tes_J_per_K": 1.961875e-13,
+      "fixed_L_H": 1e-10,
+      "reference_day": {
+        "c2": 47.19075716792122,
+        "white_asd_A_rtHz": 5.943565825165701e-11,
+        "continuum_rms_dB": 0.6290502101263723,
+        "c2_censored": false
+      },
+      "repeat_day": {
+        "c2": 45.7902775286974,
+        "white_asd_A_rtHz": 5.946494356817299e-11,
+        "continuum_rms_dB": 0.6219956824749456,
+        "c2_censored": false
+      },
+      "row_censored": false
+    },
+    "0.5x": {
+      "C_tes_multiplier": 0.5,
+      "fixed_C_tes_J_per_K": 3.92375e-13,
+      "fixed_L_H": 1e-10,
+      "reference_day": {
+        "c2": 172.63679851114387,
+        "white_asd_A_rtHz": 5.93621933491821e-11,
+        "continuum_rms_dB": 0.7831306655276248,
+        "c2_censored": false
+      },
+      "repeat_day": {
+        "c2": 161.24325203297468,
+        "white_asd_A_rtHz": 5.923669942433856e-11,
+        "continuum_rms_dB": 0.7983806362852978,
+        "c2_censored": false
+      },
+      "row_censored": false
+    },
+    "1x": {
+      "C_tes_multiplier": 1.0,
+      "fixed_C_tes_J_per_K": 7.8475e-13,
+      "fixed_L_H": 1e-10,
+      "reference_day": {
+        "c2": 667.075316057862,
+        "white_asd_A_rtHz": 5.95212905208951e-11,
+        "continuum_rms_dB": 0.894004970427588,
+        "c2_censored": false
+      },
+      "repeat_day": {
+        "c2": 614.8294421324786,
+        "white_asd_A_rtHz": 5.935269725336103e-11,
+        "continuum_rms_dB": 0.9485510132085875,
+        "c2_censored": false
+      },
+      "row_censored": false
+    },
+    "2x": {
+      "C_tes_multiplier": 2.0,
+      "fixed_C_tes_J_per_K": 1.5695e-12,
+      "fixed_L_H": 1e-10,
+      "reference_day": {
+        "c2": 999.9999987450761,
+        "white_asd_A_rtHz": 4.079139230782225e-11,
+        "continuum_rms_dB": 1.057910672675078,
+        "c2_censored": true
+      },
+      "repeat_day": {
+        "c2": 999.9999973192603,
+        "white_asd_A_rtHz": 4.2069986615591116e-11,
+        "continuum_rms_dB": 1.1090902747159406,
+        "c2_censored": true
+      },
+      "row_censored": true
+    }
+  },
+  "primary_classification_anchor_keys": [
+    "0.25x",
+    "0.5x",
+    "1x"
+  ],
+  "censored_anchor_keys": [
+    "2x"
+  ],
+  "reference_day_anchor_sensitivity": {
+    "full_fitted_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.01747471131637228,
+            "rms_difference_dB": 0.20353624325446437,
+            "max_abs_difference_dB": 0.3449295603585261
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.19899455828563226,
+              "rms_difference_dB": 0.23183688453778217,
+              "max_abs_difference_dB": 0.3449295603585261
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.10714475585617247,
+              "rms_difference_dB": 0.17902121798172474,
+              "max_abs_difference_dB": 0.32541864998379577
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.24313325088331983,
+              "rms_difference_dB": 0.2474624298117736,
+              "max_abs_difference_dB": 0.29006271833861147
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.16784372396442926,
+              "rms_difference_dB": 0.19404228866233067,
+              "max_abs_difference_dB": 0.2876717617292068
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.06637830062092145,
+              "rms_difference_dB": 0.06884451285484282,
+              "max_abs_difference_dB": 0.08203805542474107
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.3271187680297528
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.03853062820302095
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.21931054196524125
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.2876717617292068
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.14360844135980666
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.016677473136051862
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.07745139246555019
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.08203805542474107
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.012703051872593176,
+            "rms_difference_dB": 0.3372243883592746,
+            "max_abs_difference_dB": 0.5551887687904453
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.3808744599060129,
+              "rms_difference_dB": 0.4177788302936204,
+              "max_abs_difference_dB": 0.5551887687904453
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.03787364811977642,
+              "rms_difference_dB": 0.22316158061520075,
+              "max_abs_difference_dB": 0.4151162637102903
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.43045695080681706,
+              "rms_difference_dB": 0.4331767071414218,
+              "max_abs_difference_dB": 0.4749789875758114
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.24562397487495424,
+              "rms_difference_dB": 0.2914212874296028,
+              "max_abs_difference_dB": 0.45766511156197986
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.08308595661174442,
+              "rms_difference_dB": 0.08488879231764529,
+              "max_abs_difference_dB": 0.09529856937751544
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.42013067180068997
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.07782826873489374
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.41012177133361427
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.45766511156197986
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.19518363176128925
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.030923426474635467
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.0941805468953752
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.09490255983364136
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.004771659443779116,
+            "rms_difference_dB": 0.1492148607335123,
+            "max_abs_difference_dB": 0.2700141976257394
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.18187990162038076,
+              "rms_difference_dB": 0.19716052989192498,
+              "max_abs_difference_dB": 0.2700141976257394
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.06927110773639612,
+              "rms_difference_dB": 0.10402614056892644,
+              "max_abs_difference_dB": 0.17225758609383077
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.1873236999234974,
+              "rms_difference_dB": 0.18744857872135895,
+              "max_abs_difference_dB": 0.1947977282091354
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.07778025091052508,
+              "rms_difference_dB": 0.0982114160343175,
+              "max_abs_difference_dB": 0.16999334983277314
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.016707655990822835,
+              "rms_difference_dB": 0.01687314651017899,
+              "max_abs_difference_dB": 0.01990669370131388
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.09301190377093707
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.11635889693791535
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.19081122936837258
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.16999334983277314
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.05157519040148277
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.014245953338583332
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.01672915442982586
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.012864504408899614
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.3386570633620325,
+        "max_peak_to_peak_spread_dB": 0.5551887687904453
+      },
+      "classification": {
+        "classification": "total_readout_transfer_stable_across_Ctes_anchors",
+        "passes_anchor_sensitivity_screen": true,
+        "max_pairwise_full_band_rms_difference_dB": 0.3372243883592746,
+        "max_pairwise_abs_difference_dB": 0.5551887687904453
+      }
+    },
+    "zero_post_filter_white_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.04658036184311624,
+            "rms_difference_dB": 0.24243279205614993,
+            "max_abs_difference_dB": 0.3450483749732529
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.19906225986472442,
+              "rms_difference_dB": 0.23191591605800504,
+              "max_abs_difference_dB": 0.3450483749732529
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.1071357538350835,
+              "rms_difference_dB": 0.17911447654008839,
+              "max_abs_difference_dB": 0.32553570424089684
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.24944786778971204,
+              "rms_difference_dB": 0.25462831596717506,
+              "max_abs_difference_dB": 0.3131625078806921
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.3143427069474897,
+              "rms_difference_dB": 0.3144499619201568,
+              "max_abs_difference_dB": 0.32170968031113834
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": -0.21933759052292157,
+              "rms_difference_dB": 0.22563568599107503,
+              "max_abs_difference_dB": 0.2901821229868037
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.3272361328148552
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.03852559299538931
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.22079604062949243
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.31362753860884474
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.3172348698775152
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.2901821229868037
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": -0.21611935942213717
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": -0.1059137175775586
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.02193838441749759,
+            "rms_difference_dB": 0.3745095658785959,
+            "max_abs_difference_dB": 0.5717103661270758
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.3810012533569732,
+              "rms_difference_dB": 0.417917700828355,
+              "max_abs_difference_dB": 0.5553711838079283
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.03777617578877756,
+              "rms_difference_dB": 0.22335962186569083,
+              "max_abs_difference_dB": 0.41526487668739254
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.4404774240375878,
+              "rms_difference_dB": 0.4439599141749115,
+              "max_abs_difference_dB": 0.4976847840752855
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.4254074370463052,
+              "rms_difference_dB": 0.43051632194195794,
+              "max_abs_difference_dB": 0.49729163145570254
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.07016358637895434,
+              "rms_difference_dB": 0.25138982787375086,
+              "max_abs_difference_dB": 0.5717103661270758
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.4202806494458216
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.07792787471159338
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.41268159507993396
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.49729163145570254
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.4206063930173106
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.26465559645014236
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.09187960690549785
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.5717103661270758
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.02464197742561864,
+            "rms_difference_dB": 0.19811012142942977,
+            "max_abs_difference_dB": 0.6776240837046337
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.1819389934922489,
+              "rms_difference_dB": 0.19722422326615577,
+              "max_abs_difference_dB": 0.27010016512937324
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.06935957804630585,
+              "rms_difference_dB": 0.10415411197902862,
+              "max_abs_difference_dB": 0.17263534173397066
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.19102955624787563,
+              "rms_difference_dB": 0.19113300444596645,
+              "max_abs_difference_dB": 0.1974358565730019
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.1110647300988156,
+              "rms_difference_dB": 0.1256431044021142,
+              "max_abs_difference_dB": 0.18366409284685883
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.2895011769018759,
+              "rms_difference_dB": 0.3454521611343002,
+              "max_abs_difference_dB": 0.6776240837046337
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.09304451663096663
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.11645346770698249
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.1918855544504406
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.18366409284685883
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.10337152313979567
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.025526526536661508
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.3079989663276351
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.6776240837046337
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.38975103458217025,
+        "max_peak_to_peak_spread_dB": 0.6776240837046359
+      },
+      "classification": {
+        "classification": "total_readout_transfer_stable_across_Ctes_anchors",
+        "passes_anchor_sensitivity_screen": true,
+        "max_pairwise_full_band_rms_difference_dB": 0.3745095658785959,
+        "max_pairwise_abs_difference_dB": 0.6776240837046337
+      }
+    },
+    "readout_transfer": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.7530718770070397,
+            "rms_difference_dB": 4.189623389996223,
+            "max_abs_difference_dB": 5.311332161791703
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.1471654848697954,
+              "rms_difference_dB": 1.4522639382111941,
+              "max_abs_difference_dB": 2.955328063547377
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 4.104751216189079,
+              "rms_difference_dB": 4.1426356276732905,
+              "max_abs_difference_dB": 4.875018831480817
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 5.115673435938576,
+              "rms_difference_dB": 5.116737212139106,
+              "max_abs_difference_dB": 5.2471633270407425
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 5.283506878133893,
+              "rms_difference_dB": 5.283530031475509,
+              "max_abs_difference_dB": 5.303233445234371
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 5.308244263639315,
+              "rms_difference_dB": 5.3082447538378466,
+              "max_abs_difference_dB": 5.311332161791703
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 2.955328063547377
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.434158021178506
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 5.059083390699177
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 5.248318007118735
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 5.292221478008382
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 5.303421620957511
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 5.309219287140186
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 5.311332161791703
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 7.580970718344158,
+            "rms_difference_dB": 8.253278899189324,
+            "max_abs_difference_dB": 10.11253951974922
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 3.081014784902118,
+              "rms_difference_dB": 3.7105659136906413,
+              "max_abs_difference_dB": 6.782034253058054
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 8.478063791630086,
+              "rms_difference_dB": 8.515419160154151,
+              "max_abs_difference_dB": 9.546221163459727
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 9.860187770191692,
+              "rms_difference_dB": 9.861118608671818,
+              "max_abs_difference_dB": 10.030293974690899
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 10.076907551399149,
+              "rms_difference_dB": 10.076927495508903,
+              "max_abs_difference_dB": 10.102178172593552
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 10.108589342896602,
+              "rms_difference_dB": 10.108589764213614,
+              "max_abs_difference_dB": 10.11253951974922
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 6.782034253058054
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 8.955279746829994
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 9.78720528233259
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 10.031776970286435
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 10.088080991021407
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 10.102418982394587
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 10.109836867597464
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 10.11253951974922
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.8278988413371184,
+            "rms_difference_dB": 4.085108961972943,
+            "max_abs_difference_dB": 4.801207357957516
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.9338493000323225,
+              "rms_difference_dB": 2.2689925914002997,
+              "max_abs_difference_dB": 3.8267061895106758
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 4.37331257544101,
+              "rms_difference_dB": 4.3798013542890235,
+              "max_abs_difference_dB": 4.671202331978909
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 4.744514334253113,
+              "rms_difference_dB": 4.7446166597123245,
+              "max_abs_difference_dB": 4.783130647650156
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 4.793400673265255,
+              "rms_difference_dB": 4.793402699160465,
+              "max_abs_difference_dB": 4.79894472735918
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 4.800345079257288,
+              "rms_difference_dB": 4.800345121557073,
+              "max_abs_difference_dB": 4.801207357957516
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 3.8267061895106758
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.521121725651488
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 4.728121891633411
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 4.7834589631677
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 4.795859513013025
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 4.798997361437076
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 4.800617580457277
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 4.801207357957516
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 8.253278899189324,
+        "max_peak_to_peak_spread_dB": 10.11253951974922
+      },
+      "classification": {
+        "classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+        "passes_anchor_sensitivity_screen": false,
+        "max_pairwise_full_band_rms_difference_dB": 8.253278899189324,
+        "max_pairwise_abs_difference_dB": 10.11253951974922
+      }
+    }
+  },
+  "repeat_day_anchor_sensitivity": {
+    "full_fitted_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.06414121059495409,
+            "rms_difference_dB": 0.29539308199348063,
+            "max_abs_difference_dB": 0.5437108423321045
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.29506207374897425,
+              "rms_difference_dB": 0.3491710186702646,
+              "max_abs_difference_dB": 0.5437108423321045
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.24843954040323254,
+              "rms_difference_dB": 0.3207221520129063,
+              "max_abs_difference_dB": 0.5348286774808199
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.2909963590551863,
+              "rms_difference_dB": 0.3014857495163993,
+              "max_abs_difference_dB": 0.37467752261314985
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.21075794579661786,
+              "rms_difference_dB": 0.24881733904047215,
+              "max_abs_difference_dB": 0.3730552913457605
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.10082819341111676,
+              "rms_difference_dB": 0.10356003987801615,
+              "max_abs_difference_dB": 0.1212809010582761
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.5362027839612381
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.15893413520659805
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.24852131105188258
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.3730552913457605
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.17610071728363375
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.036653510678386444
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.11509034466911039
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.1212809010582761
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.10044820928895268,
+            "rms_difference_dB": 0.5023025182254501,
+            "max_abs_difference_dB": 0.91356666838009
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.6108080922488413,
+              "rms_difference_dB": 0.6780051907922465,
+              "max_abs_difference_dB": 0.91356666838009
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.22969489059192336,
+              "rms_difference_dB": 0.40210962523157784,
+              "max_abs_difference_dB": 0.7729757252852296
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.5232379697792149,
+              "rms_difference_dB": 0.5307940421116635,
+              "max_abs_difference_dB": 0.6084942229444221
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.3115463914186718,
+              "rms_difference_dB": 0.37620429212591966,
+              "max_abs_difference_dB": 0.5934862497207746
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.13404513697163048,
+              "rms_difference_dB": 0.13646673135342618,
+              "max_abs_difference_dB": 0.15345850589416293
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.779303952021111
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.0631646169477403
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.4806691532272184
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.5934862497207746
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.24322950682208133
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.05998706839220185
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.1500048649464062
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.15344817816378334
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.03630699869399856,
+            "rms_difference_dB": 0.22838521532387604,
+            "max_abs_difference_dB": 0.45889578969155437
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.31574601849986694,
+              "rms_difference_dB": 0.342202928600955,
+              "max_abs_difference_dB": 0.45889578969155437
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.01874464981130912,
+              "rms_difference_dB": 0.13068105889355686,
+              "max_abs_difference_dB": 0.23814704780440937
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.23224161072402855,
+              "rms_difference_dB": 0.232589491610355,
+              "max_abs_difference_dB": 0.24494593009787774
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.1007884456220538,
+              "rms_difference_dB": 0.12815254814562865,
+              "max_abs_difference_dB": 0.22043095837501442
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.03321694356051373,
+              "rms_difference_dB": 0.033327066096095447,
+              "max_abs_difference_dB": 0.035809285237421606
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.24310116805987236
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.09576951825885756
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.23214784217533593
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.22043095837501442
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.06712878953844742
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.023333557713813596
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.034914520277296864
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.03216727710550743
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.5036691490208041,
+        "max_peak_to_peak_spread_dB": 0.9135666683800904
+      },
+      "classification": {
+        "classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+        "passes_anchor_sensitivity_screen": false,
+        "max_pairwise_full_band_rms_difference_dB": 0.5023025182254501,
+        "max_pairwise_abs_difference_dB": 0.91356666838009
+      }
+    },
+    "zero_post_filter_white_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.032039937250857166,
+            "rms_difference_dB": 0.35070947473454456,
+            "max_abs_difference_dB": 0.5439580272351531
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.2951958078944255,
+              "rms_difference_dB": 0.34932874180195855,
+              "max_abs_difference_dB": 0.5439580272351531
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.24852054197136747,
+              "rms_difference_dB": 0.3208937170365947,
+              "max_abs_difference_dB": 0.5350767817658953
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.3003353804284962,
+              "rms_difference_dB": 0.3125468787984547,
+              "max_abs_difference_dB": 0.4111504757884335
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.4260467231950411,
+              "rms_difference_dB": 0.4261049898789598,
+              "max_abs_difference_dB": 0.43376934087913255
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": -0.3347758974309778,
+              "rms_difference_dB": 0.3393059843034479,
+              "max_abs_difference_dB": 0.4080113416027993
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.5364510171186799
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.1590242216641855
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.25058326128356795
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.41206832444497277
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.4324067934280707
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.4080113416027993
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": -0.3317110697547979
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": -0.21588648287276785
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.021601459642222105,
+            "rms_difference_dB": 0.5475908497623017,
+            "max_abs_difference_dB": 0.9139588894143219
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.6110759338126703,
+              "rms_difference_dB": 0.6783008859387347,
+              "max_abs_difference_dB": 0.9139588894143219
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.22968806357524232,
+              "rms_difference_dB": 0.4023689820921052,
+              "max_abs_difference_dB": 0.7733278588853248
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.5383650593389837,
+              "rms_difference_dB": 0.5476964339611726,
+              "max_abs_difference_dB": 0.6539261480932146
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.5931114953711977,
+              "rms_difference_dB": 0.596649466541653,
+              "max_abs_difference_dB": 0.655844422343777
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": -0.0744762205169807,
+              "rms_difference_dB": 0.26674082422681217,
+              "max_abs_difference_dB": 0.4570782007027457
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.7796580425418564
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.06315476379247138
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.4843390174060392
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.6542984876301123
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.5919171770529088
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.42967838755698046
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": -0.05125893313709163
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.4570782007027457
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.0536413968930792,
+            "rms_difference_dB": 0.26350314151042026,
+            "max_abs_difference_dB": 0.6729646835755121
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.3158801259182447,
+              "rms_difference_dB": 0.34234709844350036,
+              "max_abs_difference_dB": 0.4590853707705231
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.01883247839612535,
+              "rms_difference_dB": 0.13083833918120186,
+              "max_abs_difference_dB": 0.23825107711942822
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.23802967891048762,
+              "rms_difference_dB": 0.23850142911204694,
+              "max_abs_difference_dB": 0.2511159922244094
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.16706477217615662,
+              "rms_difference_dB": 0.17823160716114253,
+              "max_abs_difference_dB": 0.24223016318513868
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.2602996769139972,
+              "rms_difference_dB": 0.3288156533992032,
+              "max_abs_difference_dB": 0.6729646835755121
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.24320702542317493
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.09586945787171622
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.23375575612247163
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.24223016318513868
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.1595103836248375
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.021667045954180966
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.280452136617706
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.6729646835755121
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.5616982093217548,
+        "max_peak_to_peak_spread_dB": 0.913958889414322
+      },
+      "classification": {
+        "classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+        "passes_anchor_sensitivity_screen": false,
+        "max_pairwise_full_band_rms_difference_dB": 0.5475908497623017,
+        "max_pairwise_abs_difference_dB": 0.9139588894143219
+      }
+    },
+    "readout_transfer": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.633776218637763,
+            "rms_difference_dB": 4.065015032639254,
+            "max_abs_difference_dB": 5.169919348204157
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.0835456812025956,
+              "rms_difference_dB": 1.3760519151935455,
+              "max_abs_difference_dB": 2.820507276216645
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 3.9584702305373276,
+              "rms_difference_dB": 3.9973553675826348,
+              "max_abs_difference_dB": 4.728370708272704
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 4.971626495993591,
+              "rms_difference_dB": 4.972747177344448,
+              "max_abs_difference_dB": 5.1047910904538085
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 5.141671894124015,
+              "rms_difference_dB": 5.141696402501019,
+              "max_abs_difference_dB": 5.161695904874493
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 5.166783811524128,
+              "rms_difference_dB": 5.1667843307823365,
+              "max_abs_difference_dB": 5.169919348204157
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 2.820507276216645
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.2852407265240835
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 4.914277000356744
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 5.105962452566147
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 5.1505160325728365
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 5.161886966711618
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 5.167773832082579
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 5.169919348204157
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 7.453100687962359,
+            "rms_difference_dB": 8.128161355927547,
+            "max_abs_difference_dB": 9.986646271734735
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 2.972943989873703,
+              "rms_difference_dB": 3.5918109287861886,
+              "max_abs_difference_dB": 6.612618678743405
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 8.322768211440863,
+              "rms_difference_dB": 8.361713487787862,
+              "max_abs_difference_dB": 9.406816474468224
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 9.728002967286516,
+              "rms_difference_dB": 9.72899179897998,
+              "max_abs_difference_dB": 9.902259766043265
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 9.950080938842216,
+              "rms_difference_dB": 9.9501022021584,
+              "max_abs_difference_dB": 9.97601175871697
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 9.982591874575045,
+              "rms_difference_dB": 9.982592324006239,
+              "max_abs_difference_dB": 9.986646271734735
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 6.612618678743405
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 8.804682060171697
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 9.65320275193387
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 9.903780813995418
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 9.961544520559587
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 9.976258905889004
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 9.983872270839356
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 9.986646271734735
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.8193244693245942,
+            "rms_difference_dB": 4.084003143929531,
+            "max_abs_difference_dB": 4.816726923530577
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.889398308671107,
+              "rms_difference_dB": 2.2256421701792446,
+              "max_abs_difference_dB": 3.7921114025267606
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 4.364297980903536,
+              "rms_difference_dB": 4.37147914581032,
+              "max_abs_difference_dB": 4.678445766195521
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 4.756376471292926,
+              "rms_difference_dB": 4.756491938594005,
+              "max_abs_difference_dB": 4.797468675589455
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 4.808409044718199,
+              "rms_difference_dB": 4.808411336908361,
+              "max_abs_difference_dB": 4.814315853842476
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 4.815808063050921,
+              "rms_difference_dB": 4.815808110928986,
+              "max_abs_difference_dB": 4.816726923530577
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 3.7921114025267606
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.519441333647615
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 4.738925751577126
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 4.797818361429271
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 4.811028487986749
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 4.814371939177387
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 4.816098438756776
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 4.816726923530577
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 8.128161355927547,
+        "max_peak_to_peak_spread_dB": 9.986646271734736
+      },
+      "classification": {
+        "classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+        "passes_anchor_sensitivity_screen": false,
+        "max_pairwise_full_band_rms_difference_dB": 8.128161355927547,
+        "max_pairwise_abs_difference_dB": 9.986646271734735
+      }
+    }
+  },
+  "cross_day_geometric_mean_anchor_sensitivity": {
+    "semantics": "For each C_tes anchor, geometric mean of the separately normalized 12/06 and 12/05 shapes, followed by anchor-to-anchor comparison.",
+    "full_fitted_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.04080796095566313,
+            "rms_difference_dB": 0.24846976938470214,
+            "max_abs_difference_dB": 0.44319041105789947
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.2470283160173032,
+              "rms_difference_dB": 0.29042446044520176,
+              "max_abs_difference_dB": 0.44319041105789947
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.17779214812970248,
+              "rms_difference_dB": 0.24812651329104815,
+              "max_abs_difference_dB": 0.4301236637323064
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.26706480496925317,
+              "rms_difference_dB": 0.2742702053547115,
+              "max_abs_difference_dB": 0.332286418651114
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.18930083488052366,
+              "rms_difference_dB": 0.22139633873251743,
+              "max_abs_difference_dB": 0.33036352653748435
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.08360324701601907,
+              "rms_difference_dB": 0.0861871200754001,
+              "max_abs_difference_dB": 0.10165947824150845
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.43166077599549607
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.0987323817048092
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.23391592650856086
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.33036352653748435
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.15985457932171962
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.026665491907219327
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.09627086856733086
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.10165947824150845
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.056575630580772904,
+            "rms_difference_dB": 0.41757940994203446,
+            "max_abs_difference_dB": 0.7327801413938879
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.495841276077427,
+              "rms_difference_dB": 0.5476444957791914,
+              "max_abs_difference_dB": 0.7327801413938879
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.13378426935585,
+              "rms_difference_dB": 0.3057785191403185,
+              "max_abs_difference_dB": 0.5940459944977592
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.47684746029301606,
+              "rms_difference_dB": 0.48178643477456856,
+              "max_abs_difference_dB": 0.5414189555918792
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.27858518314681296,
+              "rms_difference_dB": 0.33378308872404155,
+              "max_abs_difference_dB": 0.5255756806413765
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.10856554679168723,
+              "rms_difference_dB": 0.11067226476893724,
+              "max_abs_difference_dB": 0.12429172538188421
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.5997173119108985
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.007331825893576041
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.44539546228041627
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.5255756806413765
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.21920656929168553
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.04545524743341746
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.12209270592089094
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.1241753689987131
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.015767669625109736,
+            "rms_difference_dB": 0.18743555332450956,
+            "max_abs_difference_dB": 0.3633208057409508
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.24881296006012377,
+              "rms_difference_dB": 0.2692889147560148,
+              "max_abs_difference_dB": 0.3633208057409508
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.04400787877385258,
+              "rms_difference_dB": 0.1124324878183759,
+              "max_abs_difference_dB": 0.18392738223597638
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.20978265532376286,
+              "rms_difference_dB": 0.20998902413959125,
+              "max_abs_difference_dB": 0.2196270019410828
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.08928434826628938,
+              "rms_difference_dB": 0.11318006065334578,
+              "max_abs_difference_dB": 0.19521215410389228
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.024962299775668294,
+              "rms_difference_dB": 0.025049110354276455,
+              "max_abs_difference_dB": 0.027635039338714525
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.16805653591540293
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.10606420759838621
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.21147953577185447
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.19521215410389228
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.05935198996996556
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.018789755526198944
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.025821837353561524
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.022515890757204303
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.4189533375790331,
+        "max_peak_to_peak_spread_dB": 0.732780141393888
+      },
+      "classification": {
+        "classification": "total_readout_transfer_stable_across_Ctes_anchors",
+        "passes_anchor_sensitivity_screen": true,
+        "max_pairwise_full_band_rms_difference_dB": 0.41757940994203446,
+        "max_pairwise_abs_difference_dB": 0.7327801413938879
+      }
+    },
+    "zero_post_filter_white_ASD": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.039310149546986736,
+            "rms_difference_dB": 0.2957169145779092,
+            "max_abs_difference_dB": 0.4433726926302425
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.2471290338795749,
+              "rms_difference_dB": 0.290542825934565,
+              "max_abs_difference_dB": 0.4433726926302425
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.17782814790322543,
+              "rms_difference_dB": 0.24825528370935396,
+              "max_abs_difference_dB": 0.43030624300339637
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.27489162410910434,
+              "rms_difference_dB": 0.2833715352499011,
+              "max_abs_difference_dB": 0.362156491834563
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.37019471507126556,
+              "rms_difference_dB": 0.3702630258420206,
+              "max_abs_difference_dB": 0.3773947867208438
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": -0.27705674397694974,
+              "rms_difference_dB": 0.28228910704623406,
+              "max_abs_difference_dB": 0.3490967322948023
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.4318435749667695
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 0.09877490732978839
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.23568965095652913
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.3628479315269107
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.374820831652793
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.3490967322948023
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": -0.2739152145884672
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": -0.1609001002251627
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": -0.0001684623876378016,
+            "rms_difference_dB": 0.45807650071276174,
+            "max_abs_difference_dB": 0.7330670124248823
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.49603859358482166,
+              "rms_difference_dB": 0.5478617365534157,
+              "max_abs_difference_dB": 0.7330670124248823
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 0.13373211968201,
+              "rms_difference_dB": 0.3059978525172029,
+              "max_abs_difference_dB": 0.5942963677863594
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.48942124168828577,
+              "rms_difference_dB": 0.4956078451361727,
+              "max_abs_difference_dB": 0.5756775882954103
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.5092594662087516,
+              "rms_difference_dB": 0.5134518265853154,
+              "max_abs_difference_dB": 0.5759383259803119
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": -0.0021563170690133138,
+              "rms_difference_dB": 0.2487756354514666,
+              "max_abs_difference_dB": 0.5143942834149093
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.5999693459938407
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.007386555459561099
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.4485103062429862
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.5757950595429087
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.5062617850351108
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": -0.3471669920035617
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.02031033688420407
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.5143942834149093
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 0.039141687159348924,
+            "rms_difference_dB": 0.2283134087576148,
+            "max_abs_difference_dB": 0.6752943836400737
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 0.24890955970524684,
+              "rms_difference_dB": 0.26939276907272935,
+              "max_abs_difference_dB": 0.3634584511786284
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": -0.044096028221215555,
+              "rms_difference_dB": 0.1125768809209436,
+              "max_abs_difference_dB": 0.18438231593326485
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": -0.21452961757918151,
+              "rms_difference_dB": 0.2147802823085898,
+              "max_abs_difference_dB": 0.2239116384369401
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": -0.13906475113748615,
+              "rms_difference_dB": 0.151622736851707,
+              "max_abs_difference_dB": 0.21294712801599824
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 0.27490042690793653,
+              "rms_difference_dB": 0.3368629754162072,
+              "max_abs_difference_dB": 0.6752943836400737
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 0.16812577102707127
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": -0.10616146278934839
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": -0.21282065528645716
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": -0.21294712801599824
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": -0.13144095338231787
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 0.0019297402912406628
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 0.29422555147267143
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 0.6752943836400737
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 0.47287457471610683,
+        "max_peak_to_peak_spread_dB": 0.7330670124248824
+      },
+      "classification": {
+        "classification": "total_readout_transfer_stable_across_Ctes_anchors",
+        "passes_anchor_sensitivity_screen": true,
+        "max_pairwise_full_band_rms_difference_dB": 0.45807650071276174,
+        "max_pairwise_abs_difference_dB": 0.7330670124248823
+      }
+    },
+    "readout_transfer": {
+      "pairwise": {
+        "0.25x_vs_0.5x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.693424047822402,
+            "rms_difference_dB": 4.12730031472088,
+            "max_abs_difference_dB": 5.24062575499793
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.1153555830361956,
+              "rms_difference_dB": 1.4141518142036478,
+              "max_abs_difference_dB": 2.8879176698820115
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 4.031610723363204,
+              "rms_difference_dB": 4.0699861672353705,
+              "max_abs_difference_dB": 4.80169476987676
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 5.043649965966084,
+              "rms_difference_dB": 5.044741750590181,
+              "max_abs_difference_dB": 5.175977208747277
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 5.212589386128954,
+              "rms_difference_dB": 5.2126132064605954,
+              "max_abs_difference_dB": 5.232464675054431
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 5.237514037581721,
+              "rms_difference_dB": 5.237514542084387,
+              "max_abs_difference_dB": 5.24062575499793
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 2.8879176698820115
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.359699373851295
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 4.98668019552796
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 5.177140229842442
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 5.22136875529061
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 5.232654293834563
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 5.238496559611383
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 5.24062575499793
+            }
+          ],
+          "semantics": "0.5x / 0.25x"
+        },
+        "0.25x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 7.51703570315326,
+            "rms_difference_dB": 8.190691151419587,
+            "max_abs_difference_dB": 10.049592895741979
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 3.0269793873879105,
+              "rms_difference_dB": 3.651169877903377,
+              "max_abs_difference_dB": 6.69732646590073
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 8.400416001535476,
+              "rms_difference_dB": 8.438557690665766,
+              "max_abs_difference_dB": 9.476518818963974
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 9.7940953687391,
+              "rms_difference_dB": 9.795054875999458,
+              "max_abs_difference_dB": 9.966276870367082
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 10.013494245120683,
+              "rms_difference_dB": 10.013514841258152,
+              "max_abs_difference_dB": 10.03909496565526
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 10.045590608735825,
+              "rms_difference_dB": 10.045591043948074,
+              "max_abs_difference_dB": 10.049592895741979
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 6.69732646590073
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 8.879980903500845
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 9.720204017133229
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 9.967778892140927
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 10.024812755790496
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 10.039338944141797
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 10.046854569218409
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 10.049592895741979
+            }
+          ],
+          "semantics": "1x / 0.25x"
+        },
+        "0.5x_vs_1x": {
+          "full_1_200k": {
+            "mean_difference_dB": 3.8236116553308572,
+            "rms_difference_dB": 4.08453045210781,
+            "max_abs_difference_dB": 4.8089671407440475
+          },
+          "bands": {
+            "1000-5000_Hz": {
+              "mean_difference_dB": 1.9116238043517149,
+              "rms_difference_dB": 2.2472952577150824,
+              "max_abs_difference_dB": 3.809408796018719
+            },
+            "5000-15000_Hz": {
+              "mean_difference_dB": 4.368805278172272,
+              "rms_difference_dB": 4.375635679519645,
+              "max_abs_difference_dB": 4.674824049087214
+            },
+            "15000-40000_Hz": {
+              "mean_difference_dB": 4.7504454027730185,
+              "rms_difference_dB": 4.750554203997132,
+              "max_abs_difference_dB": 4.790299661619805
+            },
+            "40000-100000_Hz": {
+              "mean_difference_dB": 4.800904858991728,
+              "rms_difference_dB": 4.8009070160824105,
+              "max_abs_difference_dB": 4.806630290600829
+            },
+            "100000-200000_Hz": {
+              "mean_difference_dB": 4.808076571154103,
+              "rms_difference_dB": 4.808076616202068,
+              "max_abs_difference_dB": 4.8089671407440475
+            }
+          },
+          "anchors": [
+            {
+              "frequency_Hz": 1000.0,
+              "difference_dB": 0.0
+            },
+            {
+              "frequency_Hz": 4988.604781956303,
+              "difference_dB": 3.809408796018719
+            },
+            {
+              "frequency_Hz": 10021.853458494052,
+              "difference_dB": 4.5202815296495515
+            },
+            {
+              "frequency_Hz": 19956.38838946397,
+              "difference_dB": 4.733523821605269
+            },
+            {
+              "frequency_Hz": 40091.36998051976,
+              "difference_dB": 4.790638662298484
+            },
+            {
+              "frequency_Hz": 69929.27835877384,
+              "difference_dB": 4.803444000499886
+            },
+            {
+              "frequency_Hz": 100437.54674352899,
+              "difference_dB": 4.806684650307232
+            },
+            {
+              "frequency_Hz": 149442.23218810713,
+              "difference_dB": 4.808358009607025
+            },
+            {
+              "frequency_Hz": 200000.0,
+              "difference_dB": 4.8089671407440475
+            }
+          ],
+          "semantics": "1x / 0.5x"
+        }
+      },
+      "spread": {
+        "rms_peak_to_peak_spread_dB": 8.190691151419587,
+        "max_peak_to_peak_spread_dB": 10.049592895741979
+      },
+      "classification": {
+        "classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+        "passes_anchor_sensitivity_screen": false,
+        "max_pairwise_full_band_rms_difference_dB": 8.190691151419587,
+        "max_pairwise_abs_difference_dB": 10.049592895741979
+      }
+    }
+  },
+  "primary_material_vs_reference_anchor": {
+    "full_fitted_ASD": {
+      "full_1_200k": {
+        "mean_difference_dB": 0.056575630580772904,
+        "rms_difference_dB": 0.41757940994203446,
+        "max_abs_difference_dB": 0.7327801413938879
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": 0.495841276077427,
+          "rms_difference_dB": 0.5476444957791914,
+          "max_abs_difference_dB": 0.7327801413938879
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": 0.13378426935585,
+          "rms_difference_dB": 0.3057785191403185,
+          "max_abs_difference_dB": 0.5940459944977592
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": -0.47684746029301606,
+          "rms_difference_dB": 0.48178643477456856,
+          "max_abs_difference_dB": 0.5414189555918792
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": -0.27858518314681296,
+          "rms_difference_dB": 0.33378308872404155,
+          "max_abs_difference_dB": 0.5255756806413765
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": 0.10856554679168723,
+          "rms_difference_dB": 0.11067226476893724,
+          "max_abs_difference_dB": 0.12429172538188421
+        }
+      },
+      "anchors": [
+        {
+          "frequency_Hz": 1000.0,
+          "difference_dB": 0.0
+        },
+        {
+          "frequency_Hz": 4988.604781956303,
+          "difference_dB": 0.5997173119108985
+        },
+        {
+          "frequency_Hz": 10021.853458494052,
+          "difference_dB": -0.007331825893576041
+        },
+        {
+          "frequency_Hz": 19956.38838946397,
+          "difference_dB": -0.44539546228041627
+        },
+        {
+          "frequency_Hz": 40091.36998051976,
+          "difference_dB": -0.5255756806413765
+        },
+        {
+          "frequency_Hz": 69929.27835877384,
+          "difference_dB": -0.21920656929168553
+        },
+        {
+          "frequency_Hz": 100437.54674352899,
+          "difference_dB": 0.04545524743341746
+        },
+        {
+          "frequency_Hz": 149442.23218810713,
+          "difference_dB": 0.12209270592089094
+        },
+        {
+          "frequency_Hz": 200000.0,
+          "difference_dB": 0.1241753689987131
+        }
+      ],
+      "semantics": "1x / 0.25x using geometric-mean cross-day full_fitted_ASD"
+    },
+    "zero_post_filter_white_ASD": {
+      "full_1_200k": {
+        "mean_difference_dB": -0.0001684623876378016,
+        "rms_difference_dB": 0.45807650071276174,
+        "max_abs_difference_dB": 0.7330670124248823
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": 0.49603859358482166,
+          "rms_difference_dB": 0.5478617365534157,
+          "max_abs_difference_dB": 0.7330670124248823
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": 0.13373211968201,
+          "rms_difference_dB": 0.3059978525172029,
+          "max_abs_difference_dB": 0.5942963677863594
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": -0.48942124168828577,
+          "rms_difference_dB": 0.4956078451361727,
+          "max_abs_difference_dB": 0.5756775882954103
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": -0.5092594662087516,
+          "rms_difference_dB": 0.5134518265853154,
+          "max_abs_difference_dB": 0.5759383259803119
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": -0.0021563170690133138,
+          "rms_difference_dB": 0.2487756354514666,
+          "max_abs_difference_dB": 0.5143942834149093
+        }
+      },
+      "anchors": [
+        {
+          "frequency_Hz": 1000.0,
+          "difference_dB": 0.0
+        },
+        {
+          "frequency_Hz": 4988.604781956303,
+          "difference_dB": 0.5999693459938407
+        },
+        {
+          "frequency_Hz": 10021.853458494052,
+          "difference_dB": -0.007386555459561099
+        },
+        {
+          "frequency_Hz": 19956.38838946397,
+          "difference_dB": -0.4485103062429862
+        },
+        {
+          "frequency_Hz": 40091.36998051976,
+          "difference_dB": -0.5757950595429087
+        },
+        {
+          "frequency_Hz": 69929.27835877384,
+          "difference_dB": -0.5062617850351108
+        },
+        {
+          "frequency_Hz": 100437.54674352899,
+          "difference_dB": -0.3471669920035617
+        },
+        {
+          "frequency_Hz": 149442.23218810713,
+          "difference_dB": 0.02031033688420407
+        },
+        {
+          "frequency_Hz": 200000.0,
+          "difference_dB": 0.5143942834149093
+        }
+      ],
+      "semantics": "1x / 0.25x using geometric-mean cross-day zero_post_filter_white_ASD"
+    },
+    "readout_transfer": {
+      "full_1_200k": {
+        "mean_difference_dB": 7.51703570315326,
+        "rms_difference_dB": 8.190691151419587,
+        "max_abs_difference_dB": 10.049592895741979
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": 3.0269793873879105,
+          "rms_difference_dB": 3.651169877903377,
+          "max_abs_difference_dB": 6.69732646590073
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": 8.400416001535476,
+          "rms_difference_dB": 8.438557690665766,
+          "max_abs_difference_dB": 9.476518818963974
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": 9.7940953687391,
+          "rms_difference_dB": 9.795054875999458,
+          "max_abs_difference_dB": 9.966276870367082
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": 10.013494245120683,
+          "rms_difference_dB": 10.013514841258152,
+          "max_abs_difference_dB": 10.03909496565526
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": 10.045590608735825,
+          "rms_difference_dB": 10.045591043948074,
+          "max_abs_difference_dB": 10.049592895741979
+        }
+      },
+      "anchors": [
+        {
+          "frequency_Hz": 1000.0,
+          "difference_dB": 0.0
+        },
+        {
+          "frequency_Hz": 4988.604781956303,
+          "difference_dB": 6.69732646590073
+        },
+        {
+          "frequency_Hz": 10021.853458494052,
+          "difference_dB": 8.879980903500845
+        },
+        {
+          "frequency_Hz": 19956.38838946397,
+          "difference_dB": 9.720204017133229
+        },
+        {
+          "frequency_Hz": 40091.36998051976,
+          "difference_dB": 9.967778892140927
+        },
+        {
+          "frequency_Hz": 69929.27835877384,
+          "difference_dB": 10.024812755790496
+        },
+        {
+          "frequency_Hz": 100437.54674352899,
+          "difference_dB": 10.039338944141797
+        },
+        {
+          "frequency_Hz": 149442.23218810713,
+          "difference_dB": 10.046854569218409
+        },
+        {
+          "frequency_Hz": 200000.0,
+          "difference_dB": 10.049592895741979
+        }
+      ],
+      "semantics": "1x / 0.25x using geometric-mean cross-day readout_transfer"
+    }
+  },
+  "interpretation": {
+    "classification": "Ctes_readout_decomposition_nonidentifiable_but_observable_ASD_stable",
+    "observable_full_ASD_classification": "total_readout_transfer_stable_across_Ctes_anchors",
+    "zero_post_filter_white_ASD_classification": "total_readout_transfer_stable_across_Ctes_anchors",
+    "readout_transfer_classification": "required_total_readout_transfer_is_Ctes_anchor_sensitive",
+    "observable_full_ASD_passes_screen": true,
+    "zero_post_filter_white_ASD_passes_screen": true,
+    "readout_transfer_passes_screen": false,
+    "primary_material_vs_reference": {
+      "observable_full_ASD_rms_difference_dB": 0.41757940994203446,
+      "zero_post_filter_white_ASD_rms_difference_dB": 0.45807650071276174,
+      "readout_transfer_rms_difference_dB": 8.190691151419587,
+      "observable_to_readout_sensitivity_ratio": 0.050982194569705,
+      "zero_white_to_readout_sensitivity_ratio": 0.055926477051130075
+    },
+    "c2_bound_censoring_present": true,
+    "excluded_censored_anchor_keys": [
+      "2x"
+    ],
+    "guardrail": "The full fitted ASD is the observable model comparison; the zero-post-filter-white spectrum is a decomposition diagnostic, not a separately measured quantity. Small full-ASD anchor sensitivity alongside large readout-transfer sensitivity would demonstrate non-identifiability/cancellation, not identify which decomposition is physically correct. Rows where c2 hits a configured bound are censored and excluded from the primary finite-shape classification."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_Ctes_anchor_composite_ASD_sensitivity_config.json",
+    "base_anchor_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_physical_L_Ctes_anchor_c2_diagnostic_config.json"
+  }
+}

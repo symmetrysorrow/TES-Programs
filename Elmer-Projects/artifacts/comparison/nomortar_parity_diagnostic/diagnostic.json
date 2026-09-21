@@ -1,0 +1,762 @@
+{
+  "scope": {
+    "same_mesh_ab": false,
+    "limitation": "Existing no-mortar fine and mortar refined-3x meshes differ in node count, element type mix, and refinement."
+  },
+  "mesh": {
+    "nomortar": {
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_conformal_gpu_fine",
+      "nodes": 90872,
+      "elements_supported": 459683,
+      "element_types": {
+        "(104, 504)": 66032,
+        "(106, 504)": 68949,
+        "(107, 504)": 172849,
+        "(105, 504)": 68190,
+        "(108, 504)": 68301,
+        "(100, 504)": 6809,
+        "(103, 504)": 3632,
+        "(109, 504)": 2405,
+        "(101, 504)": 1615,
+        "(102, 504)": 901
+      },
+      "unsupported_element_types": {},
+      "body_rows": [
+        {
+          "body_id": 100,
+          "body": "abs",
+          "elements_tet": 6809,
+          "elements_wedge": 0,
+          "nodes": 1616,
+          "volume_m3": 7.000000000000001e-10
+        },
+        {
+          "body_id": 101,
+          "body": "TES",
+          "elements_tet": 1615,
+          "elements_wedge": 0,
+          "nodes": 516,
+          "volume_m3": 3.9999999999999634e-14
+        },
+        {
+          "body_id": 102,
+          "body": "Stycast",
+          "elements_tet": 901,
+          "elements_wedge": 0,
+          "nodes": 295,
+          "volume_m3": 3.854152298147841e-12
+        },
+        {
+          "body_id": 103,
+          "body": "Membrane_SiNx",
+          "elements_tet": 3632,
+          "elements_wedge": 0,
+          "nodes": 1070,
+          "volume_m3": 4.9e-13
+        },
+        {
+          "body_id": 104,
+          "body": "SiO2_1",
+          "elements_tet": 66032,
+          "elements_wedge": 0,
+          "nodes": 21910,
+          "volume_m3": 1.8000000000001385e-11
+        },
+        {
+          "body_id": 105,
+          "body": "Si_1",
+          "elements_tet": 68190,
+          "elements_wedge": 0,
+          "nodes": 22119,
+          "volume_m3": 2.626500000000145e-10
+        },
+        {
+          "body_id": 106,
+          "body": "SiNx",
+          "elements_tet": 68949,
+          "elements_wedge": 0,
+          "nodes": 22352,
+          "volume_m3": 1.7510000000001673e-11
+        },
+        {
+          "body_id": 107,
+          "body": "Si_2",
+          "elements_tet": 172849,
+          "elements_wedge": 0,
+          "nodes": 40981,
+          "volume_m3": 6.128500000000037e-09
+        },
+        {
+          "body_id": 108,
+          "body": "SiO2_2",
+          "elements_tet": 68301,
+          "elements_wedge": 0,
+          "nodes": 22142,
+          "volume_m3": 3.502000000000336e-11
+        },
+        {
+          "body_id": 109,
+          "body": "Membrane_Si1",
+          "elements_tet": 2405,
+          "elements_wedge": 0,
+          "nodes": 797,
+          "volume_m3": 7.350000000000009e-12
+        }
+      ],
+      "interfaces": [
+        {
+          "left_body": "abs",
+          "right_body": "Stycast",
+          "left_body_id": 100,
+          "right_body_id": 102,
+          "faces": 208,
+          "unique_nodes": 114
+        },
+        {
+          "left_body": "TES",
+          "right_body": "Stycast",
+          "left_body_id": 101,
+          "right_body_id": 102,
+          "faces": 241,
+          "unique_nodes": 139
+        },
+        {
+          "left_body": "TES",
+          "right_body": "Membrane_SiNx",
+          "left_body_id": 101,
+          "right_body_id": 103,
+          "faces": 360,
+          "unique_nodes": 205
+        },
+        {
+          "left_body": "Membrane_SiNx",
+          "right_body": "SiNx",
+          "left_body_id": 103,
+          "right_body_id": 106,
+          "faces": 136,
+          "unique_nodes": 136
+        },
+        {
+          "left_body": "Membrane_SiNx",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 103,
+          "right_body_id": 109,
+          "faces": 690,
+          "unique_nodes": 380
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Si_1",
+          "left_body_id": 104,
+          "right_body_id": 105,
+          "faces": 20314,
+          "unique_nodes": 10391
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Si_2",
+          "left_body_id": 104,
+          "right_body_id": 107,
+          "faces": 20312,
+          "unique_nodes": 10390
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 104,
+          "right_body_id": 109,
+          "faces": 582,
+          "unique_nodes": 324
+        },
+        {
+          "left_body": "Si_1",
+          "right_body": "SiNx",
+          "left_body_id": 105,
+          "right_body_id": 106,
+          "faces": 20430,
+          "unique_nodes": 10451
+        },
+        {
+          "left_body": "Si_1",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 105,
+          "right_body_id": 109,
+          "faces": 132,
+          "unique_nodes": 132
+        },
+        {
+          "left_body": "Si_2",
+          "right_body": "SiO2_2",
+          "left_body_id": 107,
+          "right_body_id": 108,
+          "faces": 20324,
+          "unique_nodes": 10396
+        }
+      ],
+      "exterior_faces_by_body": {
+        "abs": 14250,
+        "TES": 3037,
+        "Stycast": 1604,
+        "Membrane_SiNx": 6860,
+        "SiO2_1": 112155,
+        "Si_1": 116346,
+        "SiNx": 138213,
+        "Si_2": 327323,
+        "SiO2_2": 137069,
+        "Membrane_Si1": 4108
+      }
+    },
+    "mortar": {
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_refined_3x",
+      "nodes": 63172,
+      "elements_supported": 312997,
+      "element_types": {
+        "(105, 504)": 48082,
+        "(108, 504)": 21945,
+        "(106, 504)": 48204,
+        "(107, 504)": 92627,
+        "(104, 504)": 57307,
+        "(100, 504)": 1213,
+        "(109, 504)": 15132,
+        "(103, 504)": 17693,
+        "(101, 504)": 7929,
+        "(102, 504)": 2865
+      },
+      "unsupported_element_types": {},
+      "body_rows": [
+        {
+          "body_id": 100,
+          "body": "abs",
+          "elements_tet": 1213,
+          "elements_wedge": 0,
+          "nodes": 342,
+          "volume_m3": 6.999999999999991e-10
+        },
+        {
+          "body_id": 101,
+          "body": "TES",
+          "elements_tet": 7929,
+          "elements_wedge": 0,
+          "nodes": 2622,
+          "volume_m3": 4.000000000000042e-14
+        },
+        {
+          "body_id": 102,
+          "body": "Stycast",
+          "elements_tet": 2865,
+          "elements_wedge": 0,
+          "nodes": 1092,
+          "volume_m3": 3.8650798562573025e-12
+        },
+        {
+          "body_id": 103,
+          "body": "Membrane_SiNx",
+          "elements_tet": 17693,
+          "elements_wedge": 0,
+          "nodes": 5525,
+          "volume_m3": 4.900000000000022e-13
+        },
+        {
+          "body_id": 104,
+          "body": "SiO2_1",
+          "elements_tet": 57307,
+          "elements_wedge": 0,
+          "nodes": 19051,
+          "volume_m3": 1.799999999999997e-11
+        },
+        {
+          "body_id": 105,
+          "body": "Si_1",
+          "elements_tet": 48082,
+          "elements_wedge": 0,
+          "nodes": 15573,
+          "volume_m3": 2.6265000000000017e-10
+        },
+        {
+          "body_id": 106,
+          "body": "SiNx",
+          "elements_tet": 48204,
+          "elements_wedge": 0,
+          "nodes": 15575,
+          "volume_m3": 1.7510000000000087e-11
+        },
+        {
+          "body_id": 107,
+          "body": "Si_2",
+          "elements_tet": 92627,
+          "elements_wedge": 0,
+          "nodes": 21395,
+          "volume_m3": 6.128500000000001e-09
+        },
+        {
+          "body_id": 108,
+          "body": "SiO2_2",
+          "elements_tet": 21945,
+          "elements_wedge": 0,
+          "nodes": 6970,
+          "volume_m3": 3.5020000000000044e-11
+        },
+        {
+          "body_id": 109,
+          "body": "Membrane_Si1",
+          "elements_tet": 15132,
+          "elements_wedge": 0,
+          "nodes": 5062,
+          "volume_m3": 7.350000000000086e-12
+        }
+      ],
+      "interfaces": [
+        {
+          "left_body": "TES",
+          "right_body": "Membrane_SiNx",
+          "left_body_id": 101,
+          "right_body_id": 103,
+          "faces": 11,
+          "unique_nodes": 21
+        },
+        {
+          "left_body": "Membrane_SiNx",
+          "right_body": "SiNx",
+          "left_body_id": 103,
+          "right_body_id": 106,
+          "faces": 360,
+          "unique_nodes": 360
+        },
+        {
+          "left_body": "Membrane_SiNx",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 103,
+          "right_body_id": 109,
+          "faces": 4642,
+          "unique_nodes": 2412
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Si_1",
+          "left_body_id": 104,
+          "right_body_id": 105,
+          "faces": 13988,
+          "unique_nodes": 7191
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Si_2",
+          "left_body_id": 104,
+          "right_body_id": 107,
+          "faces": 13974,
+          "unique_nodes": 7184
+        },
+        {
+          "left_body": "SiO2_1",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 104,
+          "right_body_id": 109,
+          "faces": 4502,
+          "unique_nodes": 2340
+        },
+        {
+          "left_body": "Si_1",
+          "right_body": "SiNx",
+          "left_body_id": 105,
+          "right_body_id": 106,
+          "faces": 14032,
+          "unique_nodes": 7215
+        },
+        {
+          "left_body": "Si_1",
+          "right_body": "Membrane_Si1",
+          "left_body_id": 105,
+          "right_body_id": 109,
+          "faces": 564,
+          "unique_nodes": 460
+        },
+        {
+          "left_body": "Si_2",
+          "right_body": "SiO2_2",
+          "left_body_id": 107,
+          "right_body_id": 108,
+          "faces": 5934,
+          "unique_nodes": 3094
+        }
+      ],
+      "exterior_faces_by_body": {
+        "abs": 2660,
+        "TES": 18269,
+        "Stycast": 6733,
+        "Membrane_SiNx": 35214,
+        "SiO2_1": 100855,
+        "Si_1": 82090,
+        "SiNx": 96446,
+        "Si_2": 176188,
+        "SiO2_2": 44144,
+        "Membrane_Si1": 25410
+      }
+    }
+  },
+  "sif": {
+    "nomortar": {
+      "BDF Order": "1",
+      "TES Bias Current": "Real 0.000715",
+      "TES Shunt Resistance": "Real 0.0039",
+      "TES R0": "Real 0.015527",
+      "TES Rmin": "Real 1e-06",
+      "TES Alpha": "Real 256.46",
+      "TES Beta": "Real 5.03",
+      "TES I0": "Real 0.000143537344932311",
+      "TES Tc": "Real 0.1709",
+      "TES T0": "Real 0.16857",
+      "TES Volume": "Real 4e-14",
+      "Pulse Energy": "Real 2.134099276488e-13",
+      "Pulse Start Time": "Real 0.02002",
+      "Pulse Duration": "Real 1e-09",
+      "Pulse Sigma": "Real 5e-05",
+      "Pulse Radius": "Real 5e-05",
+      "Pulse Center X": "Real 3.0528740947e-21",
+      "Pulse Center Y": "Real 0.001",
+      "Pulse Center Z": "Real 0.00056216",
+      "Pulse Discrete Norm": "Real 1.960668551566579e-12",
+      "Lumped Mass Matrix": "True",
+      "Linear System Solver": "Direct",
+      "Linear System Direct Method": "MUMPS",
+      "Apply Mortar BCs": "False"
+    },
+    "mortar": {
+      "BDF Order": "1",
+      "TES Bias Current": "Real 0.000715",
+      "TES Shunt Resistance": "Real 0.0039",
+      "TES R0": "Real 0.015527",
+      "TES Rmin": "Real 1e-06",
+      "TES Alpha": "Real 256.46",
+      "TES Beta": "Real 5.03",
+      "TES I0": "Real 0.000143537344932311",
+      "TES Tc": "Real 0.1709",
+      "TES T0": "Real 0.16857",
+      "TES Volume": "Real 4e-14",
+      "Pulse Energy": "Real 2.134099276488e-13",
+      "Pulse Start Time": "Real 0.02002",
+      "Pulse Duration": "Real 1e-09",
+      "Pulse Sigma": "Real 5e-05",
+      "Pulse Radius": "Real 5e-05",
+      "Pulse Center X": "Real 6.37427785022e-21",
+      "Pulse Center Y": "Real 0.001",
+      "Pulse Center Z": "Real 0.00056216",
+      "Pulse Discrete Norm": "Real 1.92452795676361e-12",
+      "Lumped Mass Matrix": "True",
+      "Linear System Solver": "Direct",
+      "Linear System Direct Method": "MUMPS",
+      "Apply Mortar BCs": "True"
+    },
+    "parity": {
+      "rows": [
+        {
+          "key": "Apply Mortar BCs",
+          "nomortar": "False",
+          "mortar": "True",
+          "equal": false,
+          "delta": null
+        },
+        {
+          "key": "BDF Order",
+          "nomortar": "1",
+          "mortar": "1",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Linear System Direct Method",
+          "nomortar": "MUMPS",
+          "mortar": "MUMPS",
+          "equal": true,
+          "delta": null
+        },
+        {
+          "key": "Linear System Solver",
+          "nomortar": "Direct",
+          "mortar": "Direct",
+          "equal": true,
+          "delta": null
+        },
+        {
+          "key": "Lumped Mass Matrix",
+          "nomortar": "True",
+          "mortar": "True",
+          "equal": true,
+          "delta": null
+        },
+        {
+          "key": "Pulse Center X",
+          "nomortar": "Real 3.0528740947e-21",
+          "mortar": "Real 6.37427785022e-21",
+          "equal": true,
+          "delta": -3.32140375552e-21
+        },
+        {
+          "key": "Pulse Center Y",
+          "nomortar": "Real 0.001",
+          "mortar": "Real 0.001",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Center Z",
+          "nomortar": "Real 0.00056216",
+          "mortar": "Real 0.00056216",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Discrete Norm",
+          "nomortar": "Real 1.960668551566579e-12",
+          "mortar": "Real 1.92452795676361e-12",
+          "equal": false,
+          "delta": 3.614059480296904e-14
+        },
+        {
+          "key": "Pulse Duration",
+          "nomortar": "Real 1e-09",
+          "mortar": "Real 1e-09",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Energy",
+          "nomortar": "Real 2.134099276488e-13",
+          "mortar": "Real 2.134099276488e-13",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Radius",
+          "nomortar": "Real 5e-05",
+          "mortar": "Real 5e-05",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Sigma",
+          "nomortar": "Real 5e-05",
+          "mortar": "Real 5e-05",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "Pulse Start Time",
+          "nomortar": "Real 0.02002",
+          "mortar": "Real 0.02002",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Alpha",
+          "nomortar": "Real 256.46",
+          "mortar": "Real 256.46",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Beta",
+          "nomortar": "Real 5.03",
+          "mortar": "Real 5.03",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Bias Current",
+          "nomortar": "Real 0.000715",
+          "mortar": "Real 0.000715",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES I0",
+          "nomortar": "Real 0.000143537344932311",
+          "mortar": "Real 0.000143537344932311",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES R0",
+          "nomortar": "Real 0.015527",
+          "mortar": "Real 0.015527",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Rmin",
+          "nomortar": "Real 1e-06",
+          "mortar": "Real 1e-06",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Shunt Resistance",
+          "nomortar": "Real 0.0039",
+          "mortar": "Real 0.0039",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES T0",
+          "nomortar": "Real 0.16857",
+          "mortar": "Real 0.16857",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Tc",
+          "nomortar": "Real 0.1709",
+          "mortar": "Real 0.1709",
+          "equal": true,
+          "delta": 0.0
+        },
+        {
+          "key": "TES Volume",
+          "nomortar": "Real 4e-14",
+          "mortar": "Real 4e-14",
+          "equal": true,
+          "delta": 0.0
+        }
+      ],
+      "all_equal": false
+    }
+  },
+  "waveforms": {
+    "comsol": {
+      "label": "COMSOL",
+      "samples": 1615,
+      "baseline_uA": 143.05504935387577,
+      "minimum_uA": 135.2802056863975,
+      "peak_drop_uA": 7.7748436674782795,
+      "peak_time_ms": 20.448,
+      "rise_time_10_90_ms": 0.16144021759777516,
+      "t10_ms": 20.061742791264848,
+      "t90_ms": 20.223183008862623
+    },
+    "nomortar": {
+      "label": "Elmer no-mortar",
+      "samples": 176,
+      "baseline_uA": 154.8514548313339,
+      "minimum_uA": 148.58578291214144,
+      "peak_drop_uA": 6.265671919192471,
+      "peak_time_ms": 20.120001000000112,
+      "rise_time_10_90_ms": 0.07403668453686052,
+      "t10_ms": 20.026414391607965,
+      "t90_ms": 20.100451076144825
+    },
+    "mortar": {
+      "label": "Elmer mortar reference",
+      "samples": 148,
+      "baseline_uA": 148.13015786660128,
+      "minimum_uA": 140.4049558665074,
+      "peak_drop_uA": 7.725202000093873,
+      "peak_time_ms": 20.52000100000003,
+      "rise_time_10_90_ms": 0.17402564553093214,
+      "t10_ms": 20.028632465792064,
+      "t90_ms": 20.202658111322997
+    }
+  },
+  "waveform_comparisons": {
+    "nomortar_vs_comsol": {
+      "baseline_uA": {
+        "candidate_minus_reference": 11.796405477458137,
+        "relative_percent": 8.246060192029523
+      },
+      "minimum_uA": {
+        "candidate_minus_reference": 13.305577225743946,
+        "relative_percent": 9.83556844715962
+      },
+      "peak_drop_uA": {
+        "candidate_minus_reference": -1.5091717482858087,
+        "relative_percent": -19.41095940743589
+      },
+      "peak_time_ms": {
+        "candidate_minus_reference": -0.32799899999988824,
+        "relative_percent": -1.6040639671356036
+      },
+      "rise_time_10_90_ms": {
+        "candidate_minus_reference": -0.08740353306091464,
+        "relative_percent": -54.13987565271912
+      }
+    },
+    "mortar_vs_comsol": {
+      "baseline_uA": {
+        "candidate_minus_reference": 5.075108512725507,
+        "relative_percent": 3.5476612224789026
+      },
+      "minimum_uA": {
+        "candidate_minus_reference": 5.124750180109913,
+        "relative_percent": 3.7882483650194585
+      },
+      "peak_drop_uA": {
+        "candidate_minus_reference": -0.049641667384406674,
+        "relative_percent": -0.6384908752835108
+      },
+      "peak_time_ms": {
+        "candidate_minus_reference": 0.07200100000002863,
+        "relative_percent": 0.3521175665103121
+      },
+      "rise_time_10_90_ms": {
+        "candidate_minus_reference": 0.012585427933156978,
+        "relative_percent": 7.795720372796636
+      }
+    },
+    "nomortar_vs_mortar": {
+      "baseline_uA": {
+        "candidate_minus_reference": 6.72129696473263,
+        "relative_percent": 4.537426450855132
+      },
+      "minimum_uA": {
+        "candidate_minus_reference": 8.180827045634032,
+        "relative_percent": 5.826594221796633
+      },
+      "peak_drop_uA": {
+        "candidate_minus_reference": -1.459530080901402,
+        "relative_percent": -18.893099246902107
+      },
+      "peak_time_ms": {
+        "candidate_minus_reference": -0.39999999999991687,
+        "relative_percent": -1.9493176437950286
+      },
+      "rise_time_10_90_ms": {
+        "candidate_minus_reference": -0.09998896099407162,
+        "relative_percent": -57.45645171377865
+      }
+    }
+  },
+  "same_mesh_mortar_probe": {
+    "coarse_no_mortar": {
+      "label": "coarse no-mortar steady",
+      "nonlinear_iter": 70,
+      "tes_temperature_K": 0.1672547228309811,
+      "previous_current_uA": 143.53734493231093,
+      "raw_current_uA": 191.67315633973993,
+      "tes_resistance_ohm": 0.01064820306218256,
+      "raw_power_W": 3.9120006089453525e-10,
+      "relaxed_power_W": 3.9117007880199597e-10
+    },
+    "no_mortar": {
+      "label": "no-mortar fine steady",
+      "nonlinear_iter": 42,
+      "tes_temperature_K": 0.16824910199817433,
+      "previous_current_uA": 143.53734493231093,
+      "raw_current_uA": 154.85877713149426,
+      "tes_resistance_ohm": 0.014106728786397543,
+      "raw_power_W": 3.382968606979906e-10,
+      "relaxed_power_W": 3.3824942463966593e-10
+    },
+    "mortar_enabled_same_mesh": {
+      "label": "mortar-enabled same fine mesh steady",
+      "nonlinear_iter": 46,
+      "tes_temperature_K": 0.16824952971761117,
+      "previous_current_uA": 143.53734493231093,
+      "raw_current_uA": 154.84347768650414,
+      "tes_resistance_ohm": 0.014108507956955035,
+      "raw_power_W": 3.3827267745881814e-10,
+      "relaxed_power_W": 3.382515901837931e-10
+    }
+  },
+  "field_continuity": {
+    "status": "not_assessed",
+    "reason": "VTU paths were not supplied"
+  }
+}

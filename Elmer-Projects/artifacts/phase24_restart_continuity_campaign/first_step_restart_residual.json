@@ -1,0 +1,254 @@
+{
+  "current_state_mumps_bdf1_1": {
+    "available": true,
+    "matrix": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_current_state_mumps_bdf1_1_a.dat",
+    "rhs": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_current_state_mumps_bdf1_1_b.dat",
+    "saved_solution": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_current_state_mumps_bdf1_1_sol.dat",
+    "rows": 96955,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96955,
+      "max_row": 96955,
+      "max_col": 96955,
+      "records": 1194063,
+      "square_index_extent": true
+    },
+    "sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_current_state_mumps_bdf1_1_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96955,
+        1329477,
+        0,
+        1,
+        96955
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "rhs_saved_records": 96955,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1194063,
+    "saved_solution_records": 96769,
+    "saved_solution_l2": 47.216819596359215,
+    "missing_solution_entries_zero_extended": 186,
+    "primal_rows": 96769,
+    "constraint_rows": 186,
+    "full": {
+      "rows": 96955,
+      "residual_l2": 2.1080702329228216e-07,
+      "residual_max_abs": 6.821374894519021e-08,
+      "rhs_l2": 1.0391041738266627e-05,
+      "matrix_frobenius": 17.48026948253171,
+      "backward_error": 2.554113637668745e-10
+    },
+    "primal": {
+      "rows": 96769,
+      "residual_l2": 2.1080702329228216e-07,
+      "residual_max_abs": 6.821374894519021e-08,
+      "rhs_l2": 1.0391041738266627e-05,
+      "matrix_frobenius": 17.48026948253171,
+      "backward_error": 2.554113637668745e-10
+    },
+    "constraint": {
+      "rows": 186,
+      "residual_l2": 3.472512244532617e-16,
+      "residual_max_abs": 8.125887508719858e-17,
+      "rhs_l2": 0.0,
+      "matrix_frobenius": 2.6289109668020888e-08,
+      "backward_error": 2.797506967746546e-10
+    },
+    "constraint_row_identification": "rows without a nonzero diagonal entry",
+    "caveat": "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. It may omit mortar multipliers and is not asserted to be the exact native pre-solve vector; missing entries are extended by zero. Matrix dimension is derived from A, not RHS, because Save Skip Zeros can omit zero constraint RHS rows."
+  },
+  "gate3_state_mumps_bdf1_1": {
+    "available": true,
+    "matrix": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_a.dat",
+    "rhs": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_b.dat",
+    "saved_solution": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sol.dat",
+    "rows": 96955,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96955,
+      "max_row": 96955,
+      "max_col": 96955,
+      "records": 1194063,
+      "square_index_extent": true
+    },
+    "sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96955,
+        1329477,
+        0,
+        1,
+        96955
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "rhs_saved_records": 96955,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1194063,
+    "saved_solution_records": 96769,
+    "saved_solution_l2": 47.216819596359215,
+    "missing_solution_entries_zero_extended": 186,
+    "primal_rows": 96769,
+    "constraint_rows": 186,
+    "full": {
+      "rows": 96955,
+      "residual_l2": 2.1080702329228216e-07,
+      "residual_max_abs": 6.821374894519021e-08,
+      "rhs_l2": 1.0391041738266627e-05,
+      "matrix_frobenius": 17.48026948253171,
+      "backward_error": 2.554113637668745e-10
+    },
+    "primal": {
+      "rows": 96769,
+      "residual_l2": 2.1080702329228216e-07,
+      "residual_max_abs": 6.821374894519021e-08,
+      "rhs_l2": 1.0391041738266627e-05,
+      "matrix_frobenius": 17.48026948253171,
+      "backward_error": 2.554113637668745e-10
+    },
+    "constraint": {
+      "rows": 186,
+      "residual_l2": 3.472512244532617e-16,
+      "residual_max_abs": 8.125887508719858e-17,
+      "rhs_l2": 0.0,
+      "matrix_frobenius": 2.6289109668020888e-08,
+      "backward_error": 2.797506967746546e-10
+    },
+    "constraint_row_identification": "rows without a nonzero diagonal entry",
+    "caveat": "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. It may omit mortar multipliers and is not asserted to be the exact native pre-solve vector; missing entries are extended by zero. Matrix dimension is derived from A, not RHS, because Save Skip Zeros can omit zero constraint RHS rows."
+  },
+  "gate3_state_hypre_bdf1_1": {
+    "available": true,
+    "matrix": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_hypre_bdf1_1_a.dat",
+    "rhs": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_hypre_bdf1_1_b.dat",
+    "saved_solution": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_hypre_bdf1_1_sol.dat",
+    "rows": 96955,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96955,
+      "max_row": 96955,
+      "max_col": 96955,
+      "records": 1194063,
+      "square_index_extent": true
+    },
+    "sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_hypre_bdf1_1_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96955,
+        1329477,
+        0,
+        1,
+        96955
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "rhs_saved_records": 96955,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1194063,
+    "saved_solution_records": 96769,
+    "saved_solution_l2": 47.22239637348775,
+    "missing_solution_entries_zero_extended": 186,
+    "primal_rows": 96769,
+    "constraint_rows": 186,
+    "full": {
+      "rows": 96955,
+      "residual_l2": 2.3349058962084685e-07,
+      "residual_max_abs": 6.967637700054536e-08,
+      "rhs_l2": 1.0391041738191412e-05,
+      "matrix_frobenius": 17.480269485781857,
+      "backward_error": 2.828611029533224e-10
+    },
+    "primal": {
+      "rows": 96769,
+      "residual_l2": 2.3349058962082062e-07,
+      "residual_max_abs": 6.967637700054536e-08,
+      "rhs_l2": 1.0391041738191412e-05,
+      "matrix_frobenius": 17.480269485781857,
+      "backward_error": 2.8286110295329063e-10
+    },
+    "constraint": {
+      "rows": 186,
+      "residual_l2": 1.1064568917174008e-13,
+      "residual_max_abs": 2.484297686872442e-14,
+      "rhs_l2": 0.0,
+      "matrix_frobenius": 2.6289109668020888e-08,
+      "backward_error": 8.912726870538211e-08
+    },
+    "constraint_row_identification": "rows without a nonzero diagonal entry",
+    "caveat": "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. It may omit mortar multipliers and is not asserted to be the exact native pre-solve vector; missing entries are extended by zero. Matrix dimension is derived from A, not RHS, because Save Skip Zeros can omit zero constraint RHS rows."
+  },
+  "gate3_state_mumps_bdf1_1_nomortar": {
+    "available": true,
+    "matrix": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_nomortar_a.dat",
+    "rhs": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_nomortar_b.dat",
+    "saved_solution": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_nomortar_sol.dat",
+    "rows": 96769,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "sizes_metadata": {
+      "available": true,
+      "path": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_nomortar_sizes.dat",
+      "integer_count": 5,
+      "integers": [
+        96769,
+        1322815,
+        0,
+        1,
+        96769
+      ],
+      "caveat": "Recorded for provenance only. Matrix dimension is derived from A row/column indices because *_sizes.dat semantics are build-specific."
+    },
+    "rhs_saved_records": 96769,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1187615,
+    "saved_solution_records": 96769,
+    "saved_solution_l2": 47.21698333669075,
+    "missing_solution_entries_zero_extended": 0,
+    "primal_rows": 96769,
+    "constraint_rows": 0,
+    "full": {
+      "rows": 96769,
+      "residual_l2": 1.7467630944577494e-07,
+      "residual_max_abs": 6.281834985405629e-08,
+      "rhs_l2": 1.0391041738334161e-05,
+      "matrix_frobenius": 17.48026947934378,
+      "backward_error": 2.1163507273125954e-10
+    },
+    "primal": {
+      "rows": 96769,
+      "residual_l2": 1.7467630944577494e-07,
+      "residual_max_abs": 6.281834985405629e-08,
+      "rhs_l2": 1.0391041738334161e-05,
+      "matrix_frobenius": 17.48026947934378,
+      "backward_error": 2.1163507273125954e-10
+    },
+    "constraint": {
+      "rows": 0,
+      "residual_l2": 0.0,
+      "residual_max_abs": 0.0,
+      "rhs_l2": 0.0,
+      "matrix_frobenius": 0.0,
+      "backward_error": 0.0
+    },
+    "constraint_row_identification": "rows without a nonzero diagonal entry",
+    "caveat": "Elmer SaveLinearSystem solution is analyzed as an x0/restart candidate. It may omit mortar multipliers and is not asserted to be the exact native pre-solve vector; missing entries are extended by zero. Matrix dimension is derived from A, not RHS, because Save Skip Zeros can omit zero constraint RHS rows."
+  }
+}

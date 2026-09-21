@@ -48,8 +48,25 @@ Solver 1
   Nonlinear System Max Iterations = 120
   Nonlinear System Convergence Tolerance = 1e-08
   Nonlinear System Relaxation Factor = 1.0
-  Linear System Solver = Direct
-  Linear System Direct Method = MUMPS
+  Linear System Use Hypre = True
+  Linear System Solver = Iterative
+  Linear System Iterative Method = FlexGMRES
+  Linear System Preconditioning = BoomerAMG
+  Linear System Max Iterations = 2000
+  Linear System Convergence Tolerance = 9.999999999999999e-12
+  Linear System Abort Not Converged = True
+  Linear System Residual Output = 1
+  HYPRE GmRes Dimension = 100
+  HYPRE GPU = Logical False
+  BoomerAMG Relax Type = 18
+  BoomerAMG Coarsen Type = 8
+  BoomerAMG Num Sweeps = 1
+  BoomerAMG Max Levels = 25
+  BoomerAMG Interpolation Type = 6
+  BoomerAMG Smooth Type = 0
+  BoomerAMG Cycle Type = 1
+  BoomerAMG Num Functions = 1
+  BoomerAMG Strong Threshold = 0.25
   Apply Mortar BCs = True
   Steady State Convergence Tolerance = 1e-08
 End

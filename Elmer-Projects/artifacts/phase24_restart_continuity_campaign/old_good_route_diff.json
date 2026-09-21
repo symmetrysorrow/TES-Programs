@@ -1,0 +1,272 @@
+{
+  "spec_diff": [
+    {
+      "key": "apply_mortar_bcs",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "comparison_time_grid.event_s",
+      "left": null,
+      "right": 0.02002
+    },
+    {
+      "key": "comparison_time_grid.mesh",
+      "left": null,
+      "right": "mesh_singlepixel_gpu_fine_stycast32_mortar"
+    },
+    {
+      "key": "comparison_time_grid.mode",
+      "left": "Phase23 nonlinear coupling tolerance probe",
+      "right": "Phase24 mortar Gate 4"
+    },
+    {
+      "key": "comparison_time_grid.mortar",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "comparison_time_grid.only_changed_factor",
+      "left": "nonlinear_convergence_tolerance 3e-7 -> 1e-8; max_iterations 25 -> 120",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.reference_case",
+      "left": "case_p19_pulse_time5us",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.time_step",
+      "left": "5[us]",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.window",
+      "left": null,
+      "right": "40us"
+    },
+    {
+      "key": "iteration_series_file",
+      "left": "case_p19_pulse_phase23_tight_iterations.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv"
+    },
+    {
+      "key": "mesh",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "right": "mesh_singlepixel_gpu_fine_stycast32_mortar"
+    },
+    {
+      "key": "output_file_path",
+      "left": null,
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.result"
+    },
+    {
+      "key": "output_intervals",
+      "left": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "right": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "key": "output_result",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "phase24_smoke.independent_initial_temperature",
+      "left": null,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.memory_trace",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "phase24_smoke.no_mortar",
+      "left": null,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.purpose",
+      "left": null,
+      "right": "transient parity and stability"
+    },
+    {
+      "key": "phase24_smoke.restart_reference",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "preexisting_restart",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "restart_file_base",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "restart_file_path",
+      "left": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result"
+    },
+    {
+      "key": "restart_from",
+      "left": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "right": null
+    },
+    {
+      "key": "series_file",
+      "left": "case_p19_pulse_phase23_tight_series.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv"
+    },
+    {
+      "key": "solver_comment",
+      "left": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "right": "Phase24 Gate 4: mortar transient; backend=mumps; window=40us"
+    },
+    {
+      "key": "state_file",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "right": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state"
+    },
+    {
+      "key": "timesteps",
+      "left": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "10[us]",
+          9
+        ],
+        [
+          "5[us]",
+          100
+        ]
+      ],
+      "right": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          47
+        ]
+      ]
+    }
+  ],
+  "mesh_diff": [
+    {
+      "key": "dir",
+      "left": "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "right": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar"
+    },
+    {
+      "key": "files.mesh.boundary.sha256",
+      "left": "c9535a8c391bbf1c0c4ac1f113075d7bd1d88397b411e9977b78e52370b41fdb",
+      "right": "842b3da7e5346c138f4d7abdcf21568ae032754c1a033299bed1639e5e388047"
+    },
+    {
+      "key": "files.mesh.elements.sha256",
+      "left": "deda84b6d2638efdeb664e869b9b35f98e8e86fd64911fb65f6e30729e57683f",
+      "right": "51194b0c536422b40e9a9e70246fd63714ca9f6ca61ae218ee9a60e121d3975e"
+    },
+    {
+      "key": "files.mesh.header.sha256",
+      "left": "9e6fcfaf0f6095485eefd6e3b24c3adea113f5a234be65b8d11e17f4d23c5d6a",
+      "right": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2"
+    },
+    {
+      "key": "files.mesh.names.sha256",
+      "left": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb",
+      "right": "b1423e709355cfbd520bab2fab494970fbb8d11f2528713837e47e8b7119a56b"
+    },
+    {
+      "key": "files.mesh.nodes.sha256",
+      "left": "642276adb01d358b7392a7c7d705e2fdc654057088f9fcad6a69593bb6078783",
+      "right": "5729003c17c37ca80f32e0b9782bf5b3bc9d27186dcd156f020f5646ce01c814"
+    },
+    {
+      "key": "name",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "right": "mesh_singlepixel_gpu_fine_stycast32_mortar"
+    }
+  ],
+  "sif_diff": [
+    {
+      "key": "Pulse Transition Zone",
+      "left": null,
+      "right": "0"
+    },
+    {
+      "key": "Restart File",
+      "left": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result"
+    },
+    {
+      "key": "TES State File",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "right": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state"
+    }
+  ]
+}

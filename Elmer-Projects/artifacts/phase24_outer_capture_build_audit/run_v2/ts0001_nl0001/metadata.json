@@ -1,0 +1,32 @@
+{
+  "capture_kind": "outer_heat_solve",
+  "timestep": 1,
+  "nonlinear_iteration": 1,
+  "raw_files": {
+    "A": "outer_before_a.dat",
+    "b": "outer_before_b.dat",
+    "x_before": "outer_before_sol.dat",
+    "x_after": "outer_after_sol.dat"
+  },
+  "matrix": {
+    "total_rows": 96769,
+    "matrix_records": 1187615,
+    "primal_rows": 96769,
+    "constraint_rows": 0
+  },
+  "mesh_interface": {
+    "mortar": "True"
+  },
+  "phase24": {},
+  "solver": {
+    "bdf_order": 1,
+    "matrix_epoch": 1,
+    "rhs_epoch": 0
+  },
+  "circuit": {
+    "tes_temperature_K": 0.16856913012087524,
+    "previous_current_A": 0.00014356758901897665,
+    "raw_current_A": 0.00014356758901897665,
+    "relaxed_power_W": 3.1990625771489585e-10
+  }
+}

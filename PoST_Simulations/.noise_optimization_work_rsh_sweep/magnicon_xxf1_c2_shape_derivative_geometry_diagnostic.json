@@ -1,0 +1,718 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "tested_question": "Do local normalized-ASD shape derivatives explain why C_tes compensates removed c2 on one day while L compensates it on the other?",
+  "derivative_semantics": {
+    "c2": "d ln(normalized ASD) / d c2",
+    "C_tes": "d ln(normalized ASD) / d ln C_tes",
+    "L": "d ln(normalized ASD) / d ln L",
+    "magnicon_pole_Q_frozen": true,
+    "white_floor_frozen": true,
+    "local_to_each_day_best_fit": true
+  },
+  "reference_day": {
+    "case": {
+      "label": "tagawa_20241206_r1ch12_215mK_1400uA_gain5_day2",
+      "role": "reference",
+      "accepted_records": 345,
+      "comparison_source": "tracked_comparison_summary"
+    },
+    "base_fit": {
+      "readout": {
+        "pole_Hz": 10249.99999999874,
+        "pole_Q": 0.5773502691896258,
+        "c2": 10.13451652071929,
+        "c4": 0.0
+      },
+      "detector": {
+        "C_tes": 2.7282275891868526e-13,
+        "L": 1.2299999999999978e-08
+      },
+      "white_asd_A_rtHz": 6.001044636163611e-11,
+      "continuum_rms_dB": 0.5236626262243035,
+      "detector_boundary_hits": {
+        "C_tes": {
+          "value": 2.7282275891868526e-13,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 1.2299999999999978e-08,
+          "lower": 1e-10,
+          "upper": 1.23e-08,
+          "at_lower": false,
+          "at_upper": true
+        }
+      },
+      "readout_boundary_hits": {
+        "pole_Hz": {
+          "value": 10249.99999999874,
+          "lower": 9750.0,
+          "upper": 10249.999999999998,
+          "at_lower": false,
+          "at_upper": true
+        },
+        "c2": {
+          "value": 10.13451652071929,
+          "lower": 0.0,
+          "upper": 1000.0,
+          "at_lower": false,
+          "at_upper": false
+        }
+      }
+    },
+    "derivatives": {
+      "c2": {
+        "parameter": "c2",
+        "derivative_definition": "d ln ASD / d c2",
+        "base_value": 10.13451652071929,
+        "step": 0.1013451652071929,
+        "scheme": "central_linear",
+        "lower_bound": 0.0,
+        "upper_bound": 1000.0
+      },
+      "detector": {
+        "C_tes": {
+          "parameter": "C_tes",
+          "derivative_definition": "d ln ASD / d ln C_tes",
+          "base_value": 2.7282275891868526e-13,
+          "step": 0.01,
+          "scheme": "central_log",
+          "lower_bound": 1.961875e-13,
+          "upper_bound": 3.92375e-12
+        },
+        "L": {
+          "parameter": "L",
+          "derivative_definition": "d ln ASD / d ln L",
+          "base_value": 1.2299999999999978e-08,
+          "step": 0.01,
+          "scheme": "backward_log",
+          "lower_bound": 1e-10,
+          "upper_bound": 1.23e-08
+        }
+      }
+    },
+    "local_derivative_similarity_to_c2": {
+      "C_tes": {
+        "cosine_similarity": -0.9969299761056899,
+        "absolute_cosine_similarity": 0.9969299761056899,
+        "projection": {
+          "scale": -0.015759970894634347,
+          "fractional_residual_norm": 0.0782982933524565,
+          "explained_norm_fraction": 0.9938693772580927
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": -0.9999212055272089,
+            "absolute_cosine_similarity": 0.9999212055272089,
+            "projection": {
+              "scale": -0.022215370022836738,
+              "fractional_residual_norm": 0.012553196286722221,
+              "explained_norm_fraction": 0.9998424172629871
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": -0.9984831372673658,
+            "absolute_cosine_similarity": 0.9984831372673658,
+            "projection": {
+              "scale": -0.018916748918725836,
+              "fractional_residual_norm": 0.05505837441042816,
+              "explained_norm_fraction": 0.9969685754072811
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": -0.9989930656030495,
+            "absolute_cosine_similarity": 0.9989930656030495,
+            "projection": {
+              "scale": -0.015701034618595646,
+              "fractional_residual_norm": 0.04486485124260897,
+              "explained_norm_fraction": 0.9979871451229786
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": -0.9998423131730358,
+            "absolute_cosine_similarity": 0.9998423131730358,
+            "projection": {
+              "scale": -0.01507255330140383,
+              "fractional_residual_norm": 0.01775806264188592,
+              "explained_norm_fraction": 0.9996846512112069
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": -0.9997895793298679,
+            "absolute_cosine_similarity": 0.9997895793298679,
+            "projection": {
+              "scale": -0.016896635425921097,
+              "fractional_residual_norm": 0.020513338670392883,
+              "explained_norm_fraction": 0.9995792029365937
+            }
+          }
+        }
+      },
+      "L": {
+        "cosine_similarity": 0.9976338384188459,
+        "absolute_cosine_similarity": 0.9976338384188459,
+        "projection": {
+          "scale": 0.022906226520628493,
+          "fractional_residual_norm": 0.06875117774758407,
+          "explained_norm_fraction": 0.9952732755583201
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": 0.9999283062197304,
+            "absolute_cosine_similarity": 0.9999283062197304,
+            "projection": {
+              "scale": 0.030649250397500633,
+              "fractional_residual_norm": 0.01197423987318931,
+              "explained_norm_fraction": 0.9998566175794593
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": 0.9986687798399825,
+            "absolute_cosine_similarity": 0.9986687798399825,
+            "projection": {
+              "scale": 0.026344505758280547,
+              "fractional_residual_norm": 0.05158166508480712,
+              "explained_norm_fraction": 0.9973393318270788
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": 0.9993850297617325,
+            "absolute_cosine_similarity": 0.9993850297617325,
+            "projection": {
+              "scale": 0.022392607014344104,
+              "fractional_residual_norm": 0.035065114974031204,
+              "explained_norm_fraction": 0.998770437711858
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": 0.9987288558518025,
+            "absolute_cosine_similarity": 0.9987288558518025,
+            "projection": {
+              "scale": 0.022691683393238845,
+              "fractional_residual_norm": 0.050405083959352476,
+              "explained_norm_fraction": 0.9974593275110506
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": 0.9974631115094862,
+            "absolute_cosine_similarity": 0.9974631115094862,
+            "projection": {
+              "scale": 0.031054146407794195,
+              "fractional_residual_norm": 0.0711852595543101,
+              "explained_norm_fraction": 0.9949326588221855
+            }
+          }
+        }
+      }
+    },
+    "finite_c2_removal_compensation": {
+      "definition": "-[ln ASD(c2=0, detector fixed) - ln ASD(c2=best, detector fixed)]",
+      "rms_ln_shape": 0.4350030937778034,
+      "max_abs_ln_shape": 0.9801095512115596
+    },
+    "finite_c2_removal_similarity": {
+      "C_tes": {
+        "cosine_similarity": -0.9920289527982142,
+        "absolute_cosine_similarity": 0.9920289527982142,
+        "projection": {
+          "scale": -0.30451603775368485,
+          "fractional_residual_norm": 0.12601014566326862,
+          "explained_norm_fraction": 0.9841214431899218
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": -0.9999943021560694,
+            "absolute_cosine_similarity": 0.9999943021560694,
+            "projection": {
+              "scale": -0.2375830737701534,
+              "fractional_residual_norm": 0.003375745161561467,
+              "explained_norm_fraction": 0.9999886043446042
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": -0.9994742533228902,
+            "absolute_cosine_similarity": 0.9994742533228902,
+            "projection": {
+              "scale": -0.25617192600215916,
+              "fractional_residual_norm": 0.032422475917965446,
+              "explained_norm_fraction": 0.998948783055349
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": -0.9970813412797632,
+            "absolute_cosine_similarity": 0.9970813412797632,
+            "projection": {
+              "scale": -0.32057495205527564,
+              "fractional_residual_norm": 0.07634657079232812,
+              "explained_norm_fraction": 0.9941712011282521
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": -0.9887706579634273,
+            "absolute_cosine_similarity": 0.9887706579634273,
+            "projection": {
+              "scale": -0.29449038579598613,
+              "fractional_residual_norm": 0.14944091123441028,
+              "explained_norm_fraction": 0.9776674140494291
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": -0.9999615435432315,
+            "absolute_cosine_similarity": 0.9999615435432315,
+            "projection": {
+              "scale": -0.18347924936989415,
+              "fractional_residual_norm": 0.008769916455570367,
+              "explained_norm_fraction": 0.9999230885653623
+            }
+          }
+        }
+      },
+      "L": {
+        "cosine_similarity": 0.9931058164836015,
+        "absolute_cosine_similarity": 0.9931058164836015,
+        "projection": {
+          "scale": 0.4427646825365877,
+          "fractional_residual_norm": 0.11722131745735959,
+          "explained_norm_fraction": 0.986259162733561
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": 0.9999921802775883,
+            "absolute_cosine_similarity": 0.9999921802775883,
+            "projection": {
+              "scale": 0.32777648765811596,
+              "fractional_residual_norm": 0.003954666063652247,
+              "explained_norm_fraction": 0.999984360616325
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": 0.9993550038201221,
+            "absolute_cosine_similarity": 0.9993550038201221,
+            "projection": {
+              "scale": 0.356650248563779,
+              "fractional_residual_norm": 0.035910671668511175,
+              "explained_norm_fraction": 0.9987104236603164
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": 0.9962342768840358,
+            "absolute_cosine_similarity": 0.9962342768840358,
+            "projection": {
+              "scale": 0.45663216327830636,
+              "fractional_residual_norm": 0.08670216583996929,
+              "explained_norm_fraction": 0.9924827344386584
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": 0.993041549161105,
+            "absolute_cosine_similarity": 0.993041549161105,
+            "projection": {
+              "scale": 0.4457658271230009,
+              "fractional_residual_norm": 0.11776451774500302,
+              "explained_norm_fraction": 0.9861315183602869
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": 0.9985312311364143,
+            "absolute_cosine_similarity": 0.9985312311364143,
+            "projection": {
+              "scale": 0.33751760793039953,
+              "fractional_residual_norm": 0.054179151388672915,
+              "explained_norm_fraction": 0.9970646195548033
+            }
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "classification": "strong_single_local_shape_alignment",
+      "top_parameter": "L",
+      "top_absolute_cosine_similarity": 0.9931058164836015,
+      "similarity_screen": {
+        "strong_abs_cosine": 0.9,
+        "moderate_abs_cosine": 0.7
+      }
+    }
+  },
+  "repeat_day": {
+    "case": {
+      "label": "tagawa_20241205_r1ch12_215mK_1400uA_gain5_repeat",
+      "role": "repeat_validation",
+      "accepted_records": 1731,
+      "comparison_source": "tracked_comparison_spec_recomputed_mask"
+    },
+    "base_fit": {
+      "readout": {
+        "pole_Hz": 10230.284023462358,
+        "pole_Q": 0.5773502691896258,
+        "c2": 18.941626436988543,
+        "c4": 0.0
+      },
+      "detector": {
+        "C_tes": 2.0331852115707863e-13,
+        "L": 5.744340178706408e-09
+      },
+      "white_asd_A_rtHz": 6.003365179139946e-11,
+      "continuum_rms_dB": 0.564607080107372,
+      "detector_boundary_hits": {
+        "C_tes": {
+          "value": 2.0331852115707863e-13,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 5.744340178706408e-09,
+          "lower": 1e-10,
+          "upper": 1.23e-08,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "readout_boundary_hits": {
+        "pole_Hz": {
+          "value": 10230.284023462358,
+          "lower": 9750.0,
+          "upper": 10249.999999999998,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "c2": {
+          "value": 18.941626436988543,
+          "lower": 0.0,
+          "upper": 1000.0,
+          "at_lower": false,
+          "at_upper": false
+        }
+      }
+    },
+    "derivatives": {
+      "c2": {
+        "parameter": "c2",
+        "derivative_definition": "d ln ASD / d c2",
+        "base_value": 18.941626436988543,
+        "step": 0.18941626436988543,
+        "scheme": "central_linear",
+        "lower_bound": 0.0,
+        "upper_bound": 1000.0
+      },
+      "detector": {
+        "C_tes": {
+          "parameter": "C_tes",
+          "derivative_definition": "d ln ASD / d ln C_tes",
+          "base_value": 2.0331852115707863e-13,
+          "step": 0.01,
+          "scheme": "central_log",
+          "lower_bound": 1.961875e-13,
+          "upper_bound": 3.92375e-12
+        },
+        "L": {
+          "parameter": "L",
+          "derivative_definition": "d ln ASD / d ln L",
+          "base_value": 5.744340178706408e-09,
+          "step": 0.01,
+          "scheme": "central_log",
+          "lower_bound": 1e-10,
+          "upper_bound": 1.23e-08
+        }
+      }
+    },
+    "local_derivative_similarity_to_c2": {
+      "C_tes": {
+        "cosine_similarity": -0.9930552026096926,
+        "absolute_cosine_similarity": 0.9930552026096926,
+        "projection": {
+          "scale": -0.016924443101015475,
+          "fractional_residual_norm": 0.11764932881161072,
+          "explained_norm_fraction": 0.9861586354301775
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": -0.999675782773575,
+            "absolute_cosine_similarity": 0.999675782773575,
+            "projection": {
+              "scale": -0.027075615347067886,
+              "fractional_residual_norm": 0.02546231207178104,
+              "explained_norm_fraction": 0.9993516706639592
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": -0.9966240178850275,
+            "absolute_cosine_similarity": 0.9966240178850275,
+            "projection": {
+              "scale": -0.021082023362429488,
+              "fractional_residual_norm": 0.08210095599141268,
+              "explained_norm_fraction": 0.9932594330252961
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": -0.9987222026662768,
+            "absolute_cosine_similarity": 0.9987222026662768,
+            "projection": {
+              "scale": -0.016825263238451547,
+              "fractional_residual_norm": 0.05053673813593824,
+              "explained_norm_fraction": 0.9974460380985796
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": -0.9999400585634055,
+            "absolute_cosine_similarity": 0.9999400585634055,
+            "projection": {
+              "scale": -0.015497269857852117,
+              "fractional_residual_norm": 0.01094893968439647,
+              "explained_norm_fraction": 0.9998801207197875
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": -0.9978025998899992,
+            "absolute_cosine_similarity": 0.9978025998899992,
+            "projection": {
+              "scale": -0.014628849043873874,
+              "fractional_residual_norm": 0.06625686117496192,
+              "explained_norm_fraction": 0.9956100283472418
+            }
+          }
+        }
+      },
+      "L": {
+        "cosine_similarity": 0.9933642907852733,
+        "absolute_cosine_similarity": 0.9933642907852733,
+        "projection": {
+          "scale": 0.03984881682776658,
+          "fractional_residual_norm": 0.11501037254383051,
+          "explained_norm_fraction": 0.9867726142073293
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": 0.9996758722514815,
+            "absolute_cosine_similarity": 0.9996758722514815,
+            "projection": {
+              "scale": 0.06345496062963744,
+              "fractional_residual_norm": 0.025458798837336306,
+              "explained_norm_fraction": 0.99935184956176
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": 0.9966341575307086,
+            "absolute_cosine_similarity": 0.9966341575307086,
+            "projection": {
+              "scale": 0.04941995702681115,
+              "fractional_residual_norm": 0.08197777773918052,
+              "explained_norm_fraction": 0.9932796439569456
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": 0.9987724040389191,
+            "absolute_cosine_similarity": 0.9987724040389191,
+            "projection": {
+              "scale": 0.039513962397410715,
+              "fractional_residual_norm": 0.04953468411445165,
+              "explained_norm_fraction": 0.9975463150696815
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": 0.99997652400716,
+            "absolute_cosine_similarity": 0.99997652400716,
+            "projection": {
+              "scale": 0.03665302490535705,
+              "fractional_residual_norm": 0.0068521116860138205,
+              "explained_norm_fraction": 0.9999530485654424
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": 0.998288195339531,
+            "absolute_cosine_similarity": 0.998288195339531,
+            "projection": {
+              "scale": 0.03556758859606379,
+              "fractional_residual_norm": 0.058486571499303745,
+              "explained_norm_fraction": 0.9965793209542568
+            }
+          }
+        }
+      }
+    },
+    "finite_c2_removal_compensation": {
+      "definition": "-[ln ASD(c2=0, detector fixed) - ln ASD(c2=best, detector fixed)]",
+      "rms_ln_shape": 0.5295708153626878,
+      "max_abs_ln_shape": 1.1470702393728658
+    },
+    "finite_c2_removal_similarity": {
+      "C_tes": {
+        "cosine_similarity": -0.9869127785478505,
+        "absolute_cosine_similarity": 0.9869127785478505,
+        "projection": {
+          "scale": -0.6698831689485788,
+          "fractional_residual_norm": 0.16125497678819625,
+          "explained_norm_fraction": 0.9739968324610383
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": -0.9999975360165096,
+            "absolute_cosine_similarity": 0.9999975360165096,
+            "projection": {
+              "scale": -0.5639295560369599,
+              "fractional_residual_norm": 0.0022199011034618045,
+              "explained_norm_fraction": 0.9999950720390909
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": -0.9993247615337753,
+            "absolute_cosine_similarity": 0.9993247615337753,
+            "projection": {
+              "scale": -0.6078678712552424,
+              "fractional_residual_norm": 0.03674263171662146,
+              "explained_norm_fraction": 0.9986499790145367
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": -0.9984086996639279,
+            "absolute_cosine_similarity": 0.9984086996639279,
+            "projection": {
+              "scale": -0.743424656144895,
+              "fractional_residual_norm": 0.05639209550446425,
+              "explained_norm_fraction": 0.9968199315646153
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": -0.9804542788902082,
+            "absolute_cosine_similarity": 0.9804542788902082,
+            "projection": {
+              "scale": -0.5851329814953972,
+              "fractional_residual_norm": 0.19674706352543442,
+              "explained_norm_fraction": 0.9612905929941187
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": -0.9972367558376208,
+            "absolute_cosine_similarity": 0.9972367558376208,
+            "projection": {
+              "scale": -0.299535109132332,
+              "fractional_residual_norm": 0.0742889817298472,
+              "explained_norm_fraction": 0.9944811471935424
+            }
+          }
+        }
+      },
+      "L": {
+        "cosine_similarity": 0.9874638007639903,
+        "absolute_cosine_similarity": 0.9874638007639903,
+        "projection": {
+          "scale": 1.5776380372168572,
+          "fractional_residual_norm": 0.15784562768963337,
+          "explained_norm_fraction": 0.9750847578192656
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "cosine_similarity": 0.999997527992931,
+            "absolute_cosine_similarity": 0.999997527992931,
+            "projection": {
+              "scale": 1.3216366028055926,
+              "fractional_residual_norm": 0.0022235125427128295,
+              "explained_norm_fraction": 0.9999950559919724
+            }
+          },
+          "5000-15000_Hz": {
+            "cosine_similarity": 0.9993199526913532,
+            "absolute_cosine_similarity": 0.9993199526913532,
+            "projection": {
+              "scale": 1.4249274545201618,
+              "fractional_residual_norm": 0.036873190165099365,
+              "explained_norm_fraction": 0.9986403678470485
+            }
+          },
+          "15000-40000_Hz": {
+            "cosine_similarity": 0.9983591529628056,
+            "absolute_cosine_similarity": 0.9983591529628056,
+            "projection": {
+              "scale": 1.745750973876932,
+              "fractional_residual_norm": 0.05726256801252473,
+              "explained_norm_fraction": 0.996720998304611
+            }
+          },
+          "40000-100000_Hz": {
+            "cosine_similarity": 0.9812850402513282,
+            "absolute_cosine_similarity": 0.9812850402513282,
+            "projection": {
+              "scale": 1.3850364375919635,
+              "fractional_residual_norm": 0.19256082098637986,
+              "explained_norm_fraction": 0.9629203302210514
+            }
+          },
+          "100000-200000_Hz": {
+            "cosine_similarity": 0.9978472312506735,
+            "absolute_cosine_similarity": 0.9978472312506735,
+            "projection": {
+              "scale": 0.7283606465989927,
+              "fractional_residual_norm": 0.0655812708428641,
+              "explained_norm_fraction": 0.9956990969146349
+            }
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "classification": "strong_single_local_shape_alignment",
+      "top_parameter": "L",
+      "top_absolute_cosine_similarity": 0.9874638007639903,
+      "similarity_screen": {
+        "strong_abs_cosine": 0.9,
+        "moderate_abs_cosine": 0.7
+      }
+    }
+  },
+  "cross_day_derivative_similarity": {
+    "c2": {
+      "cosine_similarity": 0.9935770970261525,
+      "absolute_cosine_similarity": 0.9935770970261525,
+      "projection": {
+        "scale": 1.6739948047917195,
+        "fractional_residual_norm": 0.11315720156085161,
+        "explained_norm_fraction": 0.9871954477349169
+      }
+    },
+    "finite_c2_removal_compensation": {
+      "cosine_similarity": 0.9919659825825446,
+      "absolute_cosine_similarity": 0.9919659825825446,
+      "projection": {
+        "scale": 0.8148263817185958,
+        "fractional_residual_norm": 0.12650489871561266,
+        "explained_norm_fraction": 0.9839965106009526
+      }
+    },
+    "C_tes": {
+      "cosine_similarity": 0.9971678859342425,
+      "absolute_cosine_similarity": 0.9971678859342425,
+      "projection": {
+        "scale": 1.8112193824356995,
+        "fractional_residual_norm": 0.07520776064631349,
+        "explained_norm_fraction": 0.9943437927385668
+      }
+    },
+    "L": {
+      "cosine_similarity": 0.9977752082857785,
+      "absolute_cosine_similarity": 0.9977752082857785,
+      "projection": {
+        "scale": 2.937039246913263,
+        "fractional_residual_norm": 0.06666808629525378,
+        "explained_norm_fraction": 0.9955553662697286
+      }
+    }
+  },
+  "interpretation": {
+    "classification": "same_detector_direction_tracks_c2_on_both_days",
+    "reference_top_parameter": "L",
+    "repeat_top_parameter": "L",
+    "same_top_parameter": true,
+    "guardrail": "Derivative alignment is an identifiability statement, not causal attribution. C_tes or L can align with the c2 shape because different model freedoms generate similar normalized ASD changes. The derivatives are local to each fitted operating point; the finite c2-removal comparison is included to expose nonlinearity. Magnicon pole/Q and white are frozen throughout the derivative calculation."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_c2_shape_derivative_geometry_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_c2_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_necessity_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json"
+  }
+}

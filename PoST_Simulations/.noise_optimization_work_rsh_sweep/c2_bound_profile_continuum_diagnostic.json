@@ -1,0 +1,132 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "base_continuum_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\line_robust_continuum_fit_config.json",
+  "base_residual_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\readout_residual_dof_competition_config.json",
+  "only_profiled_change": "readout_bounds.c2 upper bound",
+  "c2_upper_bounds": [
+    300.0,
+    600.0,
+    1000.0
+  ],
+  "profile": [
+    {
+      "c2_upper_bound": 300.0,
+      "profiled_family": "pole_section_plus_c2",
+      "c2_value": 299.97506991707667,
+      "c2_fraction_of_upper_bound": 0.9999168997235889,
+      "c2_at_upper_bound": true,
+      "pole_Hz": 11784.613284103509,
+      "pole_Q": 0.6574345832813904,
+      "c4_fixed_value": 34.229916419004724,
+      "white_asd_A_rtHz": 5.989697916789329e-11,
+      "continuum_rms_dB": 0.5523894149851267,
+      "continuum_1_40k_rms_dB": 0.14088213021119494,
+      "continuum_40_200k_rms_dB": 0.9781470263678504,
+      "shape_score": 0.0014676216711689946,
+      "detector_candidate": {
+        "alpha": 165.9610135506565,
+        "beta": 0.013290967946853804,
+        "C_tes": 7.145612933501541e-13,
+        "L": 1.1095727430264706e-10,
+        "T_bath": 0.2169367899590419
+      },
+      "full_order2_selection_for_context": {
+        "selected_family": "pole_section_plus_c2",
+        "full_order2_score_ratio_to_pole_section_plus_c2": 0.976043627030604,
+        "full_order2_rms_improvement_dB": 0.0035041746486470515,
+        "full_order2_c4_at_bound": false,
+        "full_order2_material_improvement": false,
+        "rule": {
+          "full_order2_material_score_ratio": 0.8,
+          "full_order2_min_rms_improvement_dB": 0.05,
+          "reject_if_added_c4_at_bound": true
+        }
+      }
+    },
+    {
+      "c2_upper_bound": 600.0,
+      "profiled_family": "pole_section_plus_c2",
+      "c2_value": 593.9716733614987,
+      "c2_fraction_of_upper_bound": 0.9899527889358312,
+      "c2_at_upper_bound": false,
+      "pole_Hz": 11828.311155894487,
+      "pole_Q": 0.6339370302480362,
+      "c4_fixed_value": 34.229916419004724,
+      "white_asd_A_rtHz": 5.996873146187216e-11,
+      "continuum_rms_dB": 0.5485138090261639,
+      "continuum_1_40k_rms_dB": 0.11550429228886791,
+      "continuum_40_200k_rms_dB": 0.9785811845259352,
+      "shape_score": 0.001434244264608963,
+      "detector_candidate": {
+        "alpha": 199.49921310158243,
+        "beta": 0.680446653573207,
+        "C_tes": 9.53878742673695e-13,
+        "L": 3.081147980145063e-10,
+        "T_bath": 0.21419035571333622
+      },
+      "full_order2_selection_for_context": {
+        "selected_family": "pole_section_plus_c2",
+        "full_order2_score_ratio_to_pole_section_plus_c2": 0.9992838442102967,
+        "full_order2_rms_improvement_dB": -0.0008025884672638872,
+        "full_order2_c4_at_bound": false,
+        "full_order2_material_improvement": false,
+        "rule": {
+          "full_order2_material_score_ratio": 0.8,
+          "full_order2_min_rms_improvement_dB": 0.05,
+          "reject_if_added_c4_at_bound": true
+        }
+      }
+    },
+    {
+      "c2_upper_bound": 1000.0,
+      "profiled_family": "pole_section_plus_c2",
+      "c2_value": 743.9052086816047,
+      "c2_fraction_of_upper_bound": 0.7439052086816047,
+      "c2_at_upper_bound": false,
+      "pole_Hz": 11823.390330448115,
+      "pole_Q": 0.6306361529230657,
+      "c4_fixed_value": 34.229916419004724,
+      "white_asd_A_rtHz": 5.9823941684707e-11,
+      "continuum_rms_dB": 0.5481322659470919,
+      "continuum_1_40k_rms_dB": 0.11208218801596725,
+      "continuum_40_200k_rms_dB": 0.9787879962475888,
+      "shape_score": 0.0014321313217070175,
+      "detector_candidate": {
+        "alpha": 193.8695480493047,
+        "beta": 0.50346034896479,
+        "C_tes": 1.0851936011970735e-12,
+        "L": 6.895955891858044e-10,
+        "T_bath": 0.2153819302468101
+      },
+      "full_order2_selection_for_context": {
+        "selected_family": "pole_section_plus_c2",
+        "full_order2_score_ratio_to_pole_section_plus_c2": 0.9989459707948352,
+        "full_order2_rms_improvement_dB": -0.00018188272743213663,
+        "full_order2_c4_at_bound": false,
+        "full_order2_material_improvement": false,
+        "rule": {
+          "full_order2_material_score_ratio": 0.8,
+          "full_order2_min_rms_improvement_dB": 0.05,
+          "reject_if_added_c4_at_bound": true
+        }
+      }
+    }
+  ],
+  "interpretation": {
+    "classification": "finite_interior_c2_supported",
+    "reason": "The solution no longer follows the expanded c2 ceiling; the previous c2<=300 constraint was likely too tight.",
+    "all_tested_points_at_upper_bound": false,
+    "highest_bound_point_at_upper_bound": false,
+    "highest_bound_fraction": 0.7439052086816047,
+    "total_rms_improvement_first_to_last_dB": 0.004257149038034869,
+    "last_step_rms_improvement_dB": 0.0003815430790720109,
+    "material_total_improvement": false,
+    "thresholds": {
+      "interior_fraction_threshold": 0.9,
+      "material_total_rms_improvement_dB": 0.05,
+      "negligible_last_step_rms_improvement_dB": 0.01
+    }
+  },
+  "guardrail": "Only the c2 upper bound changes across the profile. The line mask, continuum target construction, detector nuisance family, R_TES, white-floor profiling, optimizer settings, and other readout bounds remain unchanged. This is a diagnostic of effective shape freedom, not a physical identification of c2."
+}

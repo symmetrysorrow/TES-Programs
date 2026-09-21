@@ -1,0 +1,69 @@
+{
+  "available": true,
+  "dump_count": 1,
+  "ignored_sibling_bases": [
+    "case_phase24_restartdiag_gate3_state_mumps_bdf1_1_nomortar"
+  ],
+  "reference_fingerprint": {
+    "rows": 96955,
+    "primal_rows": 96769,
+    "constraint_rows": 186
+  },
+  "records": [
+    {
+      "ordinal": 1,
+      "continuous_number": null,
+      "base": "case_phase24_restartdiag_gate3_state_mumps_bdf1_1",
+      "A": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_a.dat",
+      "b": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_b.dat",
+      "x": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sol.dat",
+      "sizes": "artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sizes.dat",
+      "dimension": {
+        "available": true,
+        "rows": 96955,
+        "max_row": 96955,
+        "max_col": 96955,
+        "records": 1194063,
+        "square_index_extent": true
+      },
+      "primal_rows": 96769,
+      "constraint_rows": 186,
+      "rhs_saved_records": 96955,
+      "fingerprint": {
+        "rows": 96955,
+        "primal_rows": 96769,
+        "constraint_rows": 186
+      },
+      "role": "reference_outer_candidate",
+      "log_event": {
+        "line": 367,
+        "path": "d:\\github\\tes-programs\\elmer-projects\\artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_a.dat",
+        "previous_computechange_iter": 13,
+        "next_computechange_iter": 14,
+        "context": [
+          "HeatSolve: Starting Assembly...",
+          "HeatSolve: Assembly:",
+          ": ..........Assembly done",
+          "SaveLinearSystem: Saving matrix to: d:\\github\\tes-programs\\elmer-projects\\artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_a.dat",
+          "SaveLinearSystem: Saving matrix rhs to: d:\\github\\tes-programs\\elmer-projects\\artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_b.dat",
+          "SaveLinearSystem: Saving solution to: d:\\github\\tes-programs\\elmer-projects\\artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sol.dat",
+          "SaveLinearSystem: Saving matrix sizes to: d:\\github\\tes-programs\\elmer-projects\\artifacts\\phase24_restart_continuity_campaign\\dumps\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1_sizes.dat"
+        ]
+      }
+    }
+  ],
+  "comparable_outer_candidate_ordinals": [
+    1
+  ],
+  "heterogeneous_ordinals": [],
+  "heterogeneous_count": 0,
+  "log_path": "results\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1\\solver.log",
+  "log_save_event_count": 1,
+  "next_computechange_iters": [
+    14
+  ],
+  "interpretation": "Continuous SaveLinearSystem numbering is treated only as dispatch order. Different structural fingerprints are not interpreted as adjacent nonlinear iterations and are excluded from A/b transition and direct sensitivity comparisons.",
+  "solver_log": "results\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1\\solver.log",
+  "launcher_log": "results\\case_phase24_restartdiag_gate3_state_mumps_bdf1_1\\restart_continuity_launcher.log",
+  "log_source": "solver.log"
+}

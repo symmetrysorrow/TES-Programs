@@ -1,0 +1,15 @@
+# Phase24 HYPRE BiCGStab diagnostic
+
+{
+  "generated_utc": "2026-09-16T10:41:09.379846+00:00",
+  "case": "case_phase24_hypre_bicgstab_1e8_2step",
+  "exit_code": 1,
+  "elapsed_seconds": 100.12439769999764,
+  "all_done": false,
+  "first_series": null,
+  "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_hypre_bicgstab_1e8_2step\\solver.log",
+  "references": {
+    "COMSOL_uA": 143.05504932879472,
+    "Phase24_MUMPS_uA": 144.268506298
+  }
+}

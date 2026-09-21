@@ -1,0 +1,19 @@
+#!/bin/sh -f
+
+if test "$ELMER_LIB" = ""; then
+  if  test "$ELMER_HOME" = ""; then
+     LIBDIR=D:/Github/TES-Programs/Elmer-Projects/$i/lib
+  else
+     LIBDIR=$ELMER_HOME/lib
+  fi
+else
+  LIBDIR=$ELMER_LIB
+fi
+
+LD=C:/msys64/ucrt64/bin/gfortran.exe
+cmd="$LD  -fallow-argument-mismatch  -shared $* -LD:/Github/TES-Programs/Elmer-Projects/$i/lib/elmersolver -L$LIBDIR -lelmersolver"
+printf "%s " $cmd
+printf "\n"
+$LD  -fallow-argument-mismatch  -shared $* -LD:/Github/TES-Programs/Elmer-Projects/$i/lib/elmersolver -L$LIBDIR -lelmersolver
+#      $* -L$LIBDIR -lelmersolver
+#      $*

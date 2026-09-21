@@ -1,0 +1,76 @@
+{
+  "gate3_state_mumps_bdf1_1": {
+    "available": true,
+    "rows": 96955,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96955,
+      "max_row": 96955,
+      "max_col": 96955,
+      "records": 1194063,
+      "square_index_extent": true
+    },
+    "rhs_saved_records": 96955,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1194063,
+    "saved_solution_records": 96769,
+    "missing_solution_entries_zero_extended": 186,
+    "direct_residual_l2": 7.70649666979524e-16,
+    "direct_relative_residual": 7.416481296013727e-11,
+    "full_delta_l2": 0.004760926065362416,
+    "full_delta_max_abs": 0.00043520194781546774,
+    "primal": {
+      "rows": 96769,
+      "delta_l2": 9.139351114096695e-06,
+      "delta_max_abs": 1.676485824053664e-07,
+      "direct_l2": 47.21682111626045,
+      "saved_l2": 47.21681959635935,
+      "delta_max_abs_mK_if_temperature": 0.0001676485824053664
+    },
+    "constraint": {
+      "rows": 186,
+      "delta_l2": 0.004760917293138841,
+      "delta_max_abs": 0.00043520194781546774,
+      "direct_l2": 0.004760917293138841,
+      "saved_l2": 0.0
+    },
+    "interpretation_caveat": "The saved Elmer solution dump is an x0/restart candidate, not proven to equal the exact native pre-solve vector. For this scalar HeatSolve, primal entries are treated as temperature DOFs; multiplier entries missing from the saved vector are zero-extended."
+  },
+  "gate3_state_mumps_bdf1_1_nomortar": {
+    "available": true,
+    "rows": 96769,
+    "dimension_source": "matrix A max row/column index",
+    "dimension": {
+      "available": true,
+      "rows": 96769,
+      "max_row": 96769,
+      "max_col": 96769,
+      "records": 1187615,
+      "square_index_extent": true
+    },
+    "rhs_saved_records": 96769,
+    "rhs_implicit_zero_entries": 0,
+    "matrix_records": 1187615,
+    "saved_solution_records": 96769,
+    "missing_solution_entries_zero_extended": 0,
+    "direct_residual_l2": 6.568187372389925e-16,
+    "direct_relative_residual": 6.321009517418129e-11,
+    "full_delta_l2": 9.415942779498388e-06,
+    "full_delta_max_abs": 2.1254345339283276e-07,
+    "primal": {
+      "rows": 96769,
+      "delta_l2": 9.415942779498388e-06,
+      "delta_max_abs": 2.1254345339283276e-07,
+      "direct_l2": 47.21698460125507,
+      "saved_l2": 47.21698333669088,
+      "delta_max_abs_mK_if_temperature": 0.00021254345339283276
+    },
+    "constraint": {
+      "rows": 0,
+      "delta_l2": 0.0,
+      "delta_max_abs": 0.0
+    },
+    "interpretation_caveat": "The saved Elmer solution dump is an x0/restart candidate, not proven to equal the exact native pre-solve vector. For this scalar HeatSolve, primal entries are treated as temperature DOFs; multiplier entries missing from the saved vector are zero-extended."
+  }
+}

@@ -1,0 +1,435 @@
+{
+  "generated_utc": "2026-09-16T10:18:17.600264+00:00",
+  "event_s": 0.02002,
+  "baseline_window_us": [
+    -2.0,
+    0.0
+  ],
+  "series": {
+    "hypre": {
+      "label": "HYPRE 5e-7",
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol5e7_1us\\case_phase24_short_hypre_tol5e7_1us_series.csv",
+      "baseline": {
+        "tes_temperature_K": 0.16844830944703806,
+        "tes_current_A": 0.0001478014394203635,
+        "tes_resistance_ohm": 0.0149725153889066,
+        "tes_power_W": 3.2707818821298876e-10
+      },
+      "samples": 22
+    },
+    "mumps": {
+      "label": "same Phase24 Direct MUMPS",
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_same_path_mumps_1us\\case_phase24_short_same_path_mumps_1us_series.csv",
+      "baseline": {
+        "tes_temperature_K": 0.1685495468807575,
+        "tes_current_A": 0.00014426850629846693,
+        "tes_resistance_ohm": 0.015441680829891946,
+        "tes_power_W": 3.213938187062779e-10
+      },
+      "samples": 22
+    },
+    "cpu_reference": {
+      "label": "CPU/MUMPS Phase23",
+      "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_p19_pulse_phase23_tight\\case_p19_pulse_phase23_tight_series.csv",
+      "baseline": {
+        "tes_temperature_K": 0.1684597659419274,
+        "tes_current_A": 0.0001473752450422976,
+        "tes_resistance_ohm": 0.015011248374442634,
+        "tes_power_W": 3.2603627537810456e-10
+      },
+      "samples": 140
+    }
+  },
+  "comparisons": {
+    "hypre_vs_mumps": {
+      "left": "HYPRE 5e-7",
+      "right": "same Phase24 Direct MUMPS",
+      "common_window_us": [
+        0.0,
+        0.9010000000162108
+      ],
+      "metrics": {
+        "tes_temperature_K": {
+          "left_baseline": 0.16844830944703806,
+          "right_baseline": 0.1685495468807575,
+          "baseline_offset": -0.00010123743371942551,
+          "max_raw_abs": 0.0001088127473426459,
+          "max_raw_time_us": 0.0010000000038417056,
+          "max_corrected_abs": 7.575313623220392e-06,
+          "max_corrected_signed": -7.575313623220392e-06,
+          "max_corrected_time_us": 0.0010000000038417056,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.1684567380878551,
+              "right": 0.16855566799994035,
+              "raw_difference": -9.892991208523827e-05,
+              "baseline_corrected_difference": 2.3075216341872373e-06
+            },
+            "0.5": {
+              "left": 0.16846843116082272,
+              "right": 0.16856630657785263,
+              "raw_difference": -9.787541702990787e-05,
+              "baseline_corrected_difference": 3.362016689517633e-06
+            },
+            "0.9": {
+              "left": 0.1684877340784301,
+              "right": 0.16858456747637626,
+              "raw_difference": -9.683339794616663e-05,
+              "baseline_corrected_difference": 4.404035773258874e-06
+            }
+          }
+        },
+        "tes_current_A": {
+          "left_baseline": 0.0001478014394203635,
+          "right_baseline": 0.00014426850629846693,
+          "baseline_offset": 3.532933121896557e-06,
+          "max_raw_abs": 3.446224960338708e-06,
+          "max_raw_time_us": 0.20100000001912122,
+          "max_corrected_abs": 1.425279671331064e-07,
+          "max_corrected_signed": -1.425279671331064e-07,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.00014749618930321882,
+              "right": 0.00014405317436175726,
+              "raw_difference": 3.4430149414615616e-06,
+              "baseline_corrected_difference": -8.991818043499553e-08
+            },
+            "0.5": {
+              "left": 0.00014722740413110718,
+              "right": 0.00014379867538535308,
+              "raw_difference": 3.4287287457540985e-06,
+              "baseline_corrected_difference": -1.0420437614245865e-07
+            },
+            "0.9": {
+              "left": 0.00014661546564393037,
+              "right": 0.00014322493274950568,
+              "raw_difference": 3.390532894424693e-06,
+              "baseline_corrected_difference": -1.4240022747186404e-07
+            }
+          }
+        },
+        "tes_resistance_ohm": {
+          "left_baseline": 0.0149725153889066,
+          "right_baseline": 0.015441680829891946,
+          "baseline_offset": -0.000469165440985346,
+          "max_raw_abs": 0.0007097524259277455,
+          "max_raw_time_us": 0.0010000000038417056,
+          "max_corrected_abs": 0.00024058698494239944,
+          "max_corrected_signed": -0.00024058698494239944,
+          "max_corrected_time_us": 0.0010000000038417056,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.015005530295325765,
+              "right": 0.015469111998118892,
+              "raw_difference": -0.0004635817027931269,
+              "baseline_corrected_difference": 5.583738192219134e-06
+            },
+            "0.5": {
+              "left": 0.015135500556439594,
+              "right": 0.01558194572190627,
+              "raw_difference": -0.000446445165466677,
+              "baseline_corrected_difference": 2.2720275518669023e-05
+            },
+            "0.9": {
+              "left": 0.015258519969417366,
+              "right": 0.015701132912103073,
+              "raw_difference": -0.0004426129426857075,
+              "baseline_corrected_difference": 2.655249829963853e-05
+            }
+          }
+        },
+        "tes_power_W": {
+          "left_baseline": 3.2707818821298876e-10,
+          "right_baseline": 3.213938187062779e-10,
+          "baseline_offset": 5.684369506710844e-12,
+          "max_raw_abs": 5.91610090055103e-12,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 5.7025344001276504e-12,
+          "max_corrected_signed": -5.7025344001276504e-12,
+          "max_corrected_time_us": 0.0010000000038417056,
+          "checkpoints": {
+            "0.1": {
+              "left": 3.264472001087132e-10,
+              "right": 3.2100444744358953e-10,
+              "raw_difference": 5.442752665123647e-12,
+              "baseline_corrected_difference": -2.4161684158719687e-13
+            },
+            "0.5": {
+              "left": 3.2807571407712163e-10,
+              "right": 3.2220438380139583e-10,
+              "raw_difference": 5.8713302757258004e-12,
+              "baseline_corrected_difference": 1.8696076901495637e-13
+            },
+            "0.9": {
+              "left": 3.279985814977005e-10,
+              "right": 3.220833206398332e-10,
+              "raw_difference": 5.915260857867302e-12,
+              "baseline_corrected_difference": 2.308913511564579e-13
+            }
+          }
+        }
+      }
+    },
+    "hypre_vs_cpu_reference": {
+      "left": "HYPRE 5e-7",
+      "right": "CPU/MUMPS Phase23",
+      "common_window_us": [
+        0.0,
+        0.9010000000162108
+      ],
+      "metrics": {
+        "tes_temperature_K": {
+          "left_baseline": 0.16844830944703806,
+          "right_baseline": 0.1684597659419274,
+          "baseline_offset": -1.1456494889344748e-05,
+          "max_raw_abs": 2.4762266338879124e-05,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 3.621876122822387e-05,
+          "max_corrected_signed": 3.621876122822387e-05,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.1684567380878551,
+              "right": 0.16845979661401275,
+              "raw_difference": -3.058526157645458e-06,
+              "baseline_corrected_difference": 8.39796873169929e-06
+            },
+            "0.5": {
+              "left": 0.16846843116082272,
+              "right": 0.16846107977445496,
+              "raw_difference": 7.351386367759893e-06,
+              "baseline_corrected_difference": 1.880788125710464e-05
+            },
+            "0.9": {
+              "left": 0.1684877340784301,
+              "right": 0.16846301744491848,
+              "raw_difference": 2.471663351161224e-05,
+              "baseline_corrected_difference": 3.617312840095699e-05
+            }
+          }
+        },
+        "tes_current_A": {
+          "left_baseline": 0.0001478014394203635,
+          "right_baseline": 0.0001473752450422976,
+          "baseline_offset": 4.261943780659017e-07,
+          "max_raw_abs": 6.823426603359828e-07,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 1.1085370384018845e-06,
+          "max_corrected_signed": -1.1085370384018845e-06,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.00014749618930321882,
+              "right": 0.00014738902837202928,
+              "raw_difference": 1.0716093118954845e-07,
+              "baseline_corrected_difference": -3.1903344687635323e-07
+            },
+            "0.5": {
+              "left": 0.00014722740413110718,
+              "right": 0.00014735871777965713,
+              "raw_difference": -1.3131364854995168e-07,
+              "baseline_corrected_difference": -5.575080266158534e-07
+            },
+            "0.9": {
+              "left": 0.00014661546564393037,
+              "right": 0.00014729631231518865,
+              "raw_difference": -6.808466712582772e-07,
+              "baseline_corrected_difference": -1.1070410493241789e-06
+            }
+          }
+        },
+        "tes_resistance_ohm": {
+          "left_baseline": 0.0149725153889066,
+          "right_baseline": 0.015011248374442634,
+          "baseline_offset": -3.873298553603438e-05,
+          "max_raw_abs": 0.0002621868276650452,
+          "max_raw_time_us": 0.0010000000038417056,
+          "max_corrected_abs": 0.00025240821409164976,
+          "max_corrected_signed": 0.00025240821409164976,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.015005530295325765,
+              "right": 0.015019472642787721,
+              "raw_difference": -1.3942347461956203e-05,
+              "baseline_corrected_difference": 2.4790638074078178e-05
+            },
+            "0.5": {
+              "left": 0.015135500556439594,
+              "right": 0.015033291728028595,
+              "raw_difference": 0.00010220882841099899,
+              "baseline_corrected_difference": 0.00014094181394703337
+            },
+            "0.9": {
+              "left": 0.015258519969417366,
+              "right": 0.01504510871495367,
+              "raw_difference": 0.00021341125446369506,
+              "baseline_corrected_difference": 0.00025214423999972944
+            }
+          }
+        },
+        "tes_power_W": {
+          "left_baseline": 3.2707818821298876e-10,
+          "right_baseline": 3.2603627537810456e-10,
+          "baseline_offset": 1.0419128348841932e-12,
+          "max_raw_abs": 5.274467951588368e-12,
+          "max_raw_time_us": 0.0010000000038417056,
+          "max_corrected_abs": 6.3163807864725615e-12,
+          "max_corrected_signed": -6.3163807864725615e-12,
+          "max_corrected_time_us": 0.0010000000038417056,
+          "checkpoints": {
+            "0.1": {
+              "left": 3.264472001087132e-10,
+              "right": 3.2627589972246635e-10,
+              "raw_difference": 1.7130038624682875e-13,
+              "baseline_corrected_difference": -8.706124486373644e-13
+            },
+            "0.5": {
+              "left": 3.2807571407712163e-10,
+              "right": 3.2644179175296345e-10,
+              "raw_difference": 1.6339223241581758e-12,
+              "baseline_corrected_difference": 5.920094892739827e-13
+            },
+            "0.9": {
+              "left": 3.279985814977005e-10,
+              "right": 3.264217421119724e-10,
+              "raw_difference": 1.5768393857280717e-12,
+              "baseline_corrected_difference": 5.349265508438786e-13
+            }
+          }
+        }
+      }
+    },
+    "mumps_vs_cpu_reference": {
+      "left": "same Phase24 Direct MUMPS",
+      "right": "CPU/MUMPS Phase23",
+      "common_window_us": [
+        0.0,
+        0.9010000000162108
+      ],
+      "metrics": {
+        "tes_temperature_K": {
+          "left_baseline": 0.1685495468807575,
+          "right_baseline": 0.1684597659419274,
+          "baseline_offset": 8.978093883008076e-05,
+          "max_raw_abs": 0.00012159047425475134,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 3.1809535424670576e-05,
+          "max_corrected_signed": 3.1809535424670576e-05,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.16855566799994035,
+              "right": 0.16845979661401275,
+              "raw_difference": 9.587138592759281e-05,
+              "baseline_corrected_difference": 6.090447097512053e-06
+            },
+            "0.5": {
+              "left": 0.16856630657785263,
+              "right": 0.16846107977445496,
+              "raw_difference": 0.00010522680339766777,
+              "baseline_corrected_difference": 1.544586456758701e-05
+            },
+            "0.9": {
+              "left": 0.16858456747637626,
+              "right": 0.16846301744491848,
+              "raw_difference": 0.00012155003145777887,
+              "baseline_corrected_difference": 3.1769092627698114e-05
+            }
+          }
+        },
+        "tes_current_A": {
+          "left_baseline": 0.00014426850629846693,
+          "right_baseline": 0.0001473752450422976,
+          "baseline_offset": -3.1067387438306554e-06,
+          "max_raw_abs": 4.0727478150994335e-06,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 9.66009071268778e-07,
+          "max_corrected_signed": -9.66009071268778e-07,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.00014405317436175726,
+              "right": 0.00014738902837202928,
+              "raw_difference": -3.335854010272013e-06,
+              "baseline_corrected_difference": -2.291152664413577e-07
+            },
+            "0.5": {
+              "left": 0.00014379867538535308,
+              "right": 0.00014735871777965713,
+              "raw_difference": -3.56004239430405e-06,
+              "baseline_corrected_difference": -4.533036504733947e-07
+            },
+            "0.9": {
+              "left": 0.00014322493274950568,
+              "right": 0.00014729631231518865,
+              "raw_difference": -4.07137956568297e-06,
+              "baseline_corrected_difference": -9.646408218523148e-07
+            }
+          }
+        },
+        "tes_resistance_ohm": {
+          "left_baseline": 0.015441680829891946,
+          "right_baseline": 0.015011248374442634,
+          "baseline_offset": 0.00043043245544931164,
+          "max_raw_abs": 0.0006562350745097298,
+          "max_raw_time_us": 0.9010000000162108,
+          "max_corrected_abs": 0.00022580261906041815,
+          "max_corrected_signed": 0.00022580261906041815,
+          "max_corrected_time_us": 0.9010000000162108,
+          "checkpoints": {
+            "0.1": {
+              "left": 0.015469111998118892,
+              "right": 0.015019472642787721,
+              "raw_difference": 0.0004496393553311707,
+              "baseline_corrected_difference": 1.9206899881859044e-05
+            },
+            "0.5": {
+              "left": 0.01558194572190627,
+              "right": 0.015033291728028595,
+              "raw_difference": 0.000548653993877676,
+              "baseline_corrected_difference": 0.00011822153842836435
+            },
+            "0.9": {
+              "left": 0.015701132912103073,
+              "right": 0.01504510871495367,
+              "raw_difference": 0.0006560241971494025,
+              "baseline_corrected_difference": 0.00022559174170009091
+            }
+          }
+        },
+        "tes_power_W": {
+          "left_baseline": 3.213938187062779e-10,
+          "right_baseline": 3.2603627537810456e-10,
+          "baseline_offset": -4.642456671826651e-12,
+          "max_raw_abs": 5.273522216597582e-12,
+          "max_raw_time_us": 0.08100000001650187,
+          "max_corrected_abs": 6.310655447709308e-13,
+          "max_corrected_signed": -6.310655447709308e-13,
+          "max_corrected_time_us": 0.08100000001650187,
+          "checkpoints": {
+            "0.1": {
+              "left": 3.2100444744358953e-10,
+              "right": 3.2627589972246635e-10,
+              "raw_difference": -5.2714522788768184e-12,
+              "baseline_corrected_difference": -6.289956070501675e-13
+            },
+            "0.5": {
+              "left": 3.2220438380139583e-10,
+              "right": 3.2644179175296345e-10,
+              "raw_difference": -4.237407951567625e-12,
+              "baseline_corrected_difference": 4.050487202590263e-13
+            },
+            "0.9": {
+              "left": 3.220833206398332e-10,
+              "right": 3.264217421119724e-10,
+              "raw_difference": -4.33842147213923e-12,
+              "baseline_corrected_difference": 3.040351996874207e-13
+            }
+          }
+        }
+      }
+    }
+  }
+}

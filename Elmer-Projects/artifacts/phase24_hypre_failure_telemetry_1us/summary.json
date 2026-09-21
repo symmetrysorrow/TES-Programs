@@ -1,0 +1,66 @@
+{
+  "generated_utc": "2026-09-16T05:59:55.770220+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tol1e8_diagnostic_1us\\phase24_hypre_tol1e8_diagnostic.json",
+  "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_1us\\solver.log",
+  "run": {
+    "command": [
+      "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+      "case_phase24_short_hypre_tol1e8_1us",
+      "--project",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_tol1e8_diagnostic_1us\\phase24_hypre_tol1e8_diagnostic.json",
+      "--skip-sync",
+      "--elmer-solver",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+      "--runtime-bin",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+      "--toolchain-bin",
+      "C:\\msys64\\ucrt64\\bin",
+      "--mpi-procs",
+      "1"
+    ],
+    "started": "2026-09-16T05:58:57.242982+00:00",
+    "finished": "2026-09-16T05:59:55.769785+00:00",
+    "elapsed_seconds": 58.52680540000438,
+    "exit_code": 1,
+    "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_1us\\failure_telemetry_launcher.log"
+  },
+  "audit": {
+    "solver_log_exists": true,
+    "all_done": false,
+    "stop_1": 1,
+    "telemetry_records": [
+      {
+        "phase": "backend_status",
+        "method": 901,
+        "solve_status": 256,
+        "iterations": 2000,
+        "final_relative_residual": 1.8283706726485033e-07,
+        "requested_tolerance": 1e-08,
+        "max_iterations": 2000,
+        "matrix_epoch": 2,
+        "preconditioner_epoch": 2,
+        "case": 0,
+        "hypre_error": 256,
+        "hypre_global_error": 256
+      },
+      {
+        "phase": "backend_status",
+        "method": 901,
+        "solve_status": 256,
+        "iterations": 2000,
+        "final_relative_residual": 1.6395401610311612e-07,
+        "requested_tolerance": 1e-08,
+        "max_iterations": 2000,
+        "matrix_epoch": 2,
+        "preconditioner_epoch": 2,
+        "case": 3,
+        "hypre_error": 256,
+        "hypre_global_error": 256
+      }
+    ],
+    "telemetry_missing": false,
+    "selector_warning_present": false,
+    "fatal_message_present": true
+  }
+}

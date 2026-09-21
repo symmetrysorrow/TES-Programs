@@ -1,0 +1,77 @@
+{
+  "generated_utc": "2026-09-17T04:56:09.871241+00:00",
+  "git_revision": "0081cc2e7a866020b7931bfb488259e9c02b9f29",
+  "comparison": {
+    "candidate_label": "conformal no-mortar native HYPRE",
+    "reference_label": "conformal no-mortar MUMPS",
+    "event_s": 0.02002,
+    "baseline_window_us": [
+      -2.0,
+      0.0
+    ],
+    "common_post_event_window_us": [
+      0.0,
+      0.9010000000162108
+    ],
+    "common_rows": 20,
+    "candidate_baseline_uA": 154.85146219318085,
+    "reference_baseline_uA": 154.8514548313339,
+    "baseline_offset_candidate_minus_reference_uA": 7.3618469400571485e-06,
+    "first_raw_abs_difference_ge_threshold_us": null,
+    "first_baseline_corrected_abs_difference_ge_threshold_us": null,
+    "first_raw_relative_difference_ge_threshold_us": null,
+    "threshold_uA": 0.1,
+    "relative_threshold_percent": 0.1,
+    "max_abs_raw_difference": {
+      "time_from_event_us": 0.9010000000162108,
+      "difference_uA": 0.07474781725721868
+    },
+    "max_abs_baseline_corrected_difference": {
+      "time_from_event_us": 0.9010000000162108,
+      "difference_uA": 0.07474045541027863
+    }
+  },
+  "inputs": {
+    "candidate": {
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_singlepixel_conformal_gpu_fine_hypre_nomortar_smoke_5stage\\case_tes_pulse_singlepixel_conformal_gpu_fine_hypre_nomortar_smoke_5stage_series.csv",
+      "series_sha256": "20b8bdab304e2d8c271db070a3bb0af0225c6838839bbda3d8d555170a2918a4",
+      "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_singlepixel_conformal_gpu_fine_hypre_nomortar_smoke_5stage\\manifest.json",
+      "manifest_sha256": "0a383007be5a175b33909d256aaf11d11de09ee30c04882af2bd3a0b8b3189fe",
+      "case": "case_tes_pulse_singlepixel_conformal_gpu_fine_hypre_nomortar_smoke_5stage",
+      "exit_code": 0,
+      "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11",
+      "mesh": "mesh_singlepixel_conformal_gpu_fine",
+      "started": "2026-09-17T13:49:16",
+      "finished": "2026-09-17T13:55:37",
+      "solver_completed": true,
+      "runtime_artifacts_sha256": {
+        "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+        "libelmersolver": "b50a6a98a824bf5c16d9e33ce8b504b3d1b5ca9f286250722b28dfc465fecfaa",
+        "HeatSolve": "851efd3f28d823d6d6e72958509233bec1382c1376787b76d537e0092df0968f"
+      }
+    },
+    "reference": {
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_singlepixel_conformal_gpu_fine_hybrid_177step\\case_tes_pulse_singlepixel_conformal_gpu_fine_hybrid_177step_series.csv",
+      "series_sha256": "13188d4607fad6df0a9e60a916107f2d68dc168911d28894a334745ff6b1bf13",
+      "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_singlepixel_conformal_gpu_fine_hybrid_177step\\manifest.json",
+      "manifest_sha256": "03af663b46a99638ba553b7d636cc9452067d2cb2d333247471cb817a652127e",
+      "case": "case_tes_pulse_singlepixel_conformal_gpu_fine_hybrid_177step",
+      "exit_code": 0,
+      "solver": "/mnt/d/Github/TES-Programs/tools/elmer-gpu-wsl/bin/ElmerSolver_mpi",
+      "elmer_prefix": "/mnt/d/Github/TES-Programs/tools/elmer-gpu-wsl",
+      "mesh": "mesh_singlepixel_conformal_gpu_fine",
+      "started": "2026-09-01T23:40:35",
+      "finished": "2026-09-02T00:06:02",
+      "solver_completed": true,
+      "runtime_artifacts_sha256": {
+        "solver": "5cbc52678ec3c384b9b7554a9197d8cc47ff96fa42bc090f14405e5178f631ff"
+      }
+    }
+  },
+  "outputs": {
+    "aligned_difference_csv": "aligned_difference.csv",
+    "checkpoints_csv": "checkpoints.csv",
+    "plot": "comparison.png"
+  }
+}

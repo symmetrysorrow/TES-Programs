@@ -3,7 +3,8 @@
     "mesh_min": 4.5e-05,
     "mesh_max": 9e-05,
     "mesh_min_mode": "fixed",
-    "mesh_max_mode": "fixed"
+    "mesh_max_mode": "fixed",
+    "stycast_layers": 32
   },
   "meshes": {
     "mesh_shifted_merged": {
@@ -295,6 +296,86 @@
         ]
       },
       "notes": "Fine conformal GPU mesh targeting production-v2-like spatial resolution; three former mortar interfaces use shared nodes."
+    },
+    "mesh_singlepixel_conformal_gpu_fine_stycast32": {
+      "geometry": "single_pixel",
+      "dir": "mesh_singlepixel_conformal_gpu_fine_stycast32",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 4.5e-05,
+          "mesh_max": 9e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed",
+          "stycast_layers": 32
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_singlepixel_conformal_gpu_fine_stycast32"
+        ]
+      },
+      "notes": "Conformal contact mesh with the validated fine in-plane resolution and 32 explicit Stycast layers (no-mortar transient candidate)."
+    },
+    "mesh_singlepixel_conformal_gpu_fine_stycast32_nomortar": {
+      "geometry": "single_pixel",
+      "dir": "mesh_singlepixel_conformal_gpu_fine_stycast32_nomortar",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 4.5e-05,
+          "mesh_max": 9e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed",
+          "stycast_layers": 32
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_singlepixel_conformal_gpu_fine_stycast32_nomortar"
+        ],
+        "postprocess": {
+          "script": "scripts/support/strip_internal_boundary_faces.py"
+        }
+      },
+      "notes": "Conformal Stycast32 mesh with internal volume-interface boundary facets removed so no-mortar heat conduction uses shared-face connectivity."
+    },
+    "mesh_singlepixel_gpu_fine_stycast32_mortar": {
+      "geometry": "single_pixel",
+      "dir": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "recipe": {
+        "generator": "generate_project_geometry.py",
+        "mesh_overrides": {
+          "mesh_min": 4.5e-05,
+          "mesh_max": 9e-05,
+          "mesh_min_mode": "fixed",
+          "mesh_max_mode": "fixed",
+          "stycast_layers": 32
+        },
+        "elmer_overrides": {
+          "fragment_mortar_interfaces": false,
+          "conformal_shared_interfaces": false,
+          "conformal_mortar_interfaces": false
+        },
+        "elmergrid_args": [
+          "14",
+          "2",
+          "gmsh/project.msh",
+          "-merge",
+          "1e-10",
+          "-out",
+          "mesh_singlepixel_gpu_fine_stycast32_mortar"
+        ]
+      },
+      "notes": "Fine all-tetra Stycast32 mesh with unshared thermal contact nodes for Elmer Mortar BC coupling."
     }
   },
   "parameter_expressions": {
@@ -1434,9 +1515,9 @@
     "stycast_dx": 0.000498,
     "stycast_dy": 0.000498,
     "stycast_dz": 2e-05,
-    "fragment_mortar_interfaces": true,
+    "fragment_mortar_interfaces": false,
     "conformal_shared_interfaces": false,
-    "conformal_mortar_interfaces": true
+    "conformal_mortar_interfaces": false
   },
   "cases": {
     "case_tes_shunt_internal": {

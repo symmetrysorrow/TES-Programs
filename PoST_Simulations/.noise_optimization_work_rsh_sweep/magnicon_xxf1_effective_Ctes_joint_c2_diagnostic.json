@@ -1,0 +1,441 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "tested_question": "If C_tes is treated as the effective heat capacity of the reduced TES thermal node and profiled across an absolute range that includes the historical PoST value 7.9e-12 J/K, does a shared residual c2 remain materially necessary across 2024-12-05/06?",
+  "fit_semantics": {
+    "shared_across_days": [
+      "L",
+      "C_tes"
+    ],
+    "day_specific": [
+      "alpha",
+      "beta",
+      "T_bath",
+      "post_filter_white_asd"
+    ],
+    "nested_readout_test": "shared c2=0 versus one shared c2 free",
+    "Magnicon": {
+      "normalization": "phase",
+      "cutoff_Hz": 10000.0,
+      "pole_Hz": 9999.999999999998,
+      "pole_Q": 0.5773502691896258,
+      "c4": 0.0
+    },
+    "objective": "equal-weight mean of the two day-specific continuum shape scores over 1-200 kHz"
+  },
+  "physical_profile": {
+    "C_tes_material_J_per_K": 7.8475e-13,
+    "C_tes_material_multiplier_bounds": {
+      "min": 0.6371455877668047,
+      "max": 25.485823510672187,
+      "semantics": "derived from the absolute effective-C_tes diagnostic range; the bare-bilayer material estimate is used only as the fitter's coordinate scale, not as a physical prior center"
+    },
+    "L_H_bounds": {
+      "min": 1e-10,
+      "max": 1e-09,
+      "semantics": "physically restricted shared circuit inductance range around the independently motivated ~1e-10 H scale; not a measured tolerance interval"
+    }
+  },
+  "c2_zero": {
+    "name": "shared_L_Ctes_joint_c2_zero",
+    "joint_shape_score": 0.21153123075643288,
+    "joint_continuum_rms_dB": 4.605474573275147,
+    "best_candidate_source": "de",
+    "evaluation_count": 19582,
+    "invalid_reference_evaluations": 2,
+    "invalid_repeat_evaluations": 5,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale"
+    ],
+    "n_free_parameters": 10,
+    "solution": {
+      "shared_C_tes_J_per_K": 5.000370856045031e-13,
+      "shared_C_tes_over_material": 0.6371928456253624,
+      "shared_L_H": 9.438808885752462e-10,
+      "shared_c2": 0.0,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 5.000370856045031e-13,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 9.438808885752462e-10,
+          "lower": 1e-10,
+          "upper": 1e-09,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "shared_c2_boundary_hit": null,
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 152.58851921046255,
+          "beta": 2.2274765754132395,
+          "C_tes": 5.000370856045031e-13,
+          "L": 9.438808885752462e-10,
+          "T_bath": 0.2176991077864253,
+          "R": 0.02193979072046886
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 152.58851921046255,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 2.2274765754132395,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.2176991077864253,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2001941486080591,
+        "white_asd_A_rtHz": 1.2001322823075444e-11,
+        "white_boundary_hit": {
+          "value": 0.2001941486080591,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00021712745403241693,
+          "joule_power_W": 1.03433676225996e-09
+        },
+        "metrics": {
+          "shape_score": 0.20849150330524013,
+          "continuum_rms_dB": 4.578620059630929,
+          "continuum_1_40k_rms_dB": 4.8452836935792565,
+          "continuum_40_200k_rms_dB": 3.901750475964769,
+          "raw_experiment_rms_dB": 4.576191172001821
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 167.0735093166809,
+          "beta": 3.191999403760522,
+          "C_tes": 5.000370856045031e-13,
+          "L": 9.438808885752462e-10,
+          "T_bath": 0.21762932659330142,
+          "R": 0.02193979072046886
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 167.0735093166809,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 3.191999403760522,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21762932659330142,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2000729790565928,
+        "white_asd_A_rtHz": 1.1994058899960881e-11,
+        "white_boundary_hit": {
+          "value": 0.2000729790565928,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.0002174183819112363,
+          "joule_power_W": 1.0371104234752492e-09
+        },
+        "metrics": {
+          "shape_score": 0.21457095820762564,
+          "continuum_rms_dB": 4.6321734034590145,
+          "continuum_1_40k_rms_dB": 4.899107982716577,
+          "continuum_40_200k_rms_dB": 3.955454849575759,
+          "raw_experiment_rms_dB": 4.635260608978276
+        }
+      }
+    }
+  },
+  "c2_free": {
+    "name": "shared_L_Ctes_joint_c2_free",
+    "joint_shape_score": 0.0019183744421101888,
+    "joint_continuum_rms_dB": 0.6042344462888198,
+    "best_candidate_source": "c2_zero_joint_solution_exact_least_squares",
+    "evaluation_count": 25305,
+    "invalid_reference_evaluations": 18,
+    "invalid_repeat_evaluations": 26,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale",
+      "shared_c2"
+    ],
+    "n_free_parameters": 11,
+    "solution": {
+      "shared_C_tes_J_per_K": 5.00000000000002e-13,
+      "shared_C_tes_over_material": 0.6371455877668073,
+      "shared_L_H": 9.99999999999996e-10,
+      "shared_c2": 40.08706850815926,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 5.00000000000002e-13,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": true,
+          "at_upper": false
+        },
+        "L": {
+          "value": 9.99999999999996e-10,
+          "lower": 1e-10,
+          "upper": 1e-09,
+          "at_lower": false,
+          "at_upper": true
+        }
+      },
+      "shared_c2_boundary_hit": {
+        "value": 40.08706850815926,
+        "lower": 0.0,
+        "upper": 1000.0,
+        "at_lower": false,
+        "at_upper": false
+      },
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 96.94780093993347,
+          "beta": 0.1392544393064744,
+          "C_tes": 5.00000000000002e-13,
+          "L": 9.99999999999996e-10,
+          "T_bath": 0.2137019592649201,
+          "R": 0.02193979072046886
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 96.94780093993347,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.1392544393064744,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.2137019592649201,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": true,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2002179783725749,
+        "white_asd_A_rtHz": 1.2002751379797709e-11,
+        "white_boundary_hit": {
+          "value": 0.2002179783725749,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00023302632313838853,
+          "joule_power_W": 1.1913584398784472e-09
+        },
+        "metrics": {
+          "shape_score": 0.0020471452580013653,
+          "continuum_rms_dB": 0.6076443543842235,
+          "continuum_1_40k_rms_dB": 0.6112823988743478,
+          "continuum_40_200k_rms_dB": 0.5992516688522855,
+          "raw_experiment_rms_dB": 0.6273629955763541
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 105.72532324796084,
+          "beta": 0.2906829624275119,
+          "C_tes": 5.00000000000002e-13,
+          "L": 9.99999999999996e-10,
+          "T_bath": 0.21770195622948085,
+          "R": 0.02193979072046886
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 105.72532324796084,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.2906829624275119,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21770195622948085,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "white_scale": 0.20000000000000007,
+        "white_asd_A_rtHz": 1.1989683920853936e-11,
+        "white_boundary_hit": {
+          "value": 0.20000000000000007,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": true,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.0002171155676071038,
+          "joule_power_W": 1.034223517896633e-09
+        },
+        "metrics": {
+          "shape_score": 0.0017896036262190123,
+          "continuum_rms_dB": 0.600805185354532,
+          "continuum_1_40k_rms_dB": 0.2967192349991841,
+          "continuum_40_200k_rms_dB": 0.9921533849146258,
+          "raw_experiment_rms_dB": 0.6158514807645169
+        }
+      }
+    }
+  },
+  "nested_test": {
+    "classification": "shared_c2_material_after_shared_L_Ctes_profile",
+    "shared_c2_material_improvement": true,
+    "joint_shape_score_ratio_c2_free_to_c2_zero": 0.0090689891759723,
+    "joint_rms_improvement_dB": 4.001240126986327,
+    "c2_zero_joint_shape_score": 0.21153123075643288,
+    "c2_free_joint_shape_score": 0.0019183744421101888,
+    "c2_zero_joint_rms_dB": 4.605474573275147,
+    "c2_free_joint_rms_dB": 0.6042344462888198,
+    "screen": {
+      "max_shared_c2_free_joint_score_ratio_to_c2_zero": 0.8,
+      "min_joint_rms_improvement_dB": 0.05
+    }
+  },
+  "interpretation": {
+    "classification": "shared_c2_material_but_effective_Ctes_profile_boundary_active",
+    "shared_c2_material": true,
+    "shared_c2": 40.08706850815926,
+    "shared_C_tes_J_per_K_c2_free": 5.00000000000002e-13,
+    "shared_C_tes_over_material_c2_free": 0.6371455877668073,
+    "shared_L_H_c2_free": 9.99999999999996e-10,
+    "shared_C_tes_J_per_K_c2_zero": 5.000370856045031e-13,
+    "shared_C_tes_over_material_c2_zero": 0.6371928456253624,
+    "shared_L_H_c2_zero": 9.438808885752462e-10,
+    "guardrail": "This is a diagnostic reinterpretation of C_tes, not a claim that the historical 7.9e-12 J/K value was explicitly derived from silicon heat capacity. The repository does not currently document that derivation. The test asks whether allowing the reduced TES node to have an effective heat capacity spanning the historical PoST scale materially changes the need for the residual shared c2. A surviving c2 remains an unidentified smooth-shape degree of freedom, not proof of an electronics zero.",
+    "base_joint_classification": "shared_c2_material_after_shared_L_Ctes_profile",
+    "C_tes_semantics": "effective reduced-node heat capacity; may include rapidly thermalized substrate/membrane material, but the historical PoST value is not documented as an explicit silicon calculation",
+    "historical_PoST_C_tes_J_per_K": 7.9e-12
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_effective_Ctes_joint_c2_diagnostic_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json",
+    "effective_C_tes_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_effective_Ctes_joint_c2_diagnostic_config.json",
+    "base_joint_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_shared_L_Ctes_joint_c2_diagnostic_config.json"
+  },
+  "effective_C_tes_context": {
+    "material_C_tes_J_per_K": 7.8475e-13,
+    "effective_C_tes_bounds_J_per_K": {
+      "min": 5e-13,
+      "max": 2e-11
+    },
+    "effective_C_tes_bounds_over_bare_material": {
+      "min": 0.6371455877668047,
+      "max": 25.485823510672187
+    },
+    "historical_PoST_C_tes_J_per_K": 7.9e-12,
+    "historical_PoST_over_bare_material": 10.066900286715514,
+    "historical_PoST_log_position_in_profile": 0.748197379275944,
+    "shared_L_bounds_H": {
+      "min": 1e-10,
+      "max": 1e-09
+    }
+  },
+  "historical_PoST_reference_comparison": {
+    "historical_PoST_C_tes_J_per_K": 7.9e-12,
+    "c2_zero": {
+      "best_shared_C_tes_J_per_K": 5.000370856045031e-13,
+      "best_over_historical_PoST": 0.06329583362082318,
+      "best_log_position_in_profile": 2.0105958836584e-05,
+      "shared_L_H": 9.438808885752462e-10,
+      "shared_c2": 0.0,
+      "C_tes_boundary_hit": {
+        "value": 5.000370856045031e-13,
+        "lower": 5e-13,
+        "upper": 2e-11,
+        "at_lower": false,
+        "at_upper": false
+      }
+    },
+    "c2_free": {
+      "best_shared_C_tes_J_per_K": 5.00000000000002e-13,
+      "best_over_historical_PoST": 0.06329113924050658,
+      "best_log_position_in_profile": 9.630874966213437e-16,
+      "shared_L_H": 9.99999999999996e-10,
+      "shared_c2": 40.08706850815926,
+      "C_tes_boundary_hit": {
+        "value": 5.00000000000002e-13,
+        "lower": 5e-13,
+        "upper": 2e-11,
+        "at_lower": true,
+        "at_upper": false
+      }
+    }
+  }
+}

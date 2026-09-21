@@ -1,0 +1,83 @@
+{
+  "generated_utc": "2026-09-17T04:24:19.408555+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\elmer_project_singlepixel_prod_v2_original_timegrid.json",
+  "window": "0..0.9 us after the 20.02 ms pulse",
+  "conditions": {
+    "mesh": "mesh_singlepixel_prod_v2",
+    "restart": "validated serial production-v2 steady result",
+    "bdf_order": 1,
+    "time_grid_stages": [
+      [
+        "18[us]",
+        1
+      ],
+      [
+        "1[us]",
+        2
+      ],
+      [
+        "1[ns]",
+        1
+      ],
+      [
+        "10[ns]",
+        10
+      ],
+      [
+        "100[ns]",
+        9
+      ]
+    ],
+    "nonlinear_max_iterations": 120,
+    "nonlinear_convergence_tolerance": 1e-08,
+    "hypre_tolerance": 6e-07,
+    "hypre_max_iterations": 4000
+  },
+  "runs": {
+    "case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_amgx_smoke_5step": {
+      "command": [
+        "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+        "case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_amgx_smoke_5step",
+        "--project",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\elmer_project_singlepixel_prod_v2_original_timegrid.json",
+        "--mpi-procs",
+        "1",
+        "--elmer-solver",
+        "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+        "--runtime-bin",
+        "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+        "--toolchain-bin",
+        "C:\\msys64\\ucrt64\\bin"
+      ],
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\production_backend_parity_short\\run_hypre.log",
+      "started": "2026-09-17T04:24:19.438546+00:00",
+      "exit_code": 1,
+      "finished": "2026-09-17T04:31:46.090908+00:00",
+      "elapsed_seconds": 446.65237419999903
+    }
+  },
+  "comparisons": {
+    "mumps_vs_comsol": {
+      "command": [
+        "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\scripts\\analysis\\compare_singlepixel_amgx_comsol.py",
+        "--elmer",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_5step\\case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_5step_series.csv",
+        "--comsol",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\docs\\Single-Pixel.txt",
+        "--out",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\production_backend_parity_short\\mumps_vs_comsol",
+        "--end-us",
+        "0.9",
+        "--solver-label",
+        "production-v2 direct MUMPS"
+      ],
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\production_backend_parity_short\\mumps_vs_comsol\\comparison.log",
+      "started": "2026-09-17T04:31:46.091099+00:00",
+      "exit_code": 0,
+      "finished": "2026-09-17T04:31:49.163747+00:00",
+      "elapsed_seconds": 3.072661300000618
+    }
+  }
+}

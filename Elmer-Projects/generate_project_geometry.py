@@ -1089,6 +1089,22 @@ def build(write_mesh: bool = True) -> None:
     elmer_overrides = raw_project.get("elmer_overrides", {})
 
     stycast_boxes: dict[str, Box] = {}
+    stycast_layer_boxes: dict[str, list[Box]] = {}
+    # The historical conformal contact mesh represented the 20 um Stycast
+    # thickness with one tetrahedral layer.  That is too coarse for the
+    # ~80 us Stycast diffusion time.  Keep the contact footprint and all
+    # surrounding geometry unchanged, but allow the Stycast solid itself to
+    # be split into equal-z OCC volumes so Gmsh creates a conformal layered
+    # mesh without introducing mortar interfaces.
+    mesh_options = raw_project.get("mesh", {})
+    stycast_layers = int(
+        elmer_overrides.get(
+            "stycast_layers",
+            mesh_options.get("stycast_layers", 1),
+        )
+    )
+    if stycast_layers < 1:
+        raise ValueError(f"stycast_layers must be >= 1, got {stycast_layers}")
     for suffix in sides:
         if suffix == "":
             stycast_boxes[suffix] = Box(
@@ -1126,7 +1142,39 @@ def build(write_mesh: bool = True) -> None:
                 group_name=f"Stycast{suffix}",
             )
     for suffix in sides:
-        spec.boxes.insert(2, stycast_boxes[suffix])
+        total = stycast_boxes[suffix]
+        dz_layer = float(total.dz) / stycast_layers
+        layers: list[Box] = []
+        for layer_index in range(stycast_layers):
+            layer_name = (
+                total.name
+                if layer_index == 0
+                else f"{total.name}__layer_{layer_index + 1}"
+            )
+            layers.append(
+                Box(
+                    name=layer_name,
+                    uid=f"{total.uid}__layer_{layer_index + 1}",
+                    x=total.x,
+                    y=total.y,
+                    z=total.zmin + (layer_index + 0.5) * dz_layer,
+                    dx=total.dx,
+                    dy=total.dy,
+                    dz=dz_layer,
+                    kind=total.kind,
+                    body_name=total.body_name,
+                    group_name=total.group_name,
+                    body_mode="add",
+                    group_mode="add",
+                    priority=total.priority,
+                )
+            )
+        stycast_layer_boxes[suffix] = layers
+        # Insert the layers as one semantic Stycast body.  Adjacent OCC
+        # cylinders share their z faces after the contact fragmentation pass,
+        # so the resulting Elmer mesh remains node-conformal.
+        for layer in reversed(layers):
+            spec.boxes.insert(2, layer)
 
     membrane_names = {f"Membrane{suffix}" for suffix in sides}
     spec.boxes = [box for box in spec.boxes if box.name not in membrane_names]
@@ -1223,7 +1271,7 @@ def build(write_mesh: bool = True) -> None:
     for suffix in sides:
         spec.add_physical_volume(
             name=f"Stycast{suffix}",
-            primitive_names=[f"Stycast{suffix}"],
+            primitive_names=[box.name for box in stycast_layer_boxes[suffix]],
             tag=expected_tags[f"Stycast{suffix}"],
             uid=stycast_boxes[suffix].uid,
         )
@@ -1261,12 +1309,36 @@ def build(write_mesh: bool = True) -> None:
         membrane_sinx = membrane_sinx_boxes[suffix]
         name_prefix = f"Membrane_SiNx{suffix}"
 
-        _add_all_box_surfaces(
-            spec,
-            box_name=f"Stycast{suffix}",
-            box_uid=stycast.uid,
-            base_tag=face_bases[f"Stycast{suffix}"],
-        )
+        if len(stycast_layer_boxes[suffix]) == 1:
+            _add_all_box_surfaces(
+                spec,
+                box_name=f"Stycast{suffix}",
+                box_uid=stycast.uid,
+                base_tag=face_bases[f"Stycast{suffix}"],
+            )
+        else:
+            # Only the external z faces are semantic contact faces.  The
+            # lateral faces are internal/free geometry and are not used by
+            # the no-mortar transient case.
+            first_layer = stycast_layer_boxes[suffix][0]
+            last_layer = stycast_layer_boxes[suffix][-1]
+            base_tag = face_bases[f"Stycast{suffix}"]
+            spec.add_physical_surface(
+                name=f"Stycast{suffix}__zmin",
+                selector="box_surface",
+                tag=base_tag + 4,
+                uid=f"{first_layer.uid}__zmin",
+                box_name=first_layer.name,
+                surface="zmin",
+            )
+            spec.add_physical_surface(
+                name=f"Stycast{suffix}__zmax",
+                selector="box_surface",
+                tag=base_tag + 5,
+                uid=f"{last_layer.uid}__zmax",
+                box_name=last_layer.name,
+                surface="zmax",
+            )
         _add_all_box_surfaces(
             spec,
             box_name=f"Membrane_Si1{suffix}",

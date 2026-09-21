@@ -1,0 +1,40 @@
+{
+  "definition": {
+    "pulse_start_ms": 20.02,
+    "baseline_window_ms": [
+      19.5,
+      20.02
+    ],
+    "response": "pre-pulse baseline current minus current",
+    "rise_time": "10% to 90% of the peak current drop; crossings are linearly interpolated"
+  },
+  "comsol": {
+    "model": "COMSOL Single-Pixel",
+    "baseline_current_uA": 143.05504935387577,
+    "minimum_current_uA": 135.2802056863975,
+    "peak_current_drop_uA": 7.7748436674782795,
+    "peak_time_ms": 20.448,
+    "peak_delay_from_pulse_ms": 0.4280000000000008,
+    "t10_ms": 20.061742791264848,
+    "t90_ms": 20.223183008862623,
+    "rise_time_10_90_ms": 0.16144021759777516
+  },
+  "elmer": {
+    "model": "Elmer mesh_refined_3x mortar",
+    "baseline_current_uA": 148.15998070274492,
+    "minimum_current_uA": 148.15961629858714,
+    "peak_current_drop_uA": 0.00036440415777860835,
+    "peak_time_ms": 20.02001165871881,
+    "peak_delay_from_pulse_ms": 1.1658718811702329e-05,
+    "t10_ms": 0.5497943573094407,
+    "t90_ms": 0.5519415223980333,
+    "rise_time_10_90_ms": 0.002147165088592584
+  },
+  "elmer_minus_comsol": {
+    "baseline_current_uA_error_percent": 3.5685083273370224,
+    "minimum_current_uA_error_percent": 9.520543339538015,
+    "peak_current_drop_uA_error_percent": -99.99531303556233,
+    "peak_delay_from_pulse_ms_error_percent": -99.99727600027764,
+    "rise_time_10_90_ms_error_percent": -98.66999368525246
+  }
+}

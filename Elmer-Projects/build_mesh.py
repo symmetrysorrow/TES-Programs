@@ -131,6 +131,11 @@ def main() -> int:
     # top-level `geometry` tree; inject the selected registry entry under that
     # legacy key so they need no changes.
     resolved["geometry"] = geometries_for_geometry_key[geometry_name]
+    if recipe.get("elmer_overrides"):
+        resolved["elmer_overrides"] = {
+            **resolved.get("elmer_overrides", {}),
+            **recipe["elmer_overrides"],
+        }
     resolved_path = ROOT / "generated" / "_mesh_build_input.json"
     resolved_path.parent.mkdir(exist_ok=True)
     resolved_path.write_text(json.dumps(resolved, indent=2) + "\n", encoding="utf-8")
@@ -149,6 +154,18 @@ def main() -> int:
     MESH_ROOT.mkdir(parents=True, exist_ok=True)
     print(f"[2/2] ElmerGrid {' '.join(elmergrid_args)}")
     subprocess.run([ELMERGRID, *elmergrid_args], cwd=ROOT, check=True)
+
+    postprocess = recipe.get("postprocess")
+    if postprocess:
+        script = postprocess.get("script")
+        if not script:
+            raise SystemExit(f"mesh '{args.mesh}' postprocess has no script")
+        print(f"[3/3] mesh postprocess via {script}")
+        subprocess.run(
+            [sys.executable, str(ROOT / script), str(MESH_ROOT / entry["dir"])],
+            cwd=ROOT,
+            check=True,
+        )
 
     write_provenance(args.mesh, entry, project_json, verified=True)
     return 0

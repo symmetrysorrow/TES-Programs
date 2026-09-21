@@ -1,0 +1,432 @@
+{
+  "steady_vs_transient_spec": [
+    {
+      "key": "comparison_time_grid.event_s",
+      "left": null,
+      "right": 0.02002
+    },
+    {
+      "key": "comparison_time_grid.mode",
+      "left": "Phase24 Gate 3 HYPRE steady",
+      "right": "Phase24 mortar Gate 4"
+    },
+    {
+      "key": "comparison_time_grid.purpose",
+      "left": "independent steady current against Stage 11 MUMPS and COMSOL",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.window",
+      "left": null,
+      "right": "40us"
+    },
+    {
+      "key": "inner_circuit_step_commit",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "iteration_series_file",
+      "left": "case_phase24_g3_s32m_s32m2_10f17b_iterations.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv"
+    },
+    {
+      "key": "lumped_mass",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "output_file_path",
+      "left": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.result"
+    },
+    {
+      "key": "output_intervals",
+      "left": 1,
+      "right": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "key": "phase24_smoke.independent_initial_temperature",
+      "left": true,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.memory_trace",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "phase24_smoke.no_mortar",
+      "left": null,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.no_restart",
+      "left": true,
+      "right": null
+    },
+    {
+      "key": "phase24_smoke.no_vtu",
+      "left": true,
+      "right": null
+    },
+    {
+      "key": "phase24_smoke.purpose",
+      "left": "Gate 3 steady qualification",
+      "right": "transient parity and stability"
+    },
+    {
+      "key": "phase24_smoke.restart_reference",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "preexisting_restart",
+      "left": false,
+      "right": true
+    },
+    {
+      "key": "pulse.center",
+      "left": null,
+      "right": "auto"
+    },
+    {
+      "key": "pulse.duration",
+      "left": null,
+      "right": "1[ns]"
+    },
+    {
+      "key": "pulse.energy",
+      "left": null,
+      "right": "1332[keV]"
+    },
+    {
+      "key": "pulse.sigma",
+      "left": null,
+      "right": "50[um]"
+    },
+    {
+      "key": "pulse.start",
+      "left": null,
+      "right": "20.02[ms]"
+    },
+    {
+      "key": "restart_file_base",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "restart_file_path",
+      "left": null,
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result"
+    },
+    {
+      "key": "restart_time",
+      "left": null,
+      "right": 0.02
+    },
+    {
+      "key": "series_file",
+      "left": "case_phase24_g3_s32m_s32m2_10f17b_series.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv"
+    },
+    {
+      "key": "solver.hypre_gmres_dimension",
+      "left": 100,
+      "right": null
+    },
+    {
+      "key": "solver.linear_system",
+      "left": "iterative_hypre_flexgmres_boomeramg",
+      "right": "mumps"
+    },
+    {
+      "key": "solver.linear_system_convergence_tolerance",
+      "left": 2e-06,
+      "right": null
+    },
+    {
+      "key": "solver.linear_system_max_iterations",
+      "left": 10000,
+      "right": null
+    },
+    {
+      "key": "solver.steady_state_convergence_tolerance",
+      "left": 1e-08,
+      "right": 1e-09
+    },
+    {
+      "key": "solver_comment",
+      "left": "Phase24 Gate 3: independent initial-T0 HYPRE steady solve; mesh_singlepixel_gpu_fine_stycast32_mortar without mortar",
+      "right": "Phase24 Gate 4: mortar transient; backend=mumps; window=40us"
+    },
+    {
+      "key": "state_file",
+      "left": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.state",
+      "right": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state"
+    },
+    {
+      "key": "template",
+      "left": "steady",
+      "right": "pulse"
+    },
+    {
+      "key": "timesteps",
+      "left": null,
+      "right": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          47
+        ]
+      ]
+    }
+  ],
+  "old_good_vs_transient_spec": [
+    {
+      "key": "apply_mortar_bcs",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "comparison_time_grid.event_s",
+      "left": null,
+      "right": 0.02002
+    },
+    {
+      "key": "comparison_time_grid.mesh",
+      "left": null,
+      "right": "mesh_singlepixel_gpu_fine_stycast32_mortar"
+    },
+    {
+      "key": "comparison_time_grid.mode",
+      "left": "Phase23 nonlinear coupling tolerance probe",
+      "right": "Phase24 mortar Gate 4"
+    },
+    {
+      "key": "comparison_time_grid.mortar",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "comparison_time_grid.only_changed_factor",
+      "left": "nonlinear_convergence_tolerance 3e-7 -> 1e-8; max_iterations 25 -> 120",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.reference_case",
+      "left": "case_p19_pulse_time5us",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.time_step",
+      "left": "5[us]",
+      "right": null
+    },
+    {
+      "key": "comparison_time_grid.window",
+      "left": null,
+      "right": "40us"
+    },
+    {
+      "key": "iteration_series_file",
+      "left": "case_p19_pulse_phase23_tight_iterations.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv"
+    },
+    {
+      "key": "mesh",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "right": "mesh_singlepixel_gpu_fine_stycast32_mortar"
+    },
+    {
+      "key": "output_file_path",
+      "left": null,
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.result"
+    },
+    {
+      "key": "output_intervals",
+      "left": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "right": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "key": "output_result",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "phase24_smoke.independent_initial_temperature",
+      "left": null,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.memory_trace",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "phase24_smoke.no_mortar",
+      "left": null,
+      "right": false
+    },
+    {
+      "key": "phase24_smoke.purpose",
+      "left": null,
+      "right": "transient parity and stability"
+    },
+    {
+      "key": "phase24_smoke.restart_reference",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "preexisting_restart",
+      "left": null,
+      "right": true
+    },
+    {
+      "key": "restart_file_base",
+      "left": null,
+      "right": "case_phase24_g3_s32m_s32m2_10f17b"
+    },
+    {
+      "key": "restart_file_path",
+      "left": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "right": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result"
+    },
+    {
+      "key": "restart_from",
+      "left": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "right": null
+    },
+    {
+      "key": "series_file",
+      "left": "case_p19_pulse_phase23_tight_series.csv",
+      "right": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv"
+    },
+    {
+      "key": "solver_comment",
+      "left": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "right": "Phase24 Gate 4: mortar transient; backend=mumps; window=40us"
+    },
+    {
+      "key": "state_file",
+      "left": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "right": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state"
+    },
+    {
+      "key": "timesteps",
+      "left": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "10[us]",
+          9
+        ],
+        [
+          "5[us]",
+          100
+        ]
+      ],
+      "right": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          47
+        ]
+      ]
+    }
+  ]
+}

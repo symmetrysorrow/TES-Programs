@@ -1,0 +1,679 @@
+{
+  "steady": {
+    "case": "case_phase24_g3_s32m_s32m2_10f17b",
+    "project": "artifacts\\phase24_gate3_hypre_steady_s32m2\\phase24_gate3_hypre_steady.json",
+    "project_sha256": "aeefe16d03408cad76f4be7e8702aa9466ec79fa9b6e410d28e4a0cdacfd1730",
+    "spec": {
+      "template": "steady",
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "heat_source": "circuit_inner",
+      "initial_temperature": "T_0",
+      "output_result": true,
+      "vtu": false,
+      "steady_state_max_iterations": 1,
+      "output_intervals": 1,
+      "apply_mortar_bcs": true,
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-08,
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 10000,
+        "linear_system_convergence_tolerance": 2e-06,
+        "hypre_gmres_dimension": 100
+      },
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.state",
+      "series_file": "case_phase24_g3_s32m_s32m2_10f17b_series.csv",
+      "iteration_series_file": "case_phase24_g3_s32m_s32m2_10f17b_iterations.csv",
+      "output_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "restart_from": null,
+      "restart_file_path": null,
+      "preexisting_restart": false,
+      "restart_file_base": null,
+      "solver_comment": "Phase24 Gate 3: independent initial-T0 HYPRE steady solve; mesh_singlepixel_gpu_fine_stycast32_mortar without mortar",
+      "comparison_time_grid": {
+        "mode": "Phase24 Gate 3 HYPRE steady",
+        "purpose": "independent steady current against Stage 11 MUMPS and COMSOL",
+        "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+        "mortar": true
+      },
+      "phase24_smoke": {
+        "purpose": "Gate 3 steady qualification",
+        "independent_initial_temperature": true,
+        "no_restart": true,
+        "no_vtu": true
+      }
+    },
+    "sif": "generated\\cases\\case_phase24_g3_s32m_s32m2_10f17b.sif",
+    "sif_sha256": "923731f3a1a47ac0f77a24728d9928eb008d071d1165c86e8fec96c378d48e70",
+    "sif_values": {
+      "TES State File": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.state",
+      "TES Bias Current": "0.000715",
+      "TES Shunt Resistance": "0.0039",
+      "TES R0": "0.015527",
+      "TES Rmin": "1e-06",
+      "TES Alpha": "256.46",
+      "TES Beta": "5.03",
+      "TES I0": "0.000143537344932311",
+      "TES Tc": "0.1709",
+      "TES T0": "0.16857",
+      "TES Volume": "4e-14",
+      "TES Inductance": "1.23e-08",
+      "Apply Mortar BCs": "True"
+    },
+    "manifest": "results\\case_phase24_g3_s32m_s32m2_10f17b\\manifest.json",
+    "manifest_sha256": "b047dfeae77db4984ad2efd97bb8620fc9910fea7705daa5e370c10c7f7692bb",
+    "manifest_data": {
+      "case": "case_phase24_g3_s32m_s32m2_10f17b",
+      "started": "2026-09-19T17:06:05",
+      "finished": "2026-09-19T17:08:08",
+      "exit_code": 0,
+      "inputs_sha256": {
+        "phase24_gate3_hypre_steady.json": "aeefe16d03408cad76f4be7e8702aa9466ec79fa9b6e410d28e4a0cdacfd1730",
+        "case_phase24_g3_s32m_s32m2_10f17b.sif": "923731f3a1a47ac0f77a24728d9928eb008d071d1165c86e8fec96c378d48e70",
+        "mesh.header": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2",
+        "tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+        "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+      },
+      "preexisting_restart_inputs_sha256": {},
+      "runtime_sif": null,
+      "runtime_sif_sha256": "923731f3a1a47ac0f77a24728d9928eb008d071d1165c86e8fec96c378d48e70",
+      "runtime_override_applied": false,
+      "udf_applied": false,
+      "udf_dll": null,
+      "udf_sha256": null,
+      "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin\\ElmerSolver.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i",
+      "runtime_bin": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin",
+      "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+      "amgx_config": null,
+      "amgx_config_sha256": null,
+      "runtime_artifacts_sha256": {
+        "solver": "87e687d44a8846da7fb3462130c2bdd4a47904319d899d7a8c0d6ece06186023",
+        "libelmersolver": "70952c4cfca3881fac2d37e89a74e5468b6976aeb4a32f8be2214ba515312a78",
+        "HeatSolve": "3bcd114f2813fdcf5eb9b40b189647e9cedd1b0008782c83ecb078737183ca94"
+      },
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "restart_from": null,
+      "collected_outputs": [
+        "case_phase24_g3_s32m_s32m2_10f17b_iterations.csv"
+      ],
+      "result_file": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g3_s32m_s32m2_10f17b.result",
+      "convergence_tail": [
+        "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15165713     0.61462370E-05 ) :: heat equation",
+        "ComputeChange: NS (ITER=3) (NRM,RELC): ( 0.15165716     0.16957595E-06 ) :: heat equation",
+        "ComputeChange: NS (ITER=4) (NRM,RELC): ( 0.15165716     0.39939422E-11 ) :: heat equation",
+        "ComputeChange: SS (ITER=1) (NRM,RELC): ( 0.15180284      2.0000000     ) :: heat equation"
+      ],
+      "solver_completed": true,
+      "errors": []
+    },
+    "mesh": {
+      "name": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "dir": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "files": {
+        "mesh.header": {
+          "exists": true,
+          "sha256": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2"
+        },
+        "mesh.nodes": {
+          "exists": true,
+          "sha256": "5729003c17c37ca80f32e0b9782bf5b3bc9d27186dcd156f020f5646ce01c814"
+        },
+        "mesh.elements": {
+          "exists": true,
+          "sha256": "51194b0c536422b40e9a9e70246fd63714ca9f6ca61ae218ee9a60e121d3975e"
+        },
+        "mesh.boundary": {
+          "exists": true,
+          "sha256": "842b3da7e5346c138f4d7abdcf21568ae032754c1a033299bed1639e5e388047"
+        },
+        "mesh.names": {
+          "exists": true,
+          "sha256": "b1423e709355cfbd520bab2fab494970fbb8d11f2528713837e47e8b7119a56b"
+        }
+      }
+    },
+    "restart": {
+      "raw": null,
+      "resolved": null,
+      "exists": false,
+      "sha256": null,
+      "position": null,
+      "time": null
+    },
+    "state": {
+      "path": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g3_s32m_s32m2_10f17b.state",
+      "exists": true,
+      "sha256": "883a5d0c483e22e127fa5b72f9098059a1025bae84bcfda223bcd2cb93de3059",
+      "temperature_K": 0.16856913012087524,
+      "current_A": 0.00014356758901897665,
+      "current_uA": 143.56758901897666,
+      "resistance_ohm": 0.015522907489457227,
+      "power_W": 3.1990625771489585e-10,
+      "previous_current_A": 0.00014356758901897665,
+      "previous_current_uA": 143.56758901897666
+    },
+    "series": {
+      "series": null,
+      "series_sha256": null,
+      "row_count": 0,
+      "first": {},
+      "last": {},
+      "iteration_series": "results\\case_phase24_g3_s32m_s32m2_10f17b\\case_phase24_g3_s32m_s32m2_10f17b_iterations.csv",
+      "iteration_series_sha256": "f751994a5c4a2109baa28a9bcbfe655dd563194e575d7bbcf29bd8dc3972b970",
+      "iteration_row_count": 4,
+      "first_iteration": {
+        "time_s": 1.0,
+        "time_step": 1.0,
+        "nonlinear_iter": 1.0,
+        "tes_temperature_K": 0.16857,
+        "previous_current_A": 0.00014353734493231094,
+        "raw_current_A": 0.00014353734493231094,
+        "tes_resistance_ohm": 0.015526999999999971,
+        "raw_power_W": 3.19902305721902e-10,
+        "residual_W": 0.0,
+        "omega": 0.5,
+        "omega_cap": 0.5,
+        "relaxed_power_W": 3.19902305721902e-10,
+        "tes_temperature_mK": 168.57
+      }
+    }
+  },
+  "transient": {
+    "case": "case_phase24_g45_s32m_40us_mumps_mortar_mumps",
+    "project": "artifacts\\phase24_gate4_5_nomortar\\40us\\mortar\\project.json",
+    "project_sha256": "2148fce760cfbd1d7c2862febe766fbbb9f37e4ed8ce2d95b5b8d554d654d122",
+    "spec": {
+      "template": "pulse",
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "restart_from": null,
+      "restart_time": 0.02,
+      "series_file": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "0.625[us]",
+          47
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "Phase24 Gate 4: mortar transient; backend=mumps; window=40us",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "mumps"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase24 mortar Gate 4",
+        "event_s": 0.02002,
+        "window": "40us",
+        "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+        "mortar": true
+      },
+      "heat_source": "circuit_inner",
+      "iteration_series_file": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv",
+      "output_result": true,
+      "apply_mortar_bcs": true,
+      "restart_file_base": "case_phase24_g3_s32m_s32m2_10f17b",
+      "restart_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "preexisting_restart": true,
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state",
+      "output_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.result",
+      "inner_circuit_step_commit": true,
+      "phase24_smoke": {
+        "purpose": "transient parity and stability",
+        "independent_initial_temperature": false,
+        "restart_reference": "case_phase24_g3_s32m_s32m2_10f17b",
+        "no_mortar": false,
+        "memory_trace": true
+      }
+    },
+    "sif": "generated\\cases\\case_phase24_g45_s32m_40us_mumps_mortar_mumps.sif",
+    "sif_sha256": "dadfe1d21f15074098aa7504ba51568a9a62c324ede25aed9e22dd4c1197e6b8",
+    "sif_values": {
+      "Restart File": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "Restart Position": "0",
+      "Restart Time": "0.02",
+      "TES State File": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state",
+      "TES Bias Current": "0.000715",
+      "TES Shunt Resistance": "0.0039",
+      "TES R0": "0.015527",
+      "TES Rmin": "1e-06",
+      "TES Alpha": "256.46",
+      "TES Beta": "5.03",
+      "TES I0": "0.000143537344932311",
+      "TES Tc": "0.1709",
+      "TES T0": "0.16857",
+      "TES Volume": "4e-14",
+      "TES Inductance": "1.23e-08",
+      "Apply Mortar BCs": "True",
+      "BDF Order": "1",
+      "Pulse Energy": "2.134099276488e-13",
+      "Pulse Duration": "1e-09",
+      "Pulse Transition Zone": "0"
+    },
+    "manifest": "results\\case_phase24_g45_s32m_40us_mumps_mortar_mumps\\manifest.json",
+    "manifest_sha256": "f647282d766af15122abbb5e9e160c7eddc5fcf4d7a46d5270cad98da80ef796",
+    "manifest_data": {
+      "case": "case_phase24_g45_s32m_40us_mumps_mortar_mumps",
+      "started": "2026-09-19T17:34:03",
+      "finished": "2026-09-19T18:05:40",
+      "exit_code": 0,
+      "inputs_sha256": {
+        "project.json": "2148fce760cfbd1d7c2862febe766fbbb9f37e4ed8ce2d95b5b8d554d654d122",
+        "case_phase24_g45_s32m_40us_mumps_mortar_mumps.sif": "dadfe1d21f15074098aa7504ba51568a9a62c324ede25aed9e22dd4c1197e6b8",
+        "mesh.header": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2",
+        "tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+        "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+      },
+      "preexisting_restart_inputs_sha256": {
+        "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g3_s32m_s32m2_10f17b.result": "e6d62c0dcf49247b11bae52edb46af2ef53f37fbd982c7ff854ffd7c870523e1",
+        "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g45_s32m_40us_mumps_mortar_mumps.state": "883a5d0c483e22e127fa5b72f9098059a1025bae84bcfda223bcd2cb93de3059"
+      },
+      "runtime_sif": null,
+      "runtime_sif_sha256": "dadfe1d21f15074098aa7504ba51568a9a62c324ede25aed9e22dd4c1197e6b8",
+      "runtime_override_applied": false,
+      "udf_applied": false,
+      "udf_dll": null,
+      "udf_sha256": null,
+      "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin\\ElmerSolver.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i",
+      "runtime_bin": "D:\\Github\\TES-Programs\\Elmer-Projects\\$i\\bin",
+      "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+      "amgx_config": null,
+      "amgx_config_sha256": null,
+      "runtime_artifacts_sha256": {
+        "solver": "87e687d44a8846da7fb3462130c2bdd4a47904319d899d7a8c0d6ece06186023",
+        "libelmersolver": "70952c4cfca3881fac2d37e89a74e5468b6976aeb4a32f8be2214ba515312a78",
+        "HeatSolve": "3bcd114f2813fdcf5eb9b40b189647e9cedd1b0008782c83ecb078737183ca94"
+      },
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "restart_from": null,
+      "collected_outputs": [
+        "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv",
+        "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv"
+      ],
+      "result_file": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g45_s32m_40us_mumps_mortar_mumps.result",
+      "convergence_tail": [
+        "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15165188     0.59689822E-06 ) :: heat equation",
+        "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15165188     0.39056971E-08 ) :: heat equation",
+        "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.15165179     0.59214650E-06 ) :: heat equation",
+        "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15165179     0.37826372E-08 ) :: heat equation"
+      ],
+      "solver_completed": true,
+      "errors": []
+    },
+    "mesh": {
+      "name": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "dir": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "files": {
+        "mesh.header": {
+          "exists": true,
+          "sha256": "937d2b333f3c00239e02f73a3a2d354b6ad54e0cb631b248103aab0e27b6b3e2"
+        },
+        "mesh.nodes": {
+          "exists": true,
+          "sha256": "5729003c17c37ca80f32e0b9782bf5b3bc9d27186dcd156f020f5646ce01c814"
+        },
+        "mesh.elements": {
+          "exists": true,
+          "sha256": "51194b0c536422b40e9a9e70246fd63714ca9f6ca61ae218ee9a60e121d3975e"
+        },
+        "mesh.boundary": {
+          "exists": true,
+          "sha256": "842b3da7e5346c138f4d7abdcf21568ae032754c1a033299bed1639e5e388047"
+        },
+        "mesh.names": {
+          "exists": true,
+          "sha256": "b1423e709355cfbd520bab2fab494970fbb8d11f2528713837e47e8b7119a56b"
+        }
+      }
+    },
+    "restart": {
+      "raw": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "resolved": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g3_s32m_s32m2_10f17b.result",
+      "exists": true,
+      "sha256": "e6d62c0dcf49247b11bae52edb46af2ef53f37fbd982c7ff854ffd7c870523e1",
+      "position": "0",
+      "time": "0.02"
+    },
+    "state": {
+      "path": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_g45_s32m_40us_mumps_mortar_mumps.state",
+      "exists": true,
+      "sha256": "883a5d0c483e22e127fa5b72f9098059a1025bae84bcfda223bcd2cb93de3059",
+      "temperature_K": 0.16856913012087524,
+      "current_A": 0.00014356758901897665,
+      "current_uA": 143.56758901897666,
+      "resistance_ohm": 0.015522907489457227,
+      "power_W": 3.1990625771489585e-10,
+      "previous_current_A": 0.00014356758901897665,
+      "previous_current_uA": 143.56758901897666
+    },
+    "series": {
+      "series": "results\\case_phase24_g45_s32m_40us_mumps_mortar_mumps\\case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv",
+      "series_sha256": "49df1e19841271ca0c8aefcaa405b0f6223d7e6d6bde1bb1916d219cb3edb1ce",
+      "row_count": 78,
+      "first": {
+        "time_s": 0.020018,
+        "tes_temperature_K": 0.16796057048034457,
+        "tes_current_A": 0.00016515748582292877,
+        "tes_resistance_ohm": 0.012894557570490447,
+        "tes_power_W": 3.5172478396803554e-10,
+        "tes_current_uA": 165.15748582292878,
+        "tes_temperature_mK": 167.9605704803446
+      },
+      "last": {
+        "time_s": 0.02005875100000005,
+        "tes_temperature_K": 0.16748544748177982,
+        "tes_current_A": 0.00018291576104837546,
+        "tes_resistance_ohm": 0.011333479878403996,
+        "tes_power_W": 3.7919756038298585e-10,
+        "tes_current_uA": 182.91576104837546,
+        "tes_temperature_mK": 167.48544748177983
+      },
+      "iteration_series": "results\\case_phase24_g45_s32m_40us_mumps_mortar_mumps\\case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv",
+      "iteration_series_sha256": "b1fafef1e2e9e1b768abe74e9a0a3235a8df986f8fe06741e62d3e606137bed2",
+      "iteration_row_count": 198,
+      "first_iteration": {
+        "time_s": 0.020018,
+        "time_step": 1.0,
+        "nonlinear_iter": 1.0,
+        "tes_temperature_K": 0.16856913012087524,
+        "previous_current_A": 0.00014356758901897665,
+        "raw_current_A": 0.00014356758901897665,
+        "tes_resistance_ohm": 0.015522907489457227,
+        "raw_power_W": 3.1990625771489585e-10,
+        "residual_W": 0.0,
+        "omega": 0.5,
+        "omega_cap": 0.5,
+        "relaxed_power_W": 3.1990625771489585e-10,
+        "tes_temperature_mK": 168.56913012087523
+      }
+    }
+  },
+  "old_good": {
+    "case": "case_p19_pulse_phase23_tight",
+    "project": "elmer_project_hybrid_prism_phase23_pulse_tight.json",
+    "project_sha256": "8306ff59ad107711a41e6f4908079d7022a2eb059321722c1c79d6da40293dc4",
+    "spec": {
+      "template": "pulse",
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "restart_time": 0.02,
+      "series_file": "case_p19_pulse_phase23_tight_series.csv",
+      "iteration_series_file": "case_p19_pulse_phase23_tight_iterations.csv",
+      "state_file": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "initial_temperature": "T_0",
+      "lumped_mass": true,
+      "vtu": false,
+      "timesteps": [
+        [
+          "18[us]",
+          1
+        ],
+        [
+          "1[us]",
+          2
+        ],
+        [
+          "1[ns]",
+          1
+        ],
+        [
+          "10[ns]",
+          10
+        ],
+        [
+          "100[ns]",
+          9
+        ],
+        [
+          "1[us]",
+          9
+        ],
+        [
+          "10[us]",
+          9
+        ],
+        [
+          "5[us]",
+          100
+        ]
+      ],
+      "output_intervals": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "pulse": {
+        "energy": "1332[keV]",
+        "start": "20.02[ms]",
+        "duration": "1[ns]",
+        "sigma": "50[um]",
+        "center": "auto"
+      },
+      "steady_state_max_iterations": 1,
+      "solver_comment": "max iterations 25: headroom for dt-stage boundaries where the coupling loop gain jumps",
+      "solver": {
+        "nonlinear_max_iterations": 120,
+        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1e-09,
+        "linear_system": "mumps"
+      },
+      "comparison_time_grid": {
+        "mode": "Phase23 nonlinear coupling tolerance probe",
+        "reference_case": "case_p19_pulse_time5us",
+        "only_changed_factor": "nonlinear_convergence_tolerance 3e-7 -> 1e-8; max_iterations 25 -> 120",
+        "time_step": "5[us]"
+      },
+      "heat_source": "circuit_inner",
+      "inner_circuit_step_commit": true,
+      "restart_file_path": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result"
+    },
+    "sif": "results\\case_p19_pulse_phase23_tight\\runtime.sif",
+    "sif_sha256": "61081617252ef572a8b38acfb148e696919173328541a759ed1840a7381af969",
+    "sif_values": {
+      "Restart File": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "Restart Position": "0",
+      "Restart Time": "0.02",
+      "TES State File": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/phase19_steady.state",
+      "TES Bias Current": "0.000715",
+      "TES Shunt Resistance": "0.0039",
+      "TES R0": "0.015527",
+      "TES Rmin": "1e-06",
+      "TES Alpha": "256.46",
+      "TES Beta": "5.03",
+      "TES I0": "0.000143537344932311",
+      "TES Tc": "0.1709",
+      "TES T0": "0.16857",
+      "TES Volume": "4e-14",
+      "TES Inductance": "1.23e-08",
+      "Apply Mortar BCs": "True",
+      "BDF Order": "1",
+      "Pulse Energy": "2.134099276488e-13",
+      "Pulse Duration": "1e-09"
+    },
+    "manifest": "results\\case_p19_pulse_phase23_tight\\manifest.json",
+    "manifest_sha256": "677ab4d1c05064b9067a90ef2313a45bf187399eee6ddc8c4a046d1764efa909",
+    "manifest_data": {
+      "case": "case_p19_pulse_phase23_tight",
+      "started": "2026-07-30T18:51:02",
+      "finished": "2026-07-30T19:54:16",
+      "exit_code": 0,
+      "inputs_sha256": {
+        "elmer_project_hybrid_prism_phase23_pulse_tight.json": "8306ff59ad107711a41e6f4908079d7022a2eb059321722c1c79d6da40293dc4",
+        "case_p19_pulse_phase23_tight.sif": "c30a1692650afa7ce166b862e95dcedcecd25d5cbe1b71d15191a9c607d170da",
+        "mesh.header": "9e6fcfaf0f6095485eefd6e3b24c3adea113f5a234be65b8d11e17f4d23c5d6a",
+        "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+      },
+      "preexisting_restart_inputs_sha256": {},
+      "runtime_sif": "results\\case_p19_pulse_phase23_tight\\runtime.sif",
+      "runtime_sif_sha256": "61081617252ef572a8b38acfb148e696919173328541a759ed1840a7381af969",
+      "udf_applied": true,
+      "udf_dll": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\hybrid_prism_diagnostics\\phase13_udf\\tes_transient_heat_source_t0.dll",
+      "udf_sha256": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b",
+      "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit\\bin\\ElmerSolver.exe",
+      "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-phase13-step-commit",
+      "runtime_bin": "C:\\msys64\\ucrt64\\bin",
+      "runtime_artifacts_sha256": {
+        "solver": "7395c46861bf511ca0401363ed7b26202221b412c3c5fa339a97405895a829fc",
+        "libelmersolver": "339425d9ce503e6d5e6e324ea22c092b72d4d01a06fd1438837b9d52b7104c78",
+        "HeatSolve": "10310fb25624e575ecd617ef0cdb896483884394370891c8d4a2bc7617d684a7",
+        "udf": "24052efd5824927bc1646891093a307545e5340e08ab6d972b9efe808c17315b"
+      },
+      "mesh": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "restart_from": "case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight",
+      "collected_outputs": [
+        "case_p19_pulse_phase23_tight_iterations.csv",
+        "case_p19_pulse_phase23_tight_series.csv"
+      ],
+      "result_file": null,
+      "convergence_tail": [
+        "ComputeChange: NS (ITER=3) (NRM,RELC): ( 0.16174352     0.58982797E-09 ) :: heat equation",
+        "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16174335     0.11042226E-05 ) :: heat equation",
+        "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16174334     0.18923357E-07 ) :: heat equation",
+        "ComputeChange: NS (ITER=3) (NRM,RELC): ( 0.16174334     0.70914476E-09 ) :: heat equation"
+      ],
+      "errors": []
+    },
+    "mesh": {
+      "name": "mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "dir": "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend",
+      "files": {
+        "mesh.header": {
+          "exists": true,
+          "sha256": "9e6fcfaf0f6095485eefd6e3b24c3adea113f5a234be65b8d11e17f4d23c5d6a"
+        },
+        "mesh.nodes": {
+          "exists": true,
+          "sha256": "642276adb01d358b7392a7c7d705e2fdc654057088f9fcad6a69593bb6078783"
+        },
+        "mesh.elements": {
+          "exists": true,
+          "sha256": "deda84b6d2638efdeb664e869b9b35f98e8e86fd64911fb65f6e30729e57683f"
+        },
+        "mesh.boundary": {
+          "exists": true,
+          "sha256": "c9535a8c391bbf1c0c4ac1f113075d7bd1d88397b411e9977b78e52370b41fdb"
+        },
+        "mesh.names": {
+          "exists": true,
+          "sha256": "0647661654e7a46bf0074b42bccf5996f2affd3a10d5e24ed2c5195ba0357acb"
+        }
+      }
+    },
+    "restart": {
+      "raw": "../work/meshes/mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend/case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "resolved": "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend\\case_tes_steady_hybrid_prism_stack17_abs35r50_noextend_inner_1rank_tight.result",
+      "exists": true,
+      "sha256": "8ab061806707bdbfe36881a97ac6b106b6a068d7ed5e288a5d7471df3615b265",
+      "position": "0",
+      "time": "0.02"
+    },
+    "state": {
+      "path": "work\\meshes\\mesh_hybrid_abs_tet_layers_prism_stack17_abs35r50_noextend\\phase19_steady.state",
+      "exists": true,
+      "sha256": "04a9fa51c0641b0bbe2544f0c60e1998111d388a7202e1a45b515e4344093f7f",
+      "temperature_K": 0.1684606304137994,
+      "current_A": 0.00014735951116912128,
+      "current_uA": 147.35951116912128,
+      "resistance_ohm": 0.015023108375405103,
+      "power_W": 3.2621602866492174e-10,
+      "previous_current_A": 0.00014735951116912128,
+      "previous_current_uA": 147.35951116912128
+    },
+    "series": {
+      "series": "results\\case_p19_pulse_phase23_tight\\case_p19_pulse_phase23_tight_series.csv",
+      "series_sha256": "e03be9cfe53294c13301aa94b86181a6ca4745f79dd024209fcfd334f2f4ebc0",
+      "row_count": 140,
+      "first": {
+        "time_s": 0.020018,
+        "tes_temperature_K": 0.16845976178105068,
+        "tes_current_A": 0.00014736363976287727,
+        "tes_resistance_ohm": 0.015004835478289485,
+        "tes_power_W": 3.25845642313638e-10,
+        "tes_current_uA": 147.36363976287726,
+        "tes_temperature_mK": 168.45976178105067
+      },
+      "last": {
+        "time_s": 0.02061500100000017,
+        "tes_temperature_K": 0.16868315732122835,
+        "tes_current_A": 0.00013962499451122164,
+        "tes_resistance_ohm": 0.016071297051271735,
+        "tes_power_W": 3.1331217140754917e-10,
+        "tes_current_uA": 139.62499451122164,
+        "tes_temperature_mK": 168.68315732122835
+      },
+      "iteration_series": "results\\case_p19_pulse_phase23_tight\\case_p19_pulse_phase23_tight_iterations.csv",
+      "iteration_series_sha256": "6e6300a5bc344516601be36057467a021d90864358cc8c993daf1d4f8b1294e0",
+      "iteration_row_count": 589,
+      "first_iteration": {
+        "time_s": 0.020018,
+        "time_step": 1.0,
+        "nonlinear_iter": 1.0,
+        "tes_temperature_K": 0.16857,
+        "previous_current_A": 0.00014353734493231094,
+        "raw_current_A": 0.00014353734493231094,
+        "tes_resistance_ohm": 0.015526999999999971,
+        "raw_power_W": 3.19902305721902e-10,
+        "residual_W": 0.0,
+        "omega": 0.5,
+        "omega_cap": 0.5,
+        "relaxed_power_W": 3.19902305721902e-10,
+        "tes_temperature_mK": 168.57
+      }
+    }
+  }
+}

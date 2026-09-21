@@ -1,0 +1,81 @@
+{
+  "generated_utc": "2026-09-16T07:30:49.776075+00:00",
+  "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_max_iterations_diagnostic_1us\\phase24_hypre_max_iterations_diagnostic.json",
+  "tolerance": 1e-08,
+  "max_iterations": 10000,
+  "run": {
+    "command": [
+      "C:\\Users\\symme\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+      "case_phase24_short_hypre_tol1e8_max10000_1us",
+      "--project",
+      "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_hypre_max_iterations_diagnostic_1us\\phase24_hypre_max_iterations_diagnostic.json",
+      "--skip-sync",
+      "--elmer-solver",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver_mpi.exe",
+      "--runtime-bin",
+      "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\lib\\elmersolver",
+      "--toolchain-bin",
+      "C:\\msys64\\ucrt64\\bin",
+      "--mpi-procs",
+      "1"
+    ],
+    "started": "2026-09-16T07:26:58.782717+00:00",
+    "finished": "2026-09-16T07:30:49.775427+00:00",
+    "elapsed_seconds": 230.99272999999812,
+    "exit_code": 1,
+    "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_max10000_1us\\max_iterations_diagnostic_launcher.log"
+  },
+  "solver_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_max10000_1us\\solver.log",
+  "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_short_hypre_tol1e8_max10000_1us\\case_phase24_short_hypre_tol1e8_max10000_1us_series.csv",
+  "audit": {
+    "solver_log_exists": true,
+    "all_done": false,
+    "stop_1": 1,
+    "telemetry_records": [
+      {
+        "phase": "backend_status",
+        "method": 901,
+        "solve_status": 256,
+        "iterations": 10000,
+        "final_relative_residual": 1.4565552596879816e-07,
+        "requested_tolerance": 1e-08,
+        "max_iterations": 10000,
+        "matrix_epoch": 2,
+        "preconditioner_epoch": 2,
+        "case": 0,
+        "hypre_error": 256,
+        "hypre_global_error": 256
+      },
+      {
+        "phase": "backend_status",
+        "method": 901,
+        "solve_status": 256,
+        "iterations": 10000,
+        "final_relative_residual": 1.2678624053027087e-07,
+        "requested_tolerance": 1e-08,
+        "max_iterations": 10000,
+        "matrix_epoch": 2,
+        "preconditioner_epoch": 2,
+        "case": 3,
+        "hypre_error": 256,
+        "hypre_global_error": 256
+      }
+    ],
+    "telemetry_missing": false,
+    "required_iterations": [],
+    "required_residuals": []
+  },
+  "comparisons": {
+    "tol1e8_vs_cpu": {
+      "status": "skipped",
+      "reason": "input series missing",
+      "output": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol1e8_max10000_vs_cpu_1us"
+    },
+    "tol1e8_vs_tol5e7": {
+      "status": "skipped",
+      "reason": "input series missing",
+      "output": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\comparison\\phase24_hypre_tol1e8_max10000_vs_tol5e7_1us"
+    }
+  }
+}

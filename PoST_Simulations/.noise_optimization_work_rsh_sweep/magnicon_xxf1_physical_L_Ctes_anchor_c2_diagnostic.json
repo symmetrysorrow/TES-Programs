@@ -1,0 +1,1346 @@
+{
+  "diagnostic_only": true,
+  "production_noise_model_unchanged": true,
+  "tested_question": "After fixing both L and C_tes to independently motivated physical scales, does a material and cross-day-repeatable c2 residual remain?",
+  "physical_anchors": {
+    "L_H": 1e-10,
+    "C_tes_material_J_per_K": 7.8475e-13,
+    "C_tes_material_source": "Opt_noise.C_TES_MATERIAL_J_PER_K",
+    "C_tes_material_source_semantics": "TES bilayer geometry x density x specific heat; independent of the noise fit but not direct calorimetry",
+    "C_tes_sensitivity_multipliers": [
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "primary_C_tes_multiplier": 1.0,
+    "sensitivity_grid_is_not_uncertainty_interval": true
+  },
+  "magnicon_fixed_model": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "pole_Hz": 9999.999999999998,
+    "pole_Q": 0.5773502691896258,
+    "c4": 0.0
+  },
+  "fit_semantics": {
+    "L": "fixed externally; not optimized",
+    "C_tes": "fixed to each material-estimate sensitivity row",
+    "remaining_detector_nuisance": "alpha, beta, T_bath optimized independently per day",
+    "white_floor": "profiled independently per day",
+    "nested_test": "c2=0 versus c2 free with identical physical anchors, Magnicon transfer, nuisance freedoms, and white profiling"
+  },
+  "sensitivity_rows": {
+    "0.25x": {
+      "C_tes_multiplier": 0.25,
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 1.961875e-13,
+      "reference_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 1.961875e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 47.19018545904538,
+          "equivalent_first_order_zero_Hz": 5822.830514553204,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.943579327231595e-11,
+          "detector_candidate": {
+            "alpha": 199.99953686266701,
+            "beta": 0.3395331646453972,
+            "T_bath": 0.21770195271466872
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99953686266701,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 0.3395331646453972,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195271466872,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 47.19018545904538,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.629050447154559,
+          "continuum_1_40k_rms_dB": 0.6388480545886587,
+          "continuum_40_200k_rms_dB": 0.6060774432484121,
+          "shape_score": 0.002227974400813345
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.9370406192715735e-11,
+          "detector_candidate": {
+            "alpha": 199.99998635776055,
+            "beta": 1.0091236314699854,
+            "T_bath": 0.21770195621067537
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99998635776055,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.0091236314699854,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195621067537,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 3.854507156490504,
+          "continuum_1_40k_rms_dB": 3.882254482094804,
+          "continuum_40_200k_rms_dB": 3.7903662279880552,
+          "shape_score": 0.15057853461915754
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.01479609564834939,
+            "continuum_rms_improvement_dB": 3.225456709335945,
+            "continuum_1_40k_rms_improvement_dB": 3.2434064275061454,
+            "continuum_40_200k_rms_improvement_dB": 3.184288784739643
+          },
+          "c2_free_rms_dB": 0.629050447154559,
+          "c2_zero_rms_dB": 3.854507156490504,
+          "c2_free_1_40k_rms_dB": 0.6388480545886587,
+          "c2_zero_1_40k_rms_dB": 3.882254482094804,
+          "c2_free_40_200k_rms_dB": 0.6060774432484121,
+          "c2_zero_40_200k_rms_dB": 3.7903662279880552
+        }
+      },
+      "repeat_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 1.961875e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 45.79063030596387,
+          "equivalent_first_order_zero_Hz": 5911.145923184562,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.946478786118816e-11,
+          "detector_candidate": {
+            "alpha": 199.99986131862008,
+            "beta": 0.4157859844306451,
+            "T_bath": 0.21770195548238822
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99986131862008,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 0.4157859844306451,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195548238822,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 45.79063030596387,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.6219958262789687,
+          "continuum_1_40k_rms_dB": 0.3364413968921608,
+          "continuum_40_200k_rms_dB": 1.0059917964339593,
+          "shape_score": 0.0019782512213967016
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 4.1060798487503644e-11,
+          "detector_candidate": {
+            "alpha": 199.9998693524938,
+            "beta": 1.1327433183821496,
+            "T_bath": 0.21770195617127613
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.9998693524938,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.1327433183821496,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195617127613,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 3.9186815951566616,
+          "continuum_1_40k_rms_dB": 3.965033179036059,
+          "continuum_40_200k_rms_dB": 3.8106933964772436,
+          "shape_score": 0.1558680947058864
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.012691829108000206,
+            "continuum_rms_improvement_dB": 3.296685768877693,
+            "continuum_1_40k_rms_improvement_dB": 3.628591782143898,
+            "continuum_40_200k_rms_improvement_dB": 2.804701600043284
+          },
+          "c2_free_rms_dB": 0.6219958262789687,
+          "c2_zero_rms_dB": 3.9186815951566616,
+          "c2_free_1_40k_rms_dB": 0.3364413968921608,
+          "c2_zero_1_40k_rms_dB": 3.965033179036059,
+          "c2_free_40_200k_rms_dB": 1.0059917964339593,
+          "c2_zero_40_200k_rms_dB": 3.8106933964772436
+        }
+      },
+      "cross_day_c2": {
+        "reference_c2": 47.19018545904538,
+        "repeat_c2": 45.79063030596387,
+        "symmetric_fractional_difference": 0.030104170232676995
+      },
+      "cross_day_c2_free_transfer": {
+        "semantics": "repeat/reference c2-free readout transfer, each normalized at 1000 Hz",
+        "full_1_200k": {
+          "mean_difference_dB": -0.08302096718867241,
+          "rms_difference_dB": 0.0956396332642224,
+          "max_abs_difference_dB": 0.12694660378483272
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_difference_dB": -0.01732130955568748,
+            "rms_difference_dB": 0.022868278903743013,
+            "max_abs_difference_dB": 0.05117479881585251
+          },
+          "5000-15000_Hz": {
+            "mean_difference_dB": -0.08403978364356168,
+            "rms_difference_dB": 0.0857985787373287,
+            "max_abs_difference_dB": 0.10953213593495283
+          },
+          "15000-40000_Hz": {
+            "mean_difference_dB": -0.11896396016294943,
+            "rms_difference_dB": 0.11903646741930718,
+            "max_abs_difference_dB": 0.12426988846502598
+          },
+          "40000-100000_Hz": {
+            "mean_difference_dB": -0.12578207332139296,
+            "rms_difference_dB": 0.12578376514050638,
+            "max_abs_difference_dB": 0.126606500536787
+          },
+          "100000-200000_Hz": {
+            "mean_difference_dB": -0.12681687666313182,
+            "rms_difference_dB": 0.12681691285593474,
+            "max_abs_difference_dB": 0.12694660378483272
+          }
+        }
+      },
+      "transfer_repeatability_passes": true,
+      "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual"
+    },
+    "0.5x": {
+      "C_tes_multiplier": 0.5,
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 3.92375e-13,
+      "reference_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 3.92375e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 172.63468100946397,
+          "equivalent_first_order_zero_Hz": 3044.359726040708,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.93624133462704e-11,
+          "detector_candidate": {
+            "alpha": 199.99719792975665,
+            "beta": 0.3489042198172019,
+            "T_bath": 0.21770195563280467
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99719792975665,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.3489042198172019,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195563280467,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 172.63468100946397,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.783128135406998,
+          "continuum_1_40k_rms_dB": 0.835481904715118,
+          "continuum_40_200k_rms_dB": 0.6478655584647879,
+          "shape_score": 0.003677336029717969
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.494613772211612e-11,
+          "detector_candidate": {
+            "alpha": 199.99993848945542,
+            "beta": 1.3570411866417817,
+            "T_bath": 0.21770195603589765
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99993848945542,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.3570411866417817,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195603589765,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 5.0543135806150215,
+          "continuum_1_40k_rms_dB": 5.258944317823973,
+          "continuum_40_200k_rms_dB": 4.5525363717887695,
+          "shape_score": 0.262922110463284
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.013986408458528991,
+            "continuum_rms_improvement_dB": 4.271185445208023,
+            "continuum_1_40k_rms_improvement_dB": 4.423462413108855,
+            "continuum_40_200k_rms_improvement_dB": 3.904670813323982
+          },
+          "c2_free_rms_dB": 0.783128135406998,
+          "c2_zero_rms_dB": 5.0543135806150215,
+          "c2_free_1_40k_rms_dB": 0.835481904715118,
+          "c2_zero_1_40k_rms_dB": 5.258944317823973,
+          "c2_free_40_200k_rms_dB": 0.6478655584647879,
+          "c2_zero_40_200k_rms_dB": 4.5525363717887695
+        }
+      },
+      "repeat_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 3.92375e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 161.25430906675683,
+          "equivalent_first_order_zero_Hz": 3149.9548361582392,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.923917555726424e-11,
+          "detector_candidate": {
+            "alpha": 199.99987018698744,
+            "beta": 0.4324277188024528,
+            "T_bath": 0.21770195611798673
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99987018698744,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 0.4324277188024528,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195611798673,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 161.25430906675683,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.7983906292667816,
+          "continuum_1_40k_rms_dB": 0.6521037555831269,
+          "continuum_40_200k_rms_dB": 1.0592913266020871,
+          "shape_score": 0.003640875993533047
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.6690630757501076e-11,
+          "detector_candidate": {
+            "alpha": 199.99998286206642,
+            "beta": 1.5074469144940954,
+            "T_bath": 0.21770195616348906
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99998286206642,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.5074469144940954,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195616348906,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 5.075317653858838,
+          "continuum_1_40k_rms_dB": 5.290188071956947,
+          "continuum_40_200k_rms_dB": 4.546591150899984,
+          "shape_score": 0.2648235709735525
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.01374830790230774,
+            "continuum_rms_improvement_dB": 4.276927024592057,
+            "continuum_1_40k_rms_improvement_dB": 4.63808431637382,
+            "continuum_40_200k_rms_improvement_dB": 3.487299824297897
+          },
+          "c2_free_rms_dB": 0.7983906292667816,
+          "c2_zero_rms_dB": 5.075317653858838,
+          "c2_free_1_40k_rms_dB": 0.6521037555831269,
+          "c2_zero_1_40k_rms_dB": 5.290188071956947,
+          "c2_free_40_200k_rms_dB": 1.0592913266020871,
+          "c2_zero_40_200k_rms_dB": 4.546591150899984
+        }
+      },
+      "cross_day_c2": {
+        "reference_c2": 172.63468100946397,
+        "repeat_c2": 161.25430906675683,
+        "symmetric_fractional_difference": 0.06816859663512241
+      },
+      "cross_day_c2_free_transfer": {
+        "semantics": "repeat/reference c2-free readout transfer, each normalized at 1000 Hz",
+        "full_1_200k": {
+          "mean_difference_dB": -0.20213170298315364,
+          "rms_difference_dB": 0.220387313640088,
+          "max_abs_difference_dB": 0.2681244468096218
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_difference_dB": -0.08085761402569255,
+            "rms_difference_dB": 0.09914088208775663,
+            "max_abs_difference_dB": 0.18581006521578053
+          },
+          "5000-15000_Hz": {
+            "mean_difference_dB": -0.23010358562323002,
+            "rms_difference_dB": 0.2309746777041126,
+            "max_abs_difference_dB": 0.25594862413802105
+          },
+          "15000-40000_Hz": {
+            "mean_difference_dB": -0.26277717842494785,
+            "rms_difference_dB": 0.2627933685645884,
+            "max_abs_difference_dB": 0.26640748217945615
+          },
+          "40000-100000_Hz": {
+            "mean_difference_dB": -0.26738222363285974,
+            "rms_difference_dB": 0.26738255126161425,
+            "max_abs_difference_dB": 0.2679091085929825
+          },
+          "100000-200000_Hz": {
+            "mean_difference_dB": -0.26804237273299303,
+            "rms_difference_dB": 0.26804237959494603,
+            "max_abs_difference_dB": 0.2681244468096218
+          }
+        }
+      },
+      "transfer_repeatability_passes": true,
+      "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual"
+    },
+    "1x": {
+      "C_tes_multiplier": 1.0,
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 7.8475e-13,
+      "reference_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 7.8475e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 667.0783691063403,
+          "equivalent_first_order_zero_Hz": 1548.715204918688,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.952114670962754e-11,
+          "detector_candidate": {
+            "alpha": 183.26384693871591,
+            "beta": 0.1565024329442899,
+            "T_bath": 0.21770195619465238
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 183.26384693871591,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.1565024329442899,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195619465238,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 667.0783691063403,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.894004569141659,
+          "continuum_1_40k_rms_dB": 0.9731525959897965,
+          "continuum_40_200k_rms_dB": 0.6794762060643926,
+          "shape_score": 0.004886777758788894
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.186632964304508e-11,
+          "detector_candidate": {
+            "alpha": 199.99979785909494,
+            "beta": 1.7989108118429655,
+            "T_bath": 0.21770195622363445
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99979785909494,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.7989108118429655,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195622363445,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 6.402842306545166,
+          "continuum_1_40k_rms_dB": 6.707095254905744,
+          "continuum_40_200k_rms_dB": 5.646725036677483,
+          "shape_score": 0.41617110345893715
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.01174223226498248,
+            "continuum_rms_improvement_dB": 5.508837737403507,
+            "continuum_1_40k_rms_improvement_dB": 5.7339426589159475,
+            "continuum_40_200k_rms_improvement_dB": 4.967248830613091
+          },
+          "c2_free_rms_dB": 0.894004569141659,
+          "c2_zero_rms_dB": 6.402842306545166,
+          "c2_free_1_40k_rms_dB": 0.9731525959897965,
+          "c2_zero_1_40k_rms_dB": 6.707095254905744,
+          "c2_free_40_200k_rms_dB": 0.6794762060643926,
+          "c2_zero_40_200k_rms_dB": 5.646725036677483
+        }
+      },
+      "repeat_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 7.8475e-13,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 614.8335839644064,
+          "equivalent_first_order_zero_Hz": 1613.1739504055504,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 5.935281652916908e-11,
+          "detector_candidate": {
+            "alpha": 176.8421099726346,
+            "beta": 0.16053009004272578,
+            "T_bath": 0.2177019560063461
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 176.8421099726346,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.16053009004272578,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.2177019560063461,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 614.8335839644064,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "continuum_rms_dB": 0.9485520915082224,
+          "continuum_1_40k_rms_dB": 0.8763913821400637,
+          "continuum_40_200k_rms_dB": 1.095695846455329,
+          "shape_score": 0.005280415501119875
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.377803882107975e-11,
+          "detector_candidate": {
+            "alpha": 199.99985443895588,
+            "beta": 1.9734008397167333,
+            "T_bath": 0.21770195587116717
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 199.99985443895588,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 1.9734008397167333,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195587116717,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 6.402100669422622,
+          "continuum_1_40k_rms_dB": 6.713191566145535,
+          "continuum_40_200k_rms_dB": 5.62738296446409,
+          "shape_score": 0.41414245604184285
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.012750239498715796,
+            "continuum_rms_improvement_dB": 5.4535485779143995,
+            "continuum_1_40k_rms_improvement_dB": 5.8368001840054715,
+            "continuum_40_200k_rms_improvement_dB": 4.531687118008761
+          },
+          "c2_free_rms_dB": 0.9485520915082224,
+          "c2_zero_rms_dB": 6.402100669422622,
+          "c2_free_1_40k_rms_dB": 0.8763913821400637,
+          "c2_zero_1_40k_rms_dB": 6.713191566145535,
+          "c2_free_40_200k_rms_dB": 1.095695846455329,
+          "c2_zero_40_200k_rms_dB": 5.62738296446409
+        }
+      },
+      "cross_day_c2": {
+        "reference_c2": 667.0783691063403,
+        "repeat_c2": 614.8335839644064,
+        "symmetric_fractional_difference": 0.08151072313006288
+      },
+      "cross_day_c2_free_transfer": {
+        "semantics": "repeat/reference c2-free readout transfer, each normalized at 1000 Hz",
+        "full_1_200k": {
+          "mean_difference_dB": -0.21093980917508767,
+          "rms_difference_dB": 0.22168783993696448,
+          "max_abs_difference_dB": 0.2529163068007372
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_difference_dB": -0.12540019322354062,
+            "rms_difference_dB": 0.14266643208835295,
+            "max_abs_difference_dB": 0.22061803948916783
+          },
+          "5000-15000_Hz": {
+            "mean_difference_dB": -0.23938406242955043,
+            "rms_difference_dB": 0.23951493247157551,
+            "max_abs_difference_dB": 0.2490019742834425
+          },
+          "15000-40000_Hz": {
+            "mean_difference_dB": -0.2512200334812274,
+            "rms_difference_dB": 0.25122178675959017,
+            "max_abs_difference_dB": 0.2523788129597777
+          },
+          "40000-100000_Hz": {
+            "mean_difference_dB": -0.2526843842043449,
+            "rms_difference_dB": 0.25268441818380966,
+            "max_abs_difference_dB": 0.25284914841450506
+          },
+          "100000-200000_Hz": {
+            "mean_difference_dB": -0.2528907156884479,
+            "rms_difference_dB": 0.2528907163957878,
+            "max_abs_difference_dB": 0.2529163068007372
+          }
+        }
+      },
+      "transfer_repeatability_passes": true,
+      "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual"
+    },
+    "2x": {
+      "C_tes_multiplier": 2.0,
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 1.5695e-12,
+      "reference_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 1.5695e-12,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 999.9999994215622,
+          "equivalent_first_order_zero_Hz": 1264.911064433188,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 4.079286011673328e-11,
+          "detector_candidate": {
+            "alpha": 194.92621150212068,
+            "beta": 0.5671266220218811,
+            "T_bath": 0.21770195618071314
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 194.92621150212068,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.5671266220218811,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195618071314,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 999.9999994215622,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 1.0579681067067053,
+          "continuum_1_40k_rms_dB": 1.0461032845097638,
+          "continuum_40_200k_rms_dB": 1.0845824539208304,
+          "shape_score": 0.00975485036072041
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.153645318827016e-11,
+          "detector_candidate": {
+            "alpha": 151.17007854765234,
+            "beta": 1.0880512869333154,
+            "T_bath": 0.2177019556237559
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 151.17007854765234,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 1.0880512869333154,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.2177019556237559,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 7.8958011818755125,
+          "continuum_1_40k_rms_dB": 8.25781686290386,
+          "continuum_40_200k_rms_dB": 6.999018671995116,
+          "shape_score": 0.6123841748520862
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.01592929856993214,
+            "continuum_rms_improvement_dB": 6.837833075168807,
+            "continuum_1_40k_rms_improvement_dB": 7.211713578394097,
+            "continuum_40_200k_rms_improvement_dB": 5.914436218074286
+          },
+          "c2_free_rms_dB": 1.0579681067067053,
+          "c2_zero_rms_dB": 7.8958011818755125,
+          "c2_free_1_40k_rms_dB": 1.0461032845097638,
+          "c2_zero_1_40k_rms_dB": 8.25781686290386,
+          "c2_free_40_200k_rms_dB": 1.0845824539208304,
+          "c2_zero_40_200k_rms_dB": 6.999018671995116
+        }
+      },
+      "repeat_day": {
+        "fixed_L_H": 1e-10,
+        "fixed_C_tes_J_per_K": 1.5695e-12,
+        "detector_parameters_varied": [
+          "alpha",
+          "beta",
+          "T_bath"
+        ],
+        "c2_free": {
+          "c2": 999.9999913037476,
+          "equivalent_first_order_zero_Hz": 1264.9110695673446,
+          "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+          "white_asd_A_rtHz": 4.207032584313983e-11,
+          "detector_candidate": {
+            "alpha": 175.85229848635322,
+            "beta": 0.42495121100257904,
+            "T_bath": 0.21770195494780079
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 175.85229848635322,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.42495121100257904,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195494780079,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "readout_boundary_hits": {
+            "c2": {
+              "value": 999.9999913037476,
+              "lower": 0.0,
+              "upper": 1000.0,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 1.1090876458784311,
+          "continuum_1_40k_rms_dB": 0.9578694514463764,
+          "continuum_40_200k_rms_dB": 1.3942789326590557,
+          "shape_score": 0.010293338462565837
+        },
+        "c2_zero": {
+          "white_asd_A_rtHz": 3.34845936938903e-11,
+          "detector_candidate": {
+            "alpha": 142.9071727618396,
+            "beta": 1.0521219835264937,
+            "T_bath": 0.2177019561986481
+          },
+          "detector_boundary_hits": {
+            "alpha": {
+              "value": 142.9071727618396,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 1.0521219835264937,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.2177019561986481,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "continuum_rms_dB": 7.8716719576096965,
+          "continuum_1_40k_rms_dB": 8.24512888584126,
+          "continuum_40_200k_rms_dB": 6.943706518946878,
+          "shape_score": 0.6055067857053053
+        },
+        "nested_c2_test": {
+          "c2_material_improvement": true,
+          "gain": {
+            "shape_score_ratio_c2_free_to_c2_zero": 0.016999542706323218,
+            "continuum_rms_improvement_dB": 6.762584311731265,
+            "continuum_1_40k_rms_improvement_dB": 7.287259434394883,
+            "continuum_40_200k_rms_improvement_dB": 5.549427586287822
+          },
+          "c2_free_rms_dB": 1.1090876458784311,
+          "c2_zero_rms_dB": 7.8716719576096965,
+          "c2_free_1_40k_rms_dB": 0.9578694514463764,
+          "c2_zero_1_40k_rms_dB": 8.24512888584126,
+          "c2_free_40_200k_rms_dB": 1.3942789326590557,
+          "c2_zero_40_200k_rms_dB": 6.943706518946878
+        }
+      },
+      "cross_day_c2": {
+        "reference_c2": 999.9999994215622,
+        "repeat_c2": 999.9999913037476,
+        "symmetric_fractional_difference": 8.117814596872662e-09
+      },
+      "cross_day_c2_free_transfer": {
+        "semantics": "repeat/reference c2-free readout transfer, each normalized at 1000 Hz",
+        "full_1_200k": {
+          "mean_difference_dB": -1.8503865314407054e-08,
+          "rms_difference_dB": 1.9298383156211694e-08,
+          "max_abs_difference_dB": 2.1694112455013776e-08
+        },
+        "bands": {
+          "1000-5000_Hz": {
+            "mean_difference_dB": -1.1887100839004372e-08,
+            "rms_difference_dB": 1.328426677884385e-08,
+            "max_abs_difference_dB": 1.9565791586247412e-08
+          },
+          "5000-15000_Hz": {
+            "mean_difference_dB": -2.0815391407381416e-08,
+            "rms_difference_dB": 2.0821927558797402e-08,
+            "max_abs_difference_dB": 2.1443649610158874e-08
+          },
+          "15000-40000_Hz": {
+            "mean_difference_dB": -2.1585760585851574e-08,
+            "rms_difference_dB": 2.158584414318949e-08,
+            "max_abs_difference_dB": 2.1659837363784532e-08
+          },
+          "40000-100000_Hz": {
+            "mean_difference_dB": -2.1679324854900063e-08,
+            "rms_difference_dB": 2.167932646523599e-08,
+            "max_abs_difference_dB": 2.1689830841051587e-08
+          },
+          "100000-200000_Hz": {
+            "mean_difference_dB": -2.1692479189448276e-08,
+            "rms_difference_dB": 2.169247922294284e-08,
+            "max_abs_difference_dB": 2.1694112455013776e-08
+          }
+        }
+      },
+      "transfer_repeatability_passes": true,
+      "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual"
+    }
+  },
+  "primary_result": {
+    "key": "1x",
+    "C_tes_multiplier": 1.0,
+    "fixed_L_H": 1e-10,
+    "fixed_C_tes_J_per_K": 7.8475e-13,
+    "reference_day": {
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 7.8475e-13,
+      "detector_parameters_varied": [
+        "alpha",
+        "beta",
+        "T_bath"
+      ],
+      "c2_free": {
+        "c2": 667.0783691063403,
+        "equivalent_first_order_zero_Hz": 1548.715204918688,
+        "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+        "white_asd_A_rtHz": 5.952114670962754e-11,
+        "detector_candidate": {
+          "alpha": 183.26384693871591,
+          "beta": 0.1565024329442899,
+          "T_bath": 0.21770195619465238
+        },
+        "detector_boundary_hits": {
+          "alpha": {
+            "value": 183.26384693871591,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.1565024329442899,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21770195619465238,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "readout_boundary_hits": {
+          "c2": {
+            "value": 667.0783691063403,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "continuum_rms_dB": 0.894004569141659,
+        "continuum_1_40k_rms_dB": 0.9731525959897965,
+        "continuum_40_200k_rms_dB": 0.6794762060643926,
+        "shape_score": 0.004886777758788894
+      },
+      "c2_zero": {
+        "white_asd_A_rtHz": 3.186632964304508e-11,
+        "detector_candidate": {
+          "alpha": 199.99979785909494,
+          "beta": 1.7989108118429655,
+          "T_bath": 0.21770195622363445
+        },
+        "detector_boundary_hits": {
+          "alpha": {
+            "value": 199.99979785909494,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "beta": {
+            "value": 1.7989108118429655,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21770195622363445,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "continuum_rms_dB": 6.402842306545166,
+        "continuum_1_40k_rms_dB": 6.707095254905744,
+        "continuum_40_200k_rms_dB": 5.646725036677483,
+        "shape_score": 0.41617110345893715
+      },
+      "nested_c2_test": {
+        "c2_material_improvement": true,
+        "gain": {
+          "shape_score_ratio_c2_free_to_c2_zero": 0.01174223226498248,
+          "continuum_rms_improvement_dB": 5.508837737403507,
+          "continuum_1_40k_rms_improvement_dB": 5.7339426589159475,
+          "continuum_40_200k_rms_improvement_dB": 4.967248830613091
+        },
+        "c2_free_rms_dB": 0.894004569141659,
+        "c2_zero_rms_dB": 6.402842306545166,
+        "c2_free_1_40k_rms_dB": 0.9731525959897965,
+        "c2_zero_1_40k_rms_dB": 6.707095254905744,
+        "c2_free_40_200k_rms_dB": 0.6794762060643926,
+        "c2_zero_40_200k_rms_dB": 5.646725036677483
+      }
+    },
+    "repeat_day": {
+      "fixed_L_H": 1e-10,
+      "fixed_C_tes_J_per_K": 7.8475e-13,
+      "detector_parameters_varied": [
+        "alpha",
+        "beta",
+        "T_bath"
+      ],
+      "c2_free": {
+        "c2": 614.8335839644064,
+        "equivalent_first_order_zero_Hz": 1613.1739504055504,
+        "equivalent_zero_semantics": "magnitude coordinate only: sqrt(1+c2*(f/f_ref)^2)=sqrt(1+(f/f_zero)^2)",
+        "white_asd_A_rtHz": 5.935281652916908e-11,
+        "detector_candidate": {
+          "alpha": 176.8421099726346,
+          "beta": 0.16053009004272578,
+          "T_bath": 0.2177019560063461
+        },
+        "detector_boundary_hits": {
+          "alpha": {
+            "value": 176.8421099726346,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.16053009004272578,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.2177019560063461,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "readout_boundary_hits": {
+          "c2": {
+            "value": 614.8335839644064,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "continuum_rms_dB": 0.9485520915082224,
+        "continuum_1_40k_rms_dB": 0.8763913821400637,
+        "continuum_40_200k_rms_dB": 1.095695846455329,
+        "shape_score": 0.005280415501119875
+      },
+      "c2_zero": {
+        "white_asd_A_rtHz": 3.377803882107975e-11,
+        "detector_candidate": {
+          "alpha": 199.99985443895588,
+          "beta": 1.9734008397167333,
+          "T_bath": 0.21770195587116717
+        },
+        "detector_boundary_hits": {
+          "alpha": {
+            "value": 199.99985443895588,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "beta": {
+            "value": 1.9734008397167333,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21770195587116717,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "continuum_rms_dB": 6.402100669422622,
+        "continuum_1_40k_rms_dB": 6.713191566145535,
+        "continuum_40_200k_rms_dB": 5.62738296446409,
+        "shape_score": 0.41414245604184285
+      },
+      "nested_c2_test": {
+        "c2_material_improvement": true,
+        "gain": {
+          "shape_score_ratio_c2_free_to_c2_zero": 0.012750239498715796,
+          "continuum_rms_improvement_dB": 5.4535485779143995,
+          "continuum_1_40k_rms_improvement_dB": 5.8368001840054715,
+          "continuum_40_200k_rms_improvement_dB": 4.531687118008761
+        },
+        "c2_free_rms_dB": 0.9485520915082224,
+        "c2_zero_rms_dB": 6.402100669422622,
+        "c2_free_1_40k_rms_dB": 0.8763913821400637,
+        "c2_zero_1_40k_rms_dB": 6.713191566145535,
+        "c2_free_40_200k_rms_dB": 1.095695846455329,
+        "c2_zero_40_200k_rms_dB": 5.62738296446409
+      }
+    },
+    "cross_day_c2": {
+      "reference_c2": 667.0783691063403,
+      "repeat_c2": 614.8335839644064,
+      "symmetric_fractional_difference": 0.08151072313006288
+    },
+    "cross_day_c2_free_transfer": {
+      "semantics": "repeat/reference c2-free readout transfer, each normalized at 1000 Hz",
+      "full_1_200k": {
+        "mean_difference_dB": -0.21093980917508767,
+        "rms_difference_dB": 0.22168783993696448,
+        "max_abs_difference_dB": 0.2529163068007372
+      },
+      "bands": {
+        "1000-5000_Hz": {
+          "mean_difference_dB": -0.12540019322354062,
+          "rms_difference_dB": 0.14266643208835295,
+          "max_abs_difference_dB": 0.22061803948916783
+        },
+        "5000-15000_Hz": {
+          "mean_difference_dB": -0.23938406242955043,
+          "rms_difference_dB": 0.23951493247157551,
+          "max_abs_difference_dB": 0.2490019742834425
+        },
+        "15000-40000_Hz": {
+          "mean_difference_dB": -0.2512200334812274,
+          "rms_difference_dB": 0.25122178675959017,
+          "max_abs_difference_dB": 0.2523788129597777
+        },
+        "40000-100000_Hz": {
+          "mean_difference_dB": -0.2526843842043449,
+          "rms_difference_dB": 0.25268441818380966,
+          "max_abs_difference_dB": 0.25284914841450506
+        },
+        "100000-200000_Hz": {
+          "mean_difference_dB": -0.2528907156884479,
+          "rms_difference_dB": 0.2528907163957878,
+          "max_abs_difference_dB": 0.2529163068007372
+        }
+      }
+    },
+    "transfer_repeatability_passes": true,
+    "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual"
+  },
+  "interpretation": {
+    "classification": "physical_L_Ctes_anchors_leave_repeatable_material_c2_residual",
+    "primary_reference_c2_material": true,
+    "primary_repeat_c2_material": true,
+    "primary_transfer_repeatability_passes": true,
+    "primary_c2_symmetric_fractional_difference": 0.08151072313006288,
+    "sensitivity_signature_consistent_across_grid": true,
+    "guardrail": "L is externally anchored near the independently motivated circuit scale. C_tes is anchored to the repository material estimate derived from assumed TES geometry, density, and specific heat; it is not a direct calorimetric measurement. The C_tes multiplier grid is a sensitivity study, not an uncertainty interval. Magnicon is fixed to the nominal 10 kHz phase-normalized second-order Bessel response with c4=0. A repeatable c2 under these constraints supports a stable residual-shape candidate but does not identify a physical zero or its phase."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_physical_L_Ctes_anchor_c2_diagnostic_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_c2_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_necessity_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json"
+  }
+}

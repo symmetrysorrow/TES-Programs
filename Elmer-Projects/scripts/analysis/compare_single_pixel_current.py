@@ -76,8 +76,11 @@ def main() -> None:
                         help="Elmer series CSV (default: frozen 3x-refined pulse series)")
     parser.add_argument("--label", default="Elmer single-pixel (3x refined)",
                         help="label used for the Elmer trace and metric table")
+    parser.add_argument("--outdir", type=Path, default=OUTDIR,
+                        help="output directory for the report and plots")
     args = parser.parse_args()
-    OUTDIR.mkdir(parents=True, exist_ok=True)
+    outdir = args.outdir if args.outdir.is_absolute() else ROOT / args.outdir
+    outdir.mkdir(parents=True, exist_ok=True)
     comsol = np.loadtxt(COMSOL_PATH, comments="%", encoding="utf-8")
     elmer_path = args.elmer if args.elmer.is_absolute() else ROOT / args.elmer
     elmer = np.genfromtxt(elmer_path, delimiter=",", names=True)
@@ -96,11 +99,11 @@ def main() -> None:
         "response": "pre-pulse baseline current minus current",
         "rise_time": "10% to 90% of the peak current drop; crossings are linearly interpolated",
     }, "comsol": comsol_metrics, "elmer": elmer_metrics, "elmer_minus_comsol": errors}
-    (OUTDIR / "metrics.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (outdir / "metrics.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     fields = ["model", "baseline_current_uA", "minimum_current_uA", "peak_current_drop_uA",
               "peak_time_ms", "peak_delay_from_pulse_ms", "t10_ms", "t90_ms", "rise_time_10_90_ms"]
-    with (OUTDIR / "metrics.csv").open("w", newline="", encoding="utf-8") as f:
+    with (outdir / "metrics.csv").open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         writer.writerows((comsol_metrics, elmer_metrics))
@@ -124,7 +127,7 @@ def main() -> None:
     axes[1].set_ylabel("current drop from baseline [µA]")
     axes[1].set_title("Pulse response normalized to each model's pre-pulse baseline")
     axes[1].legend(frameon=False, fontsize=8)
-    fig.savefig(OUTDIR / "current_timeseries_comparison.png", dpi=200)
+    fig.savefig(outdir / "current_timeseries_comparison.png", dpi=200)
     plt.close(fig)
 
     summary = (
@@ -140,8 +143,8 @@ def main() -> None:
         f"Baseline window: {BASELINE_WINDOW_MS[0]:.2f}–{BASELINE_WINDOW_MS[1]:.2f} ms. "
         "The peak is the maximum post-pulse current decrease; 10%/90% crossings are linearly interpolated.\n"
     )
-    (OUTDIR / "summary.md").write_text(summary, encoding="utf-8")
-    print(f"Wrote {OUTDIR}")
+    (outdir / "summary.md").write_text(summary, encoding="utf-8")
+    print(f"Wrote {outdir}")
 
 
 if __name__ == "__main__":
