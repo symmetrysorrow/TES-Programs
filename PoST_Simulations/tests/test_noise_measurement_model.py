@@ -6,6 +6,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "PoST_Simulations"))
 sys.path.insert(0, str(ROOT / "PoST_Simulations" / "subScript"))
 
 from PoST_Simulations.subScript.noise_measurement_model import (  # noqa: E402
@@ -23,8 +24,15 @@ from PoST_Simulations.subScript.noise_measurement_model import (  # noqa: E402
     hardware_filter_magnitude,
 )
 from PoST_Simulations.lib import general  # noqa: E402
+import Opt_noise as opt  # noqa: E402
 
 
+
+
+def test_target_optimizer_uses_sim965_phase_convention():
+    assert opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ == 100_000.0
+    assert opt.TARGET_HARDWARE_BESSEL_ORDER == 4
+    assert opt.TARGET_HARDWARE_BESSEL_NORM == "phase"
 
 
 def test_sim965_hardware_profile_is_explicit():
