@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether separating the TES heat capacity from one explicit local Si/substrate-membrane thermal node on the TES-to-bath path reduces or removes the shared c2 requirement across the 2024-12-05/06 adjacent-day noise spectra.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "shared_physical_profile": {
+    "L_H": {
+      "min": 1.0e-10,
+      "max": 1.0e-9,
+      "semantics": "shared circuit inductance profile around the independently motivated physical scale; diagnostic prior, not a measured tolerance"
+    },
+    "C_tes_material_multiplier": {
+      "min": 0.25,
+      "max": 5.0,
+      "semantics": "TES-local heat capacity after separating the substrate/membrane node; referenced to the bare-bilayer material estimate but still treated as an effective local quantity"
+    },
+    "C_substrate_J_per_K": {
+      "min": 5.0e-13,
+      "max": 2.0e-11,
+      "historical_PoST_total_reference_J_per_K": 7.9e-12,
+      "semantics": "one symmetric local Si/substrate-membrane heat-capacity node per TES; the range includes the historical PoST C_tes scale but that historical number is not documented as an explicit silicon calorimetry result"
+    },
+    "G_tes_substrate_over_G_substrate_bath": {
+      "min": 0.03,
+      "max": 30.0,
+      "semantics": "shared conductance partition ratio. For each day G_tes-substrate and G_substrate-bath are derived so their series-equivalent conductance equals the existing G_tes-bath exactly."
+    }
+  },
+  "day_specific_detector_parameters": ["alpha", "beta", "T_bath"],
+  "white_floor": {
+    "mode": "independent_per_day_joint_fit",
+    "inherit_scale_bounds_from_continuum_config": true
+  },
+  "magnicon_filter": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "c4_fixed": 0.0
+  },
+  "c2": {
+    "mode": "shared_across_days",
+    "upper_bound": 1000.0
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 7000,
+    "seed_offset": 31100
+  },
+  "materiality_screen": {
+    "max_shared_c2_free_joint_score_ratio_to_c2_zero": 0.80,
+    "min_joint_rms_improvement_dB": 0.05
+  },
+  "guardrail": "The added substrate node is a diagnostic lumped representation, not a geometrically resolved silicon model. It is placed in series on the TES-to-bath path because the reduced PoST model already represents that path by G_tes-bath. The DC series-equivalent conductance is held exactly equal to the original G_tes-bath, so the new freedom is a finite thermalization time scale rather than a changed DC thermal link. A good fit does not prove the node is silicon; a surviving c2 still does not identify an electronics zero."
+}
