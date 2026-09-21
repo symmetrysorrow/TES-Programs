@@ -2,17 +2,20 @@
 
 The physical chain is kept explicit:
 1. intrinsic TES ASD from the five-state model,
-2. 100 kHz analog Bessel hardware response before the ADC,
+2. SRS SIM965 analog filter before the ADC, configured as 100 kHz,
+   Bessel, Slope 24 dB/oct, low-pass, DC coupling,
 3. sampling/first alias fold,
 4. finite time records,
 5. 10 kHz second-order digital Bessel ``filtfilt`` analysis,
 6. Hann window, power average, one-sided ASD.
 
-The 100 kHz hardware filter and the 10 kHz analysis filter are intentionally
-separate parameters and must never be conflated through ``input["cutoff"]``.
-The historical hardware Bessel convention is SciPy ``norm="phase"``.  The
-helpers also expose ``norm="mag"`` and an explicit diagnostic bypass so those
-conventions can be compared without changing the production default.
+The SIM965 front-panel 100 kHz setting is not the -3 dB point in Bessel
+mode.  For the four-pole (24 dB/oct) Bessel response, SciPy's
+``norm="phase"`` convention matches the nominal SIM965 normalization; its
+-3 dB point is about 0.6604 times the displayed cutoff.  The external 100 kHz
+hardware filter and the 10 kHz analysis filter are intentionally separate
+parameters and must never be conflated through ``input["cutoff"]``.
+``norm="mag"`` remains available only for historical/diagnostic comparison.
 """
 
 from __future__ import annotations
@@ -36,6 +39,10 @@ from lib import general  # noqa: E402
 from proxy_physics import noise_components  # noqa: E402
 
 
+HARDWARE_FILTER_MODEL = "SRS SIM965"
+HARDWARE_FILTER_MODE = "Bessel"
+HARDWARE_FILTER_SLOPE_DB_PER_OCT = 24
+HARDWARE_FILTER_COUPLING = "DC"
 HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
 ANALYSIS_BESSEL_CUTOFF_HZ = 10_000.0
 DEFAULT_HARDWARE_BESSEL_ORDER = 4
@@ -64,13 +71,14 @@ def hardware_filter_magnitude(
     norm: str = DEFAULT_HARDWARE_BESSEL_NORM,
     bypass: bool = False,
 ) -> np.ndarray:
-    """Return the analog hardware Bessel magnitude for a stated convention.
+    """Return the SRS SIM965 Bessel magnitude for a stated convention.
 
-    ``norm="phase"`` preserves the repository's historical behavior.
-    ``norm="mag"`` uses SciPy's magnitude normalization, where ``cutoff_hz``
-    is the -3 dB angular-frequency reference after the Hz-to-rad/s mapping.
-    ``bypass=True`` returns unity and exists only for diagnostic comparisons;
-    it does not change the confirmed physical hardware configuration.
+    For the measured configuration (100 kHz, Bessel, Slope 24, LP, DC),
+    ``norm="phase"`` is the production convention.  In this convention the
+    displayed 100 kHz setting is not the -3 dB point; a four-pole response is
+    -3 dB near 66 kHz.  ``norm="mag"`` is retained only for historical and
+    diagnostic comparisons, where ``cutoff_hz`` is the -3 dB reference.
+    ``bypass=True`` returns unity and exists only for diagnostic comparisons.
     """
     frequency = np.asarray(frequency_hz, dtype=float)
     if bypass:
