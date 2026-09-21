@@ -1,10 +1,15 @@
-"""Run the Phase24 no-mortar transient Gate 4/5 campaign.
+"""Run the Phase24 transient Gate 4/5 campaign.
 
-The runner uses a selected conformal/no-mortar mesh, its converged no-mortar
-MUMPS restart, and the same HYPRE policy that passed Gate 3.  It can run a short
-0.9-us diagnostic, a targeted 40-us diagnosis, the full 100-us Gate 4 window,
-or a 1-ms Gate 5 stability window.  Each run is isolated under
+The runner uses a selected mesh, a converged MUMPS restart, and the same HYPRE
+policy that passed Gate 3.  It can run a short 0.9-us diagnostic, a targeted
+40-us diagnosis, the full 100-us Gate 4 window, or a 1-ms Gate 5 stability
+window.  Each run is isolated under
 ``artifacts/phase24_gate4_5_nomortar``.
+
+For a mortar restart produced by an iterative Gate 3 solve, ``--refine-reference``
+adds one full constrained MUMPS steady solve before the transient cases.  This
+projects the approximate Gate 3 field back onto the exact primal equilibrium
+without changing the physical model or the transient SIF formulation.
 """
 from __future__ import annotations
 
@@ -158,6 +163,106 @@ def case_name(window: str, backend: str) -> str:
     suffix = "_mortar" if APPLY_MORTAR_BCS else ""
     tag = f"_{RUN_TAG}" if RUN_TAG else ""
     return f"case_phase24_g45_{MESH_TAG}_{window}_{backend}{suffix}{tag}"
+
+
+def refinement_case_name() -> str:
+    suffix = "_mortar" if APPLY_MORTAR_BCS else ""
+    tag = f"_{RUN_TAG}" if RUN_TAG else ""
+    return f"case_phase24_restart_refine_{MESH_TAG}_mumps{suffix}{tag}"
+
+
+def refinement_spec(
+    template: dict[str, Any],
+    *,
+    name: str,
+    source_case: str,
+) -> dict[str, Any]:
+    """Build the direct steady projection case used before a transient.
+
+    The source result/state remain read-only inputs.  The refinement has its
+    own state/result names so a subsequent transient cannot overwrite the
+    input checkpoint or accidentally feed a partially completed run back into
+    the chain.
+    """
+    candidate = copy.deepcopy(template)
+    candidate.update(
+        {
+            "template": "steady",
+            "mesh": MESH,
+            "heat_source": "circuit_inner",
+            "apply_mortar_bcs": APPLY_MORTAR_BCS,
+            "initial_temperature": "T_0",
+            "restart_from": None,
+            "restart_file_base": source_case,
+            "restart_file_path": f"../work/meshes/{MESH}/{source_case}.result",
+            "preexisting_restart": True,
+            "restart_time": 0.020,
+            "steady_state_max_iterations": 1,
+            "output_intervals": 1,
+            "series_file": f"{name}_series.csv",
+            "iteration_series_file": f"{name}_iterations.csv",
+            "state_file": f"work/meshes/{MESH}/{name}.state",
+            "output_result": True,
+            "output_file_path": f"../work/meshes/{MESH}/{name}.result",
+            "post_file": False,
+            "vtu": False,
+            "inner_circuit_step_commit": True,
+            "solver_comment": (
+                "Phase24 restart refinement: full constrained steady MUMPS "
+                f"projection of {source_case}"
+            ),
+            "phase24_smoke": {
+                "purpose": "exact constrained restart projection before transient",
+                "source_restart": source_case,
+                "backend": "mumps",
+                "mortar": APPLY_MORTAR_BCS,
+            },
+        }
+    )
+    candidate.pop("pulse", None)
+    candidate.pop("timesteps", None)
+    candidate["solver"] = {
+        **candidate.get("solver", {}),
+        "linear_system": "mumps",
+        "nonlinear_max_iterations": NONLINEAR_MAX_ITERATIONS,
+        "nonlinear_convergence_tolerance": NONLINEAR_TOLERANCE,
+        "nonlinear_relaxation_factor": 1.0,
+        "steady_state_convergence_tolerance": 1.0e-9,
+    }
+    return candidate
+
+
+def prepare_refinement_project() -> tuple[Path, str]:
+    """Create the isolated direct-refinement project and seed its state."""
+    if not REFERENCE_RESULT.is_file():
+        raise FileNotFoundError(
+            f"restart refinement input result not found: {REFERENCE_RESULT}"
+        )
+    if not REFERENCE_STATE.is_file():
+        raise FileNotFoundError(
+            f"restart refinement input state not found: {REFERENCE_STATE}"
+        )
+
+    project = json.loads(BASE_PROJECT.read_text(encoding="utf-8"))
+    template_project = json.loads(TIMEGRID_PROJECT.read_text(encoding="utf-8"))
+    template = copy.deepcopy(
+        template_project["cases"]["case_tes_mpi_comsol_grid_full_uniform_continuous"]
+    )
+    name = refinement_case_name()
+    out = OUT_ROOT / "restart_refinement" / ("mortar" if APPLY_MORTAR_BCS else "nomortar")
+    out.mkdir(parents=True, exist_ok=True)
+    state_path = ROOT / "work" / "meshes" / MESH / f"{name}.state"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(REFERENCE_STATE, state_path)
+
+    project["cases"] = {
+        name: refinement_spec(template, name=name, source_case=REFERENCE_CASE)
+    }
+    project_path = out / "project.json"
+    project_path.write_text(
+        json.dumps(project, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return project_path, name
 
 
 def prepare_project(window: str, backend: str) -> tuple[Path, str]:
@@ -434,11 +539,21 @@ def main() -> int:
     parser.add_argument("--base-project", type=Path, default=None, help="project containing the selected mesh registry")
     parser.add_argument("--mesh", default=None, help="mesh registry key")
     parser.add_argument("--mesh-tag", default=None, help="short case/artifact tag for the mesh")
-    parser.add_argument("--reference-case", default=None, help="converged no-mortar steady restart case")
+    parser.add_argument("--reference-case", default=None, help="converged steady restart case")
     parser.add_argument("--reference-current-uA", type=float, default=None, help="same-mesh MUMPS current for diagnostics")
+    parser.add_argument(
+        "--refine-reference",
+        action="store_true",
+        help=(
+            "run one full constrained MUMPS steady solve from the selected "
+            "restart result/state, then use that refined checkpoint for all "
+            "transient cases"
+        ),
+    )
     args = parser.parse_args()
     global APPLY_MORTAR_BCS, HYPRE_TOLERANCE, HYPRE_MAX_ITERATIONS, RUN_TAG
     global NONLINEAR_TOLERANCE, NONLINEAR_MAX_ITERATIONS
+    global REFERENCE_CASE, REFERENCE_RESULT, REFERENCE_STATE
     APPLY_MORTAR_BCS = bool(args.mortar)
     if args.linear_tolerance is not None:
         HYPRE_TOLERANCE = args.linear_tolerance
@@ -456,6 +571,48 @@ def main() -> int:
         reference_case=args.reference_case,
         reference_current_uA=args.reference_current_uA,
     )
+
+    source_reference_case = REFERENCE_CASE
+    refinement_record: dict[str, Any] | None = None
+    refinement_paths: dict[str, str] | None = None
+    if args.refine_reference:
+        refinement_project, refined_case = prepare_refinement_project()
+        refinement_paths = {
+            "project": str(refinement_project),
+            "name": refined_case,
+            "result": str(
+                ROOT / "work" / "meshes" / MESH / f"{refined_case}.result"
+            ),
+            "state": str(
+                ROOT / "work" / "meshes" / MESH / f"{refined_case}.state"
+            ),
+            "log": str(ROOT / "results" / refined_case / "solver.log"),
+            "manifest": str(ROOT / "results" / refined_case / "manifest.json"),
+        }
+        if not args.audit_only:
+            refinement_record = run_case(
+                refinement_project,
+                refined_case,
+                args.solver,
+                args.runtime_bin,
+                args.toolchain_bin,
+            )
+        else:
+            refinement_record = {}
+        refinement_record["audit"] = audit_solver(
+            ROOT / "results" / refined_case / "solver.log",
+            ROOT / "results" / refined_case / "manifest.json",
+        )
+        if refinement_record["audit"].get("manifest_exit_code") != 0 or not refinement_record["audit"].get("solver_completed"):
+            print(
+                f"restart refinement failed; transient cases were not started: "
+                f"{refined_case}"
+            )
+            return 1
+        REFERENCE_CASE = refined_case
+        REFERENCE_RESULT = ROOT / "work" / "meshes" / MESH / f"{refined_case}.result"
+        REFERENCE_STATE = ROOT / "work" / "meshes" / MESH / f"{refined_case}.state"
+
     backends = ("mumps", "hypre") if args.backend == "both" else (args.backend,)
     records: dict[str, Any] = {}
     paths: dict[str, dict[str, Path | str]] = {}
@@ -482,7 +639,9 @@ def main() -> int:
         "policy": {
             "mesh": MESH,
             "mortar": APPLY_MORTAR_BCS,
+            "initial_reference_case": source_reference_case,
             "reference_case": REFERENCE_CASE,
+            "restart_refinement": bool(args.refine_reference),
             "hypre_system": HYPRE_SYSTEM,
             "hypre_max_iterations": HYPRE_MAX_ITERATIONS,
             "hypre_tolerance": HYPRE_TOLERANCE,
@@ -491,6 +650,9 @@ def main() -> int:
         "paths": {backend: {key: str(value) for key, value in data.items()} for backend, data in paths.items()},
         "runs": records,
     }
+    if refinement_record is not None:
+        payload["restart_refinement"] = refinement_record
+        payload["restart_refinement_paths"] = refinement_paths
     if {"mumps", "hypre"}.issubset(backends):
         end_us = {"short": 0.9, "40us": 40.0, "100us": 100.0, "1ms": 1000.0}[args.window]
         series_ready = all(Path(paths[backend]["series"]).is_file() for backend in ("mumps", "hypre"))
@@ -516,6 +678,9 @@ def main() -> int:
         f"- Window: `{args.window}`",
         f"- Mesh: `{MESH}`; mortar: `{APPLY_MORTAR_BCS}`",
         f"- Backend(s): `{', '.join(backends)}`",
+        f"- Restart refinement: `{bool(args.refine_reference)}`",
+        f"- Initial reference: `{source_reference_case}`",
+        f"- Transient reference: `{REFERENCE_CASE}`",
     ]
     if "gate4" in payload:
         lines.extend([f"- Gate4: **{payload['gate4'].get('status', 'NOT RUN')}**"])
