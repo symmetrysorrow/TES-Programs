@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "purpose": "Re-test the separated TES/substrate joint c2 comparison while allowing the shared effective series inductance L to float continuously from the SQUID-washer-scale 0.1 nH through the approximately 1.25 nH ISAS-B10 input-coil scale.",
+  "base_cross_day_config": "magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+  "shared_physical_profile": {
+    "L_H": {
+      "min": 1.0e-10,
+      "max": 1.3e-9,
+      "semantics": "shared effective TES-current-path series inductance; diagnostic interval spanning approximately 0.1 nH to 1.3 nH so the fit can choose between the washer-scale and published ISAS-B10 input-coil-scale values without allowing the historical microhenry drift"
+    },
+    "C_tes_material_multiplier": {
+      "min": 0.25,
+      "max": 5.0,
+      "semantics": "TES-local heat capacity after separating the substrate/membrane node; referenced to the bare-bilayer material estimate but still treated as an effective local quantity"
+    },
+    "C_substrate_J_per_K": {
+      "min": 5.0e-13,
+      "max": 2.0e-11,
+      "historical_PoST_total_reference_J_per_K": 7.9e-12,
+      "semantics": "one symmetric local Si/substrate-membrane heat-capacity node per TES; the range includes the historical PoST C_tes scale but that historical number is not documented as an explicit silicon calorimetry result"
+    },
+    "G_tes_substrate_over_G_substrate_bath": {
+      "min": 0.03,
+      "max": 30.0,
+      "semantics": "shared conductance partition ratio. For each day G_tes-substrate and G_substrate-bath are derived so their series-equivalent conductance equals the existing G_tes-bath exactly."
+    }
+  },
+  "day_specific_detector_parameters": ["alpha", "beta", "T_bath"],
+  "white_floor": {
+    "mode": "independent_per_day_joint_fit",
+    "inherit_scale_bounds_from_continuum_config": true
+  },
+  "magnicon_filter": {
+    "normalization": "phase",
+    "cutoff_Hz": 10000.0,
+    "c4_fixed": 0.0
+  },
+  "c2": {
+    "mode": "shared_across_days",
+    "upper_bound": 1000.0
+  },
+  "optimizer": {
+    "DE_maxiter": 200,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 37100
+  },
+  "materiality_screen": {
+    "max_shared_c2_free_joint_score_ratio_to_c2_zero": 0.80,
+    "min_joint_rms_improvement_dB": 0.05
+  },
+  "guardrail": "This diagnostic treats L as the effective series inductance in the TES-current branch of the reduced noise model, not as a direct measurement of SQUID washer self-inductance. The interval deliberately spans 0.1-1.3 nH and excludes the historical approximately 0.9 microhenry drift that produced visually good but physically inconsistent early fits. All other separated-substrate freedoms are retained so the test asks whether a physically plausible L interval can rescue c2=0."
+}

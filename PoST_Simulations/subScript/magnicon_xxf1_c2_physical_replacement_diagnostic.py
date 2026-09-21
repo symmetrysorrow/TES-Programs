@@ -1006,6 +1006,20 @@ def run(config: dict, config_path: Path) -> dict:
                 FAMILY_BYPASS_NOISE
             ]["semantics"],
         },
+        "external_analog_filter": {
+            "model": "SRS SIM965",
+            "front_panel_cutoff_Hz": float(
+                opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+            ),
+            "mode": "Bessel",
+            "slope_dB_per_oct": 24,
+            "order": int(opt.TARGET_HARDWARE_BESSEL_ORDER),
+            "coupling": "DC",
+            "scipy_norm": str(opt.TARGET_HARDWARE_BESSEL_NORM),
+            "nominal_minus3dB_Hz": float(
+                0.6604 * opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ
+            ),
+        },
         "c2_zero_reference": {
             key: value
             for key, value in c2_zero.items()

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "purpose": "Replace the phenomenological shared c2 with concrete candidate physics under the separated TES/substrate joint model: (A) a finite real lead-lag readout section and (B) an additive downstream electronics-noise source that bypasses the Magnicon 10 kHz filter but is still shaped by the known 100 kHz hardware Bessel and first-alias fold.",
-  "base_separated_substrate_config": "magnicon_xxf1_separated_substrate_joint_c2_diagnostic_config.json",
+  "base_separated_substrate_config": "magnicon_xxf1_separated_substrate_L_0p1_1p3nH_joint_c2_config.json",
   "candidate_families": {
     "real_lead_lag": {
       "zero_Hz": {
@@ -35,5 +35,5 @@
     "max_score_ratio_to_c2_zero_for_material_improvement": 0.80,
     "min_rms_improvement_vs_c2_zero_dB": 0.05
   },
-  "guardrail": "These are source-class replacement tests, not component identifications. The lead-lag family tests whether a finite real pole/zero pair can replace c2; if its pole runs high, the data only support a zero-like response. The bypass-noise family tests one specific source location: after the Magnicon 10 kHz filter but before the known 100 kHz hardware Bessel and sampling. A successful replacement does not prove that exact circuit location or noise source."
+  "guardrail": "These are source-class replacement tests, not component identifications. The external anti-alias stage is fixed to the measured SRS SIM965 settings: 100 kHz front-panel cutoff, Bessel, Slope 24 dB/oct, LP, Couple DC, represented by a four-pole phase-normalized Bessel response. The lead-lag family tests whether a finite real pole/zero pair can replace c2 after that known hardware response is applied; if its pole runs high, the data only support a zero-like response. The bypass-noise family tests one specific source location: after the Magnicon 10 kHz filter but before the SIM965 and sampling. A successful replacement does not prove that exact circuit location or noise source."
 }

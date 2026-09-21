@@ -6,18 +6,59 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "PoST_Simulations"))
 sys.path.insert(0, str(ROOT / "PoST_Simulations" / "subScript"))
 
 from PoST_Simulations.subScript.noise_measurement_model import (  # noqa: E402
     ANALYSIS_BESSEL_CUTOFF_HZ,
+    DEFAULT_HARDWARE_BESSEL_NORM,
+    DEFAULT_HARDWARE_BESSEL_ORDER,
     HARDWARE_BESSEL_CUTOFF_HZ,
+    HARDWARE_FILTER_COUPLING,
+    HARDWARE_FILTER_MODE,
+    HARDWARE_FILTER_MODEL,
+    HARDWARE_FILTER_SLOPE_DB_PER_OCT,
     analysis_filter_magnitude,
     finite_record_post_analysis_asd,
     fold_hardware_asd,
     hardware_filter_magnitude,
 )
 from PoST_Simulations.lib import general  # noqa: E402
+import Opt_noise as opt  # noqa: E402
 
+
+
+
+def test_target_optimizer_uses_sim965_phase_convention():
+    assert opt.TARGET_HARDWARE_BESSEL_CUTOFF_HZ == 100_000.0
+    assert opt.TARGET_HARDWARE_BESSEL_ORDER == 4
+    assert opt.TARGET_HARDWARE_BESSEL_NORM == "phase"
+
+
+def test_sim965_hardware_profile_is_explicit():
+    assert HARDWARE_FILTER_MODEL == "SRS SIM965"
+    assert HARDWARE_FILTER_MODE == "Bessel"
+    assert HARDWARE_FILTER_SLOPE_DB_PER_OCT == 24
+    assert HARDWARE_FILTER_COUPLING == "DC"
+    assert HARDWARE_BESSEL_CUTOFF_HZ == 100_000.0
+    assert DEFAULT_HARDWARE_BESSEL_ORDER == 4
+    assert DEFAULT_HARDWARE_BESSEL_NORM == "phase"
+
+
+def test_sim965_100khz_bessel_has_about_66khz_minus3db_point():
+    frequency = np.array([66_040.0])
+    response = hardware_filter_magnitude(
+        frequency,
+        cutoff_hz=100_000.0,
+        order=4,
+        norm="phase",
+    )[0]
+    np.testing.assert_allclose(
+        response,
+        1.0 / np.sqrt(2.0),
+        rtol=2e-3,
+        atol=0.0,
+    )
 
 def test_hardware_and_analysis_cutoffs_are_distinct():
     assert HARDWARE_BESSEL_CUTOFF_HZ == 100_000.0

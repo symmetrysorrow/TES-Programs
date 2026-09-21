@@ -127,10 +127,12 @@ FIT_BANDS_HZ = (
 )
 SIM_ANALYSIS_CUTOFF_HZ = 10_000.0  # experimental NoiseAnalysis cutoff.
 TARGET_HARDWARE_BESSEL_ORDER = 4
-# A quoted analog "100 kHz cutoff" is interpreted as the -3 dB frequency.
-# The target-case hardware refinement in this repository also preferred
-# scipy's magnitude-normalized Bessel convention over the legacy phase norm.
-TARGET_HARDWARE_BESSEL_NORM = "mag"
+# External anti-alias filter: SRS SIM965, front-panel settings
+#   100 kHz, Bessel, Slope 24 dB/oct, LP, Couple DC.
+# In SIM965 Bessel mode the displayed cutoff is not the -3 dB point.
+# A four-pole SciPy phase-normalized Bessel matches the nominal response:
+# f_-3dB is about 0.6604 * 100 kHz, rather than 100 kHz.
+TARGET_HARDWARE_BESSEL_NORM = "phase"
 TARGET_HARDWARE_BESSEL_CUTOFF_HZ = 100_000.0
 T_BATH_FIT_HALF_WIDTH_K = 0.002
 ALPHA_FIT_MAX = 200.0
