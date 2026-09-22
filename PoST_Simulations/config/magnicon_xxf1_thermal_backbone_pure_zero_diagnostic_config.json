@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the apparent readout zero-like residual survives after relaxing the thermal backbone in physically motivated ways: lower T_bath, broad shared TES-to-bath conductance, and Pb absorber heat capacity/conductance tied to the measured 0.5+/-0.1 mm thickness and Elmer Pb material properties.",
+  "base_separated_substrate_config": "magnicon_xxf1_separated_substrate_L_0p1_1p3nH_joint_c2_config.json",
+  "shared_thermal_backbone_profile": {
+    "G_tes_bath_scale_to_snapshot": {
+      "min": 0.03,
+      "max": 30.0,
+      "semantics": "shared effective TES-to-bath DC conductance scale. This is deliberately broad because sub-kelvin membrane/phonon transport may be ballistic or boundary limited; it is not a bulk-material tolerance."
+    },
+    "Pb_absorber": {
+      "length_m": 0.020,
+      "width_m": 0.001,
+      "thickness_m": {
+        "min": 0.0004,
+        "max": 0.0006,
+        "nominal": 0.0005
+      },
+      "rho_kg_per_m3": 9860.0,
+      "cp_J_per_kgK": 3.26e-5,
+      "k_W_per_mK": 0.0168,
+      "material_source": "Elmer-Projects/elmer_project.json",
+      "semantics": "C_abs = rho*cp*L*w*t and G_abs-abs = k*w*t/L. Only the measured thickness uncertainty is profiled here; Pb cp and k are held to the current Elmer material table for this diagnostic."
+    }
+  },
+  "day_specific_bounds": {
+    "T_bath_K": {
+      "min": 0.200,
+      "max": 0.218,
+      "semantics": "allows modest downward offset/fluctuation relative to the nominal 215 mK run label; not a thermometer calibration interval"
+    }
+  },
+  "readout_branches": {
+    "c2_zero": {
+      "mode": "fixed",
+      "c2": 0.0
+    },
+    "c2_reference": {
+      "mode": "c2",
+      "upper_bound": 1000.0,
+      "semantics": "historical c2 coordinate retained as a reference; this branch may censor at its upper bound"
+    },
+    "pure_zero": {
+      "mode": "pure_zero",
+      "zero_Hz": {
+        "min": 100.0,
+        "max": 20000.0
+      },
+      "semantics": "one shared minimum-phase zero-like numerator sqrt(1+(f/fz)^2), implemented exactly as c2=(reference_scale_Hz/fz)^2 with c4=0 and the documented Magnicon denominator fixed"
+    }
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 40100
+  },
+  "materiality_screen": {
+    "max_score_ratio_to_c2_zero": 0.80,
+    "min_joint_rms_improvement_dB": 0.05,
+    "max_rms_delta_from_c2_reference_dB": 0.15
+  },
+  "guardrail": "This is a diagnostic profile, not a measurement of Pb k/cp or TES-to-bath conductance. The Pb material properties are inherited from the current Elmer table; only absorber thickness is varied over the measured 0.4-0.6 mm interval. G_tes-bath is intentionally broad because it is an effective low-temperature link. C_substrate remains the existing lumped diagnostic node rather than a geometrically resolved Si calorimeter."
+}
