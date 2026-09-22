@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "purpose": "Counterfactual check of the Magnicon XXF-1 10 kHz output filter order under the same relaxed thermal-backbone profile. Compare c2=0 first-order versus documented second-order Bessel responses with a shared cutoff profiled only over the manual's 10 kHz +/-2.5% tolerance.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "orders": [1, 2],
+  "magnicon_filter": {
+    "cutoff_Hz": {
+      "min": 9750.0,
+      "max": 10250.0,
+      "nominal": 10000.0
+    },
+    "normalization": "phase",
+    "documented_order": 2,
+    "manual_statement": "Connector-box anti-alias filters are second-order Bessel, cutoff 10 kHz +/-2.5%.",
+    "semantics": "Order 1 is deliberately counterfactual. It tests whether one excess modeled pole could account for the zero-like residual; it is not an alternative hardware claim."
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 45100
+  },
+  "materiality_screen": {
+    "max_first_over_second_score_ratio": 0.8,
+    "min_first_order_rms_improvement_dB": 0.20,
+    "target_good_fit_rms_dB": 0.65
+  },
+  "guardrail": "The XXF-1 manual explicitly documents a second-order Bessel 10 kHz +/-2.5% output filter. The first-order branch is a diagnostic counterfactual only. A better first-order fit would indicate that the measured chain attenuates roughly one pole less than the present model over the fitted band; it would not establish that the connector-box hardware is actually first order."
+}
