@@ -1,0 +1,151 @@
+{
+  "method": {
+    "native_reaction": "C lambda, where C is the solver-assembled upper-right saddle block and lambda is the solver-native multiplier tail",
+    "native_capture_implementation": "../tools/elmer-hypre/src/fem/src/SolverUtils.F90: SolveWithLinearRestriction / Phase24CaptureFullSystem",
+    "audit_implementation": "scripts/support/run_phase24_native_mortar_flux_audit.py: read_blocks / reaction_capture",
+    "units": "C/B projector weights are m^2 for Galerkin thermal mortar; lambda is W/m^2; integrated C lambda is W",
+    "sign": "B=slave-master; slave reaction is positive for slave-to-master transfer; master reaction should be equal and opposite",
+    "one_sided_fluxes_used_as_balance": false
+  },
+  "cases": {
+    "historical": {
+      "case": "historical",
+      "TES_Joule_input_W": 3.203004762115138e-10,
+      "TES_to_membrane_reaction_W": 3.203008493383834e-10,
+      "TES_to_Stycast_reaction_W": 9.110423078127119e-18,
+      "Stycast_to_substrate_reaction_W": -3.8575922154147553e-19,
+      "mortar_reaction_contribution_W": 3.2030085806304723e-10,
+      "other_or_conformal_path_W": 8.975852787195026e-18,
+      "total_bath_flux_outgoing_W": 3.203008670389e-10,
+      "global_balance_error_W": -3.9082738619819823e-16,
+      "global_balance_relative": -1.2201898380572848e-06,
+      "evidence": "native SaveScalars bath/Joule plus native C lambda reaction; other path includes conformal/shared-node transport"
+    },
+    "Phase24": {
+      "case": "Phase24",
+      "TES_Joule_input_W": 4.232286181467137e-10,
+      "TES_to_membrane_reaction_W": 0.0,
+      "TES_to_Stycast_reaction_W": -1.5717285459408908e-19,
+      "Stycast_to_substrate_reaction_W": -7.570075602770421e-21,
+      "mortar_reaction_contribution_W": -1.647429301968595e-19,
+      "other_or_conformal_path_W": 4.2338208106824296e-10,
+      "total_bath_flux_outgoing_W": 4.233820809035e-10,
+      "global_balance_error_W": -1.5346275678634283e-13,
+      "global_balance_relative": -0.0003626001414042952,
+      "evidence": "native SaveScalars bath/Joule plus native C lambda reaction; other path includes conformal/shared-node transport"
+    }
+  },
+  "topology_runtime": {
+    "historical": {
+      "TES_to_membrane": {
+        "constraint_count": 2218,
+        "projector_nnz": 42564,
+        "row_norm_min": 3.359117237195734e-11,
+        "row_norm_mean": 8.375851997359592e-11,
+        "row_norm_max": 1.5807609264381378e-10,
+        "slave_nodes": 2218,
+        "master_nodes": 3366,
+        "slave_boundary_elements": 4274,
+        "master_boundary_elements": 6702,
+        "slave_area_m2": 2.4999999999999967e-07,
+        "master_area_m2": 4.900000000000003e-07,
+        "master_side": "Membrane_SiNx",
+        "slave_side": "TES"
+      },
+      "TES_to_Stycast": {
+        "constraint_count": 1671,
+        "projector_nnz": 32333,
+        "row_norm_min": 3.240752487162355e-11,
+        "row_norm_mean": 8.625648212321808e-11,
+        "row_norm_max": 1.5060847991932193e-10,
+        "slave_nodes": 2218,
+        "master_nodes": 1671,
+        "slave_boundary_elements": 4274,
+        "master_boundary_elements": 3214,
+        "slave_area_m2": 2.4999999999999967e-07,
+        "master_area_m2": 1.9470116968126126e-07,
+        "master_side": "Stycast",
+        "slave_side": "TES"
+      },
+      "Stycast_to_substrate": {
+        "constraint_count": 1671,
+        "projector_nnz": 32454,
+        "row_norm_min": 3.286273511169506e-11,
+        "row_norm_mean": 8.602593684234383e-11,
+        "row_norm_max": 1.482767081893258e-10,
+        "slave_nodes": 1671,
+        "master_nodes": 5743,
+        "slave_boundary_elements": 3214,
+        "master_boundary_elements": 11444,
+        "slave_area_m2": 1.9470116968126126e-07,
+        "master_area_m2": 9.999999999999983e-07,
+        "master_side": "Pb",
+        "slave_side": "Stycast"
+      },
+      "_runtime": {
+        "total_rows": 165516,
+        "primal_rows": 159956,
+        "constraint_rows": 5560,
+        "native_constraint_matrix_nnz": 107351,
+        "unclassified_rows": 0
+      }
+    },
+    "Phase24": {
+      "TES_to_membrane": {
+        "constraint_count": 0,
+        "projector_nnz": 0,
+        "row_norm_min": 0.0,
+        "row_norm_mean": 0.0,
+        "row_norm_max": 0.0,
+        "slave_nodes": 179,
+        "master_nodes": 179,
+        "slave_boundary_elements": 308,
+        "master_boundary_elements": 308,
+        "slave_area_m2": 2.5000000000000004e-07,
+        "master_area_m2": 2.5e-07,
+        "master_side": "Membrane_SiNx",
+        "slave_side": "TES"
+      },
+      "TES_to_Stycast": {
+        "constraint_count": 139,
+        "projector_nnz": 2489,
+        "row_norm_min": 5.100537695675437e-10,
+        "row_norm_mean": 1.0515494839267915e-09,
+        "row_norm_max": 1.6320355026140383e-09,
+        "slave_nodes": 179,
+        "master_nodes": 139,
+        "slave_boundary_elements": 308,
+        "master_boundary_elements": 241,
+        "slave_area_m2": 2.5000000000000004e-07,
+        "master_area_m2": 1.93737355602149e-07,
+        "master_side": "Stycast",
+        "slave_side": "TES"
+      },
+      "Stycast_to_substrate": {
+        "constraint_count": 47,
+        "projector_nnz": 749,
+        "row_norm_min": 1.5801292058500816e-09,
+        "row_norm_mean": 3.1586996810906807e-09,
+        "row_norm_max": 5.45299136105779e-09,
+        "slave_nodes": 47,
+        "master_nodes": 182,
+        "slave_boundary_elements": 74,
+        "master_boundary_elements": 314,
+        "slave_area_m2": 1.908503181567056e-07,
+        "master_area_m2": 1.0000000000000006e-06,
+        "master_side": "Pb",
+        "slave_side": "Stycast"
+      },
+      "_runtime": {
+        "total_rows": 96955,
+        "primal_rows": 96769,
+        "constraint_rows": 186,
+        "native_constraint_matrix_nnz": 3238,
+        "unclassified_rows": 0
+      }
+    }
+  },
+  "matched_point_note": "Matched-T and matched-P rows are controlled secant projections from native operating-point Q; no new production solve or \u00b1delta-T perturbation was run in this audit.",
+  "physics_changed": false,
+  "hypre_gpu": "NO-GO"
+}
