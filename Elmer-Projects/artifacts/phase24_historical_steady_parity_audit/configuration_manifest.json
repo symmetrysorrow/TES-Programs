@@ -1,0 +1,941 @@
+{
+  "schema_version": 1,
+  "historical_comsol_good": {
+    "steady": {
+      "sif": "generated\\cases\\case_tes_steady_singlepixel_prod_v2.sif",
+      "sif_sha256": "5d9dc6c0a18ad74c57cba27680019cf9eacd5c4eb04cddae7785fff42d2e389e",
+      "mesh": "mesh_singlepixel_prod_v2",
+      "mesh_header": {
+        "nodes": 159956,
+        "bulk_elements": 525378,
+        "boundary_elements": 81222
+      },
+      "simulation": {
+        "Max Output Level": "5",
+        "Coordinate System": "Cartesian 3D",
+        "Simulation Type": "Steady State",
+        "Steady State Max Iterations": "1",
+        "Output Intervals": "1",
+        "Solver Input File": "generated/cases/case_tes_steady_singlepixel_prod_v2.sif",
+        "Output File": "../work/meshes/mesh_singlepixel_prod_v2/case_tes_steady_singlepixel_prod_v2.result"
+      },
+      "constants": {
+        "Stefan Boltzmann": "Real 5.670374419e-8",
+        "TES Series File": "String \"case_tes_steady_singlepixel_prod_v2_series.csv\"",
+        "TES State File": "String \"mesh_singlepixel_prod_v2/prod_v2_steady.state\"",
+        "TES Bias Current": "Real 0.000715",
+        "TES Shunt Resistance": "Real 0.0039",
+        "TES R0": "Real 0.015527",
+        "TES Rmin": "Real 1e-06",
+        "TES Alpha": "Real 256.46",
+        "TES Beta": "Real 5.03",
+        "TES I0": "Real 0.000143537344932311",
+        "TES Tc": "Real 0.1709",
+        "TES T0": "Real 0.16857",
+        "TES Volume": "Real 4e-14",
+        "TES Inductance": "Real 1.23e-08",
+        "TES Iteration Series File": "String \"case_tes_steady_singlepixel_prod_v2_iterations.csv\""
+      },
+      "solver": {
+        "Equation": "Heat Equation",
+        "Procedure": "\"HeatSolve\" \"HeatSolver\"",
+        "Variable": "Temperature",
+        "Variable DOFs": "1",
+        "TES Inner Circuit Update": "Logical True",
+        "TES Body ID": "Integer 8",
+        "Nonlinear System Max Iterations": "120",
+        "Nonlinear System Convergence Tolerance": "1e-08",
+        "Nonlinear System Relaxation Factor": "1.0",
+        "Linear System Solver": "Direct",
+        "Linear System Direct Method": "MUMPS",
+        "Apply Mortar BCs": "True",
+        "Steady State Convergence Tolerance": "1e-08"
+      },
+      "materials": {
+        "\"Pb\"": {
+          "Name": "\"Pb\"",
+          "Density": "9860",
+          "Heat Capacity": "3.26e-05",
+          "Heat Conductivity": "0.0168"
+        },
+        "\"TES\"": {
+          "Name": "\"TES\"",
+          "Density": "15695",
+          "Heat Capacity": "0.00125",
+          "Heat Conductivity": "68"
+        },
+        "\"Stycast\"": {
+          "Name": "\"Stycast\"",
+          "Density": "2400",
+          "Heat Capacity": "0.00122",
+          "Heat Conductivity": "2.69094e-06"
+        },
+        "\"SiO2\"": {
+          "Name": "\"SiO2\"",
+          "Density": "2200",
+          "Heat Capacity": "0.000124",
+          "Heat Conductivity": "0.000494"
+        },
+        "\"Si\"": {
+          "Name": "\"Si\"",
+          "Density": "2332",
+          "Heat Capacity": "1.24e-06",
+          "Heat Conductivity": "0.37"
+        },
+        "\"SiNx\"": {
+          "Name": "\"SiNx\"",
+          "Density": "3400",
+          "Heat Capacity": "2.43e-05",
+          "Heat Conductivity": "0.000102"
+        },
+        "\"Membrane\"": {
+          "Name": "\"Membrane\"",
+          "Density": "2387",
+          "Heat Capacity": "9.819999999999999e-06",
+          "Heat Conductivity": "Variable Temperature"
+        }
+      },
+      "bodies": [
+        {
+          "Target Bodies(1)": "1",
+          "Name": "\"SiO2_2\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "2",
+          "Name": "\"Si_2\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "3",
+          "Name": "\"SiO2_1\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "4",
+          "Name": "\"Si_1\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "5",
+          "Name": "\"Membrane_Si1\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "6",
+          "Name": "\"SiNx\"",
+          "Equation": "1",
+          "Material": "6",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "7",
+          "Name": "\"Membrane_SiNx\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "8",
+          "Name": "\"TES\"",
+          "Equation": "1",
+          "Material": "2",
+          "Body Force": "1",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "9",
+          "Name": "\"Stycast\"",
+          "Equation": "1",
+          "Material": "3",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "10",
+          "Name": "\"abs\"",
+          "Equation": "1",
+          "Material": "1",
+          "Initial Condition": "1"
+        }
+      ],
+      "boundaries": [
+        {
+          "Target Boundaries(1)": "30",
+          "Name": "\"bath on SiO2_2__zmin\"",
+          "Temperature": "0.15"
+        },
+        {
+          "Target Boundaries(1)": "24",
+          "Name": "\"TES bottom mortar\"",
+          "Mortar BC": "3",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "23",
+          "Name": "\"Membrane_SiNx top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "26",
+          "Name": "\"Stycast bottom mortar\"",
+          "Mortar BC": "5",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "25",
+          "Name": "\"TES top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "27",
+          "Name": "\"Stycast top mortar\"",
+          "Mortar BC": "7",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "28",
+          "Name": "\"Pb bottom mortar\""
+        }
+      ],
+      "mesh_volumes_m3": {
+        "SiO2_2": 3.5019999999999876e-11,
+        "Si_2": 6.128500000000011e-09,
+        "SiO2_1": 1.800000000000008e-11,
+        "Si_1": 2.6265000000000085e-10,
+        "Membrane_Si1": 7.350000000000033e-12,
+        "SiNx": 1.750999999999994e-11,
+        "Membrane_SiNx": 4.899999999999972e-13,
+        "TES": 3.9999999999999546e-14,
+        "Stycast": 3.894023393625171e-12,
+        "abs": 7.000000000000784e-10
+      }
+    },
+    "transient": {
+      "sif": "generated\\cases\\case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step.sif",
+      "sif_sha256": "e29c939000959624a524ab51364ebc93627993a640da57be6874d64d27086274",
+      "mesh": "mesh_singlepixel_prod_v2",
+      "mesh_header": {
+        "nodes": 159956,
+        "bulk_elements": 525378,
+        "boundary_elements": 81222
+      },
+      "simulation": {
+        "Max Output Level": "5",
+        "Coordinate System": "Cartesian 3D",
+        "Simulation Type": "Transient",
+        "Timestepping Method": "BDF",
+        "BDF Order": "1",
+        "Timestep Sizes(8)": "1.8e-05 1e-06 1e-09 1e-08 1e-07 1e-06 6.250000000000001e-07 5.26134395146352e-05",
+        "Timestep Intervals(8)": "1 2 1 10 9 9 144 1",
+        "Output Intervals(8)": "999999 999999 999999 999999 999999 999999 999999 1",
+        "Steady State Max Iterations": "1",
+        "Solver Input File": "generated/cases/case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step.sif",
+        "Restart File": "../work/meshes/mesh_singlepixel_prod_v2/case_tes_steady_singlepixel_prod_v2.result",
+        "Restart Position": "0",
+        "Restart Time": "Real 0.02",
+        "Output File": "../work/meshes/mesh_singlepixel_prod_v2/case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step.result"
+      },
+      "constants": {
+        "Stefan Boltzmann": "Real 5.670374419e-8",
+        "TES Series File": "String \"case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step_series.csv\"",
+        "TES State File": "String \"work/meshes/mesh_singlepixel_prod_v2/case_tes_steady_singlepixel_prod_v2_original_timegrid_hybrid.state\"",
+        "TES Bias Current": "Real 0.000715",
+        "TES Shunt Resistance": "Real 0.0039",
+        "TES R0": "Real 0.015527",
+        "TES Rmin": "Real 1e-06",
+        "TES Alpha": "Real 256.46",
+        "TES Beta": "Real 5.03",
+        "TES I0": "Real 0.000143537344932311",
+        "TES Tc": "Real 0.1709",
+        "TES T0": "Real 0.16857",
+        "TES Volume": "Real 4e-14",
+        "TES Inductance": "Real 1.23e-08",
+        "TES Iteration Series File": "String \"case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step_iterations.csv\"",
+        "Pulse Energy": "Real 2.134099276488e-13",
+        "Pulse Start Time": "Real 0.02002",
+        "Pulse Duration": "Real 1e-09",
+        "Pulse Transition Zone": "Real 0",
+        "Pulse Sigma": "Real 5e-05",
+        "Pulse Shape": "Real 0.0",
+        "Pulse Radius": "Real 5e-05",
+        "Pulse Center X": "Real -7.13386462029e-20",
+        "Pulse Center Y": "Real 0.001",
+        "Pulse Center Z": "Real 0.00056216",
+        "Pulse Discrete Norm": "Real 1.97408698574938e-12"
+      },
+      "solver": {
+        "Equation": "Heat Equation",
+        "Procedure": "\"HeatSolve\" \"HeatSolver\"",
+        "Variable": "Temperature",
+        "Variable DOFs": "1",
+        "TES Inner Circuit Update": "Logical True",
+        "TES Body ID": "Integer 8",
+        "TES Inner Circuit Step Commit": "Logical True",
+        "Nonlinear System Max Iterations": "120",
+        "Nonlinear System Convergence Tolerance": "1e-08",
+        "Nonlinear System Relaxation Factor": "1.0",
+        "Lumped Mass Matrix": "True",
+        "Linear System Solver": "Direct",
+        "Linear System Direct Method": "MUMPS",
+        "Apply Mortar BCs": "True",
+        "Steady State Convergence Tolerance": "1e-09"
+      },
+      "materials": {
+        "\"Pb\"": {
+          "Name": "\"Pb\"",
+          "Density": "9860",
+          "Heat Capacity": "3.26e-05",
+          "Heat Conductivity": "0.0168"
+        },
+        "\"TES\"": {
+          "Name": "\"TES\"",
+          "Density": "15695",
+          "Heat Capacity": "0.00125",
+          "Heat Conductivity": "68"
+        },
+        "\"Stycast\"": {
+          "Name": "\"Stycast\"",
+          "Density": "2400",
+          "Heat Capacity": "0.00122",
+          "Heat Conductivity": "2.69094e-06"
+        },
+        "\"SiO2\"": {
+          "Name": "\"SiO2\"",
+          "Density": "2200",
+          "Heat Capacity": "0.000124",
+          "Heat Conductivity": "0.000494"
+        },
+        "\"Si\"": {
+          "Name": "\"Si\"",
+          "Density": "2332",
+          "Heat Capacity": "1.24e-06",
+          "Heat Conductivity": "0.37"
+        },
+        "\"SiNx\"": {
+          "Name": "\"SiNx\"",
+          "Density": "3400",
+          "Heat Capacity": "2.43e-05",
+          "Heat Conductivity": "0.000102"
+        },
+        "\"Membrane\"": {
+          "Name": "\"Membrane\"",
+          "Density": "2387",
+          "Heat Capacity": "9.819999999999999e-06",
+          "Heat Conductivity": "Variable Temperature"
+        }
+      },
+      "bodies": [
+        {
+          "Target Bodies(1)": "1",
+          "Name": "\"SiO2_2\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "2",
+          "Name": "\"Si_2\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "3",
+          "Name": "\"SiO2_1\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "4",
+          "Name": "\"Si_1\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "5",
+          "Name": "\"Membrane_Si1\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "6",
+          "Name": "\"SiNx\"",
+          "Equation": "1",
+          "Material": "6",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "7",
+          "Name": "\"Membrane_SiNx\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "8",
+          "Name": "\"TES\"",
+          "Equation": "1",
+          "Material": "2",
+          "Body Force": "1",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "9",
+          "Name": "\"Stycast\"",
+          "Equation": "1",
+          "Material": "3",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "10",
+          "Name": "\"abs\"",
+          "Equation": "1",
+          "Material": "1",
+          "Body Force": "2",
+          "Initial Condition": "1"
+        }
+      ],
+      "boundaries": [
+        {
+          "Target Boundaries(1)": "30",
+          "Name": "\"bath on SiO2_2__zmin\"",
+          "Temperature": "0.15"
+        },
+        {
+          "Target Boundaries(1)": "24",
+          "Name": "\"TES bottom mortar\"",
+          "Mortar BC": "3",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "23",
+          "Name": "\"Membrane_SiNx top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "26",
+          "Name": "\"Stycast bottom mortar\"",
+          "Mortar BC": "5",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "25",
+          "Name": "\"TES top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "27",
+          "Name": "\"Stycast top mortar\"",
+          "Mortar BC": "7",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "28",
+          "Name": "\"Pb bottom mortar\""
+        }
+      ],
+      "mesh_volumes_m3": {
+        "SiO2_2": 3.5019999999999876e-11,
+        "Si_2": 6.128500000000011e-09,
+        "SiO2_1": 1.800000000000008e-11,
+        "Si_1": 2.6265000000000085e-10,
+        "Membrane_Si1": 7.350000000000033e-12,
+        "SiNx": 1.750999999999994e-11,
+        "Membrane_SiNx": 4.899999999999972e-13,
+        "TES": 3.9999999999999546e-14,
+        "Stycast": 3.894023393625171e-12,
+        "abs": 7.000000000000784e-10
+      }
+    }
+  },
+  "current_phase24_full_nonlinear": {
+    "steady": {
+      "sif": "generated\\cases\\case_phase24_diag_one_shot_refined.sif",
+      "sif_sha256": "a524a055256368b6c7939df7d2e215e147eea57b56b11eb64cbbe7e281d119ac",
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "mesh_header": {
+        "nodes": 96769,
+        "bulk_elements": 489575,
+        "boundary_elements": 401577
+      },
+      "simulation": {
+        "Max Output Level": "5",
+        "Coordinate System": "Cartesian 3D",
+        "Simulation Type": "Steady State",
+        "Steady State Max Iterations": "1",
+        "Output Intervals": "1",
+        "Solver Input File": "generated/cases/case_phase24_diag_one_shot_refined.sif",
+        "Restart File": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.result",
+        "Restart Position": "0",
+        "Restart Time": "Real 0.02",
+        "Output File": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_refined.result"
+      },
+      "constants": {
+        "Stefan Boltzmann": "Real 5.670374419e-8",
+        "TES Series File": "String \"case_phase24_diag_one_shot_refined_series.csv\"",
+        "TES State File": "String \"work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_refined.state\"",
+        "TES Bias Current": "Real 0.000715",
+        "TES Shunt Resistance": "Real 0.0039",
+        "TES R0": "Real 0.015527",
+        "TES Rmin": "Real 1e-06",
+        "TES Alpha": "Real 256.46",
+        "TES Beta": "Real 5.03",
+        "TES I0": "Real 0.000143537344932311",
+        "TES Tc": "Real 0.1709",
+        "TES T0": "Real 0.16857",
+        "TES Volume": "Real 4e-14",
+        "TES Inductance": "Real 1.23e-08",
+        "TES Iteration Series File": "String \"case_phase24_diag_one_shot_refined_iterations.csv\""
+      },
+      "solver": {
+        "Equation": "Heat Equation",
+        "Procedure": "\"HeatSolve\" \"HeatSolver\"",
+        "Variable": "Temperature",
+        "Variable DOFs": "1",
+        "TES Inner Circuit Update": "Logical True",
+        "TES Body ID": "Integer 2",
+        "TES Inner Circuit Step Commit": "Logical True",
+        "Nonlinear System Max Iterations": "84",
+        "Nonlinear System Convergence Tolerance": "1e-08",
+        "Nonlinear System Relaxation Factor": "1.0",
+        "Lumped Mass Matrix": "True",
+        "Linear System Solver": "Direct",
+        "Linear System Direct Method": "MUMPS",
+        "Apply Mortar BCs": "True",
+        "Phase24 Full Restriction Capture": "Logical True",
+        "Phase24 Full Restriction Capture Prefix": "String \"artifacts/phase24_steady_branch_diagnosis/capture/case_phase24_diag_one_shot_refined\"",
+        "Phase24 Full Restriction Capture Timestep": "Integer 1",
+        "Phase24 Full Restriction Capture Max Iterations": "Integer 1",
+        "Phase24 Restart State Audit": "Logical True",
+        "Phase24 Restart Audit Fail Fast": "Logical True",
+        "Phase24 Restart State Audit Prefix": "String \"artifacts/phase24_steady_branch_diagnosis/capture/case_phase24_diag_one_shot_refined/restart_state_audit\"",
+        "Steady State Convergence Tolerance": "1e-09"
+      },
+      "materials": {
+        "\"Pb\"": {
+          "Name": "\"Pb\"",
+          "Density": "9860",
+          "Heat Capacity": "3.26e-05",
+          "Heat Conductivity": "0.0168"
+        },
+        "\"TES\"": {
+          "Name": "\"TES\"",
+          "Density": "15695",
+          "Heat Capacity": "0.00125",
+          "Heat Conductivity": "68"
+        },
+        "\"Stycast\"": {
+          "Name": "\"Stycast\"",
+          "Density": "2400",
+          "Heat Capacity": "0.00122",
+          "Heat Conductivity": "2.69094e-06"
+        },
+        "\"SiO2\"": {
+          "Name": "\"SiO2\"",
+          "Density": "2200",
+          "Heat Capacity": "0.000124",
+          "Heat Conductivity": "0.000494"
+        },
+        "\"Si\"": {
+          "Name": "\"Si\"",
+          "Density": "2332",
+          "Heat Capacity": "1.24e-06",
+          "Heat Conductivity": "0.37"
+        },
+        "\"SiNx\"": {
+          "Name": "\"SiNx\"",
+          "Density": "3400",
+          "Heat Capacity": "2.43e-05",
+          "Heat Conductivity": "0.000102"
+        },
+        "\"Membrane\"": {
+          "Name": "\"Membrane\"",
+          "Density": "2387",
+          "Heat Capacity": "9.819999999999999e-06",
+          "Heat Conductivity": "Variable Temperature"
+        }
+      },
+      "bodies": [
+        {
+          "Target Bodies(1)": "100",
+          "Name": "\"abs\"",
+          "Equation": "1",
+          "Material": "1",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "101",
+          "Name": "\"TES\"",
+          "Equation": "1",
+          "Material": "2",
+          "Body Force": "1",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "102",
+          "Name": "\"Stycast\"",
+          "Equation": "1",
+          "Material": "3",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "103",
+          "Name": "\"Membrane_SiNx\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "104",
+          "Name": "\"SiO2_1\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "105",
+          "Name": "\"Si_1\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "106",
+          "Name": "\"SiNx\"",
+          "Equation": "1",
+          "Material": "6",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "107",
+          "Name": "\"Si_2\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "108",
+          "Name": "\"SiO2_2\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "109",
+          "Name": "\"Membrane_Si1\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        }
+      ],
+      "boundaries": [
+        {
+          "Target Boundaries(1)": "1804",
+          "Name": "\"bath on SiO2_2__zmin\"",
+          "Temperature": "0.15"
+        },
+        {
+          "Target Boundaries(1)": "1104",
+          "Name": "\"TES bottom mortar\"",
+          "Mortar BC": "3",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1305",
+          "Name": "\"Membrane_SiNx top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "1204",
+          "Name": "\"Stycast bottom mortar\"",
+          "Mortar BC": "5",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1105",
+          "Name": "\"TES top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "1205",
+          "Name": "\"Stycast top mortar\"",
+          "Mortar BC": "7",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1004",
+          "Name": "\"Pb bottom mortar\""
+        }
+      ],
+      "mesh_volumes_m3": {
+        "abs": 6.999999999999993e-10,
+        "TES": 3.999999999999949e-14,
+        "Stycast": 3.874103524108725e-12,
+        "Membrane_SiNx": 4.899999999999993e-13,
+        "SiO2_1": 1.8000000000001347e-11,
+        "Si_1": 2.6265000000001175e-10,
+        "SiNx": 1.751000000000163e-11,
+        "Si_2": 6.128499999999992e-09,
+        "SiO2_2": 3.50200000000033e-11,
+        "Membrane_Si1": 7.350000000000019e-12
+      }
+    },
+    "transient": {
+      "sif": "generated\\cases\\case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar.sif",
+      "sif_sha256": "b2b0452fb194b59b7a992b177f4b2155ad70d44e81350f2d2c71308177ab5ca5",
+      "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "mesh_header": {
+        "nodes": 96769,
+        "bulk_elements": 489575,
+        "boundary_elements": 401577
+      },
+      "simulation": {
+        "Max Output Level": "5",
+        "Coordinate System": "Cartesian 3D",
+        "Simulation Type": "Transient",
+        "Timestepping Method": "BDF",
+        "BDF Order": "1",
+        "Timestep Sizes(7)": "1.8e-05 1e-06 1e-09 1e-08 1e-07 1e-06 6.250000000000001e-07",
+        "Timestep Intervals(7)": "1 2 1 10 9 9 47",
+        "Output Intervals(7)": "1 1 1 1 1 1 1",
+        "Steady State Max Iterations": "1",
+        "Solver Input File": "generated/cases/case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar.sif",
+        "Restart File": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.result",
+        "Restart Position": "0",
+        "Restart Time": "Real 0.02",
+        "Output File": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar.result"
+      },
+      "constants": {
+        "Stefan Boltzmann": "Real 5.670374419e-8",
+        "TES Series File": "String \"case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar_series.csv\"",
+        "TES State File": "String \"work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar.state\"",
+        "TES Bias Current": "Real 0.000715",
+        "TES Shunt Resistance": "Real 0.0039",
+        "TES R0": "Real 0.015527",
+        "TES Rmin": "Real 1e-06",
+        "TES Alpha": "Real 256.46",
+        "TES Beta": "Real 5.03",
+        "TES I0": "Real 0.000143537344932311",
+        "TES Tc": "Real 0.1709",
+        "TES T0": "Real 0.16857",
+        "TES Volume": "Real 4e-14",
+        "TES Inductance": "Real 1.23e-08",
+        "TES Iteration Series File": "String \"case_phase24_g45_fine_stycast32_mortar_40us_mumps_mortar_iterations.csv\"",
+        "Pulse Energy": "Real 2.134099276488e-13",
+        "Pulse Start Time": "Real 0.02002",
+        "Pulse Duration": "Real 1e-09",
+        "Pulse Transition Zone": "Real 0",
+        "Pulse Sigma": "Real 5e-05",
+        "Pulse Shape": "Real 0.0",
+        "Pulse Radius": "Real 5e-05",
+        "Pulse Center X": "Real 2.31992018444e-21",
+        "Pulse Center Y": "Real 0.001",
+        "Pulse Center Z": "Real 0.00056216",
+        "Pulse Discrete Norm": "Real 1.9531460592922e-12"
+      },
+      "solver": {
+        "Equation": "Heat Equation",
+        "Procedure": "\"HeatSolve\" \"HeatSolver\"",
+        "Variable": "Temperature",
+        "Variable DOFs": "1",
+        "TES Inner Circuit Update": "Logical True",
+        "TES Body ID": "Integer 2",
+        "TES Inner Circuit Step Commit": "Logical True",
+        "Nonlinear System Max Iterations": "120",
+        "Nonlinear System Convergence Tolerance": "1e-08",
+        "Nonlinear System Relaxation Factor": "1.0",
+        "Lumped Mass Matrix": "True",
+        "Linear System Solver": "Direct",
+        "Linear System Direct Method": "MUMPS",
+        "Apply Mortar BCs": "True",
+        "Steady State Convergence Tolerance": "1e-09"
+      },
+      "materials": {
+        "\"Pb\"": {
+          "Name": "\"Pb\"",
+          "Density": "9860",
+          "Heat Capacity": "3.26e-05",
+          "Heat Conductivity": "0.0168"
+        },
+        "\"TES\"": {
+          "Name": "\"TES\"",
+          "Density": "15695",
+          "Heat Capacity": "0.00125",
+          "Heat Conductivity": "68"
+        },
+        "\"Stycast\"": {
+          "Name": "\"Stycast\"",
+          "Density": "2400",
+          "Heat Capacity": "0.00122",
+          "Heat Conductivity": "2.69094e-06"
+        },
+        "\"SiO2\"": {
+          "Name": "\"SiO2\"",
+          "Density": "2200",
+          "Heat Capacity": "0.000124",
+          "Heat Conductivity": "0.000494"
+        },
+        "\"Si\"": {
+          "Name": "\"Si\"",
+          "Density": "2332",
+          "Heat Capacity": "1.24e-06",
+          "Heat Conductivity": "0.37"
+        },
+        "\"SiNx\"": {
+          "Name": "\"SiNx\"",
+          "Density": "3400",
+          "Heat Capacity": "2.43e-05",
+          "Heat Conductivity": "0.000102"
+        },
+        "\"Membrane\"": {
+          "Name": "\"Membrane\"",
+          "Density": "2387",
+          "Heat Capacity": "9.819999999999999e-06",
+          "Heat Conductivity": "Variable Temperature"
+        }
+      },
+      "bodies": [
+        {
+          "Target Bodies(1)": "100",
+          "Name": "\"abs\"",
+          "Equation": "1",
+          "Material": "1",
+          "Body Force": "2",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "101",
+          "Name": "\"TES\"",
+          "Equation": "1",
+          "Material": "2",
+          "Body Force": "1",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "102",
+          "Name": "\"Stycast\"",
+          "Equation": "1",
+          "Material": "3",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "103",
+          "Name": "\"Membrane_SiNx\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "104",
+          "Name": "\"SiO2_1\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "105",
+          "Name": "\"Si_1\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "106",
+          "Name": "\"SiNx\"",
+          "Equation": "1",
+          "Material": "6",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "107",
+          "Name": "\"Si_2\"",
+          "Equation": "1",
+          "Material": "5",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "108",
+          "Name": "\"SiO2_2\"",
+          "Equation": "1",
+          "Material": "4",
+          "Initial Condition": "1"
+        },
+        {
+          "Target Bodies(1)": "109",
+          "Name": "\"Membrane_Si1\"",
+          "Equation": "1",
+          "Material": "7",
+          "Initial Condition": "1"
+        }
+      ],
+      "boundaries": [
+        {
+          "Target Boundaries(1)": "1804",
+          "Name": "\"bath on SiO2_2__zmin\"",
+          "Temperature": "0.15"
+        },
+        {
+          "Target Boundaries(1)": "1104",
+          "Name": "\"TES bottom mortar\"",
+          "Mortar BC": "3",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1305",
+          "Name": "\"Membrane_SiNx top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "1204",
+          "Name": "\"Stycast bottom mortar\"",
+          "Mortar BC": "5",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1105",
+          "Name": "\"TES top mortar\""
+        },
+        {
+          "Target Boundaries(1)": "1205",
+          "Name": "\"Stycast top mortar\"",
+          "Mortar BC": "7",
+          "Galerkin Projector": "True",
+          "Plane Projector": "True"
+        },
+        {
+          "Target Boundaries(1)": "1004",
+          "Name": "\"Pb bottom mortar\""
+        }
+      ],
+      "mesh_volumes_m3": {
+        "abs": 6.999999999999993e-10,
+        "TES": 3.999999999999949e-14,
+        "Stycast": 3.874103524108725e-12,
+        "Membrane_SiNx": 4.899999999999993e-13,
+        "SiO2_1": 1.8000000000001347e-11,
+        "Si_1": 2.6265000000001175e-10,
+        "SiNx": 1.751000000000163e-11,
+        "Si_2": 6.128499999999992e-09,
+        "SiO2_2": 3.50200000000033e-11,
+        "Membrane_Si1": 7.350000000000019e-12
+      }
+    }
+  }
+}
