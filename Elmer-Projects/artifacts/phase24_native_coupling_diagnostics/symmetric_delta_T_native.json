@@ -1,0 +1,48 @@
+{
+  "method": "actual three-point fixed-power native MUMPS solves; symmetric \u00b15% power bracket used to obtain the local \u00b1delta-T pair",
+  "delta_T_K": 0.0011544205239601424,
+  "delta_T_mK": 1.1544205239601424,
+  "delta_Q_native_bath_W": 3.203005459698771e-11,
+  "delta_power_W": 3.2030047621151454e-11,
+  "G_native_bath_W_per_K": 2.774556925505041e-08,
+  "R_native_bath_K_per_W": 36041790.70205864,
+  "center": {
+    "case": "fixed_power_center",
+    "fixed_power_W": 3.203004762115138e-10,
+    "TES_temperature_K": 0.16154423291764256,
+    "TES_temperature_mK": 161.54423291764255,
+    "TES_to_membrane_W": 3.2030130185961174e-10,
+    "TES_to_Stycast_W": 1.9485965056062357e-20,
+    "Stycast_to_substrate_W": -1.9909973144379026e-20,
+    "native_bath_W": 3.203013018591877e-10,
+    "constraint_rows": 365,
+    "TES_to_membrane_rows": 179,
+    "solver": "CPU MUMPS native full saddle capture"
+  },
+  "minus": {
+    "case": "fixed_power_minus5pct",
+    "fixed_power_W": 3.042854524009381e-10,
+    "TES_temperature_K": 0.16096702265566154,
+    "TES_temperature_mK": 160.96702265566154,
+    "TES_to_membrane_W": 3.0428627563344705e-10,
+    "TES_to_Stycast_W": 1.9415757145152026e-20,
+    "Stycast_to_substrate_W": -1.9831013039672746e-20,
+    "native_bath_W": 3.042862756330318e-10,
+    "constraint_rows": 365,
+    "TES_to_membrane_rows": 179,
+    "solver": "CPU MUMPS native full saddle capture"
+  },
+  "plus": {
+    "case": "fixed_power_plus5pct",
+    "fixed_power_W": 3.3631550002208954e-10,
+    "TES_temperature_K": 0.16212144317962168,
+    "TES_temperature_mK": 162.12144317962168,
+    "TES_to_membrane_W": 3.363163302304377e-10,
+    "TES_to_Stycast_W": 1.955617295795009e-20,
+    "Stycast_to_substrate_W": -1.9974341484212028e-20,
+    "native_bath_W": 3.363163302300195e-10,
+    "constraint_rows": 365,
+    "TES_to_membrane_rows": 179,
+    "solver": "CPU MUMPS native full saddle capture"
+  }
+}
