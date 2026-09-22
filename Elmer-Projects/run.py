@@ -649,6 +649,23 @@ def run_case(
         fatal.append(f"solver process exited with code {proc.returncode}")
     completed = reported_done and proc.returncode == 0 and not fatal
 
+    # The native inner-circuit writer commits a row at the next timestep
+    # boundary.  A normal run has no next callback for its final accepted
+    # step; append that row once, before collecting the output.  Never flush
+    # an incomplete/failed run and never append when the row is already there.
+    final_flush_audit: dict[str, object] | None = None
+    series_name = spec.get("series_file")
+    iteration_name = spec.get("iteration_series_file")
+    if series_name and iteration_name:
+        from scripts.support.final_series_flush import flush_final_series_row
+        final_series = find_case_insensitive(ROOT / series_name)
+        final_iterations = find_case_insensitive(ROOT / iteration_name)
+        if final_series is not None and final_iterations is not None:
+            final_flush_audit = flush_final_series_row(final_series, final_iterations, completed)
+            (out_dir / "final_series_flush_audit.json").write_text(
+                json.dumps(final_flush_audit, indent=2) + "\n", encoding="utf-8"
+            )
+
     collected: list[str] = []
     for pattern in (f"{case_name}_t*.vtu", f"{case_name}*.pvtu", f"{case_name}.ep"):
         for src in mesh_dir.glob(pattern):

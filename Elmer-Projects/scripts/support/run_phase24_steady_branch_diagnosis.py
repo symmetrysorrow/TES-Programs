@@ -44,6 +44,8 @@ def case_spec(template: dict[str, Any], name: str, restart: str, iterations: int
         "restart_from": None, "restart_file_base": restart,
         "restart_file_path": f"../work/meshes/{MESH}/{restart}.result",
         "preexisting_restart": True, "restart_time": 0.020,
+        # The refined case uses HeatSolve's nonlinear iterations; keep the
+        # outer steady driver at one pass so the diagnostic remains bounded.
         "steady_state_max_iterations": 1, "output_intervals": 1,
         "series_file": f"{name}_series.csv",
         "iteration_series_file": f"{name}_iterations.csv",
@@ -82,6 +84,7 @@ def prepare(name: str, restart: str, iterations: int) -> Path:
     source_state = MESH_ROOT / f"{restart}.state"
     if not source_state.is_file():
         raise FileNotFoundError(f"restart circuit state missing: {source_state}")
+    shutil.copy2(source_state, OUT / f"{name}_original_state_before.state")
     shutil.copy2(source_state, MESH_ROOT / f"{name}.state")
     return path
 
@@ -98,14 +101,17 @@ def add_capture(sif: Path, capture: Path) -> None:
         + f'  "Phase24 Full Restriction Capture Prefix" = String "{capture.relative_to(ROOT).as_posix()}"\n'
         + '  "Phase24 Full Restriction Capture Timestep" = Integer 1\n'
         + '  "Phase24 Full Restriction Capture Max Iterations" = Integer 1\n'
+        + '  "Phase24 Restart State Audit" = Logical True\n'
+        + '  "Phase24 Restart Audit Fail Fast" = Logical True\n'
+        + f'  "Phase24 Restart State Audit Prefix" = String "{capture.relative_to(ROOT).as_posix()}/restart_state_audit"\n'
     )
     if needle not in text:
         raise ValueError(f"could not find mortar solver key in {sif}")
-    state_file = f"work/meshes/{MESH}/{sif.stem}.state"
-    # run.py validates state_file relative to the repository, while the UDF
-    # opens it relative to generated/cases.  Preserve the former in JSON and
-    # make only the diagnostic SIF's UDF path explicit.
-    text = text.replace(state_file, f"../../{state_file}")
+    # ElmerSolver is launched with ROOT as its cwd (see run.py).  The native
+    # HeatSolve hook and tes_parallel_circuit UDF both resolve Constants paths
+    # from that cwd, not from generated/cases.  Keep the repository-relative
+    # path emitted by build_cases.py.  Rewriting it to ../../work silently
+    # selects a different file and makes the restart look like a T0 fallback.
     sif.write_text(text.replace(needle, insertion, 1), encoding="utf-8")
 
 
@@ -281,7 +287,7 @@ def main() -> int:
         return 0
     restart = GATE3 if args.run == "gate3-one-shot" else REFINED
     name = "case_phase24_diag_one_shot_gate3" if args.run == "gate3-one-shot" else "case_phase24_diag_one_shot_refined"
-    project = prepare(name, restart, 1)
+    project = prepare(name, restart, 1 if args.run == "gate3-one-shot" else 84)
     run(name, project, capture=True)
     print(name)
     return 0

@@ -1,0 +1,11 @@
+{
+  "status": "launcher_flush_implemented_and_unit_tested",
+  "solver_final_after_pulse_us": 39.376,
+  "series_last_after_pulse_us": 38.751,
+  "missing_final_row_us": 0.625,
+  "root_cause": "native TES inner-circuit series row is deferred until the next timestep and has no normal-completion flush callback",
+  "physics_or_restart_change_in_this_audit": false,
+  "duplicate_rows_introduced": false,
+  "normal_completion_only": true,
+  "implementation": "run.py invokes scripts/support/final_series_flush.py before collecting outputs"
+}

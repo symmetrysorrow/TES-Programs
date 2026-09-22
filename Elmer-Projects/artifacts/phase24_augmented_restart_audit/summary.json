@@ -1,0 +1,227 @@
+{
+  "saved_checkpoint": {
+    "schema": "legacy-v1-5",
+    "temperature_K": 0.16856911499347801,
+    "current_A": 0.0001435681149930223,
+    "resistance_ohm": 0.015522836331977527,
+    "power_W": 3.1990633149344825e-10,
+    "previous_current_A": 0.0001435681149930223
+  },
+  "stages": {
+    "load_after": {
+      "stage": "load_after",
+      "physical_time_s": 1.02,
+      "timestep": 1,
+      "dt_s": 1.0,
+      "bdf_order": 0,
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_gate3.state",
+      "state_exists": true,
+      "state_open_success": true,
+      "state_parse_success": true,
+      "state_loaded": true,
+      "current_A": 0.0001435681149930223,
+      "previous_current_A": 0.0001435681149930223,
+      "resistance_ohm": 0.015522836331977527,
+      "power_W": 3.1990633149344825e-10,
+      "average_temperature_K": 0.0,
+      "sweep_temperature_K": 0.0,
+      "omega": 0.5,
+      "omega_cap": 0.5,
+      "previous_residual_W": 0.0,
+      "last_circuit_dt_s": -1.0,
+      "last_circuit_step": -2147483647,
+      "circuit_iteration": 0,
+      "circuit_calls_in_step": 0,
+      "circuit_initialized": false,
+      "circuit_power_initialized": false,
+      "source": "checkpoint_or_default"
+    },
+    "circuit_init_after": {
+      "stage": "circuit_init_after",
+      "physical_time_s": 1.02,
+      "timestep": 1,
+      "dt_s": 1.0,
+      "bdf_order": 0,
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_gate3.state",
+      "state_exists": true,
+      "state_open_success": true,
+      "state_parse_success": true,
+      "state_loaded": true,
+      "current_A": 0.0001435681149930223,
+      "previous_current_A": 0.0001435681149930223,
+      "resistance_ohm": 0.015522836331977527,
+      "power_W": 3.1990633149344825e-10,
+      "average_temperature_K": 0.16856911499347801,
+      "sweep_temperature_K": 0.1685691147074918,
+      "omega": 0.5,
+      "omega_cap": 0.5,
+      "previous_residual_W": 0.0,
+      "last_circuit_dt_s": -1.0,
+      "last_circuit_step": 1,
+      "circuit_iteration": 1,
+      "circuit_calls_in_step": 1,
+      "circuit_initialized": true,
+      "circuit_power_initialized": true,
+      "source": "loaded_or_default_then_init"
+    },
+    "pre_first_assembly": {
+      "stage": "pre_first_assembly",
+      "physical_time_s": 1.02,
+      "timestep": 1,
+      "dt_s": 1.0,
+      "bdf_order": 0,
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_gate3.state",
+      "state_exists": true,
+      "state_open_success": true,
+      "state_parse_success": true,
+      "state_loaded": true,
+      "current_A": 0.0001435681149930223,
+      "previous_current_A": 0.0001435681149930223,
+      "resistance_ohm": 0.015522836331977527,
+      "power_W": 3.1990633149344825e-10,
+      "average_temperature_K": 0.16856911499347801,
+      "sweep_temperature_K": 0.1685691147074918,
+      "omega": 0.5,
+      "omega_cap": 0.5,
+      "previous_residual_W": 0.0,
+      "last_circuit_dt_s": -1.0,
+      "last_circuit_step": 1,
+      "circuit_iteration": 1,
+      "circuit_calls_in_step": 1,
+      "circuit_initialized": true,
+      "circuit_power_initialized": true,
+      "source": "preserved_before_first_assembly"
+    }
+  },
+  "state_diff": {
+    "load_after": {
+      "current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "previous_current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "resistance_ohm": {
+        "saved": 0.015522836331977527,
+        "stage": 0.015522836331977527,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "power_W": {
+        "saved": 3.1990633149344825e-10,
+        "stage": 3.1990633149344825e-10,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      }
+    },
+    "circuit_init_after": {
+      "current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "previous_current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "resistance_ohm": {
+        "saved": 0.015522836331977527,
+        "stage": 0.015522836331977527,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "power_W": {
+        "saved": 3.1990633149344825e-10,
+        "stage": 3.1990633149344825e-10,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      }
+    },
+    "pre_first_assembly": {
+      "current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "previous_current_A": {
+        "saved": 0.0001435681149930223,
+        "stage": 0.0001435681149930223,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "resistance_ohm": {
+        "saved": 0.015522836331977527,
+        "stage": 0.015522836331977527,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      },
+      "power_W": {
+        "saved": 3.1990633149344825e-10,
+        "stage": 3.1990633149344825e-10,
+        "delta": 0.0,
+        "equal_within_tolerance": true
+      }
+    }
+  },
+  "transitions": {
+    "saved_to_load_after": {
+      "current_A": 0.0,
+      "previous_current_A": 0.0,
+      "resistance_ohm": 0.0,
+      "power_W": 0.0,
+      "average_temperature_K": -0.16856911499347801,
+      "omega": null,
+      "omega_cap": null,
+      "last_circuit_dt_s": null
+    },
+    "load_after_to_circuit_init_after": {
+      "current_A": 0.0,
+      "previous_current_A": 0.0,
+      "resistance_ohm": 0.0,
+      "power_W": 0.0,
+      "average_temperature_K": 0.16856911499347801,
+      "omega": 0.0,
+      "omega_cap": 0.0,
+      "last_circuit_dt_s": 0.0
+    },
+    "circuit_init_after_to_pre_first_assembly": {
+      "current_A": 0.0,
+      "previous_current_A": 0.0,
+      "resistance_ohm": 0.0,
+      "power_W": 0.0,
+      "average_temperature_K": 0.0,
+      "omega": 0.0,
+      "omega_cap": 0.0,
+      "last_circuit_dt_s": 0.0
+    }
+  },
+  "path_audit": {
+    "elmer_solver_cwd": "D:\\Github\\TES-Programs\\Elmer-Projects",
+    "sif": "generated\\cases\\case_phase24_diag_one_shot_gate3.sif",
+    "configured_state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_diag_one_shot_gate3.state",
+    "actual_loaded_state_file": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_diag_one_shot_gate3.state",
+    "configured_path_resolves_to": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_diag_one_shot_gate3.state",
+    "file_exists": true,
+    "open_success": true,
+    "parse_success": true,
+    "loaded": true,
+    "schema": "legacy-v1-5",
+    "state_sha256": "9c2eca9bbb26fc6fab1949511787b87350ccdc370658ed2a41d458959f5971a6",
+    "original_checkpoint_sha256_before": "9c2eca9bbb26fc6fab1949511787b87350ccdc370658ed2a41d458959f5971a6",
+    "original_checkpoint_sha256_after": "9c2eca9bbb26fc6fab1949511787b87350ccdc370658ed2a41d458959f5971a6",
+    "original_checkpoint_overwritten": false,
+    "diagnostic_snapshot_isolated": true
+  },
+  "all_required_fields_loaded": true,
+  "first_mismatch": null
+}

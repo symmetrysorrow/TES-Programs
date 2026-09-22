@@ -1,0 +1,12 @@
+--- tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90
++++ tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90
+@@
+-      IF (TransientSimulation .AND. FoundState .AND. ParEnv % MyPE == 0) THEN
++      ! A steady solve can also be a restart of a previously converged Gate3
++      ! field. Restore the circuit checkpoint before the first assembly too.
++      IF (FoundState .AND. ParEnv % MyPE == 0) THEN
+@@
++  CALL ListAddNewLogical( Params,'Phase24 Restart State Audit',.FALSE.)
++  CALL ListAddNewLogical( Params,'Phase24 Restart Audit Fail Fast',.FALSE.)
++  CALL ListAddNewString( Params,'Phase24 Restart State Audit Prefix', &
++       'phase24_restart_state_audit',.FALSE.)
