@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the Magnicon XXF-1 10 kHz response can remain second order while a non-Bessel damping/Q removes the residual, with c2 fixed to zero and the same relaxed thermal-backbone profile.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "magnicon_filter": {
+    "natural_frequency_Hz": {
+      "min": 9750.0,
+      "max": 10250.0,
+      "nominal": 10000.0
+    },
+    "documented_bessel_Q": 0.5773502691896258,
+    "free_Q": {
+      "min": 0.2,
+      "max": 2.0
+    },
+    "documented_order": 2,
+    "manual_statement": "Connector-box anti-alias filters are second-order Bessel, cutoff 10 kHz +/-2.5%.",
+    "semantics": "For the documented phase-normalized 2nd-order Bessel, the natural denominator frequency equals the 10 kHz nominal cutoff and Q=1/sqrt(3). The free-Q branch keeps a two-pole denominator and profiles only its damping Q; once Q is non-Bessel, the 9.75-10.25 kHz coordinate is treated as the natural frequency f0, not asserted to be a measured -3 dB cutoff."
+  },
+  "optimizer": {
+    "DE_maxiter": 200,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 9000,
+    "seed_offset": 47100
+  },
+  "materiality_screen": {
+    "max_freeQ_over_bessel_score_ratio": 0.8,
+    "min_freeQ_rms_improvement_dB": 0.20,
+    "target_good_fit_rms_dB": 0.65
+  },
+  "guardrail": "The XXF-1 manual documents a second-order Bessel 10 kHz +/-2.5% output filter. Free Q is a diagnostic deformation of the ideal Bessel transfer, not evidence that the hardware Q differs from 1/sqrt(3). A successful free-Q fit would show only that corner damping/shape can absorb the residual without changing filter order or adding c2."
+}
