@@ -1,0 +1,54 @@
+{
+  "historical_one_shot": {
+    "case": "case_phase24_historical_one_shot",
+    "started": "2026-09-22T18:48:01",
+    "finished": "2026-09-22T18:50:08",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "case_phase24_historical_one_shot.json": "b57adba9e3f9f8d9c3a710b7942de53d482b7cc6a333cb710f0bdca85ee7d35d",
+      "case_phase24_historical_one_shot.sif": "6552ef94816d264aaff565dc64efa5b42de8a2198f164c080e794b093337172b",
+      "mesh.header": "e1643089eb1e5301fbf88fe61b7634aebd997d96624c0402159c55174d29f3fb",
+      "tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+      "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+    },
+    "preexisting_restart_inputs_sha256": {
+      "work\\meshes\\mesh_singlepixel_prod_v2\\phase24_historical_restart_snapshot.result": "3f0be1ddf5b03a9412c28a0e563ed39d7f183b238715e218b5ad81d443d3e407",
+      "work\\meshes\\mesh_singlepixel_prod_v2\\case_phase24_historical_one_shot.state": "06853ace887be301ac0a37aa36fc75ef20fe63d13cad6cc2ce684e2fc2d47815"
+    },
+    "runtime_sif": null,
+    "runtime_sif_sha256": "6552ef94816d264aaff565dc64efa5b42de8a2198f164c080e794b093337172b",
+    "runtime_override_applied": false,
+    "udf_applied": false,
+    "udf_dll": null,
+    "udf_sha256": null,
+    "solver": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-steady-full-capture\\bin\\ElmerSolver.exe",
+    "elmer_prefix": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-steady-full-capture",
+    "runtime_bin": "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-steady-full-capture\\bin",
+    "toolchain_bin": "C:\\msys64\\ucrt64\\bin",
+    "amgx_config": null,
+    "amgx_config_sha256": null,
+    "runtime_artifacts_sha256": {
+      "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+      "libelmersolver": "c0b0dee1b6690aef22ae17e7e6c0613645401ef4919c68b79e63bf51006f2f1a",
+      "HeatSolve": "f2ad585ba698c9f08b5318d9e1a6c1c62e7561e845542d25c543496080de5907"
+    },
+    "mesh": "mesh_singlepixel_prod_v2",
+    "restart_from": null,
+    "collected_outputs": [
+      "case_phase24_historical_one_shot_iterations.csv"
+    ],
+    "result_file": "work\\meshes\\mesh_singlepixel_prod_v2\\case_phase24_historical_one_shot.result",
+    "convergence_tail": [
+      "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.17111228      2.0000000     ) :: heat equation",
+      "ComputeChange: SS (ITER=1) (NRM,RELC): ( 0.16579548      2.0000000     ) :: heat equation"
+    ],
+    "solver_completed": true,
+    "errors": []
+  },
+  "historical_refinement": {
+    "solver_process": "terminated after 21 nonlinear iterations because the 1e-8 nonlinear criterion stalled at approximately 1e-7 numerical change",
+    "final_result_file": false,
+    "captured_complete_iterations": 20,
+    "all_done": false
+  }
+}

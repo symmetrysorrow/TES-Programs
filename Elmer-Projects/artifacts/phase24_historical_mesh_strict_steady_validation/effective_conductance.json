@@ -1,0 +1,30 @@
+{
+  "historical": {
+    "route": "historical_refined_or_one_shot",
+    "mesh": "work\\meshes\\mesh_singlepixel_prod_v2",
+    "result": "work\\meshes\\mesh_singlepixel_prod_v2\\case_phase24_historical_one_shot.result",
+    "tes_temperature_K": 0.16856316510815095,
+    "joule_power_W": 3.2029879304735996e-10,
+    "bath_boundary_id": 30,
+    "bath_outgoing_W": 3.2058939396538107e-10,
+    "body_count": 10,
+    "boundary_count": 15,
+    "method_note": "Wedge elements are split into three linear tetrahedra for the flux diagnostic; this is a diagnostic FE integral, not a solver balance report.",
+    "secant_G_eff_W_per_K": 1.7270190298776826e-08,
+    "G_eff_definition": "bath integrated outgoing flux / (TES average temperature - 150 mK); secant diagnostic, not dQ/dT perturbation"
+  },
+  "phase24": {
+    "route": "phase24_refined",
+    "mesh": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+    "result": "work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.result",
+    "tes_temperature_K": 0.1665570245368069,
+    "joule_power_W": 4.2324271156482167e-10,
+    "bath_boundary_id": 21,
+    "bath_outgoing_W": 1.1307544453505394e-10,
+    "body_count": 10,
+    "boundary_count": 81,
+    "method_note": "Wedge elements are split into three linear tetrahedra for the flux diagnostic; this is a diagnostic FE integral, not a solver balance report.",
+    "secant_G_eff_W_per_K": 6.829454427858269e-09,
+    "G_eff_definition": "bath integrated outgoing flux / (TES average temperature - 150 mK); secant diagnostic, not dQ/dT perturbation"
+  }
+}

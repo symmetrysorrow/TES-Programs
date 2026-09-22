@@ -1,0 +1,354 @@
+{
+  "historical_restart_provenance": {
+    "historical_result": {
+      "path": "work\\meshes\\mesh_singlepixel_prod_v2\\case_tes_steady_singlepixel_prod_v2.result",
+      "exists": true,
+      "sha256": "3f0be1ddf5b03a9412c28a0e563ed39d7f183b238715e218b5ad81d443d3e407",
+      "size_bytes": 8317993
+    },
+    "historical_state": {
+      "path": "work\\meshes\\mesh_singlepixel_prod_v2\\case_tes_steady_singlepixel_prod_v2_original_timegrid.state",
+      "exists": true,
+      "sha256": "06853ace887be301ac0a37aa36fc75ef20fe63d13cad6cc2ce684e2fc2d47815",
+      "size_bytes": 121
+    },
+    "snapshot_result": {
+      "path": "work\\meshes\\mesh_singlepixel_prod_v2\\phase24_historical_restart_snapshot.result",
+      "exists": true,
+      "sha256": "3f0be1ddf5b03a9412c28a0e563ed39d7f183b238715e218b5ad81d443d3e407",
+      "size_bytes": 8317993
+    },
+    "snapshot_state": {
+      "path": "work\\meshes\\mesh_singlepixel_prod_v2\\phase24_historical_restart_snapshot.state",
+      "exists": true,
+      "sha256": "06853ace887be301ac0a37aa36fc75ef20fe63d13cad6cc2ce684e2fc2d47815",
+      "size_bytes": 121
+    },
+    "historical_steady_sif": {
+      "path": "generated\\cases\\case_tes_steady_singlepixel_prod_v2.sif",
+      "exists": true,
+      "sha256": "5d9dc6c0a18ad74c57cba27680019cf9eacd5c4eb04cddae7785fff42d2e389e",
+      "size_bytes": 4803
+    },
+    "historical_transient_sif": {
+      "path": "generated\\cases\\case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step.sif",
+      "exists": true,
+      "sha256": "e29c939000959624a524ab51364ebc93627993a640da57be6874d64d27086274",
+      "size_bytes": 6697
+    },
+    "historical_steady_manifest": {
+      "path": "results\\case_tes_steady_singlepixel_prod_v2\\manifest.json",
+      "exists": true,
+      "sha256": "5708ce87b7ab8a0557082d7d94c0f0ceb79a604d3b5e37ea708773a2dd4d68e5",
+      "size_bytes": 2196
+    },
+    "historical_transient_manifest": {
+      "path": "results\\case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid_cpu_smoke_177step\\manifest.json",
+      "exists": true,
+      "sha256": "0b8f19335547c2e249766d21ac559a856e6af5f7b8d53e4b7cd2b3a7534949eb",
+      "size_bytes": 2589
+    },
+    "historical_waveform_summary": {
+      "path": "artifacts\\comparison\\comsol_cpu_singlepixel_prod_v2_hybrid_100us\\summary.md",
+      "exists": true,
+      "sha256": "16f8d526acb345f729d6b6b71e1b1158395058b95440785e0cf90c454f21fa8c",
+      "size_bytes": 666
+    },
+    "historical_waveform_metrics": {
+      "path": "artifacts\\comparison\\comsol_cpu_singlepixel_prod_v2_hybrid_100us\\metrics.json",
+      "exists": true,
+      "sha256": "9350f65a88d46c0b7b71e9287ccf8615657ec1bbd136e6b6dcfb7570935780ab",
+      "size_bytes": 2049
+    },
+    "snapshot_semantics": {
+      "result_and_state_copied": true,
+      "originals_overwritten": false,
+      "restart_result_used_by_diagnostic": "work\\meshes\\mesh_singlepixel_prod_v2\\phase24_historical_restart_snapshot.result",
+      "restart_state_used_by_diagnostic": "work\\meshes\\mesh_singlepixel_prod_v2\\phase24_historical_restart_snapshot.state"
+    }
+  },
+  "restart_integrity_gate": {
+    "audit_path": "artifacts\\phase24_historical_mesh_strict_steady_validation\\capture\\one\\restart_state_audit.csv",
+    "stages": {
+      "load_after": {
+        "stage": "load_after",
+        "physical_time": "  1.0200000000000000E+00",
+        "timestep": "1",
+        "dt": "  1.0000000000000000E+00",
+        "bdf_order": "0",
+        "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+        "state_exists": "T",
+        "state_open_success": "T",
+        "state_parse_success": "T",
+        "state_loaded": "T",
+        "current": "  1.4377467748651372E-04",
+        "previous_current": "  1.4353734493231094E-04",
+        "resistance": "  1.5494931351952193E-02",
+        "power": "  3.2030047621151382E-10",
+        "average_temperature": "  0.0000000000000000E+00",
+        "sweep_temperature": "  0.0000000000000000E+00",
+        "omega": "  5.0000000000000000E-01",
+        "omega_cap": "  5.0000000000000000E-01",
+        "prev_residual": "  0.0000000000000000E+00",
+        "last_circuit_dt": " -1.0000000000000000E+00",
+        "last_circuit_step": "-2147483647",
+        "circuit_iter_in_step": "0",
+        "circuit_calls_in_step": "0",
+        "circuit_initialized": "F",
+        "circuit_power_initialized": "F",
+        "source": "checkpoint_or_default"
+      },
+      "circuit_init_after": {
+        "stage": "circuit_init_after",
+        "physical_time": "  1.0200000000000000E+00",
+        "timestep": "1",
+        "dt": "  1.0000000000000000E+00",
+        "bdf_order": "0",
+        "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+        "state_exists": "T",
+        "state_open_success": "T",
+        "state_parse_success": "T",
+        "state_loaded": "T",
+        "current": "  1.4377467748651372E-04",
+        "previous_current": "  1.4353734493231094E-04",
+        "resistance": "  1.5494931351952193E-02",
+        "power": "  3.2030047621151382E-10",
+        "average_temperature": "  1.6856317580942831E-01",
+        "sweep_temperature": "  1.6856316400298002E-01",
+        "omega": "  5.0000000000000000E-01",
+        "omega_cap": "  5.0000000000000000E-01",
+        "prev_residual": "  0.0000000000000000E+00",
+        "last_circuit_dt": " -1.0000000000000000E+00",
+        "last_circuit_step": "1",
+        "circuit_iter_in_step": "1",
+        "circuit_calls_in_step": "1",
+        "circuit_initialized": "T",
+        "circuit_power_initialized": "T",
+        "source": "loaded_or_default_then_init"
+      },
+      "pre_first_assembly": {
+        "stage": "pre_first_assembly",
+        "physical_time": "  1.0200000000000000E+00",
+        "timestep": "1",
+        "dt": "  1.0000000000000000E+00",
+        "bdf_order": "0",
+        "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+        "state_exists": "T",
+        "state_open_success": "T",
+        "state_parse_success": "T",
+        "state_loaded": "T",
+        "current": "  1.4377467748651372E-04",
+        "previous_current": "  1.4353734493231094E-04",
+        "resistance": "  1.5494931351952193E-02",
+        "power": "  3.2030047621151382E-10",
+        "average_temperature": "  1.6856317580942831E-01",
+        "sweep_temperature": "  1.6856316400298002E-01",
+        "omega": "  5.0000000000000000E-01",
+        "omega_cap": "  5.0000000000000000E-01",
+        "prev_residual": "  0.0000000000000000E+00",
+        "last_circuit_dt": " -1.0000000000000000E+00",
+        "last_circuit_step": "1",
+        "circuit_iter_in_step": "1",
+        "circuit_calls_in_step": "1",
+        "circuit_initialized": "T",
+        "circuit_power_initialized": "T",
+        "source": "preserved_before_first_assembly"
+      }
+    },
+    "fields": [
+      "current",
+      "previous_current",
+      "resistance",
+      "power",
+      "tes_temperature"
+    ],
+    "temperature_note": "load_after reports zero before the checkpoint's temperature-dependent circuit initialization; circuit_init_after and pre_first_assembly are the valid TES-temperature stages",
+    "saved_temperature_K": 0.1685631758094283,
+    "mismatches": [],
+    "passed": true
+  },
+  "historical_restart_state": {
+    "tes_temperature_K": 0.1685631758094283,
+    "current_A": 0.00014377467748651372,
+    "resistance_ohm": 0.015494931351952193,
+    "power_W": 3.203004762115138e-10,
+    "previous_current_A": 0.00014353734493231094
+  },
+  "historical_initial_full_residual": {
+    "full_residual_l2": 6.332096599170965e-10,
+    "primal_residual_l2": 6.332096599170964e-10,
+    "constraint_residual_l2": 6.202569189542044e-20,
+    "max_absolute_residual": 1.6997475429903135e-10,
+    "componentwise_backward_error_max": 0.0023285508474292405,
+    "componentwise_backward_error_constraint_max": 1.254907914655533e-09
+  },
+  "one_shot": {
+    "before": {
+      "tes_temperature_K": 0.1685631758094283,
+      "current_A": 0.00014377467748651372,
+      "resistance_ohm": 0.015494931351952193,
+      "power_W": 3.203004762115138e-10,
+      "previous_current_A": 0.00014353734493231094
+    },
+    "after_thermal_one_shot": {
+      "tes_temperature_K": 0.16856316510815095,
+      "temperature_K": 0.16856316510815095,
+      "raw_current_A": 0.00014377504977932306,
+      "resistance_ohm": 0.015494881130488247,
+      "raw_power_W": 3.2029879304735996e-10
+    },
+    "delta_T_mK": -1.0701277364244532e-05,
+    "delta_I_uA": 0.0003722928093466502,
+    "full_residual_capture": {
+      "directory": "artifacts\\phase24_historical_mesh_strict_steady_validation\\capture\\one\\ts0001_nl0001",
+      "dimensions": {
+        "total": 165516,
+        "primal": 159956,
+        "constraint": 5560
+      },
+      "before": {
+        "full_residual_l2": 6.332096599170965e-10,
+        "primal_residual_l2": 6.332096599170964e-10,
+        "constraint_residual_l2": 6.202569189542044e-20,
+        "max_absolute_residual": 1.6997475429903135e-10,
+        "componentwise_backward_error_max": 0.0023285508474292405,
+        "componentwise_backward_error_constraint_max": 1.254907914655533e-09
+      },
+      "after_direct_system": {
+        "full_residual_l2": 8.778631574823717e-17,
+        "primal_residual_l2": 8.778630438465698e-17,
+        "constraint_residual_l2": 4.466691791438934e-20,
+        "max_absolute_residual": 1.0282701575734816e-17
+      },
+      "sha256": {
+        "full_A_before.dat": "6bcebf7c08ccc6aef3cfbdbd1a0663a8806d498e2b140299d0f8855ce187611d",
+        "full_b_before.dat": "5981e0d06bfdc7644253f5f7f7039b6bf9a38745f7ea50408017adfbab2c7c8b",
+        "full_x_before.dat": "642faf2540d0e1dbc777e57665f47e63e2b043ca83f05940dcba987bd743c619",
+        "full_A_after.dat": "aa56ae2a8dd8530c480584b3323e414c4483f316f57ffacde4d3f1c013659fc3",
+        "full_b_after.dat": "29066205ded7ec77da897b385d006e32a82ff028c9e1e34e1d8a82d93f3a94ae",
+        "full_x_after.dat": "5b97181836b85d1e93c24253708f1e572cd7aaf31e6f2046a7a70586b73ff2c0"
+      }
+    },
+    "restart_integrity": {
+      "audit_path": "artifacts\\phase24_historical_mesh_strict_steady_validation\\capture\\one\\restart_state_audit.csv",
+      "stages": {
+        "load_after": {
+          "stage": "load_after",
+          "physical_time": "  1.0200000000000000E+00",
+          "timestep": "1",
+          "dt": "  1.0000000000000000E+00",
+          "bdf_order": "0",
+          "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+          "state_exists": "T",
+          "state_open_success": "T",
+          "state_parse_success": "T",
+          "state_loaded": "T",
+          "current": "  1.4377467748651372E-04",
+          "previous_current": "  1.4353734493231094E-04",
+          "resistance": "  1.5494931351952193E-02",
+          "power": "  3.2030047621151382E-10",
+          "average_temperature": "  0.0000000000000000E+00",
+          "sweep_temperature": "  0.0000000000000000E+00",
+          "omega": "  5.0000000000000000E-01",
+          "omega_cap": "  5.0000000000000000E-01",
+          "prev_residual": "  0.0000000000000000E+00",
+          "last_circuit_dt": " -1.0000000000000000E+00",
+          "last_circuit_step": "-2147483647",
+          "circuit_iter_in_step": "0",
+          "circuit_calls_in_step": "0",
+          "circuit_initialized": "F",
+          "circuit_power_initialized": "F",
+          "source": "checkpoint_or_default"
+        },
+        "circuit_init_after": {
+          "stage": "circuit_init_after",
+          "physical_time": "  1.0200000000000000E+00",
+          "timestep": "1",
+          "dt": "  1.0000000000000000E+00",
+          "bdf_order": "0",
+          "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+          "state_exists": "T",
+          "state_open_success": "T",
+          "state_parse_success": "T",
+          "state_loaded": "T",
+          "current": "  1.4377467748651372E-04",
+          "previous_current": "  1.4353734493231094E-04",
+          "resistance": "  1.5494931351952193E-02",
+          "power": "  3.2030047621151382E-10",
+          "average_temperature": "  1.6856317580942831E-01",
+          "sweep_temperature": "  1.6856316400298002E-01",
+          "omega": "  5.0000000000000000E-01",
+          "omega_cap": "  5.0000000000000000E-01",
+          "prev_residual": "  0.0000000000000000E+00",
+          "last_circuit_dt": " -1.0000000000000000E+00",
+          "last_circuit_step": "1",
+          "circuit_iter_in_step": "1",
+          "circuit_calls_in_step": "1",
+          "circuit_initialized": "T",
+          "circuit_power_initialized": "T",
+          "source": "loaded_or_default_then_init"
+        },
+        "pre_first_assembly": {
+          "stage": "pre_first_assembly",
+          "physical_time": "  1.0200000000000000E+00",
+          "timestep": "1",
+          "dt": "  1.0000000000000000E+00",
+          "bdf_order": "0",
+          "state_file": "work/meshes/mesh_singlepixel_prod_v2/case_phase24_historical_one_shot.state",
+          "state_exists": "T",
+          "state_open_success": "T",
+          "state_parse_success": "T",
+          "state_loaded": "T",
+          "current": "  1.4377467748651372E-04",
+          "previous_current": "  1.4353734493231094E-04",
+          "resistance": "  1.5494931351952193E-02",
+          "power": "  3.2030047621151382E-10",
+          "average_temperature": "  1.6856317580942831E-01",
+          "sweep_temperature": "  1.6856316400298002E-01",
+          "omega": "  5.0000000000000000E-01",
+          "omega_cap": "  5.0000000000000000E-01",
+          "prev_residual": "  0.0000000000000000E+00",
+          "last_circuit_dt": " -1.0000000000000000E+00",
+          "last_circuit_step": "1",
+          "circuit_iter_in_step": "1",
+          "circuit_calls_in_step": "1",
+          "circuit_initialized": "T",
+          "circuit_power_initialized": "T",
+          "source": "preserved_before_first_assembly"
+        }
+      },
+      "fields": [
+        "current",
+        "previous_current",
+        "resistance",
+        "power",
+        "tes_temperature"
+      ],
+      "temperature_note": "load_after reports zero before the checkpoint's temperature-dependent circuit initialization; circuit_init_after and pre_first_assembly are the valid TES-temperature stages",
+      "saved_temperature_K": 0.1685631758094283,
+      "mismatches": [],
+      "passed": true
+    }
+  },
+  "historical_refinement": {
+    "status": "interrupted_after_capture; no final result file",
+    "iterations": 21,
+    "final_tes_temperature_K": 0.16856314338940187,
+    "final_current_A": 0.0001437758053663839,
+    "final_resistance_ohm": 0.015494779204290071,
+    "final_power_W": 3.203000526500274e-10,
+    "final_full_residual": {
+      "full_residual_l2": 6.332090279878955e-10,
+      "primal_residual_l2": 6.332090279878956e-10,
+      "constraint_residual_l2": 3.328162389547869e-20,
+      "max_absolute_residual": 1.699745612652716e-10,
+      "componentwise_backward_error_max": 0.0023285491441470954,
+      "componentwise_backward_error_constraint_max": 6.226400580741898e-10
+    }
+  },
+  "interpretation": {
+    "strict_143_uA_fixed_point": true,
+    "classification": "historical mesh remains on the 143.78-uA fixed-point basin; one-shot is residual-qualified after direct correction, while the repeated refinement was stopped at the numerical-noise plateau",
+    "hypre_gpu": "NO-GO"
+  }
+}
