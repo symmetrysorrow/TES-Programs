@@ -38,6 +38,12 @@ SNAPSHOT_RESULT = "phase24_historical_restart_snapshot"
 SNAPSHOT_STATE = "phase24_historical_restart_snapshot.state"
 ONE_SHOT = "case_phase24_historical_one_shot"
 REFINED = "case_phase24_historical_refinement"
+CURRENT = "case_phase24_native_flux_one_shot"
+CURRENT_PROJECT_SOURCE = ROOT / "artifacts" / "phase24_gate4_5_nomortar" / "restart_refinement" / "mortar" / "project.json"
+CURRENT_MESH = "mesh_singlepixel_gpu_fine_stycast32_mortar"
+CURRENT_MESH_ROOT = ROOT / "work" / "meshes" / CURRENT_MESH
+CURRENT_RESULT = CURRENT_MESH_ROOT / "case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.result"
+CURRENT_STATE = CURRENT_MESH_ROOT / "case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.state"
 
 
 def sha256(path: Path) -> str:
@@ -155,6 +161,40 @@ def prepare_project(name: str, iterations: int) -> Path:
     return path
 
 
+def prepare_current_flux_project() -> Path:
+    """Make a one-iteration observer case from the existing Phase24 MUMPS case.
+
+    The restart/result and circuit state are copied to diagnostic names.  The
+    physical mesh, materials, circuit constants, and mortar setup stay those
+    of the existing refined Phase24 case; only the native observer and output
+    filenames differ.
+    """
+    if not CURRENT_RESULT.is_file() or not CURRENT_STATE.is_file():
+        raise FileNotFoundError("Phase24 refined result/state pair is incomplete")
+    source = json.loads(CURRENT_PROJECT_SOURCE.read_text(encoding="utf-8"))
+    template = source["cases"]["case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar"]
+    spec = copy.deepcopy(template)
+    spec.update({
+        "restart_from": None,
+        "restart_file_base": CURRENT_RESULT.stem,
+        "restart_file_path": f"../work/meshes/{CURRENT_MESH}/{CURRENT_RESULT.name}",
+        "preexisting_restart": True,
+        "state_file": f"work/meshes/{CURRENT_MESH}/{CURRENT}.state",
+        "output_file_path": f"../work/meshes/{CURRENT_MESH}/{CURRENT}.result",
+        "series_file": f"{CURRENT}_series.csv",
+        "iteration_series_file": f"{CURRENT}_iterations.csv",
+        "output_result": True,
+        "solver_comment": "Phase24 native body/interface flux observer; current CPU MUMPS route",
+    })
+    spec["solver"] = {**spec.get("solver", {}), "nonlinear_max_iterations": 1}
+    project = copy.deepcopy(source)
+    project["cases"] = {CURRENT: spec}
+    path = OUT / f"{CURRENT}.json"
+    write_json(path, project)
+    shutil.copy2(CURRENT_STATE, CURRENT_MESH_ROOT / f"{CURRENT}.state")
+    return path
+
+
 def add_capture(sif: Path, capture: Path, max_iterations: int) -> None:
     capture.mkdir(parents=True, exist_ok=True)
     for iteration in range(1, max_iterations + 1):
@@ -177,14 +217,192 @@ def add_capture(sif: Path, capture: Path, max_iterations: int) -> None:
     sif.write_text(text.replace(needle, insertion, 1), encoding="utf-8")
 
 
+def add_native_flux_capture(
+    sif: Path,
+    name: str,
+    *,
+    tes_body: int = 8,
+    membrane_body: int = 7,
+    stycast_body: int = 9,
+) -> Path:
+    """Enable Elmer's native SaveScalars flux integrals on the diagnostic SIF.
+
+    The heat solve remains Solver 1 and therefore uses the same CPU MUMPS
+    route.  SaveScalars is only an observer: it evaluates the converged
+    temperature field and the native diffusive-flux operator.  The
+    ``Flux Integrate Body`` selectors make the two sides of a mortar pair
+    explicit instead of silently choosing the first adjacent element.
+    """
+    scalar_path = OUT / "native_flux" / f"{name}.dat"
+    # SaveScalars resolves File paths below the mesh database directory
+    # (work/meshes for these cases), unlike the result/restart paths emitted by
+    # the project builder.  Keep the artifact in the repository root.
+    scalar_rel = os.path.relpath(scalar_path, ROOT / "work" / "meshes").replace("\\", "/")
+    scalar_path.parent.mkdir(parents=True, exist_ok=True)
+    text = sif.read_text(encoding="utf-8")
+    if "! Phase24 native body/interface flux capture" in text:
+        return scalar_path
+
+    # The generated case has a fixed BC numbering for both diagnostic meshes:
+    # 1=bath, 2=TES bottom/membrane, 3=membrane side, 4=Stycast bottom/TES,
+    # 5=TES top/Stycast, 6=Stycast side, 7=substrate side.  Mark only the
+    # physical faces needed by the comparison; no BC equation is changed.
+    bc_flags = {
+        1: ("Phase24 Native Bath Flux", None),
+        2: ("Phase24 Native TES Membrane Flux", tes_body),
+        3: ("Phase24 Native TES Membrane Flux", membrane_body),
+        5: ("Phase24 Native TES Stycast Flux", tes_body),
+        6: ("Phase24 Native TES Stycast Flux", stycast_body),
+    }
+    lines = text.splitlines()
+    out_lines: list[str] = []
+    current_bc: int | None = None
+    for line in lines:
+        match = re.match(r"\s*Boundary Condition\s+(\d+)\s*$", line, re.IGNORECASE)
+        if match:
+            current_bc = int(match.group(1))
+        out_lines.append(line)
+        if line.strip().lower() == "end" and current_bc in bc_flags:
+            flag, body = bc_flags[current_bc]
+            out_lines[-1:-1] = [f"  \"{flag}\" = Logical True"]
+            if body is not None:
+                out_lines[-1:-1] = [f"  Flux Integrate Body = Integer {body}"]
+            current_bc = None
+
+    # Mark the body named TES.  SaveScalars' masked body-volume observation
+    # records its volume alongside the native fluxes; the actual Joule input
+    # is written from the same native circuit series below.
+    joined = "\n".join(out_lines) + "\n"
+    body_flag = "  \"Phase24 Native TES Body\" = Logical True\n"
+    body_match = re.search(r"(Body\s+\d+\s*\n.*?Name\s*=\s*\"TES\"\s*\n)", joined, re.IGNORECASE | re.DOTALL)
+    if body_match and body_flag not in joined:
+        joined = joined[:body_match.end()] + body_flag + joined[body_match.end():]
+
+    if "Active Solvers(1) = 1" not in joined:
+        raise ValueError(f"cannot locate diagnostic equation in {sif}")
+    joined = joined.replace("  Active Solvers(1) = 1", "  Active Solvers(2) = 1 2", 1)
+    joined = joined.replace("  Variable DOFs = 1\n", "  Variable DOFs = 1\n  Calculate Loads = Logical True\n", 1)
+    solver = (
+        "! Phase24 native body/interface flux capture\n"
+        "Solver 2\n"
+        "  Equation = SaveScalars\n"
+        "  Procedure = \"SaveData\" \"SaveScalars\"\n"
+        f"  Filename = File \"{scalar_rel}\"\n"
+        "  Echo Values = Logical False\n"
+        "  Save Flux Range = Logical False\n"
+        "  Variable 1 = Temperature\n"
+        "  Coefficient 1 = Heat Conductivity\n"
+        "  Operator 1 = diffusive flux\n"
+        "  Mask Name 1 = String \"Phase24 Native Bath Flux\"\n"
+        "  Variable 2 = Temperature\n"
+        "  Coefficient 2 = Heat Conductivity\n"
+        "  Operator 2 = diffusive flux\n"
+        "  Mask Name 2 = String \"Phase24 Native TES Membrane Flux\"\n"
+        "  Variable 3 = Temperature\n"
+        "  Coefficient 3 = Heat Conductivity\n"
+        "  Operator 3 = diffusive flux\n"
+        "  Mask Name 3 = String \"Phase24 Native TES Stycast Flux\"\n"
+        "  Variable 4 = Temperature\n"
+        "  Operator 4 = body volume\n"
+        "  Mask Name 4 = String \"Phase24 Native TES Body\"\n"
+        "  Variable 5 = Temperature Loads\n"
+        "  Operator 5 = body int\n"
+        "  Mask Name 5 = String \"Phase24 Native TES Body\"\n"
+        "End\n\n"
+    )
+    if solver not in joined:
+        insert_at = joined.find("Equation 1\n")
+        joined = joined[:insert_at] + solver + joined[insert_at:]
+    sif.write_text(joined, encoding="utf-8")
+    return scalar_path
+
+
 def capture_path(name: str) -> Path:
     # The native diagnostic keeps a fixed-length Fortran path buffer.  Keep
     # the capture leaf short enough that the .dat suffix is not truncated.
-    leaf = "one" if name == ONE_SHOT else "refined"
+    leaf = {ONE_SHOT: "one", REFINED: "refined", CURRENT: "phase24"}.get(name, name)
     return OUT / "capture" / leaf
 
 
-def run_case(name: str, project: Path, max_iterations: int) -> None:
+def parse_native_scalars(name: str, scalar_path: Path) -> None:
+    """Materialize SaveScalars' native names/data pair as a stable CSV."""
+    names_path = scalar_path.with_name(scalar_path.name + ".names")
+    if not scalar_path.is_file() or not names_path.is_file():
+        raise RuntimeError(f"native SaveScalars output missing for {name}: {scalar_path}")
+    names: list[str] = []
+    in_columns = False
+    for line in names_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.strip() == "Variables in columns of matrix:":
+            in_columns = True
+            continue
+        if not in_columns:
+            continue
+        match = re.match(r"\s*\d+\s*:\s*(.*)$", line)
+        if match:
+            names.append(match.group(1).strip())
+    data_lines = [line.split() for line in scalar_path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip()]
+    if not data_lines:
+        raise RuntimeError(f"native SaveScalars data empty for {name}: {scalar_path}")
+    values = data_lines[-1]
+    if len(values) != len(names):
+        raise RuntimeError(f"native SaveScalars columns mismatch for {name}: {len(names)} names vs {len(values)} values")
+    semantic_names = {
+        "diffusive flux: temperature over bc 1": "native bath boundary diffusive flux (W)",
+        "diffusive flux: temperature over bc 2": "native TES side flux: TES-to-membrane (W)",
+        "diffusive flux:  over bc 3": "native membrane side flux: membrane-to-TES (W)",
+        "diffusive flux: temperature over bc 5": "native TES side flux: TES-to-Stycast (W)",
+        "diffusive flux:  over bc 6": "native Stycast side flux: Stycast-to-TES (W)",
+    }
+    rows = [{"case": name, "quantity": semantic_names.get(quantity, quantity), "value": float(value)} for quantity, value in zip(names, values)]
+    series_candidates = [
+        ROOT / "results" / name / f"{name}_iterations.csv",
+        ROOT / f"{name}_iterations.csv",
+    ]
+    series = next((path for path in series_candidates if path.is_file()), None)
+    if series is not None:
+        series_rows = list(csv.DictReader(series.open(encoding="utf-8")))
+        if series_rows:
+            latest = series_rows[-1]
+            for label, field in (
+                ("native TES body source: relaxed Joule power (W)", "relaxed_power_W"),
+                ("native TES body source: raw Joule power (W)", "raw_power_W"),
+            ):
+                if field in latest:
+                    rows.append({"case": name, "quantity": label, "value": float(latest[field])})
+    path = OUT / f"native_flux_integrals_{name}.csv"
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["case", "quantity", "value"])
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def aggregate_native_scalars() -> list[dict[str, Any]]:
+    """Collect per-case native SaveScalars rows into the audit artifact."""
+    rows: list[dict[str, Any]] = []
+    for name in (ONE_SHOT, REFINED, CURRENT):
+        path = OUT / f"native_flux_integrals_{name}.csv"
+        if path.is_file():
+            rows.extend(
+                {"case": row["case"], "quantity": row["quantity"], "value": float(row["value"])}
+                for row in csv.DictReader(path.open(encoding="utf-8"))
+            )
+    if rows:
+        with (OUT / "native_flux_integrals.csv").open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=["case", "quantity", "value"])
+            writer.writeheader()
+            writer.writerows(rows)
+    return rows
+
+
+def run_case(
+    name: str,
+    project: Path,
+    max_iterations: int,
+    *,
+    tes_body: int = 8,
+    membrane_body: int = 7,
+    stycast_body: int = 9,
+) -> None:
     sync = subprocess.run(
         [sys.executable, str(ROOT / "sync_elmer_parameters.py"), str(project)],
         cwd=ROOT, text=True, capture_output=True,
@@ -194,6 +412,13 @@ def run_case(name: str, project: Path, max_iterations: int) -> None:
         raise RuntimeError(f"parameter sync failed for {name}")
     capture = capture_path(name)
     add_capture(ROOT / "generated" / "cases" / f"{name}.sif", capture, max_iterations)
+    scalar_path = add_native_flux_capture(
+        ROOT / "generated" / "cases" / f"{name}.sif",
+        name,
+        tes_body=tes_body,
+        membrane_body=membrane_body,
+        stycast_body=stycast_body,
+    )
     command = [
         sys.executable, str(ROOT / "run.py"), name, "--project", str(project), "--skip-sync",
         "--mpi-procs", "1", "--elmer-solver", str(SOLVER), "--runtime-bin", str(RUNTIME),
@@ -208,6 +433,7 @@ def run_case(name: str, project: Path, max_iterations: int) -> None:
     completed_iterations = max((int(path.name.split("nl")[-1]) for path in roots if path.is_dir()), default=0)
     if completed_iterations == 0:
         raise RuntimeError(f"{name} produced no native full-system capture")
+    parse_native_scalars(name, scalar_path)
     subprocess.run([
         sys.executable, str(ROOT / "scripts" / "support" / "phase24_full_restriction_capture.py"),
         "materialize", "--root", str(capture), "--iterations", str(completed_iterations),
@@ -384,6 +610,7 @@ def enrich_outputs() -> None:
         final_t = tes_average(final_x[: int(final_meta["runtime"]["primal_rows"])], final_perm)
         refinement_status = "interrupted_after_capture; no final result file"
     final_circuit = circuit_at(final_t)
+    native_rows = aggregate_native_scalars()
     one_shot = {
         "before": {"tes_temperature_K": initial_state[0], "current_A": initial_state[1], "resistance_ohm": initial_state[2], "power_W": initial_state[3], "previous_current_A": initial_state[4]},
         "after_thermal_one_shot": {"tes_temperature_K": one_after_t, **one_after_circuit},
@@ -439,6 +666,7 @@ def enrich_outputs() -> None:
         "historical_initial_full_residual": initial["before"],
         "one_shot": one_shot,
         "historical_refinement": {"status": refinement_status, "iterations": len(rows), "final_tes_temperature_K": final_t, "final_current_A": final_circuit["raw_current_A"], "final_resistance_ohm": final_circuit["resistance_ohm"], "final_power_W": final_circuit["raw_power_W"], "final_full_residual": final["before"]},
+        "native_flux_capture": {"artifact": str((OUT / "native_flux_integrals.csv").relative_to(ROOT)), "rows": native_rows, "method": "Elmer native SaveScalars diffusive-flux/body-integral observers on the same CPU MUMPS HeatSolve route"},
         "interpretation": {"strict_143_uA_fixed_point": one_shot["delta_T_mK"] < 1.0e-3 and abs(one_shot["delta_I_uA"]) < 1.0e-2 and abs(final_circuit["raw_current_A"] - 143.78e-6) < 2e-6, "classification": "historical mesh remains on the 143.78-uA fixed-point basin; one-shot is residual-qualified after direct correction, while the repeated refinement was stopped at the numerical-noise plateau", "hypre_gpu": "NO-GO"},
     }
     write_json(OUT / "summary.json", summary)
@@ -451,6 +679,7 @@ def enrich_outputs() -> None:
         f"- One-shot thermal correction: Delta T={one_shot['delta_T_mK']:.9f} mK; field-revaluated Delta I={one_shot['delta_I_uA']:.9f} uA; post-field current={one_after_circuit['raw_current_A'] * 1e6:.9f} uA.",
         f"- Full native MUMPS refinement: {final_t * 1e3:.9f} mK / {final_circuit['raw_current_A'] * 1e6:.9f} uA after {len(rows)} nonlinear rows ({refinement_status}).",
         f"- Final captured residual: L2={final['before']['full_residual_l2']:.9e}; primal={final['before']['primal_residual_l2']:.9e}; constraint={final['before']['constraint_residual_l2']:.9e}; max={final['before']['max_absolute_residual']:.9e}.",
+        f"- Native flux capture: `{(OUT / 'native_flux_integrals.csv').relative_to(ROOT)}` records SaveScalars bath/mortar one-sided diffusive fluxes, TES body volume/load integral, and native raw/relaxed Joule power.",
         "",
         "The historical 143.78-uA restart is a strict fixed-point candidate under the current native HeatSolve + CPU MUMPS replay: the one-shot correction is only 1.07e-5 mK and 3.72e-4 uA, and 21 captured nonlinear rows remain in the same 143.776-uA basin. The pre-solve residual is larger than the direct-solve residual because the saved restart is not the exact linear-system solution, but its physical correction is negligible.",
         "",
@@ -466,12 +695,30 @@ def enrich_outputs() -> None:
         for row in rows:
             if row["interface"] in {"TES_to_membrane", "TES_to_Stycast"}:
                 lines.insert(-2, f"- One-sided {row['route']} {row['interface']} flux: {float(row['left_flux_outgoing_W']):.9e} W / {float(row['right_flux_outgoing_W']):.9e} W; signed mismatch={float(row['signed_mismatch_W']):.9e} W (diagnostic wedge/mortar extraction, not solver-native flux).")
+    if native_rows:
+        native_by_case: dict[str, dict[str, float]] = {}
+        for row in native_rows:
+            native_by_case.setdefault(row["case"], {})[row["quantity"]] = float(row["value"])
+        for case, label in ((ONE_SHOT, "historical one-shot"), (CURRENT, "Phase24 one-shot")):
+            values = native_by_case.get(case)
+            if not values:
+                continue
+            lines.insert(-2, (
+                f"- Native SaveScalars {label}: bath={values.get('native bath boundary diffusive flux (W)', float('nan')):.9e} W; "
+                f"TES→membrane={values.get('native TES side flux: TES-to-membrane (W)', float('nan')):.9e} W / "
+                f"membrane side={values.get('native membrane side flux: membrane-to-TES (W)', float('nan')):.9e} W; "
+                f"TES→Stycast={values.get('native TES side flux: TES-to-Stycast (W)', float('nan')):.9e} W / "
+                f"Stycast side={values.get('native Stycast side flux: Stycast-to-TES (W)', float('nan')):.9e} W; "
+                f"native Joule={values.get('native TES body source: relaxed Joule power (W)', float('nan')):.9e} W."
+            ))
+        lines.insert(-2, "- Native interface values are solver-native one-sided boundary integrals. They are retained as diagnostics; mortar reaction/constraint flux conservation still needs a dedicated native mortar-reaction integral before treating the two sides as an energy-balance proof.")
     (OUT / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="snapshot and execute both diagnostics")
+    parser.add_argument("--run-current", action="store_true", help="run the one-iteration Phase24 CPU MUMPS native-flux observer")
     parser.add_argument("--audit", action="store_true", help="materialize reports from completed diagnostics")
     args = parser.parse_args()
     if args.run:
@@ -480,10 +727,13 @@ def main() -> int:
         run_case(ONE_SHOT, one_project, 1)
         refined_project = prepare_project(REFINED, 120)
         run_case(REFINED, refined_project, 120)
+    if args.run_current:
+        current_project = prepare_current_flux_project()
+        run_case(CURRENT, current_project, 1, tes_body=2, membrane_body=4, stycast_body=3)
     if args.audit:
         enrich_outputs()
-    if not args.run and not args.audit:
-        parser.error("choose --run and/or --audit")
+    if not args.run and not args.run_current and not args.audit:
+        parser.error("choose --run, --run-current, and/or --audit")
     return 0
 
 
