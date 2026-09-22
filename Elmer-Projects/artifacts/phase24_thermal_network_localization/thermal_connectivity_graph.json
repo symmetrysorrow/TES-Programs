@@ -1,0 +1,710 @@
+{
+  "historical": {
+    "label": "historical",
+    "mesh": "work/meshes/mesh_singlepixel_prod_v2",
+    "bodies": {
+      "1": "SiO2_2",
+      "2": "Si_2",
+      "3": "SiO2_1",
+      "4": "Si_1",
+      "5": "Membrane_Si1",
+      "6": "SiNx",
+      "7": "Membrane_SiNx",
+      "8": "TES",
+      "9": "Stycast",
+      "10": "abs"
+    },
+    "edges": [
+      {
+        "source": "TES->membrane",
+        "connected_body_ids": [
+          8,
+          7
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 2.4999999999999967e-07,
+        "boundary_ids": [
+          24,
+          23
+        ],
+        "node_count": [
+          2218,
+          3366
+        ],
+        "element_face_count": [
+          4274,
+          6702
+        ],
+        "mortar_constraint_count": 2218,
+        "shared_node_count": 0
+      },
+      {
+        "source": "TES->Stycast",
+        "connected_body_ids": [
+          8,
+          9
+        ],
+        "connected_bodies": [
+          "TES",
+          "Stycast"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.9470116968126126e-07,
+        "boundary_ids": [
+          25,
+          26
+        ],
+        "node_count": [
+          2218,
+          1671
+        ],
+        "element_face_count": [
+          4274,
+          3214
+        ],
+        "mortar_constraint_count": 1671,
+        "shared_node_count": 0
+      },
+      {
+        "source": "Stycast->substrate",
+        "connected_body_ids": [
+          9,
+          1
+        ],
+        "connected_bodies": [
+          "Stycast",
+          "SiO2_2"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.9470116968126126e-07,
+        "boundary_ids": [
+          27,
+          28
+        ],
+        "node_count": [
+          1671,
+          5743
+        ],
+        "element_face_count": [
+          3214,
+          11444
+        ],
+        "mortar_constraint_count": 1671,
+        "shared_node_count": 0
+      }
+    ],
+    "direct_shared_edges": [
+      {
+        "connected_body_ids": [
+          1,
+          2
+        ],
+        "connected_bodies": [
+          "SiO2_2",
+          "Si_2"
+        ],
+        "shared_node_count": 2416,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          2,
+          3
+        ],
+        "connected_bodies": [
+          "Si_2",
+          "SiO2_1"
+        ],
+        "shared_node_count": 2416,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          3,
+          4
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_1"
+        ],
+        "shared_node_count": 2416,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          3,
+          5
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 3366,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          4,
+          5
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 84,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          4,
+          6
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "SiNx"
+        ],
+        "shared_node_count": 2416,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          4,
+          7
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "Membrane_SiNx"
+        ],
+        "shared_node_count": 28,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          5,
+          6
+        ],
+        "connected_bodies": [
+          "Membrane_Si1",
+          "SiNx"
+        ],
+        "shared_node_count": 28,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          5,
+          7
+        ],
+        "connected_bodies": [
+          "Membrane_Si1",
+          "Membrane_SiNx"
+        ],
+        "shared_node_count": 3366,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          6,
+          7
+        ],
+        "connected_bodies": [
+          "SiNx",
+          "Membrane_SiNx"
+        ],
+        "shared_node_count": 56,
+        "topology_type": "conformal shared-node"
+      }
+    ],
+    "bath_boundary": {
+      "case": "historical",
+      "label": "historical",
+      "boundary_id": 30,
+      "boundary_name": "bath",
+      "connected_body": "SiO2_2",
+      "area_m2": 1.7509999999999976e-05,
+      "face_count": 4624,
+      "temperature_K": 0.15,
+      "bc_type": "Dirichlet Temperature"
+    }
+  },
+  "original_phase24": {
+    "label": "original Phase24",
+    "mesh": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar",
+    "bodies": {
+      "100": "abs",
+      "101": "TES",
+      "102": "Stycast",
+      "103": "Membrane_SiNx",
+      "104": "SiO2_1",
+      "105": "Si_1",
+      "106": "SiNx",
+      "107": "Si_2",
+      "108": "SiO2_2",
+      "109": "Membrane_Si1"
+    },
+    "edges": [
+      {
+        "source": "TES->membrane",
+        "connected_body_ids": [
+          101,
+          103
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "topology_type": "shared-node",
+        "interface_area_m2": 2.5e-07,
+        "boundary_ids": [
+          1104,
+          1305
+        ],
+        "node_count": [
+          179,
+          179
+        ],
+        "element_face_count": [
+          308,
+          308
+        ],
+        "mortar_constraint_count": 0,
+        "shared_node_count": 179
+      },
+      {
+        "source": "TES->Stycast",
+        "connected_body_ids": [
+          101,
+          102
+        ],
+        "connected_bodies": [
+          "TES",
+          "Stycast"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.93737355602149e-07,
+        "boundary_ids": [
+          1105,
+          1204
+        ],
+        "node_count": [
+          179,
+          139
+        ],
+        "element_face_count": [
+          308,
+          241
+        ],
+        "mortar_constraint_count": 139,
+        "shared_node_count": 0
+      },
+      {
+        "source": "Stycast->substrate",
+        "connected_body_ids": [
+          102,
+          108
+        ],
+        "connected_bodies": [
+          "Stycast",
+          "SiO2_2"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.908503181567056e-07,
+        "boundary_ids": [
+          1205,
+          1004
+        ],
+        "node_count": [
+          47,
+          182
+        ],
+        "element_face_count": [
+          74,
+          314
+        ],
+        "mortar_constraint_count": 47,
+        "shared_node_count": 0
+      }
+    ],
+    "direct_shared_edges": [
+      {
+        "connected_body_ids": [
+          101,
+          103
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "shared_node_count": 179,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          105
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Si_1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          106
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "SiNx"
+        ],
+        "shared_node_count": 136,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          109
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 380,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          105
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_1"
+        ],
+        "shared_node_count": 10395,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          107
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_2"
+        ],
+        "shared_node_count": 10392,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          109
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 324,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          106
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "SiNx"
+        ],
+        "shared_node_count": 10430,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          109
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 132,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          106,
+          109
+        ],
+        "connected_bodies": [
+          "SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          107,
+          108
+        ],
+        "connected_bodies": [
+          "Si_2",
+          "SiO2_2"
+        ],
+        "shared_node_count": 10396,
+        "topology_type": "conformal shared-node"
+      }
+    ],
+    "bath_boundary": {
+      "case": "original_phase24",
+      "label": "original Phase24",
+      "boundary_id": 1804,
+      "boundary_name": "SiO2_2__zmin",
+      "connected_body": "SiO2_2",
+      "area_m2": 1.750999999999974e-05,
+      "face_count": 20322,
+      "temperature_K": 0.15,
+      "bc_type": "Dirichlet Temperature"
+    }
+  },
+  "phase24_tes_membrane_mortar": {
+    "label": "Phase24 TES-membrane mortar",
+    "mesh": "work/meshes/mesh_phase24_native_coupling_diag",
+    "bodies": {
+      "100": "abs",
+      "101": "TES",
+      "102": "Stycast",
+      "103": "Membrane_SiNx",
+      "104": "SiO2_1",
+      "105": "Si_1",
+      "106": "SiNx",
+      "107": "Si_2",
+      "108": "SiO2_2",
+      "109": "Membrane_Si1"
+    },
+    "edges": [
+      {
+        "source": "TES->membrane",
+        "connected_body_ids": [
+          101,
+          103
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 2.5e-07,
+        "boundary_ids": [
+          1104,
+          1305
+        ],
+        "node_count": [
+          179,
+          179
+        ],
+        "element_face_count": [
+          308,
+          308
+        ],
+        "mortar_constraint_count": 179,
+        "shared_node_count": 0
+      },
+      {
+        "source": "TES->Stycast",
+        "connected_body_ids": [
+          101,
+          102
+        ],
+        "connected_bodies": [
+          "TES",
+          "Stycast"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.93737355602149e-07,
+        "boundary_ids": [
+          1105,
+          1204
+        ],
+        "node_count": [
+          179,
+          139
+        ],
+        "element_face_count": [
+          308,
+          241
+        ],
+        "mortar_constraint_count": 139,
+        "shared_node_count": 0
+      },
+      {
+        "source": "Stycast->substrate",
+        "connected_body_ids": [
+          102,
+          108
+        ],
+        "connected_bodies": [
+          "Stycast",
+          "SiO2_2"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.908503181567056e-07,
+        "boundary_ids": [
+          1205,
+          1004
+        ],
+        "node_count": [
+          47,
+          182
+        ],
+        "element_face_count": [
+          74,
+          314
+        ],
+        "mortar_constraint_count": 47,
+        "shared_node_count": 0
+      }
+    ],
+    "direct_shared_edges": [
+      {
+        "connected_body_ids": [
+          103,
+          105
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Si_1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          106
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "SiNx"
+        ],
+        "shared_node_count": 136,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          109
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 380,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          105
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_1"
+        ],
+        "shared_node_count": 10395,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          107
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_2"
+        ],
+        "shared_node_count": 10392,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          109
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 324,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          106
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "SiNx"
+        ],
+        "shared_node_count": 10430,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          109
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 132,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          106,
+          109
+        ],
+        "connected_bodies": [
+          "SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          107,
+          108
+        ],
+        "connected_bodies": [
+          "Si_2",
+          "SiO2_2"
+        ],
+        "shared_node_count": 10396,
+        "topology_type": "conformal shared-node"
+      }
+    ],
+    "bath_boundary": {
+      "case": "phase24_tes_membrane_mortar",
+      "label": "Phase24 TES-membrane mortar",
+      "boundary_id": 1804,
+      "boundary_name": "SiO2_2__zmin",
+      "connected_body": "SiO2_2",
+      "area_m2": 1.750999999999974e-05,
+      "face_count": 20322,
+      "temperature_K": 0.15,
+      "bc_type": "Dirichlet Temperature"
+    }
+  }
+}

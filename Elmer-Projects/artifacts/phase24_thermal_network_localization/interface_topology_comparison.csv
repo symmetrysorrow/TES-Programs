@@ -1,0 +1,10 @@
+case,label,interface,source,connected_body_ids,connected_bodies,topology_type,interface_area_m2,boundary_ids,node_count,element_face_count,mortar_constraint_count,shared_node_count
+historical,historical,TES_to_membrane,TES->membrane,"[8, 7]","['TES', 'Membrane_SiNx']",mortar/nonconforming,2.4999999999999967e-07,"[24, 23]","[2218, 3366]","[4274, 6702]",2218,0
+historical,historical,TES_to_Stycast,TES->Stycast,"[8, 9]","['TES', 'Stycast']",mortar/nonconforming,1.9470116968126126e-07,"[25, 26]","[2218, 1671]","[4274, 3214]",1671,0
+historical,historical,Stycast_to_substrate,Stycast->substrate,"[9, 1]","['Stycast', 'SiO2_2']",mortar/nonconforming,1.9470116968126126e-07,"[27, 28]","[1671, 5743]","[3214, 11444]",1671,0
+original_phase24,original Phase24,TES_to_membrane,TES->membrane,"[101, 103]","['TES', 'Membrane_SiNx']",shared-node,2.5e-07,"[1104, 1305]","[179, 179]","[308, 308]",0,179
+original_phase24,original Phase24,TES_to_Stycast,TES->Stycast,"[101, 102]","['TES', 'Stycast']",mortar/nonconforming,1.93737355602149e-07,"[1105, 1204]","[179, 139]","[308, 241]",139,0
+original_phase24,original Phase24,Stycast_to_substrate,Stycast->substrate,"[102, 108]","['Stycast', 'SiO2_2']",mortar/nonconforming,1.908503181567056e-07,"[1205, 1004]","[47, 182]","[74, 314]",47,0
+phase24_tes_membrane_mortar,Phase24 TES-membrane mortar,TES_to_membrane,TES->membrane,"[101, 103]","['TES', 'Membrane_SiNx']",mortar/nonconforming,2.5e-07,"[1104, 1305]","[179, 179]","[308, 308]",179,0
+phase24_tes_membrane_mortar,Phase24 TES-membrane mortar,TES_to_Stycast,TES->Stycast,"[101, 102]","['TES', 'Stycast']",mortar/nonconforming,1.93737355602149e-07,"[1105, 1204]","[179, 139]","[308, 241]",139,0
+phase24_tes_membrane_mortar,Phase24 TES-membrane mortar,Stycast_to_substrate,Stycast->substrate,"[102, 108]","['Stycast', 'SiO2_2']",mortar/nonconforming,1.908503181567056e-07,"[1205, 1004]","[47, 182]","[74, 314]",47,0
