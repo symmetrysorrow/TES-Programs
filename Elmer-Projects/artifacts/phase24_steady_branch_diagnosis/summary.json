@@ -1,0 +1,254 @@
+{
+  "one_shot_gate3": {
+    "before": {
+      "temperature_K": 0.16856911499347801,
+      "current_A": 0.0001435681149930223,
+      "resistance_ohm": 0.015522836331977527,
+      "power_W": 3.1990633149344825e-10,
+      "previous_current_A": 0.0001435681149930223
+    },
+    "assembly_circuit_observed": {
+      "tes_temperature_K": 0.16857,
+      "previous_current_A": 0.00014353734493231094,
+      "raw_current_A": 0.00014353734493231094,
+      "tes_resistance_ohm": 0.015526999999999971,
+      "raw_power_W": 3.19902305721902e-10,
+      "relaxed_power_W": 3.19902305721902e-10
+    },
+    "thermal_only_after": 0.16236939349891646,
+    "raw_circuit_after": {
+      "temperature_K": 0.16236939349891646,
+      "raw_current_A": 0.0003901656598534681,
+      "resistance_ohm": 0.0032469641922030223,
+      "raw_power_W": 4.942828981987166e-10
+    },
+    "delta_T_mK": -6.199721494561549,
+    "delta_I_uA": 246.5975448604458,
+    "before_system_residual": {
+      "full": {
+        "l2": 2.3628321064077787e-09,
+        "max_abs": 2.01999848198735e-09,
+        "relative_l2_rhs": 0.00022740189539222647
+      },
+      "primal": {
+        "l2": 2.3628320983687974e-09,
+        "max_abs": 2.01999848198735e-09
+      },
+      "constraint": {
+        "l2": 1.9490902012909998e-13,
+        "max_abs": 5.850197264007465e-14
+      },
+      "componentwise_backward_error_max": 9.058475163039594e-05,
+      "componentwise_backward_error_constraint_max": 9.058475163039594e-05,
+      "dimensions": {
+        "total": 96955,
+        "primal": 96769,
+        "constraint": 186
+      }
+    }
+  },
+  "one_shot_refined": {
+    "before": {
+      "temperature_K": 0.16655691141885667,
+      "current_A": 0.00021866766560428157,
+      "resistance_ohm": 0.008852228329204792,
+      "power_W": 4.232286181467137e-10,
+      "previous_current_A": 0.00021866766560428157
+    },
+    "assembly_circuit_observed": {
+      "tes_temperature_K": 0.16857,
+      "previous_current_A": 0.00014353734493231094,
+      "raw_current_A": 0.00014353734493231094,
+      "tes_resistance_ohm": 0.015526999999999971,
+      "raw_power_W": 3.19902305721902e-10,
+      "relaxed_power_W": 3.19902305721902e-10
+    },
+    "thermal_only_after": 0.16251487445805807,
+    "raw_circuit_after": {
+      "temperature_K": 0.16251487445805807,
+      "raw_current_A": 0.0003840585230279885,
+      "resistance_ohm": 0.0033606122056996923,
+      "raw_power_W": 4.956934899328337e-10
+    },
+    "delta_T_mK": -4.042036960798606,
+    "delta_I_uA": 165.3908574237069,
+    "before_system_residual": {
+      "full": {
+        "l2": 5.8372824284391594e-12,
+        "max_abs": 6.553236065630401e-13,
+        "relative_l2_rhs": 5.617873079373667e-07
+      },
+      "primal": {
+        "l2": 5.83728242843916e-12,
+        "max_abs": 6.553236065630401e-13
+      },
+      "constraint": {
+        "l2": 4.779252357912433e-22,
+        "max_abs": 3.702170423896818e-22
+      },
+      "componentwise_backward_error_max": 2.446427158592798e-07,
+      "componentwise_backward_error_constraint_max": 4.4718873100840355e-13,
+      "dimensions": {
+        "total": 96955,
+        "primal": 96769,
+        "constraint": 186
+      }
+    },
+    "after_direct_residual": {
+      "primal": {
+        "absolute_l2": 5.954044901115938e-16,
+        "relative_l2": 5.730246732691547e-11,
+        "max_abs": 1.0892979233496913e-16
+      },
+      "constraint": {
+        "absolute_l2": 3.3060578400124024e-22,
+        "relative_l2": null,
+        "max_abs": 2.351503039925448e-22,
+        "relative_l2_to_constraint_action_scale": 2.6738102497457746e-16
+      },
+      "constraint_rhs_l2": 0.0,
+      "constraint_action_scale": 1.2364594085637685e-06,
+      "constraint_matrix_solution_scale": 1.2364594085637685e-06
+    }
+  },
+  "trajectory": {
+    "rows": 84,
+    "first": [
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "1",
+        "tes_temperature_K": "  1.6857000000000000E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  1.4353734493231094E-04",
+        "tes_resistance_ohm": "  1.5526999999999971E-02",
+        "raw_power_W": "  3.1990230572190201E-10",
+        "residual_W": "  0.0000000000000000E+00",
+        "omega": "  5.0000000000000000E-01",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  3.1990230572190201E-10",
+        "nonlinear_relative_change": "2.0"
+      },
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "2",
+        "tes_temperature_K": "  1.6856911470749181E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  1.4356812493666505E-04",
+        "tes_resistance_ohm": "  1.5522834986736400E-02",
+        "raw_power_W": "  3.1995367104435407E-10",
+        "residual_W": "  5.1365322452058884E-14",
+        "omega": "  4.0000000000000001E-02",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  3.1990436033480010E-10",
+        "nonlinear_relative_change": "0.00028984532"
+      },
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "3",
+        "tes_temperature_K": "  1.6236939349891624E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  3.9016565985347746E-04",
+        "tes_resistance_ohm": "  3.2469641922028558E-03",
+        "raw_power_W": "  4.9428289819871502E-10",
+        "residual_W": "  1.7437853786391493E-10",
+        "omega": "  4.0000000000000001E-02",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  3.2687950184935671E-10",
+        "nonlinear_relative_change": "0.0001668376"
+      }
+    ],
+    "last": [
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "82",
+        "tes_temperature_K": "  1.6655676853486398E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  2.1867326837661082E-04",
+        "tes_resistance_ohm": "  8.8519015959348801E-03",
+        "raw_power_W": "  4.2328021548839317E-10",
+        "residual_W": "  5.7939160051929871E-14",
+        "omega": "  4.0000000000000001E-02",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  4.2322459389474330E-10",
+        "nonlinear_relative_change": "5.6915345e-08"
+      },
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "83",
+        "tes_temperature_K": "  1.6655682606173497E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  2.1867101262750661E-04",
+        "tes_resistance_ohm": "  8.8520331409908670E-03",
+        "raw_power_W": "  4.2327777283399874E-10",
+        "residual_W": "  5.3178939255444649E-14",
+        "omega": "  4.0000000000000001E-02",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  4.2322672105231350E-10",
+        "nonlinear_relative_change": "6.5659992e-08"
+      },
+      {
+        "time_s": "  1.0200000000000000E+00",
+        "time_step": "1",
+        "nonlinear_iter": "84",
+        "tes_temperature_K": "  1.6655691141885667E-01",
+        "previous_current_A": "  1.4353734493231094E-04",
+        "raw_current_A": "  2.1866766560428157E-04",
+        "tes_resistance_ohm": "  8.8522283292047921E-03",
+        "raw_power_W": "  4.2327414841231807E-10",
+        "residual_W": "  4.7427360004573830E-14",
+        "omega": "  4.0000000000000001E-02",
+        "omega_cap": "  5.0000000000000000E-01",
+        "relaxed_power_W": "  4.2322861814671368E-10",
+        "nonlinear_relative_change": "9.893626e-09"
+      }
+    ]
+  },
+  "comparison_grid_audit": {
+    "grid": {
+      "start_us": 0.0,
+      "end_us": 38.7510000000521,
+      "spacing_us": 0.05,
+      "points": 777,
+      "method": "linear interpolation; each series subtracts its own 19.5--20.020 ms mean baseline"
+    },
+    "metrics": {
+      "MUMPS_vs_COMSOL": {
+        "max_abs_uA": 0.12923169559416747,
+        "rmse_uA": 0.05482447550484809,
+        "baseline_left_uA": 218.66301293440313,
+        "baseline_right_uA": 143.05504932879472
+      },
+      "HYPRE_vs_COMSOL": {
+        "max_abs_uA": 0.6164764813880237,
+        "rmse_uA": 0.2168913820571155,
+        "baseline_left_uA": 218.66324246133215,
+        "baseline_right_uA": 143.05504932879472
+      },
+      "HYPRE_vs_MUMPS": {
+        "max_abs_uA": 0.7457081769821912,
+        "rmse_uA": 0.2706094092905934,
+        "baseline_left_uA": 218.66324246133215,
+        "baseline_right_uA": 218.66301293440313
+      }
+    },
+    "triangle_check": {
+      "HYPRE_COMSOL_lte_HYPRE_MUMPS_plus_MUMPS_COMSOL": true
+    }
+  },
+  "endpoint_audit": {
+    "solver_timestep_count": 79,
+    "solver_final_time_s_from_schedule": 0.020059376,
+    "solver_final_after_pulse_us": 39.37600000000069,
+    "series_rows": 78,
+    "series_last_time_s": 0.02005875100000005,
+    "series_last_after_pulse_us": 38.7510000000521,
+    "writer_gap_us": 0.6249999999485834,
+    "finding": "solver executes 79 steps through 39.376 us post-pulse; the series is one final 0.625-us step behind, so this is a final-row writer/flush defect, not an early solver stop or comparison-grid truncation."
+  },
+  "conclusion": "The Gate3 one-shot uses an assembled power only 4.03e-15 W below its saved power, yet moves 6.20 mK. This is strong evidence of a linear equilibrium defect. The diagnostic also exposes a separate state-file reload failure: both one-shot cases assemble the T0/143.537-uA circuit state, so the refined-218 one-shot is not a valid fixed-point test and cannot settle branch multiplicity."
+}

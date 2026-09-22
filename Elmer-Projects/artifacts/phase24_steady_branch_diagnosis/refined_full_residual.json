@@ -1,0 +1,128 @@
+{
+  "method": {
+    "direct_solver": "scipy.sparse.linalg.splu (SuperLU)",
+    "tes_average": "TESInnerCircuitUpdate element-equal nodal average",
+    "block_partition": "runtime primal_rows; tail rows are explicit restriction equations"
+  },
+  "iterations": {
+    "nl1": {
+      "directory": "artifacts\\phase24_steady_branch_diagnosis\\capture\\case_phase24_diag_one_shot_refined\\ts0001_nl0001",
+      "dimension": {
+        "total_rows": 96955,
+        "primal_rows": 96769,
+        "constraint_rows": 186
+      },
+      "runtime": {
+        "total_rows": 96955,
+        "matrix_nnz": 1329477,
+        "primal_rows": 96769,
+        "constraint_matrix_rows": 186,
+        "constraint_rows": 186,
+        "before_matrix_records": 1329477,
+        "after_matrix_records": 1329477
+      },
+      "sha256": {
+        "matrix_before": "fbb589c163d9b9fdbf0986f0fc409a96bf58751d2d11b57c8bd1c1a5c3d1bf85",
+        "matrix_after": "b4ae8a9f57112348cfb9371208c3742ef1bf44ee9e75d1eb41f9a382309bcd2a",
+        "rhs_before": "0d71f70838d2ed9fee44e5c85517cf4ab044ae66b8282b71dbb60f1eb73bf863",
+        "rhs_after": "9be77dd3e6fd788e5653747e02de3bdc345d3b0e6cf5a3b0aff56553b6d0d829"
+      },
+      "raw_consistency": {
+        "matrix_before_after_identical": false,
+        "rhs_before_after_identical": false,
+        "matrix_before_after_max_abs": 1.1102230246251565e-16,
+        "rhs_before_after_max_abs": 8.470329472543003e-22
+      },
+      "direct_full_residual": {
+        "absolute_l2": 6.402379686354379e-16,
+        "relative_l2": 6.161729696110757e-11,
+        "max_abs": 1.749372645089003e-16
+      },
+      "native_full_residual": {
+        "absolute_l2": 5.954044901116919e-16,
+        "relative_l2": 5.7302467326924914e-11,
+        "max_abs": 1.0892979233476718e-16
+      },
+      "native_after_system_residual": {
+        "absolute_l2": 5.953513497892957e-16,
+        "relative_l2": 5.729735303632344e-11,
+        "max_abs": 1.0892979233496913e-16
+      },
+      "native_vs_direct": {
+        "full_vector_max_abs": 8.419609309751053e-08,
+        "primal_vector_max_abs": 8.419609309751053e-08,
+        "multiplier_vector_max_abs": 3.631936340269515e-10,
+        "full_l2_relative": 1.6116760197634397e-07
+      },
+      "block_residuals": {
+        "direct": {
+          "primal": {
+            "absolute_l2": 6.402379681958299e-16,
+            "relative_l2": 6.161729691879916e-11,
+            "max_abs": 1.749372645089003e-16
+          },
+          "constraint": {
+            "absolute_l2": 2.3726475853806507e-20,
+            "relative_l2": null,
+            "max_abs": 1.65032967887472e-20,
+            "relative_l2_to_constraint_action_scale": 1.9189046519053076e-14
+          },
+          "constraint_rhs_l2": 0.0,
+          "constraint_action_scale": 1.2364593431074416e-06,
+          "constraint_matrix_solution_scale": 1.2364593431074416e-06
+        },
+        "native": {
+          "primal": {
+            "absolute_l2": 5.954044901115938e-16,
+            "relative_l2": 5.730246732691547e-11,
+            "max_abs": 1.0892979233496913e-16
+          },
+          "constraint": {
+            "absolute_l2": 3.3060578400124024e-22,
+            "relative_l2": null,
+            "max_abs": 2.351503039925448e-22,
+            "relative_l2_to_constraint_action_scale": 2.6738102497457746e-16
+          },
+          "constraint_rhs_l2": 0.0,
+          "constraint_action_scale": 1.2364594085637685e-06,
+          "constraint_matrix_solution_scale": 1.2364594085637685e-06
+        }
+      },
+      "tes_average": {
+        "x_before_TES": 0.1665570245368069,
+        "full_direct_primal_TES": 0.16251479345900885,
+        "full_native_primal_TES": 0.16251487445805807,
+        "heat_solve_outer_after_TES": null,
+        "primal_only_direct_TES": 0.162514825552254,
+        "mortar_delta_direct_TES": -3.209324518837805e-08
+      },
+      "heat_solve_outer_after_vs_native": null,
+      "mortar_reaction": {
+        "direct_Bt_lambda_l2": 4.750593868423527e-15,
+        "direct_Bt_lambda_max_abs": 1.0786822270968418e-15,
+        "direct_Bt_lambda_TES_weighted": -2.1993152244493925e-19,
+        "direct_Bt_lambda_top_dofs_1based": [
+          20,
+          7276,
+          16,
+          7158,
+          7076,
+          21,
+          7345,
+          15,
+          7166,
+          7340
+        ],
+        "delta_full_primal_minus_primal_only_l2": 14.20407469457139,
+        "delta_full_primal_minus_primal_only_max_abs": 0.1625167776355075,
+        "delta_full_primal_minus_primal_only_TES": -3.209324518837805e-08,
+        "K_nnz": 1322815,
+        "Bt_nnz": 3238,
+        "B_nnz": 3238,
+        "D_nnz": 186,
+        "D_frobenius": 0.0
+      }
+    }
+  },
+  "crossed_sensitivity": {}
+}

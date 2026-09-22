@@ -1,0 +1,32 @@
+{
+  "grid": {
+    "start_us": 0.0,
+    "end_us": 38.7510000000521,
+    "spacing_us": 0.05,
+    "points": 777,
+    "method": "linear interpolation; each series subtracts its own 19.5--20.020 ms mean baseline"
+  },
+  "metrics": {
+    "MUMPS_vs_COMSOL": {
+      "max_abs_uA": 0.12923169559416747,
+      "rmse_uA": 0.05482447550484809,
+      "baseline_left_uA": 218.66301293440313,
+      "baseline_right_uA": 143.05504932879472
+    },
+    "HYPRE_vs_COMSOL": {
+      "max_abs_uA": 0.6164764813880237,
+      "rmse_uA": 0.2168913820571155,
+      "baseline_left_uA": 218.66324246133215,
+      "baseline_right_uA": 143.05504932879472
+    },
+    "HYPRE_vs_MUMPS": {
+      "max_abs_uA": 0.7457081769821912,
+      "rmse_uA": 0.2706094092905934,
+      "baseline_left_uA": 218.66324246133215,
+      "baseline_right_uA": 218.66301293440313
+    }
+  },
+  "triangle_check": {
+    "HYPRE_COMSOL_lte_HYPRE_MUMPS_plus_MUMPS_COMSOL": true
+  }
+}
