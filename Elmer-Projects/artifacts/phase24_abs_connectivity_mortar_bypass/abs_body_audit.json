@@ -1,0 +1,250 @@
+{
+  "historical": {
+    "body_id": 10,
+    "body_name": "abs",
+    "material": "Pb",
+    "volume_m3": 7e-10,
+    "thickness_m": 0.0007,
+    "footprint_bbox_area_m2": 1e-06,
+    "bbox_m": {
+      "x": [
+        -0.0005,
+        0.0005
+      ],
+      "y": [
+        0.0005,
+        0.0015
+      ],
+      "z": [
+        0.00021216,
+        0.00091216
+      ]
+    },
+    "element_count": 347754,
+    "neighboring_bodies": [
+      "Stycast"
+    ],
+    "shared_node_neighbors": [],
+    "mortar_neighbors": [
+      "Stycast"
+    ],
+    "bath_boundary_ids": [
+      30
+    ],
+    "boundary_1004": null,
+    "actual_related_edges": [
+      {
+        "case": "historical",
+        "route": "Stycast -> abs",
+        "body_a_id": 9,
+        "body_a_name": "Stycast",
+        "body_a_material": "Stycast",
+        "body_b_id": 10,
+        "body_b_name": "abs",
+        "body_b_material": "Pb",
+        "interface_boundary_ids": "27;28",
+        "physical_area_m2": 1.9470116968126169e-07,
+        "master_boundary_area_m2": 1.9470116968126169e-07,
+        "slave_boundary_area_m2": 1e-06,
+        "master_to_slave_area_ratio": 0.1947011696812617,
+        "shared_node_count": 0,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": null,
+        "coupling_type": "mortar",
+        "master": "Stycast__zmax",
+        "slave": "abs__zmin",
+        "physical_role": "Pb bottom mortar"
+      }
+    ]
+  },
+  "phase24_refined": {
+    "body_id": 100,
+    "body_name": "abs",
+    "material": "Pb",
+    "volume_m3": 7e-10,
+    "thickness_m": 0.0007,
+    "footprint_bbox_area_m2": 1e-06,
+    "bbox_m": {
+      "x": [
+        -0.0005,
+        0.0005
+      ],
+      "y": [
+        0.0005,
+        0.0015
+      ],
+      "z": [
+        0.00021216,
+        0.00091216
+      ]
+    },
+    "element_count": 6052,
+    "neighboring_bodies": [
+      "Stycast"
+    ],
+    "shared_node_neighbors": [],
+    "mortar_neighbors": [
+      "Stycast"
+    ],
+    "bath_boundary_ids": [
+      1804
+    ],
+    "boundary_1004": {
+      "boundary_id": 1004,
+      "boundary_name": "abs__zmin",
+      "facet_count": 314,
+      "physical_area_m2": 1e-06,
+      "body_ids": {
+        "100": 314
+      }
+    },
+    "actual_related_edges": [
+      {
+        "case": "phase24_refined",
+        "route": "Stycast -> abs",
+        "body_a_id": 102,
+        "body_a_name": "Stycast",
+        "body_a_material": "Stycast",
+        "body_b_id": 100,
+        "body_b_name": "abs",
+        "body_b_material": "Pb",
+        "interface_boundary_ids": "1205;1004",
+        "physical_area_m2": 1.9085031815670558e-07,
+        "master_boundary_area_m2": 1.9085031815670558e-07,
+        "slave_boundary_area_m2": 1e-06,
+        "master_to_slave_area_ratio": 0.19085031815670558,
+        "shared_node_count": 0,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": null,
+        "coupling_type": "mortar",
+        "master": "Stycast__zmax",
+        "slave": "abs__zmin",
+        "physical_role": "Pb bottom mortar"
+      }
+    ]
+  },
+  "phase24_target_refined": {
+    "body_id": 100,
+    "body_name": "abs",
+    "material": "Pb",
+    "volume_m3": 7e-10,
+    "thickness_m": 0.0007,
+    "footprint_bbox_area_m2": 1e-06,
+    "bbox_m": {
+      "x": [
+        -0.0005,
+        0.0005
+      ],
+      "y": [
+        0.0005,
+        0.0015
+      ],
+      "z": [
+        0.00021216,
+        0.00091216
+      ]
+    },
+    "element_count": 54923,
+    "neighboring_bodies": [
+      "Stycast"
+    ],
+    "shared_node_neighbors": [],
+    "mortar_neighbors": [
+      "Stycast"
+    ],
+    "bath_boundary_ids": [
+      1804
+    ],
+    "boundary_1004": {
+      "boundary_id": 1004,
+      "boundary_name": "abs__zmin",
+      "facet_count": 6334,
+      "physical_area_m2": 1e-06,
+      "body_ids": {
+        "100": 6334
+      }
+    },
+    "actual_related_edges": [
+      {
+        "case": "phase24_target_refined",
+        "route": "Stycast -> abs",
+        "body_a_id": 102,
+        "body_a_name": "Stycast",
+        "body_a_material": "Stycast",
+        "body_b_id": 100,
+        "body_b_name": "abs",
+        "body_b_material": "Pb",
+        "interface_boundary_ids": "1205;1004",
+        "physical_area_m2": 1.9472989573800174e-07,
+        "master_boundary_area_m2": 1.9472989573800174e-07,
+        "slave_boundary_area_m2": 1e-06,
+        "master_to_slave_area_ratio": 0.19472989573800176,
+        "shared_node_count": 0,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": null,
+        "coupling_type": "mortar",
+        "master": "Stycast__zmax",
+        "slave": "abs__zmin",
+        "physical_role": "Pb bottom mortar"
+      }
+    ]
+  },
+  "phase24_abs_bypass": {
+    "body_id": 100,
+    "body_name": "abs",
+    "material": "Pb",
+    "volume_m3": 7e-10,
+    "thickness_m": 0.0007,
+    "footprint_bbox_area_m2": 1e-06,
+    "bbox_m": {
+      "x": [
+        -0.0005,
+        0.0005
+      ],
+      "y": [
+        0.0005,
+        0.0015
+      ],
+      "z": [
+        0.00021216,
+        0.00091216
+      ]
+    },
+    "element_count": 6838,
+    "neighboring_bodies": [
+      "Stycast"
+    ],
+    "shared_node_neighbors": [
+      "Stycast"
+    ],
+    "mortar_neighbors": [],
+    "bath_boundary_ids": [
+      1804
+    ],
+    "boundary_1004": null,
+    "actual_related_edges": [
+      {
+        "case": "phase24_abs_bypass",
+        "route": "Stycast -> abs",
+        "body_a_id": 102,
+        "body_a_name": "Stycast",
+        "body_a_material": "Stycast",
+        "body_b_id": 100,
+        "body_b_name": "abs",
+        "body_b_material": "Pb",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 114,
+        "conforming_face_count": 208,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "unknown",
+        "slave": "unknown",
+        "physical_role": "Pb bottom mortar"
+      }
+    ]
+  }
+}

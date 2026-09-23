@@ -1,0 +1,53 @@
+case,route,body_a_id,body_a_name,body_a_material,body_b_id,body_b_name,body_b_material,interface_boundary_ids,physical_area_m2,master_boundary_area_m2,slave_boundary_area_m2,master_to_slave_area_ratio,shared_node_count,conforming_face_count,mortar_constraint_count,coupling_type,master,slave,physical_role
+historical,Membrane_SiNx -> TES,7,Membrane_SiNx,Membrane,8,TES,TES,23;24,2.5e-07,4.900000000000001e-07,2.5e-07,1.9600000000000004,0,0,2218,mortar,Membrane_SiNx__zmax,TES__zmin,TES bottom mortar
+historical,TES -> Stycast,8,TES,TES,9,Stycast,Stycast,25;26,1.9470116968126169e-07,2.5e-07,1.9470116968126169e-07,1.2840189938728466,0,0,1671,mortar,TES__zmax,Stycast__zmin,TES top mortar
+historical,Stycast -> abs,9,Stycast,Stycast,10,abs,Pb,27;28,1.9470116968126169e-07,1.9470116968126169e-07,1e-06,0.1947011696812617,0,0,1671,mortar,Stycast__zmax,abs__zmin,Pb bottom mortar
+historical,SiO2_2 -> Si_2,1,SiO2_2,SiO2,2,Si_2,Si,,0.0,0.0,0.0,0.0,2416,4624,0,shared-node,,,internal conforming body adjacency
+historical,Si_2 -> SiO2_1,2,Si_2,Si,3,SiO2_1,SiO2,,0.0,0.0,0.0,0.0,2416,4624,0,shared-node,,,internal conforming body adjacency
+historical,SiO2_1 -> Si_1,3,SiO2_1,SiO2,4,Si_1,Si,,0.0,0.0,0.0,0.0,2416,4624,0,shared-node,,,internal conforming body adjacency
+historical,SiO2_1 -> Membrane_Si1,3,SiO2_1,SiO2,5,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,3366,6702,0,shared-node,,,internal conforming body adjacency
+historical,Si_1 -> Membrane_Si1,4,Si_1,Si,5,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,84,56,0,shared-node,,,internal conforming body adjacency
+historical,Si_1 -> SiNx,4,Si_1,Si,6,SiNx,SiNx,,0.0,0.0,0.0,0.0,2416,4624,0,shared-node,,,internal conforming body adjacency
+historical,Si_1 -> Membrane_SiNx,4,Si_1,Si,7,Membrane_SiNx,Membrane,,0.0,0.0,0.0,0.0,28,0,0,shared-node,,,internal conforming body adjacency
+historical,Membrane_Si1 -> SiNx,5,Membrane_Si1,Membrane,6,SiNx,SiNx,,0.0,0.0,0.0,0.0,28,0,0,shared-node,,,internal conforming body adjacency
+historical,Membrane_Si1 -> Membrane_SiNx,5,Membrane_Si1,Membrane,7,Membrane_SiNx,Membrane,,0.0,0.0,0.0,0.0,3366,6702,0,shared-node,,,internal conforming body adjacency
+historical,SiNx -> Membrane_SiNx,6,SiNx,SiNx,7,Membrane_SiNx,Membrane,,0.0,0.0,0.0,0.0,56,28,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Membrane_SiNx -> TES,103,Membrane_SiNx,Membrane,101,TES,TES,1305;1104,2.5e-07,2.5e-07,2.5e-07,1.0,179,308,0,mortar,Membrane_SiNx__zmax,TES__zmin,TES bottom mortar
+phase24_refined,TES -> Stycast,101,TES,TES,102,Stycast,Stycast,1105;1204,1.9472989573800174e-07,2.5e-07,1.9472989573800174e-07,1.2838295786711718,0,0,2369,mortar,TES__zmax,Stycast__zmin,TES top mortar
+phase24_refined,Stycast -> abs,102,Stycast,Stycast,100,abs,Pb,1205;1004,1.9085031815670558e-07,1.9085031815670558e-07,1e-06,0.19085031815670558,0,0,45,mortar,Stycast__zmax,abs__zmin,Pb bottom mortar
+phase24_refined,Membrane_SiNx -> Si_1,103,Membrane_SiNx,Membrane,105,Si_1,Si,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Membrane_SiNx -> SiNx,103,Membrane_SiNx,Membrane,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,136,136,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Membrane_SiNx -> Membrane_Si1,103,Membrane_SiNx,Membrane,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,380,690,0,shared-node,,,internal conforming body adjacency
+phase24_refined,SiO2_1 -> Si_1,104,SiO2_1,SiO2,105,Si_1,Si,,0.0,0.0,0.0,0.0,10395,20322,0,shared-node,,,internal conforming body adjacency
+phase24_refined,SiO2_1 -> Si_2,104,SiO2_1,SiO2,107,Si_2,Si,,0.0,0.0,0.0,0.0,10392,20316,0,shared-node,,,internal conforming body adjacency
+phase24_refined,SiO2_1 -> Membrane_Si1,104,SiO2_1,SiO2,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,324,582,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Si_1 -> SiNx,105,Si_1,Si,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,10429,20386,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Si_1 -> Membrane_Si1,105,Si_1,Si,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,132,132,0,shared-node,,,internal conforming body adjacency
+phase24_refined,SiNx -> Membrane_Si1,106,SiNx,SiNx,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_refined,Si_2 -> SiO2_2,107,Si_2,Si,108,SiO2_2,SiO2,,0.0,0.0,0.0,0.0,10396,20324,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Membrane_SiNx -> TES,103,Membrane_SiNx,Membrane,101,TES,TES,1305;1104,2.5e-07,2.5e-07,2.5e-07,1.0,161,252,,mortar,Membrane_SiNx__zmax,TES__zmin,TES bottom mortar
+phase24_target_refined,TES -> Stycast,101,TES,TES,102,Stycast,Stycast,1105;1204,1.9472989573800174e-07,2.5e-07,1.9472989573800174e-07,1.2838295786711718,0,0,,mortar,TES__zmax,Stycast__zmin,TES top mortar
+phase24_target_refined,Stycast -> abs,102,Stycast,Stycast,100,abs,Pb,1205;1004,1.9472989573800174e-07,1.9472989573800174e-07,1e-06,0.19472989573800176,0,0,,mortar,Stycast__zmax,abs__zmin,Pb bottom mortar
+phase24_target_refined,Membrane_SiNx -> Si_1,103,Membrane_SiNx,Membrane,105,Si_1,Si,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Membrane_SiNx -> SiNx,103,Membrane_SiNx,Membrane,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,136,136,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Membrane_SiNx -> Membrane_Si1,103,Membrane_SiNx,Membrane,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,380,690,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,SiO2_1 -> Si_1,104,SiO2_1,SiO2,105,Si_1,Si,,0.0,0.0,0.0,0.0,10391,20314,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,SiO2_1 -> Si_2,104,SiO2_1,SiO2,107,Si_2,Si,,0.0,0.0,0.0,0.0,10392,20316,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,SiO2_1 -> Membrane_Si1,104,SiO2_1,SiO2,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,324,582,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Si_1 -> SiNx,105,Si_1,Si,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,10429,20386,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Si_1 -> Membrane_Si1,105,Si_1,Si,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,132,132,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,SiNx -> Membrane_Si1,106,SiNx,SiNx,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_target_refined,Si_2 -> SiO2_2,107,Si_2,Si,108,SiO2_2,SiO2,,0.0,0.0,0.0,0.0,10396,20324,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Membrane_SiNx -> TES,103,Membrane_SiNx,Membrane,101,TES,TES,2305;1104,2.5e-07,4.900000000000001e-07,2.5e-07,1.9600000000000004,50,4,155,mortar,Membrane_SiNx_contact__zmax,TES__zmin,TES bottom mortar
+phase24_abs_bypass,TES -> Stycast,101,TES,TES,102,Stycast,Stycast,1105;1204,1.9472989573800174e-07,2.5e-07,1.9472989573800174e-07,1.2838295786711718,1,0,2369,mortar,TES__zmax,Stycast__zmin,TES top mortar
+phase24_abs_bypass,Stycast -> abs,102,Stycast,Stycast,100,abs,Pb,,0.0,0.0,0.0,0.0,114,208,0,shared-node,unknown,unknown,Pb bottom mortar
+phase24_abs_bypass,Membrane_SiNx -> Si_1,103,Membrane_SiNx,Membrane,105,Si_1,Si,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Membrane_SiNx -> SiNx,103,Membrane_SiNx,Membrane,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,136,136,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Membrane_SiNx -> Membrane_Si1,103,Membrane_SiNx,Membrane,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,380,690,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,SiO2_1 -> Si_1,104,SiO2_1,SiO2,105,Si_1,Si,,0.0,0.0,0.0,0.0,10395,20322,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,SiO2_1 -> Si_2,104,SiO2_1,SiO2,107,Si_2,Si,,0.0,0.0,0.0,0.0,10392,20316,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,SiO2_1 -> Membrane_Si1,104,SiO2_1,SiO2,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,324,582,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Si_1 -> SiNx,105,Si_1,Si,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,10429,20386,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Si_1 -> Membrane_Si1,105,Si_1,Si,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,132,132,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,SiNx -> Membrane_Si1,106,SiNx,SiNx,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_abs_bypass,Si_2 -> SiO2_2,107,Si_2,Si,108,SiO2_2,SiO2,,0.0,0.0,0.0,0.0,10396,20324,0,shared-node,,,internal conforming body adjacency

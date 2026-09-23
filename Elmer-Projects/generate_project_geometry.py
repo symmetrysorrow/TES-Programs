@@ -228,6 +228,82 @@ class TesGmshBuilder(GmshApiBuilder):
                 self.fragment_sources.setdefault(tag, set()).update(sources or {body})
 
     def _before_mesh_generate(self):
+        """Apply final diagnostic sizing and copy coincident contact faces."""
+        h_target = os.environ.get("SUBSTRATE_CONTACT_TARGET_REFINE_H")
+        if h_target:
+            h_target = float(h_target)
+            if h_target <= 0.0:
+                raise ValueError(
+                    "SUBSTRATE_CONTACT_TARGET_REFINE_H must be positive"
+                )
+            stycast_boxes = {
+                str(getattr(box, "name", "")): box
+                for box in self.build_boxes
+                if str(getattr(box, "name", "")) in {
+                    "Stycast", "Stycast_L", "Stycast_R"
+                }
+            }
+            target_points: set[int] = set()
+            for target_name, target in (
+                (name, box)
+                for name, box in {
+                    str(getattr(box, "name", "")): box
+                    for box in self.build_boxes
+                    if str(getattr(box, "name", "")) in {
+                        "abs", "abs_L", "abs_R"
+                    }
+                }.items()
+            ):
+                _base, suffix = _strip_known_suffix(target_name, ["_L", "_R"])
+                stycast = stycast_boxes.get(f"Stycast{suffix}")
+                if stycast is None:
+                    continue
+                for volume in self.group_entities.get(target_name, []):
+                    for dim, face in gmsh.model.getBoundary(
+                        [(3, volume)], oriented=False, recursive=False
+                    ):
+                        if dim != 2:
+                            continue
+                        bbox = gmsh.model.occ.getBoundingBox(2, face)
+                        z_target = float(target.zmin)
+                        if abs(float(gmsh.model.occ.getCenterOfMass(2, face)[2]) - z_target) > 5.0e-8:
+                            continue
+                        if bbox[1] < stycast.xmin or bbox[0] > stycast.xmax:
+                            continue
+                        if bbox[3] < stycast.ymin or bbox[2] > stycast.ymax:
+                            continue
+                        target_points.update(
+                            int(point)
+                            for point_dim, point in gmsh.model.getBoundary(
+                                [(2, face)], oriented=False, recursive=True
+                            )
+                            if point_dim == 0
+                        )
+            # After OCC grouping, the physical contact surface is the most
+            # reliable handle; body-volume adjacency can be hidden by the
+            # fragment bookkeeping.  Union its points with the volume-based
+            # selection above.
+            for _, physical_tag in gmsh.model.getPhysicalGroups(2):
+                name = gmsh.model.getPhysicalName(2, physical_tag)
+                if not name.startswith("abs") or not name.endswith("__zmin"):
+                    continue
+                for face in gmsh.model.getEntitiesForPhysicalGroup(2, physical_tag):
+                    target_points.update(
+                        int(point)
+                        for point_dim, point in gmsh.model.getBoundary(
+                            [(2, int(face))], oriented=False, recursive=True
+                        )
+                        if point_dim == 0
+                    )
+            if target_points:
+                print(
+                    "Diagnostic substrate target sizing: "
+                    f"h={h_target:.6e}, points={len(target_points)}"
+                )
+                gmsh.model.mesh.setSize(
+                    [(0, point) for point in sorted(target_points)], h_target
+                )
+
         """Copy meshes across coincident contact faces for Elmer node merging."""
         if not getattr(self, "merge_mortar_interfaces", False):
             return
@@ -421,6 +497,58 @@ class TesGmshBuilder(GmshApiBuilder):
             if selected:
                 _original_set_number("Mesh.CharacteristicLengthMin", min(
                     float(self.spec.mesh_min), h_substrate
+                ))
+
+        # Diagnostic-only hook: refine the actual target side of the outer
+        # Stycast contact.  In the converted Phase24 topology, boundary 1004
+        # is the zmin face of the large absorber (the ``abs`` body), even
+        # though the downstream thermal path continues through SiO2_2.  Keep
+        # the refinement local to the Stycast XY footprint and to a shallow
+        # target-side depth so the bath-facing network is unchanged.
+        h_target = os.environ.get("SUBSTRATE_CONTACT_TARGET_REFINE_H")
+        if h_target:
+            h_target = float(h_target)
+            if h_target <= 0.0:
+                raise ValueError(
+                    "SUBSTRATE_CONTACT_TARGET_REFINE_H must be positive"
+                )
+            target_boxes = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")) in {
+                    "abs", "abs_L", "abs_R"
+                }
+            ]
+            for target in target_boxes:
+                _base, suffix = _strip_known_suffix(
+                    str(getattr(target, "name", "")), ["_L", "_R"]
+                )
+                stycast_name = f"Stycast{suffix}"
+                stycast = next(
+                    (
+                        box for box in self.build_boxes
+                        if str(getattr(box, "name", "")) == stycast_name
+                    ),
+                    None,
+                )
+                if stycast is None:
+                    raise RuntimeError(
+                        f"target interface refinement: {stycast_name} footprint not found"
+                    )
+                target_depth = max(4.0 * h_target, 20.0e-6)
+                # The contact plane is a fragmented OCC face.  Extend the
+                # field slightly into both neighboring volumes so Gmsh does
+                # not drop the field exactly on the shared z plane.
+                z_guard = max(1.0e-9, 2.0 * h_target)
+                entries.append((
+                    float(stycast.xmin), float(stycast.xmax),
+                    float(stycast.ymin), float(stycast.ymax),
+                    float(target.zmin) - z_guard,
+                    min(float(target.zmax), float(target.zmin) + target_depth),
+                    h_target,
+                ))
+            if target_boxes:
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_target
                 ))
         return entries
 
@@ -1463,6 +1591,13 @@ def build(write_mesh: bool = True) -> None:
     conformal_mortar_interfaces = bool(
         elmer_overrides.get("conformal_mortar_interfaces", False)
     )
+    conformal_contact_interfaces = {
+        str(value).strip().lower()
+        for value in elmer_overrides.get(
+            "conformal_contact_interfaces",
+            ["membrane_tes", "tes_stycast", "stycast_abs"],
+        )
+    }
     builder = TesGmshBuilder(spec=spec, verbose=False)
     builder._stycast_layer_count = resolved_stycast_layer_count
     if fragment_mortar_interfaces and (len(sides) > 1 or conformal_mortar_interfaces):
@@ -1502,46 +1637,48 @@ def build(write_mesh: bool = True) -> None:
             for suffix in sides:
                 tes_box = _find_box(spec, f"TES{suffix}")
                 stycast = stycast_boxes[suffix]
-                builder.contact_disc_specs.append(
-                    {
-                        "body": f"Membrane_SiNx{suffix}",
-                        "discs": [
-                            (
-                                stycast.x,
-                                stycast.y,
-                                tes_box.zmin,
-                                float(stycast.dx) / 2.0,
-                            )
-                        ],
-                    }
-                )
+                if "membrane_tes" in conformal_contact_interfaces:
+                    builder.contact_disc_specs.append(
+                        {
+                            "body": f"Membrane_SiNx{suffix}",
+                            "discs": [
+                                (
+                                    stycast.x,
+                                    stycast.y,
+                                    tes_box.zmin,
+                                    float(stycast.dx) / 2.0,
+                                )
+                            ],
+                        }
+                    )
             builder.merge_mortar_interfaces = True
             builder.conformal_contact_pairs = []
             for suffix in sides:
                 tes_box = _find_box(spec, f"TES{suffix}")
                 stycast = stycast_boxes[suffix]
                 disc_area = pi * (float(stycast.dx) / 2.0) ** 2
-                builder.conformal_contact_pairs.extend(
-                    [
-                        (
-                            f"TES{suffix}", tes_box.zmin,
-                            f"Membrane_SiNx{suffix}", tes_box.zmin,
-                            None,
-                            (tes_box.xmin, tes_box.xmax, tes_box.ymin, tes_box.ymax),
-                            f"TES{suffix}/membrane",
-                        ),
-                        (
-                            f"Stycast{suffix}", stycast.zmin,
-                            f"TES{suffix}", tes_box.zmax,
-                            disc_area, None, f"Stycast{suffix}/TES",
-                        ),
-                        (
-                            f"Stycast{suffix}", stycast.zmax,
-                            "abs", _find_box(spec, "abs").zmin,
-                            disc_area, None, f"Stycast{suffix}/absorber",
-                        ),
-                    ]
-                )
+                candidates = {
+                    "membrane_tes": (
+                        f"TES{suffix}", tes_box.zmin,
+                        f"Membrane_SiNx{suffix}", tes_box.zmin,
+                        None,
+                        (tes_box.xmin, tes_box.xmax, tes_box.ymin, tes_box.ymax),
+                        f"TES{suffix}/membrane",
+                    ),
+                    "tes_stycast": (
+                        f"Stycast{suffix}", stycast.zmin,
+                        f"TES{suffix}", tes_box.zmax,
+                        disc_area, None, f"Stycast{suffix}/TES",
+                    ),
+                    "stycast_abs": (
+                        f"Stycast{suffix}", stycast.zmax,
+                        "abs", _find_box(spec, "abs").zmin,
+                        disc_area, None, f"Stycast{suffix}/absorber",
+                    ),
+                }
+                for interface_name, pair in candidates.items():
+                    if interface_name in conformal_contact_interfaces:
+                        builder.conformal_contact_pairs.append(pair)
 
     try:
         gmsh.option.setNumber = _set_number_without_optimize

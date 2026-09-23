@@ -1,0 +1,37 @@
+{
+  "mesh": "mesh_phase24_abs_conforming_bypass_stycast_abs",
+  "source_project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_stycast_interface_discretization_rootcause\\mesh_phase24_stycast_density_10um.project.json",
+  "source_mesh": "mesh_phase24_stycast_density_10um",
+  "interface_change": "Stycast -> abs only: mortar to periodic/shared-node continuity",
+  "remaining_mortar_interfaces": [
+    "Membrane_SiNx -> TES",
+    "TES -> Stycast"
+  ],
+  "fixed": [
+    "geometry, materials, TES law, circuit constants, bath, power points",
+    "mesh_min=45 um, mesh_max=90 um, Stycast layers=32",
+    "STYCAST_INTERFACE_REFINE_H=10 um"
+  ],
+  "production_mesh_overwritten": false,
+  "mesh_dir": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_abs_conforming_bypass_stycast_abs",
+  "fixed_power_runs": {
+    "case": "phase24_abs_conforming_bypass",
+    "source_case": "phase24_abs_conforming_bypass",
+    "T_0p95P_K": 0.16655058374352957,
+    "T_1p00P_K": 0.16734099417155227,
+    "T_1p05P_K": 0.16812456452086116,
+    "G_eff_W_per_K": 2.0349706986544527e-08,
+    "G_secant_W_per_K": 1.8470710101325308e-08,
+    "historical_ratio_G_eff": 1.0834140973225772
+  },
+  "historical_G_eff_W_per_K": 1.8782944616314677e-08,
+  "baseline_G_eff_W_per_K": 2.0299398582083185e-08,
+  "conforming_G_eff_W_per_K": 2.0349706986544527e-08,
+  "mortar_contribution_ratio": -0.03317502911197612,
+  "remaining_mortar_constraint_rows": 2524,
+  "bypass_mesh_statistics": {
+    "nodes": 99630,
+    "elements": 497795,
+    "boundary_facets_after_strip": 411957
+  }
+}

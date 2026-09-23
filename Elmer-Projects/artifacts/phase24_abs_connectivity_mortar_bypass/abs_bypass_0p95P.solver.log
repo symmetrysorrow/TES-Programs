@@ -1,0 +1,287 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/09/23 21:40:51
+ParCommInit: Initialize #PEs: 1
+MAIN: OMP_NUM_THREADS not set. Using only 1 thread per task.
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: 9916c3f05, Compiled: 2026-09-15)
+MAIN:  Running one task without MPI parallelization.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  MUMPS library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: artifacts/phase24_abs_connectivity_mortar_bypass/abs_bypass_0p95P.sif
+LoadInputFile: Scanning input file: artifacts/phase24_abs_connectivity_mortar_bypass/abs_bypass_0p95P.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+LoadInputFile: Loading input file: artifacts/phase24_abs_connectivity_mortar_bypass/abs_bypass_0p95P.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Step Commit] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Freeze Power] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Prefix] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Timestep] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Max Iterations] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+LoadInputFile: Number of BCs: 5
+LoadInputFile: Number of Body Forces: 1
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: work/meshes/mesh_phase24_abs_conforming_bypass_stycast_abs
+LoadMesh: Elapsed REAL time:     5.9110 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 4698
+OptimizeBandwidth: Optimized bandwidth for heat equation: 2034
+MAIN: Number of timesteps to be saved: 1
+MAIN: 
+MAIN: -------------------------------------
+MAIN:  Steady state iteration:            1
+MAIN: -------------------------------------
+MAIN: 
+ PlaneNormal: Selecting slave normal
+ PlaneNormal selected:   0.0000000000000000        0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     0.1820 (s)
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     0.9170 (s)
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ........Assembly done
+SolveWithLinearRestriction: PHASE24_FULL_RESTRICTION_CAPTURE stage=before, timestep=1, nonlinear_iteration=1, time=  1.00000000E+00, dt=  1.00000000E+00, bdf_order=0, solver=direct, direct_method=mumps, total_rows=102154, primal_rows=99630, constraint_rows=2524, matrix_nnz=1415826, constraint_matrix_rows=2524, eliminate=0, penalty=0, restriction_active=1
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.14996092      2.0000000     ) :: heat equation
+SolveWithLinearRestriction: PHASE24_FULL_RESTRICTION_CAPTURE stage=after, timestep=1, nonlinear_iteration=1, time=  1.00000000E+00, dt=  1.00000000E+00, bdf_order=0, solver=direct, direct_method=mumps, total_rows=102154, primal_rows=99630, constraint_rows=2524, matrix_nnz=1415826, constraint_matrix_rows=2524, eliminate=0, penalty=0, restriction_active=1
+HeatSolve: iter:    1 Assembly: (s)    8.34    8.34
+HeatSolve: iter:    1 Solve:    (s)   42.34   42.34
+HeatSolve:  Result Norm   :   0.14996092215349738
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.685700E-01 I=  1.435373E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.649926E-01
+TESInnerCircuit: StycastT=  1.649925E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .......Assembly done
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.15017888     0.14524088E-02 ) :: heat equation
+HeatSolve: iter:    2 Assembly: (s)    7.91   16.24
+HeatSolve: iter:    2 Solve:    (s)    1.81   44.15
+HeatSolve:  Result Norm   :   0.15017888499670357
+HeatSolve:  Relative Change :    1.4524087642737169E-003
+TESInnerCircuit: T=  1.649919E-01 I=  2.813896E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.667179E-01
+TESInnerCircuit: StycastT=  1.667178E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           3
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=3) (NRM,RELC): ( 0.15015673     0.14755707E-03 ) :: heat equation
+HeatSolve: iter:    3 Assembly: (s)    7.02   23.27
+HeatSolve: iter:    3 Solve:    (s)    1.77   45.92
+HeatSolve:  Result Norm   :   0.15015672667553850
+HeatSolve:  Relative Change :    1.4755706818572425E-004
+TESInnerCircuit: T=  1.667171E-01 I=  2.124043E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665403E-01
+TESInnerCircuit: StycastT=  1.665402E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           4
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=4) (NRM,RELC): ( 0.15015817     0.95966167E-05 ) :: heat equation
+HeatSolve: iter:    4 Assembly: (s)    7.02   30.28
+HeatSolve: iter:    4 Solve:    (s)    1.74   47.66
+HeatSolve:  Result Norm   :   0.15015816767900930
+HeatSolve:  Relative Change :    9.5966167372082928E-006
+TESInnerCircuit: T=  1.665396E-01 I=  2.193474E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665519E-01
+TESInnerCircuit: StycastT=  1.665518E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           5
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .......Assembly done
+ComputeChange: NS (ITER=5) (NRM,RELC): ( 0.15015809     0.53167524E-06 ) :: heat equation
+HeatSolve: iter:    5 Assembly: (s)    7.36   37.65
+HeatSolve: iter:    5 Solve:    (s)    1.86   49.51
+HeatSolve:  Result Norm   :   0.15015808784365037
+HeatSolve:  Relative Change :    5.3167524212708216E-007
+TESInnerCircuit: T=  1.665512E-01 I=  2.188931E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665512E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           6
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .......Assembly done
+ComputeChange: NS (ITER=6) (NRM,RELC): ( 0.15015809     0.41583062E-07 ) :: heat equation
+HeatSolve: iter:    6 Assembly: (s)    7.59   45.24
+HeatSolve: iter:    6 Solve:    (s)    1.86   51.37
+HeatSolve:  Result Norm   :   0.15015809408768357
+HeatSolve:  Relative Change :    4.1583062004800727E-008
+TESInnerCircuit: T=  1.665505E-01 I=  2.189183E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665512E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           7
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .......Assembly done
+ComputeChange: NS (ITER=7) (NRM,RELC): ( 0.15015810     0.22902332E-07 ) :: heat equation
+HeatSolve: iter:    7 Assembly: (s)    7.32   52.56
+HeatSolve: iter:    7 Solve:    (s)    1.86   53.23
+HeatSolve:  Result Norm   :   0.15015809752665416
+HeatSolve:  Relative Change :    2.2902332118964764E-008
+TESInnerCircuit: T=  1.665506E-01 I=  2.189163E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665514E-01
+TESInnerCircuit: StycastT=  1.665513E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           8
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=8) (NRM,RELC): ( 0.15015809     0.31346672E-07 ) :: heat equation
+HeatSolve: iter:    8 Assembly: (s)    7.25   59.82
+HeatSolve: iter:    8 Solve:    (s)    1.83   55.06
+HeatSolve:  Result Norm   :   0.15015809281969761
+HeatSolve:  Relative Change :    3.1346671928164754E-008
+TESInnerCircuit: T=  1.665506E-01 I=  2.189153E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665512E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           9
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=9) (NRM,RELC): ( 0.15015809     0.13692085E-07 ) :: heat equation
+HeatSolve: iter:    9 Assembly: (s)    7.29   67.11
+HeatSolve: iter:    9 Solve:    (s)    1.85   56.91
+HeatSolve:  Result Norm   :   0.15015809076372022
+HeatSolve:  Relative Change :    1.3692085213693823E-008
+TESInnerCircuit: T=  1.665506E-01 I=  2.189168E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665512E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          10
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .......Assembly done
+ComputeChange: NS (ITER=10) (NRM,RELC): ( 0.15015810     0.34269409E-07 ) :: heat equation
+HeatSolve: iter:   10 Assembly: (s)    7.51   74.62
+HeatSolve: iter:   10 Solve:    (s)    1.83   58.74
+HeatSolve:  Result Norm   :   0.15015809590954932
+HeatSolve:  Relative Change :    3.4269408873143550E-008
+TESInnerCircuit: T=  1.665505E-01 I=  2.189173E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665513E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          11
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=11) (NRM,RELC): ( 0.15015809     0.21176525E-07 ) :: heat equation
+HeatSolve: iter:   11 Assembly: (s)    7.24   81.86
+HeatSolve: iter:   11 Solve:    (s)    1.81   60.55
+HeatSolve:  Result Norm   :   0.15015809272972266
+HeatSolve:  Relative Change :    2.1176525091082497E-008
+TESInnerCircuit: T=  1.665506E-01 I=  2.189158E-04 P=  3.042855E-10
+TESInnerCircuit: AbsorberT=  1.665513E-01
+TESInnerCircuit: StycastT=  1.665512E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          12
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ......Assembly done
+ComputeChange: NS (ITER=12) (NRM,RELC): ( 0.15015809     0.35480638E-09 ) :: heat equation
+HeatSolve: iter:   12 Assembly: (s)    7.22   89.08
+HeatSolve: iter:   12 Solve:    (s)    1.81   62.36
+HeatSolve:  Result Norm   :   0.15015809278299971
+HeatSolve:  Relative Change :    3.5480638080059548E-010
+ComputeChange: SS (ITER=1) (NRM,RELC): ( 0.15203360      2.0000000     ) :: heat equation
+WARNING:: SaveCurrent: > Output File < for restart should not include directory: ../work/meshes/mesh_phase24_abs_conforming_bypass_stycast_abs/abs_bypass_0p95p.result
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_phase24_abs_conforming_bypass_stycast_abs/../work/meshes/mesh_phase24_abs_conforming_bypass_stycast_abs/abs_bypass_0p95p.result
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: *** Elmer Solver: ALL DONE ***
+MAIN: The end
+SOLVER TOTAL TIME(CPU,REAL):       161.61      161.61
+ELMER SOLVER FINISHED AT: 2026/09/23 21:43:33
