@@ -706,5 +706,249 @@
       "temperature_K": 0.15,
       "bc_type": "Dirichlet Temperature"
     }
+  },
+  "phase24_membrane_stycast_coupling_only": {
+    "label": "Phase24 membrane-Stycast coupling-only",
+    "mesh": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar",
+    "bodies": {
+      "100": "abs",
+      "101": "TES",
+      "102": "Stycast",
+      "103": "Membrane_SiNx",
+      "104": "SiO2_1",
+      "105": "Si_1",
+      "106": "SiNx",
+      "107": "Si_2",
+      "108": "SiO2_2",
+      "109": "Membrane_Si1"
+    },
+    "edges": [
+      {
+        "source": "TES->membrane",
+        "connected_body_ids": [
+          101,
+          103
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "topology_type": "shared-node",
+        "interface_area_m2": 2.5e-07,
+        "boundary_ids": [
+          1104,
+          1305
+        ],
+        "node_count": [
+          179,
+          179
+        ],
+        "element_face_count": [
+          308,
+          308
+        ],
+        "mortar_constraint_count": 0,
+        "shared_node_count": 179
+      },
+      {
+        "source": "TES->Stycast",
+        "connected_body_ids": [
+          101,
+          102
+        ],
+        "connected_bodies": [
+          "TES",
+          "Stycast"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.93737355602149e-07,
+        "boundary_ids": [
+          1105,
+          1204
+        ],
+        "node_count": [
+          179,
+          139
+        ],
+        "element_face_count": [
+          308,
+          241
+        ],
+        "mortar_constraint_count": 153,
+        "shared_node_count": 0
+      },
+      {
+        "source": "Stycast->substrate",
+        "connected_body_ids": [
+          102,
+          108
+        ],
+        "connected_bodies": [
+          "Stycast",
+          "SiO2_2"
+        ],
+        "topology_type": "mortar/nonconforming",
+        "interface_area_m2": 1.908503181567056e-07,
+        "boundary_ids": [
+          1205,
+          1004
+        ],
+        "node_count": [
+          47,
+          182
+        ],
+        "element_face_count": [
+          74,
+          314
+        ],
+        "mortar_constraint_count": 47,
+        "shared_node_count": 0
+      }
+    ],
+    "direct_shared_edges": [
+      {
+        "connected_body_ids": [
+          101,
+          103
+        ],
+        "connected_bodies": [
+          "TES",
+          "Membrane_SiNx"
+        ],
+        "shared_node_count": 179,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          105
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Si_1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          106
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "SiNx"
+        ],
+        "shared_node_count": 136,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          103,
+          109
+        ],
+        "connected_bodies": [
+          "Membrane_SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 380,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          105
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_1"
+        ],
+        "shared_node_count": 10395,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          107
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Si_2"
+        ],
+        "shared_node_count": 10392,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          104,
+          109
+        ],
+        "connected_bodies": [
+          "SiO2_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 324,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          106
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "SiNx"
+        ],
+        "shared_node_count": 10430,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          105,
+          109
+        ],
+        "connected_bodies": [
+          "Si_1",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 132,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          106,
+          109
+        ],
+        "connected_bodies": [
+          "SiNx",
+          "Membrane_Si1"
+        ],
+        "shared_node_count": 68,
+        "topology_type": "conformal shared-node"
+      },
+      {
+        "connected_body_ids": [
+          107,
+          108
+        ],
+        "connected_bodies": [
+          "Si_2",
+          "SiO2_2"
+        ],
+        "shared_node_count": 10396,
+        "topology_type": "conformal shared-node"
+      }
+    ],
+    "bath_boundary": {
+      "case": "phase24_membrane_stycast_coupling_only",
+      "label": "Phase24 membrane-Stycast coupling-only",
+      "boundary_id": 1804,
+      "boundary_name": "SiO2_2__zmin",
+      "connected_body": "SiO2_2",
+      "area_m2": 1.750999999999974e-05,
+      "face_count": 20322,
+      "temperature_K": 0.15,
+      "bc_type": "Dirichlet Temperature"
+    }
   }
 }

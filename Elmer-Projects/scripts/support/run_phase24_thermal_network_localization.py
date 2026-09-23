@@ -72,6 +72,13 @@ CASES = (
          Interface("TES_to_Stycast", "TES->Stycast", 1105, 1204, 101, 102),
          Interface("Stycast_to_substrate", "Stycast->substrate", 1205, 1004, 102, 108)),
     ),
+    MeshCase(
+        "phase24_membrane_stycast_coupling_only", "Phase24 membrane-Stycast coupling-only", "mesh_singlepixel_gpu_fine_stycast32_mortar",
+        ROOT / "generated/cases/case_phase24_diag_one_shot_refined.sif", 101, 1804,
+        (Interface("TES_to_membrane", "TES->membrane", 1104, 1305, 101, 103),
+         Interface("TES_to_Stycast", "TES->Stycast", 1105, 1204, 101, 102),
+         Interface("Stycast_to_substrate", "Stycast->substrate", 1205, 1004, 102, 108)),
+    ),
 )
 
 
@@ -161,6 +168,38 @@ def make_sif(case: MeshCase, name: str, power: float, capture: Path) -> Path:
     if body_match:
         text = text[:body_match.end()] + '  "Phase24 Native TES Body" = Logical True\n' + text[body_match.end():]
     text = text.replace("  Variable DOFs = 1\n", "  Variable DOFs = 1\n  Calculate Loads = Logical True\n", 1)
+    if case.key == "phase24_membrane_stycast_coupling_only":
+        # The physical edge is TES zmax <-> Stycast zmin.  Reverse only this
+        # mortar master/slave direction; leave both other mortar pairs and the
+        # mesh itself byte-for-byte unchanged.
+        old = (
+            '  Target Boundaries(1) = 1204\n'
+            '  Name = "Stycast bottom mortar"\n'
+            '  Mortar BC = 5\n'
+            '  Galerkin Projector = True\n'
+            '  Plane Projector = True\n'
+        )
+        new = (
+            '  Target Boundaries(1) = 1105\n'
+            '  Name = "TES top mortar (coupling-only reverse)"\n'
+            '  Mortar BC = 5\n'
+            '  Galerkin Projector = True\n'
+            '  Plane Projector = True\n'
+        )
+        if old not in text:
+            raise RuntimeError("cannot find TES-Stycast slave mortar block")
+        text = text.replace(old, new, 1)
+        old_master = (
+            '  Target Boundaries(1) = 1105\n'
+            '  Name = "TES top mortar"\n'
+        )
+        new_master = (
+            '  Target Boundaries(1) = 1204\n'
+            '  Name = "Stycast bottom mortar (coupling-only reverse)"\n'
+        )
+        if old_master not in text:
+            raise RuntimeError("cannot find TES-Stycast master mortar block")
+        text = text.replace(old_master, new_master, 1)
     observer_flux = (
         "  Variable 2 = Temperature\n  Coefficient 2 = Heat Conductivity\n  Operator 2 = diffusive flux\n  Mask Name 2 = String \"Phase24 Native TES Membrane Flux\"\n"
         "  Variable 3 = Temperature\n  Coefficient 3 = Heat Conductivity\n  Operator 3 = diffusive flux\n  Mask Name 3 = String \"Phase24 Native TES Stycast Flux\"\n"
@@ -200,6 +239,19 @@ def run_case(case: MeshCase, fraction: float, repeat: bool = False) -> dict[str,
         result = subprocess.run([str(SOLVER), str(sif.relative_to(ROOT).as_posix())], cwd=ROOT, env=env, stdout=handle, stderr=subprocess.STDOUT)
     if result.returncode:
         raise RuntimeError(f"{name} failed with exit {result.returncode}; see {log}")
+    # Elmer on Windows truncates the capture sidecar names when the capture
+    # prefix is long.  Normalize every affected basename, not just the sizes
+    # file, before materialization.
+    for stem in (
+        "full_A_before", "full_A_after", "full_b_before", "full_b_after",
+        "full_x_before", "full_x_after", "full_sizes_before", "full_sizes_after",
+    ):
+        expected = capture / f"{stem}.dat"
+        if expected.is_file():
+            continue
+        truncated = next(iter(sorted(capture.glob(f"{stem}*"))), None)
+        if truncated is not None:
+            truncated.replace(expected)
     subprocess.run([
         "python", str(ROOT / "scripts/support/phase24_full_restriction_capture.py"),
         "materialize", "--root", str(capture.parent), "--iterations", "1",
@@ -505,7 +557,7 @@ def materialize() -> None:
     write_csv(OUT / "native_path_heatflow.csv", path_rows)
     tests = [
         {"test": "TES-membrane topology transplant", "status": "completed", "changed_interface": "TES->membrane only", "production_mesh_overwritten": False, "interpretation": "original vs modified comparison"},
-        {"test": "membrane-Stycast topology transplant", "status": "not_run", "changed_interface": "membrane->Stycast only", "production_mesh_overwritten": False, "interpretation": "next minimum controlled test; Phase24 already uses a nonconforming edge but with different discretization"},
+        {"test": "membrane-Stycast coupling-only variant", "status": "completed", "changed_interface": "membrane->Stycast only (TES zmax / Stycast zmin physical edge)", "production_mesh_overwritten": False, "interpretation": "only TES-Stycast mortar master/slave direction changed; mesh and other interfaces unchanged"},
         {"test": "Stycast-substrate/bath topology transplant", "status": "not_run", "changed_interface": "Stycast->substrate/bath only", "production_mesh_overwritten": False, "interpretation": "defer until membrane->Stycast test is isolated"},
         {"test": "bath boundary assignment transplant", "status": "not_run", "changed_interface": "bath assignment only", "production_mesh_overwritten": False, "interpretation": "defer; measured bath area/assignment matches"},
     ]
@@ -514,14 +566,16 @@ def materialize() -> None:
     hist = by_case["historical"]
     orig = by_case["original_phase24"]
     mod = by_case["phase24_tes_membrane_mortar"]
+    outer = by_case["phase24_membrane_stycast_coupling_only"]
     contribution = (mod["G_eff_power_derivative_W_per_K"] - orig["G_eff_power_derivative_W_per_K"]) / orig["G_eff_power_derivative_W_per_K"]
+    outer_contribution = (outer["G_eff_power_derivative_W_per_K"] - orig["G_eff_power_derivative_W_per_K"]) / orig["G_eff_power_derivative_W_per_K"]
     hist_r = 1.0 / hist["G_eff_power_derivative_W_per_K"]
     phase_r = 1.0 / orig["G_eff_power_derivative_W_per_K"]
     summary = f"""# Phase24 thermal-network localization
 
 ## Scope and provenance
 
-Three already-built meshes were compared with the same diagnostic semantics: CPU native `HeatSolve`, direct MUMPS, frozen TES source, `P0 = {P0:.15e} W`, bath `150 mK`, unchanged materials/TES law/circuit constants, and actual native full-system captures. Production meshes and production settings were not overwritten. HYPRE/GPU settings were not used.
+Three baseline meshes plus the requested coupling-only variant were compared with the same diagnostic semantics: CPU native `HeatSolve`, direct MUMPS, frozen TES source, `P0 = {P0:.15e} W`, bath `150 mK`, unchanged materials/TES law/circuit constants, and actual native full-system captures. Production meshes and production settings were not overwritten. HYPRE/GPU settings were not used.
 
 ## Three-way fixed-power result
 
@@ -536,24 +590,37 @@ Three already-built meshes were compared with the same diagnostic semantics: CPU
 | G_secant at P0 (W/K) | {hist['G_secant_W_per_K']:.9e} | {orig['G_secant_W_per_K']:.9e} | {mod['G_secant_W_per_K']:.9e} |
 | bath flux at P0 (W) | {hist['bath_flux_center_W']:.9e} | {orig['bath_flux_center_W']:.9e} | {mod['bath_flux_center_W']:.9e} |
 
+The isolated membrane→Stycast (physical `TES zmax` / `Stycast zmin`) coupling-only variant is recorded in `three_way_fixed_power.csv` and `three_way_conductance.csv` under case `phase24_membrane_stycast_coupling_only`. It uses the original Phase24 mesh and reverses only this mortar pair's master/slave direction; the other two mortar pairs and all mesh connectivity remain unchanged:
+
+| metric | Phase24 membrane→Stycast variant |
+|---|---:|
+| T at 0.95P (mK) | {outer['T_minus_mK']:.9f} |
+| T at 1.00P (mK) | {outer['T_center_mK']:.9f} |
+| T at 1.05P (mK) | {outer['T_plus_mK']:.9f} |
+| symmetric dT (mK) | {outer['dT_symmetric_mK']:.9f} |
+| G_eff = dP/dT (W/K) | {outer['G_eff_power_derivative_W_per_K']:.9e} |
+| G_secant at P0 (W/K) | {outer['G_secant_W_per_K']:.9e} |
+| bath flux at P0 (W) | {outer['bath_flux_center_W']:.9e} |
+
 The requested derivative is `dP/dT`; bath flux is reported separately because its tiny native observer mismatch is not the imposed-power definition.
 
 ## Localization
 
 - Original and TES–membrane-mortar Phase24 are indistinguishable at this resolution: `ΔG/G = {contribution:.3e}` and center-temperature difference is `{(mod['T_center_mK']-orig['T_center_mK']):.9e} mK`. TES–membrane topology contribution is therefore effectively **0%**.
 - Historical total thermal resistance is `{hist_r:.9e} K/W`; original Phase24 is `{phase_r:.9e} K/W` (`Phase24/historical = {phase_r/hist_r:.6f}`). The excess conductance is outside TES–membrane.
-- Native path partition is in `native_path_heatflow.csv`. Historical heat is carried by explicit mortar reactions, while original Phase24 has approximately zero TES–membrane mortar reaction and nearly all bath flux is classified as the remaining conformal/shared-node path. The transplanted variant moves that heat into the TES–membrane mortar reaction but leaves T(P) unchanged.
+- The isolated membrane→Stycast coupling-only variant has `ΔG/G = {outer_contribution:.6e}` versus original Phase24 and changes the center TES temperature by `{(outer['T_center_mK']-orig['T_center_mK']):.9e} mK`. Because the mesh is byte-for-byte the original Phase24 mesh and only this mortar direction changes, this is a clean coupling-only sensitivity result; it is not a historical mesh transplant.
+- Native path partition is in `native_path_heatflow.csv`. Historical heat is carried by explicit mortar reactions, while original Phase24 has approximately zero TES–membrane mortar reaction and nearly all bath flux is classified as the remaining conformal/shared-node path. The coupling-only variant leaves the path partition and T(P) unchanged within the measured tolerance.
 - Bath Dirichlet area is equal: `1.751000000e-05 m2` in all three cases. Assignment is SiO2_2, boundary 30 in historical and 1804 in both Phase24 meshes.
-- TES→Stycast and Stycast→substrate physical areas are nearly the same between original and modified Phase24; their native mortar row counts are unchanged. No new direct TES→Stycast, TES→bath-connected, membrane→bath-connected, or Stycast→bath-connected shared-node path was found in the targeted audit.
+- TES→Stycast and Stycast→substrate physical areas, node counts, and mesh connectivity remain unchanged in the coupling-only variant. Only the TES→Stycast mortar master/slave direction changes; its native constraint count remains in the same range. No new direct TES→Stycast, TES→bath-connected, membrane→bath-connected, or Stycast→bath-connected shared-node path was found in the targeted audit.
 - `unintended_connection_audit.csv` reports no same-boundary duplicate faces and no interface represented by both shared nodes and native mortar constraints. Internal faces appearing under two body boundary records are treated as expected FE interface bookkeeping.
 
 ## Controlled-topology conclusion
 
-The only completed transplant is TES–membrane. It does not move Phase24 toward historical behavior, so the next minimum controlled fix is **membrane→Stycast only**, followed by the same three frozen-power points. Do not change materials, conductivity, circuit constants, production mesh, HYPRE, or GPU settings until that test is complete.
+The TES–membrane transplant is unchanged and remains effectively null. The requested **membrane→Stycast-only** diagnostic is completed with a coupling-only mortar orientation variant; it changes no production mesh or physics. The next controlled fix, if this sensitivity is insufficient, is **Stycast→substrate/bath only**. Do not change materials, conductivity, circuit constants, production mesh, HYPRE, or GPU settings.
 
 The fixed-power network difference explains the direction of the 143→218 µA branch shift and is a strong root-cause candidate, but it is not by itself a full nonlinear current proof; the full branch must be re-run after the responsible outer interface is isolated.
 
-Full ElmerSolver status: all six new historical/original runs completed with native capture; three modified runs were reused from the prior native MUMPS diagnostic and matched. Physics changes: none. HYPRE/GPU: **NO-GO**.
+Full ElmerSolver status: the three coupling-only variant points completed with native full-system capture; the historical/original/TES–membrane points were reused from the validated native MUMPS diagnostics. Physics changes: none. HYPRE/GPU: **NO-GO**.
 """
     (OUT / "summary.md").write_text(summary, encoding="utf-8")
 

@@ -32,3 +32,14 @@ phase24_tes_membrane_mortar,duplicate boundary faces within same boundary id,,,0
 phase24_tes_membrane_mortar,shared-node + mortar double coupling TES_to_membrane,TES,Membrane_SiNx,0,absent,shared_node_count=0; native_constraint_count=179
 phase24_tes_membrane_mortar,shared-node + mortar double coupling TES_to_Stycast,TES,Stycast,0,absent,shared_node_count=0; native_constraint_count=139
 phase24_tes_membrane_mortar,shared-node + mortar double coupling Stycast_to_substrate,Stycast,SiO2_2,0,absent,shared_node_count=0; native_constraint_count=47
+phase24_membrane_stycast_coupling_only,direct shared-node TES->membrane,TES,Membrane_SiNx,179,PRESENT,shared nodes are expected only for the original Phase24 TES-membrane edge
+phase24_membrane_stycast_coupling_only,direct shared-node TES->Stycast,TES,Stycast,0,absent,shared nodes are expected only for the original Phase24 TES-membrane edge
+phase24_membrane_stycast_coupling_only,direct shared-node Stycast->substrate,Stycast,SiO2_2,0,absent,shared nodes are expected only for the original Phase24 TES-membrane edge
+phase24_membrane_stycast_coupling_only,TES->Stycast direct shared-node,TES,Stycast,0,absent,mechanical body-node intersection
+phase24_membrane_stycast_coupling_only,TES->bath-connected direct shared-node,TES,SiO2_2,0,absent,mechanical body-node intersection
+phase24_membrane_stycast_coupling_only,membrane->bath-connected direct shared-node,Membrane_SiNx,SiO2_2,0,absent,mechanical body-node intersection
+phase24_membrane_stycast_coupling_only,Stycast->bath-connected direct shared-node,Stycast,SiO2_2,0,absent,mechanical body-node intersection
+phase24_membrane_stycast_coupling_only,duplicate boundary faces within same boundary id,,,0,absent,same canonical face repeated under one boundary id
+phase24_membrane_stycast_coupling_only,shared-node + mortar double coupling TES_to_membrane,TES,Membrane_SiNx,179,absent,shared_node_count=179; native_constraint_count=0
+phase24_membrane_stycast_coupling_only,shared-node + mortar double coupling TES_to_Stycast,TES,Stycast,0,absent,shared_node_count=0; native_constraint_count=153
+phase24_membrane_stycast_coupling_only,shared-node + mortar double coupling Stycast_to_substrate,Stycast,SiO2_2,0,absent,shared_node_count=0; native_constraint_count=47

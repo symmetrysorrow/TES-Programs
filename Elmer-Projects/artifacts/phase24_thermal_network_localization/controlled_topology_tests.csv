@@ -1,5 +1,5 @@
 test,status,changed_interface,production_mesh_overwritten,interpretation
 TES-membrane topology transplant,completed,TES->membrane only,False,original vs modified comparison
-membrane-Stycast topology transplant,not_run,membrane->Stycast only,False,next minimum controlled test; Phase24 already uses a nonconforming edge but with different discretization
+membrane-Stycast coupling-only variant,completed,membrane->Stycast only (TES zmax / Stycast zmin physical edge),False,only TES-Stycast mortar master/slave direction changed; mesh and other interfaces unchanged
 Stycast-substrate/bath topology transplant,not_run,Stycast->substrate/bath only,False,defer until membrane->Stycast test is isolated
 bath boundary assignment transplant,not_run,bath assignment only,False,defer; measured bath area/assignment matches
