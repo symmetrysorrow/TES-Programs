@@ -18,4 +18,4 @@
 | Stycast_to_substrate | support_x_span_m | 3.543116404e-05 | 2.061671469e-04 | 5.818808171e+00 |
 | Stycast_to_substrate | support_y_span_m | 3.524666792e-05 | 2.409943725e-04 | 6.837366103e+00 |
 
-Constraint rows are classified from their primal support nodes. The raw constraint-row count is not itself a conductance; it diagnoses mortar tessellation and projection stencil changes. Phase24 has fewer but much larger support patches; the total coefficient L1/L2 mass is reported in the JSON to distinguish area aggregation from an actual projection-strength change.
+Constraint rows are classified from their primal support nodes. The raw constraint-row count is not itself a conductance; it diagnoses mortar tessellation and projection stencil changes. Row count and support-patch size can move in opposite directions; the total coefficient L1/L2 mass is reported in the JSON to distinguish area aggregation from an actual projection-strength change.

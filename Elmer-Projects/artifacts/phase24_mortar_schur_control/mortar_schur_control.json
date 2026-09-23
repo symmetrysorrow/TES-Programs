@@ -111,18 +111,59 @@
         }
       },
       "constraint_rows_center": 1721
+    },
+    "phase24_stycast_only_refined": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_only_refined",
+      "temperatures_K": {
+        "minus": 0.16496841768953494,
+        "center": 0.16575622669406054,
+        "plus": 0.1665440356985862
+      },
+      "temperatures_mK": {
+        "minus": 164.96841768953493,
+        "center": 165.75622669406053,
+        "plus": 166.54403569858619
+      },
+      "G_derivative_W_K": 2.0328561515006986e-08,
+      "G_secant_to_bath_W_K": 2.0328501387470774e-08,
+      "D_blocks": {
+        "minus": {
+          "records": 5811,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "center": {
+          "records": 5811,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "plus": {
+          "records": 5811,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        }
+      },
+      "constraint_rows_center": 5811
     }
   },
   "comparison": {
     "original_over_historical_G": 1.4771603277620164,
     "refined_over_historical_G": 1.0801360587107312,
     "refined_over_original_G": 0.7312246601878348,
-    "original_to_refined_reduction": 0.26877533981216517
+    "original_to_refined_reduction": 0.26877533981216517,
+    "stycast_only_over_historical_G": 1.0822883168888142,
+    "stycast_only_over_original_G": 0.732681684274952,
+    "stycast_only_over_interface_refined_G": 1.0019925806204935,
+    "stycast_only_vs_interface_refined_relative_difference": 0.001992580620493456
   },
   "control": {
     "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_membrane_stycast_diag_v2",
     "notes": "Existing diagnostic mesh: TES top and first 1 um of Stycast locally refined; outer Stycast-substrate interface remains original Phase24 coarse topology.",
     "constraint_rows_center_original_phase24": 186,
-    "constraint_rows_center_interface_refined": 1721
+    "constraint_rows_center_interface_refined": 1721,
+    "constraint_rows_center_stycast_only_refined": 5811
   }
 }
