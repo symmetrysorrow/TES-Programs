@@ -1,0 +1,74 @@
+{
+  "material": {
+    "material_id": 3,
+    "name": "Stycast",
+    "k_W_mK": 2.69094e-06,
+    "rho_kg_m3": 2400.0,
+    "cp_J_kgK": 0.00122
+  },
+  "historical": {
+    "mesh": "historical",
+    "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2",
+    "body_name": "Stycast",
+    "body_id": 9,
+    "element_count": 102848,
+    "element_types": {
+      "706": 102848
+    },
+    "node_count": 55143,
+    "x_min_m": -0.000249,
+    "x_max_m": 0.000249,
+    "y_min_m": 0.000751077393682,
+    "y_max_m": 0.00124892260632,
+    "z_min_m": 0.00019216,
+    "z_max_m": 0.00021216,
+    "thickness_m": 1.9999999999999998e-05,
+    "nominal_layer_thickness_m": 6.249999999999999e-07,
+    "crossing_element_count": 0,
+    "total_volume_m3": 3.894023393625229e-12,
+    "volume_over_thickness_effective_area_m2": 1.9470116968126147e-07,
+    "integral_k_dV_W_m": 1.0478583310841876e-17,
+    "integral_rho_cp_dV_J_K": 1.140170049653467e-11,
+    "one_dimensional_series_R_K_W": 38173099.180891365,
+    "layer_area_min_m2": 1.9470116968125348e-07,
+    "layer_area_max_m2": 1.94701169681262e-07,
+    "layer_area_minmax_ratio": 0.9999999999999563,
+    "crossing_elements": []
+  },
+  "phase24": {
+    "mesh": "phase24",
+    "path": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+    "body_name": "Stycast",
+    "body_id": 102,
+    "element_count": 31885,
+    "element_types": {
+      "504": 31885
+    },
+    "node_count": 6193,
+    "x_min_m": -0.000249,
+    "x_max_m": 0.000249,
+    "y_min_m": 0.000751250726431,
+    "y_max_m": 0.00124874927357,
+    "z_min_m": 0.00019216,
+    "z_max_m": 0.00021216,
+    "thickness_m": 1.9999999999999998e-05,
+    "nominal_layer_thickness_m": 6.249999999999999e-07,
+    "crossing_element_count": 0,
+    "total_volume_m3": 3.874103524108758e-12,
+    "volume_over_thickness_effective_area_m2": 1.9370517620543792e-07,
+    "integral_k_dV_W_m": 1.0424980137165222e-17,
+    "integral_rho_cp_dV_J_K": 1.1343375118590443e-11,
+    "one_dimensional_series_R_K_W": 38369410.65241678,
+    "layer_area_min_m2": 1.9270761490739276e-07,
+    "layer_area_max_m2": 1.9373735560214982e-07,
+    "layer_area_minmax_ratio": 0.994684862444021,
+    "crossing_elements": []
+  },
+  "comparison": {
+    "phase24_over_historical_total_volume": 0.9948845018370764,
+    "phase24_over_historical_effective_area": 0.9948845018370764,
+    "phase24_over_historical_integral_k_dV": 0.9948845018370764,
+    "phase24_over_historical_integral_rho_cp_dV": 0.9948845018370764,
+    "phase24_over_historical_1d_series_R": 1.0051426652731326
+  }
+}
