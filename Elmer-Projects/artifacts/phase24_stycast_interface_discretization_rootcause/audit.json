@@ -1,0 +1,444 @@
+{
+  "physics_changed": false,
+  "production_mesh_changed": false,
+  "historical_interface_definition": "Stycast side of TES_to_Stycast; boundary 26 historical / 1204 Phase24",
+  "historical_equivalent_selection": "provisional 10um Stycast contact-side probe; native three-point solve completed; exact historical topology/constraint match not achieved",
+  "fixed_power_source": "existing residual-captured CPU native HeatSolve MUMPS runs",
+  "g_eff_definition": "(P_plus-P_minus)/(T_plus-T_minus)",
+  "g_secant_definition": "P0/(T_center-T_bath)",
+  "cases": [
+    {
+      "case": "historical",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2",
+      "body_id": 9,
+      "interface_boundary_id": 26,
+      "interface_face_count": 3214,
+      "interface_area_m2": 1.9470116968126169e-07,
+      "face_area_distribution_m2": {
+        "min": 3.0401849885174356e-11,
+        "p10": 4.387640655623819e-11,
+        "median": 5.91453790665075e-11,
+        "mean": 6.057908204146288e-11,
+        "p90": 7.976656390905136e-11,
+        "max": 1.0967141434209929e-10
+      },
+      "edge_length_distribution_m": {
+        "min": 7.107261660070886e-06,
+        "p10": 9.07937557469518e-06,
+        "median": 1.0434555482461861e-05,
+        "mean": 1.064244498419618e-05,
+        "p90": 1.2529252003490896e-05,
+        "max": 1.5574358658858736e-05
+      },
+      "edge_max_distribution_m": {
+        "min": 8.605803950788906e-06,
+        "p10": 1.1380698399973536e-05,
+        "median": 1.3500303516830153e-05,
+        "mean": 1.3448840036435451e-05,
+        "p90": 1.5418599355398235e-05,
+        "max": 1.851995969378797e-05
+      },
+      "adjacent_element_depth_m": {
+        "min": 3.124999999999872e-07,
+        "p10": 3.1249999999998727e-07,
+        "median": 3.1249999999998727e-07,
+        "mean": 3.1249999999998727e-07,
+        "p90": 3.1249999999998727e-07,
+        "max": 3.124999999999873e-07
+      },
+      "adjacent_element_volume_m3": {
+        "min": 1.900115617823406e-17,
+        "p10": 2.7422754097649023e-17,
+        "median": 3.6965861916567256e-17,
+        "mean": 3.786192627591444e-17,
+        "p90": 4.985410244315724e-17,
+        "max": 6.854463396381245e-17
+      },
+      "element_aspect_ratio": {
+        "min": 13.805551267403223,
+        "p10": 18.236555540054546,
+        "median": 21.62362086513568,
+        "mean": 21.541686483058456,
+        "p90": 24.690018379309706,
+        "max": 29.64880439532756
+      },
+      "local_K_ff_trace_W_K_sum": 8.44882766591259e-07,
+      "local_K_fi_fro_W_K_sum": 5.919856956697177e-07,
+      "local_K_ii_trace_W_K_sum": 8.44882766591259e-07,
+      "local_K_condensed_trace_W_K_sum": 1.938873979222164e-08,
+      "local_K_condensed_fro_W_K_sum": 1.4362269925663161e-08,
+      "condensation_status_counts": {
+        "solve": 3214,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": null
+    },
+    {
+      "case": "phase24_original",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "body_id": 102,
+      "interface_boundary_id": 1204,
+      "interface_face_count": 241,
+      "interface_area_m2": 1.9373735560214897e-07,
+      "face_area_distribution_m2": {
+        "min": 5.638421791921574e-10,
+        "p10": 6.482133235856444e-10,
+        "median": 8.240155813868206e-10,
+        "mean": 8.038894423325684e-10,
+        "p90": 8.961506764041348e-10,
+        "max": 1.3222310841630192e-09
+      },
+      "edge_length_distribution_m": {
+        "min": 3.353961425559091e-05,
+        "p10": 3.633923424388357e-05,
+        "median": 4.148420532420092e-05,
+        "mean": 4.0956272206585145e-05,
+        "p90": 4.499989598567754e-05,
+        "max": 5.40122385368277e-05
+      },
+      "edge_max_distribution_m": {
+        "min": 3.785682314072608e-05,
+        "p10": 4.299955271378201e-05,
+        "median": 4.502268386991088e-05,
+        "mean": 4.600529360434905e-05,
+        "p90": 5.102402942377009e-05,
+        "max": 5.722123428927113e-05
+      },
+      "adjacent_element_depth_m": {
+        "min": 7.81249225000058e-08,
+        "p10": 7.812499524999868e-08,
+        "median": 1.5625000000002074e-07,
+        "mean": 1.335580921473165e-07,
+        "p90": 1.5625000000002074e-07,
+        "max": 1.5625000000002077e-07
+      },
+      "adjacent_element_volume_m3": {
+        "min": 5.873357442857024e-17,
+        "p10": 7.407245016718635e-17,
+        "median": 1.585814595939708e-16,
+        "mean": 1.445524636467008e-16,
+        "p90": 1.8371458275618585e-16,
+        "max": 2.7546480920062956e-16
+      },
+      "element_aspect_ratio": {
+        "min": 1.820097734649631,
+        "p10": 2.087999128058298,
+        "median": 72.00720409268155,
+        "mean": 53.33079197107877,
+        "p90": 80.79721253553618,
+        "max": 91.18469783252094
+      },
+      "local_K_ff_trace_W_K_sum": 2.6777190110951245e-07,
+      "local_K_fi_fro_W_K_sum": 3.014432818783673e-07,
+      "local_K_ii_trace_W_K_sum": 3.5416427947356215e-07,
+      "local_K_condensed_trace_W_K_sum": 2.037421839459548e-10,
+      "local_K_condensed_fro_W_K_sum": 1.4658052780335388e-10,
+      "condensation_status_counts": {
+        "solve": 241,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": null
+    },
+    {
+      "case": "phase24_h5um",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_only_refined",
+      "body_id": 102,
+      "interface_boundary_id": 1204,
+      "interface_face_count": 8308,
+      "interface_area_m2": 8.89213479482104e-08,
+      "face_area_distribution_m2": {
+        "min": 6.161763109198194e-12,
+        "p10": 1.0448347315471613e-11,
+        "median": 1.082531754716117e-11,
+        "mean": 1.0703099175278095e-11,
+        "p90": 1.0825317556660492e-11,
+        "max": 1.4806408479583777e-11
+      },
+      "edge_length_distribution_m": {
+        "min": 3.5041996570642735e-06,
+        "p10": 4.747935667636329e-06,
+        "median": 4.999999999885748e-06,
+        "mean": 4.923111236960841e-06,
+        "p90": 5.000000000810452e-06,
+        "max": 5.8244630760197945e-06
+      },
+      "edge_max_distribution_m": {
+        "min": 4.05911361265242e-06,
+        "p10": 4.999999999927205e-06,
+        "median": 5.00000000079195e-06,
+        "mean": 5.028739282410672e-06,
+        "p90": 5.011725089347169e-06,
+        "max": 6.377662016086955e-06
+      },
+      "adjacent_element_depth_m": {
+        "min": 7.81249999999968e-08,
+        "p10": 1.5625000000002074e-07,
+        "median": 1.5625000000002074e-07,
+        "mean": 1.5480237421763997e-07,
+        "p90": 1.5625000000002074e-07,
+        "max": 1.0199999999999868e-06
+      },
+      "adjacent_element_volume_m3": {
+        "min": 6.815315783788292e-19,
+        "p10": 2.148846594646297e-18,
+        "median": 2.255274488991916e-18,
+        "mean": 2.210492157526621e-18,
+        "p90": 2.255274490970933e-18,
+        "max": 1.4722431876147514e-17
+      },
+      "element_aspect_ratio": {
+        "min": 1.000598100565003,
+        "p10": 2.0792035335333807,
+        "median": 2.820398731946247,
+        "mean": 2.9002781360911727,
+        "p90": 3.66153691592098,
+        "max": 8.67857796283413
+      },
+      "local_K_ff_trace_W_K_sum": 1.3272430347772512e-06,
+      "local_K_fi_fro_W_K_sum": 3.88684353274405e-07,
+      "local_K_ii_trace_W_K_sum": 1.2998715641486665e-07,
+      "local_K_condensed_trace_W_K_sum": 8.017644392963525e-09,
+      "local_K_condensed_fro_W_K_sum": 5.686342617890733e-09,
+      "condensation_status_counts": {
+        "solve": 8308,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": 5.0
+    },
+    {
+      "case": "mesh_phase24_stycast_density_10um",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_density_10um",
+      "body_id": 102,
+      "interface_boundary_id": 1204,
+      "interface_face_count": 4579,
+      "interface_area_m2": 1.9472989573800174e-07,
+      "face_area_distribution_m2": {
+        "min": 2.5508480774409435e-11,
+        "p10": 3.9636942072823266e-11,
+        "median": 4.330127018829993e-11,
+        "mean": 4.25267297964625e-11,
+        "p90": 4.330127020069059e-11,
+        "max": 5.967128178081715e-11
+      },
+      "edge_length_distribution_m": {
+        "min": 7.073655438509541e-06,
+        "p10": 9.123776001643933e-06,
+        "median": 9.999999999166448e-06,
+        "mean": 9.77544201654069e-06,
+        "p90": 9.99999999999819e-06,
+        "max": 1.1025256833655242e-05
+      },
+      "edge_max_distribution_m": {
+        "min": 8.15206149461411e-06,
+        "p10": 9.99990127883179e-06,
+        "median": 1.0000000000392253e-05,
+        "mean": 1.0063147618528787e-05,
+        "p90": 1.0162682146988927e-05,
+        "max": 1.301918922043417e-05
+      },
+      "adjacent_element_depth_m": {
+        "min": 4.333658899999801e-08,
+        "p10": 7.763543475000395e-08,
+        "median": 1.5625000000002074e-07,
+        "mean": 1.3298071399007858e-07,
+        "p90": 1.5625000000002074e-07,
+        "max": 1.5625000000002077e-07
+      },
+      "adjacent_element_volume_m3": {
+        "min": 2.0057298700911673e-18,
+        "p10": 4.068728120449482e-18,
+        "median": 9.021097954127422e-18,
+        "mean": 7.584909827024083e-18,
+        "p90": 9.021097958392618e-18,
+        "max": 1.1033531169135418e-17
+      },
+      "element_aspect_ratio": {
+        "min": 1.5746469119284845,
+        "p10": 2.00657232688273,
+        "median": 2.450524864816319,
+        "mean": 2.8595139745533795,
+        "p90": 3.9255662709200245,
+        "max": 17.847661187979092
+      },
+      "local_K_ff_trace_W_K_sum": 1.2746762863126583e-06,
+      "local_K_fi_fro_W_K_sum": 6.184323206966255e-07,
+      "local_K_ii_trace_W_K_sum": 3.6126132821457123e-07,
+      "local_K_condensed_trace_W_K_sum": 3.79510797104014e-09,
+      "local_K_condensed_fro_W_K_sum": 2.690989381345651e-09,
+      "condensation_status_counts": {
+        "solve": 4579,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": 10.0
+    },
+    {
+      "case": "mesh_phase24_stycast_density_15um",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_density_15um",
+      "body_id": 102,
+      "interface_boundary_id": 1204,
+      "interface_face_count": 2053,
+      "interface_area_m2": 1.9466566080922914e-07,
+      "face_area_distribution_m2": {
+        "min": 6.001069060153529e-11,
+        "p10": 8.385992681609429e-11,
+        "median": 9.742785790633923e-11,
+        "mean": 9.482009781258117e-11,
+        "p90": 9.742785796768122e-11,
+        "max": 1.3863226220304784e-10
+      },
+      "edge_length_distribution_m": {
+        "min": 1.0536057710691483e-05,
+        "p10": 1.2812170311883693e-05,
+        "median": 1.4999999996421002e-05,
+        "mean": 1.4500210743033798e-05,
+        "p90": 1.5000000000495872e-05,
+        "max": 1.7454142123259456e-05
+      },
+      "edge_max_distribution_m": {
+        "min": 1.2335594664491548e-05,
+        "p10": 1.4897902152602071e-05,
+        "median": 1.5000000000558581e-05,
+        "mean": 1.5148665202026594e-05,
+        "p90": 1.572467874537351e-05,
+        "max": 1.9230128858926866e-05
+      },
+      "adjacent_element_depth_m": {
+        "min": 5.015483575001689e-08,
+        "p10": 8.006480275001156e-08,
+        "median": 1.5625000000002074e-07,
+        "mean": 1.381479404291438e-07,
+        "p90": 1.5625000000002074e-07,
+        "max": 1.5625000000002077e-07
+      },
+      "adjacent_element_volume_m3": {
+        "min": 4.643350308092601e-18,
+        "p10": 9.179353481014919e-18,
+        "median": 2.0297470396389343e-17,
+        "mean": 1.7605884454512818e-17,
+        "p90": 2.029747040928768e-17,
+        "max": 2.888172129230166e-17
+      },
+      "element_aspect_ratio": {
+        "min": 1.6495702893252433,
+        "p10": 1.9808479161151915,
+        "median": 2.45048181201083,
+        "mean": 3.240808337362254,
+        "p90": 5.072068282399763,
+        "max": 37.99794012971509
+      },
+      "local_K_ff_trace_W_K_sum": 7.100018548362833e-07,
+      "local_K_fi_fro_W_K_sum": 4.628539035879535e-07,
+      "local_K_ii_trace_W_K_sum": 3.428711283911797e-07,
+      "local_K_condensed_trace_W_K_sum": 1.7714879442610286e-09,
+      "local_K_condensed_fro_W_K_sum": 1.258688777826582e-09,
+      "condensation_status_counts": {
+        "solve": 2053,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": 15.0
+    },
+    {
+      "case": "mesh_phase24_stycast_density_20um",
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_density_20um",
+      "body_id": 102,
+      "interface_boundary_id": 1204,
+      "interface_face_count": 1165,
+      "interface_area_m2": 1.945765971954577e-07,
+      "face_area_distribution_m2": {
+        "min": 1.0603446061455992e-10,
+        "p10": 1.4537268740372987e-10,
+        "median": 1.7320480746322525e-10,
+        "mean": 1.6701853836519975e-10,
+        "p90": 1.7322740957860739e-10,
+        "max": 2.3999170984902825e-10
+      },
+      "edge_length_distribution_m": {
+        "min": 1.4038705803321997e-05,
+        "p10": 1.6666811597810356e-05,
+        "median": 1.998227394201814e-05,
+        "mean": 1.915602434766459e-05,
+        "p90": 1.9999999999964375e-05,
+        "max": 2.261317596142667e-05
+      },
+      "edge_max_distribution_m": {
+        "min": 1.629776685701581e-05,
+        "p10": 1.9758936127791454e-05,
+        "median": 2.0000000000636665e-05,
+        "mean": 2.0203605601894824e-05,
+        "p90": 2.1152049554288658e-05,
+        "max": 2.576899634755109e-05
+      },
+      "adjacent_element_depth_m": {
+        "min": 6.335143350002007e-08,
+        "p10": 8.022966274999574e-08,
+        "median": 1.5625000000002074e-07,
+        "mean": 1.4178536404078664e-07,
+        "p90": 1.5625000000002074e-07,
+        "max": 1.5625000000002077e-07
+      },
+      "adjacent_element_volume_m3": {
+        "min": 9.838818872296676e-18,
+        "p10": 1.672155967229947e-17,
+        "median": 3.6083728669954616e-17,
+        "mean": 3.1829266416666323e-17,
+        "p90": 3.608439183559459e-17,
+        "max": 4.9998272885214236e-17
+      },
+      "element_aspect_ratio": {
+        "min": 1.642851407297314,
+        "p10": 2.0880857538131656,
+        "median": 2.896271090022579,
+        "mean": 3.7285835771645677,
+        "p90": 6.047410039236763,
+        "max": 24.599550923934714
+      },
+      "local_K_ff_trace_W_K_sum": 4.803606843740674e-07,
+      "local_K_fi_fro_W_K_sum": 3.789590975655229e-07,
+      "local_K_ii_trace_W_K_sum": 3.2627394672296675e-07,
+      "local_K_condensed_trace_W_K_sum": 1.033497247580685e-09,
+      "local_K_condensed_fro_W_K_sum": 7.355250143539667e-10,
+      "condensation_status_counts": {
+        "solve": 1165,
+        "pinv": 0,
+        "none": 0
+      },
+      "target_h_um": 20.0
+    }
+  ],
+  "conductance": [
+    {
+      "case": "historical",
+      "G_eff_W_per_K": 1.8782944616314638e-08,
+      "G_secant_W_per_K": 1.8782921210583397e-08,
+      "ratio_to_historical": 1.0
+    },
+    {
+      "case": "original_phase24",
+      "G_eff_W_per_K": 2.7745420625771133e-08,
+      "G_secant_W_per_K": 2.7745360910514374e-08,
+      "ratio_to_historical": 1.4771603277620164
+    },
+    {
+      "case": "phase24_stycast_only_refined",
+      "G_eff_W_per_K": 2.0328561515006625e-08,
+      "G_secant_W_per_K": 2.032850138747081e-08,
+      "ratio_to_historical": 1.0822883168887951
+    },
+    {
+      "case": "phase24_historical_density",
+      "G_eff_W_per_K": 2.0299398582083175e-08,
+      "G_secant_W_per_K": 2.0299344076663998e-08,
+      "ratio_to_historical": 1.0807356885060164
+    }
+  ],
+  "limitations": [
+    "h=5um changes Stycast bulk element shape/depth and mortar trace density together; it is not a complete bulk-vs-trace separation.",
+    "The patch-test B*u residuals are computed from the signed captured lower-left restriction block; reaction differences are not separately exported.",
+    "15/20um candidate density probes have not been solved; their G_eff fields are intentionally blank."
+  ]
+}
