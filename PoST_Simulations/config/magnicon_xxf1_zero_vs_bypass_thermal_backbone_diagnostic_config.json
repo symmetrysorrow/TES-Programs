@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "purpose": "Direct source-class comparison under the relaxed thermal backbone: documented Magnicon second-order 10 kHz Bessel plus one shared pure zero versus the same documented Magnicon response plus one shared additive electronics-noise source injected downstream of the Magnicon filter and upstream of the known 100 kHz SIM965/sampling stage. c2=0 and c2-free are retained as references.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "bypass_electronics_noise": {
+    "shared_asd_scale_to_geometric_mean_tracked_white": {
+      "min": 0.01,
+      "max": 20.0
+    },
+    "semantics": "One shared white ASD source that bypasses the Magnicon 10 kHz LPF but is still shaped by the known 100 kHz SIM965 response and first-alias fold. Existing post-filter white ASD remains independently profiled per day."
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 54100
+  },
+  "replacement_screen": {
+    "max_score_ratio_to_c2_reference": 1.50,
+    "max_rms_delta_from_c2_reference_dB": 0.15,
+    "max_score_ratio_to_c2_zero_for_material_improvement": 0.80,
+    "min_rms_improvement_vs_c2_zero_dB": 0.05,
+    "direct_pair_max_score_ratio": 0.80,
+    "direct_pair_min_rms_advantage_dB": 0.15
+  },
+  "guardrail": "This is a source-class discrimination diagnostic, not a component identification. The pure-zero branch tests a multiplicative minimum-phase zero-like response on top of the documented second-order Magnicon filter. The bypass branch tests one specific additive source location after the Magnicon 10 kHz LPF but before the fixed SIM965/sampling stage. A better branch only prioritizes the corresponding laboratory test: swept-signal transfer for multiplicative structure, or off-TES/reference electronics-noise measurements for an additive source."
+}
