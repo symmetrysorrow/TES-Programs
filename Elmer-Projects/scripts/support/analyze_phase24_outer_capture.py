@@ -96,9 +96,13 @@ def load_temp_permutation(result: Path) -> np.ndarray:
             perm_header = next(lines).split()
             if not perm_header or perm_header[0].lower().rstrip(":") != "perm":
                 continue
-            count = int(perm_header[1])
-            permutation = np.zeros(count, dtype=np.int64)
-            for _ in range(count):
+            # Elmer writes ``Perm: node_count dof_count``.  Nonconforming
+            # meshes can contain hanging nodes with no temperature DOF, so
+            # these two counts need not be equal.
+            node_count = int(perm_header[1])
+            dof_count = int(perm_header[2]) if len(perm_header) > 2 else node_count
+            permutation = np.zeros(node_count, dtype=np.int64)
+            for _ in range(dof_count):
                 node, dof = next(lines).split()[:2]
                 permutation[int(node) - 1] = int(dof)
             return permutation

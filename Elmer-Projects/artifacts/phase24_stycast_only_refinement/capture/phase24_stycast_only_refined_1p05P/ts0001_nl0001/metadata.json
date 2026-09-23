@@ -1,0 +1,61 @@
+{
+  "capture_kind": "solve_with_linear_restriction_full_system",
+  "capture_position": "SolveWithLinearRestriction after CollectionMatrix construction and immediately around SolveLinearSystem",
+  "timestep": 1,
+  "nonlinear_iteration": 1,
+  "raw_files": {
+    "full_A_before": "full_A_before.dat",
+    "full_b_before": "full_b_before.dat",
+    "full_x_before": "full_x_before.dat",
+    "full_A_after": "full_A_after.dat",
+    "full_b_after": "full_b_after.dat",
+    "full_x_after": "full_x_after.dat"
+  },
+  "runtime": {
+    "total_rows": 108136,
+    "matrix_nnz": 1482314,
+    "primal_rows": 102325,
+    "constraint_matrix_rows": 5811,
+    "constraint_rows": 5811,
+    "before_matrix_records": 1482314,
+    "after_matrix_records": 1482314
+  },
+  "provenance": {
+    "physical_time": 1.0,
+    "dt": 1.0,
+    "bdf_order": 0,
+    "solver_name": "direct",
+    "direct_method": "mumps",
+    "mumps_backend": "mumps",
+    "collection_matrix_construction_mode": "MATRIX_LIST assembled, then converted to CRS",
+    "eliminate_linear_constraints": 0,
+    "penalty_linear_constraints": 0,
+    "apply_mortar_bcs": "True",
+    "restriction_mortar_active": 1,
+    "log_event": {
+      "time": 1.0,
+      "dt": 1.0,
+      "bdf_order": 0,
+      "solver": "direct",
+      "direct_method": "mumps",
+      "total_rows": 108136,
+      "primal_rows": 102325,
+      "constraint_rows": 5811,
+      "matrix_nnz": 1482314,
+      "constraint_matrix_rows": 5811,
+      "eliminate": 0,
+      "penalty": 0,
+      "restriction_active": 1
+    }
+  },
+  "sha256": {
+    "matrix_before": "4d70cb9c7acdc9a068cf8c4d58b6a8ee1fc7d54d99c54b4478a83df8c6f22956",
+    "matrix_after": "24c0a0c48e70c9b588409a778652cb419829b42b731c321cbf6ac0d91cefcc4d",
+    "rhs_before": "80023ebabbc8dabb2c7836db69e6514ab35e4b346b80a7fd8f27c82d6e30ac98",
+    "rhs_after": "6150186c2dbe851a4db915320f4390f20c0c56ff4b6d1283e8181e50176f6686"
+  },
+  "matrix_sha_before": "4d70cb9c7acdc9a068cf8c4d58b6a8ee1fc7d54d99c54b4478a83df8c6f22956",
+  "matrix_sha_after": "24c0a0c48e70c9b588409a778652cb419829b42b731c321cbf6ac0d91cefcc4d",
+  "rhs_sha_before": "80023ebabbc8dabb2c7836db69e6514ab35e4b346b80a7fd8f27c82d6e30ac98",
+  "rhs_sha_after": "6150186c2dbe851a4db915320f4390f20c0c56ff4b6d1283e8181e50176f6686"
+}

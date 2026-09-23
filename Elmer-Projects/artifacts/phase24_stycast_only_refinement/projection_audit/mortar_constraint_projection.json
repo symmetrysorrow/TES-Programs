@@ -1,0 +1,407 @@
+{
+  "method": {
+    "matrix": "full_A_before.dat lower-left restriction block",
+    "classification": "constraint support node intersection with each interface boundary node set",
+    "coefficient_statistics": "duplicate row/column entries aggregated before statistics"
+  },
+  "historical": {
+    "case": "historical",
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2",
+    "result": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2\\historical_1p00p.result",
+    "capture": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_thermal_network_localization\\capture\\historical_1p00P\\ts0001_nl0001",
+    "matrix": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_thermal_network_localization\\capture\\historical_1p00P\\ts0001_nl0001\\full_A_before.dat",
+    "primal_rows": 159956,
+    "constraint_rows": 5560,
+    "matrix_constraint_records": 112911,
+    "constraint_constraint_records": 5560,
+    "interface_boundary_node_counts": {
+      "TES_to_Stycast": {
+        "side_a": 2218,
+        "side_b": 1671
+      },
+      "Stycast_to_substrate": {
+        "side_a": 1671,
+        "side_b": 5743
+      }
+    },
+    "classification_counts": {
+      "TES_to_Stycast": 1671,
+      "Stycast_to_substrate": 1671,
+      "unknown": 2218
+    }
+  },
+  "phase24": {
+    "case": "phase24",
+    "mesh": "work\\meshes\\mesh_phase24_stycast_only_refined",
+    "result": "work\\meshes\\mesh_phase24_stycast_only_refined\\phase24_stycast_only_refined_1p00p.result",
+    "capture": "artifacts\\phase24_stycast_only_refinement\\capture\\phase24_stycast_only_refined_1p00P\\ts0001_nl0001",
+    "matrix": "artifacts\\phase24_stycast_only_refinement\\capture\\phase24_stycast_only_refined_1p00P\\ts0001_nl0001\\full_A_before.dat",
+    "primal_rows": 102325,
+    "constraint_rows": 5811,
+    "matrix_constraint_records": 61411,
+    "constraint_constraint_records": 5811,
+    "interface_boundary_node_counts": {
+      "TES_to_Stycast": {
+        "side_a": 179,
+        "side_b": 5766
+      },
+      "Stycast_to_substrate": {
+        "side_a": 45,
+        "side_b": 182
+      }
+    },
+    "classification_counts": {
+      "TES_to_Stycast": 5766,
+      "Stycast_to_substrate": 45,
+      "unknown": 0
+    }
+  },
+  "grouped_statistics": {
+    "TES_to_Stycast": {
+      "historical": {
+        "coefficient_count": {
+          "count": 1671,
+          "sum": 32333.0,
+          "mean": 19.34949132256134,
+          "p50": 19.0,
+          "p95": 24.0,
+          "max": 28.0,
+          "min": 11.0
+        },
+        "support_node_count": {
+          "count": 1671,
+          "sum": 32333.0,
+          "mean": 19.34949132256134,
+          "p50": 19.0,
+          "p95": 24.0,
+          "max": 28.0,
+          "min": 11.0
+        },
+        "side_a_node_count": {
+          "count": 1671,
+          "sum": 20894.0,
+          "mean": 12.503889886295632,
+          "p50": 13.0,
+          "p95": 16.0,
+          "max": 19.0,
+          "min": 6.0
+        },
+        "side_b_node_count": {
+          "count": 1671,
+          "sum": 11439.0,
+          "mean": 6.845601436265709,
+          "p50": 7.0,
+          "p95": 8.0,
+          "max": 10.0,
+          "min": 4.0
+        },
+        "coefficient_l1": {
+          "count": 1671,
+          "sum": 3.8935630202733875e-07,
+          "mean": 2.3300796051905373e-10,
+          "p50": 2.3315711272355167e-10,
+          "p95": 3.411090600765166e-10,
+          "max": 4.4472271860038405e-10,
+          "min": 7.98881672271437e-11
+        },
+        "coefficient_l2": {
+          "count": 1671,
+          "sum": 1.4413458162789743e-07,
+          "mean": 8.625648212321808e-11,
+          "p50": 8.700231341688011e-11,
+          "p95": 1.2143248173730813e-10,
+          "max": 1.5060847991932193e-10,
+          "min": 3.240752487162355e-11
+        },
+        "coefficient_max_abs": {
+          "count": 1671,
+          "sum": 9.810743892307474e-08,
+          "mean": 5.87118126409783e-11,
+          "p50": 5.881197195118739e-11,
+          "p95": 8.53526412058394e-11,
+          "max": 1.1118067965009592e-10,
+          "min": 1.9972041875876062e-11
+        },
+        "support_x_span_m": {
+          "count": 1671,
+          "sum": 0.05927895186468003,
+          "mean": 3.54751357658169e-05,
+          "p50": 3.54735872954e-05,
+          "p95": 4.375558569905e-05,
+          "max": 5.3082092316e-05,
+          "min": 1.3121970688000003e-05
+        },
+        "support_y_span_m": {
+          "count": 1671,
+          "sum": 0.058987304239365004,
+          "mean": 3.5300600981068226e-05,
+          "p50": 3.556187364000011e-05,
+          "p95": 4.391366512000012e-05,
+          "max": 5.0642385350000005e-05,
+          "min": 1.8038366670000087e-05
+        }
+      },
+      "phase24": {
+        "coefficient_count": {
+          "count": 5766,
+          "sum": 54876.0,
+          "mean": 9.517169614984391,
+          "p50": 10.0,
+          "p95": 12.0,
+          "max": 15.0,
+          "min": 6.0
+        },
+        "support_node_count": {
+          "count": 5766,
+          "sum": 54876.0,
+          "mean": 9.517169614984391,
+          "p50": 10.0,
+          "p95": 12.0,
+          "max": 15.0,
+          "min": 6.0
+        },
+        "side_a_node_count": {
+          "count": 5766,
+          "sum": 21152.0,
+          "mean": 3.6684009712105445,
+          "p50": 4.0,
+          "p95": 5.0,
+          "max": 8.0,
+          "min": 3.0
+        },
+        "side_b_node_count": {
+          "count": 5766,
+          "sum": 33724.0,
+          "mean": 5.848768643773846,
+          "p50": 6.0,
+          "p95": 7.0,
+          "max": 8.0,
+          "min": 3.0
+        },
+        "coefficient_l1": {
+          "count": 5766,
+          "sum": 1.7783123018553197e-07,
+          "mean": 3.0841351055416576e-11,
+          "p50": 2.8867513460815035e-11,
+          "p95": 4.330127022323923e-11,
+          "max": 5.6316025767193363e-11,
+          "min": 4.8197330345543515e-12
+        },
+        "coefficient_l2": {
+          "count": 5766,
+          "sum": 7.903866180527184e-08,
+          "mean": 1.3707711031091196e-11,
+          "p50": 1.3317225386477361e-11,
+          "p95": 2.130987131890422e-11,
+          "max": 2.7928593927786658e-11,
+          "min": 2.1318093589890945e-12
+        },
+        "coefficient_max_abs": {
+          "count": 5766,
+          "sum": 5.516768454502131e-08,
+          "mean": 9.567756598165334e-12,
+          "p50": 9.786816320197548e-12,
+          "p95": 1.7380846182250862e-11,
+          "max": 2.3588032493051577e-11,
+          "min": 1.338012710566511e-12
+        },
+        "support_x_span_m": {
+          "count": 5766,
+          "sum": 0.30362495573275866,
+          "mean": 5.265781403620511e-05,
+          "p50": 4.51296204062e-05,
+          "p95": 7.81043864835e-05,
+          "max": 0.000100092956067,
+          "min": 2.8510264431e-05
+        },
+        "support_y_span_m": {
+          "count": 5766,
+          "sum": 0.27853793494387497,
+          "mean": 4.830696062155306e-05,
+          "p50": 4.0539647044e-05,
+          "p95": 7.841710121199994e-05,
+          "max": 8.9633995409e-05,
+          "min": 2.866897638200002e-05
+        }
+      },
+      "sum_ratios_phase24_over_historical": {
+        "coefficient_l1": 0.45673135187380504,
+        "coefficient_l2": 0.5483670949232756,
+        "coefficient_max_abs": 0.5623190774379285
+      }
+    },
+    "Stycast_to_substrate": {
+      "historical": {
+        "coefficient_count": {
+          "count": 1671,
+          "sum": 32454.0,
+          "mean": 19.421903052064632,
+          "p50": 19.0,
+          "p95": 24.0,
+          "max": 29.0,
+          "min": 12.0
+        },
+        "support_node_count": {
+          "count": 1671,
+          "sum": 32454.0,
+          "mean": 19.421903052064632,
+          "p50": 19.0,
+          "p95": 24.0,
+          "max": 29.0,
+          "min": 12.0
+        },
+        "side_a_node_count": {
+          "count": 1671,
+          "sum": 11439.0,
+          "mean": 6.845601436265709,
+          "p50": 7.0,
+          "p95": 8.0,
+          "max": 10.0,
+          "min": 4.0
+        },
+        "side_b_node_count": {
+          "count": 1671,
+          "sum": 21015.0,
+          "mean": 12.576301615798922,
+          "p50": 12.0,
+          "p95": 16.0,
+          "max": 20.0,
+          "min": 7.0
+        },
+        "coefficient_l1": {
+          "count": 1671,
+          "sum": 3.89216526031488e-07,
+          "mean": 2.3292431240663554e-10,
+          "p50": 2.330241453532551e-10,
+          "p95": 3.409964325022746e-10,
+          "max": 4.4471871368358947e-10,
+          "min": 7.988816750350392e-11
+        },
+        "coefficient_l2": {
+          "count": 1671,
+          "sum": 1.4374934046355656e-07,
+          "mean": 8.602593684234383e-11,
+          "p50": 8.680049516190213e-11,
+          "p95": 1.199735803744964e-10,
+          "max": 1.482767081893258e-10,
+          "min": 3.286273511169506e-11
+        },
+        "coefficient_max_abs": {
+          "count": 1671,
+          "sum": 9.801905945667864e-08,
+          "mean": 5.86589224755707e-11,
+          "p50": 5.869775886335114e-11,
+          "p95": 8.525763515639523e-11,
+          "max": 1.1118063975262512e-10,
+          "min": 2.0173160459368024e-11
+        },
+        "support_x_span_m": {
+          "count": 1671,
+          "sum": 0.05920547511607653,
+          "mean": 3.543116404313377e-05,
+          "p50": 3.5523648135600005e-05,
+          "p95": 4.3587278277799995e-05,
+          "max": 5.4766603116599994e-05,
+          "min": 1.3283029267999999e-05
+        },
+        "support_y_span_m": {
+          "count": 1671,
+          "sum": 0.058897182086207,
+          "mean": 3.5246667915144824e-05,
+          "p50": 3.524650937000002e-05,
+          "p95": 4.3244489564999984e-05,
+          "max": 5.1692878440999946e-05,
+          "min": 1.9777800623999942e-05
+        }
+      },
+      "phase24": {
+        "coefficient_count": {
+          "count": 45,
+          "sum": 724.0,
+          "mean": 16.08888888888889,
+          "p50": 16.0,
+          "p95": 20.0,
+          "max": 21.0,
+          "min": 12.0
+        },
+        "support_node_count": {
+          "count": 45,
+          "sum": 724.0,
+          "mean": 16.08888888888889,
+          "p50": 16.0,
+          "p95": 20.0,
+          "max": 21.0,
+          "min": 12.0
+        },
+        "side_a_node_count": {
+          "count": 45,
+          "sum": 273.0,
+          "mean": 6.066666666666666,
+          "p50": 6.0,
+          "p95": 7.799999999999997,
+          "max": 8.0,
+          "min": 4.0
+        },
+        "side_b_node_count": {
+          "count": 45,
+          "sum": 451.0,
+          "mean": 10.022222222222222,
+          "p50": 10.0,
+          "p95": 12.0,
+          "max": 14.0,
+          "min": 7.0
+        },
+        "coefficient_l1": {
+          "count": 45,
+          "sum": 3.8169897816728867e-07,
+          "mean": 8.482199514828637e-09,
+          "p50": 7.653996635450264e-09,
+          "p95": 1.511852900076639e-08,
+          "max": 1.6307628036393214e-08,
+          "min": 3.621999252334068e-09
+        },
+        "coefficient_l2": {
+          "count": 45,
+          "sum": 1.4795080014588675e-07,
+          "mean": 3.287795558797483e-09,
+          "p50": 3.090416040681156e-09,
+          "p95": 5.504189744370158e-09,
+          "max": 5.90012253506718e-09,
+          "min": 1.5768459404572217e-09
+        },
+        "coefficient_max_abs": {
+          "count": 45,
+          "sum": 9.863837511422895e-08,
+          "mean": 2.19196389142731e-09,
+          "p50": 1.9970560008598444e-09,
+          "p95": 3.779632250191596e-09,
+          "max": 4.076907009098304e-09,
+          "min": 1.070662426178271e-09
+        },
+        "support_x_span_m": {
+          "count": 45,
+          "sum": 0.009835618687505602,
+          "mean": 0.00021856930416679115,
+          "p50": 0.0002348146889087,
+          "p95": 0.0002387519168929,
+          "max": 0.00031115811818699997,
+          "min": 0.000155895709463
+        },
+        "support_y_span_m": {
+          "count": 45,
+          "sum": 0.010659618224643,
+          "mean": 0.00023688040499206665,
+          "p50": 0.00022675347010000005,
+          "p95": 0.00027066212833320004,
+          "max": 0.00031673284072800015,
+          "min": 0.00017430556359
+        }
+      },
+      "sum_ratios_phase24_over_historical": {
+        "coefficient_l1": 0.980685435069139,
+        "coefficient_l2": 1.0292276797151312,
+        "coefficient_max_abs": 1.006318318712536
+      }
+    }
+  }
+}

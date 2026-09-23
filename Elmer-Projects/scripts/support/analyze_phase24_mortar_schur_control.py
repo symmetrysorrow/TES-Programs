@@ -55,8 +55,21 @@ CASES = {
     },
     "phase24_interface_refined": {
         "mesh": ROOT / "work/meshes/mesh_phase24_membrane_stycast_diag_v2",
+        "capture_root": ROOT / "artifacts/phase24_thermal_network_localization/capture",
         "result_pattern": "phase24_membrane_stycast_variant_v2_{point}.result",
         "capture_pattern": "phase24_membrane_stycast_variant_v2_{power}P",
+        "body": 101,
+        "points": {
+            "minus": "0p95p",
+            "center": "1p00p",
+            "plus": "1p05p",
+        },
+    },
+    "phase24_stycast_only_refined": {
+        "mesh": ROOT / "work/meshes/mesh_phase24_stycast_only_refined",
+        "capture_root": ROOT / "artifacts/phase24_stycast_only_refinement/capture",
+        "result_pattern": "phase24_stycast_only_refined_{point}.result",
+        "capture_pattern": "phase24_stycast_only_refined_{power}P",
         "body": 101,
         "points": {
             "minus": "0p95p",
@@ -116,8 +129,7 @@ def case_result(case_name: str, case: dict) -> dict:
         power = point[:-1]
         result = mesh / case["result_pattern"].format(point=result_point)
         capture = (
-            ROOT
-            / "artifacts/phase24_thermal_network_localization/capture"
+            case.get("capture_root", ROOT / "artifacts/phase24_thermal_network_localization/capture")
             / case["capture_pattern"].format(power=power)
             / "ts0001_nl0001"
         )
@@ -137,8 +149,7 @@ def case_result(case_name: str, case: dict) -> dict:
         "G_secant_to_bath_W_K": center_secant,
         "D_blocks": d_blocks,
         "constraint_rows_center": read_dimensions(
-            ROOT
-            / "artifacts/phase24_thermal_network_localization/capture"
+            case.get("capture_root", ROOT / "artifacts/phase24_thermal_network_localization/capture")
             / case["capture_pattern"].format(power="1p00")
             / "ts0001_nl0001"
         )[1],
@@ -155,11 +166,16 @@ def main() -> int:
     historical_g = results["historical"]["G_derivative_W_K"]
     original_g = results["original_phase24"]["G_derivative_W_K"]
     refined_g = results["phase24_interface_refined"]["G_derivative_W_K"]
+    stycast_only_g = results["phase24_stycast_only_refined"]["G_derivative_W_K"]
     comparison = {
         "original_over_historical_G": original_g / historical_g,
         "refined_over_historical_G": refined_g / historical_g,
         "refined_over_original_G": refined_g / original_g,
         "original_to_refined_reduction": 1.0 - refined_g / original_g,
+        "stycast_only_over_historical_G": stycast_only_g / historical_g,
+        "stycast_only_over_original_G": stycast_only_g / original_g,
+        "stycast_only_over_interface_refined_G": stycast_only_g / refined_g,
+        "stycast_only_vs_interface_refined_relative_difference": stycast_only_g / refined_g - 1.0,
     }
     report = {
         "literal_expression": "B^T D^-1 B",
@@ -173,6 +189,7 @@ def main() -> int:
             "notes": "Existing diagnostic mesh: TES top and first 1 um of Stycast locally refined; outer Stycast-substrate interface remains original Phase24 coarse topology.",
             "constraint_rows_center_original_phase24": results["original_phase24"]["constraint_rows_center"],
             "constraint_rows_center_interface_refined": results["phase24_interface_refined"]["constraint_rows_center"],
+            "constraint_rows_center_stycast_only_refined": results["phase24_stycast_only_refined"]["constraint_rows_center"],
         },
     }
     (args.output / "mortar_schur_control.json").write_text(
@@ -209,6 +226,9 @@ def main() -> int:
             f"- TES/Stycast interface-refined G: {refined_g:.12e} W/K",
             f"- Reduction from original Phase24: {comparison['original_to_refined_reduction']:.9f}",
             f"- Refined/historical G ratio: {comparison['refined_over_historical_G']:.9f}",
+            f"- Stycast-only refined G: {stycast_only_g:.12e} W/K",
+            f"- Stycast-only/historical G ratio: {comparison['stycast_only_over_historical_G']:.9f}",
+            f"- Stycast-only vs TES+Stycast refined: {comparison['stycast_only_vs_interface_refined_relative_difference']:.9f}",
             "",
             "The refinement changes only the local TES top / first 1 um Stycast mesh "
             "in this existing diagnostic case. The outer Stycast-substrate interface "
@@ -216,6 +236,7 @@ def main() -> int:
             "TES-Stycast interface discretization or its local FE/mortar coupling, "
             "although it is not a pure algebra-only mortar test because the local "
             "element mesh is refined as well.",
+            "The separate Stycast-side-only control leaves the TES element mesh at the original Phase24 density and still gives essentially the same G as the TES+Stycast refinement. This isolates the dominant sensitivity to the Stycast-side interface neighborhood, while the 5 um control is somewhat denser than the historical Stycast face density.",
         ]
     )
     (args.output / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

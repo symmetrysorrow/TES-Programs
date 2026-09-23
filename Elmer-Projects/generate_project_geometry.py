@@ -358,6 +358,33 @@ class TesGmshBuilder(GmshApiBuilder):
                 _original_set_number("Mesh.CharacteristicLengthMin", min(
                     float(self.spec.mesh_min), h_local
                 ))
+
+        # Diagnostic-only hook: refine the Stycast side of the TES/Stycast
+        # contact without changing the TES-side element mesh.  The first
+        # equal-z Stycast layer is selected by its unsuffixed body name (or
+        # the corresponding _L/_R name for dual-TES geometries).  The hook is
+        # intentionally opt-in so production mesh generation is unchanged.
+        h_stycast = os.environ.get("STYCAST_INTERFACE_REFINE_H")
+        if h_stycast:
+            h_stycast = float(h_stycast)
+            if h_stycast <= 0.0:
+                raise ValueError("STYCAST_INTERFACE_REFINE_H must be positive")
+            selected = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")).startswith("Stycast")
+                and "__layer_" not in str(getattr(box, "name", ""))
+            ]
+            for box in selected:
+                entries.append((
+                    float(box.xmin), float(box.xmax),
+                    float(box.ymin), float(box.ymax),
+                    float(box.zmin), float(box.zmax),
+                    h_stycast,
+                ))
+            if selected:
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_stycast
+                ))
         return entries
 
 

@@ -39,12 +39,14 @@ def load_permutation(result: Path) -> tuple[dict[int, int], int]:
             cursor += 1
         if cursor == len(lines):
             continue
-        count = int(lines[cursor].split()[1])
+        perm_fields = lines[cursor].split()
+        node_count = int(perm_fields[1])
+        dof_count = int(perm_fields[2]) if len(perm_fields) > 2 else node_count
         permutation = {}
-        for row in range(cursor + 1, cursor + 1 + count):
+        for row in range(cursor + 1, cursor + 1 + dof_count):
             fields = lines[row].split()
             permutation[int(fields[0])] = int(fields[1])
-        return permutation, count
+        return permutation, dof_count
     raise RuntimeError(f"Temperature Perm table not found in {result}")
 
 
@@ -355,8 +357,8 @@ def main() -> int:
             "",
             "Constraint rows are classified from their primal support nodes. "
             "The raw constraint-row count is not itself a conductance; it diagnoses "
-            "mortar tessellation and projection stencil changes. Phase24 has fewer "
-            "but much larger support patches; the total coefficient L1/L2 mass is "
+            "mortar tessellation and projection stencil changes. Row count and "
+            "support-patch size can move in opposite directions; the total coefficient L1/L2 mass is "
             "reported in the JSON to distinguish area aggregation from an actual "
             "projection-strength change.",
         ]

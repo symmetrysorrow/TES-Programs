@@ -1,0 +1,39 @@
+{
+  "original_phase24": {
+    "nodes": 96769,
+    "elements": 489575,
+    "body_elements": {"TES": 1175, "Stycast": 31885},
+    "boundary_faces": {
+      "TES_zmin": 308,
+      "TES_zmax": 308,
+      "Stycast_zmin": 241,
+      "Stycast_zmax": 74
+    }
+  },
+  "tes_and_stycast_refined_v2": {
+    "nodes": 100408,
+    "elements": 498824,
+    "body_elements": {"TES": 6434, "Stycast": 36200},
+    "boundary_faces": {
+      "TES_zmin": 310,
+      "TES_zmax": 4048,
+      "Stycast_zmin": 3177,
+      "Stycast_zmax": 74
+    }
+  },
+  "stycast_side_only_refined": {
+    "mesh": "mesh_phase24_stycast_only_refined",
+    "refine_target": "first Stycast layer only",
+    "refine_h_m": 5e-06,
+    "nodes": 105776,
+    "elements": 496782,
+    "body_elements": {"TES": 1175, "Stycast": 39406},
+    "boundary_faces": {
+      "TES_zmin": 308,
+      "TES_zmax": 308,
+      "Stycast_zmin": 8308,
+      "Stycast_zmax": 70
+    },
+    "interpretation": "TES body element count and both TES interface face counts remain at original Phase24 values; only the Stycast-side contact neighborhood is refined."
+  }
+}
