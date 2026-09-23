@@ -141,10 +141,12 @@ def local_blocks(points: list[np.ndarray], element_type: int, face_nodes: list[i
     }
 
 
-def mesh_interface_metrics(label: str, mesh: Path, body: int, boundary_id: int) -> tuple[dict, list[dict]]:
+def mesh_interface_metrics(label: str, mesh: Path, body: int, boundary_id: int, face_selector=None) -> tuple[dict, list[dict]]:
     nodes = read_nodes(mesh)
     elements = read_elements(mesh)
     faces = read_boundary_faces(mesh, boundary_id)
+    if face_selector is not None:
+        faces = [face for face in faces if face_selector(face, nodes)]
     rows = []
     for face in faces:
         parent = elements[face["parent"]]

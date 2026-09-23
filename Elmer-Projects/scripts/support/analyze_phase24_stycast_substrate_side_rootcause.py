@@ -212,6 +212,21 @@ def substrate_patch_errors(label: str, case: dict) -> list[dict]:
     } for index, name in enumerate(names)]
 
 
+def substrate_contact_selector(case: dict):
+    """Return a selector for target-side faces inside the Stycast contact disk."""
+    nodes = read_nodes(case["mesh"])
+    stycast_faces = read_boundary_faces(case["mesh"], case["stycast_boundary"])
+    centers = [np.mean([nodes[node] for node in face["nodes"]], axis=0) for face in stycast_faces]
+    center = np.mean(np.asarray(centers), axis=0)
+    radius = max(float(np.linalg.norm(point[:2] - center[:2])) for point in centers) + 2.0e-8
+
+    def select(face: dict, face_nodes: dict[int, np.ndarray]) -> bool:
+        centroid = np.mean([face_nodes[node] for node in face["nodes"]], axis=0)
+        return float(np.linalg.norm(centroid[:2] - center[:2])) <= radius
+
+    return select
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -268,8 +283,9 @@ def main() -> int:
     mortar_rows = []
     patch_specs = []
     for label, case in CASES.items():
+        target_selector = substrate_contact_selector(case)
         for side, body, boundary in (("stycast_side", case["body_stycast"], case["stycast_boundary"]), ("substrate_side", case["body_substrate"], case["substrate_boundary"])):
-            summary, detail = mesh_interface_metrics(label, case["mesh"], body, boundary)
+            summary, detail = mesh_interface_metrics(label, case["mesh"], body, boundary, target_selector if side == "substrate_side" else None)
             summary["side"] = side
             density_payload["cases"].append(summary)
             operator_rows.extend({"case": label, "side": side, **row} for row in detail)
