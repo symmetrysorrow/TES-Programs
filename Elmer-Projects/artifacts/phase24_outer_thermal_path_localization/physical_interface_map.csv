@@ -1,0 +1,10 @@
+route,boundary_id,boundary_name,body_a,body_b,physical_role,area,shared_nodes,mortar_constraints,master_body,slave_body,master_boundary,slave_boundary,face_count,topology
+historical,24/23,TES_to_membrane/23,TES,membrane,TES→membrane,2.4999999999999967e-07,0,2218,membrane,TES,23,24,4274/6702,mortar/nonconforming
+historical,25/26,TES_to_Stycast/26,TES,Stycast,TES→Stycast,1.9470116968126126e-07,0,1671,Stycast,TES,26,25,4274/3214,mortar/nonconforming
+historical,27/28,Stycast_to_substrate/28,Stycast,substrate,Stycast→substrate,1.9470116968126126e-07,0,1671,substrate,Stycast,28,27,3214/11444,mortar/nonconforming
+phase24,1104/1305,TES_to_membrane/1305,TES,membrane,TES→membrane,2.5e-07,179,0,membrane,TES,1305,1104,308/308,conformal/shared-node
+phase24,1105/1204,TES_to_Stycast/1204,TES,Stycast,TES→Stycast,1.93737355602149e-07,0,139,Stycast,TES,1204,1105,308/241,mortar/nonconforming
+phase24,1205/1004,Stycast_to_substrate/1004,Stycast,substrate,Stycast→substrate,1.908503181567056e-07,0,47,substrate,Stycast,1004,1205,74/314,mortar/nonconforming
+controlled_variant,1104/1305,TES_to_membrane/1305,TES,membrane,TES→membrane,2.5e-07,179,0,membrane,TES,1305,1104,308/308,conformal/shared-node
+controlled_variant,1105/1204,TES_to_Stycast/1204,TES,Stycast,TES→Stycast,1.93737355602149e-07,0,139,Stycast,TES,1204,1105,308/241,mortar/nonconforming
+controlled_variant,1205/1004,Stycast_to_substrate/1004,Stycast,substrate,Stycast→substrate,1.908503181567056e-07,0,50,substrate,Stycast,1004,1205,74/314,mortar/nonconforming
