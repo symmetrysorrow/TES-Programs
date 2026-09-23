@@ -1,0 +1,128 @@
+{
+  "literal_expression": "B^T D^-1 B",
+  "system_form": "[K B^T; B D] [x; lambda] = [f; g]",
+  "D_block_result": "D is exactly zero in all captured cases; D^-1 does not exist.",
+  "valid_saddle_system_statement": "For D=0, eliminate x to obtain the constraint Schur complement -B K^-1 B^T. A primal additive B^T D^-1 B term is not defined.",
+  "cases": {
+    "historical": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2",
+      "temperatures_K": {
+        "minus": 0.16620011439891247,
+        "center": 0.16705275088046684,
+        "plus": 0.16790538736198826
+      },
+      "temperatures_mK": {
+        "minus": 166.20011439891246,
+        "center": 167.05275088046685,
+        "plus": 167.90538736198826
+      },
+      "G_derivative_W_K": 1.8782944616314638e-08,
+      "G_secant_to_bath_W_K": 1.8782921210583304e-08,
+      "D_blocks": {
+        "minus": {
+          "records": 5560,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "center": {
+          "records": 5560,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "plus": {
+          "records": 5560,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        }
+      },
+      "constraint_rows_center": 5560
+    },
+    "original_phase24": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+      "temperatures_K": {
+        "minus": 0.16096707618440312,
+        "center": 0.16154428941272603,
+        "plus": 0.16212150264104874
+      },
+      "temperatures_mK": {
+        "minus": 160.9670761844031,
+        "center": 161.54428941272602,
+        "plus": 162.12150264104875
+      },
+      "G_derivative_W_K": 2.7745420625771133e-08,
+      "G_secant_to_bath_W_K": 2.7745360910514374e-08,
+      "D_blocks": {
+        "minus": {
+          "records": 186,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "center": {
+          "records": 186,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "plus": {
+          "records": 186,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        }
+      },
+      "constraint_rows_center": 186
+    },
+    "phase24_interface_refined": {
+      "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_membrane_stycast_diag_v2",
+      "temperatures_K": {
+        "minus": 0.16499825954617903,
+        "center": 0.1657876383236589,
+        "plus": 0.16657701710114042
+      },
+      "temperatures_mK": {
+        "minus": 164.998259546179,
+        "center": 165.78763832365888,
+        "plus": 166.57701710114043
+      },
+      "G_derivative_W_K": 2.028813576884804e-08,
+      "G_secant_to_bath_W_K": 2.0288055100142545e-08,
+      "D_blocks": {
+        "minus": {
+          "records": 1721,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "center": {
+          "records": 1721,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        },
+        "plus": {
+          "records": 1721,
+          "nonzero_records": 0,
+          "max_abs": 0.0,
+          "is_zero": true
+        }
+      },
+      "constraint_rows_center": 1721
+    }
+  },
+  "comparison": {
+    "original_over_historical_G": 1.4771603277620164,
+    "refined_over_historical_G": 1.0801360587107312,
+    "refined_over_original_G": 0.7312246601878348,
+    "original_to_refined_reduction": 0.26877533981216517
+  },
+  "control": {
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_membrane_stycast_diag_v2",
+    "notes": "Existing diagnostic mesh: TES top and first 1 um of Stycast locally refined; outer Stycast-substrate interface remains original Phase24 coarse topology.",
+    "constraint_rows_center_original_phase24": 186,
+    "constraint_rows_center_interface_refined": 1721
+  }
+}
