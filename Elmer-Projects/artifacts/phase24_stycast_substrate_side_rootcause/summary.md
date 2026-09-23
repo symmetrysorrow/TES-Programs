@@ -7,7 +7,7 @@ The TES-side h=10 um density probe is held fixed. Only the final Stycast layer a
 - TES+substrate-side G_eff: `2.020558178452e-08 W/K` (ratio `1.075740902`)
 - substrate-side improvement: `9.381679756241e-11 W/K`; residual-8% contribution: `0.061866`
 - classification: `C`
-- interface face area is preserved in the accepted paired mesh; the substrate mesh is unchanged.
+- interface face area is preserved in the accepted paired mesh; substrate geometry/material/recipe are unchanged, while its nonconforming target-face tessellation may adapt during coupled remeshing.
 - substrate patch errors are in `substrate_patch_tests.csv`; local face stiffness and mortar support are in `substrate_interface_operator.csv`, `mortar_operator_summary.csv`, and `substrate_constraint_support.csv`.
 - physics/material/TES law/circuit/bath/geometry dimensions unchanged; production mesh not overwritten.
 - full nonlinear run: not performed because the 2–3% historical-equivalence condition was not met.
