@@ -75,14 +75,19 @@ def analog_bessel_magnitude(
     frequency = np.asarray(frequency_hz, dtype=float)
     order = int(order)
     cutoff = float(cutoff_hz)
-    if order < 1:
-        raise ValueError("Bessel order must be >= 1")
+    if order < 0:
+        raise ValueError("diagnostic filter order must be >= 0")
     if cutoff <= 0.0:
         raise ValueError("cutoff_hz must be positive")
     if norm not in {"mag", "phase", "delay"}:
         raise ValueError("unsupported Bessel normalization")
     if np.any(frequency < 0.0):
         raise ValueError("frequency must be non-negative")
+    if order == 0:
+        # Diagnostic sentinel for the connector-box LPF OFF hypothesis.
+        # Keeping the cutoff coordinate in the fit makes the ON/OFF branches
+        # have exactly the same nuisance-parameter count; it is inert here.
+        return np.ones_like(frequency, dtype=float)
 
     b, a = signal.bessel(
         order,

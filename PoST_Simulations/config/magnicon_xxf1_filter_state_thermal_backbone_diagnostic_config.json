@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "purpose": "Directly compare the Magnicon XXF-1 Connector Box 10 kHz anti-alias LPF OFF hypothesis against the documented LPF ON hypothesis under the same relaxed thermal-backbone profile, with c2 fixed to zero in both branches.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "states": ["off", "on"],
+  "magnicon_filter": {
+    "cutoff_Hz": {
+      "min": 9750.0,
+      "max": 10250.0,
+      "nominal": 10000.0
+    },
+    "normalization": "phase",
+    "documented_order": 2,
+    "manual_statement": "Connector-box anti-alias filters are second-order Bessel, cutoff 10 kHz +/-2.5%.",
+    "off_semantics": "Diagnostic LPF-OFF branch: the Magnicon connector-box 10 kHz stage is unity for both main and alias paths. The profiled cutoff coordinate is intentionally retained but inert so ON and OFF have exactly the same nuisance-parameter count.",
+    "on_semantics": "Documented LPF-ON branch: second-order phase-normalized Bessel with a shared cutoff profiled only over 10 kHz +/-2.5%."
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 50100
+  },
+  "materiality_screen": {
+    "max_off_over_on_score_ratio": 0.8,
+    "min_off_rms_improvement_dB": 0.20,
+    "target_good_fit_rms_dB": 0.65
+  },
+  "guardrail": "This is an acquisition-state diagnostic, not evidence that the historical connector-box LPF was actually OFF. A materially better OFF fit would make the measurement-time filter state a high-priority laboratory check. A poor OFF fit would disfavor the simple ON/OFF explanation but would not rule out a bypass noise source, lead-lag response, FLL dynamics, or frequency-dependent bias/readout impedance."
+}
