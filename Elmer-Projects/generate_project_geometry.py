@@ -80,7 +80,8 @@ class TesGmshBuilder(GmshApiBuilder):
         # ElmerGrid then merges (1e-10) into direct node coupling across the
         # mortar gap. The single-pixel reference mesh has zero shared nodes on
         # these contacts; the rotation (geometry unchanged) restores that.
-        if not getattr(self, "merge_mortar_interfaces", False):
+        conformal_contacts = getattr(self, "conformal_contact_interfaces", set())
+        if not ({"membrane_tes", "tes_stycast"} & conformal_contacts):
             gmsh.model.occ.rotate([(2, disk)], cx, cy, primitive.zmin, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
         # OCCBooleanGlue=2 (the global default here) skips real boolean
         # computation for interfering shapes; disable it for this 2D split.
@@ -171,6 +172,7 @@ class TesGmshBuilder(GmshApiBuilder):
         geometry change would have destroyed the existing mesh.
         """
         specs = getattr(self, "contact_disc_specs", None) or []
+        conformal_contacts = getattr(self, "conformal_contact_interfaces", set())
         for entry in specs:
             body = entry["body"]
             body_tags = list(self.group_entities.get(body, []))
@@ -183,7 +185,7 @@ class TesGmshBuilder(GmshApiBuilder):
                 # Same seam rotation as _add_contact_film_primitive: keep the
                 # imprinted circle's mesh nodes off the Stycast rim nodes so
                 # ElmerGrid does not merge them across the mortar gap.
-                if not getattr(self, "merge_mortar_interfaces", False):
+                if entry.get("interface") not in conformal_contacts:
                     gmsh.model.occ.rotate([(2, disk)], x, y, z, 0.0, 0.0, 1.0, _CONTACT_DISC_SEAM_ROTATION)
                 tools.append((2, disk))
             # OCCBooleanGlue=2 (the builder's global setting) skips the real
@@ -1622,6 +1624,7 @@ def build(write_mesh: bool = True) -> None:
         builder.contact_disc_specs = [
             {
                 "body": "abs",
+                "interface": "stycast_abs",
                 "discs": [
                     (
                         stycast_boxes[suffix].x,
@@ -1641,6 +1644,7 @@ def build(write_mesh: bool = True) -> None:
                     builder.contact_disc_specs.append(
                         {
                             "body": f"Membrane_SiNx{suffix}",
+                            "interface": "membrane_tes",
                             "discs": [
                                 (
                                     stycast.x,
@@ -1652,6 +1656,7 @@ def build(write_mesh: bool = True) -> None:
                         }
                     )
             builder.merge_mortar_interfaces = True
+            builder.conformal_contact_interfaces = conformal_contact_interfaces
             builder.conformal_contact_pairs = []
             for suffix in sides:
                 tes_box = _find_box(spec, f"TES{suffix}")

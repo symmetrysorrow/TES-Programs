@@ -1,0 +1,14 @@
+case,route,body_a_id,body_a_name,body_a_material,body_b_id,body_b_name,body_b_material,interface_boundary_ids,physical_area_m2,master_boundary_area_m2,slave_boundary_area_m2,master_to_slave_area_ratio,shared_node_count,conforming_face_count,mortar_constraint_count,coupling_type,master,slave,physical_role
+phase24_tes_stycast_bypass,Membrane_SiNx -> TES,103,Membrane_SiNx,Membrane,101,TES,TES,2305;1104,2.5e-07,4.900000000000001e-07,2.5e-07,1.9600000000000004,49,2,,mortar,Membrane_SiNx_contact__zmax,TES__zmin,TES bottom mortar
+phase24_tes_stycast_bypass,TES -> Stycast,101,TES,TES,102,Stycast,Stycast,,0.0,0.0,0.0,0.0,139,241,0,shared-node,unknown,unknown,TES top mortar
+phase24_tes_stycast_bypass,Stycast -> abs,102,Stycast,Stycast,100,abs,Pb,1205;1004,1.9085031815670558e-07,1.9085031815670558e-07,1e-06,0.19085031815670558,0,0,,mortar,Stycast__zmax,abs__zmin,Pb bottom mortar
+phase24_tes_stycast_bypass,Membrane_SiNx -> Si_1,103,Membrane_SiNx,Membrane,105,Si_1,Si,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,Membrane_SiNx -> SiNx,103,Membrane_SiNx,Membrane,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,136,136,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,Membrane_SiNx -> Membrane_Si1,103,Membrane_SiNx,Membrane,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,380,690,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,SiO2_1 -> Si_1,104,SiO2_1,SiO2,105,Si_1,Si,,0.0,0.0,0.0,0.0,10395,20322,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,SiO2_1 -> Si_2,104,SiO2_1,SiO2,107,Si_2,Si,,0.0,0.0,0.0,0.0,10392,20316,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,SiO2_1 -> Membrane_Si1,104,SiO2_1,SiO2,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,324,582,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,Si_1 -> SiNx,105,Si_1,Si,106,SiNx,SiNx,,0.0,0.0,0.0,0.0,10430,20388,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,Si_1 -> Membrane_Si1,105,Si_1,Si,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,132,132,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,SiNx -> Membrane_Si1,106,SiNx,SiNx,109,Membrane_Si1,Membrane,,0.0,0.0,0.0,0.0,68,0,0,shared-node,,,internal conforming body adjacency
+phase24_tes_stycast_bypass,Si_2 -> SiO2_2,107,Si_2,Si,108,SiO2_2,SiO2,,0.0,0.0,0.0,0.0,10396,20324,0,shared-node,,,internal conforming body adjacency

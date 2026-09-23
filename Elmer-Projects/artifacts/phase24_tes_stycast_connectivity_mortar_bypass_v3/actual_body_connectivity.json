@@ -1,0 +1,1915 @@
+{
+  "phase24_tes_stycast_bypass": {
+    "mesh": {
+      "mesh": "work\\meshes\\mesh_phase24_tes_stycast_conforming_bypass_v3",
+      "body_names": {
+        "100": "abs",
+        "101": "TES",
+        "102": "Stycast",
+        "103": "Membrane_SiNx",
+        "104": "SiO2_1",
+        "105": "Si_1",
+        "106": "SiNx",
+        "107": "Si_2",
+        "108": "SiO2_2",
+        "109": "Membrane_Si1"
+      },
+      "boundary_names": {
+        "21": "bath",
+        "1000": "abs__xmin",
+        "1001": "abs__xmax",
+        "1002": "abs__ymin",
+        "1003": "abs__ymax",
+        "1004": "abs__zmin",
+        "1005": "abs__zmax",
+        "1100": "TES__xmin",
+        "1101": "TES__xmax",
+        "1102": "TES__ymin",
+        "1103": "TES__ymax",
+        "1104": "TES__zmin",
+        "1105": "TES__zmax",
+        "1204": "Stycast__zmin",
+        "1205": "Stycast__zmax",
+        "1300": "Membrane_SiNx__xmin",
+        "1301": "Membrane_SiNx__xmax",
+        "1302": "Membrane_SiNx__ymin",
+        "1303": "Membrane_SiNx__ymax",
+        "1400": "SiO2_1__xmin",
+        "1401": "SiO2_1__xmax",
+        "1402": "SiO2_1__ymin",
+        "1403": "SiO2_1__ymax",
+        "1404": "SiO2_1__zmin",
+        "1405": "SiO2_1__zmax",
+        "1500": "Si_1__xmin",
+        "1501": "Si_1__xmax",
+        "1502": "Si_1__ymin",
+        "1503": "Si_1__ymax",
+        "1504": "Si_1__zmin",
+        "1505": "Si_1__zmax",
+        "1510": "Si_1_sub__xmin",
+        "1511": "Si_1_sub__xmax",
+        "1512": "Si_1_sub__ymin",
+        "1513": "Si_1_sub__ymax",
+        "1514": "Si_1_sub__zmin",
+        "1515": "Si_1_sub__zmax",
+        "1600": "SiNx__xmin",
+        "1601": "SiNx__xmax",
+        "1602": "SiNx__ymin",
+        "1603": "SiNx__ymax",
+        "1604": "SiNx__zmin",
+        "1605": "SiNx__zmax",
+        "1610": "SiNx_sub__xmin",
+        "1611": "SiNx_sub__xmax",
+        "1612": "SiNx_sub__ymin",
+        "1613": "SiNx_sub__ymax",
+        "1614": "SiNx_sub__zmin",
+        "1615": "SiNx_sub__zmax",
+        "1700": "Si_2__xmin",
+        "1701": "Si_2__xmax",
+        "1702": "Si_2__ymin",
+        "1703": "Si_2__ymax",
+        "1704": "Si_2__zmin",
+        "1705": "Si_2__zmax",
+        "1710": "Si_2_sub__xmin",
+        "1711": "Si_2_sub__xmax",
+        "1712": "Si_2_sub__ymin",
+        "1713": "Si_2_sub__ymax",
+        "1714": "Si_2_sub__zmin",
+        "1715": "Si_2_sub__zmax",
+        "1800": "SiO2_2__xmin",
+        "1801": "SiO2_2__xmax",
+        "1802": "SiO2_2__ymin",
+        "1803": "SiO2_2__ymax",
+        "1804": "SiO2_2__zmin",
+        "1805": "SiO2_2__zmax",
+        "1810": "SiO2_2_sub__xmin",
+        "1811": "SiO2_2_sub__xmax",
+        "1812": "SiO2_2_sub__ymin",
+        "1813": "SiO2_2_sub__ymax",
+        "1814": "SiO2_2_sub__zmin",
+        "1815": "SiO2_2_sub__zmax",
+        "1900": "Membrane_Si1__xmin",
+        "1901": "Membrane_Si1__xmax",
+        "1902": "Membrane_Si1__ymin",
+        "1903": "Membrane_Si1__ymax",
+        "1904": "Membrane_Si1__zmin",
+        "1905": "Membrane_Si1__zmax",
+        "2304": "Membrane_SiNx_contact__zmin",
+        "2305": "Membrane_SiNx_contact__zmax",
+        "2314": "Membrane_SiNx_free_left__zmin",
+        "2315": "Membrane_SiNx_free_left__zmax",
+        "2324": "Membrane_SiNx_free_right__zmin",
+        "2325": "Membrane_SiNx_free_right__zmax",
+        "2334": "Membrane_SiNx_free_bottom__zmin",
+        "2335": "Membrane_SiNx_free_bottom__zmax",
+        "2344": "Membrane_SiNx_free_top__zmin",
+        "2345": "Membrane_SiNx_free_top__zmax"
+      },
+      "body_stats": {
+        "105": {
+          "body_id": 105,
+          "body_name": "Si_1",
+          "element_count": 68092,
+          "element_types": {
+            "504": 68092
+          },
+          "node_count": 22090,
+          "volume_m3": 2.626500000000002e-10,
+          "bbox_m": {
+            "x": [
+              -0.0015,
+              0.0015
+            ],
+            "y": [
+              -0.002,
+              0.004
+            ],
+            "z": [
+              0.000176,
+              0.000191
+            ]
+          },
+          "thickness_m": 1.5000000000000012e-05,
+          "footprint_bbox_area_m2": 1.8e-05
+        },
+        "108": {
+          "body_id": 108,
+          "body_name": "SiO2_2",
+          "element_count": 68287,
+          "element_types": {
+            "504": 68287
+          },
+          "node_count": 22139,
+          "volume_m3": 3.50199999999999e-11,
+          "bbox_m": {
+            "x": [
+              -0.0015,
+              0.0015
+            ],
+            "y": [
+              -0.002,
+              0.004
+            ],
+            "z": [
+              -0.000177,
+              -0.000175
+            ]
+          },
+          "thickness_m": 1.9999999999999944e-06,
+          "footprint_bbox_area_m2": 1.8e-05
+        },
+        "106": {
+          "body_id": 106,
+          "body_name": "SiNx",
+          "element_count": 68980,
+          "element_types": {
+            "504": 68980
+          },
+          "node_count": 22336,
+          "volume_m3": 1.750999999999995e-11,
+          "bbox_m": {
+            "x": [
+              -0.0015,
+              0.0015
+            ],
+            "y": [
+              -0.002,
+              0.004
+            ],
+            "z": [
+              0.000191,
+              0.000192
+            ]
+          },
+          "thickness_m": 9.999999999999972e-07,
+          "footprint_bbox_area_m2": 1.8e-05
+        },
+        "104": {
+          "body_id": 104,
+          "body_name": "SiO2_1",
+          "element_count": 66097,
+          "element_types": {
+            "504": 66097
+          },
+          "node_count": 21922,
+          "volume_m3": 1.799999999999995e-11,
+          "bbox_m": {
+            "x": [
+              -0.0015,
+              0.0015
+            ],
+            "y": [
+              -0.002,
+              0.004
+            ],
+            "z": [
+              0.000175,
+              0.000176
+            ]
+          },
+          "thickness_m": 9.999999999999972e-07,
+          "footprint_bbox_area_m2": 1.8e-05
+        },
+        "107": {
+          "body_id": 107,
+          "body_name": "Si_2",
+          "element_count": 172845,
+          "element_types": {
+            "504": 172845
+          },
+          "node_count": 40990,
+          "volume_m3": 6.1285e-09,
+          "bbox_m": {
+            "x": [
+              -0.0015,
+              0.0015
+            ],
+            "y": [
+              -0.002,
+              0.004
+            ],
+            "z": [
+              -0.000175,
+              0.000175
+            ]
+          },
+          "thickness_m": 0.00035,
+          "footprint_bbox_area_m2": 1.8e-05
+        },
+        "100": {
+          "body_id": 100,
+          "body_name": "abs",
+          "element_count": 7023,
+          "element_types": {
+            "504": 7023
+          },
+          "node_count": 1650,
+          "volume_m3": 7e-10,
+          "bbox_m": {
+            "x": [
+              -0.0005,
+              0.0005
+            ],
+            "y": [
+              0.0005,
+              0.0015
+            ],
+            "z": [
+              0.00021216,
+              0.00091216
+            ]
+          },
+          "thickness_m": 0.0007,
+          "footprint_bbox_area_m2": 1e-06
+        },
+        "103": {
+          "body_id": 103,
+          "body_name": "Membrane_SiNx",
+          "element_count": 3529,
+          "element_types": {
+            "504": 3529
+          },
+          "node_count": 1038,
+          "volume_m3": 4.899999999999987e-13,
+          "bbox_m": {
+            "x": [
+              -0.00035,
+              0.00035
+            ],
+            "y": [
+              0.00065,
+              0.00135
+            ],
+            "z": [
+              0.000191,
+              0.000192
+            ]
+          },
+          "thickness_m": 9.999999999999972e-07,
+          "footprint_bbox_area_m2": 4.900000000000001e-07
+        },
+        "109": {
+          "body_id": 109,
+          "body_name": "Membrane_Si1",
+          "element_count": 2384,
+          "element_types": {
+            "504": 2384
+          },
+          "node_count": 792,
+          "volume_m3": 7.350000000000007e-12,
+          "bbox_m": {
+            "x": [
+              -0.00035,
+              0.00035
+            ],
+            "y": [
+              0.00065,
+              0.00135
+            ],
+            "z": [
+              0.000176,
+              0.000191
+            ]
+          },
+          "thickness_m": 1.5000000000000012e-05,
+          "footprint_bbox_area_m2": 4.900000000000001e-07
+        },
+        "101": {
+          "body_id": 101,
+          "body_name": "TES",
+          "element_count": 1709,
+          "element_types": {
+            "504": 1709
+          },
+          "node_count": 567,
+          "volume_m3": 3.999999999999962e-14,
+          "bbox_m": {
+            "x": [
+              -0.00025,
+              0.00025
+            ],
+            "y": [
+              0.00075,
+              0.00125
+            ],
+            "z": [
+              0.000192,
+              0.00019216
+            ]
+          },
+          "thickness_m": 1.5999999999999847e-07,
+          "footprint_bbox_area_m2": 2.5e-07
+        },
+        "102": {
+          "body_id": 102,
+          "body_name": "Stycast",
+          "element_count": 31885,
+          "element_types": {
+            "504": 31885
+          },
+          "node_count": 6193,
+          "volume_m3": 3.874103524108756e-12,
+          "bbox_m": {
+            "x": [
+              -0.000249,
+              0.000249
+            ],
+            "y": [
+              0.000751250726431,
+              0.00124874927357
+            ],
+            "z": [
+              0.00019216,
+              0.00021216
+            ]
+          },
+          "thickness_m": 1.9999999999999998e-05,
+          "footprint_bbox_area_m2": 2.47754276475222e-07
+        }
+      },
+      "shared_node_counts": {
+        "100:101": 0,
+        "100:102": 0,
+        "100:103": 0,
+        "100:104": 0,
+        "100:105": 0,
+        "100:106": 0,
+        "100:107": 0,
+        "100:108": 0,
+        "100:109": 0,
+        "101:102": 139,
+        "101:103": 49,
+        "101:104": 0,
+        "101:105": 0,
+        "101:106": 0,
+        "101:107": 0,
+        "101:108": 0,
+        "101:109": 0,
+        "102:103": 0,
+        "102:104": 0,
+        "102:105": 0,
+        "102:106": 0,
+        "102:107": 0,
+        "102:108": 0,
+        "102:109": 0,
+        "103:104": 0,
+        "103:105": 68,
+        "103:106": 136,
+        "103:107": 0,
+        "103:108": 0,
+        "103:109": 380,
+        "104:105": 10395,
+        "104:106": 0,
+        "104:107": 10392,
+        "104:108": 0,
+        "104:109": 324,
+        "105:106": 10430,
+        "105:107": 0,
+        "105:108": 0,
+        "105:109": 132,
+        "106:107": 0,
+        "106:108": 0,
+        "106:109": 68,
+        "107:108": 10396,
+        "107:109": 0,
+        "108:109": 0
+      },
+      "conforming_face_counts": {
+        "104:105": 20322,
+        "105:106": 20388,
+        "107:108": 20324,
+        "104:107": 20316,
+        "105:109": 132,
+        "103:106": 136,
+        "104:109": 582,
+        "103:109": 690,
+        "101:102": 241,
+        "101:103": 2
+      },
+      "boundary_stats": {
+        "1104": {
+          "boundary_id": 1104,
+          "boundary_name": "TES__zmin",
+          "facet_count": 360,
+          "physical_area_m2": 2.5e-07,
+          "body_ids": {
+            "101": 360
+          }
+        },
+        "1102": {
+          "boundary_id": 1102,
+          "boundary_name": "TES__ymin",
+          "facet_count": 24,
+          "physical_area_m2": 7.999999999999923e-11,
+          "body_ids": {
+            "101": 24
+          }
+        },
+        "1100": {
+          "boundary_id": 1100,
+          "boundary_name": "TES__xmin",
+          "facet_count": 24,
+          "physical_area_m2": 7.999999999999923e-11,
+          "body_ids": {
+            "101": 24
+          }
+        },
+        "1101": {
+          "boundary_id": 1101,
+          "boundary_name": "TES__xmax",
+          "facet_count": 24,
+          "physical_area_m2": 7.999999999999923e-11,
+          "body_ids": {
+            "101": 24
+          }
+        },
+        "1103": {
+          "boundary_id": 1103,
+          "boundary_name": "TES__ymax",
+          "facet_count": 24,
+          "physical_area_m2": 7.999999999999923e-11,
+          "body_ids": {
+            "101": 24
+          }
+        },
+        "1205": {
+          "boundary_id": 1205,
+          "boundary_name": "Stycast__zmax",
+          "facet_count": 74,
+          "physical_area_m2": 1.9085031815670558e-07,
+          "body_ids": {
+            "102": 74
+          }
+        },
+        "1404": {
+          "boundary_id": 1404,
+          "boundary_name": "SiO2_1__zmin",
+          "facet_count": 20898,
+          "physical_area_m2": 1.8e-05,
+          "body_ids": {
+            "104": 20898
+          }
+        },
+        "1705": {
+          "boundary_id": 1705,
+          "boundary_name": "Si_2__zmax",
+          "facet_count": 20316,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "104": 20316
+          }
+        },
+        "1715": {
+          "boundary_id": 1715,
+          "boundary_name": "Si_2_sub__zmax",
+          "facet_count": 20316,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "104": 20316
+          }
+        },
+        "1905": {
+          "boundary_id": 1905,
+          "boundary_name": "Membrane_Si1__zmax",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2304": {
+          "boundary_id": 2304,
+          "boundary_name": "Membrane_SiNx_contact__zmin",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2314": {
+          "boundary_id": 2314,
+          "boundary_name": "Membrane_SiNx_free_left__zmin",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2324": {
+          "boundary_id": 2324,
+          "boundary_name": "Membrane_SiNx_free_right__zmin",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2334": {
+          "boundary_id": 2334,
+          "boundary_name": "Membrane_SiNx_free_bottom__zmin",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2344": {
+          "boundary_id": 2344,
+          "boundary_name": "Membrane_SiNx_free_top__zmin",
+          "facet_count": 690,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "109": 690
+          }
+        },
+        "2305": {
+          "boundary_id": 2305,
+          "boundary_name": "Membrane_SiNx_contact__zmax",
+          "facet_count": 686,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "103": 686
+          }
+        },
+        "2315": {
+          "boundary_id": 2315,
+          "boundary_name": "Membrane_SiNx_free_left__zmax",
+          "facet_count": 686,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "103": 686
+          }
+        },
+        "2325": {
+          "boundary_id": 2325,
+          "boundary_name": "Membrane_SiNx_free_right__zmax",
+          "facet_count": 686,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "103": 686
+          }
+        },
+        "2335": {
+          "boundary_id": 2335,
+          "boundary_name": "Membrane_SiNx_free_bottom__zmax",
+          "facet_count": 686,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "103": 686
+          }
+        },
+        "2345": {
+          "boundary_id": 2345,
+          "boundary_name": "Membrane_SiNx_free_top__zmax",
+          "facet_count": 686,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "103": 686
+          }
+        },
+        "1612": {
+          "boundary_id": 1612,
+          "boundary_name": "SiNx_sub__ymin",
+          "facet_count": 36,
+          "physical_area_m2": 6.99999999999998e-10,
+          "body_ids": {
+            "103": 36
+          }
+        },
+        "1302": {
+          "boundary_id": 1302,
+          "boundary_name": "Membrane_SiNx__ymin",
+          "facet_count": 36,
+          "physical_area_m2": 6.99999999999998e-10,
+          "body_ids": {
+            "103": 36
+          }
+        },
+        "1613": {
+          "boundary_id": 1613,
+          "boundary_name": "SiNx_sub__ymax",
+          "facet_count": 36,
+          "physical_area_m2": 6.99999999999998e-10,
+          "body_ids": {
+            "103": 36
+          }
+        },
+        "1303": {
+          "boundary_id": 1303,
+          "boundary_name": "Membrane_SiNx__ymax",
+          "facet_count": 36,
+          "physical_area_m2": 6.99999999999998e-10,
+          "body_ids": {
+            "103": 36
+          }
+        },
+        "1400": {
+          "boundary_id": 1400,
+          "boundary_name": "SiO2_1__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "104": 268
+          }
+        },
+        "1401": {
+          "boundary_id": 1401,
+          "boundary_name": "SiO2_1__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "104": 268
+          }
+        },
+        "1402": {
+          "boundary_id": 1402,
+          "boundary_name": "SiO2_1__ymin",
+          "facet_count": 136,
+          "physical_area_m2": 2.9999999999999917e-09,
+          "body_ids": {
+            "104": 136
+          }
+        },
+        "1403": {
+          "boundary_id": 1403,
+          "boundary_name": "SiO2_1__ymax",
+          "facet_count": 136,
+          "physical_area_m2": 2.9999999999999917e-09,
+          "body_ids": {
+            "104": 136
+          }
+        },
+        "21": {
+          "boundary_id": 21,
+          "boundary_name": "bath",
+          "facet_count": 18610,
+          "physical_area_m2": 1.8805e-05,
+          "body_ids": {
+            "104": 7982,
+            "107": 10628
+          }
+        },
+        "1405": {
+          "boundary_id": 1405,
+          "boundary_name": "SiO2_1__zmax",
+          "facet_count": 20904,
+          "physical_area_m2": 1.8e-05,
+          "body_ids": {
+            "104": 20904
+          }
+        },
+        "1504": {
+          "boundary_id": 1504,
+          "boundary_name": "Si_1__zmin",
+          "facet_count": 20322,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "104": 20322
+          }
+        },
+        "1514": {
+          "boundary_id": 1514,
+          "boundary_name": "Si_1_sub__zmin",
+          "facet_count": 20322,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "104": 20322
+          }
+        },
+        "1904": {
+          "boundary_id": 1904,
+          "boundary_name": "Membrane_Si1__zmin",
+          "facet_count": 582,
+          "physical_area_m2": 4.900000000000001e-07,
+          "body_ids": {
+            "104": 582
+          }
+        },
+        "1500": {
+          "boundary_id": 1500,
+          "boundary_name": "Si_1__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 9.000000000000008e-08,
+          "body_ids": {
+            "105": 268
+          }
+        },
+        "1510": {
+          "boundary_id": 1510,
+          "boundary_name": "Si_1_sub__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 9.000000000000008e-08,
+          "body_ids": {
+            "105": 236,
+            "109": 32
+          }
+        },
+        "1900": {
+          "boundary_id": 1900,
+          "boundary_name": "Membrane_Si1__xmin",
+          "facet_count": 32,
+          "physical_area_m2": 1.050000000000001e-08,
+          "body_ids": {
+            "109": 32
+          }
+        },
+        "1502": {
+          "boundary_id": 1502,
+          "boundary_name": "Si_1__ymin",
+          "facet_count": 136,
+          "physical_area_m2": 4.500000000000004e-08,
+          "body_ids": {
+            "105": 136
+          }
+        },
+        "1503": {
+          "boundary_id": 1503,
+          "boundary_name": "Si_1__ymax",
+          "facet_count": 136,
+          "physical_area_m2": 4.500000000000004e-08,
+          "body_ids": {
+            "105": 136
+          }
+        },
+        "1505": {
+          "boundary_id": 1505,
+          "boundary_name": "Si_1__zmax",
+          "facet_count": 20388,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "105": 20388
+          }
+        },
+        "1515": {
+          "boundary_id": 1515,
+          "boundary_name": "Si_1_sub__zmax",
+          "facet_count": 20388,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "105": 20388
+          }
+        },
+        "1604": {
+          "boundary_id": 1604,
+          "boundary_name": "SiNx__zmin",
+          "facet_count": 20388,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "105": 20388
+          }
+        },
+        "1614": {
+          "boundary_id": 1614,
+          "boundary_name": "SiNx_sub__zmin",
+          "facet_count": 20388,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "105": 20388
+          }
+        },
+        "1511": {
+          "boundary_id": 1511,
+          "boundary_name": "Si_1_sub__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 9.000000000000008e-08,
+          "body_ids": {
+            "105": 236,
+            "109": 32
+          }
+        },
+        "1901": {
+          "boundary_id": 1901,
+          "boundary_name": "Membrane_Si1__xmax",
+          "facet_count": 32,
+          "physical_area_m2": 1.050000000000001e-08,
+          "body_ids": {
+            "109": 32
+          }
+        },
+        "1501": {
+          "boundary_id": 1501,
+          "boundary_name": "Si_1__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 9.000000000000008e-08,
+          "body_ids": {
+            "105": 268
+          }
+        },
+        "1512": {
+          "boundary_id": 1512,
+          "boundary_name": "Si_1_sub__ymin",
+          "facet_count": 34,
+          "physical_area_m2": 1.0500000000000008e-08,
+          "body_ids": {
+            "109": 34
+          }
+        },
+        "1902": {
+          "boundary_id": 1902,
+          "boundary_name": "Membrane_Si1__ymin",
+          "facet_count": 34,
+          "physical_area_m2": 1.0500000000000008e-08,
+          "body_ids": {
+            "109": 34
+          }
+        },
+        "1513": {
+          "boundary_id": 1513,
+          "boundary_name": "Si_1_sub__ymax",
+          "facet_count": 34,
+          "physical_area_m2": 1.0500000000000008e-08,
+          "body_ids": {
+            "109": 34
+          }
+        },
+        "1903": {
+          "boundary_id": 1903,
+          "boundary_name": "Membrane_Si1__ymax",
+          "facet_count": 34,
+          "physical_area_m2": 1.0500000000000008e-08,
+          "body_ids": {
+            "109": 34
+          }
+        },
+        "1600": {
+          "boundary_id": 1600,
+          "boundary_name": "SiNx__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "106": 268
+          }
+        },
+        "1610": {
+          "boundary_id": 1610,
+          "boundary_name": "SiNx_sub__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "106": 236,
+            "103": 32
+          }
+        },
+        "1300": {
+          "boundary_id": 1300,
+          "boundary_name": "Membrane_SiNx__xmin",
+          "facet_count": 32,
+          "physical_area_m2": 6.999999999999982e-10,
+          "body_ids": {
+            "103": 32
+          }
+        },
+        "1602": {
+          "boundary_id": 1602,
+          "boundary_name": "SiNx__ymin",
+          "facet_count": 136,
+          "physical_area_m2": 2.9999999999999917e-09,
+          "body_ids": {
+            "106": 136
+          }
+        },
+        "1603": {
+          "boundary_id": 1603,
+          "boundary_name": "SiNx__ymax",
+          "facet_count": 136,
+          "physical_area_m2": 2.9999999999999917e-09,
+          "body_ids": {
+            "106": 136
+          }
+        },
+        "1605": {
+          "boundary_id": 1605,
+          "boundary_name": "SiNx__zmax",
+          "facet_count": 20382,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "106": 20382
+          }
+        },
+        "1615": {
+          "boundary_id": 1615,
+          "boundary_name": "SiNx_sub__zmax",
+          "facet_count": 20382,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "106": 20382
+          }
+        },
+        "1611": {
+          "boundary_id": 1611,
+          "boundary_name": "SiNx_sub__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "106": 236,
+            "103": 32
+          }
+        },
+        "1301": {
+          "boundary_id": 1301,
+          "boundary_name": "Membrane_SiNx__xmax",
+          "facet_count": 32,
+          "physical_area_m2": 6.999999999999982e-10,
+          "body_ids": {
+            "103": 32
+          }
+        },
+        "1601": {
+          "boundary_id": 1601,
+          "boundary_name": "SiNx__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "106": 268
+          }
+        },
+        "1700": {
+          "boundary_id": 1700,
+          "boundary_name": "Si_2__xmin",
+          "facet_count": 1076,
+          "physical_area_m2": 2.1000000000000002e-06,
+          "body_ids": {
+            "107": 1076
+          }
+        },
+        "1710": {
+          "boundary_id": 1710,
+          "boundary_name": "Si_2_sub__xmin",
+          "facet_count": 1118,
+          "physical_area_m2": 2.1000000000000002e-06,
+          "body_ids": {
+            "107": 1118
+          }
+        },
+        "1702": {
+          "boundary_id": 1702,
+          "boundary_name": "Si_2__ymin",
+          "facet_count": 582,
+          "physical_area_m2": 1.0500000000000001e-06,
+          "body_ids": {
+            "107": 582
+          }
+        },
+        "1703": {
+          "boundary_id": 1703,
+          "boundary_name": "Si_2__ymax",
+          "facet_count": 586,
+          "physical_area_m2": 1.05e-06,
+          "body_ids": {
+            "107": 586
+          }
+        },
+        "1704": {
+          "boundary_id": 1704,
+          "boundary_name": "Si_2__zmin",
+          "facet_count": 20324,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "107": 20324
+          }
+        },
+        "1714": {
+          "boundary_id": 1714,
+          "boundary_name": "Si_2_sub__zmin",
+          "facet_count": 20324,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "107": 20324
+          }
+        },
+        "1805": {
+          "boundary_id": 1805,
+          "boundary_name": "SiO2_2__zmax",
+          "facet_count": 20324,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "107": 20324
+          }
+        },
+        "1815": {
+          "boundary_id": 1815,
+          "boundary_name": "SiO2_2_sub__zmax",
+          "facet_count": 20324,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "107": 20324
+          }
+        },
+        "1711": {
+          "boundary_id": 1711,
+          "boundary_name": "Si_2_sub__xmax",
+          "facet_count": 1120,
+          "physical_area_m2": 2.1000000000000002e-06,
+          "body_ids": {
+            "107": 1120
+          }
+        },
+        "1701": {
+          "boundary_id": 1701,
+          "boundary_name": "Si_2__xmax",
+          "facet_count": 1062,
+          "physical_area_m2": 2.1000000000000002e-06,
+          "body_ids": {
+            "107": 1062
+          }
+        },
+        "1712": {
+          "boundary_id": 1712,
+          "boundary_name": "Si_2_sub__ymin",
+          "facet_count": 144,
+          "physical_area_m2": 2.45e-07,
+          "body_ids": {
+            "107": 144
+          }
+        },
+        "1713": {
+          "boundary_id": 1713,
+          "boundary_name": "Si_2_sub__ymax",
+          "facet_count": 144,
+          "physical_area_m2": 2.45e-07,
+          "body_ids": {
+            "107": 144
+          }
+        },
+        "1800": {
+          "boundary_id": 1800,
+          "boundary_name": "SiO2_2__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 1.1999999999999967e-08,
+          "body_ids": {
+            "108": 268
+          }
+        },
+        "1810": {
+          "boundary_id": 1810,
+          "boundary_name": "SiO2_2_sub__xmin",
+          "facet_count": 268,
+          "physical_area_m2": 1.1999999999999967e-08,
+          "body_ids": {
+            "108": 268
+          }
+        },
+        "1802": {
+          "boundary_id": 1802,
+          "boundary_name": "SiO2_2__ymin",
+          "facet_count": 136,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "108": 136
+          }
+        },
+        "1803": {
+          "boundary_id": 1803,
+          "boundary_name": "SiO2_2__ymax",
+          "facet_count": 136,
+          "physical_area_m2": 5.9999999999999834e-09,
+          "body_ids": {
+            "108": 136
+          }
+        },
+        "1804": {
+          "boundary_id": 1804,
+          "boundary_name": "SiO2_2__zmin",
+          "facet_count": 20322,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "108": 20322
+          }
+        },
+        "1814": {
+          "boundary_id": 1814,
+          "boundary_name": "SiO2_2_sub__zmin",
+          "facet_count": 20322,
+          "physical_area_m2": 1.751e-05,
+          "body_ids": {
+            "108": 20322
+          }
+        },
+        "1811": {
+          "boundary_id": 1811,
+          "boundary_name": "SiO2_2_sub__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 1.1999999999999967e-08,
+          "body_ids": {
+            "108": 268
+          }
+        },
+        "1801": {
+          "boundary_id": 1801,
+          "boundary_name": "SiO2_2__xmax",
+          "facet_count": 268,
+          "physical_area_m2": 1.1999999999999967e-08,
+          "body_ids": {
+            "108": 268
+          }
+        },
+        "1812": {
+          "boundary_id": 1812,
+          "boundary_name": "SiO2_2_sub__ymin",
+          "facet_count": 32,
+          "physical_area_m2": 1.399999999999996e-09,
+          "body_ids": {
+            "108": 32
+          }
+        },
+        "1813": {
+          "boundary_id": 1813,
+          "boundary_name": "SiO2_2_sub__ymax",
+          "facet_count": 32,
+          "physical_area_m2": 1.399999999999996e-09,
+          "body_ids": {
+            "108": 32
+          }
+        },
+        "1004": {
+          "boundary_id": 1004,
+          "boundary_name": "abs__zmin",
+          "facet_count": 490,
+          "physical_area_m2": 1e-06,
+          "body_ids": {
+            "100": 490
+          }
+        },
+        "1000": {
+          "boundary_id": 1000,
+          "boundary_name": "abs__xmin",
+          "facet_count": 220,
+          "physical_area_m2": 7e-07,
+          "body_ids": {
+            "100": 220
+          }
+        },
+        "1001": {
+          "boundary_id": 1001,
+          "boundary_name": "abs__xmax",
+          "facet_count": 220,
+          "physical_area_m2": 7e-07,
+          "body_ids": {
+            "100": 220
+          }
+        },
+        "1002": {
+          "boundary_id": 1002,
+          "boundary_name": "abs__ymin",
+          "facet_count": 220,
+          "physical_area_m2": 7e-07,
+          "body_ids": {
+            "100": 220
+          }
+        },
+        "1003": {
+          "boundary_id": 1003,
+          "boundary_name": "abs__ymax",
+          "facet_count": 220,
+          "physical_area_m2": 7e-07,
+          "body_ids": {
+            "100": 220
+          }
+        },
+        "1005": {
+          "boundary_id": 1005,
+          "boundary_name": "abs__zmax",
+          "facet_count": 314,
+          "physical_area_m2": 1e-06,
+          "body_ids": {
+            "100": 314
+          }
+        }
+      },
+      "element_count": 490831,
+      "node_count": 97076,
+      "boundary_facet_count": 407454
+    },
+    "sif": {
+      "bodies": {
+        "100": {
+          "body_id": 100,
+          "body_name": "abs",
+          "material_id": 1,
+          "material": "Pb"
+        },
+        "101": {
+          "body_id": 101,
+          "body_name": "TES",
+          "material_id": 2,
+          "material": "TES"
+        },
+        "102": {
+          "body_id": 102,
+          "body_name": "Stycast",
+          "material_id": 3,
+          "material": "Stycast"
+        },
+        "103": {
+          "body_id": 103,
+          "body_name": "Membrane_SiNx",
+          "material_id": 7,
+          "material": "Membrane"
+        },
+        "104": {
+          "body_id": 104,
+          "body_name": "SiO2_1",
+          "material_id": 4,
+          "material": "SiO2"
+        },
+        "105": {
+          "body_id": 105,
+          "body_name": "Si_1",
+          "material_id": 5,
+          "material": "Si"
+        },
+        "106": {
+          "body_id": 106,
+          "body_name": "SiNx",
+          "material_id": 6,
+          "material": "SiNx"
+        },
+        "107": {
+          "body_id": 107,
+          "body_name": "Si_2",
+          "material_id": 5,
+          "material": "Si"
+        },
+        "108": {
+          "body_id": 108,
+          "body_name": "SiO2_2",
+          "material_id": 4,
+          "material": "SiO2"
+        },
+        "109": {
+          "body_id": 109,
+          "body_name": "Membrane_Si1",
+          "material_id": 7,
+          "material": "Membrane"
+        }
+      },
+      "materials": {
+        "1": {
+          "name": "Pb",
+          "density": "9860",
+          "cp": "3.26e-05",
+          "conductivity": "0.0168",
+          "block_normalized": "Name = \"Pb\" Density = 9860 Heat Capacity = 3.26e-05 Heat Conductivity = 0.0168"
+        },
+        "2": {
+          "name": "TES",
+          "density": "15695",
+          "cp": "0.00125",
+          "conductivity": "68",
+          "block_normalized": "Name = \"TES\" Density = 15695 Heat Capacity = 0.00125 Heat Conductivity = 68"
+        },
+        "3": {
+          "name": "Stycast",
+          "density": "2400",
+          "cp": "0.00122",
+          "conductivity": "2.69094e-06",
+          "block_normalized": "Name = \"Stycast\" Density = 2400 Heat Capacity = 0.00122 Heat Conductivity = 2.69094e-06"
+        },
+        "4": {
+          "name": "SiO2",
+          "density": "2200",
+          "cp": "0.000124",
+          "conductivity": "0.000494",
+          "block_normalized": "Name = \"SiO2\" Density = 2200 Heat Capacity = 0.000124 Heat Conductivity = 0.000494"
+        },
+        "5": {
+          "name": "Si",
+          "density": "2332",
+          "cp": "1.24e-06",
+          "conductivity": "0.37",
+          "block_normalized": "Name = \"Si\" Density = 2332 Heat Capacity = 1.24e-06 Heat Conductivity = 0.37"
+        },
+        "6": {
+          "name": "SiNx",
+          "density": "3400",
+          "cp": "2.43e-05",
+          "conductivity": "0.000102",
+          "block_normalized": "Name = \"SiNx\" Density = 3400 Heat Capacity = 2.43e-05 Heat Conductivity = 0.000102"
+        },
+        "7": {
+          "name": "Membrane",
+          "density": "2387",
+          "cp": "9.819999999999999e-06",
+          "conductivity": "Variable Temperature",
+          "block_normalized": "Name = \"Membrane\" Density = 2387 Heat Capacity = 9.819999999999999e-06 Heat Conductivity = Variable Temperature Real MATC \"(7.854e-06)*(0.5*((tx+1.0e-12)+abs(tx-1.0e-12)))^(4.252-1)*0.4*((0.0007)-(0.0005))/(8*((1e-06)+(1.5e-05)+(1e-06))*(0.0005))\""
+        }
+      },
+      "mortar_blocks": [
+        {
+          "bc_number": 2,
+          "slave_boundary_id": 1104,
+          "master_bc_number": 3
+        },
+        {
+          "bc_number": 6,
+          "slave_boundary_id": 1205,
+          "master_bc_number": 7
+        }
+      ],
+      "bath_boundary_ids": [
+        1804
+      ]
+    },
+    "named_body_stats": {
+      "Si_1": {
+        "body_id": 105,
+        "body_name": "Si_1",
+        "element_count": 68092,
+        "element_types": {
+          "504": 68092
+        },
+        "node_count": 22090,
+        "volume_m3": 2.626500000000002e-10,
+        "bbox_m": {
+          "x": [
+            -0.0015,
+            0.0015
+          ],
+          "y": [
+            -0.002,
+            0.004
+          ],
+          "z": [
+            0.000176,
+            0.000191
+          ]
+        },
+        "thickness_m": 1.5000000000000012e-05,
+        "footprint_bbox_area_m2": 1.8e-05
+      },
+      "SiO2_2": {
+        "body_id": 108,
+        "body_name": "SiO2_2",
+        "element_count": 68287,
+        "element_types": {
+          "504": 68287
+        },
+        "node_count": 22139,
+        "volume_m3": 3.50199999999999e-11,
+        "bbox_m": {
+          "x": [
+            -0.0015,
+            0.0015
+          ],
+          "y": [
+            -0.002,
+            0.004
+          ],
+          "z": [
+            -0.000177,
+            -0.000175
+          ]
+        },
+        "thickness_m": 1.9999999999999944e-06,
+        "footprint_bbox_area_m2": 1.8e-05
+      },
+      "SiNx": {
+        "body_id": 106,
+        "body_name": "SiNx",
+        "element_count": 68980,
+        "element_types": {
+          "504": 68980
+        },
+        "node_count": 22336,
+        "volume_m3": 1.750999999999995e-11,
+        "bbox_m": {
+          "x": [
+            -0.0015,
+            0.0015
+          ],
+          "y": [
+            -0.002,
+            0.004
+          ],
+          "z": [
+            0.000191,
+            0.000192
+          ]
+        },
+        "thickness_m": 9.999999999999972e-07,
+        "footprint_bbox_area_m2": 1.8e-05
+      },
+      "SiO2_1": {
+        "body_id": 104,
+        "body_name": "SiO2_1",
+        "element_count": 66097,
+        "element_types": {
+          "504": 66097
+        },
+        "node_count": 21922,
+        "volume_m3": 1.799999999999995e-11,
+        "bbox_m": {
+          "x": [
+            -0.0015,
+            0.0015
+          ],
+          "y": [
+            -0.002,
+            0.004
+          ],
+          "z": [
+            0.000175,
+            0.000176
+          ]
+        },
+        "thickness_m": 9.999999999999972e-07,
+        "footprint_bbox_area_m2": 1.8e-05
+      },
+      "Si_2": {
+        "body_id": 107,
+        "body_name": "Si_2",
+        "element_count": 172845,
+        "element_types": {
+          "504": 172845
+        },
+        "node_count": 40990,
+        "volume_m3": 6.1285e-09,
+        "bbox_m": {
+          "x": [
+            -0.0015,
+            0.0015
+          ],
+          "y": [
+            -0.002,
+            0.004
+          ],
+          "z": [
+            -0.000175,
+            0.000175
+          ]
+        },
+        "thickness_m": 0.00035,
+        "footprint_bbox_area_m2": 1.8e-05
+      },
+      "abs": {
+        "body_id": 100,
+        "body_name": "abs",
+        "element_count": 7023,
+        "element_types": {
+          "504": 7023
+        },
+        "node_count": 1650,
+        "volume_m3": 7e-10,
+        "bbox_m": {
+          "x": [
+            -0.0005,
+            0.0005
+          ],
+          "y": [
+            0.0005,
+            0.0015
+          ],
+          "z": [
+            0.00021216,
+            0.00091216
+          ]
+        },
+        "thickness_m": 0.0007,
+        "footprint_bbox_area_m2": 1e-06
+      },
+      "Membrane_SiNx": {
+        "body_id": 103,
+        "body_name": "Membrane_SiNx",
+        "element_count": 3529,
+        "element_types": {
+          "504": 3529
+        },
+        "node_count": 1038,
+        "volume_m3": 4.899999999999987e-13,
+        "bbox_m": {
+          "x": [
+            -0.00035,
+            0.00035
+          ],
+          "y": [
+            0.00065,
+            0.00135
+          ],
+          "z": [
+            0.000191,
+            0.000192
+          ]
+        },
+        "thickness_m": 9.999999999999972e-07,
+        "footprint_bbox_area_m2": 4.900000000000001e-07
+      },
+      "Membrane_Si1": {
+        "body_id": 109,
+        "body_name": "Membrane_Si1",
+        "element_count": 2384,
+        "element_types": {
+          "504": 2384
+        },
+        "node_count": 792,
+        "volume_m3": 7.350000000000007e-12,
+        "bbox_m": {
+          "x": [
+            -0.00035,
+            0.00035
+          ],
+          "y": [
+            0.00065,
+            0.00135
+          ],
+          "z": [
+            0.000176,
+            0.000191
+          ]
+        },
+        "thickness_m": 1.5000000000000012e-05,
+        "footprint_bbox_area_m2": 4.900000000000001e-07
+      },
+      "TES": {
+        "body_id": 101,
+        "body_name": "TES",
+        "element_count": 1709,
+        "element_types": {
+          "504": 1709
+        },
+        "node_count": 567,
+        "volume_m3": 3.999999999999962e-14,
+        "bbox_m": {
+          "x": [
+            -0.00025,
+            0.00025
+          ],
+          "y": [
+            0.00075,
+            0.00125
+          ],
+          "z": [
+            0.000192,
+            0.00019216
+          ]
+        },
+        "thickness_m": 1.5999999999999847e-07,
+        "footprint_bbox_area_m2": 2.5e-07
+      },
+      "Stycast": {
+        "body_id": 102,
+        "body_name": "Stycast",
+        "element_count": 31885,
+        "element_types": {
+          "504": 31885
+        },
+        "node_count": 6193,
+        "volume_m3": 3.874103524108756e-12,
+        "bbox_m": {
+          "x": [
+            -0.000249,
+            0.000249
+          ],
+          "y": [
+            0.000751250726431,
+            0.00124874927357
+          ],
+          "z": [
+            0.00019216,
+            0.00021216
+          ]
+        },
+        "thickness_m": 1.9999999999999998e-05,
+        "footprint_bbox_area_m2": 2.47754276475222e-07
+      }
+    },
+    "graph_rows": [
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Membrane_SiNx -> TES",
+        "body_a_id": 103,
+        "body_a_name": "Membrane_SiNx",
+        "body_a_material": "Membrane",
+        "body_b_id": 101,
+        "body_b_name": "TES",
+        "body_b_material": "TES",
+        "interface_boundary_ids": "2305;1104",
+        "physical_area_m2": 2.5e-07,
+        "master_boundary_area_m2": 4.900000000000001e-07,
+        "slave_boundary_area_m2": 2.5e-07,
+        "master_to_slave_area_ratio": 1.9600000000000004,
+        "shared_node_count": 49,
+        "conforming_face_count": 2,
+        "mortar_constraint_count": null,
+        "coupling_type": "mortar",
+        "master": "Membrane_SiNx_contact__zmax",
+        "slave": "TES__zmin",
+        "physical_role": "TES bottom mortar"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "TES -> Stycast",
+        "body_a_id": 101,
+        "body_a_name": "TES",
+        "body_a_material": "TES",
+        "body_b_id": 102,
+        "body_b_name": "Stycast",
+        "body_b_material": "Stycast",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 139,
+        "conforming_face_count": 241,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "unknown",
+        "slave": "unknown",
+        "physical_role": "TES top mortar"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Stycast -> abs",
+        "body_a_id": 102,
+        "body_a_name": "Stycast",
+        "body_a_material": "Stycast",
+        "body_b_id": 100,
+        "body_b_name": "abs",
+        "body_b_material": "Pb",
+        "interface_boundary_ids": "1205;1004",
+        "physical_area_m2": 1.9085031815670558e-07,
+        "master_boundary_area_m2": 1.9085031815670558e-07,
+        "slave_boundary_area_m2": 1e-06,
+        "master_to_slave_area_ratio": 0.19085031815670558,
+        "shared_node_count": 0,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": null,
+        "coupling_type": "mortar",
+        "master": "Stycast__zmax",
+        "slave": "abs__zmin",
+        "physical_role": "Pb bottom mortar"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Membrane_SiNx -> Si_1",
+        "body_a_id": 103,
+        "body_a_name": "Membrane_SiNx",
+        "body_a_material": "Membrane",
+        "body_b_id": 105,
+        "body_b_name": "Si_1",
+        "body_b_material": "Si",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 68,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Membrane_SiNx -> SiNx",
+        "body_a_id": 103,
+        "body_a_name": "Membrane_SiNx",
+        "body_a_material": "Membrane",
+        "body_b_id": 106,
+        "body_b_name": "SiNx",
+        "body_b_material": "SiNx",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 136,
+        "conforming_face_count": 136,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Membrane_SiNx -> Membrane_Si1",
+        "body_a_id": 103,
+        "body_a_name": "Membrane_SiNx",
+        "body_a_material": "Membrane",
+        "body_b_id": 109,
+        "body_b_name": "Membrane_Si1",
+        "body_b_material": "Membrane",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 380,
+        "conforming_face_count": 690,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "SiO2_1 -> Si_1",
+        "body_a_id": 104,
+        "body_a_name": "SiO2_1",
+        "body_a_material": "SiO2",
+        "body_b_id": 105,
+        "body_b_name": "Si_1",
+        "body_b_material": "Si",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 10395,
+        "conforming_face_count": 20322,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "SiO2_1 -> Si_2",
+        "body_a_id": 104,
+        "body_a_name": "SiO2_1",
+        "body_a_material": "SiO2",
+        "body_b_id": 107,
+        "body_b_name": "Si_2",
+        "body_b_material": "Si",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 10392,
+        "conforming_face_count": 20316,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "SiO2_1 -> Membrane_Si1",
+        "body_a_id": 104,
+        "body_a_name": "SiO2_1",
+        "body_a_material": "SiO2",
+        "body_b_id": 109,
+        "body_b_name": "Membrane_Si1",
+        "body_b_material": "Membrane",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 324,
+        "conforming_face_count": 582,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Si_1 -> SiNx",
+        "body_a_id": 105,
+        "body_a_name": "Si_1",
+        "body_a_material": "Si",
+        "body_b_id": 106,
+        "body_b_name": "SiNx",
+        "body_b_material": "SiNx",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 10430,
+        "conforming_face_count": 20388,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Si_1 -> Membrane_Si1",
+        "body_a_id": 105,
+        "body_a_name": "Si_1",
+        "body_a_material": "Si",
+        "body_b_id": 109,
+        "body_b_name": "Membrane_Si1",
+        "body_b_material": "Membrane",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 132,
+        "conforming_face_count": 132,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "SiNx -> Membrane_Si1",
+        "body_a_id": 106,
+        "body_a_name": "SiNx",
+        "body_a_material": "SiNx",
+        "body_b_id": 109,
+        "body_b_name": "Membrane_Si1",
+        "body_b_material": "Membrane",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 68,
+        "conforming_face_count": 0,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      },
+      {
+        "case": "phase24_tes_stycast_bypass",
+        "route": "Si_2 -> SiO2_2",
+        "body_a_id": 107,
+        "body_a_name": "Si_2",
+        "body_a_material": "Si",
+        "body_b_id": 108,
+        "body_b_name": "SiO2_2",
+        "body_b_material": "SiO2",
+        "interface_boundary_ids": "",
+        "physical_area_m2": 0.0,
+        "master_boundary_area_m2": 0.0,
+        "slave_boundary_area_m2": 0.0,
+        "master_to_slave_area_ratio": 0.0,
+        "shared_node_count": 10396,
+        "conforming_face_count": 20324,
+        "mortar_constraint_count": 0,
+        "coupling_type": "shared-node",
+        "master": "",
+        "slave": "",
+        "physical_role": "internal conforming body adjacency"
+      }
+    ],
+    "bath_audit": [
+      {
+        "boundary_id": 1804,
+        "boundary_name": "SiO2_2__zmin",
+        "facet_count": 20322,
+        "physical_area_m2": 1.751e-05,
+        "body_ids": {
+          "108": 20322
+        }
+      }
+    ]
+  }
+}
