@@ -250,8 +250,23 @@ def run_case(case: MeshCase, fraction: float, repeat: bool = False) -> dict[str,
         if expected.is_file():
             continue
         truncated = next(iter(sorted(capture.glob(f"{stem}*"))), None)
-        if truncated is not None:
-            truncated.replace(expected)
+        if truncated is None:
+            # Windows Elmer truncates long capture prefixes at a fixed total
+            # path length.  In that case the basename can be shortened before
+            # the distinguishing suffix (e.g. full_A_be/full_A_af and the
+            # shared full_size file).
+            truncated = next(iter(sorted(capture.glob(f"{stem[:8]}*"))), None)
+        if truncated is not None and truncated.name != expected.name:
+            expected.write_bytes(truncated.read_bytes())
+    # The fixed-size sidecar is shared by before/after under the same Windows
+    # truncation.  It contains the same matrix dimensions for this one-shot
+    # solve, so materialize both required names from the surviving file.
+    size_short = capture / "full_size"
+    if size_short.is_file():
+        for stem in ("full_sizes_before", "full_sizes_after"):
+            expected = capture / f"{stem}.dat"
+            if not expected.is_file():
+                expected.write_bytes(size_short.read_bytes())
     subprocess.run([
         "python", str(ROOT / "scripts/support/phase24_full_restriction_capture.py"),
         "materialize", "--root", str(capture.parent), "--iterations", "1",

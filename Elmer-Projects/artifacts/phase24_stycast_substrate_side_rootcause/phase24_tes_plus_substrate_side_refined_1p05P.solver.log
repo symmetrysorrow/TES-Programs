@@ -1,0 +1,155 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/09/23 18:34:58
+ParCommInit: Initialize #PEs: 1
+MAIN: OMP_NUM_THREADS not set. Using only 1 thread per task.
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: 9916c3f05, Compiled: 2026-09-15)
+MAIN:  Running one task without MPI parallelization.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  MUMPS library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: artifacts/phase24_stycast_substrate_side_rootcause/phase24_tes_plus_substrate_side_refined_1p05P.sif
+LoadInputFile: Scanning input file: artifacts/phase24_stycast_substrate_side_rootcause/phase24_tes_plus_substrate_side_refined_1p05P.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 5
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 5
+LoadInputFile: Loading input file: artifacts/phase24_stycast_substrate_side_rootcause/phase24_tes_plus_substrate_side_refined_1p05P.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Step Commit] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Freeze Power] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Prefix] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Timestep] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Full Restriction Capture Max Iterations] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [echo values] in section: [solver 2]
+CheckKeyword:  Unlisted keyword: [save flux range] in section: [solver 2]
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 5
+CheckKeyword:  Unlisted keyword: [echo values] in section: [solver 2]
+CheckKeyword:  Unlisted keyword: [save flux range] in section: [solver 2]
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 4
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 4
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: variable 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: operator 5
+CheckKeyword: Found keyword type assuming suffix 1 for: mask name 5
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+CheckKeyword:  Unlisted keyword: [Phase24 Native TES Body] in section: [body 2]
+CheckKeyword:  Unlisted keyword: [Phase24 Native TES Body] in section: [body 2]
+CheckKeyword:  Unlisted keyword: [Phase24 Native Bath Flux] in section: [boundary condition 1]
+CheckKeyword:  Unlisted keyword: [Phase24 Native Bath Flux] in section: [boundary condition 1]
+LoadInputFile: Number of BCs: 7
+LoadInputFile: Number of Body Forces: 1
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 2
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: work/meshes/mesh_phase24_stycast_density_10um_plus_substrate_10um
+LoadMesh: Elapsed REAL time:     5.8760 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 8718
+OptimizeBandwidth: Optimized bandwidth for heat equation: 1984
+MAIN: Number of timesteps to be saved: 1
+MAIN: 
+MAIN: -------------------------------------
+MAIN:  Steady state iteration:            1
+MAIN: -------------------------------------
+MAIN: 
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     0.0590 (s)
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000       -1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     0.7530 (s)
+ PlaneNormal: Selecting master normal
+ PlaneNormal selected:  -0.0000000000000000       -0.0000000000000000        1.0000000000000000     
+PeriodicProjector: Elapsed REAL time:     0.8700 (s)
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ........Assembly done
+SolveWithLinearRestriction: PHASE24_FULL_RESTRICTION_CAPTURE stage=before, timestep=1, nonlinear_iteration=1, time=  1.00000000E+00, dt=  1.00000000E+00, bdf_order=0, solver=direct, direct_method=mumps, total_rows=109104, primal_rows=104364, constraint_rows=4740, matrix_nnz=1521436, constraint_matrix_rows=4740, eliminate=0, penalty=0, restriction_active=1
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.14937668      2.0000000     ) :: heat equation
+SolveWithLinearRestriction: PHASE24_FULL_RESTRICTION_CAPTURE stage=after, timestep=1, nonlinear_iteration=1, time=  1.00000000E+00, dt=  1.00000000E+00, bdf_order=0, solver=direct, direct_method=mumps, total_rows=109104, primal_rows=104364, constraint_rows=4740, matrix_nnz=1521436, constraint_matrix_rows=4740, eliminate=0, penalty=0, restriction_active=1
+HeatSolve: iter:    1 Assembly: (s)    8.77    8.77
+HeatSolve: iter:    1 Solve:    (s)   38.71   38.71
+HeatSolve:  Result Norm   :   0.14937668433781054
+HeatSolve:  Relative Change :    2.0000000000000000
+ComputeChange: SS (ITER=1) (NRM,RELC): ( 0.15273121      2.0000000     ) :: heat equation
+SaveScalars: -----------------------------------------
+SaveScalars: Saving scalar values of various kinds
+SaveScalars: Saving names of values to file: work/meshes/../../artifacts/phase24_stycast_substrate_side_rootcause/native_scalars/phase24_tes_plus_substrate_side_refined_1p05P.dat.names
+SaveScalars: Saving values to file: work/meshes/../../artifacts/phase24_stycast_substrate_side_rootcause/native_scalars/phase24_tes_plus_substrate_side_refined_1p05P.dat
+WARNING:: SaveCurrent: > Output File < for restart should not include directory: ../work/meshes/mesh_phase24_stycast_density_10um_plus_substrate_10um/phase24_tes_plus_substrate_side_refined_1p05p.result
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_phase24_stycast_density_10um_plus_substrate_10um/../work/meshes/mesh_phase24_stycast_density_10um_plus_substrate_10um/phase24_tes_plus_substrate_side_refined_1p05p.result
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: *** Elmer Solver: ALL DONE ***
+MAIN: The end
+SOLVER TOTAL TIME(CPU,REAL):        59.42       59.42
+ELMER SOLVER FINISHED AT: 2026/09/23 18:35:58

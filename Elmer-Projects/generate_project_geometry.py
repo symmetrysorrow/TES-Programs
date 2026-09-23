@@ -385,6 +385,43 @@ class TesGmshBuilder(GmshApiBuilder):
                 _original_set_number("Mesh.CharacteristicLengthMin", min(
                     float(self.spec.mesh_min), h_stycast
                 ))
+
+        # Diagnostic-only hook: refine the opposite, Stycast/substrate
+        # contact side without changing the TES-side contact layer.  The
+        # layered Stycast construction names its last layer explicitly; keep
+        # this opt-in and independent from STYCAST_INTERFACE_REFINE_H so a
+        # one-sided controlled test can be reproduced from provenance.
+        h_substrate = os.environ.get("STYCAST_SUBSTRATE_INTERFACE_REFINE_H")
+        if h_substrate:
+            h_substrate = float(h_substrate)
+            if h_substrate <= 0.0:
+                raise ValueError(
+                    "STYCAST_SUBSTRATE_INTERFACE_REFINE_H must be positive"
+                )
+            selected = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")).startswith("Stycast")
+                and "__layer_" in str(getattr(box, "name", ""))
+                and str(getattr(box, "name", "")).endswith(
+                    f"__layer_{int(self._stycast_layer_count)}"
+                )
+            ]
+            # Include the CAD contact plane with a nanometre-scale numerical
+            # guard.  Without this, a z-bounded field ending exactly at the
+            # curved layer's zmax can leave only a partial physical surface
+            # after Gmsh/ElmerGrid conversion.
+            z_guard = 1.0e-9
+            for box in selected:
+                entries.append((
+                    float(box.xmin), float(box.xmax),
+                    float(box.ymin), float(box.ymax),
+                    float(box.zmin) - z_guard, float(box.zmax) + z_guard,
+                    h_substrate,
+                ))
+            if selected:
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_substrate
+                ))
         return entries
 
 
@@ -1132,6 +1169,10 @@ def build(write_mesh: bool = True) -> None:
     )
     if stycast_layers < 1:
         raise ValueError(f"stycast_layers must be >= 1, got {stycast_layers}")
+    # Expose the resolved layer count to the diagnostic refinement hook.  This
+    # avoids hard-coding the final-layer index while keeping the production
+    # path unchanged when the opt-in environment variable is absent.
+    resolved_stycast_layer_count = stycast_layers
     for suffix in sides:
         if suffix == "":
             stycast_boxes[suffix] = Box(
@@ -1423,6 +1464,7 @@ def build(write_mesh: bool = True) -> None:
         elmer_overrides.get("conformal_mortar_interfaces", False)
     )
     builder = TesGmshBuilder(spec=spec, verbose=False)
+    builder._stycast_layer_count = resolved_stycast_layer_count
     if fragment_mortar_interfaces and (len(sides) > 1 or conformal_mortar_interfaces):
         # Multi-side (dual_tes) contact refinement, all BEFORE meshing, with
         # each side's real Stycast position/radius. The single_pixel path

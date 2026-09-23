@@ -130,11 +130,16 @@ def analyze_case(
     capture: Path,
     matrix_name: str,
 ) -> tuple[dict, list[dict]]:
-    permutation, primal_rows = load_permutation(result)
+    permutation, result_dof_rows = load_permutation(result)
     inverse = {dof: node for node, dof in permutation.items() if dof > 0}
     runtime_primal, constraint_rows = read_runtime(capture)
-    if runtime_primal != primal_rows:
+    # Nonconforming meshes can retain result-file temperature slots for
+    # nodes that are not active rows in the captured assembled system.  The
+    # native capture's primal row count is authoritative; only reject a
+    # result table that cannot cover it.
+    if runtime_primal > result_dof_rows:
         raise RuntimeError("primal row metadata mismatch")
+    primal_rows = runtime_primal
 
     if label == "historical":
         interface_specs = {
