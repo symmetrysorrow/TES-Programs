@@ -29,8 +29,8 @@ CONFIGS = {
         "remaining": ["Membrane_SiNx -> TES", "TES -> Stycast"],
     },
     "tes_stycast": {
-        "out": ROOT / "artifacts/phase24_tes_stycast_connectivity_mortar_bypass_v3",
-        "mesh_name": "mesh_phase24_tes_stycast_conforming_bypass_v3",
+        "out": ROOT / "artifacts/phase24_tes_stycast_connectivity_mortar_bypass_v4",
+        "mesh_name": "mesh_phase24_tes_stycast_conforming_bypass_v4",
         "label": "TES -> Stycast",
         "remaining": ["Membrane_SiNx -> TES", "Stycast -> abs"],
     },
@@ -78,6 +78,8 @@ def main() -> int:
 
     env = os.environ.copy()
     env["STYCAST_INTERFACE_REFINE_H"] = "1.0e-5"
+    if args.interface == "tes_stycast":
+        env["TES_INTERFACE_REFINE_H"] = "1.0e-5"
     subprocess.run(
         [sys.executable, str(ROOT / "generate_project_geometry.py"), str(resolved_path)],
         cwd=ROOT,

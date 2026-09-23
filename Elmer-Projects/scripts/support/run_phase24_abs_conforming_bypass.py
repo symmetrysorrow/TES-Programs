@@ -29,8 +29,8 @@ CONFIGS = {
         "run_prefix": "abs_bypass",
     },
     "tes_stycast": {
-        "out": ROOT / "artifacts/phase24_tes_stycast_connectivity_mortar_bypass_v3",
-        "mesh_name": "mesh_phase24_tes_stycast_conforming_bypass_v3",
+        "out": ROOT / "artifacts/phase24_tes_stycast_connectivity_mortar_bypass_v4",
+        "mesh_name": "mesh_phase24_tes_stycast_conforming_bypass_v4",
         "boundary_ids": {"1105", "1204"},
         "remove_bc_numbers": (4, 5),
         "case_label": "phase24_tes_stycast_conforming_bypass",

@@ -1,0 +1,17 @@
+{
+  "mesh": "mesh_phase24_tes_stycast_conforming_bypass_v4",
+  "source_project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_stycast_interface_discretization_rootcause\\mesh_phase24_stycast_density_10um.project.json",
+  "source_mesh": "mesh_phase24_stycast_density_10um",
+  "interface_change": "TES -> Stycast only: mortar to periodic/shared-node continuity",
+  "remaining_mortar_interfaces": [
+    "Membrane_SiNx -> TES",
+    "Stycast -> abs"
+  ],
+  "fixed": [
+    "geometry, materials, TES law, circuit constants, bath, power points",
+    "mesh_min=45 um, mesh_max=90 um, Stycast layers=32",
+    "STYCAST_INTERFACE_REFINE_H=10 um"
+  ],
+  "production_mesh_overwritten": false,
+  "mesh_dir": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_tes_stycast_conforming_bypass_v4"
+}

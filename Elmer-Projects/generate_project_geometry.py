@@ -464,6 +464,33 @@ class TesGmshBuilder(GmshApiBuilder):
                     float(self.spec.mesh_min), h_stycast
                 ))
 
+        # Diagnostic-only refinement for the TES side of the TES/Stycast
+        # contact.  This is separate from TES_LOCAL_REFINE_H, which is a
+        # dual-TES whole-stack hook.  It allows a conforming TES/Stycast test
+        # to use the same ~10 um interface resolution as the refined mortar
+        # baseline instead of inheriting the coarse TES surface mesh.
+        h_tes_interface = os.environ.get("TES_INTERFACE_REFINE_H")
+        if h_tes_interface:
+            h_tes_interface = float(h_tes_interface)
+            if h_tes_interface <= 0.0:
+                raise ValueError("TES_INTERFACE_REFINE_H must be positive")
+            selected = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")).startswith("TES")
+                and "__layer_" not in str(getattr(box, "name", ""))
+            ]
+            for box in selected:
+                entries.append((
+                    float(box.xmin), float(box.xmax),
+                    float(box.ymin), float(box.ymax),
+                    float(box.zmin), float(box.zmax),
+                    h_tes_interface,
+                ))
+            if selected:
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_tes_interface
+                ))
+
         # Diagnostic-only hook: refine the opposite, Stycast/substrate
         # contact side without changing the TES-side contact layer.  The
         # layered Stycast construction names its last layer explicitly; keep
