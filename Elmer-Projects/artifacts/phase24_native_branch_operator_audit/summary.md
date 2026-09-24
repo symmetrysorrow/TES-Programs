@@ -153,6 +153,10 @@ The difference is therefore high-frequency and edge-localized. The constant-mode
 11. **Full nonlinear steady: NO-GO.** No diagnostic fix exists yet that satisfies |G/G_hist − 1| ≤ 0.03.
 12. **HYPRE/GPU: NO-GO.**
 
+## Root-cause confidence
+
+**Medium-high.** The accounting itself is exact. The dissipation split closes the gap to 99.95%, and the uniform-flux versus isothermal-edge split is an exact identity. The causal attribution to the z = 192 TES/Membrane trace rests on two pieces of evidence: the operator split, and the fact that z = 192 is the only plane in the TES-edge band still coarser than historical. It has not yet been confirmed by a one-factor remesh. The predicted ratio of 1.008–1.015 after the fix in `next_controlled_fix.md` is an estimate.
+
 ## Caveats
 
 * Branch shares depend on units. In conductance units, C 55% / A 28% / B 20%. In resistance units at fixed P, B 78% / C 36% / A −17%. Both splits are exact, but they answer different questions, because strongly coupled sheets are not independent parallel branches.
