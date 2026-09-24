@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Test whether the TES circuit inductance range used by the Elmer transient model can absorb the continuum residual that otherwise requires phenomenological c2. Scan fixed L from the historical noise-model scale through the Elmer-configured 12.3 nH value and beyond, comparing c2=0 and c2-free under the same relaxed thermal-backbone profile.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "L_grid_nH": [0.1, 0.3, 1.0, 3.0, 10.0, 12.3, 30.0, 100.0],
+  "numerical_fixed_L_relative_half_width": 1e-6,
+  "elmer_reference": {
+    "project": "../../Elmer-Projects/elmer_project.json",
+    "expected_parameter_expression": "12.3[nH]",
+    "semantics": "This is the circuit inductance configured as an input to the Elmer TES branch. It is not an inductance inferred independently by Elmer."
+  },
+  "materiality_screen": {
+    "max_c2_over_zero_shape_score_ratio": 0.80,
+    "min_joint_rms_improvement_dB": 0.05,
+    "target_good_fit_rms_dB": 0.65
+  },
+  "guardrail": "The fixed-L rows are sensitivity tests, not an inductance measurement or confidence interval. The Elmer 12.3 nH value is a configured circuit input, not an independent electromagnetic estimate. Each nominal fixed L is implemented as an extremely narrow +/-1e-6 relative profile solely to reuse the existing relaxed-thermal optimizer without changing its physics or parameter bookkeeping. A high-L row that improves the normalized noise fit does not by itself establish that the physical TES circuit has that inductance."
+}
