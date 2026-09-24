@@ -1,0 +1,228 @@
+{
+  "method": "Exact additive decomposition G_src = sum_body D_body/dT_src^2 with D_body = sum_e T_e^T K_e T_e (element matrices verified against the native K; D_body/dT^2 = dG/dln k_body, the first-order sensitivity of G to that body's discrete operator). System is linear (A identical at 0.95/1.00/1.05 P0), so differential = secant.",
+  "best_phase24_minus_historical": {
+    "G_reference": 1.8782944616314638e-08,
+    "G_case": 1.959750657703143e-08,
+    "ratio": 1.0433671065616237,
+    "gap_G_eff_W_per_K": 8.145619607167927e-10,
+    "gap_G_src_W_per_K": 8.148130016824466e-10,
+    "components": {
+      "Membrane_SiNx": {
+        "dG_W_per_K": 2.2612939348622372e-10,
+        "fraction_of_gap": 0.2775230550068617
+      },
+      "Membrane_Si1": {
+        "dG_W_per_K": 1.6300454203462144e-10,
+        "fraction_of_gap": 0.20005147401679343
+      },
+      "SiO2_1": {
+        "dG_W_per_K": 4.497860325463331e-10,
+        "fraction_of_gap": 0.5520113591923588
+      },
+      "SiO2_1_frame": {
+        "dG_W_per_K": -1.7437404502687622e-13,
+        "fraction_of_gap": -0.0002140049860112986
+      },
+      "TES": {
+        "dG_W_per_K": -2.4995114926886257e-11,
+        "fraction_of_gap": -0.030675891125050418
+      },
+      "Stycast": {
+        "dG_W_per_K": 6.936834015526758e-19,
+        "fraction_of_gap": 8.513406144972413e-10
+      },
+      "abs": {
+        "dG_W_per_K": 5.552556371169502e-20,
+        "fraction_of_gap": 6.814516164696002e-11
+      },
+      "SiNx": {
+        "dG_W_per_K": 2.9253041043184753e-13,
+        "fraction_of_gap": 0.00035901539350479593
+      },
+      "Si_1": {
+        "dG_W_per_K": 6.576134255936528e-16,
+        "fraction_of_gap": 8.070728182242991e-07
+      },
+      "Si_2": {
+        "dG_W_per_K": 9.161843114917254e-14,
+        "fraction_of_gap": 0.00011244105206961165
+      },
+      "SiO2_2": {
+        "dG_W_per_K": 1.3952888854525198e-14,
+        "fraction_of_gap": 1.7124038062371266e-05
+      }
+    },
+    "categories_W_per_K": {
+      "TES_to_Membrane_operator (TES body + coupling)": -2.4995114177677292e-11,
+      "branch_A_Membrane_SiNx_sheet": 2.2612939348622372e-10,
+      "branch_B_Membrane_Si1_sheet": 1.6300454203462144e-10,
+      "branch_C_SiO2_1_window_sheet": 4.497860325463331e-10,
+      "merge_frame_to_bath_network": 2.243852988342627e-13
+    },
+    "categories_fraction_of_gap_eff": {
+      "TES_to_Membrane_operator (TES body + coupling)": -0.030685344250156562,
+      "branch_A_Membrane_SiNx_sheet": 0.2776085852170606,
+      "branch_B_Membrane_Si1_sheet": 0.20011312815440316,
+      "branch_C_SiO2_1_window_sheet": 0.552181484328747,
+      "merge_frame_to_bath_network": 0.000275467440975036
+    },
+    "explained_gap_W_per_K": 8.141492391883352e-10,
+    "explained_fraction": 0.9994933208910292,
+    "unexplained_W_per_K": 4.127215284575325e-13,
+    "unexplained_fraction": 0.0005066791089708494,
+    "unexplained_breakdown": {
+      "G_eff(TES element-node mean) vs G_src(source-weighted) definition": -2.5104096565390907e-13,
+      "dissipation closure (MUMPS balance precision)": 6.637624941121654e-13
+    }
+  },
+  "refined_parent_minus_best_phase24_controlled_improvement": {
+    "G_reference": 1.959750657703143e-08,
+    "G_case": 2.0299398582083175e-08,
+    "ratio": 1.0358153728533186,
+    "gap_G_eff_W_per_K": 7.018920050517448e-10,
+    "gap_G_src_W_per_K": 7.01213953437629e-10,
+    "components": {
+      "Membrane_SiNx": {
+        "dG_W_per_K": -1.1620077650660662e-10,
+        "fraction_of_gap": -0.1657137253714709
+      },
+      "Membrane_Si1": {
+        "dG_W_per_K": 6.557723745834244e-10,
+        "fraction_of_gap": 0.9351958433921175
+      },
+      "SiO2_1": {
+        "dG_W_per_K": 1.6215539231634904e-10,
+        "fraction_of_gap": 0.23124952308977734
+      },
+      "SiO2_1_frame": {
+        "dG_W_per_K": 4.136960080807344e-14,
+        "fraction_of_gap": 5.8997115795062616e-05
+      },
+      "TES": {
+        "dG_W_per_K": 2.2264415810404065e-13,
+        "fraction_of_gap": 0.0003175124468253244
+      },
+      "Stycast": {
+        "dG_W_per_K": 3.3283073020800802e-18,
+        "fraction_of_gap": 4.74649325753345e-09
+      },
+      "abs": {
+        "dG_W_per_K": 1.6044771236661683e-21,
+        "fraction_of_gap": 2.288142036821123e-12
+      },
+      "SiNx": {
+        "dG_W_per_K": -1.8063563973067358e-13,
+        "fraction_of_gap": -0.00025760417180109726
+      },
+      "Si_1": {
+        "dG_W_per_K": 6.573114723808818e-14,
+        "fraction_of_gap": 9.373907480854883e-05
+      },
+      "Si_2": {
+        "dG_W_per_K": 3.5157250161192734e-14,
+        "fraction_of_gap": 5.0137693337159005e-05
+      },
+      "SiO2_2": {
+        "dG_W_per_K": 1.1580311624593547e-14,
+        "fraction_of_gap": 1.6514662276502436e-05
+      }
+    },
+    "categories_W_per_K": {
+      "TES_to_Membrane_operator (TES body + coupling)": 2.2264748801581984e-13,
+      "branch_A_Membrane_SiNx_sheet": -1.1620077650660662e-10,
+      "branch_B_Membrane_Si1_sheet": 6.557723745834244e-10,
+      "branch_C_SiO2_1_window_sheet": 1.6215539231634904e-10,
+      "merge_frame_to_bath_network": -2.679732989872567e-14
+    },
+    "categories_fraction_of_gap_eff": {
+      "TES_to_Membrane_operator (TES body + coupling)": 0.0003172104631672017,
+      "branch_A_Membrane_SiNx_sheet": -0.1655536402612822,
+      "branch_B_Membrane_Si1_sheet": 0.9342924123136004,
+      "branch_C_SiO2_1_window_sheet": 0.23102612816396825,
+      "merge_frame_to_bath_network": -3.8178707986209534e-05
+    },
+    "explained_gap_W_per_K": 7.01922840551284e-10,
+    "explained_fraction": 1.0000439319714676,
+    "unexplained_W_per_K": -3.083549953917611e-14,
+    "unexplained_fraction": -4.393197146746651e-05,
+    "unexplained_breakdown": {
+      "G_eff(TES element-node mean) vs G_src(source-weighted) definition": 6.780516141158283e-13,
+      "dissipation closure (MUMPS balance precision)": -7.088871136536602e-13
+    }
+  },
+  "refined_parent_minus_historical": {
+    "G_reference": 1.8782944616314638e-08,
+    "G_case": 2.0299398582083175e-08,
+    "ratio": 1.0807356885060164,
+    "gap_G_eff_W_per_K": 1.5164539657685375e-09,
+    "gap_G_src_W_per_K": 1.5160269551200756e-09,
+    "components": {
+      "Membrane_SiNx": {
+        "dG_W_per_K": 1.099286169796171e-10,
+        "fraction_of_gap": 0.0725109910535267
+      },
+      "Membrane_Si1": {
+        "dG_W_per_K": 8.187769166180459e-10,
+        "fraction_of_gap": 0.5400807115287706
+      },
+      "SiO2_1": {
+        "dG_W_per_K": 6.119414248626821e-10,
+        "fraction_of_gap": 0.40364811641110554
+      },
+      "SiO2_1_frame": {
+        "dG_W_per_K": -1.3300444421880277e-13,
+        "fraction_of_gap": -8.773224233883644e-05
+      },
+      "TES": {
+        "dG_W_per_K": -2.4772470768782217e-11,
+        "fraction_of_gap": -0.016340389387614902
+      },
+      "Stycast": {
+        "dG_W_per_K": 4.021990703632756e-18,
+        "fraction_of_gap": 2.65298099750093e-09
+      },
+      "abs": {
+        "dG_W_per_K": 5.713004083536119e-20,
+        "fraction_of_gap": 3.768405346779355e-11
+      },
+      "SiNx": {
+        "dG_W_per_K": 1.1189477070117397e-13,
+        "fraction_of_gap": 7.380790316641266e-05
+      },
+      "Si_1": {
+        "dG_W_per_K": 6.638876066368184e-14,
+        "fraction_of_gap": 4.379127985783312e-05
+      },
+      "Si_2": {
+        "dG_W_per_K": 1.2677568131036527e-13,
+        "fraction_of_gap": 8.362363273436923e-05
+      },
+      "SiO2_2": {
+        "dG_W_per_K": 2.5533200479118745e-14,
+        "fraction_of_gap": 1.6842181066032833e-05
+      }
+    },
+    "categories_W_per_K": {
+      "TES_to_Membrane_operator (TES body + coupling)": -2.4772466689661475e-11,
+      "branch_A_Membrane_SiNx_sheet": 1.099286169796171e-10,
+      "branch_B_Membrane_Si1_sheet": 8.187769166180459e-10,
+      "branch_C_SiO2_1_window_sheet": 6.119414248626821e-10,
+      "merge_frame_to_bath_network": 1.9758796893553706e-13
+    },
+    "categories_fraction_of_gap_eff": {
+      "TES_to_Membrane_operator (TES body + coupling)": -0.016335785489608852,
+      "branch_A_Membrane_SiNx_sheet": 0.07249057304809473,
+      "branch_B_Membrane_Si1_sheet": 0.5399286329163909,
+      "branch_C_SiO2_1_window_sheet": 0.4035344551672894,
+      "merge_frame_to_bath_network": 0.00013029605474070534
+    },
+    "explained_gap_W_per_K": 1.5160720797396191e-09,
+    "explained_fraction": 0.9997481716969069,
+    "unexplained_W_per_K": 3.818860289183564e-13,
+    "unexplained_fraction": 0.000251828303093142,
+    "unexplained_breakdown": {
+      "G_eff(TES element-node mean) vs G_src(source-weighted) definition": 4.2701064846191923e-13,
+      "dissipation closure (MUMPS balance precision)": -4.512461954149487e-14
+    }
+  }
+}

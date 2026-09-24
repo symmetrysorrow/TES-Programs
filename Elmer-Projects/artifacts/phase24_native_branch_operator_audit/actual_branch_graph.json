@@ -1,0 +1,489 @@
+{
+  "cases": {
+    "historical": {
+      "label": "Historical reference",
+      "mesh": "work/meshes/mesh_singlepixel_prod_v2",
+      "body_adjacency": [
+        {
+          "bodies": [
+            "SiO2_2",
+            "Si_2"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 2416,
+          "shared_faces": 4624
+        },
+        {
+          "bodies": [
+            "Si_2",
+            "SiO2_1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 2416,
+          "shared_faces": 4624
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Si_1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 2416,
+          "shared_faces": 4624
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 3366,
+          "shared_faces": 6702
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 84,
+          "shared_faces": 56
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 2416,
+          "shared_faces": 4624
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "Membrane_SiNx"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 28,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Membrane_Si1",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 28,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Membrane_Si1",
+            "Membrane_SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 3366,
+          "shared_faces": 6702
+        },
+        {
+          "bodies": [
+            "SiNx",
+            "Membrane_SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 56,
+          "shared_faces": 28
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "abs"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 1671
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "TES"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 1671
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "TES"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 2218
+        }
+      ],
+      "bath": {
+        "dirichlet_rows": 2416,
+        "T_K": 0.15,
+        "location": "SiO2_2 bottom z=-177um"
+      },
+      "evidence": {
+        "Q_TES_to_Membrane_over_P": 1.0000010701706559,
+        "Q_Stycast_abs_dead_end_W": 8.200446212459819e-18,
+        "frame_top_SiNx_T_K": 0.1500001197415072,
+        "window_perimeter_sidewall_T_K": [
+          0.15000218296694887,
+          0.15000186721499376
+        ],
+        "TES_T_K": 0.16705275088046675,
+        "window_perimeter_to_bath_conductance_W_per_K": 0.0007484986575079081
+      }
+    },
+    "best_phase24": {
+      "label": "Best Phase24 (Membrane/substrate h=10um control)",
+      "mesh": "work/meshes/mesh_phase24_trace_membrane_substrate_historical",
+      "body_adjacency": [
+        {
+          "bodies": [
+            "TES",
+            "Membrane_SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 161,
+          "shared_faces": 252
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "Si_1"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 68,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 136,
+          "shared_faces": 136
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 3473,
+          "shared_faces": 6876
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Si_1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10395,
+          "shared_faces": 20322
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Si_2"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10394,
+          "shared_faces": 20320
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 3172,
+          "shared_faces": 6278
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10428,
+          "shared_faces": 20384
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 132,
+          "shared_faces": 132
+        },
+        {
+          "bodies": [
+            "SiNx",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 68,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Si_2",
+            "SiO2_2"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10396,
+          "shared_faces": 20324
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "abs"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 45
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "TES"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 2370
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "TES"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 18
+        }
+      ],
+      "bath": {
+        "dirichlet_rows": 10395,
+        "T_K": 0.15,
+        "location": "SiO2_2 bottom z=-177um"
+      },
+      "evidence": {
+        "Q_TES_to_Membrane_over_P": 0.9999668874954164,
+        "Q_Stycast_abs_dead_end_W": -1.0090967605235184e-18,
+        "frame_top_SiNx_T_K": 0.15000012166702362,
+        "window_perimeter_sidewall_T_K": [
+          0.15000342405707523,
+          0.15000179434016125
+        ],
+        "TES_T_K": 0.16634345219181979,
+        "window_perimeter_to_bath_conductance_W_per_K": 0.0007677727805406508
+      }
+    },
+    "refined_parent": {
+      "label": "Refined mortar parent (Stycast 10um)",
+      "mesh": "work/meshes/mesh_phase24_stycast_density_10um",
+      "body_adjacency": [
+        {
+          "bodies": [
+            "TES",
+            "Membrane_SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 179,
+          "shared_faces": 308
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "Si_1"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 68,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 136,
+          "shared_faces": 136
+        },
+        {
+          "bodies": [
+            "Membrane_SiNx",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 380,
+          "shared_faces": 690
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Si_1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10395,
+          "shared_faces": 20322
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Si_2"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10392,
+          "shared_faces": 20316
+        },
+        {
+          "bodies": [
+            "SiO2_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 324,
+          "shared_faces": 582
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "SiNx"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10429,
+          "shared_faces": 20386
+        },
+        {
+          "bodies": [
+            "Si_1",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 132,
+          "shared_faces": 132
+        },
+        {
+          "bodies": [
+            "SiNx",
+            "Membrane_Si1"
+          ],
+          "coupling_type": "conformal shared-node line only (rim)",
+          "shared_nodes": 68,
+          "shared_faces": 0
+        },
+        {
+          "bodies": [
+            "Si_2",
+            "SiO2_2"
+          ],
+          "coupling_type": "conformal shared-face",
+          "shared_nodes": 10396,
+          "shared_faces": 20324
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "abs"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 45
+        },
+        {
+          "bodies": [
+            "Stycast",
+            "TES"
+          ],
+          "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+          "constraint_rows": 2369
+        }
+      ],
+      "bath": {
+        "dirichlet_rows": 10395,
+        "T_K": 0.15,
+        "location": "SiO2_2 bottom z=-177um"
+      },
+      "evidence": {
+        "Q_TES_to_Membrane_over_P": 1.000002967637981,
+        "Q_Stycast_abs_dead_end_W": 5.287254548101262e-19,
+        "frame_top_SiNx_T_K": 0.15000011757128215,
+        "window_perimeter_sidewall_T_K": [
+          0.15000240859387268,
+          0.15000180632924293
+        ],
+        "TES_T_K": 0.1657788584203432,
+        "window_perimeter_to_bath_conductance_W_per_K": 0.0007675829527358896
+      }
+    }
+  },
+  "thermal_graph": {
+    "nodes": [
+      "TES (source, k=68, isothermal within 6uK)",
+      "Stycast+abs (dead end, net Q=0)",
+      "Membrane-side TES trace (z=192um, TES footprint)",
+      "branch A: Membrane_SiNx window sheet",
+      "branch B: Membrane_Si1 window sheet",
+      "branch C: SiO2_1 window sheet (back-etched, bottom free)",
+      "frame (SiNx, Si_1, SiO2_1 frame, Si_2 frame) ~ bath",
+      "SiO2_2",
+      "bath 0.15 K (SiO2_2 zmin)"
+    ],
+    "edges": [
+      [
+        "TES",
+        "Stycast+abs",
+        "mortar (dead end)"
+      ],
+      [
+        "TES",
+        "Membrane-side trace",
+        "historical: mortar (2218 rows); Phase24: conformal (+18 hanging mortar rows in best)"
+      ],
+      [
+        "Membrane-side trace",
+        "branch A",
+        "conformal"
+      ],
+      [
+        "branch A",
+        "branch B",
+        "conformal face z=191 (vertical exchange, ~97-99% of P)"
+      ],
+      [
+        "branch B",
+        "branch C",
+        "conformal face z=176 (vertical exchange, ~52-53% of P)"
+      ],
+      [
+        "branch A",
+        "frame",
+        "sidewall z191-192 at s=350um"
+      ],
+      [
+        "branch B",
+        "frame",
+        "sidewall z176-191 at s=350um"
+      ],
+      [
+        "branch C",
+        "frame",
+        "continuous SiO2_1 across s=350um"
+      ],
+      [
+        "frame",
+        "SiO2_2",
+        "series, conductance ~7.5e-4 W/K (negligible resistance)"
+      ],
+      [
+        "SiO2_2",
+        "bath",
+        "Dirichlet"
+      ]
+    ],
+    "parallel_structure": "A, B, C are parallel lateral sheets between the TES footprint and the window perimeter, strongly coupled vertically (not independent).",
+    "correction_to_previous_labels": "The previous 'Si1/SiNx' and 'Si2/SiO2_2' parallel branches do not exist in the actual adjacency: Si_2/SiO2_2 carry heat only in the frame, in series, below the window perimeter; the window region of Si_2 is etched (SiO2_1 window nodes are not shared with Si_2)."
+  }
+}

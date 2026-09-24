@@ -1,0 +1,425 @@
+{
+  "historical": {
+    "Lambda_membrane_trace_to_bath(network DtN)": {
+      "operator": "Lambda_membrane_trace_to_bath",
+      "trace_dof_count": 2313,
+      "interior_dof_count": 37043,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.5024290831003233e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 1.97567740182118e-08,
+        "energy_W_per_K": 1.9756774018211798e-08,
+        "normalized_response_W_per_K_m2": 0.07895038525421319
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": 2.060039641154858e-10,
+        "energy_W_per_K": 1.728682017887169e-08,
+        "normalized_response_W_per_K_m2": 0.20706178479370704
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -7.099996357370137e-11,
+        "energy_W_per_K": 1.726206177573274e-08,
+        "normalized_response_W_per_K_m2": 0.2060774304683981
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 2.651443600456116e-08,
+        "energy_W_per_K": 4.782969016439596e-08,
+        "normalized_response_W_per_K_m2": 0.30516361386703394
+      },
+      "row_sum_total_W_per_K": 1.9756774018212856e-08,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        2.8365627594027703e-06,
+        3.8512928874326285e-05,
+        0.006938332835126989,
+        0.2074587631601948,
+        2.263440156823533
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        2.5747274898172035,
+        2.8966368668359914,
+        3.551581788604711,
+        4.799694612265112,
+        15.519390106895731
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 79,
+        "row_sum_total": 5.216174672967789e-09
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          0.04030881521846652,
+          0.10619393320354653,
+          0.10630334578047862,
+          0.17636596613537045,
+          0.22061178045596083,
+          0.22185349818342404
+        ],
+        "median": 3.6964177598646653,
+        "largest_3": [
+          40831408.087243244,
+          41029177.213076666,
+          41347242.026230216
+        ]
+      },
+      "effective_total_conductance_W_per_K": 1.9756774018212856e-08,
+      "actual_trace_reproduction_Q_over_P": 1.000001105360363
+    },
+    "sheet_operators(parallel branches)": {
+      "Membrane_SiNx": {
+        "G_sheet_W_per_K": 6.000129298144958e-10,
+        "k_times_t_W_per_K": 2.8259304166591952e-11,
+        "shape_factor_mesh": 21.232402831907972,
+        "NtD_uniform_footprint_G_W_per_K": 3.335459628579678e-10,
+        "NtD_shape_factor_mesh": 11.80304939186311,
+        "hot_dofs": 4264,
+        "cold_dofs": 56,
+        "free_dofs": 2412,
+        "hot_nodes_exactly_on_s250": 28,
+        "cold_nodes_exactly_on_s350": 56,
+        "first_free_node_s_um": 250.509760942,
+        "annulus_elements": 2456,
+        "annulus_mean_edge_um": 11.525663061069196,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.002810959207672825,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.045212671644845326
+      },
+      "Membrane_Si1": {
+        "G_sheet_W_per_K": 9.000193947217056e-09,
+        "k_times_t_W_per_K": 4.238895624988793e-10,
+        "shape_factor_mesh": 21.232402831907073,
+        "NtD_uniform_footprint_G_W_per_K": 5.003189442869905e-09,
+        "NtD_shape_factor_mesh": 11.803049391864027,
+        "hot_dofs": 6396,
+        "cold_dofs": 84,
+        "free_dofs": 3618,
+        "hot_nodes_exactly_on_s250": 42,
+        "cold_nodes_exactly_on_s350": 84,
+        "first_free_node_s_um": 250.509760942,
+        "annulus_elements": 4912,
+        "annulus_mean_edge_um": 13.64456592719674,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.002810959207750763,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.04521267164488574
+      },
+      "SiO2_1": {
+        "G_sheet_W_per_K": 1.0488806998962893e-08,
+        "k_times_t_W_per_K": 4.94e-10,
+        "shape_factor_mesh": 21.232402831908693,
+        "NtD_uniform_footprint_G_W_per_K": 5.830706399585823e-09,
+        "NtD_shape_factor_mesh": 11.803049391874138,
+        "hot_dofs": 6396,
+        "cold_dofs": 84,
+        "free_dofs": 3618,
+        "hot_nodes_exactly_on_s250": 42,
+        "cold_nodes_exactly_on_s350": 84,
+        "first_free_node_s_um": 250.509760942,
+        "annulus_elements": 4912,
+        "annulus_mean_edge_um": 11.413465557869346,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.0028109592086096313,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.04521267164481291
+      }
+    },
+    "Lambda_window_perimeter_to_bath": {
+      "trace_dof_count": 252,
+      "constant_mode_total_reaction_W_per_K": 0.0007484986575079081
+    }
+  },
+  "best_phase24": {
+    "Lambda_membrane_trace_to_bath(network DtN)": {
+      "operator": "Lambda_membrane_trace_to_bath",
+      "trace_dof_count": 180,
+      "interior_dof_count": 90218,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.4999999999999994e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 1.959877414824149e-08,
+        "energy_W_per_K": 1.959877414824149e-08,
+        "normalized_response_W_per_K_m2": 0.07839509659296594
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": 4.4380446783433684e-11,
+        "energy_W_per_K": 1.726117446898771e-08,
+        "normalized_response_W_per_K_m2": 0.20475733947606173
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -1.4639088195538315e-11,
+        "energy_W_per_K": 1.7281049108227636e-08,
+        "normalized_response_W_per_K_m2": 0.20501480730145508
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 2.6363163357261978e-08,
+        "energy_W_per_K": 4.806603090471004e-08,
+        "normalized_response_W_per_K_m2": 0.29945030946691287
+      },
+      "row_sum_total_W_per_K": 1.959877414824204e-08,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        5.496946996436695e-06,
+        0.00010315847579606028,
+        0.0319862140582937,
+        0.4137274793989714,
+        1.740665280040608
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        0.7694455585280956,
+        0.8504142212599747,
+        0.9434101229369436,
+        2.9001205050076218,
+        4.928451449548085
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 0,
+        "row_sum_total": 0.0
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          0.04039264236256265,
+          0.10581190677072969,
+          0.10588440418439826,
+          0.1757381511192755,
+          0.21441628731497786,
+          0.21713751583726473
+        ],
+        "median": 1.0301662614287515,
+        "largest_3": [
+          5.50234236928512,
+          5.964422851463067,
+          9.808940352315417
+        ]
+      },
+      "effective_total_conductance_W_per_K": 1.959877414824204e-08,
+      "actual_trace_reproduction_Q_over_P": 0.9999668874080077
+    },
+    "sheet_operators(parallel branches)": {
+      "Membrane_SiNx": {
+        "G_sheet_W_per_K": 8.086396645271603e-10,
+        "k_times_t_W_per_K": 2.8259304166591952e-11,
+        "shape_factor_mesh": 28.614988527676882,
+        "NtD_uniform_footprint_G_W_per_K": 3.830206366149587e-10,
+        "NtD_shape_factor_mesh": 13.553788669282392,
+        "hot_dofs": 3344,
+        "cold_dofs": 136,
+        "free_dofs": 779,
+        "hot_nodes_exactly_on_s250": 248,
+        "cold_nodes_exactly_on_s350": 136,
+        "first_free_node_s_um": 253.26056121000008,
+        "annulus_elements": 3416,
+        "annulus_mean_edge_um": 20.25226068224147,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.15155731074981826,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": 0.2867704453212321
+      },
+      "Membrane_Si1": {
+        "G_sheet_W_per_K": 9.386655965972595e-09,
+        "k_times_t_W_per_K": 4.238895624988793e-10,
+        "shape_factor_mesh": 22.14410732511823,
+        "NtD_uniform_footprint_G_W_per_K": 5.004497992070631e-09,
+        "NtD_shape_factor_mesh": 11.806136396868375,
+        "hot_dofs": 8927,
+        "cold_dofs": 132,
+        "free_dofs": 689,
+        "hot_nodes_exactly_on_s250": 218,
+        "cold_nodes_exactly_on_s350": 132,
+        "first_free_node_s_um": 250.589998633,
+        "annulus_elements": 2815,
+        "annulus_mean_edge_um": 24.145353504869206,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.0030732373993189732,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.004214773092663937
+      },
+      "SiO2_1": {
+        "G_sheet_W_per_K": 1.04711834838645e-08,
+        "k_times_t_W_per_K": 4.94e-10,
+        "shape_factor_mesh": 21.196727700130566,
+        "NtD_uniform_footprint_G_W_per_K": 5.832034274531341e-09,
+        "NtD_shape_factor_mesh": 11.805737397836724,
+        "hot_dofs": 5794,
+        "cold_dofs": 128,
+        "free_dofs": 422,
+        "hot_nodes_exactly_on_s250": 36,
+        "cold_nodes_exactly_on_s350": 128,
+        "first_free_node_s_um": 250.589998633,
+        "annulus_elements": 1585,
+        "annulus_mean_edge_um": 25.68826564557582,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.0030393376342354728,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.04681692548404248
+      }
+    },
+    "Lambda_window_perimeter_to_bath": {
+      "trace_dof_count": 613,
+      "constant_mode_total_reaction_W_per_K": 0.0007677727805406508
+    }
+  },
+  "refined_parent": {
+    "Lambda_membrane_trace_to_bath(network DtN)": {
+      "operator": "Lambda_membrane_trace_to_bath",
+      "trace_dof_count": 179,
+      "interior_dof_count": 78373,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.5000000000000004e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 2.0300774556645527e-08,
+        "energy_W_per_K": 2.0300774556645527e-08,
+        "normalized_response_W_per_K_m2": 0.08120309822658212
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": 1.2032510465978097e-10,
+        "energy_W_per_K": 1.7885330780163412e-08,
+        "normalized_response_W_per_K_m2": 0.21214102180994576
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -3.2401661791292087e-10,
+        "energy_W_per_K": 1.8311212133993005e-08,
+        "normalized_response_W_per_K_m2": 0.21723171545970704
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 2.7788389750626038e-08,
+        "energy_W_per_K": 5.109663971161362e-08,
+        "normalized_response_W_per_K_m2": 0.3181972342089802
+      },
+      "row_sum_total_W_per_K": 2.0300774556643654e-08,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        -0.01422164414760436,
+        3.4339193413421768e-06,
+        0.021331499839550242,
+        0.4803556818985404,
+        1.8735318458498749
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        1.027806670042837,
+        1.133082836675297,
+        1.6770310822422587,
+        5.4410830700220965,
+        6.533995125469079
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 0,
+        "row_sum_total": 0.0
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          0.04055426880328535,
+          0.10757361076965512,
+          0.10773161721129242,
+          0.18168890655623812,
+          0.22199712758246967,
+          0.22687189195965374
+        ],
+        "median": 1.531361620520773,
+        "largest_3": [
+          10.398313169566087,
+          10.4605029358251,
+          10.526039221995799
+        ]
+      },
+      "effective_total_conductance_W_per_K": 2.0300774556643654e-08,
+      "actual_trace_reproduction_Q_over_P": 1.0000029676447741
+    },
+    "sheet_operators(parallel branches)": {
+      "Membrane_SiNx": {
+        "G_sheet_W_per_K": 7.254710111246235e-10,
+        "k_times_t_W_per_K": 2.8259304166591952e-11,
+        "shape_factor_mesh": 25.671934696193713,
+        "NtD_uniform_footprint_G_W_per_K": 3.595535093052086e-10,
+        "NtD_shape_factor_mesh": 12.723367397356919,
+        "hot_dofs": 431,
+        "cold_dofs": 136,
+        "free_dofs": 469,
+        "hot_nodes_exactly_on_s250": 96,
+        "cold_nodes_exactly_on_s350": 136,
+        "first_free_node_s_um": 261.7623469199999,
+        "annulus_elements": 2211,
+        "annulus_mean_edge_um": 26.64428431063789,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.08100303917148088,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": 0.15442600332786638
+      },
+      "Membrane_Si1": {
+        "G_sheet_W_per_K": 9.765729497845907e-09,
+        "k_times_t_W_per_K": 4.238895624988793e-10,
+        "shape_factor_mesh": 23.038381601744973,
+        "NtD_uniform_footprint_G_W_per_K": 5.038878895201744e-09,
+        "NtD_shape_factor_mesh": 11.887244558457525,
+        "hot_dofs": 327,
+        "cold_dofs": 132,
+        "free_dofs": 332,
+        "hot_nodes_exactly_on_s250": 48,
+        "cold_nodes_exactly_on_s350": 132,
+        "first_free_node_s_um": 250.74806269300007,
+        "annulus_elements": 1493,
+        "annulus_mean_edge_um": 32.53564432575349,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.009964350926206178,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": 0.0359993163891934
+      },
+      "SiO2_1": {
+        "G_sheet_W_per_K": 1.0004388519506068e-08,
+        "k_times_t_W_per_K": 4.94e-10,
+        "shape_factor_mesh": 20.25179862248192,
+        "NtD_uniform_footprint_G_W_per_K": 5.876903857100603e-09,
+        "NtD_shape_factor_mesh": 11.8965665123494,
+        "hot_dofs": 294,
+        "cold_dofs": 128,
+        "free_dofs": 226,
+        "hot_nodes_exactly_on_s250": 0,
+        "cold_nodes_exactly_on_s350": 128,
+        "first_free_node_s_um": 250.68534648399998,
+        "annulus_elements": 900,
+        "annulus_mean_edge_um": 36.3206657454345,
+        "NtD_shape_factor_reference_2D": 11.76996450177287,
+        "NtD_relative_error": 0.0107563629913634,
+        "Dirichlet_shape_factor_reference_2D": 22.237834752672903,
+        "Dirichlet_relative_error": -0.08930888066574327
+      }
+    },
+    "Lambda_window_perimeter_to_bath": {
+      "trace_dof_count": 616,
+      "constant_mode_total_reaction_W_per_K": 0.0007675829527358896
+    }
+  },
+  "comparison_best_over_historical": {
+    "constant": {
+      "Lambda_membrane_energy_ratio_best_over_hist": 0.9920027495468307,
+      "Lambda_membrane_normalized_ratio_best_over_hist": 0.9929666123925897
+    },
+    "linear_x": {
+      "Lambda_membrane_energy_ratio_best_over_hist": 0.998516458803955,
+      "Lambda_membrane_normalized_ratio_best_over_hist": 0.9888707357567635
+    },
+    "linear_y": {
+      "Lambda_membrane_energy_ratio_best_over_hist": 1.0010999458084195,
+      "Lambda_membrane_normalized_ratio_best_over_hist": 0.9948435732892837
+    },
+    "radial_quadratic": {
+      "Lambda_membrane_energy_ratio_best_over_hist": 1.0049412977483598,
+      "Lambda_membrane_normalized_ratio_best_over_hist": 0.981277897689957
+    }
+  },
+  "reference_2D_annulus": {
+    "dirichlet": {
+      "h4um": 22.253672768628093,
+      "h2um": 22.242305003109152,
+      "h1um": 22.237834752672903
+    },
+    "ntd_uniform_footprint": {
+      "h4um": 11.770956880547946,
+      "h2um": 11.770162976682682,
+      "h1um": 11.76996450177287
+    }
+  }
+}

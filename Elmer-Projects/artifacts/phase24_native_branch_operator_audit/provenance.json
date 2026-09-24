@@ -1,0 +1,225 @@
+{
+  "audit_parent_commit": "a301347887e344f10694d2211617be11ed1da705",
+  "cases": {
+    "historical": {
+      "case": "historical",
+      "mesh": "work/meshes/mesh_singlepixel_prod_v2",
+      "mesh_hash_sha256": "283cfe1faf9d3b3f68035f17658d7976b99973d222156fb1a64bfda623a771d5:bd4f93c6f61470848e750bf6d8ba930fe6d1e4b2f2f4476747c8039ccfd9c87c:806c56b0ec4f31e85ac815786f45bc6db55896ae3ddc4568b81d0a06c8cf27c7",
+      "audit_commit_parent_sha": "a301347887e344f10694d2211617be11ed1da705",
+      "heatsolve_binary": "tools/elmer-hypre/install-steady-full-capture/bin/ElmerSolver.exe (CPU MUMPS; capture hook opt-in, default OFF)",
+      "points": {
+        "0p95P": {
+          "P_W": 3.042854524009381e-10,
+          "capture": "artifacts/phase24_thermal_network_localization/capture/historical_0p95P/ts0001_nl0001",
+          "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "rhs_sha256": "6e5f6946ab5531ff0fffc31c0ce6cabbaf46b6f7e69630f99d89d4315f0965d1",
+          "solution_sha256": "bf00bd32748cf4f165f18283c5d4c88556b76c0420c5f65b347335cbf65710b5",
+          "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "sif": "artifacts/phase24_thermal_network_localization/historical_0p95P.sif",
+          "sif_sha256": "c42c7dbbb923c6685ee081ed8295ba4f57f096a869f29c2818cb508ebf8f3670",
+          "solver_log": "artifacts/phase24_thermal_network_localization/historical_0p95P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p00P": {
+          "P_W": 3.203004762115138e-10,
+          "capture": "artifacts/phase24_thermal_network_localization/capture/historical_1p00P/ts0001_nl0001",
+          "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "rhs_sha256": "5981e0d06bfdc7644253f5f7f7039b6bf9a38745f7ea50408017adfbab2c7c8b",
+          "solution_sha256": "a662d7070b269236904fa356cf979fa81e5e653dcf11fd3a196617e8572bb327",
+          "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "sif": "artifacts/phase24_thermal_network_localization/historical_1p00P.sif",
+          "sif_sha256": "f14bd7eb9e44fc1cb8f65072fab6e3885bdc1a562fae68a643846d8ec459d590",
+          "solver_log": "artifacts/phase24_thermal_network_localization/historical_1p00P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p05P": {
+          "P_W": 3.3631550002208954e-10,
+          "capture": "artifacts/phase24_thermal_network_localization/capture/historical_1p05P/ts0001_nl0001",
+          "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "rhs_sha256": "24ee970482d217ec86e43764b811905b5c4422cdb811e112b85dbefa8fd90974",
+          "solution_sha256": "e964fe16b6977da9e30cf593f1bd3ad5238516b0aabf6448c7782b08598a601c",
+          "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+          "sif": "artifacts/phase24_thermal_network_localization/historical_1p05P.sif",
+          "sif_sha256": "ce1fae01141027ce35ca3b44be08391fa1f1ab92f2c070cd31108ed06c945f7f",
+          "solver_log": "artifacts/phase24_thermal_network_localization/historical_1p05P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        }
+      }
+    },
+    "best_phase24": {
+      "case": "best_phase24",
+      "mesh": "work/meshes/mesh_phase24_trace_membrane_substrate_historical",
+      "mesh_hash_sha256": "03caa5014996f04e5a8393e39e963f0f6f04f008536702540fd6c288af6bf81c:fe3b8dc72636417a17180bec88067a0775b773bb8f391f407ea79c637bedf9d3:3afc1425aa650b348380ccafe9dda54b00517d5898e7916eb09ea6397e2d8324",
+      "audit_commit_parent_sha": "a301347887e344f10694d2211617be11ed1da705",
+      "heatsolve_binary": "tools/elmer-hypre/install-steady-full-capture/bin/ElmerSolver.exe (CPU MUMPS; capture hook opt-in, default OFF)",
+      "points": {
+        "0p95P": {
+          "P_W": 3.042854524009381e-10,
+          "capture": "artifacts/p24trace/ms/capture/ms_hist_0p95P/ts0001_nl0001",
+          "matrix_sha256": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "rhs_sha256": "773e541f9febd56239ea2241a8bc94240448cf6b5aef62c8842283dff5c97f8e",
+          "solution_sha256": "f721f4e8164ba234e6a9ffa1594afd6b781226a5c9ef96e8590f531b2011eecc",
+          "metadata_matrix_sha_before": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "sif": "artifacts/p24trace/ms/ms_hist_0p95P.sif",
+          "sif_sha256": "0aff7fe43fdeab2c5ea051a9f2b03cb9682c3e383db1f9cc823d3091e8d7c434",
+          "solver_log": "artifacts/p24trace/ms/ms_hist_0p95P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p00P": {
+          "P_W": 3.203004762115138e-10,
+          "capture": "artifacts/p24trace/ms/capture/ms_hist_1p00P/ts0001_nl0001",
+          "matrix_sha256": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "rhs_sha256": "099af6d7051006735db9a5c0bbdea8f93f6c98227492972caab06ad8e6b79c87",
+          "solution_sha256": "c740ca6115b061d8fc21c2b1451b446e5790411759f6bb9a568fedbd9a33f1e8",
+          "metadata_matrix_sha_before": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "sif": "artifacts/p24trace/ms/ms_hist_1p00P.sif",
+          "sif_sha256": "7d781a11f7b447adbeacdf14a256524ae8eced17a02d7d212ef36e66d509368d",
+          "solver_log": "artifacts/p24trace/ms/ms_hist_1p00P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p05P": {
+          "P_W": 3.3631550002208954e-10,
+          "capture": "artifacts/p24trace/ms/capture/ms_hist_1p05P/ts0001_nl0001",
+          "matrix_sha256": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "rhs_sha256": "628152295a6cc0be5bba6d602cef99c8c4e58e5da7f4aaa43275a0e3c0fa1629",
+          "solution_sha256": "6ad1cf28f1ce85c78bee316f33bcc90752f0afd5a9ea75db801134865d0ce7da",
+          "metadata_matrix_sha_before": "74ae3acdbf9d0f615a1c9d8316d94ced750f2e9a176e5c829abe8140853cd985",
+          "sif": "artifacts/p24trace/ms/ms_hist_1p05P.sif",
+          "sif_sha256": "d538f7a711bafac29d39908a79c694d88bd1f8bf4d1193b3465ad0d834e4cec7",
+          "solver_log": "artifacts/p24trace/ms/ms_hist_1p05P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        }
+      }
+    },
+    "refined_parent": {
+      "case": "refined_parent",
+      "mesh": "work/meshes/mesh_phase24_stycast_density_10um",
+      "mesh_hash_sha256": "5931eb14b784d88b48bff49346111f03e1f82166f57c4a520d31f896929b02be:265c3b60ac99064a80d72d925ccc87b7901907f37be7d8d9315cbc85182d12f6:f6fc47ababbf4548d592d7b3954a59e434078475b9f85c4983a24acd76491b2f",
+      "audit_commit_parent_sha": "a301347887e344f10694d2211617be11ed1da705",
+      "heatsolve_binary": "tools/elmer-hypre/install-steady-full-capture/bin/ElmerSolver.exe (CPU MUMPS; capture hook opt-in, default OFF)",
+      "points": {
+        "0p95P": {
+          "P_W": 3.042854524009381e-10,
+          "capture": "artifacts/p24d10b/capture/phase24_historical_density_0p95P/ts0001_nl0001",
+          "matrix_sha256": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "rhs_sha256": "b8fb04e5ba1b18470f1c7d62fb9ba74702916a11b5de7961d0d635736c2c26fc",
+          "solution_sha256": "606901639a72fad9ee80020e9366a3b98c18575abedf101d3308c4ac1b5cd742",
+          "metadata_matrix_sha_before": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "sif": "artifacts/p24d10b/phase24_historical_density_0p95P.sif",
+          "sif_sha256": "2a02b6d83bd935bf11a7a0c97d759aa9538f35f1ee97e80a0d2ad67803f9ae7a",
+          "solver_log": "artifacts/p24d10b/phase24_historical_density_0p95P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p00P": {
+          "P_W": 3.203004762115138e-10,
+          "capture": "artifacts/p24d10b/capture/phase24_historical_density_1p00P/ts0001_nl0001",
+          "matrix_sha256": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "rhs_sha256": "02aa40f6db9ee386e6221dd5ce56ef42160476fbc2c944c1aef5c5e71bc52175",
+          "solution_sha256": "a63061fbf7ac487655942ccd0eb9203d51ae9fc98ccf08bfd4d3ef0daa4bb739",
+          "metadata_matrix_sha_before": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "sif": "artifacts/p24d10b/phase24_historical_density_1p00P.sif",
+          "sif_sha256": "b13544ccc6b9fa1083626b0f53d8ffc62cefea131737e2861ce248a62281c538",
+          "solver_log": "artifacts/p24d10b/phase24_historical_density_1p00P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        },
+        "1p05P": {
+          "P_W": 3.3631550002208954e-10,
+          "capture": "artifacts/p24d10b/capture/phase24_historical_density_1p05P/ts0001_nl0001",
+          "matrix_sha256": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "rhs_sha256": "b1ea07806bf9803cb3c875ff614bc2b6de4c933a2ce8900703fd69d9b367d535",
+          "solution_sha256": "b6d583397d20ad602fdcd6d3ca00393adcf78eca8e9bba3bfdb85657ead352ab",
+          "metadata_matrix_sha_before": "b79487ad3fa77d8209711c0417e251839e76bbf05d6e84c251d25eb0a507a461",
+          "sif": "artifacts/p24d10b/phase24_historical_density_1p05P.sif",
+          "sif_sha256": "9b7c58f9ccf2823fabbc05e0eb541a903395fc87ae20f7be8a0edfb33e2db625",
+          "solver_log": "artifacts/p24d10b/phase24_historical_density_1p05P.solver.log",
+          "solver_ALL_DONE": true,
+          "backend": "CPU direct mumps",
+          "capture_kind": "solve_with_linear_restriction_full_system",
+          "capture_flags": {
+            "Phase24 Full Restriction Capture": true,
+            "TES Inner Circuit Freeze Power": true,
+            "Nonlinear System Max Iterations": 1
+          }
+        }
+      }
+    }
+  },
+  "element_reassembly_verification": {
+    "historical": {
+      "max_abs_entry_diff": 4.676814491233472e-15,
+      "max_entry_diff_relative_to_row_diagonal": 3.0400967743860397e-13,
+      "native_nnz_checked": 2798555,
+      "passed": true
+    },
+    "best_phase24": {
+      "max_abs_entry_diff": 8.161944799189857e-08,
+      "max_entry_diff_relative_to_row_diagonal": 9.727834015631647e-07,
+      "native_nnz_checked": 1394048,
+      "passed": false
+    },
+    "refined_parent": {
+      "max_abs_entry_diff": 8.161944800577636e-08,
+      "max_entry_diff_relative_to_row_diagonal": 1.2803225846920719e-06,
+      "native_nnz_checked": 1231507,
+      "passed": false
+    }
+  },
+  "solver_reruns": "none (existing opt-in native captures reused)",
+  "native_source_changes": "none"
+}

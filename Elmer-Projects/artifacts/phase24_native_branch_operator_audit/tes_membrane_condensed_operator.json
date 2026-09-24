@@ -1,0 +1,314 @@
+{
+  "historical": {
+    "TES_Membrane_local_operator(membrane side, Membrane_SiNx layer, grounded below)": {
+      "operator": "TES_Membrane_local_operator",
+      "trace_dof_count": 2313,
+      "interior_dof_count": 1025,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.5024290831003233e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 7.586211928728732e-06,
+        "energy_W_per_K": 7.586211928728731e-06,
+        "normalized_response_W_per_K_m2": 30.315392272095803
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": 1.999398891238384e-08,
+        "energy_W_per_K": 2.7176458878641067e-06,
+        "normalized_response_W_per_K_m2": 32.552002170196076
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -1.5447634287043044e-09,
+        "energy_W_per_K": 2.711566762896688e-06,
+        "normalized_response_W_per_K_m2": 32.37114536496565
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 5.433610422800105e-06,
+        "energy_W_per_K": 5.440995429537633e-06,
+        "normalized_response_W_per_K_m2": 34.71471010171216
+      },
+      "row_sum_total_W_per_K": 7.586211928728732e-06,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        28.25930416659189,
+        28.259304166591978,
+        28.259304166592077,
+        28.259304166592262,
+        109.91408739728985
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        14.302380402055954,
+        14.344137196357769,
+        14.437807691992077,
+        14.82402643856659,
+        66.42419034477935
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 79,
+        "row_sum_total": 2.06624776032903e-07
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          7.71471909243925,
+          7.74060410910264,
+          7.805115378741746,
+          7.811908238242917,
+          7.813089264770148,
+          7.826328379078253
+        ],
+        "median": 13.710382466186159,
+        "largest_3": [
+          205702126.8609582,
+          227594229.15026602,
+          247566655.12879962
+        ]
+      },
+      "effective_total_conductance_W_per_K": 7.586211928728732e-06
+    },
+    "TES_side_native_NtD(full native saddle A, TES source modes)": {
+      "source_dofs": 4436,
+      "mode_constant": {
+        "energy_K_per_W": 53239811.969945006,
+        "TES_mean_temperature_response_K_per_W": 53239655.188121796,
+        "net_source_W": 1.0
+      },
+      "mode_linear_x": {
+        "energy_K_per_W": 3065.441876661833,
+        "TES_mean_temperature_response_K_per_W": -30.861011696446848,
+        "net_source_W": 0.0
+      },
+      "mode_linear_y": {
+        "energy_K_per_W": 3065.411410672263,
+        "TES_mean_temperature_response_K_per_W": -66.10104886567257,
+        "net_source_W": -8.326672684688674e-17
+      },
+      "mode_radial_quadratic": {
+        "energy_K_per_W": 23703432.843514435,
+        "TES_mean_temperature_response_K_per_W": 35523816.24267941,
+        "net_source_W": 0.667262490138277
+      },
+      "constant_mode_reproduces_native_relative_error": 3.9578012818237526e-05
+    },
+    "mortar_slave_Dirichlet_wellposedness": {
+      "constraint_rows": 2218,
+      "master_dofs": 2313,
+      "sigma_min_over_max": 3.663614298292979e-11,
+      "near_null_count_rel_1e-6": 15,
+      "conclusion": "slave-side (TES) Dirichlet trace-to-flux map is ill-posed"
+    },
+    "TES_dissipation_G_W_per_K": 2.6547300224611402e-11,
+    "TES_bottom_minus_membrane_top_trace_K_at_P0": 1.617458797370519e-06
+  },
+  "best_phase24": {
+    "TES_Membrane_local_operator(membrane side, Membrane_SiNx layer, grounded below)": {
+      "operator": "TES_Membrane_local_operator",
+      "trace_dof_count": 180,
+      "interior_dof_count": 538,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.4999999999999994e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 7.686507331736775e-06,
+        "energy_W_per_K": 7.686507331736775e-06,
+        "normalized_response_W_per_K_m2": 30.746029326947095
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": -2.7121469178413067e-09,
+        "energy_W_per_K": 2.777124691844768e-06,
+        "normalized_response_W_per_K_m2": 32.94310386104106
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -4.042947097002979e-09,
+        "energy_W_per_K": 2.7836696366678123e-06,
+        "normalized_response_W_per_K_m2": 33.02423889766343
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 5.604149990864381e-06,
+        "energy_W_per_K": 5.678146491517798e-06,
+        "normalized_response_W_per_K_m2": 35.374727059413885
+      },
+      "row_sum_total_W_per_K": 7.686507331736775e-06,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        28.259304166591907,
+        28.259304166591964,
+        28.259304166592052,
+        46.282395453949796,
+        67.6282388431735
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        17.006979794765492,
+        17.217509248619187,
+        17.65977704516211,
+        31.73873797680422,
+        51.30786724956613
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 0,
+        "row_sum_total": 0.0
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          12.096738202779491,
+          12.247074207885213,
+          12.344039741409835,
+          12.378461996220668,
+          12.482384430394255,
+          12.632967073616856
+        ],
+        "median": 18.565472691444576,
+        "largest_3": [
+          53.64542698845096,
+          54.28576527884387,
+          54.52419755340091
+        ]
+      },
+      "effective_total_conductance_W_per_K": 7.686507331736775e-06
+    },
+    "TES_side_native_NtD(full native saddle A, TES source modes)": {
+      "source_dofs": 409,
+      "mode_constant": {
+        "energy_K_per_W": 51027847.37170648,
+        "TES_mean_temperature_response_K_per_W": 51026736.85811155,
+        "net_source_W": 1.0
+      },
+      "mode_linear_x": {
+        "energy_K_per_W": 3077.83460497771,
+        "TES_mean_temperature_response_K_per_W": 21.19736342190341,
+        "net_source_W": -1.6871226637960035e-13
+      },
+      "mode_linear_y": {
+        "energy_K_per_W": 3092.580571781935,
+        "TES_mean_temperature_response_K_per_W": -69.98206923958278,
+        "net_source_W": 1.1263212584822213e-13
+      },
+      "mode_radial_quadratic": {
+        "energy_K_per_W": 23180608.371570636,
+        "TES_mean_temperature_response_K_per_W": 34391960.39689226,
+        "net_source_W": 0.6740148025492422
+      },
+      "constant_mode_reproduces_native_relative_error": 0.0003958822589293868
+    },
+    "mortar_slave_Dirichlet_wellposedness": {
+      "constraint_rows": 18,
+      "master_dofs": 19,
+      "sigma_min_over_max": 0.27431977249175943,
+      "near_null_count_rel_1e-6": 0,
+      "conclusion": "well posed"
+    },
+    "TES_dissipation_G_W_per_K": 1.5521852977251459e-12,
+    "TES_bottom_minus_membrane_top_trace_K_at_P0": 6.47264643827139e-08
+  },
+  "refined_parent": {
+    "TES_Membrane_local_operator(membrane side, Membrane_SiNx layer, grounded below)": {
+      "operator": "TES_Membrane_local_operator",
+      "trace_dof_count": 179,
+      "interior_dof_count": 409,
+      "constraint_rows": 0,
+      "trace_area_m2": 2.5000000000000004e-07,
+      "dropped_hanging_trace_dofs": 0,
+      "dropped_uninformative_constraint_rows": 0,
+      "mode_constant": {
+        "total_reaction_W_per_K": 7.715681804699722e-06,
+        "energy_W_per_K": 7.715681804699722e-06,
+        "normalized_response_W_per_K_m2": 30.86272721879889
+      },
+      "mode_linear_x": {
+        "total_reaction_W_per_K": -4.6554814999381275e-09,
+        "energy_W_per_K": 2.8175365122743985e-06,
+        "normalized_response_W_per_K_m2": 33.4192910406581
+      },
+      "mode_linear_y": {
+        "total_reaction_W_per_K": -3.0879292188908512e-09,
+        "energy_W_per_K": 2.8227263001545295e-06,
+        "normalized_response_W_per_K_m2": 33.4868970971878
+      },
+      "mode_radial_quadratic": {
+        "total_reaction_W_per_K": 5.6477213086492185e-06,
+        "energy_W_per_K": 5.782669638376597e-06,
+        "normalized_response_W_per_K_m2": 36.01077283478313
+      },
+      "row_sum_total_W_per_K": 7.71568180469972e-06,
+      "row_sum_per_area_percentiles_W_per_K_m2": [
+        28.259304166591843,
+        28.25930416659197,
+        28.25930416659204,
+        47.72229855662382,
+        72.44350035860667
+      ],
+      "diag_per_area_percentiles_W_per_K_m2": [
+        21.799995141248377,
+        24.49765839558083,
+        28.29087701809096,
+        40.56670814243153,
+        65.66371505464839
+      ],
+      "row_sum_zero_area_trace_dofs": {
+        "count": 0,
+        "row_sum_total": 0.0
+      },
+      "generalized_eigenvalues_W_per_K_m2": {
+        "smallest_6": [
+          17.668831290158323,
+          21.139482396216433,
+          21.240140865768513,
+          21.34151122441195,
+          22.23226585275512,
+          22.474492556151457
+        ],
+        "median": 28.2891925804809,
+        "largest_3": [
+          65.93902267986044,
+          66.7709395730905,
+          67.88380624420589
+        ]
+      },
+      "effective_total_conductance_W_per_K": 7.71568180469972e-06
+    },
+    "TES_side_native_NtD(full native saddle A, TES source modes)": {
+      "source_dofs": 409,
+      "mode_constant": {
+        "energy_K_per_W": 49263496.16719532,
+        "TES_mean_temperature_response_K_per_W": 49262350.49926162,
+        "net_source_W": 1.0
+      },
+      "mode_linear_x": {
+        "energy_K_per_W": 3077.802711441151,
+        "TES_mean_temperature_response_K_per_W": -15.828127702263547,
+        "net_source_W": -1.6870532748569644e-13
+      },
+      "mode_linear_y": {
+        "energy_K_per_W": 3092.5320267995003,
+        "TES_mean_temperature_response_K_per_W": 29.46275121952842,
+        "net_source_W": 1.1263906474212604e-13
+      },
+      "mode_radial_quadratic": {
+        "energy_K_per_W": 22379049.315390512,
+        "TES_mean_temperature_response_K_per_W": 33202721.967498165,
+        "net_source_W": 0.6740148025492422
+      },
+      "constant_mode_reproduces_native_relative_error": 0.00015883672221926883
+    },
+    "mortar_slave_Dirichlet_wellposedness": "no TES/Membrane mortar rows beyond hanging nodes",
+    "TES_dissipation_G_W_per_K": 1.7748294558291865e-12,
+    "TES_bottom_minus_membrane_top_trace_K_at_P0": 0.0
+  },
+  "comparison_best_over_historical": {
+    "constant": {
+      "TES_Membrane_local_normalized_ratio_best_over_hist": 1.01420522785871,
+      "TES_side_NtD_energy_ratio_hist_over_best": 1.0433481855921871
+    },
+    "linear_x": {
+      "TES_Membrane_local_normalized_ratio_best_over_hist": 1.0120146738993236,
+      "TES_side_NtD_energy_ratio_hist_over_best": 0.9959735561177215
+    },
+    "linear_y": {
+      "TES_Membrane_local_normalized_ratio_best_over_hist": 1.0201751753092,
+      "TES_side_NtD_energy_ratio_hist_over_best": 0.9912147281278376
+    },
+    "radial_quadratic": {
+      "TES_Membrane_local_normalized_ratio_best_over_hist": 1.0190126017405277,
+      "TES_side_NtD_energy_ratio_hist_over_best": 1.0225543895812936
+    }
+  }
+}

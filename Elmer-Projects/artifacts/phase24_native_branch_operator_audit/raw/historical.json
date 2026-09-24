@@ -1,0 +1,1687 @@
+{
+ "case": "historical",
+ "label": "Historical reference",
+ "G_eff_harness_symmetric_W_per_K": 1.8782944616314638e-08,
+ "element_reassembly_verification": {
+  "max_abs_entry_diff": 4.676814491233472e-15,
+  "max_entry_diff_relative_to_row_diagonal": 3.0400967743860397e-13,
+  "native_nnz_checked": 2798555,
+  "passed": true
+ },
+ "mortar_rows": {
+  "Stycast|abs": 1671,
+  "Stycast|TES": 1671,
+  "Membrane_SiNx|TES": 2218
+ },
+ "points": {
+  "0p95P": {
+   "P_source_W": 3.042854524009145e-10,
+   "P_nominal_W": 3.042854524009381e-10,
+   "Q_TES_to_Membrane_W": 3.042857943139697e-10,
+   "Q_TES_to_Membrane_mortar_part_W": 3.042857943139697e-10,
+   "Q_TES_to_Membrane_conformal_part_W": 0.0,
+   "Q_into_Stycast_abs_W": 7.951069055288446e-18,
+   "Q_bath_W": 3.0428581202480873e-10,
+   "lateral_cuts_edge_attribution": {
+    "TES_footprint_edge|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 2.498507565581885e-10,
+     "Membrane_Si1_layer(z176-191)": 9.347774338024693e-11,
+     "SiO2_1_layer(z175-176)": 1.5003515606317957e-08,
+     "plane_z191_junction": -1.2185845759902245e-10,
+     "plane_z176_junction": -1.1178052203743318e-08,
+     "plane_z175_junction": -3.725506901302837e-09,
+     "plane_z192_surface": -1.207829944968777e-10,
+     "other": 1.4274180291917207e-13,
+     "total": 2.0078629091725337e-10,
+     "negative_edge_flow_sum": -1.5235448379030016e-08
+    },
+    "TES_footprint_edge|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 2.0725807691868552e-10,
+     "Membrane_Si1_layer(z176-191)": 8.72590422452027e-11,
+     "SiO2_1_layer(z175-176)": 1.4701155192269538e-08,
+     "plane_z191_junction": -1.038209611480828e-10,
+     "plane_z176_junction": -1.0953402553649202e-08,
+     "plane_z175_junction": -3.6507022128823373e-09,
+     "plane_z192_surface": -9.758726616233229e-11,
+     "other": -6.31543018936663e-14,
+     "total": 1.900961632895816e-10,
+     "negative_edge_flow_sum": -1.485741703256024e-08
+    },
+    "window_perimeter|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 1.0664202866159169e-11,
+     "Membrane_Si1_layer(z176-191)": 7.260968592835953e-09,
+     "SiO2_1_layer(z175-176)": 1.3173707766318667e-10,
+     "plane_z191_junction": -1.772633884523829e-09,
+     "plane_z176_junction": -1.9224599749858176e-09,
+     "plane_z175_junction": 7.620573371629359e-11,
+     "plane_z192_surface": -6.951954757857974e-12,
+     "other": -3.473243988500138e-09,
+     "total": 3.042858043139518e-10,
+     "negative_edge_flow_sum": -7.3753634726941426e-09
+    },
+    "window_perimeter|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 3.3299516722840105e-09,
+     "Membrane_Si1_layer(z176-191)": 9.326955854359171e-10,
+     "SiO2_1_layer(z175-176)": 2.3272855967164427e-07,
+     "plane_z191_junction": -1.8597234951440155e-09,
+     "plane_z176_junction": -1.7460807063683472e-07,
+     "plane_z175_junction": -5.816069473055373e-08,
+     "plane_z192_surface": -1.660241130700812e-09,
+     "other": -3.9819113195115587e-10,
+     "total": 3.042858041798881e-10,
+     "negative_edge_flow_sum": -2.3668692112518441e-07
+    }
+   },
+   "branch_sheets": {
+    "Membrane_SiNx": {
+     "Q_in_from_TES_W": 3.042858041775243e-10,
+     "Q_exit_perimeter_W": 9.087097036085525e-12,
+     "Q_in_from_Membrane_Si1_W": -2.9519870714146875e-10,
+     "Q_in_from_SiO2_1_W": 0.0,
+     "balance_residual_W": 3.026397533602151e-23,
+     "T_hot_footprint_mean_K": 0.16619134298754917,
+     "T_cold_perimeter_mean_K": 0.15000207381870714,
+     "dT_branch_K": 0.01618926916884203,
+     "dissipation_WK": 2.5280507493548066e-13
+    },
+    "Membrane_Si1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.3631816428284032e-10,
+     "Q_in_from_Membrane_SiNx_W": 2.95198707141586e-10,
+     "Q_in_from_SiO2_1_W": -1.588805428587101e-10,
+     "balance_residual_W": -3.553741064721566e-23,
+     "T_hot_footprint_mean_K": 0.16601204637099215,
+     "T_cold_perimeter_mean_K": 0.15000177429231507,
+     "dT_branch_K": 0.016010272078677085,
+     "dissipation_WK": 2.440181624131294e-12
+    },
+    "SiO2_1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.5888054286090974e-10,
+     "Q_in_from_Membrane_SiNx_W": 0.0,
+     "Q_in_from_Membrane_Si1_W": 1.5888054286008776e-10,
+     "balance_residual_W": 8.154879142674501e-22,
+     "T_hot_footprint_mean_K": 0.16586325242581362,
+     "T_cold_perimeter_mean_K": 0.15000132494995905,
+     "dT_branch_K": 0.015861927475854576,
+     "dissipation_WK": 2.229014257726292e-12
+    }
+   },
+   "dissipation_total_WK": 4.929465709224887e-12,
+   "P_dT_src_WK": 4.9294616379622195e-12,
+   "dissipation_closure_rel": 8.259041182068216e-07,
+   "body_dissipation_WK": {
+    "SiO2_2": 3.8286983776093783e-17,
+    "Si_2": 1.0847746491212933e-16,
+    "SiO2_1": 2.2291695974581455e-12,
+    "Si_1": 1.926279758363119e-16,
+    "Membrane_Si1": 2.4401816241312947e-12,
+    "SiNx": 2.8556875792610615e-18,
+    "Membrane_SiNx": 2.528050749354807e-13,
+    "TES": 6.967157018706808e-15,
+    "Stycast": 7.586131195540954e-21,
+    "abs": -1.697506757341469e-23
+   },
+   "zone_dissipation_WK": {
+    "SiO2_2|0-230": 0.0,
+    "SiO2_2|230-250": 0.0,
+    "SiO2_2|250-270": 0.0,
+    "SiO2_2|270-330": 0.0,
+    "SiO2_2|330-350": 0.0,
+    "SiO2_2|350-370": 0.0,
+    "SiO2_2|370-inf": 3.8286983776093783e-17,
+    "Si_2|0-230": 0.0,
+    "Si_2|230-250": 0.0,
+    "Si_2|250-270": 0.0,
+    "Si_2|270-330": 0.0,
+    "Si_2|330-350": 0.0,
+    "Si_2|350-370": 0.0,
+    "Si_2|370-inf": 1.0847746491212933e-16,
+    "SiO2_1|0-230": 1.3885344713617241e-14,
+    "SiO2_1|230-250": 1.0066244649623526e-13,
+    "SiO2_1|250-270": 3.51812862787335e-13,
+    "SiO2_1|270-330": 1.3750084695034686e-12,
+    "SiO2_1|330-350": 3.876451342256419e-13,
+    "SiO2_1|350-370": 0.0,
+    "SiO2_1|370-inf": 1.5533973184776228e-16,
+    "Si_1|0-230": 0.0,
+    "Si_1|230-250": 0.0,
+    "Si_1|250-270": 0.0,
+    "Si_1|270-330": 0.0,
+    "Si_1|330-350": 0.0,
+    "Si_1|350-370": 0.0,
+    "Si_1|370-inf": 1.926279758363119e-16,
+    "Membrane_Si1|0-230": 2.7757821051115228e-14,
+    "Membrane_Si1|230-250": 2.1928286142773064e-13,
+    "Membrane_Si1|250-270": 6.470881309143238e-13,
+    "Membrane_Si1|270-330": 1.2135213350717304e-12,
+    "Membrane_Si1|330-350": 3.325314756663941e-13,
+    "Membrane_Si1|350-370": 0.0,
+    "Membrane_Si1|370-inf": 0.0,
+    "SiNx|0-230": 0.0,
+    "SiNx|230-250": 0.0,
+    "SiNx|250-270": 0.0,
+    "SiNx|270-330": 0.0,
+    "SiNx|330-350": 0.0,
+    "SiNx|350-370": 0.0,
+    "SiNx|370-inf": 2.8556875792610615e-18,
+    "Membrane_SiNx|0-230": 5.534704857057266e-15,
+    "Membrane_SiNx|230-250": 3.474548197411246e-14,
+    "Membrane_SiNx|250-270": 1.0763108427222593e-13,
+    "Membrane_SiNx|270-330": 8.272958515797551e-14,
+    "Membrane_SiNx|330-350": 2.2164218674109555e-14,
+    "Membrane_SiNx|350-370": 0.0,
+    "Membrane_SiNx|370-inf": 0.0,
+    "TES|0-230": 5.778442343760765e-15,
+    "TES|230-250": 1.188714674946043e-15,
+    "TES|250-270": 0.0,
+    "TES|270-330": 0.0,
+    "TES|330-350": 0.0,
+    "TES|350-370": 0.0,
+    "TES|370-inf": 0.0,
+    "Stycast|0-230": 7.01294111715181e-21,
+    "Stycast|230-250": 5.731900783891446e-22,
+    "Stycast|250-270": 0.0,
+    "Stycast|270-330": 0.0,
+    "Stycast|330-350": 0.0,
+    "Stycast|350-370": 0.0,
+    "Stycast|370-inf": 0.0,
+    "abs|0-230": 5.9431788800406255e-24,
+    "abs|230-250": -5.528325069613168e-25,
+    "abs|250-270": -1.2194842248268375e-24,
+    "abs|270-330": -6.124607392911458e-24,
+    "abs|330-350": 2.3318339138662357e-25,
+    "abs|350-370": -3.6305887216506194e-24,
+    "abs|370-inf": -1.1623916998491702e-23
+   },
+   "traces_K": {
+    "TES_bottom": 0.1662001226113481,
+    "Membrane_top_under_TES": 0.1661985860306458,
+    "MembraneSiNx_sidewall_to_SiNx": 0.15000207381870712,
+    "MembraneSi1_sidewall_to_Si_1": 0.15000177385433427,
+    "frame_top_SiNx": 0.15000011375443772,
+    "bath": 0.15,
+    "TES_average_harness": 0.1662001143989125,
+    "TES_source_weighted": 0.16620012261206413
+   },
+   "G_eff_secant_harness_W_per_K": 1.8782919978721935e-08,
+   "G_src_W_per_K": 1.8782910456141547e-08,
+   "native_residual_primal_inf": 2.579899312861796e-17,
+   "native_residual_constraint_inf": 9.405589355500142e-21,
+   "native_balance_rel": 1.181863580311937e-06
+  },
+  "1p00P": {
+   "P_source_W": 3.20300476211489e-10,
+   "P_nominal_W": 3.203004762115138e-10,
+   "Q_TES_to_Membrane_W": 3.203008189876597e-10,
+   "Q_TES_to_Membrane_mortar_part_W": 3.203008189876597e-10,
+   "Q_TES_to_Membrane_conformal_part_W": 0.0,
+   "Q_into_Stycast_abs_W": 8.200446212459819e-18,
+   "Q_bath_W": 3.2030083811788885e-10,
+   "lateral_cuts_edge_attribution": {
+    "TES_footprint_edge|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 2.6300068774182887e-10,
+     "Membrane_Si1_layer(z176-191)": 9.839760594813816e-11,
+     "SiO2_1_layer(z175-176)": 1.5793172598196065e-08,
+     "plane_z191_junction": -1.2827201310309987e-10,
+     "plane_z176_junction": -1.1766369455390814e-08,
+     "plane_z175_junction": -3.921585783780402e-09,
+     "plane_z192_surface": -1.2713993543273983e-10,
+     "other": 1.502550857496312e-13,
+     "total": 2.1135395926471932e-10,
+     "negative_edge_flow_sum": -1.6037312261906273e-08
+    },
+    "TES_footprint_edge|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 2.1816629866240298e-10,
+     "Membrane_Si1_layer(z176-191)": 9.185160585030652e-11,
+     "SiO2_1_layer(z175-176)": 1.5474898520203076e-08,
+     "plane_z191_junction": -1.0928517884414225e-10,
+     "plane_z176_junction": -1.1529896170700554e-08,
+     "plane_z175_junction": -3.842844016893421e-09,
+     "plane_z192_surface": -1.0272338543155777e-10,
+     "other": -6.647752787943224e-14,
+     "total": 2.0010119531822833e-10,
+     "negative_edge_flow_sum": -1.563938458019396e-08
+    },
+    "window_perimeter|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 1.1225476132116564e-11,
+     "Membrane_Si1_layer(z176-191)": 7.643124446140686e-09,
+     "SiO2_1_layer(z175-176)": 1.3867060105004903e-10,
+     "plane_z191_junction": -1.8659303098869256e-09,
+     "plane_z176_junction": -2.0236419761838e-09,
+     "plane_z175_junction": 8.021655773517729e-11,
+     "plane_z192_surface": -7.31784674311235e-12,
+     "other": -3.6560461178617117e-09,
+     "total": 3.2030083038247384e-10,
+     "negative_edge_flow_sum": -7.763540102444608e-09
+    },
+    "window_perimeter|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 3.5052121102810923e-09,
+     "Membrane_Si1_layer(z176-191)": 9.817847773621296e-10,
+     "SiO2_1_layer(z175-176)": 2.4497741890776983e-07,
+     "plane_z191_junction": -1.957603580629153e-09,
+     "plane_z176_junction": -1.837979598440621e-07,
+     "plane_z175_junction": -6.122178084665055e-08,
+     "plane_z192_surface": -1.747622154930703e-09,
+     "other": -4.191485388812806e-10,
+     "total": 3.2030083025930954e-10,
+     "negative_edge_flow_sum": -2.491441149651537e-07
+    }
+   },
+   "branch_sheets": {
+    "Membrane_SiNx": {
+     "Q_in_from_TES_W": 3.203008302562371e-10,
+     "Q_exit_perimeter_W": 9.565364816056324e-12,
+     "Q_in_from_Membrane_Si1_W": -3.107354654401886e-10,
+     "Q_in_from_SiO2_1_W": 0.0,
+     "balance_residual_W": 8.318966991457557e-24,
+     "T_hot_footprint_mean_K": 0.16704351780937457,
+     "T_cold_perimeter_mean_K": 0.1500021829669489,
+     "dT_branch_K": 0.017041334842425676,
+     "dissipation_WK": 2.801164032903116e-13
+    },
+    "Membrane_Si1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.4349279723050966e-10,
+     "Q_in_from_Membrane_SiNx_W": 3.107354654408422e-10,
+     "Q_in_from_SiO2_1_W": -1.672426682104058e-10,
+     "balance_residual_W": 7.308993013991295e-23,
+     "T_hot_footprint_mean_K": 0.16685478455337877,
+     "T_cold_perimeter_mean_K": 0.15000186767602616,
+     "dT_branch_K": 0.016852916877352603,
+     "dissipation_WK": 2.7038020534351335e-12
+    },
+    "SiO2_1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.6724266821269902e-10,
+     "Q_in_from_Membrane_SiNx_W": 0.0,
+     "Q_in_from_Membrane_Si1_W": 1.6724266821148981e-10,
+     "balance_residual_W": 1.1978244097597723e-21,
+     "T_hot_footprint_mean_K": 0.1666981593667844,
+     "T_cold_perimeter_mean_K": 0.15000139468409643,
+     "dT_branch_K": 0.016696764682687965,
+     "dissipation_WK": 2.4698215999438286e-12
+    }
+   },
+   "dissipation_total_WK": 5.462011273716041e-12,
+   "P_dT_src_WK": 5.4620069968651324e-12,
+   "dissipation_closure_rel": 7.83018204053576e-07,
+   "body_dissipation_WK": {
+    "SiO2_2": 4.242324634994936e-17,
+    "Si_2": 1.201966247713161e-16,
+    "SiO2_1": 2.4699937215128365e-12,
+    "Si_1": 2.1343817863046305e-16,
+    "Membrane_Si1": 2.703802053435129e-12,
+    "SiNx": 3.164196438803669e-18,
+    "Membrane_SiNx": 2.801164032903116e-13,
+    "TES": 7.719864842223305e-15,
+    "Stycast": 8.405702901280821e-21,
+    "abs": -1.635336851333384e-23
+   },
+   "zone_dissipation_WK": {
+    "SiO2_2|0-230": 0.0,
+    "SiO2_2|230-250": 0.0,
+    "SiO2_2|250-270": 0.0,
+    "SiO2_2|270-330": 0.0,
+    "SiO2_2|330-350": 0.0,
+    "SiO2_2|350-370": 0.0,
+    "SiO2_2|370-inf": 4.242324634994936e-17,
+    "Si_2|0-230": 0.0,
+    "Si_2|230-250": 0.0,
+    "Si_2|250-270": 0.0,
+    "Si_2|270-330": 0.0,
+    "Si_2|330-350": 0.0,
+    "Si_2|350-370": 0.0,
+    "Si_2|370-inf": 1.201966247713161e-16,
+    "SiO2_1|0-230": 1.538541975078504e-14,
+    "SiO2_1|230-250": 1.1153731222349217e-13,
+    "SiO2_1|250-270": 3.8982028463945567e-13,
+    "SiO2_1|270-330": 1.5235549307850826e-12,
+    "SiO2_1|330-350": 4.2952365254501014e-13,
+    "SiO2_1|350-370": 0.0,
+    "SiO2_1|370-inf": 1.721215690111336e-16,
+    "Si_1|0-230": 0.0,
+    "Si_1|230-250": 0.0,
+    "Si_1|250-270": 0.0,
+    "Si_1|270-330": 0.0,
+    "Si_1|330-350": 0.0,
+    "Si_1|350-370": 0.0,
+    "Si_1|370-inf": 2.1343817863046305e-16,
+    "Membrane_Si1|0-230": 3.075658026212212e-14,
+    "Membrane_Si1|230-250": 2.4297264498756714e-13,
+    "Membrane_Si1|250-270": 7.169950768203485e-13,
+    "Membrane_Si1|270-330": 1.3446218585783059e-12,
+    "Membrane_Si1|330-350": 3.684558927867853e-13,
+    "Membrane_Si1|350-370": 0.0,
+    "Membrane_Si1|370-inf": 0.0,
+    "SiNx|0-230": 0.0,
+    "SiNx|230-250": 0.0,
+    "SiNx|250-270": 0.0,
+    "SiNx|270-330": 0.0,
+    "SiNx|330-350": 0.0,
+    "SiNx|350-370": 0.0,
+    "SiNx|370-inf": 3.164196438803669e-18,
+    "Membrane_SiNx|0-230": 6.132635771100726e-15,
+    "Membrane_SiNx|230-250": 3.849913820678713e-14,
+    "Membrane_SiNx|250-270": 1.1925881410244412e-13,
+    "Membrane_SiNx|270-330": 9.166712655282432e-14,
+    "Membrane_SiNx|330-350": 2.4558688657155283e-14,
+    "Membrane_SiNx|350-370": 0.0,
+    "Membrane_SiNx|370-inf": 0.0,
+    "TES|0-230": 6.402740705752948e-15,
+    "TES|230-250": 1.3171241364703573e-15,
+    "TES|250-270": 0.0,
+    "TES|270-330": 0.0,
+    "TES|330-350": 0.0,
+    "TES|350-370": 0.0,
+    "TES|370-inf": 0.0,
+    "Stycast|0-230": 7.770576888717605e-21,
+    "Stycast|230-250": 6.351260125632162e-22,
+    "Stycast|250-270": 0.0,
+    "Stycast|270-330": 0.0,
+    "Stycast|330-350": 0.0,
+    "Stycast|350-370": 0.0,
+    "Stycast|370-inf": 0.0,
+    "abs|0-230": 1.2107090730062683e-24,
+    "abs|230-250": -4.619749067951813e-25,
+    "abs|250-270": 1.721109876549355e-25,
+    "abs|270-330": -3.733614736755801e-24,
+    "abs|330-350": -5.788809587547235e-25,
+    "abs|350-370": -2.3566654017944833e-24,
+    "abs|370-inf": -1.0605052569894857e-23
+   },
+   "traces_K": {
+    "TES_bottom": 0.1670527595251443,
+    "Membrane_top_under_TES": 0.16705114206634694,
+    "MembraneSiNx_sidewall_to_SiNx": 0.15000218296694887,
+    "MembraneSi1_sidewall_to_Si_1": 0.15000186721499376,
+    "frame_top_SiNx": 0.1500001197415072,
+    "bath": 0.15,
+    "TES_average_harness": 0.16705275088046675,
+    "TES_source_weighted": 0.167052759525898
+   },
+   "G_eff_secant_harness_W_per_K": 1.878292121058194e-08,
+   "G_src_W_per_K": 1.8782911687990985e-08,
+   "native_residual_primal_inf": 2.929014736754892e-17,
+   "native_residual_constraint_inf": 6.157020894081371e-21,
+   "native_balance_rel": 1.1298965400572435e-06
+  },
+  "1p05P": {
+   "P_source_W": 3.3631550002206354e-10,
+   "P_nominal_W": 3.3631550002208954e-10,
+   "Q_TES_to_Membrane_W": 3.3631584679652693e-10,
+   "Q_TES_to_Membrane_mortar_part_W": 3.3631584679652693e-10,
+   "Q_TES_to_Membrane_conformal_part_W": 0.0,
+   "Q_into_Stycast_abs_W": 5.516159463797477e-18,
+   "Q_bath_W": 3.3631586416261427e-10,
+   "lateral_cuts_edge_attribution": {
+    "TES_footprint_edge|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 2.7615061892824885e-10,
+     "Membrane_Si1_layer(z176-191)": 1.0331746851641211e-10,
+     "SiO2_1_layer(z175-176)": 1.6582829590103494e-08,
+     "plane_z191_junction": -1.3468556860904027e-10,
+     "plane_z176_junction": -1.2354686707060258e-08,
+     "plane_z175_junction": -4.117664666265229e-09,
+     "plane_z192_surface": -1.3349687637006702e-10,
+     "other": 1.5776836854925377e-13,
+     "total": 2.219216276120948e-10,
+     "negative_edge_flow_sum": -1.683917614480653e-08
+    },
+    "TES_footprint_edge|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 2.2907452040854103e-10,
+     "Membrane_Si1_layer(z176-191)": 9.644416945576498e-11,
+     "SiO2_1_layer(z175-176)": 1.624864184816339e-08,
+     "plane_z191_junction": -1.1474939654192577e-10,
+     "plane_z176_junction": -1.210638978777196e-08,
+     "plane_z175_junction": -4.034985820911145e-09,
+     "plane_z192_surface": -1.0785950470198944e-10,
+     "other": -6.980075390510229e-14,
+     "total": 2.101062273467599e-10,
+     "negative_edge_flow_sum": -1.642135212785094e-08
+    },
+    "window_perimeter|perimeter_inside": {
+     "Membrane_SiNx_layer(z191-192)": 1.1786749398003517e-11,
+     "Membrane_Si1_layer(z176-191)": 8.025280299156318e-09,
+     "SiO2_1_layer(z175-176)": 1.4560412443330918e-10,
+     "plane_z191_junction": -1.9592267352294637e-09,
+     "plane_z176_junction": -2.124823977249947e-09,
+     "plane_z175_junction": 8.422738176687664e-11,
+     "plane_z192_surface": -7.683738728339569e-12,
+     "other": -3.8388482470822834e-09,
+     "total": 3.3631585646447336e-10,
+     "negative_edge_flow_sum": -8.151716731919088e-09
+    },
+    "window_perimeter|perimeter_outside": {
+     "Membrane_SiNx_layer(z191-192)": 3.680472548270962e-09,
+     "Membrane_Si1_layer(z176-191)": 1.0308739692863266e-09,
+     "SiO2_1_layer(z175-176)": 2.572262781433891e-07,
+     "plane_z191_junction": -2.055483666110254e-09,
+     "plane_z176_junction": -1.9298784905091003e-07,
+     "plane_z175_junction": -6.428286696262037e-08,
+     "plane_z192_surface": -1.8350031791570015e-09,
+     "other": -4.40105945810537e-10,
+     "total": 3.3631585633812374e-10,
+     "negative_edge_flow_sum": -2.616013088046083e-07
+    }
+   },
+   "branch_sheets": {
+    "Membrane_SiNx": {
+     "Q_in_from_TES_W": 3.3631585633502347e-10,
+     "Q_exit_perimeter_W": 1.0043632596008508e-11,
+     "Q_in_from_Membrane_Si1_W": -3.262722237390442e-10,
+     "Q_in_from_SiO2_1_W": 0.0,
+     "balance_residual_W": 2.9456868866923643e-23,
+     "T_hot_footprint_mean_K": 0.16789569263119286,
+     "T_cold_perimeter_mean_K": 0.1500022921151906,
+     "dT_branch_K": 0.017893400516002272,
+     "dissipation_WK": 3.088283114546885e-13
+    },
+    "Membrane_Si1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.5066743017790286e-10,
+     "Q_in_from_Membrane_SiNx_W": 3.262722237397216e-10,
+     "Q_in_from_SiO2_1_W": -1.7560479356189543e-10,
+     "balance_residual_W": 7.663249950933657e-23,
+     "T_hot_footprint_mean_K": 0.16769752273576963,
+     "T_cold_perimeter_mean_K": 0.15000196105973723,
+     "dT_branch_K": 0.017695561676032395,
+     "dissipation_WK": 2.9809414644826866e-12
+    },
+    "SiO2_1": {
+     "Q_in_from_TES_W": 0.0,
+     "Q_exit_perimeter_W": 1.7560479356416322e-10,
+     "Q_in_from_Membrane_SiNx_W": 0.0,
+     "Q_in_from_Membrane_Si1_W": 1.7560479356320413e-10,
+     "balance_residual_W": 9.696612298205e-22,
+     "T_hot_footprint_mean_K": 0.16753306630775802,
+     "T_cold_perimeter_mean_K": 0.15000146441823384,
+     "dT_branch_K": 0.017531601889524184,
+     "dissipation_WK": 2.7229780223881205e-12
+    }
+   },
+   "dissipation_total_WK": 6.021866953079117e-12,
+   "P_dT_src_WK": 6.021862356710493e-12,
+   "dissipation_closure_rel": 7.632802532242522e-07,
+   "body_dissipation_WK": {
+    "SiO2_2": 4.6771624732710244e-17,
+    "Si_2": 1.3251676659526425e-16,
+    "SiO2_1": 2.7231677864004677e-12,
+    "Si_1": 2.353155702443925e-16,
+    "Membrane_Si1": 2.980941464482694e-12,
+    "SiNx": 3.488526249600233e-18,
+    "Membrane_SiNx": 3.0882831145468826e-13,
+    "TES": 8.511289000566984e-15,
+    "Stycast": 9.26729777384798e-21,
+    "abs": -1.4420512284220422e-23
+   },
+   "zone_dissipation_WK": {
+    "SiO2_2|0-230": 0.0,
+    "SiO2_2|230-250": 0.0,
+    "SiO2_2|250-270": 0.0,
+    "SiO2_2|270-330": 0.0,
+    "SiO2_2|330-350": 0.0,
+    "SiO2_2|350-370": 0.0,
+    "SiO2_2|370-inf": 4.6771624732710244e-17,
+    "Si_2|0-230": 0.0,
+    "Si_2|230-250": 0.0,
+    "Si_2|250-270": 0.0,
+    "Si_2|270-330": 0.0,
+    "Si_2|330-350": 0.0,
+    "Si_2|350-370": 0.0,
+    "Si_2|370-inf": 1.3251676659526425e-16,
+    "SiO2_1|0-230": 1.6962421530487837e-14,
+    "SiO2_1|230-250": 1.2296986217399666e-13,
+    "SiO2_1|250-270": 4.2977680203042385e-13,
+    "SiO2_1|270-330": 1.6797191515071077e-12,
+    "SiO2_1|330-350": 4.735497851460991e-13,
+    "SiO2_1|350-370": 0.0,
+    "SiO2_1|370-inf": 1.8976401235267985e-16,
+    "Si_1|0-230": 0.0,
+    "Si_1|230-250": 0.0,
+    "Si_1|250-270": 0.0,
+    "Si_1|270-330": 0.0,
+    "Si_1|330-350": 0.0,
+    "Si_1|350-370": 0.0,
+    "Si_1|370-inf": 2.353155702443925e-16,
+    "Membrane_Si1|0-230": 3.3909121600687e-14,
+    "Membrane_Si1|230-250": 2.678772865803831e-13,
+    "Membrane_Si1|250-270": 7.904869903104005e-13,
+    "Membrane_Si1|270-330": 1.4824454800348148e-12,
+    "Membrane_Si1|330-350": 4.062225859564088e-13,
+    "Membrane_Si1|350-370": 0.0,
+    "Membrane_Si1|370-inf": 0.0,
+    "SiNx|0-230": 0.0,
+    "SiNx|230-250": 0.0,
+    "SiNx|250-270": 0.0,
+    "SiNx|270-330": 0.0,
+    "SiNx|330-350": 0.0,
+    "SiNx|350-370": 0.0,
+    "SiNx|370-inf": 3.488526249600233e-18,
+    "Membrane_SiNx|0-230": 6.761229752371673e-15,
+    "Membrane_SiNx|230-250": 4.24452891049542e-14,
+    "Membrane_SiNx|250-270": 1.3148283752391014e-13,
+    "Membrane_SiNx|270-330": 1.0106300321753524e-13,
+    "Membrane_SiNx|330-350": 2.707595185591701e-14,
+    "Membrane_SiNx|350-370": 0.0,
+    "Membrane_SiNx|370-inf": 0.0,
+    "TES|0-230": 7.05913724446695e-15,
+    "TES|230-250": 1.4521517561000328e-15,
+    "TES|250-270": 0.0,
+    "TES|270-330": 0.0,
+    "TES|330-350": 0.0,
+    "TES|350-370": 0.0,
+    "TES|370-inf": 0.0,
+    "Stycast|0-230": 8.567058720781375e-21,
+    "Stycast|230-250": 7.002390530666058e-22,
+    "Stycast|250-270": 0.0,
+    "Stycast|270-330": 0.0,
+    "Stycast|330-350": 0.0,
+    "Stycast|350-370": 0.0,
+    "Stycast|370-inf": 0.0,
+    "abs|0-230": 4.357508223011177e-24,
+    "abs|230-250": -9.917911381602328e-25,
+    "abs|250-270": 7.704475237082396e-25,
+    "abs|270-330": -6.2116619292026e-24,
+    "abs|330-350": 2.077647503727622e-24,
+    "abs|350-370": -1.9815365515147056e-24,
+    "abs|370-inf": -1.2441125915789923e-23
+   },
+   "traces_K": {
+    "TES_bottom": 0.16790539643890726,
+    "Membrane_top_under_TES": 0.16790369810205397,
+    "MembraneSiNx_sidewall_to_SiNx": 0.1500022921151906,
+    "MembraneSi1_sidewall_to_Si_1": 0.1500019605756532,
+    "frame_top_SiNx": 0.15000012572857663,
+    "bath": 0.15,
+    "TES_average_harness": 0.1679053873619883,
+    "TES_source_weighted": 0.16790539643969854
+   },
+   "G_eff_secant_harness_W_per_K": 1.878292232515642e-08,
+   "G_src_W_per_K": 1.878291280255651e-08,
+   "native_residual_primal_inf": 1.5719394644609778e-17,
+   "native_residual_constraint_inf": 3.0860925716405317e-20,
+   "native_balance_rel": 1.082734963774386e-06
+  }
+ },
+ "operators": {
+  "Lambda_membrane_trace_to_bath": {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "trace_dof_count": 2313,
+   "interior_dof_count": 37043,
+   "constraint_rows": 0,
+   "trace_area_m2": 2.5024290831003233e-07,
+   "dropped_hanging_trace_dofs": 0,
+   "dropped_uninformative_constraint_rows": 0,
+   "mode_constant": {
+    "total_reaction_W_per_K": 1.97567740182118e-08,
+    "energy_W_per_K": 1.9756774018211798e-08,
+    "normalized_response_W_per_K_m2": 0.07895038525421319
+   },
+   "mode_linear_x": {
+    "total_reaction_W_per_K": 2.060039641154858e-10,
+    "energy_W_per_K": 1.728682017887169e-08,
+    "normalized_response_W_per_K_m2": 0.20706178479370704
+   },
+   "mode_linear_y": {
+    "total_reaction_W_per_K": -7.099996357370137e-11,
+    "energy_W_per_K": 1.726206177573274e-08,
+    "normalized_response_W_per_K_m2": 0.2060774304683981
+   },
+   "mode_radial_quadratic": {
+    "total_reaction_W_per_K": 2.651443600456116e-08,
+    "energy_W_per_K": 4.782969016439596e-08,
+    "normalized_response_W_per_K_m2": 0.30516361386703394
+   },
+   "row_sum_total_W_per_K": 1.9756774018212856e-08,
+   "row_sum_per_area_percentiles_W_per_K_m2": [
+    2.8365627594027703e-06,
+    3.8512928874326285e-05,
+    0.006938332835126989,
+    0.2074587631601948,
+    2.263440156823533
+   ],
+   "diag_per_area_percentiles_W_per_K_m2": [
+    2.5747274898172035,
+    2.8966368668359914,
+    3.551581788604711,
+    4.799694612265112,
+    15.519390106895731
+   ],
+   "row_sum_zero_area_trace_dofs": {
+    "count": 79,
+    "row_sum_total": 5.216174672967789e-09
+   },
+   "generalized_eigenvalues_W_per_K_m2": {
+    "smallest_6": [
+     0.04030881521846652,
+     0.10619393320354653,
+     0.10630334578047862,
+     0.17636596613537045,
+     0.22061178045596083,
+     0.22185349818342404
+    ],
+    "median": 3.6964177598646653,
+    "largest_3": [
+     40831408.087243244,
+     41029177.213076666,
+     41347242.026230216
+    ]
+   },
+   "effective_total_conductance_W_per_K": 1.9756774018212856e-08,
+   "actual_trace_reproduction_Q_over_P": 1.000001105360363
+  },
+  "Stack_NtD_uniform_footprint_flux": {
+   "loaded_area_m2": 2.5002176151870264e-07,
+   "reference_area_m2": 2.5e-07,
+   "mode_constant": {
+    "energy_K_per_W": 90908530.94247925,
+    "net_load": 1.0
+   },
+   "mode_linear_x": {
+    "energy_K_per_W": 11028233.320531078,
+    "net_load": -6.659544305930021e-05
+   },
+   "mode_linear_y": {
+    "energy_K_per_W": 11030998.635977453,
+    "net_load": -0.00011039302237253468
+   },
+   "mode_radial_quadratic": {
+    "energy_K_per_W": 30504805.604759496,
+    "net_load": 0.6667384339903215
+   },
+   "G_uniform_flux_W_per_K": 1.1000067756377364e-08
+  },
+  "TES_Membrane_local_operator": {
+   "operator": "TES_Membrane_local_operator",
+   "trace_dof_count": 2313,
+   "interior_dof_count": 1025,
+   "constraint_rows": 0,
+   "trace_area_m2": 2.5024290831003233e-07,
+   "dropped_hanging_trace_dofs": 0,
+   "dropped_uninformative_constraint_rows": 0,
+   "mode_constant": {
+    "total_reaction_W_per_K": 7.586211928728732e-06,
+    "energy_W_per_K": 7.586211928728731e-06,
+    "normalized_response_W_per_K_m2": 30.315392272095803
+   },
+   "mode_linear_x": {
+    "total_reaction_W_per_K": 1.999398891238384e-08,
+    "energy_W_per_K": 2.7176458878641067e-06,
+    "normalized_response_W_per_K_m2": 32.552002170196076
+   },
+   "mode_linear_y": {
+    "total_reaction_W_per_K": -1.5447634287043044e-09,
+    "energy_W_per_K": 2.711566762896688e-06,
+    "normalized_response_W_per_K_m2": 32.37114536496565
+   },
+   "mode_radial_quadratic": {
+    "total_reaction_W_per_K": 5.433610422800105e-06,
+    "energy_W_per_K": 5.440995429537633e-06,
+    "normalized_response_W_per_K_m2": 34.71471010171216
+   },
+   "row_sum_total_W_per_K": 7.586211928728732e-06,
+   "row_sum_per_area_percentiles_W_per_K_m2": [
+    28.25930416659189,
+    28.259304166591978,
+    28.259304166592077,
+    28.259304166592262,
+    109.91408739728985
+   ],
+   "diag_per_area_percentiles_W_per_K_m2": [
+    14.302380402055954,
+    14.344137196357769,
+    14.437807691992077,
+    14.82402643856659,
+    66.42419034477935
+   ],
+   "row_sum_zero_area_trace_dofs": {
+    "count": 79,
+    "row_sum_total": 2.06624776032903e-07
+   },
+   "generalized_eigenvalues_W_per_K_m2": {
+    "smallest_6": [
+     7.71471909243925,
+     7.74060410910264,
+     7.805115378741746,
+     7.811908238242917,
+     7.813089264770148,
+     7.826328379078253
+    ],
+    "median": 13.710382466186159,
+    "largest_3": [
+     205702126.8609582,
+     227594229.15026602,
+     247566655.12879962
+    ]
+   },
+   "effective_total_conductance_W_per_K": 7.586211928728732e-06
+  },
+  "TES_side_native_NtD": {
+   "source_dofs": 4436,
+   "mode_constant": {
+    "energy_K_per_W": 53239811.969945006,
+    "TES_mean_temperature_response_K_per_W": 53239655.188121796,
+    "net_source_W": 1.0
+   },
+   "mode_linear_x": {
+    "energy_K_per_W": 3065.441876661833,
+    "TES_mean_temperature_response_K_per_W": -30.861011696446848,
+    "net_source_W": 0.0
+   },
+   "mode_linear_y": {
+    "energy_K_per_W": 3065.411410672263,
+    "TES_mean_temperature_response_K_per_W": -66.10104886567257,
+    "net_source_W": -8.326672684688674e-17
+   },
+   "mode_radial_quadratic": {
+    "energy_K_per_W": 23703432.843514435,
+    "TES_mean_temperature_response_K_per_W": 35523816.24267941,
+    "net_source_W": 0.667262490138277
+   },
+   "constant_mode_reproduces_native_relative_error": 3.9578012818237526e-05
+  },
+  "TES_Membrane_mortar_slave_Dirichlet_wellposedness": {
+   "constraint_rows": 2218,
+   "master_dofs": 2313,
+   "sigma_min_over_max": 3.663614298292979e-11,
+   "near_null_count_rel_1e-6": 15,
+   "conclusion": "slave-side (TES) Dirichlet trace-to-flux map is ill-posed"
+  },
+  "sheet_annulus_operators": {
+   "Membrane_SiNx": {
+    "G_sheet_W_per_K": 6.000129298144958e-10,
+    "k_times_t_W_per_K": 2.8259304166591952e-11,
+    "shape_factor_mesh": 21.232402831907972,
+    "NtD_uniform_footprint_G_W_per_K": 3.335459628579678e-10,
+    "NtD_shape_factor_mesh": 11.80304939186311,
+    "hot_dofs": 4264,
+    "cold_dofs": 56,
+    "free_dofs": 2412,
+    "hot_nodes_exactly_on_s250": 28,
+    "cold_nodes_exactly_on_s350": 56,
+    "first_free_node_s_um": 250.509760942,
+    "annulus_elements": 2456,
+    "annulus_mean_edge_um": 11.525663061069196
+   },
+   "Membrane_Si1": {
+    "G_sheet_W_per_K": 9.000193947217056e-09,
+    "k_times_t_W_per_K": 4.238895624988793e-10,
+    "shape_factor_mesh": 21.232402831907073,
+    "NtD_uniform_footprint_G_W_per_K": 5.003189442869905e-09,
+    "NtD_shape_factor_mesh": 11.803049391864027,
+    "hot_dofs": 6396,
+    "cold_dofs": 84,
+    "free_dofs": 3618,
+    "hot_nodes_exactly_on_s250": 42,
+    "cold_nodes_exactly_on_s350": 84,
+    "first_free_node_s_um": 250.509760942,
+    "annulus_elements": 4912,
+    "annulus_mean_edge_um": 13.64456592719674
+   },
+   "SiO2_1": {
+    "G_sheet_W_per_K": 1.0488806998962893e-08,
+    "k_times_t_W_per_K": 4.94e-10,
+    "shape_factor_mesh": 21.232402831908693,
+    "NtD_uniform_footprint_G_W_per_K": 5.830706399585823e-09,
+    "NtD_shape_factor_mesh": 11.803049391874138,
+    "hot_dofs": 6396,
+    "cold_dofs": 84,
+    "free_dofs": 3618,
+    "hot_nodes_exactly_on_s250": 42,
+    "cold_nodes_exactly_on_s350": 84,
+    "first_free_node_s_um": 250.509760942,
+    "annulus_elements": 4912,
+    "annulus_mean_edge_um": 11.413465557869346
+   }
+  },
+  "Lambda_window_perimeter_to_bath": {
+   "trace_dof_count": 252,
+   "constant_mode_total_reaction_W_per_K": 0.0007484986575079081
+  }
+ },
+ "mode_rows": [
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 4.504347314780525e-14,
+   "reaction_density_W_per_K_m2": 4.397474130377873e-06,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 1.208812293410063e-12,
+   "reaction_density_W_per_K_m2": 4.016017590197327e-05,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 2.4137873663053232e-11,
+   "reaction_density_W_per_K_m2": 0.00048726163760276335,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 4.5504415419508555e-10,
+   "reaction_density_W_per_K_m2": 0.006505624100228092,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 1.580661186535787e-09,
+   "reaction_density_W_per_K_m2": 0.03701496989802074,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 2.8649507816479074e-09,
+   "reaction_density_W_per_K_m2": 0.10210320474387236,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "constant",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 4.213707613146953e-09,
+   "reaction_density_W_per_K_m2": 0.2795578056921751,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 0.00015534820552864483,
+   "reaction_W_per_K": 1.97625846256033e-16,
+   "reaction_density_W_per_K_m2": 1.9293684204884292e-08,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": -0.01016399977317995,
+   "reaction_W_per_K": -9.471518796253035e-14,
+   "reaction_density_W_per_K_m2": -3.1467074167761893e-06,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.0113138103116141,
+   "reaction_W_per_K": 7.55915115843945e-13,
+   "reaction_density_W_per_K_m2": 1.5259357239846155e-05,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": -0.002011612310990297,
+   "reaction_W_per_K": -8.081442433024842e-12,
+   "reaction_density_W_per_K_m2": -0.00011553785752921154,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": -0.0032389952099329913,
+   "reaction_W_per_K": -4.583324066301209e-11,
+   "reaction_density_W_per_K_m2": -0.0010732951741468744,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 0.013475165895995707,
+   "reaction_W_per_K": -4.5049137545601535e-11,
+   "reaction_density_W_per_K_m2": -0.001605494008419829,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_x",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": -0.03134592989670125,
+   "reaction_W_per_K": -6.657802524983055e-11,
+   "reaction_density_W_per_K_m2": -0.004417109195732834,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": -0.002422905831135937,
+   "reaction_W_per_K": -5.635727644488664e-16,
+   "reaction_density_W_per_K_m2": -5.502010566807698e-08,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": -0.0037698769531865485,
+   "reaction_W_per_K": -3.055525856698309e-14,
+   "reaction_density_W_per_K_m2": -1.0151324283099829e-06,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.002388126864646,
+   "reaction_W_per_K": 2.7383844136160613e-13,
+   "reaction_density_W_per_K_m2": 5.527867501464362e-06,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 0.0008261804215840085,
+   "reaction_W_per_K": 1.9769997008809982e-12,
+   "reaction_density_W_per_K_m2": 2.8264547037079716e-05,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": -0.00439330332928394,
+   "reaction_W_per_K": -6.140255584737429e-12,
+   "reaction_density_W_per_K_m2": -0.00014378880026359394,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 0.0036636704717263866,
+   "reaction_W_per_K": 2.78776480742164e-11,
+   "reaction_density_W_per_K_m2": 0.00099352394719399,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "linear_y",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 0.019176418763369844,
+   "reaction_W_per_K": 7.211596752416984e-11,
+   "reaction_density_W_per_K_m2": 0.0047845231533206484,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 0.027414001650600834,
+   "reaction_W_per_K": -6.202615472135122e-10,
+   "reaction_density_W_per_K_m2": -0.060554480312592765,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": 0.13504445708370885,
+   "reaction_W_per_K": -1.8199188034301737e-09,
+   "reaction_density_W_per_K_m2": -0.06046286894293762,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.3469605408357842,
+   "reaction_W_per_K": -2.9528438284753914e-09,
+   "reaction_density_W_per_K_m2": -0.059607881768411565,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 0.6664047112036076,
+   "reaction_W_per_K": -3.2981634322283703e-09,
+   "reaction_density_W_per_K_m2": -0.04715281212468242,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": 0.9644074709697062,
+   "reaction_W_per_K": 7.663920530622186e-10,
+   "reaction_density_W_per_K_m2": 0.017946906658948363,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 1.1597534874435989,
+   "reaction_W_per_K": 4.532329726164996e-09,
+   "reaction_density_W_per_K_m2": 0.1615264712265608,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "Lambda_membrane_trace_to_bath",
+   "mode": "radial_quadratic",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 1.2693276144273757,
+   "reaction_W_per_K": 7.994557243631187e-09,
+   "reaction_density_W_per_K_m2": 0.5303977128211044,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 2.894609884365986e-07,
+   "reaction_density_W_per_K_m2": 28.259304166592074,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 8.505987215586935e-07,
+   "reaction_density_W_per_K_m2": 28.259304166592074,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 1.3999039964132911e-06,
+   "reaction_density_W_per_K_m2": 28.25930416659207,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 1.97663298163472e-06,
+   "reaction_density_W_per_K_m2": 28.25930416659207,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 1.2067654080958641e-06,
+   "reaction_density_W_per_K_m2": 28.25930416659207,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 7.929380450299993e-07,
+   "reaction_density_W_per_K_m2": 28.259304166592063,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "constant",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 1.0,
+   "reaction_W_per_K": 5.487685264024938e-07,
+   "reaction_density_W_per_K_m2": 36.40796637036604,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 0.00015534820552864483,
+   "reaction_W_per_K": 6.506713732138563e-11,
+   "reaction_density_W_per_K_m2": 0.0063523310507080585,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": -0.01016399977317995,
+   "reaction_W_per_K": -8.690881980741452e-09,
+   "reaction_density_W_per_K_m2": -0.2887357706342144,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.0113138103116141,
+   "reaction_W_per_K": 1.5902332111243556e-08,
+   "reaction_density_W_per_K_m2": 0.32101404184942667,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": -0.002011612310990297,
+   "reaction_W_per_K": -4.105621516275659e-09,
+   "reaction_density_W_per_K_m2": -0.05869678807311309,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": -0.0032389952099329913,
+   "reaction_W_per_K": -3.916817091698297e-09,
+   "reaction_density_W_per_K_m2": -0.0917216592526125,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 0.013475165895995707,
+   "reaction_W_per_K": 1.0786642309349774e-08,
+   "reaction_density_W_per_K_m2": 0.38442222298037665,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_x",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": -0.03134592989670125,
+   "reaction_W_per_K": -7.128076786004972e-09,
+   "reaction_density_W_per_K_m2": -0.47291119556647465,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": -0.002422905831135937,
+   "reaction_W_per_K": -7.20605022808767e-10,
+   "reaction_density_W_per_K_m2": -0.07035074616967703,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": -0.0037698769531865485,
+   "reaction_W_per_K": -3.1482693042200944e-09,
+   "reaction_density_W_per_K_m2": -0.10459444343305639,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.002388126864646,
+   "reaction_W_per_K": 3.253483968304548e-09,
+   "reaction_density_W_per_K_m2": 0.06567678447737325,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 0.0008261804215840085,
+   "reaction_W_per_K": 1.8051466294103925e-09,
+   "reaction_density_W_per_K_m2": 0.025807617367397416,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": -0.00439330332928394,
+   "reaction_W_per_K": -5.491184012837034e-09,
+   "reaction_density_W_per_K_m2": -0.1285892338415142,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 0.0036636704717263866,
+   "reaction_W_per_K": 3.046989631412135e-09,
+   "reaction_density_W_per_K_m2": 0.1085908379932383,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "linear_y",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 0.019176418763369844,
+   "reaction_W_per_K": 8.813806488936745e-09,
+   "reaction_density_W_per_K_m2": 0.584750682310021,
+   "area_m2": 1.507275964881025e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "0-50",
+   "trace_nodes": 84,
+   "input_mean": 0.027414001650600834,
+   "reaction_W_per_K": 8.277629824487541e-09,
+   "reaction_density_W_per_K_m2": 0.808122919264762,
+   "area_m2": 1.0243033116816694e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "50-100",
+   "trace_nodes": 243,
+   "input_mean": 0.13504445708370885,
+   "reaction_W_per_K": 1.1594853866134646e-07,
+   "reaction_density_W_per_K_m2": 3.852139603147469,
+   "area_m2": 3.009977586653618e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "100-150",
+   "trace_nodes": 418,
+   "input_mean": 0.3469605408357842,
+   "reaction_W_per_K": 4.872869594374124e-07,
+   "reaction_density_W_per_K_m2": 9.8366676846676,
+   "area_m2": 4.9537808438618484e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "150-200",
+   "trace_nodes": 602,
+   "input_mean": 0.6664047112036076,
+   "reaction_W_per_K": 1.3194273512373327e-06,
+   "reaction_density_W_per_K_m2": 18.8634406036776,
+   "area_m2": 6.994627220763207e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "200-225",
+   "trace_nodes": 368,
+   "input_mean": 0.9644074709697062,
+   "reaction_W_per_K": 1.1652129280629745e-06,
+   "reaction_density_W_per_K_m2": 27.28625326187771,
+   "area_m2": 4.270329520436292e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "225-240",
+   "trace_nodes": 244,
+   "input_mean": 1.1597534874435989,
+   "reaction_W_per_K": 9.208182134990405e-07,
+   "reaction_density_W_per_K_m2": 32.81679084577512,
+   "area_m2": 2.8059361984128564e-08
+  },
+  {
+   "operator": "TES_Membrane_local_operator",
+   "mode": "radial_quadratic",
+   "s_bin_um": "240-250",
+   "trace_nodes": 165,
+   "input_mean": 1.2693276144273757,
+   "reaction_W_per_K": 7.009679533386103e-07,
+   "reaction_density_W_per_K_m2": 46.50561474281456,
+   "area_m2": 1.507275964881025e-08
+  }
+ ],
+ "mesh_stats": {
+  "TES": {
+   "elements": 4274,
+   "nodes": 4436
+  },
+  "Membrane_SiNx": {
+   "elements": 6702,
+   "nodes": 6732
+  },
+  "Membrane_Si1": {
+   "elements": 13404,
+   "nodes": 10098
+  },
+  "SiO2_1": {
+   "elements": 22652,
+   "nodes": 17262
+  },
+  "TES_edge_band_230_270um": {
+   "TES": {
+    "inplane_edge_mean_um_by_plane": {
+     "192": 11.706834457414088
+    },
+    "nodes_on_TES_edge_line_by_plane": {
+     "192": 174
+    },
+    "elements_in_band": 651
+   },
+   "Membrane_SiNx": {
+    "inplane_edge_mean_um_by_plane": {
+     "191": 11.818232397199653,
+     "192": 11.818232397199653
+    },
+    "nodes_on_TES_edge_line_by_plane": {
+     "191": 14,
+     "192": 174
+    },
+    "elements_in_band": 1363
+   },
+   "Membrane_Si1": {
+    "inplane_edge_mean_um_by_plane": {
+     "176": 11.818232397199653,
+     "184": 11.818232397199653,
+     "191": 11.818232397199653
+    },
+    "nodes_on_TES_edge_line_by_plane": {
+     "176": 14,
+     "184": 0,
+     "191": 14
+    },
+    "elements_in_band": 2726
+   },
+   "SiO2_1": {
+    "inplane_edge_mean_um_by_plane": {
+     "175": 11.818232397199653,
+     "176": 11.818232397199653
+    },
+    "nodes_on_TES_edge_line_by_plane": {
+     "175": 14,
+     "176": 14
+    },
+    "elements_in_band": 2726
+   }
+  },
+  "TES_bottom_trace_faces": 4274,
+  "Membrane_top_under_TES_faces": 4255
+ },
+ "trace_face_counts": {
+  "TES_bottom": 4274,
+  "Membrane_top_under_TES": 4255,
+  "MembraneSiNx_sidewall_to_SiNx": 28,
+  "MembraneSi1_sidewall_to_Si_1": 56,
+  "frame_top_SiNx": 4624,
+  "bath": 4624
+ },
+ "trace_areas_m2": {
+  "TES_bottom": 2.5e-07,
+  "Membrane_top_under_TES": 2.5024290831003233e-07,
+  "MembraneSiNx_sidewall_to_SiNx": 2.7999999999999924e-09,
+  "MembraneSi1_sidewall_to_Si_1": 4.200000000000004e-08,
+  "frame_top_SiNx": 1.751e-05,
+  "bath": 1.751e-05
+ },
+ "graph": {
+  "bodies": {
+   "1": "SiO2_2",
+   "2": "Si_2",
+   "3": "SiO2_1",
+   "4": "Si_1",
+   "5": "Membrane_Si1",
+   "6": "SiNx",
+   "7": "Membrane_SiNx",
+   "8": "TES",
+   "9": "Stycast",
+   "10": "abs"
+  },
+  "edges": [
+   {
+    "bodies": [
+     "SiO2_2",
+     "Si_2"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 2416,
+    "shared_faces": 4624
+   },
+   {
+    "bodies": [
+     "Si_2",
+     "SiO2_1"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 2416,
+    "shared_faces": 4624
+   },
+   {
+    "bodies": [
+     "SiO2_1",
+     "Si_1"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 2416,
+    "shared_faces": 4624
+   },
+   {
+    "bodies": [
+     "SiO2_1",
+     "Membrane_Si1"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 3366,
+    "shared_faces": 6702
+   },
+   {
+    "bodies": [
+     "Si_1",
+     "Membrane_Si1"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 84,
+    "shared_faces": 56
+   },
+   {
+    "bodies": [
+     "Si_1",
+     "SiNx"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 2416,
+    "shared_faces": 4624
+   },
+   {
+    "bodies": [
+     "Si_1",
+     "Membrane_SiNx"
+    ],
+    "coupling_type": "conformal shared-node line only (rim)",
+    "shared_nodes": 28,
+    "shared_faces": 0
+   },
+   {
+    "bodies": [
+     "Membrane_Si1",
+     "SiNx"
+    ],
+    "coupling_type": "conformal shared-node line only (rim)",
+    "shared_nodes": 28,
+    "shared_faces": 0
+   },
+   {
+    "bodies": [
+     "Membrane_Si1",
+     "Membrane_SiNx"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 3366,
+    "shared_faces": 6702
+   },
+   {
+    "bodies": [
+     "SiNx",
+     "Membrane_SiNx"
+    ],
+    "coupling_type": "conformal shared-face",
+    "shared_nodes": 56,
+    "shared_faces": 28
+   },
+   {
+    "bodies": [
+     "Stycast",
+     "abs"
+    ],
+    "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+    "constraint_rows": 1671
+   },
+   {
+    "bodies": [
+     "Stycast",
+     "TES"
+    ],
+    "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+    "constraint_rows": 1671
+   },
+   {
+    "bodies": [
+     "Membrane_SiNx",
+     "TES"
+    ],
+    "coupling_type": "mortar Lagrange multiplier (Galerkin plane projector)",
+    "constraint_rows": 2218
+   }
+  ],
+  "bath": {
+   "dirichlet_rows": 2416,
+   "T_K": 0.15,
+   "location": "SiO2_2 bottom z=-177um"
+  }
+ },
+ "provenance": {
+  "case": "historical",
+  "mesh": "work/meshes/mesh_singlepixel_prod_v2",
+  "mesh_hash_sha256": "283cfe1faf9d3b3f68035f17658d7976b99973d222156fb1a64bfda623a771d5:bd4f93c6f61470848e750bf6d8ba930fe6d1e4b2f2f4476747c8039ccfd9c87c:806c56b0ec4f31e85ac815786f45bc6db55896ae3ddc4568b81d0a06c8cf27c7",
+  "audit_commit_parent_sha": "a301347887e344f10694d2211617be11ed1da705",
+  "heatsolve_binary": "tools/elmer-hypre/install-steady-full-capture/bin/ElmerSolver.exe (CPU MUMPS; capture hook opt-in, default OFF)",
+  "points": {
+   "0p95P": {
+    "P_W": 3.042854524009381e-10,
+    "capture": "artifacts/phase24_thermal_network_localization/capture/historical_0p95P/ts0001_nl0001",
+    "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "rhs_sha256": "6e5f6946ab5531ff0fffc31c0ce6cabbaf46b6f7e69630f99d89d4315f0965d1",
+    "solution_sha256": "bf00bd32748cf4f165f18283c5d4c88556b76c0420c5f65b347335cbf65710b5",
+    "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "sif": "artifacts/phase24_thermal_network_localization/historical_0p95P.sif",
+    "sif_sha256": "c42c7dbbb923c6685ee081ed8295ba4f57f096a869f29c2818cb508ebf8f3670",
+    "solver_log": "artifacts/phase24_thermal_network_localization/historical_0p95P.solver.log",
+    "solver_ALL_DONE": true,
+    "backend": "CPU direct mumps",
+    "capture_kind": "solve_with_linear_restriction_full_system",
+    "capture_flags": {
+     "Phase24 Full Restriction Capture": true,
+     "TES Inner Circuit Freeze Power": true,
+     "Nonlinear System Max Iterations": 1
+    }
+   },
+   "1p00P": {
+    "P_W": 3.203004762115138e-10,
+    "capture": "artifacts/phase24_thermal_network_localization/capture/historical_1p00P/ts0001_nl0001",
+    "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "rhs_sha256": "5981e0d06bfdc7644253f5f7f7039b6bf9a38745f7ea50408017adfbab2c7c8b",
+    "solution_sha256": "a662d7070b269236904fa356cf979fa81e5e653dcf11fd3a196617e8572bb327",
+    "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "sif": "artifacts/phase24_thermal_network_localization/historical_1p00P.sif",
+    "sif_sha256": "f14bd7eb9e44fc1cb8f65072fab6e3885bdc1a562fae68a643846d8ec459d590",
+    "solver_log": "artifacts/phase24_thermal_network_localization/historical_1p00P.solver.log",
+    "solver_ALL_DONE": true,
+    "backend": "CPU direct mumps",
+    "capture_kind": "solve_with_linear_restriction_full_system",
+    "capture_flags": {
+     "Phase24 Full Restriction Capture": true,
+     "TES Inner Circuit Freeze Power": true,
+     "Nonlinear System Max Iterations": 1
+    }
+   },
+   "1p05P": {
+    "P_W": 3.3631550002208954e-10,
+    "capture": "artifacts/phase24_thermal_network_localization/capture/historical_1p05P/ts0001_nl0001",
+    "matrix_sha256": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "rhs_sha256": "24ee970482d217ec86e43764b811905b5c4422cdb811e112b85dbefa8fd90974",
+    "solution_sha256": "e964fe16b6977da9e30cf593f1bd3ad5238516b0aabf6448c7782b08598a601c",
+    "metadata_matrix_sha_before": "e0e0441a5a6825201367662a70dcbcbcb0550c58961d1bbdeb99fb02531f2194",
+    "sif": "artifacts/phase24_thermal_network_localization/historical_1p05P.sif",
+    "sif_sha256": "ce1fae01141027ce35ca3b44be08391fa1f1ab92f2c070cd31108ed06c945f7f",
+    "solver_log": "artifacts/phase24_thermal_network_localization/historical_1p05P.solver.log",
+    "solver_ALL_DONE": true,
+    "backend": "CPU direct mumps",
+    "capture_kind": "solve_with_linear_restriction_full_system",
+    "capture_flags": {
+     "Phase24 Full Restriction Capture": true,
+     "TES Inner Circuit Freeze Power": true,
+     "Nonlinear System Max Iterations": 1
+    }
+   }
+  }
+ }
+}
