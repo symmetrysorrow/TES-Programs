@@ -1,0 +1,38 @@
+{
+  "status": "invalid controlled mesh",
+  "solver_executed": false,
+  "target": "Membrane/substrate trace/local mesh only",
+  "checks": {
+    "TES_element_count": {
+      "base": 1175,
+      "candidate": 1175,
+      "changed": false
+    },
+    "Stycast_element_count": {
+      "base": 38000,
+      "candidate": 35698,
+      "changed": true
+    },
+    "Stycast_upper_faces": {
+      "base": 4579,
+      "candidate": 2932,
+      "changed": true
+    },
+    "TES_zmax_faces": {
+      "base": 308,
+      "candidate": 308,
+      "changed": false
+    },
+    "Membrane_TES_faces": {
+      "base": 308,
+      "candidate": 308,
+      "changed": false
+    },
+    "bath_faces": {
+      "base": 18592,
+      "candidate": 18618,
+      "changed": true
+    }
+  },
+  "reason": "non-target mesh statistics changed; candidate is not used as a controlled convergence point"
+}

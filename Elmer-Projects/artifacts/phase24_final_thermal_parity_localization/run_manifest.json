@@ -1,0 +1,75 @@
+{
+  "P0_W": 3.203004762115138e-10,
+  "bath_K": 0.15,
+  "solver": "CPU native HeatSolve MUMPS",
+  "mesh_generation": "serialized; unique diagnostic directory",
+  "physics_changed": false,
+  "production_mesh_overwritten": false,
+  "runs": [
+    {
+      "case": "membrane_substrate_intermediate",
+      "G_eff_W_per_K": NaN,
+      "G_secant_W_per_K": NaN,
+      "historical_ratio": NaN,
+      "power_points": "not run: mesh gate failed",
+      "solver_status": "NOT RUN; invalid controlled mesh",
+      "residual_source": "pre-solver gate"
+    },
+    {
+      "case": "refined_mortar_parent",
+      "G_eff_W_per_K": 2.029899315e-08,
+      "G_secant_W_per_K": NaN,
+      "historical_ratio": 1.0807141033876306,
+      "power_points": "0.95/1.00/1.05 P0 (existing audited capture)",
+      "solver_status": "existing ALL DONE / exit 0; CPU native HeatSolve MUMPS",
+      "residual_source": "existing audited capture"
+    },
+    {
+      "case": "membrane_substrate_control",
+      "G_eff_W_per_K": 1.959713948e-08,
+      "G_secant_W_per_K": NaN,
+      "historical_ratio": 1.0433475623932875,
+      "power_points": "0.95/1.00/1.05 P0 (existing audited capture)",
+      "solver_status": "existing ALL DONE / exit 0; CPU native HeatSolve MUMPS",
+      "residual_source": "existing audited capture"
+    }
+  ],
+  "tes_membrane_gate": {
+    "status": "invalid controlled mesh",
+    "solver_executed": false,
+    "target": "TES/Membrane trace only",
+    "checks": {
+      "node_count": {
+        "base": 99185,
+        "candidate": 104806,
+        "changed": true
+      },
+      "element_count": {
+        "base": 495944,
+        "candidate": 526152,
+        "changed": true
+      },
+      "Stycast_upper_faces": {
+        "base": 4579,
+        "candidate": 4070,
+        "changed": true
+      },
+      "TES_zmax_faces": {
+        "base": 308,
+        "candidate": 310,
+        "changed": true
+      },
+      "Membrane_SiNx_faces": {
+        "base": 308,
+        "candidate": 5242,
+        "changed": true
+      },
+      "bath_faces": {
+        "base": 18592,
+        "candidate": 18610,
+        "changed": true
+      }
+    },
+    "reason": "candidate changes non-target topology/statistics; previous result is retained as confounded evidence"
+  }
+}

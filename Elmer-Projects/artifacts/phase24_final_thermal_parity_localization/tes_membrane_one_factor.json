@@ -1,0 +1,38 @@
+{
+  "status": "invalid controlled mesh",
+  "solver_executed": false,
+  "target": "TES/Membrane trace only",
+  "checks": {
+    "node_count": {
+      "base": 99185,
+      "candidate": 104806,
+      "changed": true
+    },
+    "element_count": {
+      "base": 495944,
+      "candidate": 526152,
+      "changed": true
+    },
+    "Stycast_upper_faces": {
+      "base": 4579,
+      "candidate": 4070,
+      "changed": true
+    },
+    "TES_zmax_faces": {
+      "base": 308,
+      "candidate": 310,
+      "changed": true
+    },
+    "Membrane_SiNx_faces": {
+      "base": 308,
+      "candidate": 5242,
+      "changed": true
+    },
+    "bath_faces": {
+      "base": 18592,
+      "candidate": 18610,
+      "changed": true
+    }
+  },
+  "reason": "candidate changes non-target topology/statistics; previous result is retained as confounded evidence"
+}
