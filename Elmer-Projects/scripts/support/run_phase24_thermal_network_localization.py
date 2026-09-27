@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "artifacts" / "phase24_thermal_network_localization"
 SOLVER = ROOT.parent / "tools" / "elmer-hypre" / "install-steady-full-capture" / "bin" / "ElmerSolver.exe"
 RUNTIME = SOLVER.parent
-TOOLCHAIN = Path(r"C:\msys64\ucrt64\bin")
+TOOLCHAIN = Path(os.environ.get("TES_TOOLCHAIN_BIN", r"C:\msys64\ucrt64\bin"))
 P0 = 3.203004762115138e-10
 TBATH = 0.150
 

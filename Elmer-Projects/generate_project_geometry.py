@@ -491,6 +491,76 @@ class TesGmshBuilder(GmshApiBuilder):
                     float(self.spec.mesh_min), h_tes_interface
                 ))
 
+        # Diagnostic-only TES/Membrane trace refinement.  Unlike
+        # TES_INTERFACE_REFINE_H, this box stops at the TES bottom face so
+        # the TES/Stycast top trace is not refined at the same time.
+        h_tes_membrane = os.environ.get("TES_MEMBRANE_TRACE_REFINE_H")
+        if h_tes_membrane:
+            h_tes_membrane = float(h_tes_membrane)
+            if h_tes_membrane <= 0.0:
+                raise ValueError("TES_MEMBRANE_TRACE_REFINE_H must be positive")
+            tes_boxes = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")) == "TES"
+            ]
+            membrane_boxes = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")).startswith("Membrane_SiNx")
+            ]
+            if tes_boxes and membrane_boxes:
+                tes = tes_boxes[0]
+                membrane_zmin = min(float(box.zmin) for box in membrane_boxes)
+                entries.append((
+                    float(tes.xmin), float(tes.xmax),
+                    float(tes.ymin), float(tes.ymax),
+                    membrane_zmin - 1.0e-9,
+                    float(tes.zmin) + 1.0e-9,
+                    h_tes_membrane,
+                ))
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_tes_membrane
+                ))
+
+        # Diagnostic-only refinement of the downstream Membrane->substrate
+        # trace neighborhood.  It starts below Membrane_SiNx, so the direct
+        # TES/Membrane trace remains at the parent-mesh resolution.  The XY
+        # pad is intentionally small and local to the TES footprint.
+        h_membrane_substrate = os.environ.get("MEMBRANE_SUBSTRATE_TRACE_REFINE_H")
+        if h_membrane_substrate:
+            h_membrane_substrate = float(h_membrane_substrate)
+            if h_membrane_substrate <= 0.0:
+                raise ValueError(
+                    "MEMBRANE_SUBSTRATE_TRACE_REFINE_H must be positive"
+                )
+            tes_boxes = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")) == "TES"
+            ]
+            membrane_boxes = [
+                box for box in self.build_boxes
+                if str(getattr(box, "name", "")).startswith("Membrane_SiNx")
+            ]
+            stack_boxes = [
+                box for box in self.build_boxes
+                if not any(str(getattr(box, "name", "")).startswith(prefix)
+                           for prefix in ("TES", "Stycast", "abs"))
+            ]
+            if tes_boxes and membrane_boxes and stack_boxes:
+                tes = tes_boxes[0]
+                membrane_zmin = min(float(box.zmin) for box in membrane_boxes)
+                stack_zmin = min(float(box.zmin) for box in stack_boxes)
+                pad_xy = 1.0e-5
+                entries.append((
+                    float(tes.xmin) - pad_xy, float(tes.xmax) + pad_xy,
+                    float(tes.ymin) - pad_xy, float(tes.ymax) + pad_xy,
+                    stack_zmin - 1.0e-9,
+                    membrane_zmin + 1.0e-9,
+                    h_membrane_substrate,
+                ))
+                _original_set_number("Mesh.CharacteristicLengthMin", min(
+                    float(self.spec.mesh_min), h_membrane_substrate
+                ))
+
         # Diagnostic-only hook: refine the opposite, Stycast/substrate
         # contact side without changing the TES-side contact layer.  The
         # layered Stycast construction names its last layer explicitly; keep

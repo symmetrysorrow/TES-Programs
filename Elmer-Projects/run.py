@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-ELMERSOLVER = r"C:\Program Files\Elmer 26.1-Release\bin\ElmerSolver.exe"
+ELMERSOLVER = os.path.join(os.environ.get("ELMER_HOME", r"C:\Program Files\Elmer 26.1-Release"), "bin", "ElmerSolver.exe")
 
 
 def load_model(project_path: Path) -> dict:

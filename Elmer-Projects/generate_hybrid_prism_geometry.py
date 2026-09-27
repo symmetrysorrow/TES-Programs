@@ -9,6 +9,7 @@ all-tetrahedral comparison mesh.
 from __future__ import annotations
 
 import argparse
+import math
 import json
 import sys
 from collections import Counter, defaultdict
@@ -77,6 +78,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--stycast-layers", type=int, default=1, metavar="COUNT",
         help="number of prism elements through the Stycast thickness (default: 1)",
     )
+    parser.add_argument(
+        "--conformal-tes-stack", action="store_true",
+        help=(
+            "imprint the TES rectangle and Stycast disk into the stack footprint so "
+            "TES/Membrane and Stycast/TES share nodes (no mortar); only Stycast/abs "
+            "remains nonconforming"
+        ),
+    )
+    parser.add_argument(
+        "--conformal-abs", action="store_true",
+        help="with --conformal-tes-stack, also make Stycast/abs node-conforming (no mortar at all)",
+    )
     for name, help_name in (
         ("sio2-2", "lower SiO2"),
         ("si-2", "lower Si"),
@@ -106,6 +119,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--absorber-local-radius must be positive")
     if args.stycast_diameter <= 0.0:
         parser.error("--stycast-diameter must be positive")
+    if args.conformal_abs and not args.conformal_tes_stack:
+        parser.error("--conformal-abs requires --conformal-tes-stack")
     for name in ("stycast", "sio2_2", "si_2", "sio2_1", "si_1", "sinx", "tes"):
         if getattr(args, f"{name}_layers") < 1:
             parser.error(f"--{name.replace('_', '-')}-layers must be at least 1")
@@ -360,6 +375,47 @@ def _join_ring_and_centre(ring_faces: list[int], centre: int) -> tuple[list[int]
     return outer, inner
 
 
+def _imprint_tes_footprint(
+    centre_faces: list[int], x0: float, y0: float, tes_x: float, tes_y: float, sty_d: float, z: float,
+) -> tuple[list[int], list[str]]:
+    """Split the membrane footprint into annulus / TES-outside-disk / disk.
+
+    The pieces are extruded through every stack layer, so the TES outline and
+    the Stycast disk appear as shared mesh edges on the membrane top and the
+    TES top.  Returns the faces and a parallel list of their kinds.
+    """
+    tes = _rectangle(x0 - tes_x / 2.0, x0 + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z)
+    disk = gmsh.model.occ.addDisk(x0, y0, z, sty_d / 2.0, sty_d / 2.0)
+    result, _ = gmsh.model.occ.fragment(
+        [(2, face) for face in centre_faces], [(2, tes), (2, disk)],
+        removeObject=True, removeTool=True,
+    )
+    gmsh.model.occ.synchronize()
+    faces = [tag for dim, tag in result if dim == 2]
+    kinds: list[str] = []
+    r_disk = sty_d / 2.0
+    # OCC bounding boxes carry a ~1e-7 m tolerance, so classify by exact
+    # area: the three pieces are the disk, the TES rectangle minus the disk
+    # and the membrane square minus the TES rectangle.
+    disk_area = math.pi * r_disk * r_disk
+    tes_outer_area = tes_x * tes_y - disk_area
+    for face in faces:
+        area = gmsh.model.occ.getMass(2, face)
+        if abs(area - disk_area) < 1.0e-4 * disk_area:
+            kinds.append("disk")
+        elif abs(area - tes_outer_area) < 1.0e-4 * tes_x * tes_y:
+            kinds.append("tes_outer")
+        else:
+            kinds.append("annulus")
+    counts = Counter(kinds)
+    if counts["disk"] != 1 or counts["tes_outer"] < 1 or counts["annulus"] < 1:
+        raise RuntimeError(f"failed to imprint TES/Stycast footprint: {dict(counts)}")
+    tes_area = sum(gmsh.model.occ.getMass(2, f) for f, k in zip(faces, kinds) if k != "annulus")
+    if abs(tes_area - tes_x * tes_y) > 1.0e-6 * tes_x * tes_y:
+        raise RuntimeError(f"imprinted TES area {tes_area} != {tes_x * tes_y}")
+    return faces, kinds
+
+
 def _rectangle(xmin: float, xmax: float, ymin: float, ymax: float, z: float) -> int:
     return gmsh.model.occ.addRectangle(xmin, ymin, z, xmax - xmin, ymax - ymin)
 
@@ -466,6 +522,13 @@ def main(argv: list[str] | None = None) -> int:
     centre = _rectangle(mx0, mx1, my0, my1, z_sio2_1)
     ring_top, centre_faces = _join_ring_and_centre(ring_top, centre)
     faces_by_name["Si_2"]["zmax"] = list(ring_top)
+    # Per centre face: "annulus", "tes_outer" or "disk".  Extrusion keeps the
+    # input order, so this list stays parallel to centre_top below.
+    centre_kind = ["annulus"] * len(centre_faces)
+    if args.conformal_tes_stack:
+        centre_faces, centre_kind = _imprint_tes_footprint(
+            centre_faces, x0, y0, tes_x, tes_y, sty_d, z_sio2_1
+        )
 
     pairs = _extrude_partitioned(ring_top + centre_faces, p["SiO2_1_dz"], args.sio2_1_layers)
     split = len(ring_top)
@@ -495,27 +558,67 @@ def main(argv: list[str] | None = None) -> int:
     ring_top = [top for _, top in pairs[:split]]
     centre_top = [top for _, top in pairs[split:]]
     faces_by_name["SiNx"]["zmax"] += ring_top
-    faces_by_name["Membrane_SiNx"]["zmax"] += centre_top
+    if not args.conformal_tes_stack:
+        faces_by_name["Membrane_SiNx"]["zmax"] += centre_top
 
-    tes = _rectangle(x0 - tes_x / 2.0, x0 + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z_tes)
-    v, _ = _extrude([tes], tes_z, args.tes_layers)
-    volumes["TES"] += v
-    faces_by_name["TES"]["zmin"] += [tes]
-    faces_by_name["TES"]["zmax"] += _
-    disk = gmsh.model.occ.addDisk(x0, y0, z_sty, sty_d / 2.0, sty_d / 2.0)
-    v, _ = _extrude([disk], sty_z, layers=args.stycast_layers)
-    volumes["Stycast"] += v
-    faces_by_name["Stycast"]["zmin"] += [disk]
-    faces_by_name["Stycast"]["zmax"] += _
+        tes = _rectangle(x0 - tes_x / 2.0, x0 + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z_tes)
+        v, _ = _extrude([tes], tes_z, args.tes_layers)
+        volumes["TES"] += v
+        faces_by_name["TES"]["zmin"] += [tes]
+        faces_by_name["TES"]["zmax"] += _
+        disk = gmsh.model.occ.addDisk(x0, y0, z_sty, sty_d / 2.0, sty_d / 2.0)
+        v, _ = _extrude([disk], sty_z, layers=args.stycast_layers)
+        volumes["Stycast"] += v
+        faces_by_name["Stycast"]["zmin"] += [disk]
+        faces_by_name["Stycast"]["zmax"] += _
+    else:
+        # TES grows from its imprinted footprint on the membrane top and the
+        # Stycast from the imprinted disk on the TES top: both interfaces are
+        # the same OCC faces on either side, hence node-conforming.
+        faces_by_name["Membrane_SiNx"]["zmax"] += [f for f, k in zip(centre_top, centre_kind) if k == "annulus"]
+        tes_base = [f for f, k in zip(centre_top, centre_kind) if k != "annulus"]
+        tes_kind = [k for k in centre_kind if k != "annulus"]
+        pairs = _extrude_partitioned(tes_base, tes_z, args.tes_layers)
+        volumes["TES"] += [vol for vol, _ in pairs]
+        faces_by_name["TES"]["zmin"] += tes_base
+        tes_top = [top for _, top in pairs]
+        disk_top = [f for f, k in zip(tes_top, tes_kind) if k == "disk"]
+        faces_by_name["TES"]["zmax"] += [f for f, k in zip(tes_top, tes_kind) if k != "disk"]
+        v, sty_top = _extrude(disk_top, sty_z, layers=args.stycast_layers)
+        volumes["Stycast"] += v
+        faces_by_name["Stycast"]["zmin"] += disk_top
+        faces_by_name["Stycast"]["zmax"] += sty_top
 
     # Only the absorber is deliberately left to the 3-D tetrahedral mesher.
     abs_tag = gmsh.model.occ.addBox(x0 - abs_x / 2.0, y0 - abs_y / 2.0, z_abs, abs_x, abs_y, abs_z)
+    abs_disk_face = None
+    if args.conformal_abs:
+        # Imprint the Stycast disk into the absorber bottom.  The imprinted
+        # face gets the Stycast top mesh through an identity periodic map, and
+        # ElmerGrid -merge then fuses the coincident nodes: no mortar remains.
+        disk_abs = gmsh.model.occ.addDisk(x0, y0, z_abs, sty_d / 2.0, sty_d / 2.0)
+        result, _ = gmsh.model.occ.fragment([(3, abs_tag)], [(2, disk_abs)], removeObject=True, removeTool=True)
+        abs_vols = [tag for dim, tag in result if dim == 3]
+        if len(abs_vols) != 1:
+            raise RuntimeError(f"absorber fragment produced {abs_vols}")
+        abs_tag = abs_vols[0]
     gmsh.model.occ.synchronize()
     volumes["abs"].append(abs_tag)
     abs_faces = [face for dim, face in gmsh.model.getBoundary([(3, abs_tag)], False, False) if dim == 2]
     horizontal = sorted((gmsh.model.occ.getCenterOfMass(2, face)[2], face) for face in abs_faces)
-    faces_by_name["abs"]["zmin"] += [horizontal[0][1]]
-    faces_by_name["abs"]["zmax"] += [horizontal[-1][1]]
+    z_bottom = horizontal[0][0]
+    bottom = [face for zc, face in horizontal if abs(zc - z_bottom) < 1.0e-9]
+    top = [face for zc, face in horizontal if abs(zc - horizontal[-1][0]) < 1.0e-9]
+    faces_by_name["abs"]["zmin"] += bottom
+    faces_by_name["abs"]["zmax"] += top
+    if args.conformal_abs:
+        disk_area = math.pi * (sty_d / 2.0) ** 2
+        disks = [f for f in bottom if abs(gmsh.model.occ.getMass(2, f) - disk_area) < 1.0e-4 * disk_area]
+        if len(disks) != 1 or len(sty_top) != 1:
+            raise RuntimeError(f"cannot pair absorber disk {disks} with Stycast top {sty_top}")
+        abs_disk_face = disks[0]
+        identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        gmsh.model.mesh.setPeriodic(2, [abs_disk_face], [sty_top[0]], identity)
     _add_physical_volumes(volumes)
     _add_boundary_groups(faces_by_name, bath_faces)
     configure_local_fields(local_profile, absorber_profile)

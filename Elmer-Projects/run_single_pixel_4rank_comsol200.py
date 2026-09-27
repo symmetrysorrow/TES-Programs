@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import re
 import shutil
 import subprocess
@@ -23,8 +24,8 @@ text = text.replace("generated/cases/case_tes_single_pixel_4rank_comsol200.sif",
                     "generated/cases/case_tes_single_pixel_4rank_comsol200.sif")
 sif.write_text(text, encoding="utf-8")
 log = OUT / "solver.log"
-solver = Path(r"C:\Program Files\Elmer 26.1-Release\bin\ElmerSolver.exe")
-mpiexec = Path(r"C:\Program Files\Microsoft MPI\Bin\mpiexec.exe")
+solver = Path(os.environ.get("ELMER_HOME", r"C:\Program Files\Elmer 26.1-Release")) / "bin" / "ElmerSolver.exe"
+mpiexec = Path(os.environ.get("MSMPI_BIN", r"C:\Program Files\Microsoft MPI\Bin")) / "mpiexec.exe"
 with log.open("w", encoding="utf-8") as f:
     p = subprocess.run([str(mpiexec), "-n", "4", str(solver), str(sif)], cwd=ROOT,
                        stdout=f, stderr=subprocess.STDOUT)

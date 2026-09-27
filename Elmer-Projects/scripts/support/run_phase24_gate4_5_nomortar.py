@@ -59,6 +59,10 @@ SHORT_STAGES = [
 PULSE_EVENT_S = 0.020020
 OUT_ROOT = ROOT / "artifacts" / "phase24_gate4_5_nomortar"
 APPLY_MORTAR_BCS = False
+CONFORMAL_TES_STACK = False
+# Extra case keys (e.g. membrane_k_udf, phase24_vector_assembly) merged into
+# every generated case.
+EXTRA_CASE_OPTIONS: dict[str, Any] = {}
 RUN_TAG = ""
 NONLINEAR_TOLERANCE = 1.0e-8
 NONLINEAR_MAX_ITERATIONS = 120
@@ -127,9 +131,81 @@ def hybrid_schedule() -> list[list[object]]:
     return hybrid_timesteps(original)
 
 
+# Full pulse-and-recovery window: the COMSOL current drop peaks ~0.43 ms
+# after the pulse and has decayed to ~0.03 uA by 75 ms.  The first 100 us
+# reuse the established hybrid grid; later steps grow with the response
+# time scale.
+LONG_75MS_TAIL = [
+    ["2[us]", 40],     # 20.120 -> 20.200 ms (rise to the peak)
+    ["5[us]", 60],     # -> 20.500 ms (peak at ~20.448 ms)
+    ["10[us]", 50],    # -> 21.000 ms
+    ["25[us]", 40],    # -> 22.000 ms
+    ["50[us]", 60],    # -> 25.000 ms
+    ["100[us]", 100],  # -> 35.000 ms
+    ["250[us]", 80],   # -> 55.000 ms
+    ["500[us]", 40],   # -> 75.000 ms
+]
+
+
+def bdf2_ratio_limited_schedule(end_after_pulse_s: float = 0.055) -> list[list[object]]:
+    """75 ms schedule for variable-step BDF2.
+
+    Variable-step BDF2 is zero-stable only for step ratios below 1+sqrt(2);
+    growing the step by at most 2x keeps the pulse jump from being amplified
+    (a 10x jump multiplied the response ~7x).  The cap follows the response
+    time scale (rise ~160 us, peak ~430 us, decay ~12 ms).
+    """
+    caps = [(100e-6, 2.5e-6), (200e-6, 5e-6), (500e-6, 10e-6), (1e-3, 25e-6),
+            (2e-3, 50e-6), (5e-3, 100e-6), (15e-3, 250e-6), (35e-3, 500e-6),
+            (float("inf"), 1e-3)]
+    steps: list[float] = []
+    t = 0.0
+    dt = 1e-9  # the 1 ns pulse window
+    while t < end_after_pulse_s - 1e-15:
+        cap = next(c for limit, c in caps if t < limit)
+        dt = min(dt, cap, end_after_pulse_s - t)
+        steps.append(dt)
+        t += dt
+        dt = min(2.0 * dt, cap)
+    schedule: list[list[object]] = [["18[us]", 1], ["1[us]", 2]]
+    for value in steps:
+        token = f"{value:.12e}[s]"
+        if schedule[-1][0] == token:
+            schedule[-1][1] += 1
+        else:
+            schedule.append([token, 1])
+    return schedule
+
+
 def trim_schedule(schedule: list[list[object]], window: str) -> list[list[object]]:
     if window == "short":
         return copy.deepcopy(SHORT_STAGES)
+    if window == "75ms_bdf2":
+        return bdf2_ratio_limited_schedule()
+    if window == "75ms_coarse":
+        # Coarse schedule intended for BDF2 (bdf_order=2): same pulse
+        # deposition grid, then steps that follow the response time scale.
+        return [
+            ["18[us]", 1], ["1[us]", 2],
+            ["1[ns]", 1], ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9],
+            ["2.5[us]", 36],   # -> 20.120 ms
+            ["5[us]", 16],     # -> 20.200 ms
+            ["10[us]", 30],    # -> 20.500 ms (peak ~20.43 ms)
+            ["25[us]", 20],    # -> 21.0 ms
+            ["50[us]", 20],    # -> 22.0 ms
+            ["100[us]", 30],   # -> 25.0 ms
+            ["250[us]", 40],   # -> 35.0 ms
+            ["500[us]", 40],   # -> 55.0 ms
+            ["1[ms]", 20],     # -> 75.0 ms
+        ]
+    if window == "nltest2":
+        return [["18[us]", 1], ["1[us]", 2], ["250[us]", 4]]
+    if window == "nltest":
+        # Solver-behaviour probe only (not a physics window): reaches the
+        # large-dt regime of the 75 ms schedule within 40 steps.
+        return [["18[us]", 1], ["1[us]", 2], ["50[us]", 20], ["250[us]", 20]]
+    if window == "75ms":
+        return trim_schedule(schedule, "100us") + copy.deepcopy(LONG_75MS_TAIL)
     target_us = {"40us": 40.0, "100us": 100.0, "1ms": 1000.0}[window]
     target_s = PULSE_EVENT_S + target_us * 1.0e-6
     elapsed = 0.0
@@ -221,6 +297,9 @@ def refinement_spec(
     )
     candidate.pop("pulse", None)
     candidate.pop("timesteps", None)
+    if CONFORMAL_TES_STACK:
+        candidate["conformal_tes_stack"] = True
+    candidate.update(EXTRA_CASE_OPTIONS)
     candidate["solver"] = {
         **candidate.get("solver", {}),
         "linear_system": "mumps",
@@ -273,6 +352,8 @@ def prepare_project(window: str, backend: str) -> tuple[Path, str]:
     )
     name = case_name(window, backend)
     out = OUT_ROOT / window / ("mortar" if APPLY_MORTAR_BCS else backend)
+    if RUN_TAG:
+        out = out / f"{RUN_TAG}_{backend}"
     out.mkdir(parents=True, exist_ok=True)
     state_path = ROOT / "work" / "meshes" / MESH / f"{name}.state"
     shutil.copy2(REFERENCE_STATE, state_path)
@@ -320,6 +401,9 @@ def prepare_project(window: str, backend: str) -> tuple[Path, str]:
         },
     }
     candidate["output_intervals"] = [1] * len(candidate["timesteps"])
+    if CONFORMAL_TES_STACK:
+        candidate["conformal_tes_stack"] = True
+    candidate.update(EXTRA_CASE_OPTIONS)
     solver = {
         **candidate.get("solver", {}),
         "linear_system": "mumps" if backend == "mumps" else HYPRE_SYSTEM,
@@ -520,7 +604,7 @@ def evaluate_gate5(records: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--window", choices=("short", "40us", "100us", "1ms"), default="short")
+    parser.add_argument("--window", choices=("short", "40us", "100us", "1ms", "75ms", "nltest", "nltest2", "75ms_coarse", "75ms_bdf2"), default="short")
     parser.add_argument("--backend", choices=("mumps", "hypre", "both"), default="both")
     parser.add_argument("--solver", type=Path, default=Path(r"D:\Github\TES-Programs\tools\elmer-hypre\install-stage11\bin\ElmerSolver.exe"))
     parser.add_argument("--runtime-bin", type=Path, default=Path(r"D:\Github\TES-Programs\tools\elmer-hypre\install-stage11\bin"))
@@ -530,6 +614,14 @@ def main() -> int:
         "--mortar",
         action="store_true",
         help="diagnostic only: enable Elmer Mortar BCs on the same mesh",
+    )
+    parser.add_argument("--case-option", action="append", default=[], metavar="KEY=JSON",
+                        help="extra case key merged into the generated case, e.g. membrane_k_udf=true")
+    parser.add_argument("--hypre-system", default=None, help="override the HYPRE linear-system preset (e.g. iterative_hypre_pcg_boomeramg)")
+    parser.add_argument(
+        "--conformal-tes-stack",
+        action="store_true",
+        help="mesh from generate_hybrid_prism_geometry.py --conformal-tes-stack: only the Stycast/abs mortar is generated",
     )
     parser.add_argument("--linear-tolerance", type=float, default=None, help="override HYPRE linear convergence tolerance")
     parser.add_argument("--max-iterations", type=int, default=None, help="override HYPRE linear iteration limit")
@@ -551,10 +643,16 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
-    global APPLY_MORTAR_BCS, HYPRE_TOLERANCE, HYPRE_MAX_ITERATIONS, RUN_TAG
+    global APPLY_MORTAR_BCS, CONFORMAL_TES_STACK, HYPRE_SYSTEM, HYPRE_TOLERANCE, HYPRE_MAX_ITERATIONS, RUN_TAG
     global NONLINEAR_TOLERANCE, NONLINEAR_MAX_ITERATIONS
     global REFERENCE_CASE, REFERENCE_RESULT, REFERENCE_STATE
     APPLY_MORTAR_BCS = bool(args.mortar)
+    CONFORMAL_TES_STACK = bool(args.conformal_tes_stack)
+    if args.hypre_system:
+        HYPRE_SYSTEM = args.hypre_system
+    for item in args.case_option:
+        key, _, value = item.partition("=")
+        EXTRA_CASE_OPTIONS[key] = json.loads(value)
     if args.linear_tolerance is not None:
         HYPRE_TOLERANCE = args.linear_tolerance
     if args.max_iterations is not None:
@@ -654,7 +752,7 @@ def main() -> int:
         payload["restart_refinement"] = refinement_record
         payload["restart_refinement_paths"] = refinement_paths
     if {"mumps", "hypre"}.issubset(backends):
-        end_us = {"short": 0.9, "40us": 40.0, "100us": 100.0, "1ms": 1000.0}[args.window]
+        end_us = {"short": 0.9, "40us": 40.0, "100us": 100.0, "1ms": 1000.0, "75ms": 54980.0, "nltest": 6000.0, "nltest2": 900.0, "75ms_coarse": 54980.0, "75ms_bdf2": 54980.0}[args.window]
         series_ready = all(Path(paths[backend]["series"]).is_file() for backend in ("mumps", "hypre"))
         if series_ready:
             metrics = compare_waveforms(paths["hypre"]["series"], paths["mumps"]["series"], out / "comparison", end_us)

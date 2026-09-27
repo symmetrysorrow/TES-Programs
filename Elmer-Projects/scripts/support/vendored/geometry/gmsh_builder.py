@@ -2,6 +2,7 @@
 (import paths adjusted only). See vendored/__init__.py for policy."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from collections import defaultdict
 import gmsh
@@ -142,7 +143,12 @@ class GmshApiBuilder:
         gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
         gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
         gmsh.option.setNumber("Mesh.Optimize", 1)
-        gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
+        # Diagnostic opt-out: the Netgen optimizer can crash on very fine
+        # thin-layer refinements.  Default behaviour is unchanged.
+        gmsh.option.setNumber("Mesh.OptimizeNetgen", 0 if os.environ.get("GMSH_NO_NETGEN_OPTIMIZE") else 1)
+        if os.environ.get("GMSH_VERBOSE"):
+            gmsh.option.setNumber("General.Terminal", 1)
+            gmsh.option.setNumber("General.Verbosity", 4)
 
         field_ids: list[int] = []
         if refinement_balls:

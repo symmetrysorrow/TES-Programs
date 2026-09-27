@@ -1,0 +1,39 @@
+{
+  "case": "tm_on_ms",
+  "G_eff_W_per_K": 1.955767393059499e-08,
+  "G_secant_W_per_K": 1.9557571665537918e-08,
+  "historical_ratio": 1.0412464248873647,
+  "power_points": "0.95/1.00/1.05 P0",
+  "solver_status": "ALL DONE / exit 0; CPU native HeatSolve MUMPS",
+  "residual_source": "native full restriction capture",
+  "gate": "valid controlled mesh",
+  "runs": [
+    {
+      "case": "tm_on_ms",
+      "fraction": 0.95,
+      "name": "tm_on_ms_0p95P",
+      "status": "ran",
+      "power_W": 3.042854524009381e-10,
+      "sif": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_0p95P.sif",
+      "log": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_0p95P.solver.log"
+    },
+    {
+      "case": "tm_on_ms",
+      "fraction": 1.0,
+      "name": "tm_on_ms_1p00P",
+      "status": "ran",
+      "power_W": 3.203004762115138e-10,
+      "sif": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_1p00P.sif",
+      "log": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_1p00P.solver.log"
+    },
+    {
+      "case": "tm_on_ms",
+      "fraction": 1.05,
+      "name": "tm_on_ms_1p05P",
+      "status": "ran",
+      "power_W": 3.3631550002208954e-10,
+      "sif": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_1p05P.sif",
+      "log": "artifacts\\phase24_tes_membrane_trace_fix\\tm_on_ms_1p05P.solver.log"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ Templates:
 """
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -150,7 +151,39 @@ def matc_guarded_membrane_expr(model: dict) -> str:
     return guarded.replace("**", "^")
 
 
-def materials_block(model: dict) -> list[str]:
+def membrane_power_law(model: dict) -> tuple[float, float]:
+    """Return (C, p) with k(T) = C * T**p for the Membrane conductivity.
+
+    The project expression is evaluated numerically at three temperatures;
+    anything that is not an exact power law is rejected, so the compiled
+    UDF path can never silently change the physics.
+    """
+    membrane_expr = str(model["materials"]["Membrane"]["k"]["expression"])
+    params = model["parameters"]
+    names = sorted(
+        (n for n in set(re.findall(r"[A-Za-z_]\w*", membrane_expr)) if n in params),
+        key=len,
+        reverse=True,
+    )
+    inlined = membrane_expr
+    for name in names:
+        inlined = re.sub(rf"\b{re.escape(name)}\b", f"({fmt(params[name])})", inlined)
+    leftover = set(re.findall(r"\b[A-Za-z_]\w*\b", re.sub(r"\d[\d.]*[eE][+-]?\d+", "0", inlined))) - {"T"}
+    if leftover:
+        raise ValueError(f"Membrane k expression has unresolved names {sorted(leftover)}: {inlined}")
+
+    def k_of(t: float) -> float:
+        return float(eval(re.sub(r"\bT\b", f"({t!r})", inlined), {"__builtins__": {}}, {}))
+
+    t1, t2, t3 = 0.10, 0.20, 0.155
+    exponent = math.log(k_of(t2) / k_of(t1)) / math.log(t2 / t1)
+    coefficient = k_of(t1) / t1**exponent
+    if abs(coefficient * t3**exponent / k_of(t3) - 1.0) > 1.0e-12:
+        raise ValueError(f"Membrane k expression is not a pure power law: {inlined}")
+    return _round_noise(coefficient), _round_noise(exponent)
+
+
+def materials_block(model: dict, membrane_k_udf: bool = False) -> list[str]:
     materials = model["materials"]
     lines: list[str] = []
     order = [
@@ -178,11 +211,24 @@ def materials_block(model: dict) -> list[str]:
         '  Name = "Membrane"',
         f"  Density = {fmt(membrane['rho']['nominal'])}",
         f"  Heat Capacity = {fmt(membrane['cp']['nominal'])}",
-        "  Heat Conductivity = Variable Temperature",
-        f'    Real MATC "{matc_guarded_membrane_expr(model)}"',
-        "End",
-        "",
     ]
+    if membrane_k_udf:
+        # Same k(T) as the MATC form, evaluated by compiled code: MATC is an
+        # interpreter called at every integration point of every assembly.
+        coefficient, exponent = membrane_power_law(model)
+        lines += [
+            "  Heat Conductivity = Variable Temperature",
+            '    Real Procedure "tes_membrane_conductivity" "MembraneConductivity"',
+            f"  Membrane Conductivity Coefficient = Real {coefficient!r}",
+            f"  Membrane Conductivity Exponent = Real {exponent!r}",
+            "  Membrane Conductivity Temperature Floor = Real 1.0e-12",
+        ]
+    else:
+        lines += [
+            "  Heat Conductivity = Variable Temperature",
+            f'    Real MATC "{matc_guarded_membrane_expr(model)}"',
+        ]
+    lines += ["End", ""]
     return lines
 
 
@@ -323,6 +369,7 @@ def solver1_block(
     phase24_preconditioner_lag_krylov_relative_growth: float | None = None,
     phase24_preconditioner_lag_nonlinear_threshold: float | None = None,
     phase24_hypre_reuse: bool = False,
+    extra_solver_keywords: list[str] | None = None,
     comment: str | None = None,
 ) -> list[str]:
     lines = [
@@ -332,6 +379,9 @@ def solver1_block(
         "  Variable = Temperature",
         "  Variable DOFs = 1",
     ]
+    # Verbatim solver keywords from the case (diagnostic/opt-in switches).
+    for keyword in extra_solver_keywords or []:
+        lines.append(f"  {keyword}")
     if phase24_vector_assembly:
         lines.append("  Phase24 Vector Assembly = Logical True")
     if phase24_wall_profiling:
@@ -441,6 +491,8 @@ def solver1_block(
         "iterative_hypre_flexgmres_boomeramg_gpu",
         "iterative_hypre_flexgmres_mgr",
         "iterative_hypre_flexgmres_mgr_gpu",
+        "iterative_hypre_pcg_boomeramg",
+        "iterative_hypre_pcg_boomeramg_gpu",
     }:
         # CUDA/HIP-safe HYPRE IJ choices: PMIS, extended+i interpolation, and
         # l1-Jacobi.  The same formulation is also the CPU correctness gate.
@@ -449,7 +501,10 @@ def solver1_block(
         lines += [
             "  Linear System Use Hypre = True",
             "  Linear System Solver = Iterative",
-            "  Linear System Iterative Method = FlexGMRES",
+            # PCG is valid only for an SPD system, i.e. a mesh without
+            # mortar constraints (generate_hybrid_prism_geometry.py
+            # --conformal-tes-stack --conformal-abs).
+            f"  Linear System Iterative Method = {'PCG' if '_pcg_' in linear_system else 'FlexGMRES'}",
             f"  Linear System Preconditioning = {hypre_preconditioning}",
             f"  Linear System Max Iterations = {solver.get('linear_system_max_iterations', 2000)}",
             f"  Linear System Convergence Tolerance = {fmt_real(solver.get('linear_system_convergence_tolerance', 1.0e-11))}",
@@ -457,8 +512,8 @@ def solver1_block(
             "  Linear System Residual Output = 1",
             f"  HYPRE GmRes Dimension = {solver.get('hypre_gmres_dimension', 100)}",
             f"  HYPRE GPU = Logical {'True' if hypre_gpu else 'False'}",
-            "  BoomerAMG Relax Type = 18",
-            "  BoomerAMG Coarsen Type = 8",
+            f"  BoomerAMG Relax Type = {solver.get('boomer_amg_relax_type', 18)}",
+            f"  BoomerAMG Coarsen Type = {solver.get('boomer_amg_coarsen_type', 8)}",
             "  BoomerAMG Num Sweeps = 1",
             "  BoomerAMG Max Levels = 25",
             "  BoomerAMG Interpolation Type = 6",
@@ -467,6 +522,14 @@ def solver1_block(
             "  BoomerAMG Num Functions = 1",
             f"  BoomerAMG Strong Threshold = {fmt_real(solver.get('boomer_amg_strong_threshold', 0.25))}",
         ]
+        if solver.get("linear_system_residual_mode"):
+            # Solve A dx = b - A x0: the relative tolerance then refers to the
+            # current residual instead of ||b||, which is dominated by the
+            # bath/mass terms and hides the small TES/pulse RHS changes.
+            lines.append("  Linear System Residual Mode = True")
+        if "linear_system_abort_not_converged" in solver:
+            lines = [l for l in lines if not l.startswith("  Linear System Abort Not Converged")]
+            lines.append(f"  Linear System Abort Not Converged = {bool(solver['linear_system_abort_not_converged'])}")
     elif linear_system in {
         "iterative_hypre_block_diag",
         "iterative_hypre_block_diag_gpu",
@@ -743,7 +806,8 @@ def resolve_bath_boundaries(mesh_names: MeshNames) -> list[int]:
 
 
 def resolve_mortar_pairs(
-    mesh_names: MeshNames, *, reverse_stycast_abs: bool = False
+    mesh_names: MeshNames, *, reverse_stycast_abs: bool = False,
+    conformal_tes_stack: bool = False,
 ) -> list[tuple[int, str, int, str]]:
     """(slave target, slave label, master target, master label) for every
     mortar pair, expanded over whichever of the "", "_L", "_R" stack
@@ -775,6 +839,11 @@ def resolve_mortar_pairs(
 
     pairs = []
     for slave_base, slave_face, master_base, master_face, master_suffixed in _MORTAR_PAIRS:
+        # A conformal TES stack (generate_hybrid_prism_geometry.py
+        # --conformal-tes-stack) shares nodes across TES/Membrane and
+        # Stycast/TES; only the tetrahedral absorber still needs a mortar.
+        if conformal_tes_stack and master_base in ("Membrane_SiNx", "TES"):
+            continue
         for sfx in suffixes:
             if reverse_stycast_abs and slave_base == "Stycast" and master_base == "abs":
                 slave_base, master_base = master_base, slave_base
@@ -809,7 +878,7 @@ def _target_boundaries_line(targets: list[int]) -> str:
 
 def bodies_and_bcs(
     mesh_names: MeshNames, with_pulse: bool, *, reverse_stycast_abs: bool = False,
-    apply_mortar_bcs: bool = True,
+    apply_mortar_bcs: bool = True, conformal_tes_stack: bool = False,
 ) -> list[str]:
     bodies = resolve_bodies(mesh_names)
     # TES-role bodies get Body Force 1..N (ascending target id, i.e. one per
@@ -845,7 +914,8 @@ def bodies_and_bcs(
     bc_number = 2
     master_bc_of: dict[int, int] = {}
     mortar_pairs = resolve_mortar_pairs(
-        mesh_names, reverse_stycast_abs=reverse_stycast_abs
+        mesh_names, reverse_stycast_abs=reverse_stycast_abs,
+        conformal_tes_stack=conformal_tes_stack,
     ) if apply_mortar_bcs else []
     for slave_target, slave_label, master_target, master_label in mortar_pairs:
         slave_bc = bc_number
@@ -1286,6 +1356,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
                 phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
                 phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
                 phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
+                extra_solver_keywords=spec.get("extra_solver_keywords"),
                 comment=spec.get("solver_comment"),
             )
             lines.append("")
@@ -1314,6 +1385,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
             phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
             phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
+                extra_solver_keywords=spec.get("extra_solver_keywords"),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -1337,6 +1409,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             phase24_preconditioner_lag_krylov_relative_growth=spec.get("phase24_preconditioner_lag_krylov_relative_growth"),
             phase24_preconditioner_lag_nonlinear_threshold=spec.get("phase24_preconditioner_lag_nonlinear_threshold"),
             phase24_hypre_reuse=bool(spec.get("phase24_hypre_reuse")),
+                extra_solver_keywords=spec.get("extra_solver_keywords"),
             comment=spec.get("solver_comment"),
         )
         lines.append("")
@@ -1358,13 +1431,14 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     else:
         lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
 
-    lines += materials_block(model)
+    lines += materials_block(model, membrane_k_udf=bool(spec.get("membrane_k_udf", False)))
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)
     body_lines = bodies_and_bcs(
         mesh_names,
         with_pulse,
         reverse_stycast_abs=bool(spec.get("reverse_stycast_abs_mortar", False)),
         apply_mortar_bcs=bool(spec.get("apply_mortar_bcs", True)),
+        conformal_tes_stack=bool(spec.get("conformal_tes_stack", False)),
     )
     body_lines = [
         line.replace("__T_BATH__", fmt(params["T_bath"])) for line in body_lines

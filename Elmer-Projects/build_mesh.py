@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -24,7 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 MESH_ROOT = ROOT / "work" / "meshes"
-ELMERGRID = r"C:\Program Files\Elmer 26.1-Release\bin\ElmerGrid.exe"
+ELMERGRID = os.path.join(os.environ.get("ELMER_HOME", r"C:\Program Files\Elmer 26.1-Release"), "bin", "ElmerGrid.exe")
 
 
 def sha256(path: Path) -> str:
