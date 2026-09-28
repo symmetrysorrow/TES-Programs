@@ -53,6 +53,24 @@ CASES = {
             (1.05, ROOT / "work/meshes/mesh_phase24_stycast_density_10um/phase24_historical_density_1p05p.result", ROOT / "artifacts/p24d10b/capture/phase24_historical_density_1p05P/ts0001_nl0001"),
         ],
     },
+    "tes_membrane_trace_historical": {
+        "mesh": ROOT / "work/meshes/mesh_phase24_trace_tes_membrane_historical",
+        "body_ids": {"TES": 101, "Membrane_SiNx": 103, "Stycast": 102, "SiO2_1": 104, "Si_1": 105, "SiNx": 106, "Si_2": 107, "SiO2_2": 108, "Membrane_Si1": 109},
+        "runs": [
+            (0.95, ROOT / "work/meshes/mesh_phase24_trace_tes_membrane_historical/tm_hist_0p95P.result", ROOT / "artifacts/p24trace/tm/capture/tm_hist_0p95P/ts0001_nl0001"),
+            (1.00, ROOT / "work/meshes/mesh_phase24_trace_tes_membrane_historical/tm_hist_1p00P.result", ROOT / "artifacts/p24trace/tm/capture/tm_hist_1p00P/ts0001_nl0001"),
+            (1.05, ROOT / "work/meshes/mesh_phase24_trace_tes_membrane_historical/tm_hist_1p05P.result", ROOT / "artifacts/p24trace/tm/capture/tm_hist_1p05P/ts0001_nl0001"),
+        ],
+    },
+    "membrane_substrate_trace_historical": {
+        "mesh": ROOT / "work/meshes/mesh_phase24_trace_membrane_substrate_historical",
+        "body_ids": {"TES": 101, "Membrane_SiNx": 103, "Stycast": 102, "SiO2_1": 104, "Si_1": 105, "SiNx": 106, "Si_2": 107, "SiO2_2": 108, "Membrane_Si1": 109},
+        "runs": [
+            (0.95, ROOT / "work/meshes/mesh_phase24_trace_membrane_substrate_historical/ms_hist_0p95P.result", ROOT / "artifacts/p24trace/ms/capture/ms_hist_0p95P/ts0001_nl0001"),
+            (1.00, ROOT / "work/meshes/mesh_phase24_trace_membrane_substrate_historical/ms_hist_1p00P.result", ROOT / "artifacts/p24trace/ms/capture/ms_hist_1p00P/ts0001_nl0001"),
+            (1.05, ROOT / "work/meshes/mesh_phase24_trace_membrane_substrate_historical/ms_hist_1p05P.result", ROOT / "artifacts/p24trace/ms/capture/ms_hist_1p05P/ts0001_nl0001"),
+        ],
+    },
 }
 
 
@@ -180,6 +198,23 @@ def main() -> int:
         })
     write_csv(OUT / "resistance_comparison.csv", comparison_rows)
 
+    conductance_rows: list[dict[str, Any]] = []
+    for case_name, points in grouped.items():
+        tes_minus, tes_plus = points[0.95]["TES"], points[1.05]["TES"]
+        geff = (0.10 * P0) / (tes_plus - tes_minus)
+        conductance_rows.append({
+            "case": case_name,
+            "G_eff_W_per_K": geff,
+            "G_ratio_to_historical": geff / 1.8782944616314638e-08,
+            "G_delta_vs_refined_mortar": geff / next(
+                row["G_eff_W_per_K"] for row in conductance_rows if row["case"] == "refined_mortar"
+            ) - 1.0 if any(row["case"] == "refined_mortar" for row in conductance_rows) else float("nan"),
+        })
+    refined_geff = next(row["G_eff_W_per_K"] for row in conductance_rows if row["case"] == "refined_mortar")
+    for row in conductance_rows:
+        row["G_delta_vs_refined_mortar"] = row["G_eff_W_per_K"] / refined_geff - 1.0
+    write_csv(OUT / "controlled_test_conductance.csv", conductance_rows)
+
     summary = [
         "# Refined Phase24 thermal-resistance decomposition",
         "",
@@ -188,6 +223,9 @@ def main() -> int:
         "The endpoint budget is TES -> Membrane_SiNx -> bath-side SiO2_2 -> bath. The middle term includes the intervening SiO2/Si/SiNx/Membrane stack and any parallel network paths; it is not a unique single-interface resistance.",
         "",
     ]
+    for row in conductance_rows:
+        summary.append(f"- controlled case `{row['case']}`: `G_eff={float(row['G_eff_W_per_K']):.9e} W/K`, historical ratio `{float(row['G_ratio_to_historical']):.6f}`")
+    summary.append("")
     for row in comparison_rows:
         summary.append(f"- {row['segment']}: historical `{float(row['historical_R_K_per_W']):.9e} K/W`, refined mortar `{float(row['refined_mortar_R_K_per_W']):.9e} K/W`, delta `{float(row['refined_minus_historical_R_K_per_W']):.9e} K/W`, share `{float(row['share_of_total_delta']):.3f}`")
     summary += [

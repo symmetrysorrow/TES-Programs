@@ -1,0 +1,105 @@
+{
+  "schema": "tes.phase24.gate4_5.nomortar.v1",
+  "window": "100us",
+  "policy": {
+    "mesh": "mesh_hybrid_fullconf_h12",
+    "mortar": false,
+    "initial_reference_case": "case_phase24_g3_mesh_hybrid_fullconf_h12_hybfull_h1_87ab7d",
+    "reference_case": "case_phase24_g3_mesh_hybrid_fullconf_h12_hybfull_h1_87ab7d",
+    "restart_refinement": false,
+    "hypre_system": "iterative_hypre_flexgmres_boomeramg",
+    "hypre_max_iterations": 4000,
+    "hypre_tolerance": 2e-08,
+    "boomer_amg_strong_threshold": 0.5
+  },
+  "paths": {
+    "mumps": {
+      "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate4_5_nomortar\\100us\\mumps\\hybf12m_mumps\\project.json",
+      "name": "case_phase24_g45_hybf12_100us_mumps_hybf12m",
+      "series": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g45_hybf12_100us_mumps_hybf12m\\case_phase24_g45_hybf12_100us_mumps_hybf12m_series.csv",
+      "log": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g45_hybf12_100us_mumps_hybf12m\\solver.log",
+      "manifest": "D:\\Github\\TES-Programs\\Elmer-Projects\\results\\case_phase24_g45_hybf12_100us_mumps_hybf12m\\manifest.json"
+    }
+  },
+  "runs": {
+    "mumps": {
+      "command": [
+        "C:\\Users\\Nao\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\run.py",
+        "case_phase24_g45_hybf12_100us_mumps_hybf12m",
+        "--project",
+        "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate4_5_nomortar\\100us\\mumps\\hybf12m_mumps\\project.json",
+        "--mpi-procs",
+        "1",
+        "--elmer-solver",
+        "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin\\ElmerSolver.exe",
+        "--runtime-bin",
+        "D:\\Github\\TES-Programs\\tools\\elmer-hypre\\install-stage11\\bin",
+        "--toolchain-bin",
+        "G:\\Elmer-Migration\\msys64\\ucrt64\\bin"
+      ],
+      "started": "2026-09-24T17:29:39.580833+00:00",
+      "finished": "2026-09-24T20:08:37.606443+00:00",
+      "elapsed_seconds": 9538.025609400001,
+      "exit_code": 0,
+      "launcher_log": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_gate4_5_nomortar\\100us\\mumps\\hybf12m_mumps\\launcher.log",
+      "audit": {
+        "all_done": true,
+        "stop_1": 0,
+        "mpi_abort": false,
+        "native_crash": false,
+        "linear_residuals": [],
+        "linear_residual_final": null,
+        "manifest_exit_code": 0,
+        "solver_completed": true
+      },
+      "memory": {
+        "records": 0,
+        "private_bytes_initial": null,
+        "private_bytes_final": null,
+        "private_bytes_peak": null,
+        "working_set_initial": null,
+        "working_set_final": null,
+        "working_set_peak": null,
+        "private_bytes_monotonic_non_decreasing": false,
+        "raw_records": []
+      }
+    }
+  },
+  "gate5": {
+    "status": "FAIL",
+    "backends": {
+      "mumps": {
+        "status": "FAIL",
+        "criteria": {
+          "normal_exit": true,
+          "no_stop_or_abort": true,
+          "memory_trace_recorded": false,
+          "private_usage_not_monotonic_increase": true,
+          "working_set_peak_within_1p25x_initial": false
+        },
+        "memory": {
+          "records": 0,
+          "private_bytes_initial": null,
+          "private_bytes_final": null,
+          "private_bytes_peak": null,
+          "working_set_initial": null,
+          "working_set_final": null,
+          "working_set_peak": null,
+          "private_bytes_monotonic_non_decreasing": false,
+          "raw_records": []
+        },
+        "audit": {
+          "all_done": true,
+          "stop_1": 0,
+          "mpi_abort": false,
+          "native_crash": false,
+          "linear_residuals": [],
+          "linear_residual_final": null,
+          "manifest_exit_code": 0,
+          "solver_completed": true
+        }
+      }
+    }
+  }
+}

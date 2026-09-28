@@ -12,26 +12,45 @@ from pathlib import Path
 from scripts.support.mesh_names import parse_mesh_names
 
 TET_TYPE = "504"
+PRISM_TYPE = "706"
+# Bodies that receive the pulse (their union is "the absorber" for the pulse
+# centre and the discrete norm).  build_cases sets it from the mesh role table;
+# the default is the conventional body name.
+PULSE_BODY_NAMES: tuple[str, ...] = ("abs",)
+
+
+def set_pulse_bodies(names) -> None:
+    global PULSE_BODY_NAMES
+    PULSE_BODY_NAMES = tuple(names) if names else ("abs",)
 
 
 def _load_abs_tets(mesh_dir: Path):
+    """Nodes, linear tetrahedra and their volumes of the pulse bodies.
+
+    Wedges (706) are split into three tetrahedra, so a prism absorber works
+    too (the nodal-interpolated integrals stay exact for linear fields)."""
     import numpy as np
 
-    # Body IDs are assigned by the mesh converter.  The original tetra mesh
-    # happened to use 100 for `abs`; the hybrid prism mesh correctly uses a
-    # compact physical-group ID instead, so resolve the name from mesh.names.
-    absorber_body_id = parse_mesh_names(mesh_dir / "mesh.names").bodies.get("abs")
-    if absorber_body_id is None:
-        raise ValueError(f"No absorber body named 'abs' in {mesh_dir / 'mesh.names'}")
+    # Body IDs are assigned by the mesh converter: resolve them by name.
+    bodies = parse_mesh_names(mesh_dir / "mesh.names").bodies
+    missing = [n for n in PULSE_BODY_NAMES if n not in bodies]
+    if missing:
+        raise ValueError(f"pulse bodies {missing} not in {mesh_dir / 'mesh.names'}")
+    body_ids = {str(bodies[n]) for n in PULSE_BODY_NAMES}
     nodes = np.loadtxt(mesh_dir / "mesh.nodes", usecols=(2, 3, 4))
     tets = []
     with (mesh_dir / "mesh.elements").open() as f:
         for line in f:
             parts = line.split()
-            if len(parts) >= 7 and parts[1] == str(absorber_body_id) and parts[2] == TET_TYPE:
+            if len(parts) < 7 or parts[1] not in body_ids:
+                continue
+            if parts[2] == TET_TYPE:
                 tets.append([int(x) - 1 for x in parts[3:7]])
+            elif parts[2] == PRISM_TYPE and len(parts) >= 9:
+                a, b, c, d, e, g = (int(x) - 1 for x in parts[3:9])
+                tets += [[a, b, c, d], [b, c, d, e], [c, d, e, g]]
     if not tets:
-        raise ValueError(f"No absorber (body {ABS_BODY_ID}) tetrahedra found in {mesh_dir}")
+        raise ValueError(f"No tetrahedra/wedges in pulse bodies {PULSE_BODY_NAMES} of {mesh_dir}")
     tets = np.array(tets)
     p1, p2, p3, p4 = (nodes[tets[:, i]] for i in range(4))
     volumes = np.abs(np.einsum("ij,ij->i", p2 - p1, np.cross(p3 - p1, p4 - p1))) / 6.0

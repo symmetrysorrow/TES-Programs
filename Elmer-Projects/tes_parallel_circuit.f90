@@ -250,6 +250,23 @@ CONTAINS
     IF (.NOT. Found) Power = CircuitPower
     HeatSource = Power / Volume
   END FUNCTION TESParallelHeatSourceCore
+
+  ! Circuit k of a multi-TES model ('TES Circuit Count' > 0): HeatSolve
+  ! publishes 'TES <k> Parallel Power'; the body force of TES body k calls
+  ! TESParallelHeatSource<k>.
+  FUNCTION TESNumberedHeatSourceCore(Model, k) RESULT(HeatSource)
+    TYPE(Model_t) :: Model
+    INTEGER, INTENT(IN) :: k
+    REAL(KIND=dp) :: HeatSource, Volume, Power
+    LOGICAL :: Found
+    CHARACTER(LEN=16) :: tag
+    WRITE(tag,'(A,I0,A)') 'TES ', k, ' '
+    Volume = GetConstReal(Model % Constants, TRIM(tag)//' Volume', Found)
+    IF (.NOT. Found) CALL Fatal('TESParallelHeatSource', TRIM(tag)//' Volume is required')
+    Power = GetConstReal(Model % Constants, TRIM(tag)//' Parallel Power', Found)
+    IF (.NOT. Found) CALL Fatal('TESParallelHeatSource', TRIM(tag)//' Parallel Power not published yet')
+    HeatSource = Power / Volume
+  END FUNCTION TESNumberedHeatSourceCore
 END MODULE TESParallelCircuitModule
 
 SUBROUTINE TESParallelCircuitSolver(Model, Solver, dt, TransientSimulation)
@@ -270,3 +287,77 @@ FUNCTION TESParallelHeatSource(Model, Node, Temperature) RESULT(HeatSource)
   REAL(KIND=dp) :: Temperature, HeatSource
   HeatSource = TESParallelHeatSourceCore(Model, Node, Temperature)
 END FUNCTION TESParallelHeatSource
+
+! Numbered entry points for multi-TES models (one per TES body force).
+
+FUNCTION TESParallelHeatSource1(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 1)
+END FUNCTION TESParallelHeatSource1
+
+FUNCTION TESParallelHeatSource2(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 2)
+END FUNCTION TESParallelHeatSource2
+
+FUNCTION TESParallelHeatSource3(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 3)
+END FUNCTION TESParallelHeatSource3
+
+FUNCTION TESParallelHeatSource4(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 4)
+END FUNCTION TESParallelHeatSource4
+
+FUNCTION TESParallelHeatSource5(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 5)
+END FUNCTION TESParallelHeatSource5
+
+FUNCTION TESParallelHeatSource6(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 6)
+END FUNCTION TESParallelHeatSource6
+
+FUNCTION TESParallelHeatSource7(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 7)
+END FUNCTION TESParallelHeatSource7
+
+FUNCTION TESParallelHeatSource8(Model, Node, Temperature) RESULT(HeatSource)
+  USE DefUtils
+  USE TESParallelCircuitModule, ONLY: TESNumberedHeatSourceCore
+  TYPE(Model_t) :: Model
+  INTEGER :: Node
+  REAL(KIND=dp) :: Temperature, HeatSource
+  HeatSource = TESNumberedHeatSourceCore(Model, 8)
+END FUNCTION TESParallelHeatSource8

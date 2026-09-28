@@ -385,7 +385,14 @@ def prepare_project(window: str, backend: str) -> tuple[Path, str]:
         out = out / f"{RUN_TAG}_{backend}"
     out.mkdir(parents=True, exist_ok=True)
     state_path = ROOT / "work" / "meshes" / MESH / f"{name}.state"
-    shutil.copy2(REFERENCE_STATE, state_path)
+    # Multi-TES (numbered inner circuits) keep one state file per circuit,
+    # '<case>_<k>.state'; a single-pixel reference has only '<case>.state'.
+    numbered = sorted(REFERENCE_STATE.parent.glob(f"{REFERENCE_CASE}_[0-9]*.state"))
+    for src in numbered:
+        k = src.stem[len(REFERENCE_CASE) + 1:]
+        shutil.copy2(src, state_path.with_name(f"{name}_{k}.state"))
+    if not numbered:
+        shutil.copy2(REFERENCE_STATE, state_path)
 
     candidate = {
         **template,

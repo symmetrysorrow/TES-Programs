@@ -1,0 +1,28 @@
+# Two TES under one 5 mm absorber (PoST test mesh), pulse 1 mm off centre towards TES 1.
+#   python tes_sim.py run cases/post2_h8_pulse_m1mm.toml
+name = "post2_h8_pulse_m1mm"
+mesh = "mesh_hybrid_post2_h8"
+mpi = 6
+
+# Which body is what.  Written out here for illustration: these are exactly
+# what the naming convention of this mesh would give.
+[roles]
+tes_circuits = ["TES_T1", "TES_T2"]          # circuit 1, 2 (series files *_1_*, *_2_*)
+pulse_bodies = ["abs"]
+bath_boundaries = ["bath"]
+
+[roles.bodies]                                # body name / pattern -> material
+"TES_*" = "TES"
+"Stycast_*" = "Stycast"
+"Membrane_*" = "Membrane"
+"SiNx_*" = "SiNx"
+"SiO2_*" = "SiO2"
+"Si_*" = "Si"
+"abs" = "Pb"
+
+# Per-TES circuit parameters (optional, one table per circuit in order).
+[[tes]]                                       # circuit 1: project defaults
+[[tes]]                                       # circuit 2: project defaults
+
+[transient.pulse]
+center = { x = "-1[mm]" }

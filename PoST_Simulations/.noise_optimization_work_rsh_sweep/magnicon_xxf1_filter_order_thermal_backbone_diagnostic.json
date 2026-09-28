@@ -1,0 +1,533 @@
+{
+  "diagnostic_only": true,
+  "production_default_topology_unchanged": true,
+  "tested_question": "With c2 fixed to zero and the same relaxed thermal-backbone profile, does replacing the documented second-order Magnicon 10 kHz Bessel response by a counterfactual first-order response remove the continuum mismatch?",
+  "manual_constraint": {
+    "documented_order": 2,
+    "statement": "Connector-box anti-alias filters are second-order Bessel, cutoff 10 kHz +/-2.5%.",
+    "cutoff_profile_Hz": [
+      9750.0,
+      10250.0
+    ],
+    "normalization_used_for_isolated_order_test": "phase"
+  },
+  "fit_semantics": {
+    "c2": 0.0,
+    "same_number_of_free_parameters_per_order": true,
+    "shared_thermal_parameters": [
+      "C_tes",
+      "L",
+      "C_substrate",
+      "G_tes-substrate/G_substrate-bath",
+      "G_tes-bath scale to inherited snapshot",
+      "Pb absorber thickness"
+    ],
+    "shared_filter_parameter": "Magnicon cutoff within 10 kHz +/-2.5%",
+    "day_specific": [
+      "alpha",
+      "beta",
+      "T_bath",
+      "post-filter white ASD"
+    ],
+    "external_analog_filter": {
+      "model": "SRS SIM965",
+      "front_panel_cutoff_Hz": 100000.0,
+      "mode": "Bessel",
+      "slope_dB_per_oct": 24,
+      "order": 4,
+      "coupling": "DC",
+      "scipy_norm": "phase",
+      "nominal_minus3dB_Hz": 66040.0
+    }
+  },
+  "counterfactual_first_order": {
+    "name": "magnicon_order_1_c2_zero",
+    "joint_shape_score": 0.002424146262459874,
+    "joint_continuum_rms_dB": 0.6554687396295175,
+    "best_candidate_source": "physical_midpoint_warm_least_squares",
+    "evaluation_count": 34706,
+    "invalid_reference_evaluations": 136,
+    "invalid_repeat_evaluations": 100,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "shared_log10_C_substrate",
+      "shared_log10_G_ratio",
+      "shared_log10_G_tes_bath_scale",
+      "shared_log10_Pb_thickness_m",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale",
+      "shared_log10_magnicon_cutoff_Hz"
+    ],
+    "n_free_parameters": 15,
+    "solution": {
+      "magnicon_order": 1,
+      "magnicon_cutoff_Hz": 10249.999999999975,
+      "magnicon_normalization": "phase",
+      "magnicon_cutoff_boundary_hit": {
+        "value": 10249.999999999975,
+        "lower": 9750.0,
+        "upper": 10250.0,
+        "at_lower": false,
+        "at_upper": true
+      },
+      "shared_C_tes_J_per_K": 4.3091790421350647e-13,
+      "shared_C_tes_over_material": 0.5491148827187085,
+      "shared_C_substrate_J_per_K": 5.000005838082252e-13,
+      "shared_local_C_total_J_per_K": 9.309184880217316e-13,
+      "shared_local_C_total_over_historical_PoST": 0.11783778329389008,
+      "shared_L_H": 1.2999376316113263e-09,
+      "shared_G_tes_substrate_over_G_substrate_bath": 0.030059441051579434,
+      "shared_G_tes_bath_scale_to_snapshot": 1.764745834696674,
+      "shared_Pb_absorber_thickness_m": 0.00040057169450275485,
+      "shared_Pb_C_abs_J_per_K": 2.5751632638837504e-09,
+      "shared_Pb_G_abs_abs_W_per_K": 3.3648022338231406e-07,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 4.3091790421350647e-13,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 1.2999376316113263e-09,
+          "lower": 1e-10,
+          "upper": 1.3e-09,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "C_substrate": {
+          "value": 5.000005838082252e-13,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": true,
+          "at_upper": false
+        },
+        "G_ratio": {
+          "value": 0.030059441051579434,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "G_tes_bath_scale": {
+          "value": 1.764745834696674,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "Pb_thickness_m": {
+          "value": 0.00040057169450275485,
+          "lower": 0.0004,
+          "upper": 0.0006,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 199.9995135260063,
+          "beta": 1.6890977422489875,
+          "T_bath": 0.21799991893945633,
+          "C_tes": 4.3091790421350647e-13,
+          "C_substrate": 5.000005838082252e-13,
+          "C_abs": 2.5751632638837504e-09,
+          "L": 1.2999376316113263e-09,
+          "R": 0.02193979072046886,
+          "G_tes-bath": 8.046487146288255e-08,
+          "G_tes-substrate": 8.288360052334399e-08,
+          "G_substrate-bath": 2.7573234106756276e-06,
+          "G_tes-stycast": 3.1192825848862786e-09,
+          "G_stycast-abs": 1.4219915147408813e-09,
+          "G_abs-abs": 3.3648022338231406e-07,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 199.9995135260063,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "beta": {
+            "value": 1.6890977422489875,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21799991893945633,
+            "lower": 0.2,
+            "upper": 0.218,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "white_scale": 0.2542897248245073,
+        "white_asd_A_rtHz": 1.524426712483383e-11,
+        "white_boundary_hit": {
+          "value": 0.2542897248245073,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00028676638123374996,
+          "joule_power_W": 1.804217755392126e-09,
+          "f_substrate_node_Hz": 904064.9148720821
+        },
+        "metrics": {
+          "shape_score": 0.0016829933400284783,
+          "continuum_rms_dB": 0.5670884936474324,
+          "continuum_1_40k_rms_dB": 0.52683061611486,
+          "continuum_40_200k_rms_dB": 0.6497544594668562,
+          "raw_experiment_rms_dB": 0.5905951637801883
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 104.89742842752003,
+          "beta": 0.8043565498202964,
+          "T_bath": 0.21074433997553804,
+          "C_tes": 4.3091790421350647e-13,
+          "C_substrate": 5.000005838082252e-13,
+          "C_abs": 2.5751632638837504e-09,
+          "L": 1.2999376316113263e-09,
+          "R": 0.02193979072046886,
+          "G_tes-bath": 8.046487146288255e-08,
+          "G_tes-substrate": 8.288360052334399e-08,
+          "G_substrate-bath": 2.7573234106756276e-06,
+          "G_tes-stycast": 3.1192825848862786e-09,
+          "G_stycast-abs": 1.4219915147408813e-09,
+          "G_abs-abs": 3.3648022338231406e-07,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 104.89742842752003,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.8043565498202964,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21074433997553804,
+            "lower": 0.2,
+            "upper": 0.218,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2004169390678312,
+        "white_asd_A_rtHz": 1.201467875904169e-11,
+        "white_boundary_hit": {
+          "value": 0.2004169390678312,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.0003240035824618998,
+          "joule_power_W": 2.3032024027584108e-09,
+          "f_substrate_node_Hz": 904064.9148720821
+        },
+        "metrics": {
+          "shape_score": 0.0031652991848912697,
+          "continuum_rms_dB": 0.7332729216572109,
+          "continuum_1_40k_rms_dB": 0.5393539220252866,
+          "continuum_40_200k_rms_dB": 1.0494700372685126,
+          "raw_experiment_rms_dB": 0.7439641601344943
+        }
+      }
+    }
+  },
+  "documented_second_order": {
+    "name": "magnicon_order_2_c2_zero",
+    "joint_shape_score": 0.01839220100327172,
+    "joint_continuum_rms_dB": 1.419985865457929,
+    "best_candidate_source": "de",
+    "evaluation_count": 33212,
+    "invalid_reference_evaluations": 2218,
+    "invalid_repeat_evaluations": 1014,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "shared_log10_C_substrate",
+      "shared_log10_G_ratio",
+      "shared_log10_G_tes_bath_scale",
+      "shared_log10_Pb_thickness_m",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale",
+      "shared_log10_magnicon_cutoff_Hz"
+    ],
+    "n_free_parameters": 15,
+    "solution": {
+      "magnicon_order": 2,
+      "magnicon_cutoff_Hz": 10248.2527232411,
+      "magnicon_normalization": "phase",
+      "magnicon_cutoff_boundary_hit": {
+        "value": 10248.2527232411,
+        "lower": 9750.0,
+        "upper": 10250.0,
+        "at_lower": false,
+        "at_upper": false
+      },
+      "shared_C_tes_J_per_K": 2.907722389593824e-13,
+      "shared_C_tes_over_material": 0.37052849819609096,
+      "shared_C_substrate_J_per_K": 2.277620478707336e-12,
+      "shared_local_C_total_J_per_K": 2.5683927176667184e-12,
+      "shared_local_C_total_over_historical_PoST": 0.32511300223629347,
+      "shared_L_H": 1.1119501846229423e-09,
+      "shared_G_tes_substrate_over_G_substrate_bath": 0.05574804107448555,
+      "shared_G_tes_bath_scale_to_snapshot": 28.31672012456111,
+      "shared_Pb_absorber_thickness_m": 0.00045642085443851075,
+      "shared_Pb_C_abs_J_per_K": 2.934201875345943e-09,
+      "shared_Pb_G_abs_abs_W_per_K": 3.83393517728349e-07,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 2.907722389593824e-13,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 1.1119501846229423e-09,
+          "lower": 1e-10,
+          "upper": 1.3e-09,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "C_substrate": {
+          "value": 2.277620478707336e-12,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "G_ratio": {
+          "value": 0.05574804107448555,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "G_tes_bath_scale": {
+          "value": 28.31672012456111,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "Pb_thickness_m": {
+          "value": 0.00045642085443851075,
+          "lower": 0.0004,
+          "upper": 0.0006,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 127.45479579261139,
+          "beta": 0.8354737470649347,
+          "T_bath": 0.2129264206910094,
+          "C_tes": 2.907722389593824e-13,
+          "C_substrate": 2.277620478707336e-12,
+          "C_abs": 2.934201875345943e-09,
+          "L": 1.1119501846229423e-09,
+          "R": 0.02193979072046886,
+          "G_tes-bath": 1.291121474988414e-06,
+          "G_tes-substrate": 1.3630989680082183e-06,
+          "G_substrate-bath": 2.4451064857812087e-05,
+          "G_tes-stycast": 3.1192825848862786e-09,
+          "G_stycast-abs": 1.4219915147408813e-09,
+          "G_abs-abs": 3.83393517728349e-07,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 127.45479579261139,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.8354737470649347,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.2129264206910094,
+            "lower": 0.2,
+            "upper": 0.218,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.26051484807323827,
+        "white_asd_A_rtHz": 1.561745342543705e-11,
+        "white_boundary_hit": {
+          "value": 0.26051484807323827,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.001255544028413397,
+          "joule_power_W": 3.458568440549379e-08,
+          "f_substrate_node_Hz": 1803835.1046944603
+        },
+        "metrics": {
+          "shape_score": 0.013098648187840518,
+          "continuum_rms_dB": 1.2070129767482085,
+          "continuum_1_40k_rms_dB": 1.1522373920899103,
+          "continuum_40_200k_rms_dB": 1.3236539811623207,
+          "raw_experiment_rms_dB": 1.2173432523396384
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 117.64081682482453,
+          "beta": 0.7737644638027934,
+          "T_bath": 0.21453871091513532,
+          "C_tes": 2.907722389593824e-13,
+          "C_substrate": 2.277620478707336e-12,
+          "C_abs": 2.934201875345943e-09,
+          "L": 1.1119501846229423e-09,
+          "R": 0.02193979072046886,
+          "G_tes-bath": 1.291121474988414e-06,
+          "G_tes-substrate": 1.3630989680082183e-06,
+          "G_substrate-bath": 2.4451064857812087e-05,
+          "G_tes-stycast": 3.1192825848862786e-09,
+          "G_stycast-abs": 1.4219915147408813e-09,
+          "G_abs-abs": 3.83393517728349e-07,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 117.64081682482453,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.7737644638027934,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21453871091513532,
+            "lower": 0.2,
+            "upper": 0.218,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.24667067344150034,
+        "white_asd_A_rtHz": 1.478751703553884e-11,
+        "white_boundary_hit": {
+          "value": 0.24667067344150034,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.0012229523586569397,
+          "joule_power_W": 3.2813424624611095e-08,
+          "f_substrate_node_Hz": 1803835.1046944603
+        },
+        "metrics": {
+          "shape_score": 0.023685753818702922,
+          "continuum_rms_dB": 1.6049421765789682,
+          "continuum_1_40k_rms_dB": 1.4844131281514394,
+          "continuum_40_200k_rms_dB": 1.8510429159669883,
+          "raw_experiment_rms_dB": 1.617080045799328
+        }
+      }
+    }
+  },
+  "comparison": {
+    "classification": "counterfactual_first_order_materially_improves_but_does_not_fully_close_residual",
+    "first_order_materially_better": true,
+    "first_order_reaches_target_good_fit": false,
+    "first_over_second_shape_score_ratio": 0.13180294528254946,
+    "first_order_rms_improvement_dB": 0.7645171258284115,
+    "screen": {
+      "max_first_over_second_score_ratio": 0.8,
+      "min_first_order_rms_improvement_dB": 0.2,
+      "target_good_fit_rms_dB": 0.65
+    }
+  },
+  "filter_transfer_comparison": {
+    "reference_Hz": 1000.0,
+    "frequency_Hz": [
+      2000.0,
+      5000.0,
+      10000.0,
+      20000.0,
+      40000.0,
+      100000.0
+    ],
+    "first_order_over_second_order_dB": [
+      0.005714498886534291,
+      0.1942280490966259,
+      1.656908282961149,
+      6.039266635619475,
+      11.846713805740931,
+      19.78853894728511
+    ]
+  },
+  "interpretation": {
+    "classification": "counterfactual_first_order_materially_improves_but_does_not_fully_close_residual",
+    "guardrail": "The XXF-1 manual explicitly documents a second-order Bessel 10 kHz +/-2.5% output filter. The first-order branch is a diagnostic counterfactual only. A better first-order fit would indicate that the measured chain attenuates roughly one pole less than the present model over the fitted band; it would not establish that the connector-box hardware is actually first order."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_filter_order_thermal_backbone_diagnostic_config.json",
+    "base_thermal_backbone_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+    "base_separated_substrate_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_separated_substrate_L_0p1_1p3nH_joint_c2_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json"
+  }
+}

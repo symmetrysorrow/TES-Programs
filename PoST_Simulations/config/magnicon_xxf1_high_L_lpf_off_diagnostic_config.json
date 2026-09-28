@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "purpose": "Refit the fixed-L grid of the high-L thermal-backbone scan with the Magnicon XXF-1 Connector Box 10 kHz LPF turned OFF (unity), and with the documented second-order LPF ON as an apples-to-apples comparator, using the same filter-order fitter and c2 fixed to zero in both.",
+  "base_thermal_backbone_config": "magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+  "L_grid_nH": [0.1, 0.3, 1.0, 3.0, 10.0, 12.3, 30.0, 100.0],
+  "numerical_fixed_L_relative_half_width": 1e-6,
+  "states": ["off", "on"],
+  "magnicon_filter": {
+    "cutoff_Hz": {"min": 9750.0, "max": 10250.0, "nominal": 10000.0},
+    "normalization": "phase",
+    "documented_order": 2,
+    "off_semantics": "Diagnostic LPF-OFF branch: the Magnicon 10 kHz stage is unity for both main and alias paths (order=0). The cutoff coordinate is retained but inert so ON and OFF have the same nuisance-parameter count."
+  },
+  "optimizer": {
+    "DE_maxiter": 180,
+    "DE_popsize": 12,
+    "least_squares_max_nfev": 8000,
+    "seed_offset": 60100
+  },
+  "guardrail": "c2 is held at zero: c2 is a numerator coefficient defined relative to the Magnicon pole, so it is not meaningful when the pole is removed. Fixed-L rows are sensitivity tests, not an inductance measurement. This is an acquisition-state counterfactual, not evidence that the LPF was actually OFF."
+}

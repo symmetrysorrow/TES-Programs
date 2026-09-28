@@ -1244,9 +1244,9 @@
       "vtu": false,
       "output_intervals": 1,
       "steady_state_max_iterations": 1,
-      "solver_comment": "Phase24 steady-branch diagnosis: one assembled constrained MUMPS solve only; no subsequent nonlinear feedback",
+      "solver_comment": "Phase24 steady-branch diagnosis: MUMPS basin/refinement run",
       "solver": {
-        "nonlinear_max_iterations": 1,
+        "nonlinear_max_iterations": 84,
         "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,

@@ -1,0 +1,21 @@
+{
+  "kind": "Gate3 steady final actual saddle-point system capture",
+  "tolerance": 5e-8,
+  "nonlinear_iteration": 3,
+  "system": {
+    "rows": 96955,
+    "primal_rows": 96769,
+    "constraint_rows": 186,
+    "matrix_nnz": 1329477,
+    "explicit_B": true
+  },
+  "solver": "HYPRE FlexGMRES + BoomerAMG",
+  "files": {
+    "full_A": "full_A.dat",
+    "full_b": "full_b.dat",
+    "full_x": "full_x.dat",
+    "source_capture": "../run/full/ts0001_nl0003",
+    "gate3_result": "../../../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_tol5e-8_c6f7fc.result"
+  },
+  "git_head": "e5c79353fd9fe4bd57188fcdd9246323e24f54f3"
+}

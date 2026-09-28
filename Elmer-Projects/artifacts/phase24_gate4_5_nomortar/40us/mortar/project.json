@@ -1233,12 +1233,12 @@
     "conformal_mortar_interfaces": true
   },
   "cases": {
-    "case_phase24_g45_s32m_40us_mumps_mortar_mumps": {
+    "case_phase24_g45_fine_stycast32_mortar_40us_hypre_mortar": {
       "template": "pulse",
       "mesh": "mesh_singlepixel_gpu_fine_stycast32_mortar",
       "restart_from": null,
       "restart_time": 0.02,
-      "series_file": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_series.csv",
+      "series_file": "case_phase24_g45_fine_stycast32_mortar_40us_hypre_mortar_series.csv",
       "initial_temperature": "T_0",
       "lumped_mass": true,
       "vtu": false,
@@ -1289,13 +1289,17 @@
         "center": "auto"
       },
       "steady_state_max_iterations": 1,
-      "solver_comment": "Phase24 Gate 4: mortar transient; backend=mumps; window=40us",
+      "solver_comment": "Phase24 Gate 4: mortar transient; backend=hypre; window=40us",
       "solver": {
         "nonlinear_max_iterations": 120,
         "nonlinear_convergence_tolerance": 1e-08,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
-        "linear_system": "mumps"
+        "linear_system": "iterative_hypre_flexgmres_boomeramg",
+        "linear_system_max_iterations": 4000,
+        "linear_system_convergence_tolerance": 2e-08,
+        "hypre_gmres_dimension": 100,
+        "boomer_amg_strong_threshold": 0.5
       },
       "comparison_time_grid": {
         "mode": "Phase24 mortar Gate 4",
@@ -1305,19 +1309,19 @@
         "mortar": true
       },
       "heat_source": "circuit_inner",
-      "iteration_series_file": "case_phase24_g45_s32m_40us_mumps_mortar_mumps_iterations.csv",
+      "iteration_series_file": "case_phase24_g45_fine_stycast32_mortar_40us_hypre_mortar_iterations.csv",
       "output_result": true,
       "apply_mortar_bcs": true,
-      "restart_file_base": "case_phase24_g3_s32m_s32m2_10f17b",
-      "restart_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g3_s32m_s32m2_10f17b.result",
+      "restart_file_base": "case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar",
+      "restart_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar.result",
       "preexisting_restart": true,
-      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.state",
-      "output_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_s32m_40us_mumps_mortar_mumps.result",
+      "state_file": "work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_fine_stycast32_mortar_40us_hypre_mortar.state",
+      "output_file_path": "../work/meshes/mesh_singlepixel_gpu_fine_stycast32_mortar/case_phase24_g45_fine_stycast32_mortar_40us_hypre_mortar.result",
       "inner_circuit_step_commit": true,
       "phase24_smoke": {
         "purpose": "transient parity and stability",
         "independent_initial_temperature": false,
-        "restart_reference": "case_phase24_g3_s32m_s32m2_10f17b",
+        "restart_reference": "case_phase24_restart_refine_fine_stycast32_mortar_mumps_mortar",
         "no_mortar": false,
         "memory_trace": true
       }

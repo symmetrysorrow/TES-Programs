@@ -1,0 +1,605 @@
+{
+  "method": {
+    "temperature_source": "saved 1.00P native full_x_after capture, mapped through result Temperature Perm",
+    "local_stiffness_proxy": "k * face_area / centroid_to_face_distance",
+    "local_gradient": "affine least-squares gradient over parent element nodes",
+    "mortar_caveat": "face tessellations are nonconforming; side sums are not paired flux conservation"
+  },
+  "material": {
+    "k_W_mK": 2.69094e-06
+  },
+  "historical": {
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2",
+    "result": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_prod_v2\\historical_1p00p.result",
+    "capture": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_thermal_network_localization\\capture\\historical_1p00P\\ts0001_nl0001",
+    "element_count": 525377,
+    "node_count": 159955,
+    "material_k_W_mK": 2.69094e-06,
+    "body_element_counts": {
+      "2": 9248,
+      "3": 22652,
+      "4": 9248,
+      "6": 4624,
+      "1": 4623,
+      "10": 347754,
+      "5": 13404,
+      "7": 6702,
+      "8": 4274,
+      "9": 102848
+    },
+    "interface_summary": {
+      "TES_to_Stycast:side_a": {
+        "body": "TES",
+        "body_id": 8,
+        "boundary_ids": [
+          25
+        ],
+        "face_count": 4274,
+        "face_area": {
+          "count": 4274,
+          "sum": 2.5e-07,
+          "mean": 5.849321478708469e-11,
+          "p50": 5.725003485074975e-11,
+          "p95": 8.188234965132116e-11,
+          "max": 1.0883950877713113e-10,
+          "min": 3.013700308137643e-11
+        },
+        "centroid_to_face_h": {
+          "count": 4274,
+          "sum": 0.00034192000000005465,
+          "mean": 8.000000000001279e-08,
+          "p50": 8.000000000001279e-08,
+          "p95": 8.000000000001279e-08,
+          "max": 8.000000000001279e-08,
+          "min": 8.000000000001279e-08
+        },
+        "local_kA_over_h": {
+          "count": 4274,
+          "sum": 8.409187499998656e-06,
+          "mean": 1.967521642489157e-09,
+          "p50": 1.9257051097656493e-09,
+          "p95": 2.7542561246336367e-09,
+          "max": 3.6610073468585806e-09,
+          "min": 1.0137108383973268e-09
+        },
+        "local_face_block_diagonal": {
+          "count": 4274,
+          "sum": 4.2068365716411115e-06,
+          "mean": 9.842855806366663e-10,
+          "p50": 9.633691230773346e-10,
+          "p95": 1.377643113633233e-09,
+          "max": 1.8310047678325603e-09,
+          "min": 5.073619277168111e-10
+        },
+        "normal_gradient": {
+          "count": 4274,
+          "sum": 1.6562597250306705,
+          "mean": 0.00038751982335766743,
+          "p50": 9.395045739164768e-05,
+          "p95": 0.0019230889354083414,
+          "max": 0.008714563312676386,
+          "min": 7.531923113955792e-09
+        },
+        "heatflow_proxy": {
+          "count": 4274,
+          "sum": 2.4527780064919334e-16,
+          "mean": 5.738834830350803e-20,
+          "p50": 1.442451608002906e-20,
+          "p95": 2.7502053342137255e-19,
+          "max": 1.3547813147089474e-18,
+          "min": 1.0576326060477017e-24
+        },
+        "temperature_face_min_K": 0.1670500283388011,
+        "temperature_face_max_K": 0.16705399695412468
+      },
+      "TES_to_Stycast:side_b": {
+        "body": "Stycast",
+        "body_id": 9,
+        "boundary_ids": [
+          26
+        ],
+        "face_count": 3214,
+        "face_area": {
+          "count": 3214,
+          "sum": 1.9470116968126169e-07,
+          "mean": 6.057908204146288e-11,
+          "p50": 5.91453790665075e-11,
+          "p95": 8.526294859553108e-11,
+          "max": 1.0967141434209929e-10,
+          "min": 3.0401849885174356e-11
+        },
+        "centroid_to_face_h": {
+          "count": 3214,
+          "sum": 0.001004374999999959,
+          "mean": 3.1249999999998727e-07,
+          "p50": 3.1249999999998727e-07,
+          "p95": 3.1249999999998727e-07,
+          "max": 3.1249999999998727e-07,
+          "min": 3.1249999999998727e-07
+        },
+        "local_kA_over_h": {
+          "count": 3214,
+          "sum": 1.67657332973477e-06,
+          "mean": 5.216469600917144e-10,
+          "p50": 5.093013323047494e-10,
+          "p95": 7.341999324597368e-10,
+          "max": 9.443814262711703e-10,
+          "min": 2.617905725760462e-10
+        },
+        "local_face_block_diagonal": {
+          "count": 3214,
+          "sum": 8.44882766591259e-07,
+          "mean": 2.628757830091036e-10,
+          "p50": 2.5664819984949633e-10,
+          "p95": 3.6908214341011215e-10,
+          "max": 4.742231552999102e-10,
+          "min": 1.3284165899549232e-10
+        },
+        "normal_gradient": {
+          "count": 3214,
+          "sum": 79.41889640514748,
+          "mean": 0.02471029757471919,
+          "p50": 0.022971822497016944,
+          "p95": 0.051520719475596645,
+          "max": 0.16560781918845424,
+          "min": 1.7631543134875556e-06
+        },
+        "heatflow_proxy": {
+          "count": 3214,
+          "sum": 1.3000634269123755e-14,
+          "mean": 4.045001328289905e-18,
+          "p50": 3.5214023463336504e-18,
+          "p95": 9.567841329185813e-18,
+          "max": 3.7211397491304854e-17,
+          "min": 3.090939433598052e-22
+        },
+        "temperature_face_min_K": 0.16705192465232624,
+        "temperature_face_max_K": 0.16705399104530474
+      },
+      "Stycast_to_substrate:side_a": {
+        "body": "Stycast",
+        "body_id": 9,
+        "boundary_ids": [
+          27
+        ],
+        "face_count": 3214,
+        "face_area": {
+          "count": 3214,
+          "sum": 1.9470116968126169e-07,
+          "mean": 6.057908204146288e-11,
+          "p50": 5.91453790665075e-11,
+          "p95": 8.526294859553108e-11,
+          "max": 1.0967141434209929e-10,
+          "min": 3.0401849885174356e-11
+        },
+        "centroid_to_face_h": {
+          "count": 3214,
+          "sum": 0.001004374999999959,
+          "mean": 3.1249999999998727e-07,
+          "p50": 3.1249999999998727e-07,
+          "p95": 3.1249999999998727e-07,
+          "max": 3.1249999999998727e-07,
+          "min": 3.1249999999998727e-07
+        },
+        "local_kA_over_h": {
+          "count": 3214,
+          "sum": 1.67657332973477e-06,
+          "mean": 5.216469600917144e-10,
+          "p50": 5.093013323047494e-10,
+          "p95": 7.341999324597368e-10,
+          "max": 9.443814262711703e-10,
+          "min": 2.617905725760462e-10
+        },
+        "local_face_block_diagonal": {
+          "count": 3214,
+          "sum": 8.44882766591259e-07,
+          "mean": 2.628757830091036e-10,
+          "p50": 2.5664819984949633e-10,
+          "p95": 3.690821434101121e-10,
+          "max": 4.742231552999102e-10,
+          "min": 1.3284165899549232e-10
+        },
+        "normal_gradient": {
+          "count": 3214,
+          "sum": 70.10808679256425,
+          "mean": 0.021813343743797217,
+          "p50": 0.02218835052911325,
+          "p95": 0.04108569250320686,
+          "max": 0.04628149459514002,
+          "min": 1.0121245363321539e-05
+        },
+        "heatflow_proxy": {
+          "count": 3214,
+          "sum": 1.1524304342158919e-14,
+          "mean": 3.585657853814225e-18,
+          "p50": 3.3487913573950386e-18,
+          "p95": 8.034449445279723e-18,
+          "max": 1.1762416299564627e-17,
+          "min": 1.1667854072756323e-21
+        },
+        "temperature_face_min_K": 0.16705308484717307,
+        "temperature_face_max_K": 0.16705309026686713
+      },
+      "Stycast_to_substrate:side_b": {
+        "body": "abs",
+        "body_id": 10,
+        "boundary_ids": [
+          28
+        ],
+        "face_count": 11444,
+        "face_area": {
+          "count": 11444,
+          "sum": 1.0000000000000002e-06,
+          "mean": 8.738203425375744e-11,
+          "p50": 5.91745536646031e-11,
+          "p95": 1.114484278083543e-10,
+          "max": 3.444079623499998e-09,
+          "min": 2.623850452352001e-11
+        },
+        "centroid_to_face_h": {
+          "count": 11444,
+          "sum": 0.0392127023231357,
+          "mean": 3.4264856975826374e-06,
+          "p50": 4.445798606749987e-06,
+          "p95": 5.77753531874999e-06,
+          "max": 8.44476629375e-06,
+          "min": 1.1164550075000012e-06
+        },
+        "local_kA_over_h": {
+          "count": 11444,
+          "sum": 8.092145679756223e-07,
+          "mean": 7.071081509748535e-11,
+          "p50": 5.509622918677319e-11,
+          "p95": 1.0664427818460974e-10,
+          "max": 1.8222025241172808e-09,
+          "min": 1.6494392982648745e-11
+        },
+        "local_face_block_diagonal": {
+          "count": 11444,
+          "sum": 3.2250415461075916e-07,
+          "mean": 2.818106908517644e-11,
+          "p50": 2.986994317418189e-11,
+          "p95": 4.405672037596134e-11,
+          "max": 1.869254147511358e-10,
+          "min": 9.400828422662514e-12
+        },
+        "normal_gradient": {
+          "count": 11444,
+          "sum": 0.010380431389975329,
+          "mean": 9.07063211287603e-07,
+          "p50": 3.729095975024615e-08,
+          "p95": 4.411780703909277e-06,
+          "max": 6.892589161186517e-06,
+          "min": 1.0168822658772877e-12
+        },
+        "heatflow_proxy": {
+          "count": 11444,
+          "sum": 1.6282540690219736e-18,
+          "mean": 1.42280152833098e-22,
+          "p50": 6.986525080804344e-24,
+          "p95": 6.897980032975024e-22,
+          "max": 1.5087322313283158e-21,
+          "min": 1.8902368703060652e-28
+        },
+        "temperature_face_min_K": 0.1670530884876585,
+        "temperature_face_max_K": 0.1670530892523466
+      }
+    }
+  },
+  "phase24": {
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar",
+    "result": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_singlepixel_gpu_fine_stycast32_mortar\\phase24_stycast_substrate_coupling_only_1p00P.result",
+    "capture": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_thermal_network_localization\\capture\\original_phase24_1p00P\\ts0001_nl0001",
+    "element_count": 489574,
+    "node_count": 96768,
+    "material_k_W_mK": 2.69094e-06,
+    "body_element_counts": {
+      "105": 68131,
+      "104": 66134,
+      "108": 68276,
+      "106": 68883,
+      "107": 173126,
+      "100": 6052,
+      "103": 3525,
+      "109": 2387,
+      "101": 1175,
+      "102": 31885
+    },
+    "interface_summary": {
+      "TES_to_Stycast:side_a": {
+        "body": "TES",
+        "body_id": 101,
+        "boundary_ids": [
+          1105
+        ],
+        "face_count": 308,
+        "face_area": {
+          "count": 308,
+          "sum": 2.5000000000000004e-07,
+          "mean": 8.116883116883119e-10,
+          "p50": 8.503169776891163e-10,
+          "p95": 9.555638456232047e-10,
+          "max": 1.1942122639493832e-09,
+          "min": 4.779462113525134e-10
+        },
+        "centroid_to_face_h": {
+          "count": 308,
+          "sum": 1.1116755774747886e-05,
+          "mean": 3.60933629050256e-08,
+          "p50": 3.999999999997929e-08,
+          "p95": 4.000000000000639e-08,
+          "max": 4.000000000000639e-08,
+          "min": 1.7909884249999375e-08
+        },
+        "local_kA_over_h": {
+          "count": 308,
+          "sum": 1.9726221551639777e-05,
+          "mean": 6.404617386896031e-08,
+          "p50": 5.8923224560885964e-08,
+          "p95": 1.041316666073267e-07,
+          "max": 1.2874397995322683e-07,
+          "min": 3.215311444943996e-08
+        },
+        "local_face_block_diagonal": {
+          "count": 308,
+          "sum": 1.3797510098991314e-06,
+          "mean": 4.4797110711010755e-09,
+          "p50": 4.769742879865791e-09,
+          "p95": 5.399238927736155e-09,
+          "max": 6.695154031461803e-09,
+          "min": 1.8434487423440777e-09
+        },
+        "normal_gradient": {
+          "count": 308,
+          "sum": 0.08355092360069045,
+          "mean": 0.0002712692324697742,
+          "p50": 3.6347660989948393e-06,
+          "p95": 0.0013084920765369225,
+          "max": 0.0129666424404266,
+          "min": 1.8665624609075126e-07
+        },
+        "heatflow_proxy": {
+          "count": 308,
+          "sum": 1.605441302117478e-16,
+          "mean": 5.212471760121682e-19,
+          "p50": 8.475104857464188e-21,
+          "p95": 2.6764344053613902e-18,
+          "max": 2.561645979230142e-17,
+          "min": 3.6528503016423425e-22
+        },
+        "temperature_face_min_K": 0.16154129399558803,
+        "temperature_face_max_K": 0.16154624205756238
+      },
+      "TES_to_Stycast:side_b": {
+        "body": "Stycast",
+        "body_id": 102,
+        "boundary_ids": [
+          1204
+        ],
+        "face_count": 241,
+        "face_area": {
+          "count": 241,
+          "sum": 1.9373735560214897e-07,
+          "mean": 8.038894423325684e-10,
+          "p50": 8.240155813868206e-10,
+          "p95": 9.922463026080552e-10,
+          "max": 1.3222310841630192e-09,
+          "min": 5.638421791921574e-10
+        },
+        "centroid_to_face_h": {
+          "count": 241,
+          "sum": 3.2187500207503275e-05,
+          "mean": 1.335580921473165e-07,
+          "p50": 1.5625000000002074e-07,
+          "p95": 1.5625000000002074e-07,
+          "max": 1.5625000000002074e-07,
+          "min": 7.81249225000058e-08
+        },
+        "local_kA_over_h": {
+          "count": 241,
+          "sum": 4.249971353682323e-06,
+          "mean": 1.763473590739553e-08,
+          "p50": 1.5095759591609055e-08,
+          "p95": 2.9542530592657473e-08,
+          "max": 3.7603630724739844e-08,
+          "min": 9.982289058746727e-09
+        },
+        "local_face_block_diagonal": {
+          "count": 241,
+          "sum": 2.6777190110951245e-07,
+          "mean": 1.1110867265954874e-09,
+          "p50": 1.1573989439605792e-09,
+          "p95": 1.4260211338551181e-09,
+          "max": 1.8985967464379488e-09,
+          "min": 5.9654381259981e-10
+        },
+        "normal_gradient": {
+          "count": 241,
+          "sum": 8.772208460264,
+          "mean": 0.036399205229311206,
+          "p50": 0.03440101150609602,
+          "p95": 0.07308983761634846,
+          "max": 0.0973272008230538,
+          "min": 1.5109809693713682e-05
+        },
+        "heatflow_proxy": {
+          "count": 241,
+          "sum": 1.885452709169376e-14,
+          "mean": 7.823455224769196e-17,
+          "p50": 7.79303478990561e-17,
+          "p95": 1.4969378475143188e-16,
+          "max": 1.9708969259487238e-16,
+          "min": 4.16460974437045e-20
+        },
+        "temperature_face_min_K": 0.16154333193448991,
+        "temperature_face_max_K": 0.16154623907456772
+      },
+      "Stycast_to_substrate:side_a": {
+        "body": "Stycast",
+        "body_id": 102,
+        "boundary_ids": [
+          1205
+        ],
+        "face_count": 74,
+        "face_area": {
+          "count": 74,
+          "sum": 1.9085031815670558e-07,
+          "mean": 2.5790583534689944e-09,
+          "p50": 2.4124136526987353e-09,
+          "p95": 3.673853173670454e-09,
+          "max": 4.099796051643022e-09,
+          "min": 1.6854363281361422e-09
+        },
+        "centroid_to_face_h": {
+          "count": 74,
+          "sum": 8.819770214750673e-06,
+          "mean": 1.1918608398311721e-07,
+          "p50": 1.5624999999999363e-07,
+          "p95": 1.5625000000002074e-07,
+          "max": 1.5625000000002074e-07,
+          "min": 7.44947405000051e-08
+        },
+        "local_kA_over_h": {
+          "count": 74,
+          "sum": 4.735334816463626e-06,
+          "mean": 6.399101103329225e-08,
+          "p50": 6.345356194685705e-08,
+          "p95": 1.0460018027903935e-07,
+          "max": 1.2177810969579407e-07,
+          "min": 2.9135916713409364e-08
+        },
+        "local_face_block_diagonal": {
+          "count": 74,
+          "sum": 1.7429004248228095e-07,
+          "mean": 2.355270844355148e-09,
+          "p50": 2.1557208000431705e-09,
+          "p95": 4.552855273064129e-09,
+          "max": 5.5527261605724805e-09,
+          "min": 8.137180679713273e-10
+        },
+        "normal_gradient": {
+          "count": 74,
+          "sum": 2.3086472144430625,
+          "mean": 0.031197935330311656,
+          "p50": 0.03380768673164945,
+          "p95": 0.06427187480357363,
+          "max": 0.0695721353302405,
+          "min": 0.0004006828184886727
+        },
+        "heatflow_proxy": {
+          "count": 74,
+          "sum": 1.6826787097644995e-14,
+          "mean": 2.2738901483304046e-16,
+          "p50": 2.1931247271410322e-16,
+          "p95": 5.182536168876029e-16,
+          "max": 5.790005689118292e-16,
+          "min": 3.481636828684466e-18
+        },
+        "temperature_face_min_K": 0.16154510382451662,
+        "temperature_face_max_K": 0.16154510588314777
+      },
+      "Stycast_to_substrate:side_b": {
+        "body": "abs",
+        "body_id": 100,
+        "boundary_ids": [
+          1004
+        ],
+        "face_count": 314,
+        "face_area": {
+          "count": 314,
+          "sum": 1.0000000000000002e-06,
+          "mean": 3.184713375796179e-09,
+          "p50": 3.344256500421374e-09,
+          "p95": 3.6692618347397506e-09,
+          "max": 4.374024406189117e-09,
+          "min": 1.938259523857515e-09
+        },
+        "centroid_to_face_h": {
+          "count": 314,
+          "sum": 0.005537029831422998,
+          "mean": 1.763385296631528e-05,
+          "p50": 1.7504591500624997e-05,
+          "p95": 2.692201403300002e-05,
+          "max": 3.339743259975e-05,
+          "min": 7.592092095749976e-06
+        },
+        "local_kA_over_h": {
+          "count": 314,
+          "sum": 1.6594699186259603e-07,
+          "mean": 5.284936046579492e-10,
+          "p50": 5.078684622954718e-10,
+          "p95": 8.304192220174582e-10,
+          "max": 1.1189989359415055e-09,
+          "min": 2.235902653450657e-10
+        },
+        "local_face_block_diagonal": {
+          "count": 314,
+          "sum": 4.511109508338946e-08,
+          "mean": 1.4366590790888362e-10,
+          "p50": 1.4499260536362118e-10,
+          "p95": 1.9170370763910267e-10,
+          "max": 2.2972014442163794e-10,
+          "min": 7.72975014745955e-11
+        },
+        "normal_gradient": {
+          "count": 314,
+          "sum": 0.0001361043606276699,
+          "mean": 4.334533777951271e-07,
+          "p50": 5.8562460281885365e-08,
+          "p95": 2.4490003891316914e-06,
+          "max": 4.699138375567911e-06,
+          "min": 3.647935583662435e-10
+        },
+        "heatflow_proxy": {
+          "count": 314,
+          "sum": 1.267955682100313e-18,
+          "mean": 4.038075420701634e-21,
+          "p50": 5.330305718584793e-22,
+          "p95": 2.30586582395099e-20,
+          "max": 4.434539433765642e-20,
+          "min": 2.9518162493905426e-24
+        },
+        "temperature_face_min_K": 0.161545104794285,
+        "temperature_face_max_K": 0.1615451056930857
+      }
+    }
+  },
+  "comparison": {
+    "TES_to_Stycast:side_a": {
+      "face_count_phase24_over_historical": 0.07206364061768834,
+      "area_sum_phase24_over_historical": 1.0000000000000002,
+      "centroid_to_face_h_mean_phase24_over_historical": 0.4511670363127479,
+      "kA_over_h_sum_phase24_over_historical": 2.3457939963454173,
+      "face_block_diagonal_sum_phase24_over_historical": 0.3279782768839253,
+      "gradient_mean_phase24_over_historical": 0.7000138215365619,
+      "heatflow_proxy_sum_phase24_over_historical": 0.6545399941895467
+    },
+    "TES_to_Stycast:side_b": {
+      "face_count_phase24_over_historical": 0.07498444306160548,
+      "area_sum_phase24_over_historical": 0.9950497776634288,
+      "centroid_to_face_h_mean_phase24_over_historical": 0.4273858948714302,
+      "kA_over_h_sum_phase24_over_historical": 2.5349152812508704,
+      "face_block_diagonal_sum_phase24_over_historical": 0.31693379448353254,
+      "gradient_mean_phase24_over_historical": 1.4730379154377644,
+      "heatflow_proxy_sum_phase24_over_historical": 1.450277478882156
+    },
+    "Stycast_to_substrate:side_a": {
+      "face_count_phase24_over_historical": 0.023024268823895456,
+      "area_sum_phase24_over_historical": 0.9802217339995429,
+      "centroid_to_face_h_mean_phase24_over_historical": 0.3813954687459906,
+      "kA_over_h_sum_phase24_over_historical": 2.824412587556039,
+      "face_block_diagonal_sum_phase24_over_historical": 0.2062890253821448,
+      "gradient_mean_phase24_over_historical": 1.4302225141059823,
+      "heatflow_proxy_sum_phase24_over_historical": 1.4601130444020127
+    },
+    "Stycast_to_substrate:side_b": {
+      "face_count_phase24_over_historical": 0.027437958755679833,
+      "area_sum_phase24_over_historical": 1.0,
+      "centroid_to_face_h_mean_phase24_over_historical": 5.146337829092894,
+      "kA_over_h_sum_phase24_over_historical": 0.20507168114600133,
+      "face_block_diagonal_sum_phase24_over_historical": 0.13987756262500098,
+      "gradient_mean_phase24_over_historical": 0.477864577023058,
+      "heatflow_proxy_sum_phase24_over_historical": 0.7787210277705142
+    }
+  }
+}

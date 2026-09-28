@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.support.mesh_names import MeshNames, parse_mesh_names
+from scripts.support.mesh_quantities import set_pulse_bodies
 from scripts.support.mesh_quantities import (
     absorber_centroid,
     gaussian_discrete_norm,
@@ -183,32 +184,108 @@ def membrane_power_law(model: dict) -> tuple[float, float]:
     return _round_noise(coefficient), _round_noise(exponent)
 
 
-def materials_block(model: dict, membrane_k_udf: bool = False) -> list[str]:
+# SIF Material ordinals of the standard stack materials (fixed: legacy SIFs
+# and MATERIAL_BY_BASE_NAME rely on them).  Any further material of the
+# project ("materials" in elmer_project.json, e.g. an Al wiring film) is
+# appended from ordinal 8 on, in project order; bodies reach it through the
+# project's "body_materials" map {body base name: material key}.
+STANDARD_MATERIALS = [
+    (1, "Pb", "Pb"),
+    (2, "TES", "TES"),
+    (3, "Stycast", "Stycast"),
+    (4, "SiO2", "SiO2"),
+    (5, "Si", "Si"),
+    (6, "SiNx", "SiNx"),
+    (7, "Membrane", "Membrane"),
+]
+
+
+def material_ordinals(model: dict) -> dict[str, int]:
+    """Material key -> SIF Material ordinal (standard ones first)."""
+    ordinals = {key: idx for idx, _, key in STANDARD_MATERIALS}
+    for key in model["materials"]:
+        if key not in ordinals:
+            ordinals[key] = len(ordinals) + 1
+    return ordinals
+
+
+def register_body_materials(model: dict) -> None:
+    """Add the project's extra body -> material roles to MATERIAL_BY_BASE_NAME."""
+    ordinals = material_ordinals(model)
+    for base, key in model.get("body_materials", {}).items():
+        if key not in ordinals:
+            raise ValueError(f"body_materials: '{base}' uses unknown material '{key}'")
+        MATERIAL_BY_BASE_NAME[base] = ordinals[key]
+
+
+def _inline_expression(expr: str, params: dict[str, float]) -> str:
+    """Project parameters inlined (longest names first), T left symbolic."""
+    names = sorted((n for n in set(re.findall(r"[A-Za-z_]\w*", expr)) if n in params), key=len, reverse=True)
+    for name in names:
+        expr = re.sub(rf"\b{re.escape(name)}\b", f"({fmt(params[name])})", expr)
+    return expr
+
+
+def depends_on_temperature(expr: str) -> bool:
+    return re.search(r"\bT\b", str(expr)) is not None
+
+
+def temperature_table_lines(keyword: str, expr: str, params: dict[str, float],
+                            t_range: tuple[float, float] = (0.05, 1.0), points: int = 400) -> list[str]:
+    """`<keyword> = Variable Temperature` as a cubic-spline table of *expr*,
+    sampled log-uniformly over *t_range* (K).  Works for any material without a
+    UDF; with 400 points the spline error of a power law is below 1e-9."""
+    inlined = _inline_expression(str(expr), params)
+    leftover = set(re.findall(r"\b[A-Za-z_]\w*\b", re.sub(r"\d[\d.]*[eE][+-]?\d+", "0", inlined))) - {"T"}
+    if leftover:
+        raise ValueError(f"{keyword}: unresolved names {sorted(leftover)} in {inlined}")
+    lo, hi = t_range
+    temps = [lo * (hi / lo) ** (i / (points - 1)) for i in range(points)]
+    lines = [f"  {keyword} = Variable Temperature", "    Real Cubic"]
+    for t in temps:
+        value = eval(inlined, {"__builtins__": {}, "math": math}, {"T": t})  # noqa: S307 - project data
+        lines.append(f"      {t!r} {float(value)!r}")
+    lines.append("    End")
+    return lines
+
+
+def material_property_lines(key: str, mat: dict, params: dict[str, float], k_table: dict | None) -> list[str]:
+    """Density / Heat Capacity / Heat Conductivity of one material.  A
+    property whose expression contains T becomes a temperature table (the
+    Phase24 fast assembly supports T-dependent conductivity in any number of
+    materials; T-dependent density or heat capacity fall back to the generic
+    element path)."""
+    lines = []
+    for keyword, prop in (("Density", "rho"), ("Heat Capacity", "cp"), ("Heat Conductivity", "k")):
+        expr = str(mat[prop].get("expression", mat[prop].get("nominal")))
+        if depends_on_temperature(expr):
+            opts = (k_table or {}).get(key, {})
+            lines += temperature_table_lines(
+                keyword, expr, params, tuple(opts.get("t_range", (0.05, 1.0))), int(opts.get("points", 400))
+            )
+        else:
+            lines.append(f"  {keyword} = {fmt(mat[prop]['nominal'])}")
+    return lines
+
+
+def materials_block(model: dict, membrane_k_udf: bool = False, k_table: dict | None = None) -> list[str]:
     materials = model["materials"]
+    params = model["parameters"]
     lines: list[str] = []
-    order = [
-        (1, "Pb", "Pb"),
-        (2, "TES", "TES"),
-        (3, "Stycast", "Stycast"),
-        (4, "SiO2", "SiO2"),
-        (5, "Si", "Si"),
-        (6, "SiNx", "SiNx"),
-    ]
-    for idx, sif_name, key in order:
+    for key, idx in material_ordinals(model).items():
+        if key == "Membrane":
+            continue  # kept below: its validated k(T) UDF / MATC forms
         mat = materials[key]
-        lines += [
-            f"Material {idx}",
-            f'  Name = "{sif_name}"',
-            f"  Density = {fmt(mat['rho']['nominal'])}",
-            f"  Heat Capacity = {fmt(mat['cp']['nominal'])}",
-            f"  Heat Conductivity = {fmt(mat['k']['nominal'])}",
-            "End",
-            "",
-        ]
+        sif_name = "Pb" if key == "Pb" else key
+        lines += [f"Material {idx}", f'  Name = "{sif_name}"']
+        lines += material_property_lines(key, mat, params, k_table)
+        lines += ["End", ""]
     membrane = materials["Membrane"]
-    lines += [
+    membrane_lines = [
         "Material 7",
         '  Name = "Membrane"',
+    ]
+    membrane_lines += [
         f"  Density = {fmt(membrane['rho']['nominal'])}",
         f"  Heat Capacity = {fmt(membrane['cp']['nominal'])}",
     ]
@@ -216,7 +293,7 @@ def materials_block(model: dict, membrane_k_udf: bool = False) -> list[str]:
         # Same k(T) as the MATC form, evaluated by compiled code: MATC is an
         # interpreter called at every integration point of every assembly.
         coefficient, exponent = membrane_power_law(model)
-        lines += [
+        membrane_lines += [
             "  Heat Conductivity = Variable Temperature",
             '    Real Procedure "tes_membrane_conductivity" "MembraneConductivity"',
             f"  Membrane Conductivity Coefficient = Real {coefficient!r}",
@@ -224,12 +301,14 @@ def materials_block(model: dict, membrane_k_udf: bool = False) -> list[str]:
             "  Membrane Conductivity Temperature Floor = Real 1.0e-12",
         ]
     else:
-        lines += [
+        membrane_lines += [
             "  Heat Conductivity = Variable Temperature",
             f'    Real MATC "{matc_guarded_membrane_expr(model)}"',
         ]
-    lines += ["End", ""]
-    return lines
+    membrane_lines += ["End", ""]
+    # Material blocks in ordinal order: 1..6, 7 (Membrane), then extras.
+    split = lines.index("Material 8") if "Material 8" in lines else len(lines)
+    return lines[:split] + membrane_lines + lines[split:]
 
 
 def validate_tes_state_file(state_file: str | None) -> None:
@@ -336,6 +415,76 @@ def dual_tes_constants_block(
     return lines
 
 
+TES_CIRCUIT_KEYS = ("I_bias", "R_sh", "L_tes", "R_0", "R_min", "alpha", "beta", "I_0", "T_c", "T_0", "TES_volume")
+
+
+def tes_circuit_params(params: dict[str, float], overrides: list[dict] | None, n: int) -> list[dict[str, float]]:
+    """Circuit parameters of each of the N TES (body order).  *overrides* is
+    the case's optional "tes_circuits" list: entry k-1 overrides any of
+    TES_CIRCUIT_KEYS for circuit k (numbers in SI, or dimensioned strings over
+    the project parameters), e.g. [{"I_bias": "700[uA]"}, {"alpha": 240}]."""
+    overrides = overrides or []
+    if len(overrides) > n:
+        raise ValueError(f"tes_circuits lists {len(overrides)} circuits but the mesh has {n} TES bodies")
+    result = []
+    for k in range(n):
+        pk = dict(params)
+        for key, value in (overrides[k] if k < len(overrides) else {}).items():
+            if key not in TES_CIRCUIT_KEYS:
+                raise ValueError(f"tes_circuits[{k}]: unknown circuit parameter '{key}' (use {TES_CIRCUIT_KEYS})")
+            pk[key] = eval_si(value, params)
+        result.append(pk)
+    return result
+
+
+def numbered_inner_constants_block(
+    n: int,
+    params: dict[str, float],
+    series_file_base: str | None,
+    state_files: list[str | None],
+    iteration_series_base: str | None,
+    circuit_overrides: list[dict] | None = None,
+) -> list[str]:
+    """`Constants` for N inner TES circuits: 'TES Circuit Count' plus a
+    'TES <k> ...' set per circuit (k = 1..N in TES body order), the keys
+    HeatSolve's TESKey and TESParallelHeatSource<k> read."""
+    lines = ["Constants", f"  Stefan Boltzmann = Real {STEFAN_BOLTZMANN}",
+             f"  TES Circuit Count = Integer {n}"]
+    per_tes = tes_circuit_params(params, circuit_overrides, n)
+    for k in range(1, n + 1):
+        params = per_tes[k - 1]
+        prefix = f"TES {k} "
+        lines += [
+            f"  {prefix}Bias Current = Real {fmt(params['I_bias'])}",
+            f"  {prefix}Shunt Resistance = Real {fmt(params['R_sh'])}",
+            f"  {prefix}Inductance = Real {fmt(params['L_tes'])}",
+            f"  {prefix}R0 = Real {fmt(params['R_0'])}",
+            f"  {prefix}Rmin = Real {fmt(params['R_min'])}",
+            f"  {prefix}Alpha = Real {fmt(params['alpha'])}",
+            f"  {prefix}Beta = Real {fmt(params['beta'])}",
+            f"  {prefix}I0 = Real {fmt(params['I_0'])}",
+            f"  {prefix}Tc = Real {fmt(params['T_c'])}",
+            f"  {prefix}T0 = Real {fmt(params['T_0'])}",
+            f"  {prefix}Volume = Real {fmt(params['TES_volume'])}",
+        ]
+        if series_file_base:
+            lines.append(f'  {prefix}Series File = String "{_side_series_file(series_file_base, str(k))}"')
+        if iteration_series_base:
+            lines.append(f'  {prefix}Iteration Series File = String "{_side_series_file(iteration_series_base, str(k))}"')
+        if state_files[k - 1]:
+            validate_tes_state_file(state_files[k - 1])
+            lines.append(f'  {prefix}State File = String "{state_files[k - 1]}"')
+    return lines
+
+
+def _numbered_state_file(state_file: str | None, k: int) -> str | None:
+    """'<stem>.state' -> '<stem>_<k>.state' for circuit k."""
+    if not state_file:
+        return None
+    stem, dot, ext = state_file.rpartition(".")
+    return f"{stem}_{k}.{ext}" if dot else f"{state_file}_{k}"
+
+
 def _side_state_file(mesh_dir_name: str, case_name: str, side: str) -> str:
     """Path (relative to the repo root -- ElmerSolver's cwd, see run.py) for
     one side's persisted circuit state file. Lives in the mesh directory
@@ -351,6 +500,7 @@ def solver1_block(
     equation_name: str = "Heat Equation",
     inner_circuit: bool = False,
     tes_body_id: int | None = None,
+    tes_body_ids: list[int] | None = None,
     inner_circuit_step_commit: bool = False,
     calculate_loads: bool = False,
     lumped_mass: bool = False,
@@ -427,15 +577,17 @@ def solver1_block(
     if comment:
         lines.append(f"! {comment}")
     if inner_circuit:
-        if tes_body_id is None:
+        if tes_body_id is None and not tes_body_ids:
             raise ValueError("inner_circuit requires a resolved TES Body index")
         # Implemented in the custom HeatSolve module.  Unlike an external
         # slave solver, this hook executes within HeatSolve's nonlinear loop
         # and is collective-safe under MPI.
-        lines += [
-            '  "TES Inner Circuit Update" = Logical True',
-            f'  "TES Body ID" = Integer {tes_body_id}',
-        ]
+        lines.append('  "TES Inner Circuit Update" = Logical True')
+        if tes_body_ids:
+            ids = " ".join(str(i) for i in tes_body_ids)
+            lines.append(f'  TES Body IDs({len(tes_body_ids)}) = Integer {ids}')
+        else:
+            lines.append(f'  "TES Body ID" = Integer {tes_body_id}')
         if inner_circuit_step_commit:
             lines.append('  "TES Inner Circuit Step Commit" = Logical True')
     lines += [
@@ -701,9 +853,15 @@ def body_force_blocks(heat_source: str, tes_body_names: list[str], with_pulse: b
     """
     dll, unprefixed_proc, unprefixed_label = HEAT_SOURCES[heat_source]
     lines: list[str] = []
+    multi_inner = heat_source == "circuit_inner" and len(tes_body_names) > 1
     for i, name in enumerate(tes_body_names, start=1):
         side = name[len(_base_body_name(name)):].lstrip("_")
-        if side:
+        if multi_inner:
+            # One inner circuit per TES body, numbered in body order
+            # (TES Circuit Count / 'TES <i> ...' / TESParallelHeatSource<i>).
+            proc = f"{unprefixed_proc}{i}"
+            label = f"TES {i} ({name}) circuit power, updated inside HeatSolve"
+        elif side:
             if heat_source != "circuit_implicit":
                 raise ValueError(
                     f"{name}: heat_source '{heat_source}' has no per-side TES procedure"
@@ -735,12 +893,63 @@ def body_force_blocks(heat_source: str, tes_body_names: list[str], with_pulse: b
 
 
 def _base_body_name(name: str) -> str:
-    """Strip a dual-TES `_L`/`_R` stack suffix, if present, from a body
-    name (`TES_L` -> `TES`; `abs` -> `abs`, it is never suffixed)."""
+    """Strip a stack suffix, if present, from a body name: dual-TES `_L`/`_R`
+    or multi-TES `_T<k>` (`TES_L` -> `TES`, `SiO2_2_T3` -> `SiO2_2`; `abs` -> `abs`,
+    it is never suffixed)."""
     for suffix in ("_L", "_R"):
         if name.endswith(suffix):
             return name[: -len(suffix)]
+    m = re.fullmatch(r"(.+)_T(\d+)", name)
+    if m:
+        return m.group(1)
     return name
+
+
+# ---------------------------------------------------------------------------
+# Mesh role table.  A mesh (registry entry "roles") or a case ("roles") may
+# declare the physics roles of its bodies/boundaries explicitly instead of
+# relying on the naming convention (TES, abs, SiO2_2, ... with _L/_R/_T<k>
+# stack suffixes):
+#
+#   "roles": {
+#     "bodies": {"TES_*": "TES", "Sub*": {"material": "Si"}, "abs": "Pb"},
+#     "tes_circuits": ["TES_left", "TES_right"],   # circuit k = list order
+#     "pulse_bodies": ["abs"],
+#     "bath_boundaries": ["bath"]
+#   }
+#
+# "bodies" keys are mesh.names body names or fnmatch patterns (first match
+# wins); values a material key of the project ("materials") or {"material":
+# key}.  Any part left out falls back to the naming convention.
+_ACTIVE_ROLES: dict = {}
+_ACTIVE_ORDINALS: dict[str, int] = {}
+
+
+def set_active_roles(roles: dict | None, model: dict) -> None:
+    global _ACTIVE_ROLES, _ACTIVE_ORDINALS
+    _ACTIVE_ROLES = dict(roles or {})
+    _ACTIVE_ORDINALS = material_ordinals(model)
+    set_pulse_bodies(_ACTIVE_ROLES.get("pulse_bodies"))
+
+
+def _role_material(name: str) -> int | None:
+    import fnmatch
+    for pattern, value in _ACTIVE_ROLES.get("bodies", {}).items():
+        if name == pattern or fnmatch.fnmatchcase(name, pattern):
+            key = value["material"] if isinstance(value, dict) else value
+            if key not in _ACTIVE_ORDINALS:
+                raise ValueError(f"roles.bodies: '{pattern}' uses unknown material '{key}'")
+            return _ACTIVE_ORDINALS[key]
+    return None
+
+
+def validate_roles(mesh_names: MeshNames) -> None:
+    """Every name a role table refers to must exist in the mesh."""
+    for key, table in (("tes_circuits", mesh_names.bodies), ("pulse_bodies", mesh_names.bodies),
+                       ("bath_boundaries", mesh_names.boundaries)):
+        missing = [n for n in _ACTIVE_ROLES.get(key, []) if n not in table]
+        if missing:
+            raise ValueError(f"roles.{key}: {missing} not in mesh.names ({sorted(table)})")
 
 
 def resolve_bodies(mesh_names: MeshNames) -> list[tuple[int, str, int]]:
@@ -750,7 +959,9 @@ def resolve_bodies(mesh_names: MeshNames) -> list[tuple[int, str, int]]:
     bodies = []
     for name, target in mesh_names.bodies.items():
         base = _base_body_name(name)
-        material = MATERIAL_BY_BASE_NAME.get(base)
+        material = _role_material(name)
+        if material is None:
+            material = MATERIAL_BY_BASE_NAME.get(base)
         if material is None:
             raise ValueError(f"No material role for body '{name}' (base name '{base}')")
         bodies.append((target, name, material))
@@ -762,7 +973,10 @@ def resolve_tes_body_names(mesh_names: MeshNames) -> list[str]:
     """TES-role body names ordered by ascending target id -- the order Body
     Force 1..N are assigned to them in bodies_and_bcs (and that
     body_force_blocks must match). ["TES"] for a single-pixel mesh,
-    ["TES_L", "TES_R"] for dual-TES."""
+    ["TES_L", "TES_R"] for dual-TES.  A role table's "tes_circuits" list
+    takes precedence (its order is the circuit numbering)."""
+    if _ACTIVE_ROLES.get("tes_circuits"):
+        return list(_ACTIVE_ROLES["tes_circuits"])
     return [name for _, name, _ in resolve_bodies(mesh_names) if _base_body_name(name) == "TES"]
 
 
@@ -780,9 +994,12 @@ def resolve_body_sif_ordinal(mesh_names: MeshNames, body_name: str) -> int:
 
 
 def _present_suffixes(mesh_names: MeshNames, base: str) -> list[str]:
-    """Which of the stack suffixes "", "_L", "_R" actually have a
-    `<base><suffix>` body in this mesh."""
-    return [sfx for sfx in ("", "_L", "_R") if f"{base}{sfx}" in mesh_names.bodies]
+    """Stack suffixes ("", "_L"/"_R", "_T1".."_TN") that have a `<base><suffix>`
+    body in this mesh, in body target-id order."""
+    return [
+        name[len(base):] for name, _ in sorted(mesh_names.bodies.items(), key=lambda kv: kv[1])
+        if _base_body_name(name) == base
+    ]
 
 
 def resolve_bath_boundaries(mesh_names: MeshNames) -> list[int]:
@@ -790,6 +1007,11 @@ def resolve_bath_boundaries(mesh_names: MeshNames) -> list[int]:
     ascending. A single-pixel mesh has one; a dual-TES mesh has one per
     stack."""
     targets = []
+    if _ACTIVE_ROLES.get("bath_boundaries"):
+        return sorted(mesh_names.boundaries[n] for n in _ACTIVE_ROLES["bath_boundaries"])
+    if "bath" in mesh_names.boundaries:
+        # Hybrid extruded meshes label every stack's bath face "bath".
+        return [mesh_names.boundaries["bath"]]
     for sfx in _present_suffixes(mesh_names, "SiO2_2"):
         name = f"SiO2_2{sfx}__zmin"
         # Hybrid extruded meshes assign this face the unambiguous physical
@@ -898,7 +1120,9 @@ def bodies_and_bcs(
         ]
         if name in body_force_by_name:
             lines.append(f"  Body Force = {body_force_by_name[name]}")
-        if _base_body_name(name) == "abs" and with_pulse:
+        pulse_bodies = _ACTIVE_ROLES.get("pulse_bodies") or ["abs"]
+        is_pulse_body = name in pulse_bodies if _ACTIVE_ROLES.get("pulse_bodies") else _base_body_name(name) == "abs"
+        if is_pulse_body and with_pulse:
             lines.append(f"  Body Force = {pulse_body_force}")
         lines += ["  Initial Condition = 1", "End", ""]
 
@@ -906,7 +1130,8 @@ def bodies_and_bcs(
         [
             "Boundary Condition 1",
             _target_boundaries_line(resolve_bath_boundaries(mesh_names)),
-            '  Name = "bath on SiO2_2__zmin"',
+            (f'  Name = "bath on {" ".join(_ACTIVE_ROLES["bath_boundaries"])}"'
+             if _ACTIVE_ROLES.get("bath_boundaries") else '  Name = "bath on SiO2_2__zmin"'),
             "  Temperature = __T_BATH__",
             "End",
         ]
@@ -1211,13 +1436,19 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     if heat_source == "circuit_implicit" and not series_file:
         raise ValueError(f"{case_name}: circuit_implicit cases need a series_file")
 
+    register_body_materials(model)
+    set_active_roles(spec.get("roles") or meshes[spec["mesh"]].get("roles"), model)
     mesh_names = parse_mesh_names(root / "work" / "meshes" / mesh_dir_name / "mesh.names")
+    validate_roles(mesh_names)
     tes_body_names = resolve_tes_body_names(mesh_names)
     # "" for a single-pixel mesh's unsuffixed "TES" body, "L"/"R" for a
     # dual-TES mesh's "TES_L"/"TES_R" bodies (see body_force_blocks).
     tes_sides = [name[len(_base_body_name(name)):].lstrip("_") for name in tes_body_names]
     is_dual_tes = tes_sides != [""]
     tes_body_id = resolve_body_sif_ordinal(mesh_names, tes_body_names[0]) if not is_dual_tes else None
+    # Inner (HeatSolve) circuits handle any number of TES bodies.
+    multi_inner = heat_source == "circuit_inner" and len(tes_body_names) > 1
+    tes_body_ids = [resolve_body_sif_ordinal(mesh_names, name) for name in tes_body_names]
 
     lines: list[str] = [
         f"! Auto-generated by scripts/support/build_cases.py from elmer_project.json",
@@ -1296,7 +1527,15 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
         "",
     ]
 
-    if is_dual_tes:
+    if multi_inner:
+        n_tes = len(tes_body_names)
+        lines += numbered_inner_constants_block(
+            n_tes, params, series_file,
+            [_numbered_state_file(spec.get("state_file"), k) for k in range(1, n_tes + 1)],
+            spec.get("iteration_series_file"),
+            spec.get("tes_circuits"),
+        )
+    elif is_dual_tes:
         # State File Constants are dual-only (docs/dual_tes_plan.md): a dual
         # steady case writes its converged circuit state; a dual transient/
         # pulse case that restarts from another case reads that case's
@@ -1371,12 +1610,11 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             )
             lines.append("")
     elif heat_source == "circuit_inner":
-        if is_dual_tes:
-            raise ValueError(f"{case_name}: circuit_inner supports one TES only")
         lines += solver1_block(
             spec["solver"],
             inner_circuit=True,
             tes_body_id=tes_body_id,
+            tes_body_ids=tes_body_ids if multi_inner else None,
             inner_circuit_step_commit=bool(spec.get("inner_circuit_step_commit")),
             calculate_loads=bool(spec.get("calculate_loads")),
             lumped_mass=bool(spec.get("lumped_mass")),
@@ -1441,7 +1679,8 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     else:
         lines += ["Equation 1", '  Name = "Heat"', "  Active Solvers(1) = 1", "End", ""]
 
-    lines += materials_block(model, membrane_k_udf=bool(spec.get("membrane_k_udf", False)))
+    lines += materials_block(model, membrane_k_udf=bool(spec.get("membrane_k_udf", False)),
+                             k_table=spec.get("temperature_tables"))
     lines += body_force_blocks(heat_source, tes_body_names, with_pulse)
     body_lines = bodies_and_bcs(
         mesh_names,

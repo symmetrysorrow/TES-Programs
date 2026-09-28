@@ -10,6 +10,18 @@
 - `tes_transient_heat_source.f90`: TES 電熱結合 UDF(定常/時間依存/パルス熱源)
 - `tes_heat_source.f90`: 定電力熱源 UDF(constant power ケース用)
 
+## ディレクトリ案内
+
+- `config/`: 実験・解析の設定ファイル
+- `scripts/`: 実行、前処理、解析、可視化のスクリプト
+- `tests/`: スクリプトの回帰テストとテスト用ログ断片
+- `generated/`: 設定から再生成できる SIF やメッシュ入力
+- `artifacts/`: 比較・診断ごとに整理した実験結果とレポート
+- `results/`, `work/`: 実行時の出力と作業用データ。容量が大きいため Git 管理対象外
+- `archive/`, `legacy/`: 過去の実行結果、旧ケース、移行用データ
+
+Python の `__pycache__` や pytest のキャッシュは再生成できるため、作業ツリーに残さず Git 対象から除外します。
+
 ## ケース定義と実行
 
 **ケースは `elmer_project.json` の `cases` セクションで定義**し、

@@ -530,7 +530,10 @@ def preexisting_restart_paths(model: dict, case_name: str, mpi_procs: int) -> li
         if mpi_procs == 1
         else [mesh / f"{base}.result.{rank}" for rank in range(mpi_procs)]
     )
-    return [*results, ROOT / state]
+    # Multi-TES inner circuits keep one state per circuit: '<stem>_<k>.state'.
+    state_path = ROOT / state
+    numbered = sorted(state_path.parent.glob(f"{state_path.stem}_[0-9]*{state_path.suffix}"))
+    return [*results, *(numbered or [state_path])]
 
 
 def validate_preexisting_restart(
@@ -658,10 +661,23 @@ def run_case(
     iteration_name = spec.get("iteration_series_file")
     if series_name and iteration_name:
         from scripts.support.final_series_flush import flush_final_series_row
-        final_series = find_case_insensitive(ROOT / series_name)
-        final_iterations = find_case_insensitive(ROOT / iteration_name)
-        if final_series is not None and final_iterations is not None:
-            final_flush_audit = flush_final_series_row(final_series, final_iterations, completed)
+        sys.path.insert(0, str(ROOT))
+        from scripts.support.build_cases import _side_series_file
+        # One (series, iterations) pair per inner circuit: the plain names for
+        # a single circuit, '<stem>_<k>_series.csv' / '<stem>_<k>.csv' for
+        # numbered multi-TES circuits.
+        pairs = [(series_name, iteration_name)] + [
+            (_side_series_file(series_name, str(k)), _side_series_file(iteration_name, str(k)))
+            for k in range(1, 9)
+        ]
+        audits = {}
+        for s_name, i_name in pairs:
+            final_series = find_case_insensitive(ROOT / s_name)
+            final_iterations = find_case_insensitive(ROOT / i_name)
+            if final_series is not None and final_iterations is not None:
+                audits[s_name] = flush_final_series_row(final_series, final_iterations, completed)
+        if audits:
+            final_flush_audit = audits[series_name] if list(audits) == [series_name] else audits
             (out_dir / "final_series_flush_audit.json").write_text(
                 json.dumps(final_flush_audit, indent=2) + "\n", encoding="utf-8"
             )
@@ -686,7 +702,7 @@ def run_case(
             sys.path.insert(0, str(ROOT))
             from scripts.support.build_cases import _side_series_file
 
-            for side in ("L", "R"):
+            for side in ("L", "R", *(str(k) for k in range(1, 9))):
                 side_name = _side_series_file(series, side)
                 found_side = find_case_insensitive(ROOT / side_name)
                 if found_side is not None:
@@ -694,10 +710,13 @@ def run_case(
                     collected.append(side_name)
     iteration_series = spec.get("iteration_series_file")
     if iteration_series:
-        found_iteration = find_case_insensitive(ROOT / iteration_series)
-        if found_iteration is not None:
-            shutil.move(str(found_iteration), out_dir / iteration_series)
-            collected.append(iteration_series)
+        sys.path.insert(0, str(ROOT))
+        from scripts.support.build_cases import _side_series_file
+        for it_name in [iteration_series] + [_side_series_file(iteration_series, str(k)) for k in range(1, 9)]:
+            found_iteration = find_case_insensitive(ROOT / it_name)
+            if found_iteration is not None:
+                shutil.move(str(found_iteration), out_dir / it_name)
+                collected.append(it_name)
     result_file = result_file_of(model, case_name)
 
     manifest = {

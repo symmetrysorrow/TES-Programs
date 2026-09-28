@@ -1,0 +1,853 @@
+{
+  "diagnostic_only": true,
+  "production_default_topology_unchanged": true,
+  "tested_question": "Can either one finite real lead/lag readout section or one downstream additive electronics-noise source replace the phenomenological shared c2 after separating the substrate node?",
+  "candidate_semantics": {
+    "real_lead_lag": "one stable minimum-phase real zero/pole pair multiplying the documented Magnicon second-order Bessel response",
+    "bypass_electronics_noise": "one shared white ASD source injected downstream of the Magnicon 10 kHz output filter but upstream of the known 100 kHz analog Bessel/sampling stage. The existing post-filter white ASD remains independently profiled per day."
+  },
+  "external_analog_filter": {
+    "model": "SRS SIM965",
+    "front_panel_cutoff_Hz": 100000.0,
+    "mode": "Bessel",
+    "slope_dB_per_oct": 24,
+    "order": 4,
+    "coupling": "DC",
+    "scipy_norm": "phase",
+    "nominal_minus3dB_Hz": 66040.0
+  },
+  "c2_zero_reference": {
+    "name": "replacement_reference_c2_zero",
+    "joint_shape_score": 0.08381249321272446,
+    "joint_continuum_rms_dB": 2.961512776855449,
+    "best_candidate_source": "de",
+    "evaluation_count": 29328,
+    "invalid_reference_evaluations": 2,
+    "invalid_repeat_evaluations": 3,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "shared_log10_C_substrate",
+      "shared_log10_G_ratio",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale"
+    ],
+    "n_free_parameters": 12,
+    "solution": {
+      "shared_C_tes_J_per_K": 1.9619402364193982e-13,
+      "shared_C_tes_over_material": 0.2500083130193563,
+      "shared_C_substrate_J_per_K": 5.12512103777441e-13,
+      "shared_local_C_total_J_per_K": 7.087061274193808e-13,
+      "shared_local_C_total_over_historical_PoST": 0.0897096363822001,
+      "historical_PoST_C_tes_reference_J_per_K": 7.9e-12,
+      "shared_L_H": 1.2767966661086482e-09,
+      "shared_G_tes_substrate_over_G_substrate_bath": 0.03028992859991763,
+      "shared_c2": 0.0,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 1.9619402364193982e-13,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 1.2767966661086482e-09,
+          "lower": 1e-10,
+          "upper": 1.3e-09,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "C_substrate": {
+          "value": 5.12512103777441e-13,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "G_ratio": {
+          "value": 0.03028992859991763,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "shared_c2_boundary_hit": null,
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 189.83855374640444,
+          "beta": 2.715165324133242,
+          "C_tes": 1.9619402364193982e-13,
+          "L": 1.2767966661086482e-09,
+          "T_bath": 0.21759397365129432,
+          "R": 0.02193979072046886,
+          "C_substrate": 5.12512103777441e-13,
+          "G_tes-substrate": 4.697681957614259e-08,
+          "G_substrate-bath": 1.550905589664227e-06,
+          "G_tes-bath": 4.5595728223782954e-08,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 189.83855374640444,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 2.715165324133242,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21759397365129432,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2000532353349671,
+        "white_asd_A_rtHz": 1.1992875295052314e-11,
+        "white_boundary_hit": {
+          "value": 0.2000532353349671,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00021756557882986346,
+          "joule_power_W": 1.0385151909483298e-09,
+          "G_substrate_equivalent_W_per_K": 4.5595728223782954e-08,
+          "f_substrate_node_Hz": 496204.6399212972
+        },
+        "metrics": {
+          "shape_score": 0.07858670417426977,
+          "continuum_rms_dB": 2.8709043355398656,
+          "continuum_1_40k_rms_dB": 2.7630584526163027,
+          "continuum_40_200k_rms_dB": 3.1032148434652695,
+          "raw_experiment_rms_dB": 2.8712956907361598
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 173.9946777817069,
+          "beta": 2.748681495010815,
+          "C_tes": 1.9619402364193982e-13,
+          "L": 1.2767966661086482e-09,
+          "T_bath": 0.21743189857384218,
+          "R": 0.02193979072046886,
+          "C_substrate": 5.12512103777441e-13,
+          "G_tes-substrate": 4.697681957614259e-08,
+          "G_substrate-bath": 1.550905589664227e-06,
+          "G_tes-bath": 4.5595728223782954e-08,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 173.9946777817069,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 2.748681495010815,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21743189857384218,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.20059377010868915,
+        "white_asd_A_rtHz": 1.2025279500478102e-11,
+        "white_boundary_hit": {
+          "value": 0.20059377010868915,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00021823873429481126,
+          "joule_power_W": 1.0449515369205454e-09,
+          "G_substrate_equivalent_W_per_K": 4.5595728223782954e-08,
+          "f_substrate_node_Hz": 496204.6399212972
+        },
+        "metrics": {
+          "shape_score": 0.08903828225117914,
+          "continuum_rms_dB": 3.0494301354736013,
+          "continuum_1_40k_rms_dB": 2.9759657456843747,
+          "continuum_40_200k_rms_dB": 3.2109358635135963,
+          "raw_experiment_rms_dB": 3.05656561210339
+        }
+      }
+    }
+  },
+  "c2_free_reference": {
+    "name": "replacement_reference_c2_free",
+    "joint_shape_score": 0.0010940151118505913,
+    "joint_continuum_rms_dB": 0.48908584081059486,
+    "best_candidate_source": "de_least_squares",
+    "evaluation_count": 35630,
+    "invalid_reference_evaluations": 18,
+    "invalid_repeat_evaluations": 10,
+    "free_parameter_names": [
+      "shared_log10_C_tes",
+      "shared_log10_L",
+      "shared_log10_C_substrate",
+      "shared_log10_G_ratio",
+      "reference_alpha",
+      "reference_beta",
+      "reference_T_bath",
+      "repeat_alpha",
+      "repeat_beta",
+      "repeat_T_bath",
+      "reference_log10_white_scale",
+      "repeat_log10_white_scale",
+      "shared_c2"
+    ],
+    "n_free_parameters": 13,
+    "solution": {
+      "shared_C_tes_J_per_K": 2.587146570887243e-12,
+      "shared_C_tes_over_material": 3.2967780450936517,
+      "shared_C_substrate_J_per_K": 4.312154650149637e-12,
+      "shared_local_C_total_J_per_K": 6.8993012210368805e-12,
+      "shared_local_C_total_over_historical_PoST": 0.873329268485681,
+      "historical_PoST_C_tes_reference_J_per_K": 7.9e-12,
+      "shared_L_H": 1.9917318890529081e-10,
+      "shared_G_tes_substrate_over_G_substrate_bath": 0.5814028014971642,
+      "shared_c2": 999.9999999870374,
+      "shared_physical_boundary_hits": {
+        "C_tes": {
+          "value": 2.587146570887243e-12,
+          "lower": 1.961875e-13,
+          "upper": 3.92375e-12,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "L": {
+          "value": 1.9917318890529081e-10,
+          "lower": 1e-10,
+          "upper": 1.3e-09,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "C_substrate": {
+          "value": 4.312154650149637e-12,
+          "lower": 5e-13,
+          "upper": 2e-11,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "G_ratio": {
+          "value": 0.5814028014971642,
+          "lower": 0.03,
+          "upper": 30.0,
+          "at_lower": false,
+          "at_upper": false
+        }
+      },
+      "shared_c2_boundary_hit": {
+        "value": 999.9999999870374,
+        "lower": 0.0,
+        "upper": 1000.0,
+        "at_lower": false,
+        "at_upper": true
+      },
+      "reference_day": {
+        "detector_candidate": {
+          "alpha": 199.99999999996353,
+          "beta": 1.210616346795199,
+          "C_tes": 2.587146570887243e-12,
+          "L": 1.9917318890529081e-10,
+          "T_bath": 0.21770195622948085,
+          "R": 0.02193979072046886,
+          "C_substrate": 4.312154650149637e-12,
+          "G_tes-substrate": 7.210521234939368e-08,
+          "G_substrate-bath": 1.2401937548927577e-07,
+          "G_tes-bath": 4.5595728223782954e-08,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 199.99999999996353,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "beta": {
+            "value": 1.210616346795199,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21770195622948085,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "white_scale": 0.29491883190894896,
+        "white_asd_A_rtHz": 1.7679917884478746e-11,
+        "white_boundary_hit": {
+          "value": 0.29491883190894896,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.0002171155676071038,
+          "joule_power_W": 1.034223517896633e-09,
+          "G_substrate_equivalent_W_per_K": 4.559572822378295e-08,
+          "f_substrate_node_Hz": 7238.654489189457
+        },
+        "metrics": {
+          "shape_score": 0.0006577085181627629,
+          "continuum_rms_dB": 0.39794425677415757,
+          "continuum_1_40k_rms_dB": 0.2564255973395775,
+          "continuum_40_200k_rms_dB": 0.6081816047507207,
+          "raw_experiment_rms_dB": 0.4296026796420146
+        }
+      },
+      "repeat_day": {
+        "detector_candidate": {
+          "alpha": 104.61525110126692,
+          "beta": 0.0989309164294084,
+          "C_tes": 2.587146570887243e-12,
+          "L": 1.9917318890529081e-10,
+          "T_bath": 0.21370195629744676,
+          "R": 0.02193979072046886,
+          "C_substrate": 4.312154650149637e-12,
+          "G_tes-substrate": 7.210521234939368e-08,
+          "G_substrate-bath": 1.2401937548927577e-07,
+          "G_tes-bath": 4.5595728223782954e-08,
+          "thermal_extension": "tes_bath_series_substrate_node"
+        },
+        "day_specific_boundary_hits": {
+          "alpha": {
+            "value": 104.61525110126692,
+            "lower": 9.999754955288212,
+            "upper": 200.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "beta": {
+            "value": 0.0989309164294084,
+            "lower": 0.0,
+            "upper": 12.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "T_bath": {
+            "value": 0.21370195629744676,
+            "lower": 0.21370195622948088,
+            "upper": 0.21770195622948088,
+            "at_lower": true,
+            "at_upper": false
+          }
+        },
+        "white_scale": 0.2686494431397089,
+        "white_asd_A_rtHz": 1.6105109543792652e-11,
+        "white_boundary_hit": {
+          "value": 0.2686494431397089,
+          "lower": 0.2,
+          "upper": 5.0,
+          "at_lower": false,
+          "at_upper": false
+        },
+        "operating_point": {
+          "valid": true,
+          "stable": true,
+          "current_A": 0.00023302633440204634,
+          "joule_power_W": 1.1913585550504495e-09,
+          "G_substrate_equivalent_W_per_K": 4.559572822378295e-08,
+          "f_substrate_node_Hz": 7238.654489189457
+        },
+        "metrics": {
+          "shape_score": 0.0015303217055384199,
+          "continuum_rms_dB": 0.5657298718145228,
+          "continuum_1_40k_rms_dB": 0.13232275091260856,
+          "continuum_40_200k_rms_dB": 1.0055347685641907,
+          "raw_experiment_rms_dB": 0.5793077287638013
+        }
+      }
+    }
+  },
+  "candidates": {
+    "real_lead_lag": {
+      "name": "real_lead_lag",
+      "joint_shape_score": 0.0010863347093658755,
+      "joint_continuum_rms_dB": 0.48715627176740023,
+      "best_candidate_source": "c2_zero_based_warm_least_squares",
+      "evaluation_count": 32674,
+      "invalid_reference_evaluations": 64,
+      "invalid_repeat_evaluations": 13,
+      "free_parameter_names": [
+        "shared_log10_C_tes",
+        "shared_log10_L",
+        "shared_log10_C_substrate",
+        "shared_log10_G_ratio",
+        "reference_alpha",
+        "reference_beta",
+        "reference_T_bath",
+        "repeat_alpha",
+        "repeat_beta",
+        "repeat_T_bath",
+        "reference_log10_white_scale",
+        "repeat_log10_white_scale",
+        "shared_log10_lead_zero_Hz",
+        "shared_log10_lead_pole_Hz"
+      ],
+      "n_free_parameters": 14,
+      "solution": {
+        "shared_C_tes_J_per_K": 3.839606604069599e-12,
+        "shared_C_tes_over_material": 4.89277681308646,
+        "shared_C_substrate_J_per_K": 3.614639291460887e-12,
+        "shared_L_H": 1.071681517441854e-10,
+        "shared_G_tes_substrate_over_G_substrate_bath": 0.7450012703070097,
+        "family": "real_lead_lag",
+        "family_parameters": {
+          "zero_Hz": 559.3821538616412,
+          "pole_Hz": 9999999.99999998
+        },
+        "family_boundary_hits": {
+          "zero_Hz": {
+            "value": 559.3821538616412,
+            "lower": 300.0000000000001,
+            "upper": 100000.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "pole_Hz": {
+            "value": 9999999.99999998,
+            "lower": 4999.999999999999,
+            "upper": 10000000.0,
+            "at_lower": false,
+            "at_upper": true
+          }
+        },
+        "shared_physical_boundary_hits": {
+          "C_tes": {
+            "value": 3.839606604069599e-12,
+            "lower": 1.961875e-13,
+            "upper": 3.92375e-12,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "L": {
+            "value": 1.071681517441854e-10,
+            "lower": 1e-10,
+            "upper": 1.3e-09,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "C_substrate": {
+            "value": 3.614639291460887e-12,
+            "lower": 5e-13,
+            "upper": 2e-11,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "G_ratio": {
+            "value": 0.7450012703070097,
+            "lower": 0.03,
+            "upper": 30.0,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "reference_day": {
+          "detector_candidate": {
+            "alpha": 199.998146996228,
+            "beta": 0.03045533913350792,
+            "C_tes": 3.839606604069599e-12,
+            "L": 1.071681517441854e-10,
+            "T_bath": 0.21770178297162762,
+            "R": 0.02193979072046886,
+            "C_substrate": 3.614639291460887e-12,
+            "G_tes-substrate": 7.956460367107443e-08,
+            "G_substrate-bath": 1.0679794363073559e-07,
+            "G_tes-bath": 4.5595728223782954e-08,
+            "thermal_extension": "tes_bath_series_substrate_node"
+          },
+          "day_specific_boundary_hits": {
+            "alpha": {
+              "value": 199.998146996228,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 0.03045533913350792,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770178297162762,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "white_scale": 0.7246334389780166,
+          "white_asd_A_rtHz": 4.3440629459139073e-11,
+          "white_boundary_hit": {
+            "value": 0.7246334389780166,
+            "lower": 0.2,
+            "upper": 5.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "operating_point": {
+            "valid": true,
+            "stable": true,
+            "f_substrate_node_Hz": 8205.665411857093
+          },
+          "metrics": {
+            "shape_score": 0.0006422633362985109,
+            "continuum_rms_dB": 0.39250491650550096,
+            "continuum_1_40k_rms_dB": 0.24430498281766383,
+            "continuum_40_200k_rms_dB": 0.6079699594558096,
+            "raw_experiment_rms_dB": 0.4246776009956254
+          }
+        },
+        "repeat_day": {
+          "detector_candidate": {
+            "alpha": 147.1046435958897,
+            "beta": 0.07783127782002842,
+            "C_tes": 3.839606604069599e-12,
+            "L": 1.071681517441854e-10,
+            "T_bath": 0.2137019562294912,
+            "R": 0.02193979072046886,
+            "C_substrate": 3.614639291460887e-12,
+            "G_tes-substrate": 7.956460367107443e-08,
+            "G_substrate-bath": 1.0679794363073559e-07,
+            "G_tes-bath": 4.5595728223782954e-08,
+            "thermal_extension": "tes_bath_series_substrate_node"
+          },
+          "day_specific_boundary_hits": {
+            "alpha": {
+              "value": 147.1046435958897,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "beta": {
+              "value": 0.07783127782002842,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.2137019562294912,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "white_scale": 0.6068514844638965,
+          "white_asd_A_rtHz": 3.63797874281156e-11,
+          "white_boundary_hit": {
+            "value": 0.6068514844638965,
+            "lower": 0.2,
+            "upper": 5.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "operating_point": {
+            "valid": true,
+            "stable": true,
+            "f_substrate_node_Hz": 8205.665411857093
+          },
+          "metrics": {
+            "shape_score": 0.0015304060824332401,
+            "continuum_rms_dB": 0.5661999264956116,
+            "continuum_1_40k_rms_dB": 0.13386988882770615,
+            "continuum_40_200k_rms_dB": 1.0059358172244335,
+            "raw_experiment_rms_dB": 0.5796839376716683
+          }
+        }
+      }
+    },
+    "bypass_electronics_noise": {
+      "name": "bypass_electronics_noise",
+      "joint_shape_score": 0.05270150141399335,
+      "joint_continuum_rms_dB": 2.4155285554896295,
+      "best_candidate_source": "de_least_squares",
+      "evaluation_count": 28607,
+      "invalid_reference_evaluations": 10,
+      "invalid_repeat_evaluations": 7,
+      "free_parameter_names": [
+        "shared_log10_C_tes",
+        "shared_log10_L",
+        "shared_log10_C_substrate",
+        "shared_log10_G_ratio",
+        "reference_alpha",
+        "reference_beta",
+        "reference_T_bath",
+        "repeat_alpha",
+        "repeat_beta",
+        "repeat_T_bath",
+        "reference_log10_white_scale",
+        "repeat_log10_white_scale",
+        "shared_log10_bypass_noise_scale"
+      ],
+      "n_free_parameters": 13,
+      "solution": {
+        "shared_C_tes_J_per_K": 1.9618750000000055e-13,
+        "shared_C_tes_over_material": 0.2500000000000007,
+        "shared_C_substrate_J_per_K": 5.00000000000002e-13,
+        "shared_L_H": 1.2999999999999953e-09,
+        "shared_G_tes_substrate_over_G_substrate_bath": 0.030000000000000013,
+        "family": "bypass_electronics_noise",
+        "family_parameters": {
+          "asd_scale_to_geomean_tracked_white": 0.5141839346439653
+        },
+        "family_boundary_hits": {
+          "asd_scale_to_geomean_tracked_white": {
+            "value": 0.5141839346439653,
+            "lower": 0.01,
+            "upper": 20.000000000000004,
+            "at_lower": false,
+            "at_upper": false
+          }
+        },
+        "shared_physical_boundary_hits": {
+          "C_tes": {
+            "value": 1.9618750000000055e-13,
+            "lower": 1.961875e-13,
+            "upper": 3.92375e-12,
+            "at_lower": true,
+            "at_upper": false
+          },
+          "L": {
+            "value": 1.2999999999999953e-09,
+            "lower": 1e-10,
+            "upper": 1.3e-09,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "C_substrate": {
+            "value": 5.00000000000002e-13,
+            "lower": 5e-13,
+            "upper": 2e-11,
+            "at_lower": true,
+            "at_upper": false
+          },
+          "G_ratio": {
+            "value": 0.030000000000000013,
+            "lower": 0.03,
+            "upper": 30.0,
+            "at_lower": true,
+            "at_upper": false
+          }
+        },
+        "reference_day": {
+          "detector_candidate": {
+            "alpha": 199.99999999407407,
+            "beta": 2.008061286756594,
+            "C_tes": 1.9618750000000055e-13,
+            "L": 1.2999999999999953e-09,
+            "T_bath": 0.21770195622948085,
+            "R": 0.02193979072046886,
+            "C_substrate": 5.00000000000002e-13,
+            "G_tes-substrate": 4.696360007049644e-08,
+            "G_substrate-bath": 1.5654533356832141e-06,
+            "G_tes-bath": 4.5595728223782954e-08,
+            "thermal_extension": "tes_bath_series_substrate_node"
+          },
+          "day_specific_boundary_hits": {
+            "alpha": {
+              "value": 199.99999999407407,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 2.008061286756594,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195622948085,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "white_scale": 0.20000000000000007,
+          "white_asd_A_rtHz": 1.1989683920853936e-11,
+          "white_boundary_hit": {
+            "value": 0.20000000000000007,
+            "lower": 0.2,
+            "upper": 5.0,
+            "at_lower": true,
+            "at_upper": false
+          },
+          "operating_point": {
+            "valid": true,
+            "stable": true,
+            "f_substrate_node_Hz": 513248.2513005781
+          },
+          "metrics": {
+            "shape_score": 0.050161550477649405,
+            "continuum_rms_dB": 2.366306768748151,
+            "continuum_1_40k_rms_dB": 2.588454639157628,
+            "continuum_40_200k_rms_dB": 1.7564919722432681,
+            "raw_experiment_rms_dB": 2.365791007187756
+          }
+        },
+        "repeat_day": {
+          "detector_candidate": {
+            "alpha": 199.99999999999997,
+            "beta": 2.3485380481640976,
+            "C_tes": 1.9618750000000055e-13,
+            "L": 1.2999999999999953e-09,
+            "T_bath": 0.21770195622948085,
+            "R": 0.02193979072046886,
+            "C_substrate": 5.00000000000002e-13,
+            "G_tes-substrate": 4.696360007049644e-08,
+            "G_substrate-bath": 1.5654533356832141e-06,
+            "G_tes-bath": 4.5595728223782954e-08,
+            "thermal_extension": "tes_bath_series_substrate_node"
+          },
+          "day_specific_boundary_hits": {
+            "alpha": {
+              "value": 199.99999999999997,
+              "lower": 9.999754955288212,
+              "upper": 200.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "beta": {
+              "value": 2.3485380481640976,
+              "lower": 0.0,
+              "upper": 12.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "T_bath": {
+              "value": 0.21770195622948085,
+              "lower": 0.21370195622948088,
+              "upper": 0.21770195622948088,
+              "at_lower": false,
+              "at_upper": true
+            }
+          },
+          "white_scale": 0.20000000000000007,
+          "white_asd_A_rtHz": 1.1989683920853936e-11,
+          "white_boundary_hit": {
+            "value": 0.20000000000000007,
+            "lower": 0.2,
+            "upper": 5.0,
+            "at_lower": true,
+            "at_upper": false
+          },
+          "operating_point": {
+            "valid": true,
+            "stable": true,
+            "f_substrate_node_Hz": 513248.2513005781
+          },
+          "metrics": {
+            "shape_score": 0.0552414523503373,
+            "continuum_rms_dB": 2.4637671726338746,
+            "continuum_1_40k_rms_dB": 2.699825084686265,
+            "continuum_40_200k_rms_dB": 1.8127269608150538,
+            "raw_experiment_rms_dB": 2.4656368574758236
+          }
+        },
+        "shared_bypass_noise_asd_A_rtHz": 3.08245142678108e-11
+      }
+    }
+  },
+  "replacement_comparisons": {
+    "real_lead_lag": {
+      "classification": "candidate_replaces_c2_within_screen",
+      "material_improvement_vs_c2_zero": true,
+      "within_c2_reference_screen": true,
+      "score_ratio_to_c2_zero": 0.012961489006282747,
+      "rms_improvement_vs_c2_zero_dB": 2.4743565050880485,
+      "score_ratio_to_c2_reference": 0.9929796193841198,
+      "rms_delta_from_c2_reference_dB": -0.0019295690431946344,
+      "screen": {
+        "max_score_ratio_to_c2_reference": 1.5,
+        "max_rms_delta_from_c2_reference_dB": 0.15,
+        "max_score_ratio_to_c2_zero_for_material_improvement": 0.8,
+        "min_rms_improvement_vs_c2_zero_dB": 0.05
+      }
+    },
+    "bypass_electronics_noise": {
+      "classification": "candidate_materially_improves_c2_zero_but_not_c2_reference",
+      "material_improvement_vs_c2_zero": true,
+      "within_c2_reference_screen": false,
+      "score_ratio_to_c2_zero": 0.6288024540712766,
+      "rms_improvement_vs_c2_zero_dB": 0.5459842213658193,
+      "score_ratio_to_c2_reference": 48.17255341642004,
+      "rms_delta_from_c2_reference_dB": 1.9264427146790346,
+      "screen": {
+        "max_score_ratio_to_c2_reference": 1.5,
+        "max_rms_delta_from_c2_reference_dB": 0.15,
+        "max_score_ratio_to_c2_zero_for_material_improvement": 0.8,
+        "min_rms_improvement_vs_c2_zero_dB": 0.05
+      }
+    }
+  },
+  "interpretation": {
+    "classification": "at_least_one_physical_candidate_replaces_c2",
+    "c2_reference_value": 999.9999999870374,
+    "c2_reference_equivalent_zero_Hz": 1264.91106407555,
+    "lead_lag_zero_Hz": 559.3821538616412,
+    "lead_lag_pole_Hz": 9999999.99999998,
+    "lead_lag_pole_over_zero": 17876.866344351416,
+    "lead_lag_pole_within_1pct_of_upper_bound": true,
+    "bypass_noise_asd_A_rtHz": 3.08245142678108e-11,
+    "guardrail": "These are source-class replacement tests, not component identifications. The external anti-alias stage is fixed to the measured SRS SIM965 settings: 100 kHz front-panel cutoff, Bessel, Slope 24 dB/oct, LP, Couple DC, represented by a four-pole phase-normalized Bessel response. The lead-lag family tests whether a finite real pole/zero pair can replace c2 after that known hardware response is applied; if its pole runs high, the data only support a zero-like response. The bypass-noise family tests one specific source location: after the Magnicon 10 kHz filter but before the SIM965 and sampling. A successful replacement does not prove that exact circuit location or noise source."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_c2_physical_replacement_diagnostic_config.json",
+    "base_separated_substrate_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_separated_substrate_L_0p1_1p3nH_joint_c2_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json"
+  }
+}

@@ -1,0 +1,4030 @@
+{
+  "diagnostic_only": true,
+  "production_default_topology_unchanged": true,
+  "tested_question": "Does allowing TES circuit inductance through the Elmer-configured 12.3 nH scale and up to 100 nH remove the two-day normalized-noise need for phenomenological c2 under the same relaxed thermal backbone?",
+  "L_scan": {
+    "grid_nH": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      12.3,
+      30.0,
+      100.0
+    ],
+    "numerical_fixed_L_relative_half_width": 1e-06,
+    "implementation": "Each row narrows the shared L profile to the nominal value +/- the stated relative half-width; all other relaxed thermal freedoms are unchanged."
+  },
+  "elmer_reference": {
+    "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\elmer_project.json",
+    "parameter": "parameter_expressions.L_tes",
+    "expression": "12.3[nH]",
+    "value_nH": 12.3,
+    "is_independent_elmer_inductance_estimate": false,
+    "semantics": "This is the circuit inductance configured as an input to the Elmer TES branch. It is not an inductance inferred independently by Elmer."
+  },
+  "fit_semantics": {
+    "branches_per_L": [
+      "c2_zero",
+      "c2_reference"
+    ],
+    "shared_thermal_parameters_except_L": [
+      "C_tes",
+      "C_substrate",
+      "G_tes-substrate/G_substrate-bath",
+      "G_tes-bath scale to inherited snapshot",
+      "Pb absorber thickness"
+    ],
+    "day_specific": [
+      "alpha",
+      "beta",
+      "T_bath",
+      "post-filter white ASD"
+    ],
+    "magnicon": {
+      "order": 2,
+      "cutoff_Hz": 10000.0,
+      "normalization": "phase",
+      "pole_Q": 0.5773502691896258
+    }
+  },
+  "rows": {
+    "0.1_nH": {
+      "nominal_fixed_L_nH": 0.1,
+      "nominal_fixed_L_H": 1.0000000000000002e-10,
+      "realized_L_H": {
+        "c2_zero": 9.999998142891088e-11,
+        "c2_reference": 1.0000005275008067e-10
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.04610765262756972,
+        "joint_rms_improvement_dB": 1.111386454192704,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9936288531222,
+        "equivalent_first_order_zero_Hz": 1264.9150935536943
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 1.6002483595599029,
+        "joint_shape_score": 0.02368710601567802,
+        "reference_day": {
+          "shape_score": 0.017744237316190258,
+          "continuum_rms_dB": 1.3928736369619354,
+          "continuum_1_40k_rms_dB": 1.35491394005656,
+          "continuum_40_200k_rms_dB": 1.4759220735230023,
+          "raw_experiment_rms_dB": 1.402507129389747
+        },
+        "repeat_day": {
+          "shape_score": 0.029629974715165784,
+          "continuum_rms_dB": 1.783673920873642,
+          "continuum_1_40k_rms_dB": 1.6951733243219769,
+          "continuum_40_200k_rms_dB": 1.9709738233698213,
+          "raw_experiment_rms_dB": 1.7947172221566559
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.48886190536719876,
+        "joint_shape_score": 0.0010921568559232992,
+        "reference_day": {
+          "shape_score": 0.0006519541682946049,
+          "continuum_rms_dB": 0.39732582654184234,
+          "continuum_1_40k_rms_dB": 0.25570005519716804,
+          "continuum_40_200k_rms_dB": 0.6075511296727634,
+          "raw_experiment_rms_dB": 0.4291439602058785
+        },
+        "repeat_day": {
+          "shape_score": 0.0015323595435519934,
+          "continuum_rms_dB": 0.5657774408734744,
+          "continuum_1_40k_rms_dB": 0.13209553000236557,
+          "continuum_40_200k_rms_dB": 1.0056908941078175,
+          "raw_experiment_rms_dB": 0.5792422475915406
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.02368710601567802,
+        "joint_continuum_rms_dB": 1.6002483595599029,
+        "best_candidate_source": "de",
+        "evaluation_count": 31391,
+        "invalid_reference_evaluations": 168,
+        "invalid_repeat_evaluations": 152,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 1.9684554988049996e-13,
+          "shared_C_tes_over_material": 0.2508385471557821,
+          "shared_C_substrate_J_per_K": 8.832075342888777e-13,
+          "shared_local_C_total_J_per_K": 1.0800530841693777e-12,
+          "shared_local_C_total_over_historical_PoST": 0.13671558027460476,
+          "shared_L_H": 9.999998142891088e-11,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.031958347116376344,
+          "shared_G_tes_bath_scale_to_snapshot": 29.558737867056337,
+          "shared_Pb_absorber_thickness_m": 0.00048250322393773436,
+          "shared_Pb_C_abs_J_per_K": 3.101878125792992e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 4.0530270810769684e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 1.9684554988049996e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 9.999998142891088e-11,
+              "lower": 9.999990000000001e-11,
+              "upper": 1.0000010000000001e-10,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 8.832075342888777e-13,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.031958347116376344,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 29.558737867056337,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.00048250322393773436,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 181.71031033229363,
+              "beta": 1.9862753861956346,
+              "T_bath": 0.2178736139721082,
+              "C_tes": 1.9684554988049996e-13,
+              "C_substrate": 8.832075342888777e-13,
+              "C_abs": 3.101878125792992e-09,
+              "L": 9.999998142891088e-11,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3477521784243425e-06,
+              "G_tes-substrate": 1.39082411036928e-06,
+              "G_substrate-bath": 4.351990124221985e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.0530270810769684e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 181.71031033229363,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 1.9862753861956346,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2178736139721082,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.20729445129235252,
+            "white_asd_A_rtHz": 1.2426974747710788e-11,
+            "white_boundary_hit": {
+              "value": 0.20729445129235252,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00117650972167031,
+              "joule_power_W": 3.0368512567032206e-08,
+              "f_substrate_node_Hz": 8092960.7823852515
+            },
+            "metrics": {
+              "shape_score": 0.017744237316190258,
+              "continuum_rms_dB": 1.3928736369619354,
+              "continuum_1_40k_rms_dB": 1.35491394005656,
+              "continuum_40_200k_rms_dB": 1.4759220735230023,
+              "raw_experiment_rms_dB": 1.402507129389747
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 121.2204777324609,
+              "beta": 1.099402677413357,
+              "T_bath": 0.20631339677340824,
+              "C_tes": 1.9684554988049996e-13,
+              "C_substrate": 8.832075342888777e-13,
+              "C_abs": 3.101878125792992e-09,
+              "L": 9.999998142891088e-11,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3477521784243425e-06,
+              "G_tes-substrate": 1.39082411036928e-06,
+              "G_substrate-bath": 4.351990124221985e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.0530270810769684e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 121.2204777324609,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 1.099402677413357,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20631339677340824,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.3248738581537602,
+            "white_asd_A_rtHz": 1.9475674367059598e-11,
+            "white_boundary_hit": {
+              "value": 0.3248738581537602,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.001408113000554752,
+              "joule_power_W": 4.3501827002215033e-08,
+              "f_substrate_node_Hz": 8092960.7823852515
+            },
+            "metrics": {
+              "shape_score": 0.029629974715165784,
+              "continuum_rms_dB": 1.783673920873642,
+              "continuum_1_40k_rms_dB": 1.6951733243219769,
+              "continuum_40_200k_rms_dB": 1.9709738233698213,
+              "raw_experiment_rms_dB": 1.7947172221566559
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0010921568559232992,
+        "joint_continuum_rms_dB": 0.48886190536719876,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 34636,
+        "invalid_reference_evaluations": 445,
+        "invalid_repeat_evaluations": 307,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 9.420949798708439e-13,
+          "shared_C_tes_over_material": 1.2005033193639298,
+          "shared_C_substrate_J_per_K": 1.3323113159813552e-12,
+          "shared_local_C_total_J_per_K": 2.274406295852199e-12,
+          "shared_local_C_total_over_historical_PoST": 0.2878995311205315,
+          "shared_L_H": 1.0000005275008067e-10,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.6645732090590015,
+          "shared_G_tes_bath_scale_to_snapshot": 0.3204732681827516,
+          "shared_Pb_absorber_thickness_m": 0.0005997837494671952,
+          "shared_Pb_C_abs_J_per_K": 3.855841785874748e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 5.038183495524439e-07,
+          "shared_c2": 999.9936288531222,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 9.420949798708439e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 1.0000005275008067e-10,
+              "lower": 9.999990000000001e-11,
+              "upper": 1.0000010000000001e-10,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 1.3323113159813552e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.6645732090590015,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 0.3204732681827516,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0005997837494671952,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9936288531222,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 190.16002632359525,
+              "beta": 0.6367892608845259,
+              "T_bath": 0.21799990059989782,
+              "C_tes": 9.420949798708439e-13,
+              "C_substrate": 1.3323113159813552e-12,
+              "C_abs": 3.855841785874748e-09,
+              "L": 1.0000005275008067e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.4612212039048252e-08,
+              "G_tes-substrate": 2.4323096685289124e-08,
+              "G_substrate-bath": 3.6599574514490684e-08,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 5.038183495524439e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 190.16002632359525,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.6367892608845259,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799990059989782,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.31424240587407987,
+            "white_asd_A_rtHz": 1.8838335604794554e-11,
+            "white_boundary_hit": {
+              "value": 0.31424240587407987,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00012220337853863415,
+              "joule_power_W": 3.2764150072351077e-10,
+              "f_substrate_node_Hz": 7277.686642378483
+            },
+            "metrics": {
+              "shape_score": 0.0006519541682946049,
+              "continuum_rms_dB": 0.39732582654184234,
+              "continuum_1_40k_rms_dB": 0.25570005519716804,
+              "continuum_40_200k_rms_dB": 0.6075511296727634,
+              "raw_experiment_rms_dB": 0.4291439602058785
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 142.824457252825,
+              "beta": 1.689248994697145,
+              "T_bath": 0.20000001542146262,
+              "C_tes": 9.420949798708439e-13,
+              "C_substrate": 1.3323113159813552e-12,
+              "C_abs": 3.855841785874748e-09,
+              "L": 1.0000005275008067e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.4612212039048252e-08,
+              "G_tes-substrate": 2.4323096685289124e-08,
+              "G_substrate-bath": 3.6599574514490684e-08,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 5.038183495524439e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 142.824457252825,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 1.689248994697145,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000001542146262,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.2415986024913834,
+            "white_asd_A_rtHz": 1.4483454397958602e-11,
+            "white_boundary_hit": {
+              "value": 0.2415986024913834,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00015763518370029027,
+              "joule_power_W": 5.451785936606042e-10,
+              "f_substrate_node_Hz": 7277.686642378483
+            },
+            "metrics": {
+              "shape_score": 0.0015323595435519934,
+              "continuum_rms_dB": 0.5657774408734744,
+              "continuum_1_40k_rms_dB": 0.13209553000236557,
+              "continuum_40_200k_rms_dB": 1.0056908941078175,
+              "raw_experiment_rms_dB": 0.5792422475915406
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "0.3_nH": {
+      "nominal_fixed_L_nH": 0.3,
+      "nominal_fixed_L_H": 3e-10,
+      "realized_L_H": {
+        "c2_zero": 3.000001662817106e-10,
+        "c2_reference": 3.000002994510626e-10
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.046303826243139716,
+        "joint_rms_improvement_dB": 1.1076845754944484,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9999994685293,
+        "equivalent_first_order_zero_Hz": 1264.9110644034834
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 1.5965039177913942,
+        "joint_shape_score": 0.023579288924833842,
+        "reference_day": {
+          "shape_score": 0.017669704987247827,
+          "continuum_rms_dB": 1.388409293184935,
+          "continuum_1_40k_rms_dB": 1.3508147921521825,
+          "continuum_40_200k_rms_dB": 1.4706807606980077,
+          "raw_experiment_rms_dB": 1.3971796970924522
+        },
+        "repeat_day": {
+          "shape_score": 0.029488872862419857,
+          "continuum_rms_dB": 1.7804407189356941,
+          "continuum_1_40k_rms_dB": 1.6934289380245684,
+          "continuum_40_200k_rms_dB": 1.9647886826655236,
+          "raw_experiment_rms_dB": 1.7915519888589477
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.4888193422969457,
+        "joint_shape_score": 0.0010918112973122948,
+        "reference_day": {
+          "shape_score": 0.0006514287618302323,
+          "continuum_rms_dB": 0.3972617574173757,
+          "continuum_1_40k_rms_dB": 0.2555399686896846,
+          "continuum_40_200k_rms_dB": 0.6075673829718398,
+          "raw_experiment_rms_dB": 0.4290866431537457
+        },
+        "repeat_day": {
+          "shape_score": 0.0015321938327943574,
+          "continuum_rms_dB": 0.5657488797168716,
+          "continuum_1_40k_rms_dB": 0.13195340127397495,
+          "continuum_40_200k_rms_dB": 1.0056807445987892,
+          "raw_experiment_rms_dB": 0.5792125460797347
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.023579288924833842,
+        "joint_continuum_rms_dB": 1.5965039177913942,
+        "best_candidate_source": "de",
+        "evaluation_count": 31687,
+        "invalid_reference_evaluations": 146,
+        "invalid_repeat_evaluations": 66,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 2.0255857893201123e-13,
+          "shared_C_tes_over_material": 0.25811860966169003,
+          "shared_C_substrate_J_per_K": 2.165157002432411e-12,
+          "shared_local_C_total_J_per_K": 2.3677155813644223e-12,
+          "shared_local_C_total_over_historical_PoST": 0.2997108330841041,
+          "shared_L_H": 3.000001662817106e-10,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.043442572547927466,
+          "shared_G_tes_bath_scale_to_snapshot": 29.841531723556187,
+          "shared_Pb_absorber_thickness_m": 0.0005423627109963822,
+          "shared_Pb_C_abs_J_per_K": 3.486698007436663e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 4.55584677236961e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 2.0255857893201123e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 3.000001662817106e-10,
+              "lower": 2.999997e-10,
+              "upper": 3.000003e-10,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 2.165157002432411e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.043442572547927466,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 29.841531723556187,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0005423627109963822,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 176.42474526137931,
+              "beta": 2.727720884888787,
+              "T_bath": 0.21014796607804392,
+              "C_tes": 2.0255857893201123e-13,
+              "C_substrate": 2.165157002432411e-12,
+              "C_abs": 3.486698007436663e-09,
+              "L": 3.000001662817106e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3606463702486652e-06,
+              "G_tes-substrate": 1.419756348900267e-06,
+              "G_substrate-bath": 3.268122179767183e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.55584677236961e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 176.42474526137931,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.727720884888787,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21014796607804392,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.21196500788500747,
+            "white_asd_A_rtHz": 1.2706967234112755e-11,
+            "white_boundary_hit": {
+              "value": 0.21196500788500747,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0013438845350550311,
+              "joule_power_W": 3.962382465550818e-08,
+              "f_substrate_node_Hz": 2506672.3707326497
+            },
+            "metrics": {
+              "shape_score": 0.017669704987247827,
+              "continuum_rms_dB": 1.388409293184935,
+              "continuum_1_40k_rms_dB": 1.3508147921521825,
+              "continuum_40_200k_rms_dB": 1.4706807606980077,
+              "raw_experiment_rms_dB": 1.3971796970924522
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 168.11160180401566,
+              "beta": 2.2708248432970644,
+              "T_bath": 0.2128086120151444,
+              "C_tes": 2.0255857893201123e-13,
+              "C_substrate": 2.165157002432411e-12,
+              "C_abs": 3.486698007436663e-09,
+              "L": 3.000001662817106e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3606463702486652e-06,
+              "G_tes-substrate": 1.419756348900267e-06,
+              "G_substrate-bath": 3.268122179767183e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.55584677236961e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 168.11160180401566,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.2708248432970644,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2128086120151444,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.24647402018032546,
+            "white_asd_A_rtHz": 1.477572798332138e-11,
+            "white_boundary_hit": {
+              "value": 0.24647402018032546,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0012913034480137803,
+              "joule_power_W": 3.658382424485037e-08,
+              "f_substrate_node_Hz": 2506672.3707326497
+            },
+            "metrics": {
+              "shape_score": 0.029488872862419857,
+              "continuum_rms_dB": 1.7804407189356941,
+              "continuum_1_40k_rms_dB": 1.6934289380245684,
+              "continuum_40_200k_rms_dB": 1.9647886826655236,
+              "raw_experiment_rms_dB": 1.7915519888589477
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0010918112973122948,
+        "joint_continuum_rms_dB": 0.4888193422969457,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 34669,
+        "invalid_reference_evaluations": 459,
+        "invalid_repeat_evaluations": 173,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.61955980742752e-12,
+          "shared_C_tes_over_material": 4.61237312192102,
+          "shared_C_substrate_J_per_K": 6.3150369897139945e-12,
+          "shared_local_C_total_J_per_K": 9.934596797141515e-12,
+          "shared_local_C_total_over_historical_PoST": 1.2575438983723437,
+          "shared_L_H": 3.000002994510626e-10,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.5687149681913466,
+          "shared_G_tes_bath_scale_to_snapshot": 1.4578488502166644,
+          "shared_Pb_absorber_thickness_m": 0.0005026009537440784,
+          "shared_Pb_C_abs_J_per_K": 3.2310808033536316e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 4.2218480114502574e-07,
+          "shared_c2": 999.9999994685293,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.61955980742752e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 3.000002994510626e-10,
+              "lower": 2.999997e-10,
+              "upper": 3.000003e-10,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 6.3150369897139945e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.5687149681913466,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.4578488502166644,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0005026009537440784,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9999994685293,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99993312078013,
+              "beta": 1.2019154506108278,
+              "T_bath": 0.2179999999905827,
+              "C_tes": 3.61955980742752e-12,
+              "C_substrate": 6.3150369897139945e-12,
+              "C_abs": 3.2310808033536316e-09,
+              "L": 3.000002994510626e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.64716799658335e-08,
+              "G_tes-substrate": 1.0427511932322787e-07,
+              "G_substrate-bath": 1.8335216260413962e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.2218480114502574e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99993312078013,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 1.2019154506108278,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2179999999905827,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.3027270831789551,
+            "white_asd_A_rtHz": 1.8148010207988644e-11,
+            "white_boundary_hit": {
+              "value": 0.3027270831789551,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00026064099017323434,
+              "joule_power_W": 1.4904517260028646e-09,
+              "f_substrate_node_Hz": 7248.936745958782
+            },
+            "metrics": {
+              "shape_score": 0.0006514287618302323,
+              "continuum_rms_dB": 0.3972617574173757,
+              "continuum_1_40k_rms_dB": 0.2555399686896846,
+              "continuum_40_200k_rms_dB": 0.6075673829718398,
+              "raw_experiment_rms_dB": 0.4290866431537457
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 139.82093210668646,
+              "beta": 2.143266571330682,
+              "T_bath": 0.2000001466753573,
+              "C_tes": 3.61955980742752e-12,
+              "C_substrate": 6.3150369897139945e-12,
+              "C_abs": 3.2310808033536316e-09,
+              "L": 3.000002994510626e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.64716799658335e-08,
+              "G_tes-substrate": 1.0427511932322787e-07,
+              "G_substrate-bath": 1.8335216260413962e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.2218480114502574e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 139.82093210668646,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.143266571330682,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2000001466753573,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.2337199435141529,
+            "white_asd_A_rtHz": 1.4011141243672642e-11,
+            "white_boundary_hit": {
+              "value": 0.2337199435141529,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00033621176395138175,
+              "joule_power_W": 2.4800377471984995e-09,
+              "f_substrate_node_Hz": 7248.936745958782
+            },
+            "metrics": {
+              "shape_score": 0.0015321938327943574,
+              "continuum_rms_dB": 0.5657488797168716,
+              "continuum_1_40k_rms_dB": 0.13195340127397495,
+              "continuum_40_200k_rms_dB": 1.0056807445987892,
+              "raw_experiment_rms_dB": 0.5792125460797347
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "1_nH": {
+      "nominal_fixed_L_nH": 1.0,
+      "nominal_fixed_L_H": 1e-09,
+      "realized_L_H": {
+        "c2_zero": 9.999995441654041e-10,
+        "c2_reference": 1.0000009999999954e-09
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.04659320114189535,
+        "joint_rms_improvement_dB": 1.103175346878937,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9999999999999,
+        "equivalent_first_order_zero_Hz": 1264.9110640673518
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 1.5919900240438478,
+        "joint_shape_score": 0.02343221333004021,
+        "reference_day": {
+          "shape_score": 0.017498771232329322,
+          "continuum_rms_dB": 1.3829676918932292,
+          "continuum_1_40k_rms_dB": 1.3480294516899096,
+          "continuum_40_200k_rms_dB": 1.4596386247739086,
+          "raw_experiment_rms_dB": 1.3920272169095118
+        },
+        "repeat_day": {
+          "shape_score": 0.029365655427751103,
+          "continuum_rms_dB": 1.7765879760061916,
+          "continuum_1_40k_rms_dB": 1.6904795932511931,
+          "continuum_40_200k_rms_dB": 1.959128391647131,
+          "raw_experiment_rms_dB": 1.787661535822437
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.48881467716491084,
+        "joint_shape_score": 0.001091781828886365,
+        "reference_day": {
+          "shape_score": 0.0006514546597193725,
+          "continuum_rms_dB": 0.3972644355565743,
+          "continuum_1_40k_rms_dB": 0.25553482779841374,
+          "continuum_40_200k_rms_dB": 0.6075780726620862,
+          "raw_experiment_rms_dB": 0.4290876983254445
+        },
+        "repeat_day": {
+          "shape_score": 0.0015321089980533573,
+          "continuum_rms_dB": 0.5657389375547598,
+          "continuum_1_40k_rms_dB": 0.1319052298655792,
+          "continuum_40_200k_rms_dB": 1.0056768108015728,
+          "raw_experiment_rms_dB": 0.5792037602831042
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.02343221333004021,
+        "joint_continuum_rms_dB": 1.5919900240438478,
+        "best_candidate_source": "de",
+        "evaluation_count": 121084,
+        "invalid_reference_evaluations": 4850,
+        "invalid_repeat_evaluations": 1460,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.009381945346706e-13,
+          "shared_C_tes_over_material": 0.3834828856765475,
+          "shared_C_substrate_J_per_K": 5.031421014983402e-13,
+          "shared_local_C_total_J_per_K": 8.040802960330107e-13,
+          "shared_local_C_total_over_historical_PoST": 0.10178231595354566,
+          "shared_L_H": 9.999995441654041e-10,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.047558044929058935,
+          "shared_G_tes_bath_scale_to_snapshot": 25.622653915197205,
+          "shared_Pb_absorber_thickness_m": 0.0004011344013675517,
+          "shared_Pb_C_abs_J_per_K": 2.578780748759607e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.369528971487434e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.009381945346706e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 9.999995441654041e-10,
+              "lower": 9.99999e-10,
+              "upper": 1.000001e-09,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 5.031421014983402e-13,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.047558044929058935,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 25.622653915197205,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004011344013675517,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 118.49806333396542,
+              "beta": 0.14209323409651997,
+              "T_bath": 0.2124062161760277,
+              "C_tes": 3.009381945346706e-13,
+              "C_substrate": 5.031421014983402e-13,
+              "C_abs": 2.578780748759607e-09,
+              "L": 9.999995441654041e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.16828356428938e-06,
+              "G_tes-substrate": 1.2238448465297353e-06,
+              "G_substrate-bath": 2.5733708110905567e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.369528971487434e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 118.49806333396542,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.14209323409651997,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2124062161760277,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.44695157964337867,
+            "white_asd_A_rtHz": 2.6794040839252417e-11,
+            "white_boundary_hit": {
+              "value": 0.44695157964337867,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.001204094293619906,
+              "joule_power_W": 3.180925348786328e-08,
+              "f_substrate_node_Hz": 8527268.527242348
+            },
+            "metrics": {
+              "shape_score": 0.017498771232329322,
+              "continuum_rms_dB": 1.3829676918932292,
+              "continuum_1_40k_rms_dB": 1.3480294516899096,
+              "continuum_40_200k_rms_dB": 1.4596386247739086,
+              "raw_experiment_rms_dB": 1.3920272169095118
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 190.78794025171922,
+              "beta": 2.6737806391988794,
+              "T_bath": 0.20437172411305837,
+              "C_tes": 3.009381945346706e-13,
+              "C_substrate": 5.031421014983402e-13,
+              "C_abs": 2.578780748759607e-09,
+              "L": 9.999995441654041e-10,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.16828356428938e-06,
+              "G_tes-substrate": 1.2238448465297353e-06,
+              "G_substrate-bath": 2.5733708110905567e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.369528971487434e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 190.78794025171922,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.6737806391988794,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20437172411305837,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.41116571357538056,
+            "white_asd_A_rtHz": 2.464873472430587e-11,
+            "white_boundary_hit": {
+              "value": 0.41116571357538056,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0013425049602635152,
+              "joule_power_W": 3.954251414061298e-08,
+              "f_substrate_node_Hz": 8527268.527242348
+            },
+            "metrics": {
+              "shape_score": 0.029365655427751103,
+              "continuum_rms_dB": 1.7765879760061916,
+              "continuum_1_40k_rms_dB": 1.6904795932511931,
+              "continuum_40_200k_rms_dB": 1.959128391647131,
+              "raw_experiment_rms_dB": 1.787661535822437
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.001091781828886365,
+        "joint_continuum_rms_dB": 0.48881467716491084,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 34111,
+        "invalid_reference_evaluations": 619,
+        "invalid_repeat_evaluations": 598,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.923744981029849e-12,
+          "shared_C_tes_over_material": 4.999993604370626,
+          "shared_C_substrate_J_per_K": 6.879606355247633e-12,
+          "shared_local_C_total_J_per_K": 1.0803351336277482e-11,
+          "shared_local_C_total_over_historical_PoST": 1.3675128273768966,
+          "shared_L_H": 1.0000009999999954e-09,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.565762904478066,
+          "shared_G_tes_bath_scale_to_snapshot": 1.585335779415704,
+          "shared_Pb_absorber_thickness_m": 0.0004000007407471241,
+          "shared_Pb_C_abs_J_per_K": 2.5714927620558516e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360006222275842e-07,
+          "shared_c2": 999.9999999999999,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.923744981029849e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "L": {
+              "value": 1.0000009999999954e-09,
+              "lower": 9.99999e-10,
+              "upper": 1.000001e-09,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "C_substrate": {
+              "value": 6.879606355247633e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.565762904478066,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.585335779415704,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004000007407471241,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9999999999999,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99999999795958,
+              "beta": 1.208841742801457,
+              "T_bath": 0.21799999999999997,
+              "C_tes": 3.923744981029849e-12,
+              "C_substrate": 6.879606355247633e-12,
+              "C_abs": 2.5714927620558516e-09,
+              "L": 1.0000009999999954e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.228453934167756e-08,
+              "G_tes-substrate": 1.131804502684841e-07,
+              "G_substrate-bath": 2.000492598094543e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360006222275842e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999999795958,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 1.208841742801457,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799999999999997,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.3034188091758102,
+            "white_asd_A_rtHz": 1.8189478088299297e-11,
+            "white_boundary_hit": {
+              "value": 0.3034188091758102,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0002717985265843424,
+              "joule_power_W": 1.6207897324240548e-09,
+              "f_substrate_node_Hz": 7246.353077181366
+            },
+            "metrics": {
+              "shape_score": 0.0006514546597193725,
+              "continuum_rms_dB": 0.3972644355565743,
+              "continuum_1_40k_rms_dB": 0.25553482779841374,
+              "continuum_40_200k_rms_dB": 0.6075780726620862,
+              "raw_experiment_rms_dB": 0.4290876983254445
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 139.85647633525005,
+              "beta": 2.152738533804355,
+              "T_bath": 0.20000000000000004,
+              "C_tes": 3.923744981029849e-12,
+              "C_substrate": 6.879606355247633e-12,
+              "C_abs": 2.5714927620558516e-09,
+              "L": 1.0000009999999954e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.228453934167756e-08,
+              "G_tes-substrate": 1.131804502684841e-07,
+              "G_substrate-bath": 2.000492598094543e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360006222275842e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 139.85647633525005,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.152738533804355,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000000000004,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.2342336484338571,
+            "white_asd_A_rtHz": 1.4041937041751847e-11,
+            "white_boundary_hit": {
+              "value": 0.2342336484338571,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00035060487729211023,
+              "joule_power_W": 2.6969220073524433e-09,
+              "f_substrate_node_Hz": 7246.353077181366
+            },
+            "metrics": {
+              "shape_score": 0.0015321089980533573,
+              "continuum_rms_dB": 0.5657389375547598,
+              "continuum_1_40k_rms_dB": 0.1319052298655792,
+              "continuum_40_200k_rms_dB": 1.0056768108015728,
+              "raw_experiment_rms_dB": 0.5792037602831042
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "3_nH": {
+      "nominal_fixed_L_nH": 3.0,
+      "nominal_fixed_L_H": 3.0000000000000004e-09,
+      "realized_L_H": {
+        "c2_zero": 3.0000029999991775e-09,
+        "c2_reference": 3.0000029885125848e-09
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_material_c2",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": false,
+        "c2_over_zero_shape_score_ratio": 0.04762812846641921,
+        "joint_rms_improvement_dB": 1.0795929677808194,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9510158342794,
+        "equivalent_first_order_zero_Hz": 1264.9420455121485
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 1.5684159940268236,
+        "joint_shape_score": 0.022923899432656443,
+        "reference_day": {
+          "shape_score": 0.01724476791529082,
+          "continuum_rms_dB": 1.37463473910994,
+          "continuum_1_40k_rms_dB": 1.3426936313757536,
+          "continuum_40_200k_rms_dB": 1.4449472427312215,
+          "raw_experiment_rms_dB": 1.3850565331545666
+        },
+        "repeat_day": {
+          "shape_score": 0.028603030950022063,
+          "continuum_rms_dB": 1.740757534715977,
+          "continuum_1_40k_rms_dB": 1.6799638994045234,
+          "continuum_40_200k_rms_dB": 1.8722299255378076,
+          "raw_experiment_rms_dB": 1.7524318485132577
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.48882302624600427,
+        "joint_shape_score": 0.0010918224271298355,
+        "reference_day": {
+          "shape_score": 0.0006514894155352944,
+          "continuum_rms_dB": 0.39727686791807554,
+          "continuum_1_40k_rms_dB": 0.25557254224449083,
+          "continuum_40_200k_rms_dB": 0.6075685357973803,
+          "raw_experiment_rms_dB": 0.4291048147444041
+        },
+        "repeat_day": {
+          "shape_score": 0.0015321554387243768,
+          "continuum_rms_dB": 0.5657446351436375,
+          "continuum_1_40k_rms_dB": 0.13191655804874988,
+          "continuum_40_200k_rms_dB": 1.0056839430740707,
+          "raw_experiment_rms_dB": 0.5792072344790873
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.022923899432656443,
+        "joint_continuum_rms_dB": 1.5684159940268236,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 41896,
+        "invalid_reference_evaluations": 4051,
+        "invalid_repeat_evaluations": 2191,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 6.729669786817626e-13,
+          "shared_C_tes_over_material": 0.8575558823596848,
+          "shared_C_substrate_J_per_K": 6.074232660576132e-13,
+          "shared_local_C_total_J_per_K": 1.2803902447393758e-12,
+          "shared_local_C_total_over_historical_PoST": 0.16207471452397162,
+          "shared_L_H": 3.0000029999991775e-09,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.030838994991934657,
+          "shared_G_tes_bath_scale_to_snapshot": 18.910840850791715,
+          "shared_Pb_absorber_thickness_m": 0.0004286901838585158,
+          "shared_Pb_C_abs_J_per_K": 2.755929158774918e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.6009975444115324e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 6.729669786817626e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 3.0000029999991775e-09,
+              "lower": 2.9999970000000003e-09,
+              "upper": 3.000003e-09,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "C_substrate": {
+              "value": 6.074232660576132e-13,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.030838994991934657,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 18.910840850791715,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004286901838585158,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 130.36027003786845,
+              "beta": 0.9533453768653181,
+              "T_bath": 0.20520186022064305,
+              "C_tes": 6.729669786817626e-13,
+              "C_substrate": 6.074232660576132e-13,
+              "C_abs": 2.755929158774918e-09,
+              "L": 3.0000029999991775e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 8.622535599159114e-07,
+              "G_tes-substrate": 8.888445931319361e-07,
+              "G_substrate-bath": 2.8822099856509467e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.6009975444115324e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 130.36027003786845,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.9533453768653181,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20520186022064305,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.37861056947204585,
+            "white_asd_A_rtHz": 2.2697105285321695e-11,
+            "white_boundary_hit": {
+              "value": 0.37861056947204585,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0011418967775883608,
+              "joule_power_W": 2.8607912934134065e-08,
+              "f_substrate_node_Hz": 7784758.8943697745
+            },
+            "metrics": {
+              "shape_score": 0.01724476791529082,
+              "continuum_rms_dB": 1.37463473910994,
+              "continuum_1_40k_rms_dB": 1.3426936313757536,
+              "continuum_40_200k_rms_dB": 1.4449472427312215,
+              "raw_experiment_rms_dB": 1.3850565331545666
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 115.80483596165936,
+              "beta": 0.0011279528834867456,
+              "T_bath": 0.2122669602467217,
+              "C_tes": 6.729669786817626e-13,
+              "C_substrate": 6.074232660576132e-13,
+              "C_abs": 2.755929158774918e-09,
+              "L": 3.0000029999991775e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 8.622535599159114e-07,
+              "G_tes-substrate": 8.888445931319361e-07,
+              "G_substrate-bath": 2.8822099856509467e-05,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.6009975444115324e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 115.80483596165936,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.0011279528834867456,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2122669602467217,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.5897524817027504,
+            "white_asd_A_rtHz": 3.535472923577585e-11,
+            "white_boundary_hit": {
+              "value": 0.5897524817027504,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0010366672445084016,
+              "joule_power_W": 2.3578231821543736e-08,
+              "f_substrate_node_Hz": 7784758.8943697745
+            },
+            "metrics": {
+              "shape_score": 0.028603030950022063,
+              "continuum_rms_dB": 1.740757534715977,
+              "continuum_1_40k_rms_dB": 1.6799638994045234,
+              "continuum_40_200k_rms_dB": 1.8722299255378076,
+              "raw_experiment_rms_dB": 1.7524318485132577
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0010918224271298355,
+        "joint_continuum_rms_dB": 0.48882302624600427,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 33384,
+        "invalid_reference_evaluations": 642,
+        "invalid_repeat_evaluations": 514,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 2.5835009830872865e-12,
+          "shared_C_tes_over_material": 3.292132504730534,
+          "shared_C_substrate_J_per_K": 4.449556828700468e-12,
+          "shared_local_C_total_J_per_K": 7.033057811787754e-12,
+          "shared_local_C_total_over_historical_PoST": 0.8902604825047791,
+          "shared_L_H": 3.0000029885125848e-09,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.5723718073348509,
+          "shared_G_tes_bath_scale_to_snapshot": 1.027676328178389,
+          "shared_Pb_absorber_thickness_m": 0.00040010180289448146,
+          "shared_Pb_C_abs_J_per_K": 2.5721424623038113e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360855144313644e-07,
+          "shared_c2": 999.9510158342794,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 2.5835009830872865e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 3.0000029885125848e-09,
+              "lower": 2.9999970000000003e-09,
+              "upper": 3.000003e-09,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 4.449556828700468e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.5723718073348509,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.027676328178389,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.00040010180289448146,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9510158342794,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 186.25059142736427,
+              "beta": 0.8852844131606981,
+              "T_bath": 0.21799997063892634,
+              "C_tes": 2.5835009830872865e-12,
+              "C_substrate": 4.449556828700468e-12,
+              "C_abs": 2.5721424623038113e-09,
+              "L": 3.0000029885125848e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 4.6857650561637004e-08,
+              "G_tes-substrate": 7.367764870106606e-08,
+              "G_substrate-bath": 1.287234062839907e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360855144313644e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 186.25059142736427,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.8852844131606981,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799997063892634,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.313629291965989,
+            "white_asd_A_rtHz": 1.8801580394967107e-11,
+            "white_boundary_hit": {
+              "value": 0.313629291965989,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00021883404712923012,
+              "joule_power_W": 1.0506601615647203e-09,
+              "f_substrate_node_Hz": 7239.626243248683
+            },
+            "metrics": {
+              "shape_score": 0.0006514894155352944,
+              "continuum_rms_dB": 0.39727686791807554,
+              "continuum_1_40k_rms_dB": 0.25557254224449083,
+              "continuum_40_200k_rms_dB": 0.6075685357973803,
+              "raw_experiment_rms_dB": 0.4291048147444041
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 132.62577337104563,
+              "beta": 1.7992710963046328,
+              "T_bath": 0.2000004775659163,
+              "C_tes": 2.5835009830872865e-12,
+              "C_substrate": 4.449556828700468e-12,
+              "C_abs": 2.5721424623038113e-09,
+              "L": 3.0000029885125848e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 4.6857650561637004e-08,
+              "G_tes-substrate": 7.367764870106606e-08,
+              "G_substrate-bath": 1.287234062839907e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360855144313644e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 132.62577337104563,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 1.7992710963046328,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.2000004775659163,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.24242455279575553,
+            "white_asd_A_rtHz": 1.4532968813377377e-11,
+            "white_boundary_hit": {
+              "value": 0.24242455279575553,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.000282282092532336,
+              "joule_power_W": 1.7482322879731874e-09,
+              "f_substrate_node_Hz": 7239.626243248683
+            },
+            "metrics": {
+              "shape_score": 0.0015321554387243768,
+              "continuum_rms_dB": 0.5657446351436375,
+              "continuum_1_40k_rms_dB": 0.13191655804874988,
+              "continuum_40_200k_rms_dB": 1.0056839430740707,
+              "raw_experiment_rms_dB": 0.5792072344790873
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "10_nH": {
+      "nominal_fixed_L_nH": 10.0,
+      "nominal_fixed_L_H": 1e-08,
+      "realized_L_H": {
+        "c2_zero": 1.0000009999999975e-08,
+        "c2_reference": 9.999990000000025e-09
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.1644547167240046,
+        "joint_rms_improvement_dB": 0.48984047566707095,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9999999999999,
+        "equivalent_first_order_zero_Hz": 1264.9110640673518
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 0.9786572918701155,
+        "joint_shape_score": 0.006637368768988721,
+        "reference_day": {
+          "shape_score": 0.004578929184045712,
+          "continuum_rms_dB": 0.8346812904505565,
+          "continuum_1_40k_rms_dB": 0.8406265232649591,
+          "continuum_40_200k_rms_dB": 0.8209399952042219,
+          "raw_experiment_rms_dB": 0.8509581885393332
+        },
+        "repeat_day": {
+          "shape_score": 0.00869580835393173,
+          "continuum_rms_dB": 1.104014190684563,
+          "continuum_1_40k_rms_dB": 1.0318510283990447,
+          "continuum_40_200k_rms_dB": 1.2533577449586506,
+          "raw_experiment_rms_dB": 1.1097172224048255
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.48881681620304457,
+        "joint_shape_score": 0.0010915466006967954,
+        "reference_day": {
+          "shape_score": 0.0006513971974228096,
+          "continuum_rms_dB": 0.39728384861821986,
+          "continuum_1_40k_rms_dB": 0.25540310187540893,
+          "continuum_40_200k_rms_dB": 0.6077462490910995,
+          "raw_experiment_rms_dB": 0.42910488722393114
+        },
+        "repeat_day": {
+          "shape_score": 0.0015316960039707813,
+          "continuum_rms_dB": 0.5657290015836712,
+          "continuum_1_40k_rms_dB": 0.13166138025722024,
+          "continuum_40_200k_rms_dB": 1.0057314405392914,
+          "raw_experiment_rms_dB": 0.5792032696083005
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.006637368768988721,
+        "joint_continuum_rms_dB": 0.9786572918701155,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 34646,
+        "invalid_reference_evaluations": 8475,
+        "invalid_repeat_evaluations": 2525,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 2.6797714545476876e-13,
+          "shared_C_tes_over_material": 0.34148091169769834,
+          "shared_C_substrate_J_per_K": 2.1522037833738787e-12,
+          "shared_local_C_total_J_per_K": 2.4201809288286475e-12,
+          "shared_local_C_total_over_historical_PoST": 0.30635201630742376,
+          "shared_L_H": 1.0000009999999975e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 20.921094527969238,
+          "shared_G_tes_bath_scale_to_snapshot": 13.254584526112952,
+          "shared_Pb_absorber_thickness_m": 0.0004000000000000005,
+          "shared_Pb_C_abs_J_per_K": 2.5714880000000033e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360000000000004e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 2.6797714545476876e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 1.0000009999999975e-08,
+              "lower": 9.99999e-09,
+              "upper": 1.000001e-08,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "C_substrate": {
+              "value": 2.1522037833738787e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 20.921094527969238,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 13.254584526112952,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004000000000000005,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 181.99955989328453,
+              "beta": 0.02948461988213261,
+              "T_bath": 0.21625111484810092,
+              "C_tes": 2.6797714545476876e-13,
+              "C_substrate": 2.1522037833738787e-12,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 1.0000009999999975e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.043524337718051e-07,
+              "G_tes-substrate": 1.3248066828920008e-05,
+              "G_substrate-bath": 6.332396620649449e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 181.99955989328453,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.02948461988213261,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21625111484810092,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 4.712892222689999,
+            "white_asd_A_rtHz": 2.8253044051551917e-10,
+            "white_boundary_hit": {
+              "value": 4.712892222689999,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0008121001053448888,
+              "joule_power_W": 1.44694363681318e-08,
+              "f_substrate_node_Hz": 1026519.2179666725
+            },
+            "metrics": {
+              "shape_score": 0.004578929184045712,
+              "continuum_rms_dB": 0.8346812904505565,
+              "continuum_1_40k_rms_dB": 0.8406265232649591,
+              "continuum_40_200k_rms_dB": 0.8209399952042219,
+              "raw_experiment_rms_dB": 0.8509581885393332
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 115.67741978505785,
+              "beta": 4.424784216337433e-20,
+              "T_bath": 0.20000000243810875,
+              "C_tes": 2.6797714545476876e-13,
+              "C_substrate": 2.1522037833738787e-12,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 1.0000009999999975e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.043524337718051e-07,
+              "G_tes-substrate": 1.3248066828920008e-05,
+              "G_substrate-bath": 6.332396620649449e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 115.67741978505785,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 4.424784216337433e-20,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": true,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000243810875,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 4.999999999999999,
+            "white_asd_A_rtHz": 2.9974209802134824e-10,
+            "white_boundary_hit": {
+              "value": 4.999999999999999,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.001013772184579775,
+              "joule_power_W": 2.2548269802776135e-08,
+              "f_substrate_node_Hz": 1026519.2179666725
+            },
+            "metrics": {
+              "shape_score": 0.00869580835393173,
+              "continuum_rms_dB": 1.104014190684563,
+              "continuum_1_40k_rms_dB": 1.0318510283990447,
+              "continuum_40_200k_rms_dB": 1.2533577449586506,
+              "raw_experiment_rms_dB": 1.1097172224048255
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0010915466006967954,
+        "joint_continuum_rms_dB": 0.48881681620304457,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 35928,
+        "invalid_reference_evaluations": 654,
+        "invalid_repeat_evaluations": 313,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.923749939131989e-12,
+          "shared_C_tes_over_material": 4.999999922436431,
+          "shared_C_substrate_J_per_K": 6.811799794052044e-12,
+          "shared_local_C_total_J_per_K": 1.0735549733184033e-11,
+          "shared_local_C_total_over_historical_PoST": 1.3589303459726625,
+          "shared_L_H": 9.999990000000025e-09,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.5573474534053019,
+          "shared_G_tes_bath_scale_to_snapshot": 1.5576091121176021,
+          "shared_Pb_absorber_thickness_m": 0.0005999398697076238,
+          "shared_Pb_C_abs_J_per_K": 3.856845439186795e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 5.039494905544039e-07,
+          "shared_c2": 999.9999999999999,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.923749939131989e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "L": {
+              "value": 9.999990000000025e-09,
+              "lower": 9.99999e-09,
+              "upper": 1.000001e-08,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 6.811799794052044e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.5573474534053019,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.5576091121176021,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0005999398697076238,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9999999999999,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99999999999997,
+              "beta": 1.1592829357861958,
+              "T_bath": 0.21799999999999997,
+              "C_tes": 3.923749939131989e-12,
+              "C_substrate": 6.811799794052044e-12,
+              "C_abs": 3.856845439186795e-09,
+              "L": 9.999990000000025e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.102032175500206e-08,
+              "G_tes-substrate": 1.1060331722517761e-07,
+              "G_substrate-bath": 1.9844590039733636e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 5.039494905544039e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999999999997,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 1.1592829357861958,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799999999999997,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.3148716533683405,
+            "white_asd_A_rtHz": 1.8876057997615425e-11,
+            "white_boundary_hit": {
+              "value": 0.3148716533683405,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0002694112376623,
+              "joule_power_W": 1.5924429946196106e-09,
+              "f_substrate_node_Hz": 7220.809790425
+            },
+            "metrics": {
+              "shape_score": 0.0006513971974228096,
+              "continuum_rms_dB": 0.39728384861821986,
+              "continuum_1_40k_rms_dB": 0.25540310187540893,
+              "continuum_40_200k_rms_dB": 0.6077462490910995,
+              "raw_experiment_rms_dB": 0.42910488722393114
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 142.79941778641594,
+              "beta": 2.175497894397514,
+              "T_bath": 0.20000000000000004,
+              "C_tes": 3.923749939131989e-12,
+              "C_substrate": 6.811799794052044e-12,
+              "C_abs": 3.856845439186795e-09,
+              "L": 9.999990000000025e-09,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.102032175500206e-08,
+              "G_tes-substrate": 1.1060331722517761e-07,
+              "G_substrate-bath": 1.9844590039733636e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 5.039494905544039e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 142.79941778641594,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.175497894397514,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000000000004,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.2423663846662836,
+            "white_asd_A_rtHz": 1.4529481725944199e-11,
+            "white_boundary_hit": {
+              "value": 0.2423663846662836,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0003475254082821347,
+              "joule_power_W": 2.649754296765384e-09,
+              "f_substrate_node_Hz": 7220.809790425
+            },
+            "metrics": {
+              "shape_score": 0.0015316960039707813,
+              "continuum_rms_dB": 0.5657290015836712,
+              "continuum_1_40k_rms_dB": 0.13166138025722024,
+              "continuum_40_200k_rms_dB": 1.0057314405392914,
+              "raw_experiment_rms_dB": 0.5792032696083005
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "12.3_nH": {
+      "nominal_fixed_L_nH": 12.3,
+      "nominal_fixed_L_H": 1.2300000000000001e-08,
+      "realized_L_H": {
+        "c2_zero": 1.2300012120434106e-08,
+        "c2_reference": 1.2299987700000033e-08
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.16807972907569216,
+        "joint_rms_improvement_dB": 0.4826733571908073,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9999999999999,
+        "equivalent_first_order_zero_Hz": 1264.9110640673518
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 0.9715013450843986,
+        "joint_shape_score": 0.006493963846478445,
+        "reference_day": {
+          "shape_score": 0.004466205242631551,
+          "continuum_rms_dB": 0.828092961436038,
+          "continuum_1_40k_rms_dB": 0.8327020699226222,
+          "continuum_40_200k_rms_dB": 0.8174675857907471,
+          "raw_experiment_rms_dB": 0.8445374191387529
+        },
+        "repeat_day": {
+          "shape_score": 0.008521722450325338,
+          "continuum_rms_dB": 1.0963082478124864,
+          "continuum_1_40k_rms_dB": 1.0223395486809759,
+          "continuum_40_200k_rms_dB": 1.2489394155024467,
+          "raw_experiment_rms_dB": 1.1021076442904023
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.4888279878935913,
+        "joint_shape_score": 0.0010915036839434368,
+        "reference_day": {
+          "shape_score": 0.000651481309352343,
+          "continuum_rms_dB": 0.3973085320193159,
+          "continuum_1_40k_rms_dB": 0.2553644674075801,
+          "continuum_40_200k_rms_dB": 0.6078363183434985,
+          "raw_experiment_rms_dB": 0.4291272144738437
+        },
+        "repeat_day": {
+          "shape_score": 0.0015315260585345308,
+          "continuum_rms_dB": 0.5657309730612691,
+          "continuum_1_40k_rms_dB": 0.13157025316404877,
+          "continuum_40_200k_rms_dB": 1.0057623215628422,
+          "raw_experiment_rms_dB": 0.5792104977686667
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.006493963846478445,
+        "joint_continuum_rms_dB": 0.9715013450843986,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 34095,
+        "invalid_reference_evaluations": 10477,
+        "invalid_repeat_evaluations": 2956,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.6988104253770995e-13,
+          "shared_C_tes_over_material": 0.47133614850297545,
+          "shared_C_substrate_J_per_K": 4.572438500837242e-12,
+          "shared_local_C_total_J_per_K": 4.942319543374952e-12,
+          "shared_local_C_total_over_historical_PoST": 0.6256100687816395,
+          "shared_L_H": 1.2300012120434106e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 18.91369111191341,
+          "shared_G_tes_bath_scale_to_snapshot": 21.84385664497097,
+          "shared_Pb_absorber_thickness_m": 0.0004000000000000005,
+          "shared_Pb_C_abs_J_per_K": 2.5714880000000033e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360000000000004e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.6988104253770995e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "L": {
+              "value": 1.2300012120434106e-08,
+              "lower": 1.22999877e-08,
+              "upper": 1.23000123e-08,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 4.572438500837242e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 18.91369111191341,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 21.84385664497097,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004000000000000005,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 158.1164871453024,
+              "beta": 0.028479909707798002,
+              "T_bath": 0.21206477995914932,
+              "C_tes": 3.6988104253770995e-13,
+              "C_substrate": 4.572438500837242e-12,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 1.2300012120434106e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 9.959865509433717e-07,
+              "G_tes-substrate": 1.983376852710631e-05,
+              "G_substrate-bath": 1.04864610560407e-06,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 158.1164871453024,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.028479909707798002,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21206477995914932,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 4.508982319171159,
+            "white_asd_A_rtHz": 2.703063640579056e-10,
+            "white_boundary_hit": {
+              "value": 4.508982319171159,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0011176306732786489,
+              "joule_power_W": 2.7404955770749946e-08,
+              "f_substrate_node_Hz": 726863.6881352963
+            },
+            "metrics": {
+              "shape_score": 0.004466205242631551,
+              "continuum_rms_dB": 0.828092961436038,
+              "continuum_1_40k_rms_dB": 0.8327020699226222,
+              "continuum_40_200k_rms_dB": 0.8174675857907471,
+              "raw_experiment_rms_dB": 0.8445374191387529
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 115.45175159745808,
+              "beta": 6.747315116207693e-11,
+              "T_bath": 0.20000002031884767,
+              "C_tes": 3.6988104253770995e-13,
+              "C_substrate": 4.572438500837242e-12,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 1.2300012120434106e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 9.959865509433717e-07,
+              "G_tes-substrate": 1.983376852710631e-05,
+              "G_substrate-bath": 1.04864610560407e-06,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 115.45175159745808,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 6.747315116207693e-11,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": true,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000002031884767,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 4.999999999999999,
+            "white_asd_A_rtHz": 2.9974209802134824e-10,
+            "white_boundary_hit": {
+              "value": 4.999999999999999,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0013014332227776876,
+              "joule_power_W": 3.716004736499602e-08,
+              "f_substrate_node_Hz": 726863.6881352963
+            },
+            "metrics": {
+              "shape_score": 0.008521722450325338,
+              "continuum_rms_dB": 1.0963082478124864,
+              "continuum_1_40k_rms_dB": 1.0223395486809759,
+              "continuum_40_200k_rms_dB": 1.2489394155024467,
+              "raw_experiment_rms_dB": 1.1021076442904023
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0010915036839434368,
+        "joint_continuum_rms_dB": 0.4888279878935913,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 36029,
+        "invalid_reference_evaluations": 996,
+        "invalid_repeat_evaluations": 350,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.923727663418282e-12,
+          "shared_C_tes_over_material": 4.999971536691025,
+          "shared_C_substrate_J_per_K": 6.778919850609564e-12,
+          "shared_local_C_total_J_per_K": 1.0702647514027845e-11,
+          "shared_local_C_total_over_historical_PoST": 1.3547655081047905,
+          "shared_L_H": 1.2299987700000033e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.555749090880428,
+          "shared_G_tes_bath_scale_to_snapshot": 1.5473143444168749,
+          "shared_Pb_absorber_thickness_m": 0.00040000000004831695,
+          "shared_Pb_C_abs_J_per_K": 2.5714880003106162e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360000000405862e-07,
+          "shared_c2": 999.9999999999999,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.923727663418282e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "L": {
+              "value": 1.2299987700000033e-08,
+              "lower": 1.22999877e-08,
+              "upper": 1.23000123e-08,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 6.778919850609564e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.555749090880428,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.5473143444168749,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.00040000000004831695,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9999999999999,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99999999999997,
+              "beta": 1.149880138796295,
+              "T_bath": 0.21799999999999997,
+              "C_tes": 3.923727663418282e-12,
+              "C_substrate": 6.778919850609564e-12,
+              "C_abs": 2.5714880003106162e-09,
+              "L": 1.2299987700000033e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.055092432479272e-08,
+              "G_tes-substrate": 1.0975953637907015e-07,
+              "G_substrate-bath": 1.9749836424417187e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000405862e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999999999997,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 1.149880138796295,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799999999999997,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.31701477435666436,
+            "white_asd_A_rtHz": 1.900453471388618e-11,
+            "white_boundary_hit": {
+              "value": 0.31701477435666436,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0002685194464909487,
+              "joule_power_W": 1.5819179979572767e-09,
+              "f_substrate_node_Hz": 7213.776643756905
+            },
+            "metrics": {
+              "shape_score": 0.000651481309352343,
+              "continuum_rms_dB": 0.3973085320193159,
+              "continuum_1_40k_rms_dB": 0.2553644674075801,
+              "continuum_40_200k_rms_dB": 0.6078363183434985,
+              "raw_experiment_rms_dB": 0.4291272144738437
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 144.5915467475504,
+              "beta": 2.218110906861049,
+              "T_bath": 0.20000000000000004,
+              "C_tes": 3.923727663418282e-12,
+              "C_substrate": 6.778919850609564e-12,
+              "C_abs": 2.5714880003106162e-09,
+              "L": 1.2299987700000033e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 7.055092432479272e-08,
+              "G_tes-substrate": 1.0975953637907015e-07,
+              "G_substrate-bath": 1.9749836424417187e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000405862e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 144.5915467475504,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.218110906861049,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000000000004,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.24372496557915505,
+            "white_asd_A_rtHz": 1.4610926504575366e-11,
+            "white_boundary_hit": {
+              "value": 0.24372496557915505,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0003463750476156107,
+              "joule_power_W": 2.6322411705664e-09,
+              "f_substrate_node_Hz": 7213.776643756905
+            },
+            "metrics": {
+              "shape_score": 0.0015315260585345308,
+              "continuum_rms_dB": 0.5657309730612691,
+              "continuum_1_40k_rms_dB": 0.13157025316404877,
+              "continuum_40_200k_rms_dB": 1.0057623215628422,
+              "raw_experiment_rms_dB": 0.5792104977686667
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "30_nH": {
+      "nominal_fixed_L_nH": 30.0,
+      "nominal_fixed_L_H": 3.0000000000000004e-08,
+      "realized_L_H": {
+        "c2_zero": 3.0000029999999934e-08,
+        "c2_reference": 2.999997000000009e-08
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": true,
+        "c2_over_zero_shape_score_ratio": 0.2150937152026328,
+        "joint_rms_improvement_dB": 0.40410727678944824,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 999.9999997455581,
+        "equivalent_first_order_zero_Hz": 1264.9110642282749
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 0.8931462625172533,
+        "joint_shape_score": 0.0050737284000142,
+        "reference_day": {
+          "shape_score": 0.003385598186046058,
+          "continuum_rms_dB": 0.7581526652952317,
+          "continuum_1_40k_rms_dB": 0.7494285870791543,
+          "continuum_40_200k_rms_dB": 0.7777128202027196,
+          "raw_experiment_rms_dB": 0.7763720361735762
+        },
+        "repeat_day": {
+          "shape_score": 0.006761858613982342,
+          "continuum_rms_dB": 1.0102598817150035,
+          "continuum_1_40k_rms_dB": 0.9164443007239905,
+          "continuum_40_200k_rms_dB": 1.1972872726953565,
+          "raw_experiment_rms_dB": 1.0168317653567982
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.489038985727805,
+        "joint_shape_score": 0.001091327091488164,
+        "reference_day": {
+          "shape_score": 0.0006525861266293409,
+          "continuum_rms_dB": 0.3977344071986718,
+          "continuum_1_40k_rms_dB": 0.25498967623536967,
+          "continuum_40_200k_rms_dB": 0.609109080812504,
+          "raw_experiment_rms_dB": 0.42955327520424347
+        },
+        "repeat_day": {
+          "shape_score": 0.0015300680563469873,
+          "continuum_rms_dB": 0.5657964302235228,
+          "continuum_1_40k_rms_dB": 0.13076089191432952,
+          "continuum_40_200k_rms_dB": 1.0061242797560954,
+          "raw_experiment_rms_dB": 0.579329295385097
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.0050737284000142,
+        "joint_continuum_rms_dB": 0.8931462625172533,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 35884,
+        "invalid_reference_evaluations": 8622,
+        "invalid_repeat_evaluations": 3171,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 1.9618751803467058e-13,
+          "shared_C_tes_over_material": 0.2500000229814216,
+          "shared_C_substrate_J_per_K": 1.599010692600379e-11,
+          "shared_local_C_total_J_per_K": 1.618629444403846e-11,
+          "shared_local_C_total_over_historical_PoST": 2.0488980308909444,
+          "shared_L_H": 3.0000029999999934e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 17.11912199890255,
+          "shared_G_tes_bath_scale_to_snapshot": 29.32022214095819,
+          "shared_Pb_absorber_thickness_m": 0.0004000000000000005,
+          "shared_Pb_C_abs_J_per_K": 2.5714880000000033e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360000000000004e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 1.9618751803467058e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "L": {
+              "value": 3.0000029999999934e-08,
+              "lower": 2.999997e-08,
+              "upper": 3.000003e-08,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "C_substrate": {
+              "value": 1.599010692600379e-11,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 17.11912199890255,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 29.32022214095819,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004000000000000005,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 190.5564075967783,
+              "beta": 0.009344422146793185,
+              "T_bath": 0.21799999940671025,
+              "C_tes": 1.9618751803467058e-13,
+              "C_substrate": 1.599010692600379e-11,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 3.0000029999999934e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3368768802000733e-06,
+              "G_tes-substrate": 2.4223035289857355e-05,
+              "G_substrate-bath": 1.4149694880035445e-06,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 190.5564075967783,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.009344422146793185,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799999940671025,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 4.120614263366126,
+            "white_asd_A_rtHz": 2.4702431288761107e-10,
+            "white_boundary_hit": {
+              "value": 4.120614263366126,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0011688804653284238,
+              "joule_power_W": 2.997593110168649e-08,
+              "f_substrate_node_Hz": 255183.73393579051
+            },
+            "metrics": {
+              "shape_score": 0.003385598186046058,
+              "continuum_rms_dB": 0.7581526652952317,
+              "continuum_1_40k_rms_dB": 0.7494285870791543,
+              "continuum_40_200k_rms_dB": 0.7777128202027196,
+              "raw_experiment_rms_dB": 0.7763720361735762
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 190.0651711884495,
+              "beta": 2.6610832286887296e-06,
+              "T_bath": 0.21799998152152894,
+              "C_tes": 1.9618751803467058e-13,
+              "C_substrate": 1.599010692600379e-11,
+              "C_abs": 2.5714880000000033e-09,
+              "L": 3.0000029999999934e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 1.3368768802000733e-06,
+              "G_tes-substrate": 2.4223035289857355e-05,
+              "G_substrate-bath": 1.4149694880035445e-06,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000000004e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 190.0651711884495,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 2.6610832286887296e-06,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": true,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799998152152894,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 4.999999999999999,
+            "white_asd_A_rtHz": 2.9974209802134824e-10,
+            "white_boundary_hit": {
+              "value": 4.999999999999999,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0011688808725322016,
+              "joule_power_W": 2.9975951987166016e-08,
+              "f_substrate_node_Hz": 255183.73393579051
+            },
+            "metrics": {
+              "shape_score": 0.006761858613982342,
+              "continuum_rms_dB": 1.0102598817150035,
+              "continuum_1_40k_rms_dB": 0.9164443007239905,
+              "continuum_40_200k_rms_dB": 1.1972872726953565,
+              "raw_experiment_rms_dB": 1.0168317653567982
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.001091327091488164,
+        "joint_continuum_rms_dB": 0.489038985727805,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 72723,
+        "invalid_reference_evaluations": 3089,
+        "invalid_repeat_evaluations": 1149,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.923749999999979e-12,
+          "shared_C_tes_over_material": 4.999999999999973,
+          "shared_C_substrate_J_per_K": 6.341712769775475e-12,
+          "shared_local_C_total_J_per_K": 1.0265462769775454e-11,
+          "shared_local_C_total_over_historical_PoST": 1.299425667060184,
+          "shared_L_H": 2.999997000000009e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.5521217863125432,
+          "shared_G_tes_bath_scale_to_snapshot": 1.4353902649204024,
+          "shared_Pb_absorber_thickness_m": 0.0004000008787903277,
+          "shared_Pb_C_abs_J_per_K": 2.5714936494969556e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360007381838752e-07,
+          "shared_c2": 999.9999997455581,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.923749999999979e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "L": {
+              "value": 2.999997000000009e-08,
+              "lower": 2.999997e-08,
+              "upper": 3.000003e-08,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 6.341712769775475e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.5521217863125432,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.4353902649204024,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0004000008787903277,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 999.9999997455581,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": true
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99999951550316,
+              "beta": 1.1201829375960077,
+              "T_bath": 0.21799999999996925,
+              "C_tes": 3.923749999999979e-12,
+              "C_substrate": 6.341712769775475e-12,
+              "C_abs": 2.5714936494969556e-09,
+              "L": 2.999997000000009e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.544766441437449e-08,
+              "G_tes-substrate": 1.0158274580082279e-07,
+              "G_substrate-bath": 1.8398612103185363e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360007381838752e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999951550316,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 1.1201829375960077,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799999999996925,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.32188318176428554,
+            "white_asd_A_rtHz": 1.929638804396279e-11,
+            "white_boundary_hit": {
+              "value": 0.32188318176428554,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00025862557286964545,
+              "joule_power_W": 1.4674908833916987e-09,
+              "f_substrate_node_Hz": 7166.785756394448
+            },
+            "metrics": {
+              "shape_score": 0.0006525861266293409,
+              "continuum_rms_dB": 0.3977344071986718,
+              "continuum_1_40k_rms_dB": 0.25498967623536967,
+              "continuum_40_200k_rms_dB": 0.609109080812504,
+              "raw_experiment_rms_dB": 0.42955327520424347
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 172.30809581910762,
+              "beta": 3.03937501773718,
+              "T_bath": 0.20000000000000004,
+              "C_tes": 3.923749999999979e-12,
+              "C_substrate": 6.341712769775475e-12,
+              "C_abs": 2.5714936494969556e-09,
+              "L": 2.999997000000009e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 6.544766441437449e-08,
+              "G_tes-substrate": 1.0158274580082279e-07,
+              "G_substrate-bath": 1.8398612103185363e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360007381838752e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 172.30809581910762,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 3.03937501773718,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000000000004,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.24375967178408328,
+            "white_asd_A_rtHz": 1.4613007086711278e-11,
+            "white_boundary_hit": {
+              "value": 0.24375967178408328,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.00033361250474759946,
+              "joule_power_W": 2.4418395426803807e-09,
+              "f_substrate_node_Hz": 7166.785756394448
+            },
+            "metrics": {
+              "shape_score": 0.0015300680563469873,
+              "continuum_rms_dB": 0.5657964302235228,
+              "continuum_1_40k_rms_dB": 0.13076089191432952,
+              "continuum_40_200k_rms_dB": 1.0061242797560954,
+              "raw_experiment_rms_dB": 0.579329295385097
+            }
+          }
+        }
+      },
+      "status": "ok"
+    },
+    "100_nH": {
+      "nominal_fixed_L_nH": 100.0,
+      "nominal_fixed_L_H": 1.0000000000000001e-07,
+      "realized_L_H": {
+        "c2_zero": 1.0000009999999975e-07,
+        "c2_reference": 9.999990000000024e-08
+      },
+      "nested_c2_test": {
+        "classification": "fixed_L_still_requires_material_c2",
+        "c2_material_improvement": true,
+        "c2_upper_bound_censored": false,
+        "c2_over_zero_shape_score_ratio": 0.4974208850237182,
+        "joint_rms_improvement_dB": 0.15993770855728834,
+        "c2_zero_reaches_target_good_fit": false,
+        "fitted_c2": 690.0899387946179,
+        "equivalent_first_order_zero_Hz": 1522.6747411461813
+      },
+      "c2_zero_metrics": {
+        "joint_continuum_rms_dB": 0.6523502791063991,
+        "joint_shape_score": 0.0022120093449688495,
+        "reference_day": {
+          "shape_score": 0.0015347003090329483,
+          "continuum_rms_dB": 0.5686256946873303,
+          "continuum_1_40k_rms_dB": 0.5241768350618841,
+          "continuum_40_200k_rms_dB": 0.6590032108107375,
+          "raw_experiment_rms_dB": 0.5925388950563638
+        },
+        "repeat_day": {
+          "shape_score": 0.002889318380904751,
+          "continuum_rms_dB": 0.7264892240369052,
+          "continuum_1_40k_rms_dB": 0.5088033018663654,
+          "continuum_40_200k_rms_dB": 1.068648008987885,
+          "raw_experiment_rms_dB": 0.7360515023914183
+        }
+      },
+      "c2_reference_metrics": {
+        "joint_continuum_rms_dB": 0.49241257054911075,
+        "joint_shape_score": 0.0011002996460551403,
+        "reference_day": {
+          "shape_score": 0.0006574116919822616,
+          "continuum_rms_dB": 0.40150220144688836,
+          "continuum_1_40k_rms_dB": 0.25934281559420724,
+          "continuum_40_200k_rms_dB": 0.613016726385726,
+          "raw_experiment_rms_dB": 0.4334563367246543
+        },
+        "repeat_day": {
+          "shape_score": 0.001543187600128019,
+          "continuum_rms_dB": 0.5689782610107949,
+          "continuum_1_40k_rms_dB": 0.13283214696334134,
+          "continuum_40_200k_rms_dB": 1.0113836830107832,
+          "raw_experiment_rms_dB": 0.5823369780709735
+        }
+      },
+      "c2_zero": {
+        "name": "c2_zero",
+        "joint_shape_score": 0.0022120093449688495,
+        "joint_continuum_rms_dB": 0.6523502791063991,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 32976,
+        "invalid_reference_evaluations": 10734,
+        "invalid_repeat_evaluations": 4104,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale"
+        ],
+        "n_free_parameters": 14,
+        "solution": {
+          "shared_C_tes_J_per_K": 1.9618750000000055e-13,
+          "shared_C_tes_over_material": 0.2500000000000007,
+          "shared_C_substrate_J_per_K": 1.9999972865510274e-11,
+          "shared_local_C_total_J_per_K": 2.0196160365510273e-11,
+          "shared_local_C_total_over_historical_PoST": 2.556475995634212,
+          "shared_L_H": 1.0000009999999975e-07,
+          "shared_G_tes_substrate_over_G_substrate_bath": 14.325799041571196,
+          "shared_G_tes_bath_scale_to_snapshot": 12.338860536166834,
+          "shared_Pb_absorber_thickness_m": 0.0005382020703898259,
+          "shared_Pb_C_abs_J_per_K": 3.459950413956482e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 4.520897391274537e-07,
+          "shared_c2": 0.0,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 1.9618750000000055e-13,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "L": {
+              "value": 1.0000009999999975e-07,
+              "lower": 9.99999e-08,
+              "upper": 1.000001e-07,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "C_substrate": {
+              "value": 1.9999972865510274e-11,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "G_ratio": {
+              "value": 14.325799041571196,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 12.338860536166834,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.0005382020703898259,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": false,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": null,
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 164.26712686531167,
+              "beta": 0.005551575339834163,
+              "T_bath": 0.21799998971115778,
+              "C_tes": 1.9618750000000055e-13,
+              "C_substrate": 1.9999972865510274e-11,
+              "C_abs": 3.459950413956482e-09,
+              "L": 1.0000009999999975e-07,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 5.625993315982238e-07,
+              "G_tes-substrate": 8.622284296996655e-06,
+              "G_substrate-bath": 6.018710908882746e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.520897391274537e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 164.26712686531167,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 0.005551575339834163,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799998971115778,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 0.9727669571936994,
+            "white_asd_A_rtHz": 5.831584172701652e-11,
+            "white_boundary_hit": {
+              "value": 0.9727669571936994,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0007582703635455558,
+              "joule_power_W": 1.2614808006161846e-08,
+              "f_substrate_node_Hz": 73403.5958799372
+            },
+            "metrics": {
+              "shape_score": 0.0015347003090329483,
+              "continuum_rms_dB": 0.5686256946873303,
+              "continuum_1_40k_rms_dB": 0.5241768350618841,
+              "continuum_40_200k_rms_dB": 0.6590032108107375,
+              "raw_experiment_rms_dB": 0.5925388950563638
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 164.6029008257891,
+              "beta": 4.129220873923524e-20,
+              "T_bath": 0.21799995785707219,
+              "C_tes": 1.9618750000000055e-13,
+              "C_substrate": 1.9999972865510274e-11,
+              "C_abs": 3.459950413956482e-09,
+              "L": 1.0000009999999975e-07,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 5.625993315982238e-07,
+              "G_tes-substrate": 8.622284296996655e-06,
+              "G_substrate-bath": 6.018710908882746e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 4.520897391274537e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 164.6029008257891,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "beta": {
+                "value": 4.129220873923524e-20,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": true,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.21799995785707219,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": true
+              }
+            },
+            "white_scale": 1.1591555875037582,
+            "white_asd_A_rtHz": 6.948954554630902e-11,
+            "white_boundary_hit": {
+              "value": 1.1591555875037582,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0007582708340213778,
+              "joule_power_W": 1.2614823660114035e-08,
+              "f_substrate_node_Hz": 73403.5958799372
+            },
+            "metrics": {
+              "shape_score": 0.002889318380904751,
+              "continuum_rms_dB": 0.7264892240369052,
+              "continuum_1_40k_rms_dB": 0.5088033018663654,
+              "continuum_40_200k_rms_dB": 1.068648008987885,
+              "raw_experiment_rms_dB": 0.7360515023914183
+            }
+          }
+        }
+      },
+      "c2_reference": {
+        "name": "c2_reference",
+        "joint_shape_score": 0.0011002996460551403,
+        "joint_continuum_rms_dB": 0.49241257054911075,
+        "best_candidate_source": "de_least_squares",
+        "evaluation_count": 37259,
+        "invalid_reference_evaluations": 3338,
+        "invalid_repeat_evaluations": 416,
+        "free_parameter_names": [
+          "shared_log10_C_tes",
+          "shared_log10_L",
+          "shared_log10_C_substrate",
+          "shared_log10_G_ratio",
+          "shared_log10_G_tes_bath_scale",
+          "shared_log10_Pb_thickness_m",
+          "reference_alpha",
+          "reference_beta",
+          "reference_T_bath",
+          "repeat_alpha",
+          "repeat_beta",
+          "repeat_T_bath",
+          "reference_log10_white_scale",
+          "repeat_log10_white_scale",
+          "shared_c2"
+        ],
+        "n_free_parameters": 15,
+        "solution": {
+          "shared_C_tes_J_per_K": 3.923749999999979e-12,
+          "shared_C_tes_over_material": 4.999999999999973,
+          "shared_C_substrate_J_per_K": 6.0673672916946384e-12,
+          "shared_local_C_total_J_per_K": 9.991117291694617e-12,
+          "shared_local_C_total_over_historical_PoST": 1.264698391353749,
+          "shared_L_H": 9.999990000000024e-08,
+          "shared_G_tes_substrate_over_G_substrate_bath": 0.49042837399920347,
+          "shared_G_tes_bath_scale_to_snapshot": 1.225925899529998,
+          "shared_Pb_absorber_thickness_m": 0.00040000000002471235,
+          "shared_Pb_C_abs_J_per_K": 2.571488000158869e-09,
+          "shared_Pb_G_abs_abs_W_per_K": 3.360000000207584e-07,
+          "shared_c2": 690.0899387946179,
+          "shared_pure_zero_Hz": null,
+          "shared_physical_boundary_hits": {
+            "C_tes": {
+              "value": 3.923749999999979e-12,
+              "lower": 1.961875e-13,
+              "upper": 3.92375e-12,
+              "at_lower": false,
+              "at_upper": true
+            },
+            "L": {
+              "value": 9.999990000000024e-08,
+              "lower": 9.99999e-08,
+              "upper": 1.000001e-07,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "C_substrate": {
+              "value": 6.0673672916946384e-12,
+              "lower": 5e-13,
+              "upper": 2e-11,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_ratio": {
+              "value": 0.49042837399920347,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "G_tes_bath_scale": {
+              "value": 1.225925899529998,
+              "lower": 0.03,
+              "upper": 30.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "Pb_thickness_m": {
+              "value": 0.00040000000002471235,
+              "lower": 0.0004,
+              "upper": 0.0006,
+              "at_lower": true,
+              "at_upper": false
+            }
+          },
+          "readout_boundary_hit": {
+            "value": 690.0899387946179,
+            "lower": 0.0,
+            "upper": 1000.0,
+            "at_lower": false,
+            "at_upper": false
+          },
+          "reference_day": {
+            "detector_candidate": {
+              "alpha": 199.99999999999997,
+              "beta": 3.3925813707033283,
+              "T_bath": 0.20123065139814178,
+              "C_tes": 3.923749999999979e-12,
+              "C_substrate": 6.0673672916946384e-12,
+              "C_abs": 2.571488000158869e-09,
+              "L": 9.999990000000024e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 5.5896984137466435e-08,
+              "G_tes-substrate": 8.331045117946336e-08,
+              "G_substrate-bath": 1.6987282057134539e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000207584e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999999999997,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 3.3925813707033283,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20123065139814178,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": false,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.2329366995754385,
+            "white_asd_A_rtHz": 1.396418700738209e-11,
+            "white_boundary_hit": {
+              "value": 0.2329366995754385,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": false,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0003042977765261342,
+              "joule_power_W": 2.0315618026791815e-09,
+              "f_substrate_node_Hz": 6641.326834206734
+            },
+            "metrics": {
+              "shape_score": 0.0006574116919822616,
+              "continuum_rms_dB": 0.40150220144688836,
+              "continuum_1_40k_rms_dB": 0.25934281559420724,
+              "continuum_40_200k_rms_dB": 0.613016726385726,
+              "raw_experiment_rms_dB": 0.4334563367246543
+            }
+          },
+          "repeat_day": {
+            "detector_candidate": {
+              "alpha": 199.99999999999997,
+              "beta": 4.458143315859138,
+              "T_bath": 0.20000000000000004,
+              "C_tes": 3.923749999999979e-12,
+              "C_substrate": 6.0673672916946384e-12,
+              "C_abs": 2.571488000158869e-09,
+              "L": 9.999990000000024e-08,
+              "R": 0.02193979072046886,
+              "G_tes-bath": 5.5896984137466435e-08,
+              "G_tes-substrate": 8.331045117946336e-08,
+              "G_substrate-bath": 1.6987282057134539e-07,
+              "G_tes-stycast": 3.1192825848862786e-09,
+              "G_stycast-abs": 1.4219915147408813e-09,
+              "G_abs-abs": 3.360000000207584e-07,
+              "thermal_extension": "tes_bath_series_substrate_node"
+            },
+            "day_specific_boundary_hits": {
+              "alpha": {
+                "value": 199.99999999999997,
+                "lower": 9.999754955288212,
+                "upper": 200.0,
+                "at_lower": false,
+                "at_upper": true
+              },
+              "beta": {
+                "value": 4.458143315859138,
+                "lower": 0.0,
+                "upper": 12.0,
+                "at_lower": false,
+                "at_upper": false
+              },
+              "T_bath": {
+                "value": 0.20000000000000004,
+                "lower": 0.2,
+                "upper": 0.218,
+                "at_lower": true,
+                "at_upper": false
+              }
+            },
+            "white_scale": 0.20000000000000007,
+            "white_asd_A_rtHz": 1.1989683920853936e-11,
+            "white_boundary_hit": {
+              "value": 0.20000000000000007,
+              "lower": 0.2,
+              "upper": 5.0,
+              "at_lower": true,
+              "at_upper": false
+            },
+            "operating_point": {
+              "valid": true,
+              "stable": true,
+              "current_A": 0.0003083112931254992,
+              "joule_power_W": 2.0855055318592157e-09,
+              "f_substrate_node_Hz": 6641.326834206734
+            },
+            "metrics": {
+              "shape_score": 0.001543187600128019,
+              "continuum_rms_dB": 0.5689782610107949,
+              "continuum_1_40k_rms_dB": 0.13283214696334134,
+              "continuum_40_200k_rms_dB": 1.0113836830107832,
+              "raw_experiment_rms_dB": 0.5823369780709735
+            }
+          }
+        }
+      },
+      "status": "ok"
+    }
+  },
+  "summary": {
+    "grid_classification": "high_L_grid_does_not_remove_material_c2_need",
+    "elmer_row_key": "12.3_nH",
+    "elmer_row_classification": "fixed_L_still_requires_c2_and_c2_is_upper_censored",
+    "best_c2_zero_row_key": "100_nH",
+    "best_c2_zero_joint_rms_dB": 0.6523502791063991,
+    "best_c2_zero_improvement_vs_first_grid_row_dB": 0.9478980804535038,
+    "materiality_screen": {
+      "max_c2_over_zero_shape_score_ratio": 0.8,
+      "min_joint_rms_improvement_dB": 0.05,
+      "target_good_fit_rms_dB": 0.65
+    }
+  },
+  "interpretation": {
+    "lab_relevance": "If the 12.3 nH row or a nearby physically plausible row removes the material c2 need, prioritize direct circuit-inductance and electrical-transfer measurements. If c2 remains material through the high-L grid, inductance alone is disfavored as the missing zero-like degree of freedom.",
+    "guardrail": "The fixed-L rows are sensitivity tests, not an inductance measurement or confidence interval. The Elmer 12.3 nH value is a configured circuit input, not an independent electromagnetic estimate. Each nominal fixed L is implemented as an extremely narrow +/-1e-6 relative profile solely to reuse the existing relaxed-thermal optimizer without changing its physics or parameter bookkeeping. A high-L row that improves the normalized noise fit does not by itself establish that the physical TES circuit has that inductance."
+  },
+  "inputs": {
+    "config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_high_L_thermal_backbone_c2_diagnostic_config.json",
+    "base_thermal_backbone_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_thermal_backbone_pure_zero_diagnostic_config.json",
+    "base_separated_substrate_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_separated_substrate_L_0p1_1p3nH_joint_c2_config.json",
+    "base_cross_day_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_c2_cross_day_repeatability_config.json",
+    "base_magnicon_config": "D:\\Github\\TES-Programs\\PoST_Simulations\\config\\magnicon_xxf1_lpf_continuum_config.json"
+  }
+}

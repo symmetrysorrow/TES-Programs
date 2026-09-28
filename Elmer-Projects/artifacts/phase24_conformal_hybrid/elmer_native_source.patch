@@ -6568,7 +6568,7 @@ index 428110e0e..c95f39739 100644
  
        free(b_t); free(x_t);
 diff --git a/fem/src/modules/HeatSolve.F90 b/fem/src/modules/HeatSolve.F90
-index bc3335c28..4fff848aa 100644
+index bc3335c28..b050ca5c7 100644
 --- a/fem/src/modules/HeatSolve.F90
 +++ b/fem/src/modules/HeatSolve.F90
 @@ -41,6 +41,7 @@
@@ -6703,7 +6703,7 @@ index bc3335c28..4fff848aa 100644
  
       REAL(KIND=dp), POINTER :: Temperature(:),PrevTemperature(:),FlowSolution(:), &
         ElectricCurrent(:), PhaseChangeIntervals(:,:),ForceVector(:), &
-@@ -156,6 +223,90 @@ END SUBROUTINE HeatSolver_Init
+@@ -156,6 +223,137 @@ END SUBROUTINE HeatSolver_Init
       REAL(KIND=dp), ALLOCATABLE :: vals(:)
       REAL(KIND=dp) :: Jx,Jy,Jz,JAbs, Power, MeltPoint, IntHeatSource
  
@@ -6730,11 +6730,17 @@ index bc3335c28..4fff848aa 100644
 +     ! Fast wedges whose scalar conductivity depends on the solution (e.g. a
 +     ! k(T) UDF): geometry, basis and mass are cached, the stiffness is rebuilt
 +     ! each assembly from nodal k interpolated at the quadrature points, i.e.
-+     ! the same form as the generic path.  Only one such material is supported.
++     ! the same form as the generic path.  Any number of such materials: the
++     ! nodal k is kept per (material, node) slot, since a node on the interface
++     ! of two temperature-dependent materials carries two conductivities.
++     ! Slots of material Phase24DynKMats(m) are Phase24DynKStart(m) ..
++     ! Phase24DynKStart(m)+Phase24DynKCount(m)-1.
 +     REAL(KIND=dp), ALLOCATABLE, SAVE :: Phase24PrismBasis(:,:,:), Phase24DynKNodal(:)
 +     LOGICAL, ALLOCATABLE, SAVE :: Phase24PrismDynamicK(:)
 +     INTEGER, ALLOCATABLE, SAVE :: Phase24PrismKNodeSlot(:,:), Phase24DynKNodes(:)
-+     INTEGER, SAVE :: Phase24DynKNodeCount = 0, Phase24DynKMaterial = 0, &
++     INTEGER, ALLOCATABLE, SAVE :: Phase24DynKMats(:), Phase24DynKStart(:), Phase24DynKCount(:), &
++          Phase24ElementDynMat(:)
++     INTEGER, SAVE :: Phase24DynKNodeCount = 0, Phase24DynKMatCount = 0, &
 +          Phase24DynamicPrismCount = 0
 +     ! Optional preconditioning matrix for thin wedges: the stiffness with the
 +     ! in-plane/vertical mass-like couplings lumped (an M-matrix-like operator
@@ -6743,12 +6749,57 @@ index bc3335c28..4fff848aa 100644
 +     ! parallel to Matrix % Values.
 +     REAL(KIND=dp), ALLOCATABLE, SAVE :: Phase24PrecDelta(:)
 +     LOGICAL, SAVE :: Phase24LumpedPrec = .FALSE.
-+     ! Circuit law and the Joule power used by the latest thermal solve, kept
-+     ! so that the coupled residual P_circuit(T_TES) - P_used can be checked
-+     ! after the solve ('TES Inner Circuit Power Residual Tolerance').
-+     LOGICAL, SAVE :: TESResValid = .FALSE.
-+     REAL(KIND=dp), SAVE :: TESResIBias, TESResRSh, TESResR0, TESResRMin, TESResAlpha, &
-+          TESResBeta, TESResI0, TESResT0, TESResL, TESResPrevI, TESResP, TESResDt
++     ! Inner TES circuits.  One TES body per circuit; a single-pixel case uses
++     ! the legacy keywords ('TES Body ID', 'TES Bias Current', ...), N circuits
++     ! use 'TES Circuit Count = N' (Constants), 'TES Body IDs(N)' (solver) and
++     ! numbered constants 'TES <k> Bias Current', ... (see TESKey).  All
++     ! per-circuit state lives here; the circuits share the thermal field and
++     ! are updated one after another before every assembly.
++     TYPE :: TESCircuitState_t
++       INTEGER :: Body = 0
++       ! nonlinear (Newton / Aitken) state
++       REAL(KIND=dp) :: NewtonPrevP = 0.0_dp, NewtonPrevT = 0.0_dp
++       REAL(KIND=dp) :: NewtonS = -1.0_dp, NewtonSdt = -1.0_dp
++       LOGICAL :: NewtonHasPrev = .FALSE.
++       REAL(KIND=dp) :: StepP1 = -1.0_dp, StepP2 = -1.0_dp, StepDt1 = -1.0_dp, StepDt2 = -1.0_dp
++       REAL(KIND=dp) :: NewtonPrevStepDt = -1.0_dp
++       ! electrical state
++       REAL(KIND=dp) :: CircuitPower = 0.0_dp, CircuitCurrent = 0.0_dp
++       REAL(KIND=dp) :: CircuitResistance = 0.0_dp, CircuitAverageTemperature = 0.0_dp
++       REAL(KIND=dp) :: CircuitSweepTemperature = 0.0_dp
++       REAL(KIND=dp) :: PreviousCircuitCurrent = 0.0_dp
++       REAL(KIND=dp) :: PreviousCircuitPower = -1.0_dp
++       REAL(KIND=dp) :: CircuitPrevResidual = 0.0_dp, CircuitOmega = 0.5_dp, CircuitOmegaCap = 0.5_dp
++       REAL(KIND=dp) :: LastCircuitDt = -1.0_dp
++       INTEGER :: LastCircuitStep = -HUGE(1), CircuitIterInStep = 0, CircuitCallsInStep = 0
++       LOGICAL :: CircuitInitialized = .FALSE., CircuitPowerInitialized = .FALSE.
++       LOGICAL :: SeriesStarted = .FALSE., IterationSeriesStarted = .FALSE.
++       ! snapshot at an adaptive trial boundary
++       REAL(KIND=dp) :: SavedCircuitPower = 0.0_dp, SavedCircuitCurrent = 0.0_dp
++       REAL(KIND=dp) :: SavedCircuitResistance = 0.0_dp, SavedCircuitAverageTemperature = 0.0_dp
++       REAL(KIND=dp) :: SavedCircuitSweepTemperature = 0.0_dp, SavedPreviousCircuitCurrent = 0.0_dp
++       REAL(KIND=dp) :: SavedPreviousCircuitPower = -1.0_dp
++       REAL(KIND=dp) :: SavedCircuitPrevResidual = 0.0_dp, SavedCircuitOmega = 0.5_dp
++       REAL(KIND=dp) :: SavedCircuitOmegaCap = 0.5_dp, SavedLastCircuitDt = -1.0_dp
++       INTEGER :: SavedLastCircuitStep = -HUGE(1), SavedCircuitIterInStep = 0
++       INTEGER :: SavedCircuitCallsInStep = 0, SavedTrialId = -1
++       LOGICAL :: SavedCircuitInitialized = .FALSE., SavedCircuitPowerInitialized = .FALSE.
++       LOGICAL :: SavedAdaptiveState = .FALSE.
++       ! circuit law and the Joule power used by the latest thermal solve, for
++       ! the coupled residual P_circuit(T_TES) - P_used checked after the solve
++       LOGICAL :: ResValid = .FALSE.
++       REAL(KIND=dp) :: ResIBias = 0.0_dp, ResRSh = 0.0_dp, ResR0 = 0.0_dp, ResRMin = 0.0_dp
++       REAL(KIND=dp) :: ResAlpha = 0.0_dp, ResBeta = 0.0_dp, ResI0 = 1.0_dp, ResT0 = 1.0_dp
++       REAL(KIND=dp) :: ResL = 0.0_dp, ResPrevI = 0.0_dp, ResP = 0.0_dp, ResDt = 1.0_dp
++       ! TES mean of the previous nonlinear iterate (iterate-change exit tests)
++       REAL(KIND=dp) :: ExitPrevT = 0.0_dp
++     END TYPE TESCircuitState_t
++     TYPE(TESCircuitState_t), ALLOCATABLE, SAVE :: TESC(:)
++     INTEGER, SAVE :: TESNCirc = 0
++     LOGICAL, SAVE :: TESNumbered = .FALSE.
++     INTEGER :: TESk
++     LOGICAL :: TESAllValid
++     REAL(KIND=dp) :: TESdTOne
 +     REAL(KIND=dp) :: TESPowerTol, TESPowerRes, TESCoupledTolT, TESdPdT, TESdTCircuit, &
 +          TESdkRel, TESdkTmax, TESdkTmin, TESdTk
 +     REAL(KIND=dp), ALLOCATABLE :: TESdkNow(:)
@@ -6765,10 +6816,6 @@ index bc3335c28..4fff848aa 100644
 +     INTEGER, SAVE :: Phase24FastTetCount = 0, Phase24GenericPrismCount = 0, &
 +          Phase24GenericOtherCount = 0, Phase24PrismCount = 0, Phase24FastPrismCount = 0
 +     LOGICAL, SAVE :: Phase24MetadataReady = .FALSE.
-+     ! Opt-in TES-temperature based nonlinear exit (see 'TES Inner Circuit
-+     ! Temperature Tolerance'): the field-norm change is dominated by the
-+     ! bath/absorber and can stop while the TES/circuit is still moving.
-+     REAL(KIND=dp), SAVE :: TESExitPrevT = 0.0_dp
 +     LOGICAL, SAVE :: Phase24EpochReady = .FALSE.
 +     LOGICAL, SAVE :: Phase24BoundaryMatrixInvariant = .FALSE.
 +     INTEGER, SAVE :: Phase24StructureEpoch = 0, Phase24MatrixEpoch = 0, &
@@ -6794,7 +6841,7 @@ index bc3335c28..4fff848aa 100644
       INTEGER, ALLOCATABLE, SAVE :: Indexes(:), SaveIndexes(:)
  
       REAL(KIND=dp), ALLOCATABLE :: MASS(:,:), &
-@@ -216,6 +367,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -216,6 +414,10 @@ END SUBROUTINE HeatSolver_Init
       END INTERFACE
  
       REAL(KIND=dp) :: at,at0,totat,st,totst,t1
@@ -6805,7 +6852,7 @@ index bc3335c28..4fff848aa 100644
  
  
       CALL Info('HeatSolver','-------------------------------------------',Level=6)
-@@ -233,6 +388,136 @@ END SUBROUTINE HeatSolver_Init
+@@ -233,6 +435,136 @@ END SUBROUTINE HeatSolver_Init
       IF ( .NOT. ASSOCIATED( Solver % Matrix ) ) RETURN
  
       SolverParams => GetSolverParams()
@@ -6942,7 +6989,7 @@ index bc3335c28..4fff848aa 100644
  
       Radiosity = GetLogical( SolverParams,'Radiosity Model',Found ) 
       Spectral = GetLogical( SolverParams,'Spectral Model',Found )
-@@ -268,6 +553,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -268,6 +600,10 @@ END SUBROUTINE HeatSolver_Init
       LocalNodes = COUNT( TempPerm > 0 )
       IF ( LocalNodes <= 0 ) RETURN
       IF(SIZE(Temperature) < LocalNodes) LocalNodes = SIZE(Temperature)
@@ -6953,7 +7000,7 @@ index bc3335c28..4fff848aa 100644
       
       
       NeedFlowSol = .FALSE.
-@@ -448,6 +737,12 @@ END SUBROUTINE HeatSolver_Init
+@@ -448,6 +784,12 @@ END SUBROUTINE HeatSolver_Init
       NonlinearIter = GetInteger(   SolverParams, &
                       'Nonlinear System Max Iterations', Found )
       IF ( .NOT.Found ) NonlinearIter = 1
@@ -6966,7 +7013,7 @@ index bc3335c28..4fff848aa 100644
  
       NonlinearTol  = GetConstReal( SolverParams, &
                       'Nonlinear System Convergence Tolerance',    Found )
-@@ -639,6 +934,14 @@ END SUBROUTINE HeatSolver_Init
+@@ -639,6 +981,14 @@ END SUBROUTINE HeatSolver_Init
       END IF
  !------------------------------------------------------------------------------
       FirstTime = .TRUE.
@@ -6981,7 +7028,7 @@ index bc3335c28..4fff848aa 100644
  
       ALLOCATE(PrevSolution(LocalNodes))
       
-@@ -656,6 +959,59 @@ END SUBROUTINE HeatSolver_Init
+@@ -656,6 +1006,59 @@ END SUBROUTINE HeatSolver_Init
       IF ( TransientSimulation ) THEN
         PrevTemperature => Solver % Variable % PrevValues(:,1)
       END IF
@@ -7041,7 +7088,7 @@ index bc3335c28..4fff848aa 100644
  !------------------------------------------------------------------------------
       
       totat = 0.0d0
-@@ -666,13 +1022,52 @@ END SUBROUTINE HeatSolver_Init
+@@ -666,13 +1069,52 @@ END SUBROUTINE HeatSolver_Init
       CALL DefaultStart()
       
       
@@ -7095,7 +7142,7 @@ index bc3335c28..4fff848aa 100644
  
         CALL Info( 'HeatSolve', ' ', Level=4 )
         CALL Info( 'HeatSolve', ' ', Level=4 )
-@@ -756,7 +1151,106 @@ END SUBROUTINE HeatSolver_Init
+@@ -756,7 +1198,106 @@ END SUBROUTINE HeatSolver_Init
         CALL StartAdvanceOutput( 'HeatSolve', 'Assembly:' )
         NofActive = GetNOFActive()
  
@@ -7203,7 +7250,7 @@ index bc3335c28..4fff848aa 100644
           
           CALL AdvanceOutput(t,NofActive)
  !------------------------------------------------------------------------------
-@@ -765,6 +1259,19 @@ END SUBROUTINE HeatSolver_Init
+@@ -765,6 +1306,19 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
           Element => GetActiveElement(t)
  
@@ -7223,7 +7270,7 @@ index bc3335c28..4fff848aa 100644
  !------------------------------------------------------------------------------
           IF ( Element % BodyId /= body_id ) THEN
  !------------------------------------------------------------------------------
-@@ -809,30 +1316,86 @@ END SUBROUTINE HeatSolver_Init
+@@ -809,30 +1363,86 @@ END SUBROUTINE HeatSolver_Init
  
           n = GetElementNOFNodes()
           CALL GetElementNodes( ElementNodes )
@@ -7324,7 +7371,7 @@ index bc3335c28..4fff848aa 100644
           END IF
  !------------------------------------------------------------------------------
  
-@@ -955,6 +1518,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -955,6 +1565,7 @@ END SUBROUTINE HeatSolver_Init
             IF ( ALL(MU==0) ) C1 = 0.0D0 
           END IF
  
@@ -7332,7 +7379,7 @@ index bc3335c28..4fff848aa 100644
           HeatCapacity(1:n) = Density(1:n) * HeatCapacity(1:n)
   
  !------------------------------------------------------------------------------
-@@ -1024,10 +1588,53 @@ END SUBROUTINE HeatSolver_Init
+@@ -1024,10 +1635,53 @@ END SUBROUTINE HeatSolver_Init
             END IF
           END IF
  
@@ -7387,7 +7434,7 @@ index bc3335c28..4fff848aa 100644
  !------------------------------------------------------------------------------
             CALL DiffuseConvectiveCompose( &
                 MASS, STIFF, FORCE, LOAD, &
-@@ -1038,7 +1645,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -1038,7 +1692,7 @@ END SUBROUTINE HeatSolver_Init
                 Stabilize, UseBubbles, Element, n, ElementNodes )
  
  !------------------------------------------------------------------------------
@@ -7396,7 +7443,7 @@ index bc3335c28..4fff848aa 100644
  !------------------------------------------------------------------------------
             CALL DiffuseConvectiveGenCompose( &
                 MASS, STIFF, FORCE, LOAD, &
-@@ -1049,6 +1656,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -1049,6 +1703,7 @@ END SUBROUTINE HeatSolver_Init
                 Stabilize, Element, n, ElementNodes )
  !------------------------------------------------------------------------------
           END IF
@@ -7404,7 +7451,7 @@ index bc3335c28..4fff848aa 100644
  !------------------------------------------------------------------------------
  
           ! The heat equation may have lower dimensional elements active also.
-@@ -1070,8 +1678,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -1070,8 +1725,10 @@ END SUBROUTINE HeatSolver_Init
               CALL Default1stOrderTime( MASS, STIFF, FORCE )
             END IF
  
@@ -7415,7 +7462,7 @@ index bc3335c28..4fff848aa 100644
           ELSE
              Bubbles = UseBubbles .AND. .NOT.Stabilize .AND. &
              ( ConvectionFlag == 'computed' .OR. ConvectionFlag == 'constant' )
-@@ -1096,13 +1706,22 @@ END SUBROUTINE HeatSolver_Init
+@@ -1096,13 +1753,22 @@ END SUBROUTINE HeatSolver_Init
                 CALL Condensate( N, STIFF, FORCE, TimeForce )
              END IF
  
@@ -7439,7 +7486,7 @@ index bc3335c28..4fff848aa 100644
  
  
  1000  CONTINUE
-@@ -1112,6 +1731,8 @@ END SUBROUTINE HeatSolver_Init
+@@ -1112,6 +1778,8 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
  !     Neumann & Newton boundary conditions
  !------------------------------------------------------------------------------
@@ -7448,7 +7495,7 @@ index bc3335c28..4fff848aa 100644
        DO bc_elem = 1, Solver % Mesh % NumberOfBoundaryElements
          
          Element => GetBoundaryElement(bc_elem)
-@@ -1135,9 +1756,16 @@ END SUBROUTINE HeatSolver_Init
+@@ -1135,9 +1803,16 @@ END SUBROUTINE HeatSolver_Init
          END IF
  
          HeatFluxBC = GetLogical( BC, 'Heat Flux BC', Found )
@@ -7465,7 +7512,7 @@ index bc3335c28..4fff848aa 100644
          CALL AddHeatFluxBC()
  
          IF ( HeatGapBC ) THEN
-@@ -1149,16 +1777,43 @@ END SUBROUTINE HeatSolver_Init
+@@ -1149,16 +1824,43 @@ END SUBROUTINE HeatSolver_Init
          END IF
  
        END DO   ! Neumann & Newton BCs
@@ -7509,7 +7556,7 @@ index bc3335c28..4fff848aa 100644
  
  !------------------------------------------------------------------------------
  !     Solve the system and check for convergence
-@@ -1248,11 +1903,107 @@ END SUBROUTINE HeatSolver_Init
+@@ -1248,11 +1950,107 @@ END SUBROUTINE HeatSolver_Init
  !     Check stepsize for nonlinear iteration
  !------------------------------------------------------------------------------
          IF( DefaultLinesearch( Converged ) ) GOTO 500
@@ -7618,7 +7665,7 @@ index bc3335c28..4fff848aa 100644
  
        IF( SmartHeaterControl .OR. IntegralHeaterControl) THEN
           CALL Info( 'HeatSolve', 'Heater Control Information', Level=4 )
-@@ -1324,6 +2075,8 @@ END SUBROUTINE HeatSolver_Init
+@@ -1324,6 +2122,8 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
       
        RelativeChange = Solver % Variable % NonlinChange
@@ -7627,7 +7674,7 @@ index bc3335c28..4fff848aa 100644
  
        WRITE( Message, * ) 'Result Norm   : ',Norm
        CALL Info( 'HeatSolve', Message, Level=4 )
-@@ -1334,7 +2087,123 @@ END SUBROUTINE HeatSolver_Init
+@@ -1334,7 +2134,134 @@ END SUBROUTINE HeatSolver_Init
                 NewtonLinearization = .TRUE.
        Converged =  ( Solver % Variable % NonlinConverged > 0 ) .AND. &
            ( .NOT. SmartHeaterControl .OR. SmartTolReached )
@@ -7645,9 +7692,11 @@ index bc3335c28..4fff848aa 100644
 +      IF (TransientSimulation) TESPowerTol = GetConstReal(SolverParams, &
 +           'TES Inner Circuit Power Residual Tolerance', Found)
 +      TESCoupledTolT = -1.0_dp
-+      IF (TransientSimulation) TESCoupledTolT = GetConstReal(SolverParams, &
++      TESCoupledTolT = GetConstReal(SolverParams, &
 +           'Phase24 Coupled Temperature Tolerance', Found)
-+      IF (TransientSimulation .AND. TESCoupledTolT > 0.0_dp .AND. TESResValid) THEN
++      TESAllValid = ALLOCATED(TESC)
++      IF (TESAllValid) TESAllValid = ALL(TESC(:) % ResValid)
++      IF (TESCoupledTolT > 0.0_dp .AND. TESAllValid) THEN
 +        ! Both remaining nonlinearities, expressed as a bound on the TES
 +        ! temperature error of accepting this iterate:
 +        !  circuit: dT = F/(1/S + |dP/dT|) <= |F|/|dP/dT| for the negative
@@ -7657,27 +7706,31 @@ index bc3335c28..4fff848aa 100644
 +        !           solve started from; dT <= max|dk/k| * membrane T drop.
 +        ! This replaces the field-increment test, which measures predictor
 +        ! error rather than inconsistency.
-+        TESMeanNow = TESMeanTemperatureNow()
-+        TESPowerRes = TESCircuitPowerAt(TESMeanNow) - TESResP
-+        TESdPdT = (TESCircuitPowerAt(TESMeanNow+1.0e-7_dp) - &
-+             TESCircuitPowerAt(TESMeanNow-1.0e-7_dp)) / 2.0e-7_dp
-+        IF (TESdPdT < 0.0_dp) THEN
-+          TESdTCircuit = ABS(TESPowerRes) / ABS(TESdPdT)
-+        ELSE IF (iter > 1) THEN
-+          ! Steps much shorter than L/R hold the current (dP/dT > 0): no
-+          ! S-free bound exists, so use the TES change between iterates.
-+          TESdTCircuit = ABS(TESMeanNow - TESExitPrevT)
-+        ELSE
-+          TESdTCircuit = HUGE(1.0_dp)
-+        END IF
-+        TESExitPrevT = TESMeanNow
++        ! Worst circuit (each TES body has its own circuit).
++        TESdTCircuit = 0.0_dp
++        DO TESk = 1, TESNCirc
++          TESMeanNow = TESMeanTemperatureNow(TESk)
++          TESPowerRes = TESCircuitPowerAt(TESk, TESMeanNow) - TESC(TESk) % ResP
++          TESdPdT = (TESCircuitPowerAt(TESk, TESMeanNow+1.0e-7_dp) - &
++               TESCircuitPowerAt(TESk, TESMeanNow-1.0e-7_dp)) / 2.0e-7_dp
++          IF (TESdPdT < 0.0_dp) THEN
++            TESdTOne = ABS(TESPowerRes) / ABS(TESdPdT)
++          ELSE IF (iter > 1) THEN
++            ! Steps much shorter than L/R hold the current (dP/dT > 0): no
++            ! S-free bound exists, so use the TES change between iterates.
++            TESdTOne = ABS(TESMeanNow - TESC(TESk) % ExitPrevT)
++          ELSE
++            TESdTOne = HUGE(1.0_dp)
++          END IF
++          TESC(TESk) % ExitPrevT = TESMeanNow
++          TESdTCircuit = MAX(TESdTCircuit, TESdTOne)
++        END DO
 +        TESdkRel = 0.0_dp
 +        TESdkTmax = -HUGE(1.0_dp)
 +        TESdkTmin = HUGE(1.0_dp)
-+        IF (Phase24DynKNodeCount > 0 .AND. Phase24DynKMaterial > 0) THEN
++        IF (Phase24DynKNodeCount > 0) THEN
 +          ALLOCATE(TESdkNow(Phase24DynKNodeCount))
-+          TESdkNow = ListGetReal(CurrentModel % Materials(Phase24DynKMaterial) % Values, &
-+               'Heat Conductivity', Phase24DynKNodeCount, Phase24DynKNodes, Found)
++          CALL Phase24EvaluateDynK(TESdkNow)
 +          DO i = 1, Phase24DynKNodeCount
 +            IF (Phase24DynKNodal(i) > 0.0_dp) TESdkRel = MAX(TESdkRel, &
 +                 ABS(TESdkNow(i) - Phase24DynKNodal(i)) / Phase24DynKNodal(i))
@@ -7704,25 +7757,30 @@ index bc3335c28..4fff848aa 100644
 +        WRITE(Message,'(A,I0,A,ES11.3,A,ES11.3,A,ES11.3)') 'TES coupled error: iter=',iter, &
 +             ', dT_circuit=',TESdTCircuit,', dT_k=',TESdTk,', field change=',RelativeChange
 +        CALL Info('HeatSolve',TRIM(Message),Level=4)
-+      ELSE IF (TransientSimulation .AND. TESPowerTol > 0.0_dp .AND. TESResValid) THEN
-+        TESMeanNow = TESMeanTemperatureNow()
-+        TESPowerRes = TESCircuitPowerAt(TESMeanNow) - TESResP
-+        IF (ABS(TESPowerRes) > TESPowerTol * MAX(ABS(TESResP),1.0e-30_dp)) Converged = .FALSE.
++      ELSE IF (TransientSimulation .AND. TESPowerTol > 0.0_dp .AND. TESAllValid) THEN
++        TESdTOne = 0.0_dp
++        DO TESk = 1, TESNCirc
++          TESMeanNow = TESMeanTemperatureNow(TESk)
++          TESPowerRes = TESCircuitPowerAt(TESk, TESMeanNow) - TESC(TESk) % ResP
++          TESdTOne = MAX(TESdTOne, ABS(TESPowerRes)/MAX(ABS(TESC(TESk) % ResP),1.0e-30_dp))
++        END DO
++        IF (TESdTOne > TESPowerTol) Converged = .FALSE.
 +        WRITE(Message,'(A,I0,A,ES12.4,A,ES12.4)') 'TES coupled residual: iter=',iter, &
-+             ', |dP|/P=',ABS(TESPowerRes)/MAX(ABS(TESResP),1.0e-30_dp), &
-+             ', field change=',RelativeChange
++             ', |dP|/P=',TESdTOne,', field change=',RelativeChange
 +        CALL Info('HeatSolve',TRIM(Message),Level=4)
 +      ELSE IF (TransientSimulation) THEN
 +        TESTempTol = GetConstReal(SolverParams, &
 +             'TES Inner Circuit Temperature Tolerance', Found)
-+        IF (Found .AND. TESTempTol > 0.0_dp) THEN
-+          TESMeanNow = TESMeanTemperatureNow()
-+          IF (iter <= 1) THEN
-+            Converged = .FALSE.
-+          ELSE IF (ABS(TESMeanNow - TESExitPrevT) > TESTempTol) THEN
-+            Converged = .FALSE.
-+          END IF
-+          TESExitPrevT = TESMeanNow
++        IF (Found .AND. TESTempTol > 0.0_dp .AND. ALLOCATED(TESC)) THEN
++          DO TESk = 1, TESNCirc
++            TESMeanNow = TESMeanTemperatureNow(TESk)
++            IF (iter <= 1) THEN
++              Converged = .FALSE.
++            ELSE IF (ABS(TESMeanNow - TESC(TESk) % ExitPrevT) > TESTempTol) THEN
++              Converged = .FALSE.
++            END IF
++            TESC(TESk) % ExitPrevT = TESMeanNow
++          END DO
 +        END IF
 +      END IF
 +      IF (Phase24LaggingEnabled .AND. Phase24LaggingActive .AND. &
@@ -7752,7 +7810,7 @@ index bc3335c28..4fff848aa 100644
  
        IF(SmartHeaterControl) THEN
          IF ( RelativeChange < SmartTol ) THEN
-@@ -1369,6 +2238,9 @@ END SUBROUTINE HeatSolver_Init
+@@ -1369,6 +2296,9 @@ END SUBROUTINE HeatSolver_Init
     END DO ! time interval
     Solver % dt = Timestep
  
@@ -7762,7 +7820,7 @@ index bc3335c28..4fff848aa 100644
     CALL DefaultFinish()
     
  !------------------------------------------------------------------------------
-@@ -1388,28 +2260,1363 @@ END SUBROUTINE HeatSolver_Init
+@@ -1388,30 +2318,1504 @@ END SUBROUTINE HeatSolver_Init
       
  CONTAINS
  
@@ -7971,8 +8029,12 @@ index bc3335c28..4fff848aa 100644
 +    IF (ALLOCATED(Phase24PrismKNodeSlot)) DEALLOCATE(Phase24PrismKNodeSlot)
 +    IF (ALLOCATED(Phase24DynKNodes)) DEALLOCATE(Phase24DynKNodes)
 +    IF (ALLOCATED(Phase24DynKNodal)) DEALLOCATE(Phase24DynKNodal)
++    IF (ALLOCATED(Phase24DynKMats)) DEALLOCATE(Phase24DynKMats)
++    IF (ALLOCATED(Phase24DynKStart)) DEALLOCATE(Phase24DynKStart)
++    IF (ALLOCATED(Phase24DynKCount)) DEALLOCATE(Phase24DynKCount)
++    IF (ALLOCATED(Phase24ElementDynMat)) DEALLOCATE(Phase24ElementDynMat)
 +    Phase24DynKNodeCount = 0
-+    Phase24DynKMaterial = 0
++    Phase24DynKMatCount = 0
 +    Phase24DynamicPrismCount = 0
 +    IF (ALLOCATED(Phase24ElementSrc)) DEALLOCATE(Phase24ElementSrc)
 +    IF (ALLOCATED(Phase24SrcBF)) DEALLOCATE(Phase24SrcBF)
@@ -8030,7 +8092,7 @@ index bc3335c28..4fff848aa 100644
 +    LOGICAL :: kConstant,dynK
 +    LOGICAL, ALLOCATABLE :: DynFlag(:)
 +    INTEGER, ALLOCATABLE :: NodeMark(:)
-+    INTEGER :: bodyMat,nDynNodes,bfId,srcBF(64),nSrc,srcTotal
++    INTEGER :: bodyMat,nDynNodes,bfId,srcBF(64),nSrc,srcTotal,m
 +    TYPE(ValueListEntry_t), POINTER :: kEntry
 +
 +    CALL Phase24ClearMetadata()
@@ -8051,8 +8113,9 @@ index bc3335c28..4fff848aa 100644
 +         Phase24OperatorKReference(nBulk), Phase24OperatorMassReference(nBulk), &
 +         Phase24OperatorReactionReference(nBulk), Phase24OperatorKCurrent(nBulk), &
 +         Phase24OperatorMassCurrent(nBulk), Phase24OperatorReactionCurrent(nBulk))
-+    ALLOCATE(DynFlag(nBulk), Phase24ElementSrc(nBulk))
++    ALLOCATE(DynFlag(nBulk), Phase24ElementSrc(nBulk), Phase24ElementDynMat(nBulk))
 +    DynFlag = .FALSE.
++    Phase24ElementDynMat = 0
 +    Phase24ElementSrc = 0
 +    Phase24ElementClass = 3
 +    Phase24ElementBody = 0
@@ -8122,11 +8185,9 @@ index bc3335c28..4fff848aa 100644
 +                IF (kEntry % TYPE == LIST_TYPE_VARIABLE_SCALAR .OR. &
 +                     kEntry % TYPE == LIST_TYPE_VARIABLE_SCALAR_STR .OR. &
 +                     kEntry % TYPE == LIST_TYPE_CONSTANT_SCALAR_PROC) THEN
-+                  IF (Phase24DynKMaterial == 0) Phase24DynKMaterial = bodyMat
-+                  IF (Phase24DynKMaterial == bodyMat) THEN
-+                    prismEligible = .TRUE.
-+                    dynK = .TRUE.
-+                  END IF
++                  prismEligible = .TRUE.
++                  dynK = .TRUE.
++                  Phase24ElementDynMat(i) = bodyMat
 +                END IF
 +              END IF
 +            END IF
@@ -8317,30 +8378,53 @@ index bc3335c28..4fff848aa 100644
 +      ! evaluated once per assembly with a single ListGetReal call.
 +      Phase24DynamicPrismCount = COUNT(Phase24PrismDynamicK)
 +      IF (Phase24DynamicPrismCount > 0) THEN
++        ! Distinct temperature-dependent materials, in order of appearance.
++        ALLOCATE(Phase24DynKMats(CurrentModel % NumberOfMaterials), &
++             Phase24DynKStart(CurrentModel % NumberOfMaterials), &
++             Phase24DynKCount(CurrentModel % NumberOfMaterials))
++        Phase24DynKMatCount = 0
++        DO i=1,nPrism
++          IF (.NOT. Phase24PrismDynamicK(i)) CYCLE
++          k = Phase24ElementDynMat(Phase24PrismElements(i))
++          IF (.NOT. ANY(Phase24DynKMats(1:Phase24DynKMatCount) == k)) THEN
++            Phase24DynKMatCount = Phase24DynKMatCount + 1
++            Phase24DynKMats(Phase24DynKMatCount) = k
++          END IF
++        END DO
++        ! One slot per (material, node); slots of a material are contiguous.
 +        ALLOCATE(NodeMark(Solver % Mesh % NumberOfNodes))
-+        NodeMark = 0
 +        nDynNodes = 0
++        DO m=1,Phase24DynKMatCount
++          NodeMark = 0
++          Phase24DynKStart(m) = nDynNodes + 1
++          DO i=1,nPrism
++            IF (.NOT. Phase24PrismDynamicK(i)) CYCLE
++            idx = Phase24PrismElements(i)
++            IF (Phase24ElementDynMat(idx) /= Phase24DynKMats(m)) CYCLE
++            DO j=1,6
++              k = Solver % Mesh % Elements(idx) % NodeIndexes(j)
++              IF (NodeMark(k) == 0) THEN
++                nDynNodes = nDynNodes + 1
++                NodeMark(k) = nDynNodes
++              END IF
++              Phase24PrismKNodeSlot(j,i) = NodeMark(k)
++            END DO
++          END DO
++          Phase24DynKCount(m) = nDynNodes - Phase24DynKStart(m) + 1
++        END DO
++        ALLOCATE(Phase24DynKNodes(nDynNodes), Phase24DynKNodal(nDynNodes))
 +        DO i=1,nPrism
 +          IF (.NOT. Phase24PrismDynamicK(i)) CYCLE
 +          idx = Phase24PrismElements(i)
 +          DO j=1,6
-+            k = Solver % Mesh % Elements(idx) % NodeIndexes(j)
-+            IF (NodeMark(k) == 0) THEN
-+              nDynNodes = nDynNodes + 1
-+              NodeMark(k) = nDynNodes
-+            END IF
-+            Phase24PrismKNodeSlot(j,i) = NodeMark(k)
++            Phase24DynKNodes(Phase24PrismKNodeSlot(j,i)) = Solver % Mesh % Elements(idx) % NodeIndexes(j)
 +          END DO
-+        END DO
-+        ALLOCATE(Phase24DynKNodes(nDynNodes), Phase24DynKNodal(nDynNodes))
-+        DO k=1,SIZE(NodeMark)
-+          IF (NodeMark(k) > 0) Phase24DynKNodes(NodeMark(k)) = k
 +        END DO
 +        Phase24DynKNodal = 0.0_dp
 +        Phase24DynKNodeCount = nDynNodes
 +        DEALLOCATE(NodeMark)
 +        WRITE(Message,'(A,I0,A,I0,A,I0)') 'Phase24 dynamic-k prisms: elements=', &
-+             Phase24DynamicPrismCount, ', nodes=', nDynNodes, ', material=', Phase24DynKMaterial
++             Phase24DynamicPrismCount, ', node slots=', nDynNodes, ', materials=', Phase24DynKMatCount
 +        CALL Info('HeatSolve',TRIM(Message),Level=4)
 +      END IF
 +    END IF
@@ -8592,7 +8676,8 @@ index bc3335c28..4fff848aa 100644
 +    !$OMP END PARALLEL DO
 +  END SUBROUTINE Phase24AssembleStaticElements
 +
-+  FUNCTION TESMeanTemperatureNow() RESULT(Tmean)
++  FUNCTION TESMeanTemperatureNow(kc) RESULT(Tmean)
++    INTEGER, INTENT(IN) :: kc
 +    ! Element-averaged TES temperature, the same definition as the circuit.
 +    REAL(KIND=dp) :: Tmean
 +    INTEGER :: t, i, n, p, body, cnt
@@ -8600,7 +8685,7 @@ index bc3335c28..4fff848aa 100644
 +    REAL(KIND=dp) :: acc
 +    TYPE(Element_t), POINTER :: El
 +
-+    body = ListGetInteger(Solver % Values, 'TES Body ID', gotBody)
++    body = TESC(kc) % Body
 +    acc = 0.0_dp
 +    cnt = 0
 +    DO t = 1, Solver % NumberOfActiveElements
@@ -8629,16 +8714,25 @@ index bc3335c28..4fff848aa 100644
 +  ! in the last timestep interval only ('Phase24 Step Controller'), so the
 +  ! pulse and its nanosecond ramp keep their fixed steps.
 +  SUBROUTINE Phase24StepController()
-+    REAL(KIND=dp), SAVE :: HistT(4) = 0.0_dp, HistTime(4) = 0.0_dp
++    REAL(KIND=dp), ALLOCATABLE, SAVE :: HistT(:,:)
++    REAL(KIND=dp), SAVE :: HistTime(4) = 0.0_dp
 +    INTEGER, SAVE :: HistN = 0
-+    REAL(KIND=dp) :: tnow, Tm, tol, tEnd, maxdt, h, h1, h2, p, err, fac, dtnext, remaining
++    INTEGER :: kc
++    REAL(KIND=dp) :: tnow, tol, errk, tEnd, maxdt, h, h1, h2, p, err, fac, dtnext, remaining
 +    REAL(KIND=dp) :: t0, t1, t2, L0, L1, L2
 +    LOGICAL :: gotEnd, gotMax
 +
 +    tnow = GetTime()
-+    Tm = TESMeanTemperatureNow()
-+    HistT(1:3) = HistT(2:4); HistTime(1:3) = HistTime(2:4)
-+    HistT(4) = Tm; HistTime(4) = tnow
++    IF (.NOT. ALLOCATED(TESC)) RETURN
++    IF (.NOT. ALLOCATED(HistT)) THEN
++      ALLOCATE(HistT(4,TESNCirc)); HistT = 0.0_dp
++    END IF
++    ! One TES temperature history per circuit; the worst circuit sets dt.
++    HistT(1:3,:) = HistT(2:4,:); HistTime(1:3) = HistTime(2:4)
++    DO kc = 1, TESNCirc
++      HistT(4,kc) = TESMeanTemperatureNow(kc)
++    END DO
++    HistTime(4) = tnow
 +    HistN = MIN(HistN + 1, 4)
 +
 +    tol = ListGetCReal(Model % Simulation,'Phase24 Step Controller Tolerance',Found)
@@ -8657,8 +8751,12 @@ index bc3335c28..4fff848aa 100644
 +        L0 = (tnow-t1)*(tnow-t2)/((t0-t1)*(t0-t2))
 +        L1 = (tnow-t0)*(tnow-t2)/((t1-t0)*(t1-t2))
 +        L2 = (tnow-t0)*(tnow-t1)/((t2-t0)*(t2-t1))
-+        p = L0*HistT(1) + L1*HistT(2) + L2*HistT(3)
-+        err = (4.0_dp/3.0_dp) * h*h * ABS(Tm - p) / ((h+h1)*(h+h1+h2))
++        err = 0.0_dp
++        DO kc = 1, TESNCirc
++          p = L0*HistT(1,kc) + L1*HistT(2,kc) + L2*HistT(3,kc)
++          errk = (4.0_dp/3.0_dp) * h*h * ABS(HistT(4,kc) - p) / ((h+h1)*(h+h1+h2))
++          err = MAX(err, errk)
++        END DO
 +        fac = 0.9_dp * (tol / MAX(err, 1.0e-300_dp))**(1.0_dp/3.0_dp)
 +        ! Hysteresis: keep the step unless it must shrink or can grow by a
 +        ! useful amount, so equal-dt runs keep the circuit Newton slope and the
@@ -8688,14 +8786,15 @@ index bc3335c28..4fff848aa 100644
 +
 +  ! Element-averaged TES temperature of the converged previous step (history
 +  ! slot 1).  A predictor may already have overwritten the current field.
-+  FUNCTION TESMeanPreviousStep() RESULT(Tmean)
++  FUNCTION TESMeanPreviousStep(kc) RESULT(Tmean)
++    INTEGER, INTENT(IN) :: kc
 +    REAL(KIND=dp) :: Tmean
 +    INTEGER :: t, i, n, p, body, cnt
 +    LOGICAL :: gotBody
 +    REAL(KIND=dp) :: acc
 +    TYPE(Element_t), POINTER :: El
 +
-+    body = ListGetInteger(Solver % Values, 'TES Body ID', gotBody)
++    body = TESC(kc) % Body
 +    acc = 0.0_dp
 +    cnt = 0
 +    DO t = 1, Solver % NumberOfActiveElements
@@ -8716,19 +8815,22 @@ index bc3335c28..4fff848aa 100644
 +
 +  ! Joule power of the implicit-Euler circuit step at TES temperature T, with
 +  ! the coefficients of the latest TESInnerCircuitUpdate call (same law).
-+  FUNCTION TESCircuitPowerAt(T) RESULT(P)
++  FUNCTION TESCircuitPowerAt(kc, T) RESULT(P)
++    INTEGER, INTENT(IN) :: kc
 +    REAL(KIND=dp), INTENT(IN) :: T
-+    REAL(KIND=dp) :: P, Ac, Bc, Cc, Dc, Ic, Rc
-+    Ac = TESResR0 * (1.0_dp + TESResAlpha * (T - TESResT0) / TESResT0 - TESResBeta)
-+    Bc = TESResR0 * TESResBeta / TESResI0
-+    Cc = TESResRSh + Ac + TESResL / TESResDt
-+    Dc = MAX(Cc*Cc + 4.0_dp*Bc*(TESResIBias*TESResRSh + TESResL*TESResPrevI/TESResDt), 0.0_dp)
-+    Ic = MAX(MIN((SQRT(Dc) - Cc) / (2.0_dp*Bc), TESResIBias), 0.0_dp)
++    REAL(KIND=dp) :: P, Ac, Bc, Cc, Dc, Ic, Rc, Ld
++    Ld = 0.0_dp
++    IF (TESC(kc) % ResDt > 0.0_dp) Ld = TESC(kc) % ResL / TESC(kc) % ResDt
++    Ac = TESC(kc) % ResR0 * (1.0_dp + TESC(kc) % ResAlpha * (T - TESC(kc) % ResT0) / TESC(kc) % ResT0 - TESC(kc) % ResBeta)
++    Bc = TESC(kc) % ResR0 * TESC(kc) % ResBeta / TESC(kc) % ResI0
++    Cc = TESC(kc) % ResRSh + Ac + Ld
++    Dc = MAX(Cc*Cc + 4.0_dp*Bc*(TESC(kc) % ResIBias*TESC(kc) % ResRSh + Ld*TESC(kc) % ResPrevI), 0.0_dp)
++    Ic = MAX(MIN((SQRT(Dc) - Cc) / (2.0_dp*Bc), TESC(kc) % ResIBias), 0.0_dp)
 +    Rc = Ac + Bc*ABS(Ic)
-+    IF (Rc < TESResRMin) THEN
-+      Rc = TESResRMin
-+      Ic = (TESResIBias*TESResRSh + TESResL*TESResPrevI/TESResDt) / &
-+           (TESResRSh + Rc + TESResL/TESResDt)
++    IF (Rc < TESC(kc) % ResRMin) THEN
++      Rc = TESC(kc) % ResRMin
++      Ic = (TESC(kc) % ResIBias*TESC(kc) % ResRSh + Ld*TESC(kc) % ResPrevI) / &
++           (TESC(kc) % ResRSh + Rc + Ld)
 +    END IF
 +    P = Ic*Ic*Rc
 +  END FUNCTION TESCircuitPowerAt
@@ -8775,6 +8877,22 @@ index bc3335c28..4fff848aa 100644
 +      DEALLOCATE(vals)
 +    END DO
 +  END SUBROUTINE Phase24EvaluateSources
++
++  ! Nodal conductivity of every temperature-dependent material at its slots
++  ! (serial: ValueList/UDF calls are not thread-safe), one ListGetReal per
++  ! material with the current Temperature.
++  SUBROUTINE Phase24EvaluateDynK(kNodal)
++    REAL(KIND=dp), INTENT(OUT) :: kNodal(:)
++    INTEGER :: m, a, c
++    LOGICAL :: gotK
++    DO m = 1, Phase24DynKMatCount
++      a = Phase24DynKStart(m); c = Phase24DynKCount(m)
++      IF (c <= 0) CYCLE
++      kNodal(a:a+c-1) = ListGetReal(CurrentModel % Materials(Phase24DynKMats(m)) % Values, &
++           'Heat Conductivity', c, Phase24DynKNodes(a:a+c-1), gotK)
++      IF (.NOT. gotK) CALL Fatal('HeatSolve','Phase24 dynamic-k conductivity not found')
++    END DO
++  END SUBROUTINE Phase24EvaluateDynK
 +
 +  SUBROUTINE Phase24AssemblePrismElements(Active,RHSOnly)
 +    LOGICAL, INTENT(OUT) :: Active
@@ -8829,10 +8947,7 @@ index bc3335c28..4fff848aa 100644
 +    ! Current nodal conductivity of the dynamic-k wedges, evaluated serially
 +    ! (ValueList/UDF calls are not thread-safe) in one call for all nodes.
 +    IF (Phase24DynamicPrismCount > 0 .AND. .NOT. OnlyRHS) THEN
-+      Phase24DynKNodal(1:Phase24DynKNodeCount) = ListGetReal( &
-+           CurrentModel % Materials(Phase24DynKMaterial) % Values, 'Heat Conductivity', &
-+           Phase24DynKNodeCount, Phase24DynKNodes, foundDynK)
-+      IF (.NOT. foundDynK) CALL Fatal('HeatSolve','Phase24 dynamic-k conductivity not found')
++      CALL Phase24EvaluateDynK(Phase24DynKNodal)
 +    END IF
 +
 +    !$OMP PARALLEL DO DEFAULT(NONE) SCHEDULE(static) &
@@ -9050,9 +9165,71 @@ index bc3335c28..4fff848aa 100644
 +    CALL Info('HeatSolve',TRIM(Message),Level=4)
 +  END SUBROUTINE Phase24Report
 +
++  ! Update every inner TES circuit (one TES body each) before an assembly.
    SUBROUTINE TESInnerCircuitUpdate()
 -    LOGICAL :: Enabled, GotIt, FoundState, FoundSeries, FreezePower
 -    INTEGER :: CircuitBody, t, i, n, p, LocalCount, TimeStepNow, IoStatus, SeriesUnit
++    INTEGER :: kc
++    LOGICAL :: gotU
++    IF (.NOT. ListGetLogical(Solver % Values, 'TES Inner Circuit Update', gotU)) RETURN
++    CALL TESCircuitSetup()
++    DO kc = 1, TESNCirc
++      CALL TESInnerCircuitUpdateOne(kc)
++    END DO
++  END SUBROUTINE TESInnerCircuitUpdate
++
++  ! Circuit count, TES bodies and keyword style, once.
++  SUBROUTINE TESCircuitSetup()
++    INTEGER :: n
++    LOGICAL :: gotN, gotB
++    INTEGER, POINTER :: bodies(:)
++    IF (ALLOCATED(TESC)) RETURN
++    n = ListGetInteger(Model % Constants, 'TES Circuit Count', gotN)
++    IF (gotN) THEN
++      IF (n < 1) CALL Fatal('HeatSolve', 'TES Circuit Count must be positive')
++      TESNumbered = .TRUE.
++      bodies => ListGetIntegerArray(Solver % Values, 'TES Body IDs', gotB)
++      IF (.NOT. gotB) CALL Fatal('HeatSolve', 'TES Circuit Count requires TES Body IDs(n) in the solver')
++      IF (SIZE(bodies,1) /= n) CALL Fatal('HeatSolve', 'TES Body IDs must list TES Circuit Count bodies')
++      ALLOCATE(TESC(n))
++      TESC(:) % Body = bodies(1:n)
++    ELSE
++      n = 1
++      TESNumbered = .FALSE.
++      ALLOCATE(TESC(1))
++      TESC(1) % Body = ListGetInteger(Solver % Values, 'TES Body ID', gotB)
++      IF (.NOT. gotB) CALL Fatal('HeatSolver', 'TES Body ID is required for inner circuit update')
++    END IF
++    TESNCirc = n
++    WRITE(Message,'(A,I0,A,L1)') 'TES inner circuits: ', n, ', numbered keywords=', TESNumbered
++    CALL Info('HeatSolve', TRIM(Message), Level=3)
++  END SUBROUTINE TESCircuitSetup
++
++  ! Constants key of circuit kc: 'TES <suffix>' (single legacy circuit) or
++  ! 'TES <kc> <suffix>'.
++  FUNCTION TESKey(kc, suffix) RESULT(key)
++    INTEGER, INTENT(IN) :: kc
++    CHARACTER(LEN=*), INTENT(IN) :: suffix
++    CHARACTER(:), ALLOCATABLE :: key
++    IF (TESNumbered) THEN
++      key = 'TES '//I2S(kc)//' '//suffix
++    ELSE
++      key = 'TES '//suffix
++    END IF
++  END FUNCTION TESKey
++
++  FUNCTION TESTag(kc) RESULT(tag)
++    INTEGER, INTENT(IN) :: kc
++    CHARACTER(:), ALLOCATABLE :: tag
++    IF (TESNumbered) THEN
++      tag = 'TESInnerCircuit'//I2S(kc)
++    ELSE
++      tag = 'TESInnerCircuit'
++    END IF
++  END FUNCTION TESTag
++
++  SUBROUTINE TESInnerCircuitUpdateOne(kc)
++    INTEGER, INTENT(IN) :: kc
 +    LOGICAL :: Enabled, GotIt, FoundState, FoundSeries, FoundIterationSeries, FreezePower, StepCommit
 +    LOGICAL :: RestartAudit, RestartAuditFatal, StateExists, StateOpenSuccess, StateParseSuccess
 +    LOGICAL :: AdaptiveRejected, AdaptiveRestoreTrialState, BDF2Predictor
@@ -9068,43 +9245,69 @@ index bc3335c28..4fff848aa 100644
 +    REAL(KIND=dp) :: A, B, Cc, Disc, ResistanceC, RawCurrent, RawPower, Residual, Denominator
      REAL(KIND=dp) :: StateTemperature, StateCurrent, StateResistance, StatePower, StatePrevious, StateLoaded
 -    CHARACTER(LEN=MAX_NAME_LEN) :: StateFile, SeriesFile
+-    REAL(KIND=dp), SAVE :: CircuitPower = 0.0_dp, CircuitCurrent = 0.0_dp
+-    REAL(KIND=dp), SAVE :: PreviousCircuitCurrent = 0.0_dp
+-    INTEGER, SAVE :: LastCircuitStep = -HUGE(1)
+-    LOGICAL, SAVE :: CircuitInitialized = .FALSE., CircuitPowerInitialized = .FALSE.
+-    LOGICAL, SAVE :: SeriesStarted = .FALSE.
+-    INTEGER, SAVE :: LastSeriesStep = -HUGE(1)
+-
 +    REAL(KIND=dp) :: MidTemperature, ElectricalTau, CommitCurrent, CommitResistance, CommitPower, StepDt
 +    REAL(KIND=dp) :: PredictionRatio, PredictedPower, PreviousStepCurrent, SaveUpdateT
 +    LOGICAL :: UseNewton
 +    INTEGER :: sgn
 +    REAL(KIND=dp) :: Pk, Tk, Fk, dPdT, Snew, Pnew, hT, Tpm, Apm, Cpm, Dpm, Ipm, Rpm, Ppm(2)
-+    REAL(KIND=dp) :: NewtonSecantMinRel
-+    REAL(KIND=dp), SAVE :: NewtonPrevP = 0.0_dp, NewtonPrevT = 0.0_dp
-+    REAL(KIND=dp), SAVE :: NewtonS = -1.0_dp, NewtonSdt = -1.0_dp
-+    LOGICAL, SAVE :: NewtonHasPrev = .FALSE.
++    REAL(KIND=dp) :: NewtonSecantMinRel, Ldt
 +    ! Converged powers of the last two steps (for a first-solve predictor).
-+    REAL(KIND=dp), SAVE :: StepP1 = -1.0_dp, StepP2 = -1.0_dp, StepDt1 = -1.0_dp, StepDt2 = -1.0_dp
-+    REAL(KIND=dp), SAVE :: NewtonPrevStepDt = -1.0_dp
 +    CHARACTER(LEN=MAX_NAME_LEN) :: StateFile, SeriesFile, IterationSeriesFile, RestartAuditPrefix
-     REAL(KIND=dp), SAVE :: CircuitPower = 0.0_dp, CircuitCurrent = 0.0_dp
-+    REAL(KIND=dp), SAVE :: CircuitResistance = 0.0_dp, CircuitAverageTemperature = 0.0_dp
-+    REAL(KIND=dp), SAVE :: CircuitSweepTemperature = 0.0_dp
-     REAL(KIND=dp), SAVE :: PreviousCircuitCurrent = 0.0_dp
--    INTEGER, SAVE :: LastCircuitStep = -HUGE(1)
-+    REAL(KIND=dp), SAVE :: PreviousCircuitPower = -1.0_dp
-+    REAL(KIND=dp), SAVE :: CircuitPrevResidual = 0.0_dp, CircuitOmega = 0.5_dp, CircuitOmegaCap = 0.5_dp
-+    REAL(KIND=dp), SAVE :: LastCircuitDt = -1.0_dp
-+    INTEGER, SAVE :: LastCircuitStep = -HUGE(1), CircuitIterInStep = 0, CircuitCallsInStep = 0
-     LOGICAL, SAVE :: CircuitInitialized = .FALSE., CircuitPowerInitialized = .FALSE.
-     LOGICAL, SAVE :: SeriesStarted = .FALSE.
--    INTEGER, SAVE :: LastSeriesStep = -HUGE(1)
-+    LOGICAL, SAVE :: IterationSeriesStarted = .FALSE.
-+    REAL(KIND=dp), SAVE :: SavedCircuitPower = 0.0_dp, SavedCircuitCurrent = 0.0_dp
-+    REAL(KIND=dp), SAVE :: SavedCircuitResistance = 0.0_dp, SavedCircuitAverageTemperature = 0.0_dp
-+    REAL(KIND=dp), SAVE :: SavedCircuitSweepTemperature = 0.0_dp, SavedPreviousCircuitCurrent = 0.0_dp
-+    REAL(KIND=dp), SAVE :: SavedPreviousCircuitPower = -1.0_dp
-+    REAL(KIND=dp), SAVE :: SavedCircuitPrevResidual = 0.0_dp, SavedCircuitOmega = 0.5_dp
-+    REAL(KIND=dp), SAVE :: SavedCircuitOmegaCap = 0.5_dp, SavedLastCircuitDt = -1.0_dp
-+    INTEGER, SAVE :: SavedLastCircuitStep = -HUGE(1), SavedCircuitIterInStep = 0
-+    INTEGER, SAVE :: SavedCircuitCallsInStep = 0, SavedTrialId = -1
-+    LOGICAL, SAVE :: SavedCircuitInitialized = .FALSE., SavedCircuitPowerInitialized = .FALSE.
-+    LOGICAL, SAVE :: SavedAdaptiveState = .FALSE.
- 
++
++    ASSOCIATE ( &
++      NewtonPrevP => TESC(kc) % NewtonPrevP,&
++      NewtonPrevT => TESC(kc) % NewtonPrevT,&
++      NewtonS => TESC(kc) % NewtonS,&
++      NewtonSdt => TESC(kc) % NewtonSdt,&
++      NewtonHasPrev => TESC(kc) % NewtonHasPrev,&
++      StepP1 => TESC(kc) % StepP1,&
++      StepP2 => TESC(kc) % StepP2,&
++      StepDt1 => TESC(kc) % StepDt1,&
++      StepDt2 => TESC(kc) % StepDt2,&
++      NewtonPrevStepDt => TESC(kc) % NewtonPrevStepDt,&
++      CircuitPower => TESC(kc) % CircuitPower,&
++      CircuitCurrent => TESC(kc) % CircuitCurrent,&
++      CircuitResistance => TESC(kc) % CircuitResistance,&
++      CircuitAverageTemperature => TESC(kc) % CircuitAverageTemperature,&
++      CircuitSweepTemperature => TESC(kc) % CircuitSweepTemperature,&
++      PreviousCircuitCurrent => TESC(kc) % PreviousCircuitCurrent,&
++      PreviousCircuitPower => TESC(kc) % PreviousCircuitPower,&
++      CircuitPrevResidual => TESC(kc) % CircuitPrevResidual,&
++      CircuitOmega => TESC(kc) % CircuitOmega,&
++      CircuitOmegaCap => TESC(kc) % CircuitOmegaCap,&
++      LastCircuitDt => TESC(kc) % LastCircuitDt,&
++      LastCircuitStep => TESC(kc) % LastCircuitStep,&
++      CircuitIterInStep => TESC(kc) % CircuitIterInStep,&
++      CircuitCallsInStep => TESC(kc) % CircuitCallsInStep,&
++      CircuitInitialized => TESC(kc) % CircuitInitialized,&
++      CircuitPowerInitialized => TESC(kc) % CircuitPowerInitialized,&
++      SeriesStarted => TESC(kc) % SeriesStarted,&
++      IterationSeriesStarted => TESC(kc) % IterationSeriesStarted,&
++      SavedCircuitPower => TESC(kc) % SavedCircuitPower,&
++      SavedCircuitCurrent => TESC(kc) % SavedCircuitCurrent,&
++      SavedCircuitResistance => TESC(kc) % SavedCircuitResistance,&
++      SavedCircuitAverageTemperature => TESC(kc) % SavedCircuitAverageTemperature,&
++      SavedCircuitSweepTemperature => TESC(kc) % SavedCircuitSweepTemperature,&
++      SavedPreviousCircuitCurrent => TESC(kc) % SavedPreviousCircuitCurrent,&
++      SavedPreviousCircuitPower => TESC(kc) % SavedPreviousCircuitPower,&
++      SavedCircuitPrevResidual => TESC(kc) % SavedCircuitPrevResidual,&
++      SavedCircuitOmega => TESC(kc) % SavedCircuitOmega,&
++      SavedCircuitOmegaCap => TESC(kc) % SavedCircuitOmegaCap,&
++      SavedLastCircuitDt => TESC(kc) % SavedLastCircuitDt,&
++      SavedLastCircuitStep => TESC(kc) % SavedLastCircuitStep,&
++      SavedCircuitIterInStep => TESC(kc) % SavedCircuitIterInStep,&
++      SavedCircuitCallsInStep => TESC(kc) % SavedCircuitCallsInStep,&
++      SavedTrialId => TESC(kc) % SavedTrialId,&
++      SavedCircuitInitialized => TESC(kc) % SavedCircuitInitialized,&
++      SavedCircuitPowerInitialized => TESC(kc) % SavedCircuitPowerInitialized,&
++      SavedAdaptiveState => TESC(kc) % SavedAdaptiveState )
      Enabled = ListGetLogical(Solver % Values, 'TES Inner Circuit Update', GotIt)
      IF (.NOT. GotIt .OR. .NOT. Enabled) RETURN
 +    BDF2Predictor = ListGetLogical(Solver % Values, 'Phase24 BDF2 Predictor Active', GotIt)
@@ -9124,16 +9327,21 @@ index bc3335c28..4fff848aa 100644
 +    TrialId = ListGetInteger(Solver % Values, 'Adaptive Trial ID', GotIt)
 +    IF (.NOT. GotIt) TrialId = -1
      FreezePower = ListGetLogical(Solver % Values, 'TES Inner Circuit Freeze Power', GotIt)
-     StateFile = ListGetString(Model % Constants, 'TES State File', FoundState)
+-    StateFile = ListGetString(Model % Constants, 'TES State File', FoundState)
+-    SeriesFile = ListGetString(Model % Constants, 'TES Series File', FoundSeries)
+-    CircuitBody = ListGetInteger(Solver % Values, 'TES Body ID', GotIt)
+-    IF (.NOT. GotIt) CALL Fatal('HeatSolver', 'TES Body ID is required for inner circuit update')
++    StateFile = ListGetString(Model % Constants, TESKey(kc,'State File'), FoundState)
 +    INQUIRE(FILE=TRIM(StateFile), EXIST=StateExists)
 +    StateOpenSuccess = .FALSE.
 +    StateParseSuccess = .FALSE.
-     SeriesFile = ListGetString(Model % Constants, 'TES Series File', FoundSeries)
-+    IterationSeriesFile = ListGetString(Model % Constants, 'TES Iteration Series File', FoundIterationSeries)
-     CircuitBody = ListGetInteger(Solver % Values, 'TES Body ID', GotIt)
-     IF (.NOT. GotIt) CALL Fatal('HeatSolver', 'TES Body ID is required for inner circuit update')
++    SeriesFile = ListGetString(Model % Constants, TESKey(kc,'Series File'), FoundSeries)
++    IterationSeriesFile = ListGetString(Model % Constants, TESKey(kc,'Iteration Series File'), FoundIterationSeries)
++    CircuitBody = TESC(kc) % Body
      LocalSum = 0.0_dp
-@@ -1431,6 +3638,56 @@ CONTAINS
+     LocalCount = 0
+     DO t = 1, Solver % NumberOfActiveElements
+@@ -1431,6 +3835,56 @@ CONTAINS
      GlobalSum = ParallelReduction(LocalSum)
      GlobalCount = ParallelReduction(REAL(LocalCount, dp))
      IF (GlobalCount <= 0.0_dp) CALL Fatal('HeatSolver', 'No TES elements found for inner circuit update')
@@ -9190,10 +9398,19 @@ index bc3335c28..4fff848aa 100644
      AverageT = GlobalSum / GlobalCount
      ! Collect the absorber average separately from active elements.  VTU
      ! partitions contain halo values, so a raw pointwise min/max is not a
-@@ -1456,6 +3713,32 @@ CONTAINS
+@@ -1456,15 +3910,41 @@ CONTAINS
      ELSE
        AbsorberAverageT = 0.0_dp
      END IF
+-    IBias = GetConstReal(Model % Constants, 'TES Bias Current', GotIt)
+-    RSh = GetConstReal(Model % Constants, 'TES Shunt Resistance', GotIt)
+-    R0c = GetConstReal(Model % Constants, 'TES R0', GotIt)
+-    RMin = GetConstReal(Model % Constants, 'TES Rmin', GotIt)
+-    AlphaC = GetConstReal(Model % Constants, 'TES Alpha', GotIt)
+-    BetaC = GetConstReal(Model % Constants, 'TES Beta', GotIt)
+-    I0c = GetConstReal(Model % Constants, 'TES I0', GotIt)
+-    T0c = GetConstReal(Model % Constants, 'TES T0', GotIt)
+-    Lc = GetConstReal(Model % Constants, 'TES Inductance', GotIt)
 +    ! Record the intermediate Stycast temperature as a cheap thermal-path
 +    ! diagnostic.  The existing TESInnerCircuit log already reports the TES
 +    ! average and the absorber average; adding Stycast lets short-window
@@ -9220,10 +9437,19 @@ index bc3335c28..4fff848aa 100644
 +    ELSE
 +      StycastAverageT = 0.0_dp
 +    END IF
-     IBias = GetConstReal(Model % Constants, 'TES Bias Current', GotIt)
-     RSh = GetConstReal(Model % Constants, 'TES Shunt Resistance', GotIt)
-     R0c = GetConstReal(Model % Constants, 'TES R0', GotIt)
-@@ -1474,12 +3757,21 @@ CONTAINS
++    IBias = GetConstReal(Model % Constants, TESKey(kc,'Bias Current'), GotIt)
++    RSh = GetConstReal(Model % Constants, TESKey(kc,'Shunt Resistance'), GotIt)
++    R0c = GetConstReal(Model % Constants, TESKey(kc,'R0'), GotIt)
++    RMin = GetConstReal(Model % Constants, TESKey(kc,'Rmin'), GotIt)
++    AlphaC = GetConstReal(Model % Constants, TESKey(kc,'Alpha'), GotIt)
++    BetaC = GetConstReal(Model % Constants, TESKey(kc,'Beta'), GotIt)
++    I0c = GetConstReal(Model % Constants, TESKey(kc,'I0'), GotIt)
++    T0c = GetConstReal(Model % Constants, TESKey(kc,'T0'), GotIt)
++    Lc = GetConstReal(Model % Constants, TESKey(kc,'Inductance'), GotIt)
+     IF (.NOT. CircuitInitialized) THEN
+       ! Restore on root and distribute through collective reductions.  Every
+       ! rank executes the same reductions, including when no state file is set.
+@@ -1474,12 +3954,21 @@ CONTAINS
        StatePower = 0.0_dp
        StatePrevious = 0.0_dp
        StateLoaded = 0.0_dp
@@ -9246,7 +9472,7 @@ index bc3335c28..4fff848aa 100644
          END IF
        END IF
        StateLoaded = ParallelReduction(StateLoaded)
-@@ -1488,19 +3780,233 @@ CONTAINS
+@@ -1488,19 +3977,233 @@ CONTAINS
        StateResistance = ParallelReduction(StateResistance)
        StatePower = ParallelReduction(StatePower)
        StatePrevious = ParallelReduction(StatePrevious)
@@ -9301,7 +9527,7 @@ index bc3335c28..4fff848aa 100644
 +      ! The serial UDF only initializes on its first assembly call.  In
 +      ! particular, do not turn that initialization into a first Aitken
 +      ! update, because its temperature is not a completed prior sweep.
-+      CALL ListAddConstReal(Model % Constants, 'TES Parallel Power', CircuitPower)
++      CALL ListAddConstReal(Model % Constants, TESKey(kc,'Parallel Power'), CircuitPower)
 +      IF (RestartAudit .AND. ParEnv % MyPE == 0) THEN
 +        CALL Phase24WriteRestartAudit(TRIM(RestartAuditPrefix), 'circuit_init_after', StateFile, &
 +             StateExists, StateOpenSuccess, StateParseSuccess, StateLoaded > 0.5_dp, &
@@ -9360,7 +9586,7 @@ index bc3335c28..4fff848aa 100644
 +      ! which would otherwise leak into the emitted current and into the
 +      ! inductor history (PreviousCircuitCurrent).
 +      SaveUpdateT = UpdateTemperature
-+      IF (ASSOCIATED(Solver % Variable % PrevValues)) UpdateTemperature = TESMeanPreviousStep()
++      IF (ASSOCIATED(Solver % Variable % PrevValues)) UpdateTemperature = TESMeanPreviousStep(kc)
 +      CommitCurrent = CircuitCurrent
 +      CommitResistance = CircuitResistance
 +      CommitPower = CircuitPower
@@ -9482,7 +9708,7 @@ index bc3335c28..4fff848aa 100644
      IF (TransientSimulation .AND. CircuitInitialized .AND. dt > 0.0_dp) THEN
        Cc = RSh + A + Lc / dt
        Disc = MAX(Cc*Cc + 4.0_dp*B*(IBias*RSh + Lc*PreviousCircuitCurrent/dt), 0.0_dp)
-@@ -1510,55 +4016,203 @@ CONTAINS
+@@ -1510,54 +4213,208 @@ CONTAINS
        RawCurrent = (SQRT(Disc) - (RSh + A)) / (2.0_dp*B)
      END IF
      RawCurrent = MAX(MIN(RawCurrent, IBias), 0.0_dp)
@@ -9509,8 +9735,11 @@ index bc3335c28..4fff848aa 100644
 +    ! This is the same nonlinear solve procedure as the validated serial UDF;
 +    ! it is not a physical time relaxation or an added circuit parameter.
 +    UseNewton = ListGetLogical(Solver % Values, 'TES Inner Circuit Newton', GotIt)
-+    IF (UseNewton .AND. TransientSimulation .AND. CircuitPowerInitialized .AND. &
-+         .NOT. FreezePower .AND. dt > 0.0_dp) THEN
++    ! Steady solves use the same Newton update without the inductor (L/dt).
++    Ldt = 0.0_dp
++    IF (TransientSimulation .AND. dt > 0.0_dp) Ldt = Lc / dt
++    IF (UseNewton .AND. CircuitPowerInitialized .AND. .NOT. FreezePower .AND. &
++         (.NOT. TransientSimulation .OR. dt > 0.0_dp)) THEN
 +      ! Opt-in scalar Newton on F(P) = Pcircuit(T_TES(P)) - P.  Within a
 +      ! timestep the heat problem is linear in the TES power, so dT/dP is the
 +      ! secant of the last two (P,T) pairs of this step (kept across steps of
@@ -9550,13 +9779,13 @@ index bc3335c28..4fff848aa 100644
 +        DO sgn = 1, 2
 +          Tpm = Tk + MERGE(hT, -hT, sgn == 1)
 +          Apm = R0c * (1.0_dp + AlphaC * (Tpm - T0c) / T0c - BetaC)
-+          Cpm = RSh + Apm + Lc / dt
-+          Dpm = MAX(Cpm*Cpm + 4.0_dp*B*(IBias*RSh + Lc*PreviousCircuitCurrent/dt), 0.0_dp)
++          Cpm = RSh + Apm + Ldt
++          Dpm = MAX(Cpm*Cpm + 4.0_dp*B*(IBias*RSh + Ldt*PreviousCircuitCurrent), 0.0_dp)
 +          Ipm = MAX(MIN((SQRT(Dpm) - Cpm) / (2.0_dp*B), IBias), 0.0_dp)
 +          Rpm = Apm + B*ABS(Ipm)
 +          IF (Rpm < RMin) THEN
 +            Rpm = RMin
-+            Ipm = (IBias*RSh + Lc*PreviousCircuitCurrent/dt) / (RSh + Rpm + Lc/dt)
++            Ipm = (IBias*RSh + Ldt*PreviousCircuitCurrent) / (RSh + Rpm + Ldt)
 +          END IF
 +          Ppm(sgn) = Ipm*Ipm*Rpm
 +        END DO
@@ -9605,10 +9834,12 @@ index bc3335c28..4fff848aa 100644
 +      END IF
      END IF
      CircuitPowerInitialized = .TRUE.
-+    TESResValid = TransientSimulation .AND. .NOT. FreezePower .AND. dt > 0.0_dp
-+    TESResIBias = IBias; TESResRSh = RSh; TESResR0 = R0c; TESResRMin = RMin
-+    TESResAlpha = AlphaC; TESResBeta = BetaC; TESResI0 = I0c; TESResT0 = T0c
-+    TESResL = Lc; TESResPrevI = PreviousCircuitCurrent; TESResP = CircuitPower; TESResDt = dt
++    TESC(kc) % ResValid = .NOT. FreezePower .AND. (.NOT. TransientSimulation .OR. dt > 0.0_dp)
++    TESC(kc) % ResIBias = IBias; TESC(kc) % ResRSh = RSh; TESC(kc) % ResR0 = R0c; TESC(kc) % ResRMin = RMin
++    TESC(kc) % ResAlpha = AlphaC; TESC(kc) % ResBeta = BetaC; TESC(kc) % ResI0 = I0c; TESC(kc) % ResT0 = T0c
++    TESC(kc) % ResL = Lc; TESC(kc) % ResPrevI = PreviousCircuitCurrent; TESC(kc) % ResP = CircuitPower
++    TESC(kc) % ResDt = 0.0_dp
++    IF (TransientSimulation) TESC(kc) % ResDt = dt
      CircuitCurrent = RawCurrent
 -    LastCircuitStep = TimeStepNow
 +    CircuitResistance = ResistanceC
@@ -9626,7 +9857,7 @@ index bc3335c28..4fff848aa 100644
          CLOSE(98)
        END IF
      END IF
-     CALL ListAddConstReal(Model % Constants, 'TES Parallel Power', CircuitPower)
+-    CALL ListAddConstReal(Model % Constants, 'TES Parallel Power', CircuitPower)
 -    IF (TransientSimulation .AND. FoundSeries .AND. TimeStepNow /= LastSeriesStep) THEN
 -      LastSeriesStep = TimeStepNow
 -      IF (ParEnv % MyPE == 0) THEN
@@ -9640,6 +9871,7 @@ index bc3335c28..4fff848aa 100644
 -        ELSE
 -          OPEN(UNIT=SeriesUnit, FILE=TRIM(SeriesFile), STATUS='OLD', POSITION='APPEND', ACTION='WRITE', IOSTAT=IoStatus)
 -        END IF
++    CALL ListAddConstReal(Model % Constants, TESKey(kc,'Parallel Power'), CircuitPower)
 +    IF (FoundIterationSeries .AND. ParEnv % MyPE == 0) THEN
 +      IterationUnit = 96
 +      IF (.NOT. IterationSeriesStarted) THEN
@@ -9668,13 +9900,16 @@ index bc3335c28..4fff848aa 100644
      END IF
      IF (ParEnv % MyPE == 0) WRITE(*,'(A,ES14.6,A,ES14.6,A,ES14.6)') &
 -      'TESInnerCircuit: T=', AverageT, ' I=', CircuitCurrent, ' P=', CircuitPower
-+      'TESInnerCircuit: T=', UpdateTemperature, ' I=', CircuitCurrent, ' P=', CircuitPower
++      TESTag(kc)//': T=', UpdateTemperature, ' I=', CircuitCurrent, ' P=', CircuitPower
      IF (ParEnv % MyPE == 0 .AND. AbsGlobalCount > 0.0_dp) WRITE(*,'(A,ES14.6)') &
-       'TESInnerCircuit: AbsorberT=', AbsorberAverageT
+-      'TESInnerCircuit: AbsorberT=', AbsorberAverageT
+-  END SUBROUTINE TESInnerCircuitUpdate
++      TESTag(kc)//': AbsorberT=', AbsorberAverageT
 +    IF (ParEnv % MyPE == 0 .AND. StyGlobalCount > 0.0_dp) WRITE(*,'(A,ES14.6)') &
-+      'TESInnerCircuit: StycastT=', StycastAverageT
-   END SUBROUTINE TESInnerCircuitUpdate
- 
++      TESTag(kc)//': StycastT=', StycastAverageT
++    END ASSOCIATE
++  END SUBROUTINE TESInnerCircuitUpdateOne
++
 +  SUBROUTINE Phase24WriteRestartAudit(Prefix, Stage, StateFile, StateExists, StateOpenSuccess, &
 +       StateParseSuccess, StateLoaded, Temperature, Current, Resistance, Power, PreviousCurrent, &
 +       AverageTemperature, SweepTemperature, Omega, OmegaCap, PrevResidual, LastDt, LastStep, &
@@ -9708,11 +9943,10 @@ index bc3335c28..4fff848aa 100644
 +      LastDt,',',LastStep,',',IterInStep,',',CallsInStep,',',Initialized,',',PowerInitialized,',',TRIM(Source)
 +    CLOSE(Unit)
 +  END SUBROUTINE Phase24WriteRestartAudit
-+
+ 
  
  !------------------------------------------------------------------------------
- ! To save some time tabulate data needed for the diffuse gray radiation. 
-@@ -1797,7 +4451,8 @@ CONTAINS
+@@ -1797,7 +4654,8 @@ CONTAINS
        IF ( HeatGapBC ) &
          CALL AddHeatGap( Solver, Element, STIFF, TempPerm)
  

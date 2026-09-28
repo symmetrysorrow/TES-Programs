@@ -310,6 +310,18 @@
           "ElmerGrid 14 2 gmsh/project_hybrid_fullconf_h8.msh -merge 1e-10 -out work/meshes/mesh_hybrid_fullconf_h8"
         ]
       }
+    },
+    "mesh_hybrid_fullconf_h8s16": {
+      "geometry": "single_pixel",
+      "dir": "mesh_hybrid_fullconf_h8s16",
+      "notes": "As mesh_hybrid_fullconf_h8 but 16 Stycast layers (speed test).",
+      "recipe": {
+        "generator": "generate_hybrid_prism_geometry.py",
+        "commands": [
+          "python generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_fullconf_h8s16.msh --stack-local-size 8e-6 --absorber-local-size 35e-6 --absorber-local-radius 50e-6 --disable-mesh-size-extend-from-boundary --stycast-layers 16 --si-1-layers 4 --sio2-1-layers 2 --sinx-layers 2 --conformal-tes-stack --conformal-abs",
+          "ElmerGrid 14 2 gmsh/project_hybrid_fullconf_h8s16.msh -merge 1e-10 -out work/meshes/mesh_hybrid_fullconf_h8s16"
+        ]
+      }
     }
   },
   "parameter_expressions": {
@@ -1166,12 +1178,12 @@
     "fragment_mortar_interfaces": true
   },
   "cases": {
-    "case_phase24_g45_m6a_75ms_bdf2_hypre_gpu": {
+    "case_phase24_g45_nl6_75ms_bdf2_hypre_gpu": {
       "template": "pulse",
       "mesh": "mesh_hybrid_fullconf_h8",
       "restart_from": null,
       "restart_time": 0.02,
-      "series_file": "case_phase24_g45_m6a_75ms_bdf2_hypre_gpu_series.csv",
+      "series_file": "case_phase24_g45_nl6_75ms_bdf2_hypre_gpu_series.csv",
       "initial_temperature": "T_0",
       "lumped_mass": true,
       "vtu": false,
@@ -1320,14 +1332,16 @@
       "solver_comment": "Phase24 Gate 4: no-mortar transient; backend=hypre; window=75ms_bdf2",
       "solver": {
         "nonlinear_max_iterations": 120,
-        "nonlinear_convergence_tolerance": 1e-08,
+        "nonlinear_convergence_tolerance": 1e-06,
         "nonlinear_relaxation_factor": 1.0,
         "steady_state_convergence_tolerance": 1e-09,
         "linear_system": "iterative_hypre_pcg_boomeramg",
         "linear_system_max_iterations": 4000,
         "linear_system_convergence_tolerance": 1e-12,
         "hypre_gmres_dimension": 100,
-        "boomer_amg_strong_threshold": 0.25
+        "boomer_amg_strong_threshold": 0.25,
+        "boomer_amg_relax_type": 8,
+        "boomer_amg_coarsen_type": 8
       },
       "comparison_time_grid": {
         "mode": "Phase24 no-mortar Gate 4",
@@ -1337,14 +1351,14 @@
         "mortar": false
       },
       "heat_source": "circuit_inner",
-      "iteration_series_file": "case_phase24_g45_m6a_75ms_bdf2_hypre_gpu_iterations.csv",
+      "iteration_series_file": "case_phase24_g45_nl6_75ms_bdf2_hypre_gpu_iterations.csv",
       "output_result": false,
       "apply_mortar_bcs": false,
       "restart_file_base": "case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2",
       "restart_file_path": "../work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result",
       "preexisting_restart": true,
-      "state_file": "work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g45_m6a_75ms_bdf2_hypre_gpu.state",
-      "output_file_path": "../work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g45_m6a_75ms_bdf2_hypre_gpu.result",
+      "state_file": "work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g45_nl6_75ms_bdf2_hypre_gpu.state",
+      "output_file_path": "../work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g45_nl6_75ms_bdf2_hypre_gpu.result",
       "inner_circuit_step_commit": true,
       "phase24_smoke": {
         "purpose": "transient parity and stability",
@@ -1359,8 +1373,9 @@
       "phase24_vector_assembly": true,
       "extra_solver_keywords": [
         "TES Inner Circuit Newton = Logical True",
-        "TES Inner Circuit Temperature Tolerance = Real 1e-8",
-        "Phase24 BDF1 Step Start Times(2) = Real 0.02002 0.020020001"
+        "TES Inner Circuit Temperature Tolerance = Real 1e-7",
+        "Phase24 BDF1 Step Start Times(2) = Real 0.02002 0.020020001",
+        "Phase24 Prism Lumped Preconditioner = Logical True"
       ]
     }
   }

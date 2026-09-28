@@ -202,6 +202,25 @@ prd では 225 ステップ中 213 が 2 反復だった。1 回目で止めて�
 
 75 ms（積極的粗化 1 段）：364 s → **320 s**、m6b との差 0.0036 → 0.0065 µA（COMSOL 差 最大 0.091 / RMSE 0.030 µA）。
 
+### 複数 TES（PoST）への一般化（2026-09-28）
+
+TES を N 個（最大 8、UDF の入口数で制限）扱えるようにした。単ピクセルは従来のキーワード・SIF・メッシュのまま（SIF・h8 メッシュともバイト一致、1 ms 区間の結果差 0.0009 µA は 6 ランクの実行ごとの揺らぎ 0.0017 µA 以下）。
+
+- HeatSolve：回路状態を `TESCircuitState_t` の配列に移し、`TESInnerCircuitUpdateOne(k)` を全回路に適用。キーワードは単一回路なら従来どおり、N 回路なら Constants `TES Circuit Count = N` と `TES <k> Bias Current` など、ソルバー `TES Body IDs(N)`。収束判定（TES 温度誤差・電力残差・TES 温度変化）と刻み制御は全回路の最悪値。
+- `tes_parallel_circuit.f90`：`TESParallelHeatSource1..8`（`TES <k> Parallel Power` / `TES <k> Volume` を読む）。
+- `build_cases.py`：TES 本体が複数の `circuit_inner` で回路番号付き定数・Body Force・`TES Body IDs(N)` を出力。本体の接尾辞 `_T<k>` を認識（`SiO2_2` など元々 `_数字` で終わる名前と衝突しないため）。ハイブリッドメッシュの `bath` は全スタック共通。
+- `generate_hybrid_prism_geometry.py`：`--tes-x-positions`（各 TES スタックは独立チップ Si_dx×Si_dy、間隔は Si_dx 以上）、`--absorber-length`、`--absorber-refine-x`（パルス位置などの吸収体細分化）。スタック生成を `_build_stack` に切り出し、吸収体に N 個の Stycast 円盤を刻んで各々周期写像で節点を一致。
+- `run.py` / `run_phase24_gate4_5_nomortar.py`：回路ごとの状態 `<case>_<k>.state` のコピーと検査、系列 `<case>_<k>_series.csv`・反復ログの回収と最終行の書き出し。
+
+2 TES 試験（`mesh_hybrid_post2_h8`：h8 スタック 2 本、x = ±2 mm、吸収体 5 mm、65 万節点、パルス x = −1 mm）：
+
+| 線形許容値 | 実時間 | 線形解き | 1 反復のステップ | TES1 低下 / ピーク時刻 | TES2 低下 / ピーク時刻 |
+|---|---|---|---|---|---|
+| 3e-11 | 2071 s | 1529 | 112 / 225 | 1.6333 µA / 239 µs | 1.5753 µA / 577 µs |
+| **1e-11** | **538 s** | 293 | 160 / 225 | 1.6336 µA / 239 µs | 1.5740 µA / 577 µs |
+
+3e-11 では系が大きく ‖b‖ も大きいため、線形解きの誤差が TES 温度で 1e-7 K 前後の揺らぎとなり、非線形の判定（1e-7 K）を満たせず 2 状態を往復するステップ（最大 120 反復）が出た。1e-11 で解消。複数 TES では線形許容値 1e-11 を使う（両者の系列差は最大 0.007 µA）。定常（6 ランク）は 127 s、TES1 138.594 / TES2 138.583 µA。
+
 ### GPU 切り出し実験（`gpu_probe/`）
 
 h8 の線形系を HIP 版 HYPRE と rocALUTION で解いた。WSL では CPU 6 ランク（0.56 s/解き）より遅い（HYPRE GPU 0.78 s、rocALUTION RS-AMG 0.95 s）。原因は同期遅延（起動＋同期 313 µs、読み戻し 210 µs）で、PCG + AMG は 1 反復に数十回同期する。GPU 路線は打ち切り、CPU で続ける。詳細は `gpu_probe/README.md`。

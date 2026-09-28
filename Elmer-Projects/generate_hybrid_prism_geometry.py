@@ -90,6 +90,25 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--conformal-abs", action="store_true",
         help="with --conformal-tes-stack, also make Stycast/abs node-conforming (no mortar at all)",
     )
+    parser.add_argument(
+        "--tes-x-positions", type=str, default=None, metavar="X1,X2,...",
+        help=(
+            "multi-TES (PoST) layout: x offsets in metres of the TES stacks from the "
+            "pixel centre; each stack is a full chip (Si_dx x Si_dy) and bodies get a "
+            "_T<k> suffix.  Omit for the single-pixel geometry (unchanged)."
+        ),
+    )
+    parser.add_argument(
+        "--absorber-length", type=float, default=None, metavar="METERS",
+        help="multi-TES absorber length along x (default: TES span + abs_dx)",
+    )
+    parser.add_argument(
+        "--absorber-refine-x", type=str, default=None, metavar="X1,X2,...",
+        help=(
+            "extra absorber refinement balls (same size/radius as --absorber-local-*) at "
+            "these x offsets, e.g. the pulse positions of a PoST scan"
+        ),
+    )
     for name, help_name in (
         ("sio2-2", "lower SiO2"),
         ("si-2", "lower Si"),
@@ -121,10 +140,28 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--stycast-diameter must be positive")
     if args.conformal_abs and not args.conformal_tes_stack:
         parser.error("--conformal-abs requires --conformal-tes-stack")
+    args.tes_x = _parse_positions(parser, args.tes_x_positions, "--tes-x-positions")
+    args.refine_x = _parse_positions(parser, args.absorber_refine_x, "--absorber-refine-x") or []
+    if args.tes_x is not None and not args.conformal_tes_stack:
+        parser.error("--tes-x-positions requires --conformal-tes-stack")
+    if args.absorber_length is not None and args.absorber_length <= 0.0:
+        parser.error("--absorber-length must be positive")
     for name in ("stycast", "sio2_2", "si_2", "sio2_1", "si_1", "sinx", "tes"):
         if getattr(args, f"{name}_layers") < 1:
             parser.error(f"--{name.replace('_', '-')}-layers must be at least 1")
     return args
+
+
+def _parse_positions(parser, text: str | None, flag: str) -> list[float] | None:
+    if text is None:
+        return None
+    try:
+        values = [float(v) for v in text.split(",") if v.strip()]
+    except ValueError:
+        parser.error(f"{flag} must be a comma-separated list of numbers")
+    if not values:
+        parser.error(f"{flag} is empty")
+    return values
 
 
 def stack_local_field_profile(
@@ -180,11 +217,19 @@ def absorber_local_field_profile(
 
 
 def configure_local_fields(
-    stack_profile: dict[str, float] | None,
-    absorber_profile: dict[str, float] | None,
+    stack_profile: dict[str, float] | list | None,
+    absorber_profile: dict[str, float] | list | None,
 ) -> None:
-    """Install optional Box/Ball fields, combining active fields with Min."""
-    active_profiles = (("Box", stack_profile), ("Ball", absorber_profile))
+    """Install optional Box/Ball fields, combining active fields with Min.
+
+    Each argument is one profile or a list of them (one per TES stack /
+    absorber refinement point); Box fields come first, as before."""
+    def as_list(profile):
+        if profile is None:
+            return []
+        return list(profile) if isinstance(profile, list) else [profile]
+    active_profiles = [("Box", q) for q in as_list(stack_profile)] + \
+        [("Ball", q) for q in as_list(absorber_profile)]
     field_ids: list[int] = []
     for field_type, profile in active_profiles:
         if profile is None:
@@ -279,14 +324,33 @@ def _physical_volume_prism_qualities(name: str) -> list[float]:
     return [float(value) for value in gmsh.model.mesh.getElementQualities(prism_tags, "minSICN")]
 
 
-def measure_mesh_quality() -> dict:
-    """Measure interface quality, retaining global and membrane-body diagnostics."""
-    tes_face_elements = _physical_surface_element_count("TES__zmin")
-    membrane_face_elements = _physical_surface_element_count("Membrane_SiNx__zmax")
+def measure_mesh_quality(suffixes: list[str] | None = None) -> dict:
+    """Measure interface quality, retaining global and membrane-body diagnostics.
+
+    *suffixes* are the TES stack body suffixes ("" for a single pixel,
+    "_T1".."_TN" for a multi-TES layout); every stack must pass."""
+    suffixes = suffixes or [""]
+    if suffixes != [""]:
+        merged: dict = {"reasons": [], "membrane_prism_stats": {}}
+        for sfx in suffixes:
+            q = _measure_stack_quality(sfx)
+            merged["reasons"] += [f"[{sfx.lstrip('_')}] {r}" for r in q["reasons"]]
+            merged["membrane_prism_stats"].update({f"{b}{sfx}": v for b, v in q["membrane_prism_stats"].items()})
+            for key in ("tes_face_elements", "membrane_face_elements"):
+                merged[key] = merged.get(key, 0) + q[key]
+            for key in ("prism_count", "prism_min_sicn", "prism_below_min_sicn"):
+                merged[key] = q[key]
+        return merged
+    return _measure_stack_quality("")
+
+
+def _measure_stack_quality(sfx: str) -> dict:
+    tes_face_elements = _physical_surface_element_count(f"TES{sfx}__zmin")
+    membrane_face_elements = _physical_surface_element_count(f"Membrane_SiNx{sfx}__zmax")
     types, element_tags_by_type, _ = gmsh.model.mesh.getElements(3)
     prism_tags = [tag for element_type, tags in zip(types, element_tags_by_type) if element_type == 6 for tag in tags]
     prism_qualities = [float(value) for value in gmsh.model.mesh.getElementQualities(prism_tags, "minSICN")]
-    membrane_qualities = {body: _physical_volume_prism_qualities(body) for body in MEMBRANE_PRISM_BODIES}
+    membrane_qualities = {body: _physical_volume_prism_qualities(f"{body}{sfx}") for body in MEMBRANE_PRISM_BODIES}
     membrane_stats = {
         body: {
             "prism_count": len(qualities),
@@ -443,7 +507,7 @@ def _add_boundary_groups(faces_by_name: dict[str, dict[str, list[int]]], bath_fa
             # The bath is this exact physical face.  Gmsh/ElmerGrid retain
             # one physical label per boundary entity, so do not also name it
             # SiO2_2__zmin.
-            if name == "SiO2_2" and suffix == "zmin":
+            if (name == "SiO2_2" or name.startswith("SiO2_2_T")) and suffix == "zmin":
                 continue
             faces = sorted(set(faces_by_side.get(suffix, [])))
             if faces:
@@ -451,6 +515,102 @@ def _add_boundary_groups(faces_by_name: dict[str, dict[str, list[int]]], bath_fa
                 gmsh.model.setPhysicalName(2, group, f"{name}__{suffix}")
     group = gmsh.model.addPhysicalGroup(2, bath_faces)
     gmsh.model.setPhysicalName(2, group, "bath")
+
+
+def _build_stack(args, p, xc, y0, sfx, volumes, faces_by_name, z, dims):
+    """One TES chip stack (SiO2_2 .. Stycast) centred at (xc, y0), body
+    names suffixed with *sfx*.  Returns (bath faces, Stycast top faces)."""
+    outer_x, outer_y, mem_x, mem_y, tes_x, tes_y, tes_z, sty_d, sty_z = dims
+    z_sio2_2, z_sio2_1, z_tes, z_sty = z["z_sio2_2"], z["z_sio2_1"], z["z_tes"], z["z_sty"]
+    ox0, ox1 = xc - outer_x / 2.0, xc + outer_x / 2.0
+    oy0, oy1 = y0 - outer_y / 2.0, y0 + outer_y / 2.0
+    mx0, mx1 = xc - mem_x / 2.0, xc + mem_x / 2.0
+    my0, my1 = y0 - mem_y / 2.0, y0 + mem_y / 2.0
+    sty_top: list[int] = []
+    ring = _ring(ox0, ox1, oy0, oy1, mx0, mx1, my0, my1, z_sio2_2)
+    v, ring_top = _extrude(ring, p["SiO2_2_dz"], args.sio2_2_layers)
+    volumes["SiO2_2" + sfx] += v
+    faces_by_name["SiO2_2" + sfx]["zmin"] += ring
+    faces_by_name["SiO2_2" + sfx]["zmax"] += ring_top
+    v, ring_top = _extrude(ring_top, p["Si_2_dz"], args.si_2_layers)
+    volumes["Si_2" + sfx] += v
+    faces_by_name["Si_2" + sfx]["zmin"] += faces_by_name["SiO2_2" + sfx]["zmax"]
+    faces_by_name["Si_2" + sfx]["zmax"] += ring_top
+
+    # At the Si_2 top the membrane cavity is closed by SiO2_1. Fragment the
+    # existing Si_2 top face with the centre square, then extrude both faces
+    # in one operation. This keeps all layer interfaces conforming.
+    centre = _rectangle(mx0, mx1, my0, my1, z_sio2_1)
+    ring_top, centre_faces = _join_ring_and_centre(ring_top, centre)
+    faces_by_name["Si_2" + sfx]["zmax"] = list(ring_top)
+    # Per centre face: "annulus", "tes_outer" or "disk".  Extrusion keeps the
+    # input order, so this list stays parallel to centre_top below.
+    centre_kind = ["annulus"] * len(centre_faces)
+    if args.conformal_tes_stack:
+        centre_faces, centre_kind = _imprint_tes_footprint(
+            centre_faces, xc, y0, tes_x, tes_y, sty_d, z_sio2_1
+        )
+
+    pairs = _extrude_partitioned(ring_top + centre_faces, p["SiO2_1_dz"], args.sio2_1_layers)
+    split = len(ring_top)
+    volumes["SiO2_1" + sfx] += [vol for vol, _ in pairs]
+    faces_by_name["SiO2_1" + sfx]["zmin"] += ring_top + centre_faces
+    ring_top = [top for _, top in pairs[:split]]
+    centre_top = [top for _, top in pairs[split:]]
+    faces_by_name["SiO2_1" + sfx]["zmax"] += ring_top + centre_top
+
+    pairs = _extrude_partitioned(ring_top + centre_top, p["Si_1_dz"], args.si_1_layers)
+    split = len(ring_top)
+    volumes["Si_1" + sfx] += [vol for vol, _ in pairs[:split]]
+    volumes["Membrane_Si1" + sfx] += [vol for vol, _ in pairs[split:]]
+    faces_by_name["Si_1" + sfx]["zmin"] += ring_top
+    faces_by_name["Membrane_Si1" + sfx]["zmin"] += centre_top
+    ring_top = [top for _, top in pairs[:split]]
+    centre_top = [top for _, top in pairs[split:]]
+    faces_by_name["Si_1" + sfx]["zmax"] += ring_top
+    faces_by_name["Membrane_Si1" + sfx]["zmax"] += centre_top
+
+    pairs = _extrude_partitioned(ring_top + centre_top, p["SiNx_dz"], args.sinx_layers)
+    split = len(ring_top)
+    volumes["SiNx" + sfx] += [vol for vol, _ in pairs[:split]]
+    volumes["Membrane_SiNx" + sfx] += [vol for vol, _ in pairs[split:]]
+    faces_by_name["SiNx" + sfx]["zmin"] += ring_top
+    faces_by_name["Membrane_SiNx" + sfx]["zmin"] += centre_top
+    ring_top = [top for _, top in pairs[:split]]
+    centre_top = [top for _, top in pairs[split:]]
+    faces_by_name["SiNx" + sfx]["zmax"] += ring_top
+    if not args.conformal_tes_stack:
+        faces_by_name["Membrane_SiNx" + sfx]["zmax"] += centre_top
+
+        tes = _rectangle(xc - tes_x / 2.0, xc + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z_tes)
+        v, _ = _extrude([tes], tes_z, args.tes_layers)
+        volumes["TES" + sfx] += v
+        faces_by_name["TES" + sfx]["zmin"] += [tes]
+        faces_by_name["TES" + sfx]["zmax"] += _
+        disk = gmsh.model.occ.addDisk(xc, y0, z_sty, sty_d / 2.0, sty_d / 2.0)
+        v, _ = _extrude([disk], sty_z, layers=args.stycast_layers)
+        volumes["Stycast" + sfx] += v
+        faces_by_name["Stycast" + sfx]["zmin"] += [disk]
+        faces_by_name["Stycast" + sfx]["zmax"] += _
+    else:
+        # TES grows from its imprinted footprint on the membrane top and the
+        # Stycast from the imprinted disk on the TES top: both interfaces are
+        # the same OCC faces on either side, hence node-conforming.
+        faces_by_name["Membrane_SiNx" + sfx]["zmax"] += [f for f, k in zip(centre_top, centre_kind) if k == "annulus"]
+        tes_base = [f for f, k in zip(centre_top, centre_kind) if k != "annulus"]
+        tes_kind = [k for k in centre_kind if k != "annulus"]
+        pairs = _extrude_partitioned(tes_base, tes_z, args.tes_layers)
+        volumes["TES" + sfx] += [vol for vol, _ in pairs]
+        faces_by_name["TES" + sfx]["zmin"] += tes_base
+        tes_top = [top for _, top in pairs]
+        disk_top = [f for f, k in zip(tes_top, tes_kind) if k == "disk"]
+        faces_by_name["TES" + sfx]["zmax"] += [f for f, k in zip(tes_top, tes_kind) if k != "disk"]
+        v, sty_top = _extrude(disk_top, sty_z, layers=args.stycast_layers)
+        volumes["Stycast" + sfx] += v
+        faces_by_name["Stycast" + sfx]["zmin"] += disk_top
+        faces_by_name["Stycast" + sfx]["zmax"] += sty_top
+
+    return list(faces_by_name["SiO2_2" + sfx]["zmin"]), list(sty_top)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -477,24 +637,47 @@ def main(argv: list[str] | None = None) -> int:
     z_sty = z_tes + tes_z
     z_abs = z_sty + sty_z
 
-    ox0, ox1 = x0 - outer_x / 2.0, x0 + outer_x / 2.0
-    oy0, oy1 = y0 - outer_y / 2.0, y0 + outer_y / 2.0
-    mx0, mx1 = x0 - mem_x / 2.0, x0 + mem_x / 2.0
-    my0, my1 = y0 - mem_y / 2.0, y0 + mem_y / 2.0
+    # Single pixel: one stack at the pixel centre, unsuffixed body names.
+    # Multi-TES (PoST): one full chip stack per TES x offset, bodies "_T<k>",
+    # all under one long absorber.
+    multi = args.tes_x is not None
+    stack_x = [x0 + dx for dx in args.tes_x] if multi else [x0]
+    suffixes = [f"_T{k}" for k in range(1, len(stack_x) + 1)] if multi else [""]
+    if multi:
+        order = sorted(stack_x)
+        for left, right in zip(order, order[1:]):
+            if right - left < outer_x:
+                raise ValueError(
+                    f"TES stacks at x={left:g} and x={right:g} m overlap: pitch must be >= Si_dx={outer_x:g} m"
+                )
+        abs_len = args.absorber_length if args.absorber_length else (max(stack_x) - min(stack_x) + abs_x)
+        abs_cx = 0.5 * (max(stack_x) + min(stack_x))
+    else:
+        abs_len, abs_cx = abs_x, x0
 
     gmsh.initialize()
-    gmsh.model.add("single_pixel_hybrid_prism")
+    gmsh.model.add("single_pixel_hybrid_prism" if not multi else f"multi_tes_{len(stack_x)}_hybrid_prism")
     gmsh.option.setNumber("General.Terminal", 1)
     # Horizontal footprint resolution.  Thickness is resolved by extrusion,
     # so the 1--20 um films do not force the absorber to use a 1--20 um 3-D
     # tetrahedral size.  This is the principal saving of the hybrid mesh.
-    local_profile = stack_local_field_profile(
-        args.stack_local_size, args.stack_local_half_width, x0, y0, z_sio2_1, z_abs, args.global_mesh_size
-    )
-    absorber_profile = absorber_local_field_profile(
-        args.absorber_local_size, args.absorber_local_radius, x0, y0, z_abs, abs_z, args.global_mesh_size
-    )
-    active_local_sizes = [profile["VIn"] for profile in (local_profile, absorber_profile) if profile is not None]
+    local_profiles = [
+        q for q in (
+            stack_local_field_profile(
+                args.stack_local_size, args.stack_local_half_width, xc, y0, z_sio2_1, z_abs, args.global_mesh_size
+            )
+            for xc in stack_x
+        ) if q is not None
+    ]
+    absorber_profiles = [
+        q for q in (
+            absorber_local_field_profile(
+                args.absorber_local_size, args.absorber_local_radius, xc, y0, z_abs, abs_z, args.global_mesh_size
+            )
+            for xc in stack_x + [x0 + dx for dx in args.refine_x]
+        ) if q is not None
+    ]
+    active_local_sizes = [q["VIn"] for q in local_profiles[:1] + absorber_profiles[:1]]
     global_min = min(active_local_sizes, default=args.global_mesh_size)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", global_min)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", args.global_mesh_size)
@@ -505,99 +688,27 @@ def main(argv: list[str] | None = None) -> int:
 
     volumes: dict[str, list[int]] = defaultdict(list)
     faces_by_name: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(list))
-    ring = _ring(ox0, ox1, oy0, oy1, mx0, mx1, my0, my1, z_sio2_2)
-    v, ring_top = _extrude(ring, p["SiO2_2_dz"], args.sio2_2_layers)
-    volumes["SiO2_2"] += v
-    faces_by_name["SiO2_2"]["zmin"] += ring
-    faces_by_name["SiO2_2"]["zmax"] += ring_top
-    bath_faces = list(ring)
-    v, ring_top = _extrude(ring_top, p["Si_2_dz"], args.si_2_layers)
-    volumes["Si_2"] += v
-    faces_by_name["Si_2"]["zmin"] += faces_by_name["SiO2_2"]["zmax"]
-    faces_by_name["Si_2"]["zmax"] += ring_top
-
-    # At the Si_2 top the membrane cavity is closed by SiO2_1. Fragment the
-    # existing Si_2 top face with the centre square, then extrude both faces
-    # in one operation. This keeps all layer interfaces conforming.
-    centre = _rectangle(mx0, mx1, my0, my1, z_sio2_1)
-    ring_top, centre_faces = _join_ring_and_centre(ring_top, centre)
-    faces_by_name["Si_2"]["zmax"] = list(ring_top)
-    # Per centre face: "annulus", "tes_outer" or "disk".  Extrusion keeps the
-    # input order, so this list stays parallel to centre_top below.
-    centre_kind = ["annulus"] * len(centre_faces)
-    if args.conformal_tes_stack:
-        centre_faces, centre_kind = _imprint_tes_footprint(
-            centre_faces, x0, y0, tes_x, tes_y, sty_d, z_sio2_1
+    bath_faces: list[int] = []
+    sty_tops: list[int] = []
+    for xc, sfx in zip(stack_x, suffixes):
+        ring, sty_top = _build_stack(
+            args, p, xc, y0, sfx, volumes, faces_by_name,
+            dict(z_sio2_2=z_sio2_2, z_sio2_1=z_sio2_1, z_tes=z_tes, z_sty=z_sty),
+            (outer_x, outer_y, mem_x, mem_y, tes_x, tes_y, tes_z, sty_d, sty_z),
         )
-
-    pairs = _extrude_partitioned(ring_top + centre_faces, p["SiO2_1_dz"], args.sio2_1_layers)
-    split = len(ring_top)
-    volumes["SiO2_1"] += [vol for vol, _ in pairs]
-    faces_by_name["SiO2_1"]["zmin"] += ring_top + centre_faces
-    ring_top = [top for _, top in pairs[:split]]
-    centre_top = [top for _, top in pairs[split:]]
-    faces_by_name["SiO2_1"]["zmax"] += ring_top + centre_top
-
-    pairs = _extrude_partitioned(ring_top + centre_top, p["Si_1_dz"], args.si_1_layers)
-    split = len(ring_top)
-    volumes["Si_1"] += [vol for vol, _ in pairs[:split]]
-    volumes["Membrane_Si1"] += [vol for vol, _ in pairs[split:]]
-    faces_by_name["Si_1"]["zmin"] += ring_top
-    faces_by_name["Membrane_Si1"]["zmin"] += centre_top
-    ring_top = [top for _, top in pairs[:split]]
-    centre_top = [top for _, top in pairs[split:]]
-    faces_by_name["Si_1"]["zmax"] += ring_top
-    faces_by_name["Membrane_Si1"]["zmax"] += centre_top
-
-    pairs = _extrude_partitioned(ring_top + centre_top, p["SiNx_dz"], args.sinx_layers)
-    split = len(ring_top)
-    volumes["SiNx"] += [vol for vol, _ in pairs[:split]]
-    volumes["Membrane_SiNx"] += [vol for vol, _ in pairs[split:]]
-    faces_by_name["SiNx"]["zmin"] += ring_top
-    faces_by_name["Membrane_SiNx"]["zmin"] += centre_top
-    ring_top = [top for _, top in pairs[:split]]
-    centre_top = [top for _, top in pairs[split:]]
-    faces_by_name["SiNx"]["zmax"] += ring_top
-    if not args.conformal_tes_stack:
-        faces_by_name["Membrane_SiNx"]["zmax"] += centre_top
-
-        tes = _rectangle(x0 - tes_x / 2.0, x0 + tes_x / 2.0, y0 - tes_y / 2.0, y0 + tes_y / 2.0, z_tes)
-        v, _ = _extrude([tes], tes_z, args.tes_layers)
-        volumes["TES"] += v
-        faces_by_name["TES"]["zmin"] += [tes]
-        faces_by_name["TES"]["zmax"] += _
-        disk = gmsh.model.occ.addDisk(x0, y0, z_sty, sty_d / 2.0, sty_d / 2.0)
-        v, _ = _extrude([disk], sty_z, layers=args.stycast_layers)
-        volumes["Stycast"] += v
-        faces_by_name["Stycast"]["zmin"] += [disk]
-        faces_by_name["Stycast"]["zmax"] += _
-    else:
-        # TES grows from its imprinted footprint on the membrane top and the
-        # Stycast from the imprinted disk on the TES top: both interfaces are
-        # the same OCC faces on either side, hence node-conforming.
-        faces_by_name["Membrane_SiNx"]["zmax"] += [f for f, k in zip(centre_top, centre_kind) if k == "annulus"]
-        tes_base = [f for f, k in zip(centre_top, centre_kind) if k != "annulus"]
-        tes_kind = [k for k in centre_kind if k != "annulus"]
-        pairs = _extrude_partitioned(tes_base, tes_z, args.tes_layers)
-        volumes["TES"] += [vol for vol, _ in pairs]
-        faces_by_name["TES"]["zmin"] += tes_base
-        tes_top = [top for _, top in pairs]
-        disk_top = [f for f, k in zip(tes_top, tes_kind) if k == "disk"]
-        faces_by_name["TES"]["zmax"] += [f for f, k in zip(tes_top, tes_kind) if k != "disk"]
-        v, sty_top = _extrude(disk_top, sty_z, layers=args.stycast_layers)
-        volumes["Stycast"] += v
-        faces_by_name["Stycast"]["zmin"] += disk_top
-        faces_by_name["Stycast"]["zmax"] += sty_top
+        bath_faces += ring
+        sty_tops += sty_top
 
     # Only the absorber is deliberately left to the 3-D tetrahedral mesher.
-    abs_tag = gmsh.model.occ.addBox(x0 - abs_x / 2.0, y0 - abs_y / 2.0, z_abs, abs_x, abs_y, abs_z)
-    abs_disk_face = None
+    abs_tag = gmsh.model.occ.addBox(abs_cx - abs_len / 2.0, y0 - abs_y / 2.0, z_abs, abs_len, abs_y, abs_z)
     if args.conformal_abs:
-        # Imprint the Stycast disk into the absorber bottom.  The imprinted
-        # face gets the Stycast top mesh through an identity periodic map, and
+        # Imprint the Stycast disks into the absorber bottom.  Each imprinted
+        # face gets its Stycast top mesh through an identity periodic map, and
         # ElmerGrid -merge then fuses the coincident nodes: no mortar remains.
-        disk_abs = gmsh.model.occ.addDisk(x0, y0, z_abs, sty_d / 2.0, sty_d / 2.0)
-        result, _ = gmsh.model.occ.fragment([(3, abs_tag)], [(2, disk_abs)], removeObject=True, removeTool=True)
+        disks_abs = [gmsh.model.occ.addDisk(xc, y0, z_abs, sty_d / 2.0, sty_d / 2.0) for xc in stack_x]
+        result, _ = gmsh.model.occ.fragment(
+            [(3, abs_tag)], [(2, d) for d in disks_abs], removeObject=True, removeTool=True
+        )
         abs_vols = [tag for dim, tag in result if dim == 3]
         if len(abs_vols) != 1:
             raise RuntimeError(f"absorber fragment produced {abs_vols}")
@@ -614,16 +725,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.conformal_abs:
         disk_area = math.pi * (sty_d / 2.0) ** 2
         disks = [f for f in bottom if abs(gmsh.model.occ.getMass(2, f) - disk_area) < 1.0e-4 * disk_area]
-        if len(disks) != 1 or len(sty_top) != 1:
-            raise RuntimeError(f"cannot pair absorber disk {disks} with Stycast top {sty_top}")
-        abs_disk_face = disks[0]
+        if len(disks) != len(stack_x) or len(sty_tops) != len(stack_x):
+            raise RuntimeError(f"cannot pair absorber disks {disks} with Stycast tops {sty_tops}")
         identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-        gmsh.model.mesh.setPeriodic(2, [abs_disk_face], [sty_top[0]], identity)
+        for sty_face in sty_tops:
+            cx = gmsh.model.occ.getCenterOfMass(2, sty_face)[0]
+            match = min(disks, key=lambda f: abs(gmsh.model.occ.getCenterOfMass(2, f)[0] - cx))
+            gmsh.model.mesh.setPeriodic(2, [match], [sty_face], identity)
     _add_physical_volumes(volumes)
     _add_boundary_groups(faces_by_name, bath_faces)
-    configure_local_fields(local_profile, absorber_profile)
+    configure_local_fields(local_profiles, absorber_profiles)
     gmsh.model.mesh.generate(3)
-    quality = measure_mesh_quality()
+    quality = measure_mesh_quality(suffixes)
     print(
         "mesh quality: "
         f"TES__zmin={quality['tes_face_elements']}, "

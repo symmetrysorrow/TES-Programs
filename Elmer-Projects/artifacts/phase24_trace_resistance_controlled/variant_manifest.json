@@ -1,0 +1,44 @@
+[
+  {
+    "variant": "tes_membrane",
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_trace_tes_membrane_historical",
+    "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_trace_resistance_controlled\\mesh_phase24_trace_tes_membrane_historical.project.json",
+    "case": "tes_membrane",
+    "parent_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_density_10um",
+    "parent_project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_stycast_interface_discretization_rootcause\\mesh_phase24_stycast_density_10um.project.json",
+    "environment": {
+      "TES_MEMBRANE_TRACE_REFINE_H": 1.06e-05
+    },
+    "changed": "TES/Membrane direct trace neighborhood only; TES/Stycast top trace remains parent resolution",
+    "unchanged": [
+      "materials",
+      "TES law and circuit",
+      "bath temperature/BC",
+      "geometry dimensions",
+      "TES-Stycast coupling and parent trace resolution",
+      "production mesh"
+    ],
+    "scope": "diagnostic only"
+  },
+  {
+    "variant": "membrane_substrate",
+    "mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_trace_membrane_substrate_historical",
+    "project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_trace_resistance_controlled\\mesh_phase24_trace_membrane_substrate_historical.project.json",
+    "case": "membrane_substrate",
+    "parent_mesh": "D:\\Github\\TES-Programs\\Elmer-Projects\\work\\meshes\\mesh_phase24_stycast_density_10um",
+    "parent_project": "D:\\Github\\TES-Programs\\Elmer-Projects\\artifacts\\phase24_stycast_interface_discretization_rootcause\\mesh_phase24_stycast_density_10um.project.json",
+    "environment": {
+      "MEMBRANE_SUBSTRATE_TRACE_REFINE_H": 1e-05
+    },
+    "changed": "downstream Membrane-to-substrate trace neighborhood below Membrane_SiNx only; TES/Membrane trace remains parent resolution",
+    "unchanged": [
+      "materials",
+      "TES law and circuit",
+      "bath temperature/BC",
+      "geometry dimensions",
+      "TES-Stycast coupling and parent trace resolution",
+      "production mesh"
+    ],
+    "scope": "diagnostic only"
+  }
+]

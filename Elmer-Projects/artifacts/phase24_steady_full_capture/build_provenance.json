@@ -1,0 +1,26 @@
+{
+  "git_head": "e5c79353fd9fe4bd57188fcdd9246323e24f54f3",
+  "tracked_case": "generated/cases/case_phase24_g3_s32m_s32m2_10f17b.sif",
+  "native_source": "D:/Github/TES-Programs/tools/elmer-hypre/src/fem/src/SolverUtils.F90",
+  "native_source_sha256_after_patch": "1F78C95783181DDE5CA3508C04BEB1DE62774B6D65FA49DBE44B50B3D688FBF4",
+  "diagnostic_patch": "native_patch.diff",
+  "build": {
+    "generator": "ninja",
+    "environment": "MSYSTEM=UCRT64; PATH=/ucrt64/bin:/usr/bin:/c/Program Files/CMake/bin:/c/Windows/System32",
+    "command": "C:\\msys64\\usr\\bin\\bash.exe -lc \"/ucrt64/bin/ninja.exe -C /d/Github/TES-Programs/tools/elmer-hypre/build HeatSolve.dll elmersolver\"",
+    "install_command": "/ucrt64/bin/cmake.exe --install /d/Github/TES-Programs/tools/elmer-hypre/build --prefix /d/Github/TES-Programs/tools/elmer-hypre/install-steady-full-capture",
+    "install_prefix": "D:/Github/TES-Programs/tools/elmer-hypre/install-steady-full-capture",
+    "binaries": {
+      "bin/ElmerSolver.exe": "64922C6D98390E7EDEBB16DB87DF8118B46FDA4B68ED9A483EB7B8E556A26448",
+      "bin/libelmersolver.dll": "C0B0DEE1B6690AEF22AE17E7E6C0613645401EF4919C68B79E63BF51006F2F1A",
+      "share/elmersolver/lib/HeatSolve.dll": "64369567E5E2BCC2613DD5B684BC4518D4557A845AF6B1EB05E7C74CA2B6B81D"
+    }
+  },
+  "runtime": {
+    "steady_solver_log": "artifacts/phase24_steady_full_capture/run/solver_outer.log",
+    "steady_capture": "artifacts/phase24_steady_full_capture/steady_final",
+    "steady_nonlinear_iteration": 4,
+    "steady_linear_backend": "HYPRE FlexGMRES + BoomerAMG",
+    "steady_full_restriction_hook": "SolveWithLinearRestriction; timestep selector=1; total_rows=96955; primal_rows=96769; constraint_rows=186; restriction_active=1"
+  }
+}
