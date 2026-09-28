@@ -1218,7 +1218,7 @@ index fb36ee9b6..c1bdeef71 100644
       END IF
  #endif
 diff --git a/fem/src/ElmerSolver.F90 b/fem/src/ElmerSolver.F90
-index 24f774485..308ab0219 100644
+index 24f774485..529726b65 100644
 --- a/fem/src/ElmerSolver.F90
 +++ b/fem/src/ElmerSolver.F90
 @@ -94,6 +94,14 @@
@@ -1398,7 +1398,27 @@ index 24f774485..308ab0219 100644
       stepcount = 0
       DO interval = 1, TimeIntervals
          stepcount = stepcount + Timesteps(interval)
-@@ -2987,11 +3124,13 @@
+@@ -2953,9 +3090,17 @@
+            END IF
+          END IF
+ 
++         ! Phase24 error-controlled steps: the solver proposes the next step
++         ! size; used in the last timestep interval only (fixed steps before).
++         IF ( Transient .AND. interval == TimeIntervals .AND. timestep > 1 .AND. &
++              ListGetLogical(CurrentModel % Simulation,'Phase24 Step Controller',GotIt) ) THEN
++           dtfunc = ListGetCReal(CurrentModel % Simulation,'Phase24 Controller Next Timestep',GotIt)
++           IF (GotIt .AND. dtfunc > 0.0_dp) dt = dtfunc
++         END IF
++
+ !------------------------------------------------------------------------------
+-         ! Predictor-Corrector time stepping control 
+-         IF ( PredCorrControl ) THEN 
++         ! Predictor-Corrector time stepping control
++         IF ( PredCorrControl ) THEN
+            CALL PredictorCorrectorControl( CurrentModel, dt, timestep )
+          END IF
+ 
+@@ -2987,11 +3132,13 @@
             
             AdaptiveIncrease =  ListGetConstReal( CurrentModel % Simulation, &
                 'Adaptive Increase Coefficient', GotIt )
@@ -1414,7 +1434,7 @@ index 24f774485..308ab0219 100644
             
             AdaptiveRough = ListGetLogical( CurrentModel % Simulation, &
                 'Adaptive Rough Timestep', GotIt )           
-@@ -3153,7 +3292,8 @@
+@@ -3153,7 +3300,8 @@
           IF ( Transient .AND. AdaptiveTime ) THEN 
  
              IF(.NOT. ALLOCATED( AdaptVars ) ) THEN
@@ -1424,7 +1444,7 @@ index 24f774485..308ab0219 100644
                IF( AllocStat /= 0 ) CALL Fatal(Caller,'Allocation error for AdaptVars')
                
                DO i=1,nSolvers
-@@ -3161,6 +3301,8 @@
+@@ -3161,6 +3309,8 @@
  
                  NULLIFY( AdaptVars(i) % Var % Values )
                  NULLIFY( AdaptVars(i) % Var % PrevValues )
@@ -1433,7 +1453,7 @@ index 24f774485..308ab0219 100644
  
                  IF( .NOT. ASSOCIATED( Solver % Variable ) ) CYCLE
                  IF( .NOT. ASSOCIATED( Solver % Variable  % Values ) ) CYCLE
-@@ -3168,23 +3310,68 @@
+@@ -3168,23 +3318,68 @@
                  j = SIZE( Solver % Variable % Values )
                  ALLOCATE( AdaptVars(i) % Var % Values( j ), STAT=AllocStat )
                  IF( AllocStat /= 0 ) CALL Fatal(Caller,'Allocation error AdaptVars Values')
@@ -1503,7 +1523,7 @@ index 24f774485..308ab0219 100644
                  IF( AdaptiveSmart ) THEN
                    ! If the next timestep will not get us home but the next one would
                    ! then split the timestep equally into two parts.
-@@ -3195,14 +3382,57 @@
+@@ -3195,14 +3390,57 @@
                  END IF
                  
                END IF
@@ -1562,7 +1582,7 @@ index 24f774485..308ab0219 100644
                   IF ( ASSOCIATED( Solver % Variable % PrevValues ) ) THEN
                     AdaptVars(i) % Var % PrevValues = Solver % Variable % PrevValues
                   END IF
-@@ -3210,61 +3440,371 @@
+@@ -3210,61 +3448,371 @@
                 
                 sTime(1) = s + CumTime + ddt
                 sSize(1) = ddt
@@ -1955,7 +1975,7 @@ index 24f774485..308ab0219 100644
                     ddt = MIN( AdaptiveIncrease * ddt, AdaptiveMaxTimeStep )
                     StepControl   = 1
                     SmallestCount = 0
-@@ -3272,30 +3812,177 @@
+@@ -3272,30 +3820,177 @@
                     StepControl   = 0
                     SmallestCount = SmallestCount + 1
                   END IF
@@ -2134,7 +2154,7 @@ index 24f774485..308ab0219 100644
  
            ELSE IF( DivergenceControl ) THEN
              ! This is still tentative 
-@@ -3389,10 +4076,9 @@
+@@ -3389,10 +4084,9 @@
  !------------------------------------------------------------------------------
  !        Save results to disk, if requested
  !------------------------------------------------------------------------------
@@ -2254,7 +2274,7 @@ index f2a0a7ff0..8d4518e3b 100644
  solver:logical:      'normalize coil current'
  solver:logical:      'use unity conductivity'
 diff --git a/fem/src/SParIterSolver.F90 b/fem/src/SParIterSolver.F90
-index 10a938538..e4a463205 100644
+index 10a938538..0676c34a4 100644
 --- a/fem/src/SParIterSolver.F90
 +++ b/fem/src/SParIterSolver.F90
 @@ -927,6 +927,16 @@ END SUBROUTINE ZeroSplittedMatrix
@@ -2300,7 +2320,27 @@ index 10a938538..e4a463205 100644
        CALL Fatal(Caller,'Invalid solver for Hypre: '//TRIM(IterativeMethod))
      END IF
  
-@@ -2049,8 +2062,43 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -1073,6 +1086,19 @@ END SUBROUTINE ZeroSplittedMatrix
+         hypre_dppara(1) = ListGetCReal( Params,&
+             'BoomerAMG Strong Threshold', Found, DefValue = 0.25_dp)
+ 
++        ! Operator-complexity controls; -1 keeps the HYPRE default
++        ! (P max elements 4, truncation 0, no aggressive coarsening).
++        hypre_intpara(15) = ListGetInteger( Params,&
++            'BoomerAMG P Max Elements', Found, DefValue = -1 )
++        hypre_dppara(7) = ListGetCReal( Params,&
++            'BoomerAMG Truncation Factor', Found, DefValue = -1.0_dp )
++        hypre_intpara(16) = ListGetInteger( Params,&
++            'BoomerAMG Aggressive Levels', Found, DefValue = -1 )
++        hypre_intpara(17) = ListGetInteger( Params,&
++            'BoomerAMG Aggressive Interpolation Type', Found, DefValue = -1 )
++        hypre_intpara(18) = ListGetInteger( Params,&
++            'BoomerAMG Print Level', Found, DefValue = -1 )
++
+       CASE(2) ! AMS
+         ! The numbering follows the old convention. 
+         hypre_intpara(1) = ListGetInteger( Params,&
+@@ -2049,8 +2075,53 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
    INTEGER, POINTER :: Rows(:), Cols(:)
  
    LOGICAL :: Found, NewSetup, UpdateTolerance, DoAMS
@@ -2329,6 +2369,16 @@ index 10a938538..e4a463205 100644
 +       Phase24DiagnosticRowEnd, Phase24DiagnosticCol
 +  INTEGER(KIND=C_INT) :: SolveStatus
 +  INTEGER(KIND=C_INTPTR_T), SAVE :: Phase24SavedHypre = 0
++  ! Reuse of the BoomerAMG hierarchy built on a separate preconditioning
++  ! matrix ('Phase24 Precond Matrix Reuse'): container, age and the Krylov
++  ! iterations right after the last rebuild.
++  INTEGER(KIND=C_INTPTR_T), SAVE :: Phase24PMRHypre = 0
++  INTEGER, SAVE :: Phase24PMRRows = -1, Phase24PMRAge = 0, Phase24PMRFreshIts = -1, &
++       Phase24PMRLastIts = -1, Phase24PMRRebuilds = 0, Phase24PMRReuses = 0
++  LOGICAL, SAVE :: Phase24PMRFresh = .FALSE.
++  LOGICAL :: Phase24PMR, Phase24PMRActive
++  INTEGER :: Phase24PMRMaxAge, Phase24PMRRebuild, Phase24PMRLocal, Phase24PMRIerr
++  REAL(KIND=dp) :: Phase24PMRGrowth
 +  INTEGER(KIND=C_INT) :: Phase24NativeBefore(28), Phase24NativeAfter(28)
 +  INTEGER, SAVE :: Phase24FullSetupCount = 0, Phase24CaseACount = 0, &
 +       Phase24CaseBCount = 0, Phase24AMGSetupCount = 0, &
@@ -2344,7 +2394,7 @@ index 10a938538..e4a463205 100644
    TYPE(ValueList_t), POINTER :: Params
  
    TYPE(Matrix_t), POINTER :: GM, PiM
-@@ -2064,27 +2112,71 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2064,27 +2135,79 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
      !! create HYPRE matrix and setup solver/preconditioner
      SUBROUTINE SolveHYPRE1( n, Rows, Cols, Vals, Precond, PrecVals, GDOFs, &
          Owner, ILUn, BILU, hypremethod, hypre_intpara, hypre_dppara, rounds, &
@@ -2386,6 +2436,14 @@ index 10a938538..e4a463205 100644
 +      INTEGER(KIND=C_INTPTR_T) :: hypreContainer
 +    END SUBROUTINE SolveHYPRE3
 +
++    SUBROUTINE SolveHYPRE11( n, Rows, Cols, Vals, PrecVals, GDOFs, rebuild, &
++        hypreContainer, fcomm ) BIND(C,name="solvehypre11")
++      USE, INTRINSIC :: iso_c_binding
++      INTEGER(KIND=c_int) :: n, Rows(*), Cols(*), GDOFs(*), rebuild, fcomm
++      REAL(KIND=c_double) :: Vals(*), PrecVals(*)
++      INTEGER(KIND=C_INTPTR_T) :: hypreContainer
++    END SUBROUTINE SolveHYPRE11
++
 +    SUBROUTINE SolveHYPRE6(hypreContainer, structureEpoch, matrixEpoch, preconditionerEpoch) &
 +        BIND(C,name="solvehypre6")
 +      USE, INTRINSIC :: iso_c_binding
@@ -2423,7 +2481,7 @@ index 10a938538..e4a463205 100644
  
      !! destroy the data structures (should be called when the matrix has
      !! to be updated and SolveHYPRE1 has to be called again).
-@@ -2093,6 +2185,13 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2093,6 +2216,13 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
        INTEGER(KIND=C_INTPTR_T) :: hypreContainer
        INTEGER(KIND=c_int) :: verbosity
      END SUBROUTINE SolveHYPRE4
@@ -2437,7 +2495,7 @@ index 10a938538..e4a463205 100644
      
      SUBROUTINE CreateHypreAMS(nrows,rows,cols,vals,n,grows,gcols,gvals, pirows, picols, pivals, &
          perm, invperm, globaldofs, owner, Bperm,nodeowner,xvec, rhsvec, pe, ILUn, rounds, &
-@@ -2125,6 +2224,36 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2125,6 +2255,36 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
    Cols => Matrix % Cols
    Vals => Matrix % Values
    Params => Solver % Values
@@ -2474,7 +2532,7 @@ index 10a938538..e4a463205 100644
    
    CALL SetHypreParameters(Params, hypremethod, ilun, hypre_dppara, hypre_intpara )
  
-@@ -2160,10 +2289,42 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2160,10 +2320,42 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
    verbosity = ListGetInteger( CurrentModel % Simulation,'Max Output Level',Found )
    IF( .NOT. Found ) verbosity = 10
  
@@ -2521,7 +2579,7 @@ index 10a938538..e4a463205 100644
      bilu = Solver % Variable % Dofs
    ELSE
      bilu = 1
-@@ -2171,12 +2332,173 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2171,12 +2363,223 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
  
    ! AMS requites additional information and is therefore treated separately.
    DoAMS = ( ( MODULO(hypremethod,100) == 2 ) .OR. (hypremethod/100 == 2) )
@@ -2686,6 +2744,56 @@ index 10a938538..e4a463205 100644
 +    END IF
 +  END IF
    
++  ! Separate preconditioning matrix with a fixed sparsity pattern: refresh A
++  ! every solve, rebuild the preconditioning matrix + BoomerAMG only when it
++  ! has aged or the Krylov iterations have grown since the last rebuild.
++  Phase24PMR = ListGetLogical(Params,'Phase24 Precond Matrix Reuse',Found) .AND. &
++       ASSOCIATED(Matrix % PrecValues) .AND. .NOT. DoAMS .AND. .NOT. BlockDiagonal
++  Phase24PMRActive = .FALSE.
++  IF (Phase24PMR) THEN
++    Phase24PMRMaxAge = ListGetInteger(Params,'Phase24 Precond Matrix Reuse Max Age',Found)
++    IF (.NOT. Found .OR. Phase24PMRMaxAge < 1) Phase24PMRMaxAge = 20
++    Phase24PMRGrowth = ListGetCReal(Params,'Phase24 Precond Matrix Reuse Iteration Growth',Found)
++    IF (.NOT. Found .OR. Phase24PMRGrowth <= 1.0_dp) Phase24PMRGrowth = 1.5_dp
++    IF (Solver % MeshChanged .AND. Phase24PMRHypre /= 0) THEN
++      IF (Matrix % Hypre == Phase24PMRHypre) Matrix % Hypre = 0
++      myverb = verbosity
++      IF (ParEnv % MyPe /= 0) myverb = 0
++      CALL SolveHYPRE4(Phase24PMRHypre, myverb)
++      Phase24PMRHypre = 0
++    END IF
++    IF (Matrix % Hypre == 0 .AND. Phase24PMRHypre /= 0) Matrix % Hypre = Phase24PMRHypre
++    IF (Matrix % Hypre /= 0 .AND. Matrix % Hypre == Phase24PMRHypre .AND. &
++         Phase24PMRRows == Matrix % NumberOfRows) THEN
++      Phase24PMRRebuild = 0
++      IF (Phase24PMRAge >= Phase24PMRMaxAge) Phase24PMRRebuild = 1
++      IF (Phase24PMRFreshIts > 0 .AND. REAL(Phase24PMRLastIts,dp) > &
++           MAX(REAL(Phase24PMRFreshIts+5,dp), Phase24PMRGrowth*Phase24PMRFreshIts)) &
++           Phase24PMRRebuild = 1
++      ! Only rank 0 knows the Krylov count: every rank must take the same
++      ! (collective) branch.
++      IF (ParEnv % PEs > 1) THEN
++        Phase24PMRLocal = Phase24PMRRebuild
++        CALL MPI_ALLREDUCE(Phase24PMRLocal, Phase24PMRRebuild, 1, MPI_INTEGER, &
++             MPI_MAX, Matrix % Comm, Phase24PMRIerr)
++      END IF
++      CALL SolveHYPRE11(Matrix % NumberOfRows, Rows, Cols, Vals, Matrix % PrecValues, &
++           Aperm, Phase24PMRRebuild, Matrix % Hypre, Matrix % Comm)
++      IF (Phase24PMRRebuild /= 0) THEN
++        Phase24PMRAge = 0
++        Phase24PMRFresh = .TRUE.
++        Phase24PMRRebuilds = Phase24PMRRebuilds + 1
++      ELSE
++        Phase24PMRAge = Phase24PMRAge + 1
++        Phase24PMRReuses = Phase24PMRReuses + 1
++      END IF
++      NewSetup = .FALSE.
++      UpdateMatrix = .FALSE.
++      ExactReuse = .FALSE.
++      Phase24PMRActive = .TRUE.
++    END IF
++  END IF
++
    IF (NewSetup) THEN
      IF (Matrix % Hypre /= 0) THEN
        CALL Info(Caller,'Destroy old Hypre solver structures',Level=10)
@@ -2695,7 +2803,7 @@ index 10a938538..e4a463205 100644
        CALL SolveHYPRE4(Matrix % Hypre, myverb )
        Matrix % Hypre = 0
      END IF
-@@ -2206,9 +2528,25 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2206,9 +2609,32 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
               Matrix % Hypre, Matrix % Comm)
        CALL CleanHypreAMS() 
      END IF
@@ -2719,10 +2827,17 @@ index 10a938538..e4a463205 100644
 +    IF (Phase24HypreReuse .AND. Phase24EpochsFound .AND. .NOT. DoAMS .AND. &
 +         .NOT. BlockDiagonal .AND. .NOT. ASSOCIATED(Matrix % PrecValues)) &
 +      Phase24SavedHypre = Matrix % Hypre
++    IF (Phase24PMR) THEN
++      Phase24PMRHypre = Matrix % Hypre
++      Phase24PMRRows = Matrix % NumberOfRows
++      Phase24PMRAge = 0
++      Phase24PMRFresh = .TRUE.
++      Phase24PMRRebuilds = Phase24PMRRebuilds + 1
++    END IF
    END IF
  
  
-@@ -2221,15 +2559,198 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
+@@ -2221,15 +2647,209 @@ SUBROUTINE SolveHypre(Matrix, XVec, RHSVec, Solver, ParallelInfo, SplittedMatrix
      CALL UpdateHypre( TOL, hypremethod, Matrix % Hypre, verbosity, Matrix % Comm )
    END IF
  
@@ -2853,6 +2968,17 @@ index 10a938538..e4a463205 100644
 +    CALL Fatal(Caller,'HYPRE failed to satisfy the production linear tolerance')
 +  END IF
 +
++  IF (Phase24PMR) THEN
++    Phase24PMRLastIts = Phase24NativeAfter(14)
++    IF (Phase24PMRFresh) Phase24PMRFreshIts = Phase24PMRLastIts
++    Phase24PMRFresh = .FALSE.
++    WRITE(Message,'(A,L1,A,I0,A,I0,A,I0,A,I0,A,I0)') 'Phase24 precond reuse: reused=', &
++         Phase24PMRActive .AND. Phase24PMRAge > 0, ', age=',Phase24PMRAge, &
++         ', its=',Phase24PMRLastIts,', fresh_its=',Phase24PMRFreshIts, &
++         ', rebuilds=',Phase24PMRRebuilds,', reuses=',Phase24PMRReuses
++    CALL Info(Caller,TRIM(Message),Level=4)
++  END IF
++
 +  Phase24LastKrylovIterations = Phase24NativeAfter(14)
 +  IF (Phase24RefreshSetup .AND. Phase24LastKrylovIterations > 0) &
 +       Phase24LastFreshKrylov = Phase24LastKrylovIterations
@@ -2928,7 +3054,7 @@ index 10a938538..e4a463205 100644
    IF(Parallel) CALL ExchangeHypreResults()    
    
 diff --git a/fem/src/SolveHypre.c b/fem/src/SolveHypre.c
-index 5628f72ca..4f52577e6 100644
+index 5628f72ca..bd1789bc3 100644
 --- a/fem/src/SolveHypre.c
 +++ b/fem/src/SolveHypre.c
 @@ -42,40 +42,987 @@
@@ -4127,7 +4253,24 @@ index 5628f72ca..4f52577e6 100644
       /* Set some parameters (See Reference Manual for more parameters) */
       HYPRE_BoomerAMGSetNumFunctions(precond, hypre_intpara[7]); /* No. of PDE's */
  
-@@ -442,6 +1479,69 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -354,8 +1391,14 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+      HYPRE_BoomerAMGSetCycleType(precond, hypre_intpara[6]);  /* coarsening type */
+      /* threshold for strong coupling (default 0.25 recommended for 2D Laplace, 0.5-0.6 
+ 	for 3D Laplace, 0.9 for elasticity) */
+-     HYPRE_BoomerAMGSetStrongThreshold(precond, hypre_dppara[0]);  	 
+-     
++     HYPRE_BoomerAMGSetStrongThreshold(precond, hypre_dppara[0]);
++     /* Optional operator-complexity controls (negative = HYPRE default). */
++     if (hypre_intpara[14] >= 0) HYPRE_BoomerAMGSetPMaxElmts(precond, hypre_intpara[14]);
++     if (hypre_dppara[6] >= 0.0) HYPRE_BoomerAMGSetTruncFactor(precond, hypre_dppara[6]);
++     if (hypre_intpara[15] >= 0) HYPRE_BoomerAMGSetAggNumLevels(precond, hypre_intpara[15]);
++     if (hypre_intpara[16] >= 0) HYPRE_BoomerAMGSetAggInterpType(precond, hypre_intpara[16]);
++     if (hypre_intpara[17] >= 0) HYPRE_BoomerAMGSetPrintLevel(precond, hypre_intpara[17]);
++
+      if( myverb > 10) fprintf(stdout,"SolveHypre: Created BoomerAMG preconditioner!\n");
+ 
+    } else if ( hypre_pre == 2 || hypre_sol == 2 ) {
+@@ -442,6 +1485,69 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       fprintf( stdout,"Hypre preconditioning method FSAI not compiled with!\n");
       exit(EXIT_FAILURE);
  #endif  
@@ -4197,7 +4340,7 @@ index 5628f72ca..4f52577e6 100644
     } else if( hypre_pre != 0) {
       fprintf( stdout,"Hypre preconditioning method %d not implemented\n",hypre_pre);
       exit(EXIT_FAILURE);
-@@ -459,7 +1559,8 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -459,7 +1565,8 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       HYPRE_BoomerAMGSetTol(solver, *TOL);      
       HYPRE_BoomerAMGSetMaxIter(solver, *Rounds); 
  
@@ -4207,7 +4350,7 @@ index 5628f72ca..4f52577e6 100644
       
  
     } else if ( hypre_sol == 2 ) { /* AMS */
-@@ -497,7 +1598,22 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -497,7 +1604,22 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       HYPRE_PCGSetLogging(solver, i);      /* needed to get run info later */
       
       /* Set the PCG preconditioner */
@@ -4231,7 +4374,7 @@ index 5628f72ca..4f52577e6 100644
         HYPRE_PCGSetPrecond(solver, (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSolve,
  			   (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSetup, precond);
       } else if(hypre_pre == 2 ) {
-@@ -512,7 +1628,13 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -512,7 +1634,13 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       }
         
       if (myverb > 12 ) fprintf(stdout,"SolveHypre: Setting up PCG linear system");
@@ -4246,7 +4389,7 @@ index 5628f72ca..4f52577e6 100644
  
  
     } else if ( hypre_sol == 7) { /* BiGSTAB methods */
-@@ -601,11 +1723,23 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -601,11 +1729,23 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       HYPRE_FlexGMRESSetPrintLevel(solver, i);   /* print solve info */
       i = (verbosity >= 6);
       HYPRE_FlexGMRESSetLogging(solver, i);      /* needed to get run info later */
@@ -4272,7 +4415,7 @@ index 5628f72ca..4f52577e6 100644
       } else if(hypre_pre == 2 ) {
         HYPRE_FlexGMRESSetPrecond(solver, (HYPRE_PtrToSolverFcn) HYPRE_AMSSolve,
  				 (HYPRE_PtrToSolverFcn) HYPRE_AMSSetup, precond);
-@@ -615,9 +1749,14 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -615,9 +1755,14 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
       } else if ( hypre_pre == 4) { 
         HYPRE_FlexGMRESSetPrecond(solver, (HYPRE_PtrToSolverFcn) HYPRE_ParaSailsSolve,
  			   (HYPRE_PtrToSolverFcn) HYPRE_ParaSailsSetup, precond);
@@ -4288,7 +4431,7 @@ index 5628f72ca..4f52577e6 100644
  
       
     } else if ( hypre_sol == 10) { /* LGMRes */
-@@ -708,12 +1847,28 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
+@@ -708,12 +1853,28 @@ void STDCALLBULL FC_FUNC(solvehypre1,SOLVEHYPRE1)
     Container->ilower = ilower;
     Container->iupper = iupper;     
     Container->hypre_method = *hypre_method;
@@ -4317,7 +4460,7 @@ index 5628f72ca..4f52577e6 100644
     
     if (myverb > 5) fprintf( stdout, "SolveHypre: setup time (method %d): %g\n", 
  			    Container->hypre_method, realtime_()-st );
-@@ -765,10 +1920,167 @@ void STDCALLBULL FC_FUNC(updatehypre,UPDATEHYPRE)
+@@ -765,10 +1926,167 @@ void STDCALLBULL FC_FUNC(updatehypre,UPDATEHYPRE)
  }
  
  
@@ -4486,7 +4629,7 @@ index 5628f72ca..4f52577e6 100644
   (
    int *nrows, int *globaldofs, int *owner,  double *xvec,
    double *rhsvec, int *Rounds, double *TOL,
-@@ -776,7 +2088,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -776,7 +2094,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
   )
  {
  
@@ -4495,7 +4638,7 @@ index 5628f72ca..4f52577e6 100644
     int myid, num_procs;
     int N, n;
  
-@@ -785,14 +2097,12 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -785,14 +2103,12 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
  
     int print_solution, print_system;
  
@@ -4511,7 +4654,7 @@ index 5628f72ca..4f52577e6 100644
     HYPRE_ParVector par_x;
  
     MPI_Comm comm=MPI_Comm_f2c(*fcomm);
-@@ -802,8 +2112,12 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -802,8 +2118,12 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     int verbosity = *verbosityPtr, myverb;
     int hypre_sol, hypre_pre;
  
@@ -4526,7 +4669,7 @@ index 5628f72ca..4f52577e6 100644
     
     Container = (ElmerHypreContainer*)(*ContainerPtr);
  
-@@ -820,12 +2134,20 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -820,12 +2140,20 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     if (myverb > 10) fprintf(stdout,"SolveHypre: solving the linear system\n");
     if (Container==NULL) {
       if(myverb) fprintf( stdout, "ID no. %i: pointer passed into SolveHypre2 is NULL, not solving",myid);
@@ -4550,7 +4693,7 @@ index 5628f72ca..4f52577e6 100644
     solver = Container->solver;
     precond = Container->precond;
  
-@@ -837,40 +2159,161 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -837,40 +2165,161 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     hypre_pre = Container->hypre_method % 100;
  
  
@@ -4738,7 +4881,7 @@ index 5628f72ca..4f52577e6 100644
       if (myverb > 5 ) {
         HYPRE_BoomerAMGGetNumIterations(Container->solver, &num_iterations);
         HYPRE_BoomerAMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
-@@ -879,7 +2322,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -879,7 +2328,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     
     else if( hypre_sol == 2 ) {
       if(myverb > 6) fprintf(stdout,"SolveHypre: Solving linear system with AMS (method %d)\n",Container->hypre_method);
@@ -4747,7 +4890,7 @@ index 5628f72ca..4f52577e6 100644
       if (myverb > 5 ) {
         HYPRE_AMSGetNumIterations(Container->solver, &num_iterations);
         HYPRE_AMSGetFinalRelativeResidualNorm(solver, &final_res_norm);
-@@ -889,18 +2332,21 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -889,18 +2338,21 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     else if ( hypre_sol == 6) {
       if(myverb > 6) fprintf(stdout,"SolveHypre: Solving linear system with PCG (method %d)\n",Container->hypre_method);
  //     HYPRE_ParCSRPCGSetMaxIter(solver, *Rounds); /* max iterations */
@@ -4773,7 +4916,7 @@ index 5628f72ca..4f52577e6 100644
  
       if (myverb > 5 ) {
         HYPRE_BiCGSTABGetNumIterations(Container->solver, &num_iterations);
-@@ -911,7 +2357,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -911,7 +2363,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     else if ( hypre_sol == 8) {
       if(myverb > 6) fprintf(stdout,"SolveHypre: Solving linear system with GMRes (method %d)\n",Container->hypre_method);
  //     HYPRE_GMRESSetMaxIter(solver, *Rounds); /* max GMRES iterations */
@@ -4782,7 +4925,7 @@ index 5628f72ca..4f52577e6 100644
  
       if (myverb > 5 ) {
         HYPRE_GMRESGetNumIterations(Container->solver, &num_iterations);
-@@ -922,18 +2368,16 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -922,18 +2374,16 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     else if ( hypre_sol == 9) {
       if(myverb > 6) fprintf(stdout,"SolveHypre: Solving linear system with FlexGMRes (method %d)\n",Container->hypre_method);
  //     HYPRE_ParCSRFlexGMRESSetMaxIter(solver, *Rounds); /* max iterations */
@@ -4805,7 +4948,7 @@ index 5628f72ca..4f52577e6 100644
  
       if (myverb > 5 ) {
         HYPRE_LGMRESGetNumIterations(Container->solver, &num_iterations);
-@@ -943,7 +2387,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -943,7 +2393,7 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     else if ( hypre_sol == 11) {
       if(myverb > 6) fprintf(stdout,"SolveHypre: Solving linear system with COGMRes (method %d)\n",Container->hypre_method);     
  //     HYPRE_ParCSRLGMRESSetMaxIter(solver, *Rounds); /* max iterations */
@@ -4814,7 +4957,7 @@ index 5628f72ca..4f52577e6 100644
            
       if (myverb > 5 ) {
         HYPRE_COGMRESGetNumIterations(Container->solver, &num_iterations);
-@@ -952,29 +2396,229 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
+@@ -952,29 +2402,301 @@ void STDCALLBULL FC_FUNC(solvehypre2,SOLVEHYPRE2)
     }
     
     for( k=0,i=0; i<local_size; i++ )
@@ -4920,6 +5063,78 @@ index 5628f72ca..4f52577e6 100644
 +   numeric Krylov setup while keeping IJ objects and solver allocations alive.
 +   For Phase24 B2, the registered AMG setup callback returns success without
 +   rebuilding the existing hierarchy; B1 and recovery request the real setup. */
++/* Refresh the values of an assembled IJ matrix in place from the unsummed
++   local CSR rows (zero the owned values, then add every local row). */
++static void phase24_refresh_ij_values(HYPRE_IJMatrix M, int local_size, int *rows,
++                                      int *cols, double *vals, int *globaldofs,
++                                      ElmerHypreContainer *Container)
++{
++  int i, j, k, nnz, irow, max_nnz = 0;
++  for (i = 0; i < local_size; i++) {
++    nnz = rows[i+1] - rows[i];
++    if (nnz > max_nnz) max_nnz = nnz;
++  }
++  if (Container->index_capacity < max_nnz) {
++    Container->index_buf = (int *)realloc(Container->index_buf, (size_t)max_nnz * sizeof(int));
++    Container->index_capacity = max_nnz;
++  }
++  HYPRE_IJMatrixInitialize(M);
++  HYPRE_IJMatrixSetConstantValues(M, 0.0);
++  for (i = 0; i < local_size; i++) {
++    nnz = rows[i+1] - rows[i];
++    if (nnz <= 0) continue;
++    irow = globaldofs[i];
++    for (k = 0, j = rows[i]; j < rows[i+1]; j++, k++)
++      Container->index_buf[k] = globaldofs[cols[j-1]-1];
++    HYPRE_IJMatrixAddToValues(M, 1, &nnz, &irow, Container->index_buf, &vals[rows[i]-1]);
++  }
++  HYPRE_IJMatrixAssemble(M);
++}
++
++/* Phase24 reuse with a separate preconditioning matrix: the Krylov matrix A
++   is refreshed on every call; the preconditioning matrix and its BoomerAMG
++   hierarchy only when *rebuildPtr is set.  The IJ graphs, PCG object and
++   vectors are kept (fixed sparsity pattern). */
++void STDCALLBULL FC_FUNC(solvehypre11,SOLVEHYPRE11)
++ (
++  int *nrows, int *rows, int *cols, double *vals, double *precvals,
++  int *globaldofs, int *rebuildPtr, int** ContainerPtr, int *fcomm
++ )
++{
++   ElmerHypreContainer *Container = (ElmerHypreContainer*)(*ContainerPtr);
++   HYPRE_ParCSRMatrix parcsr_A, parcsr_T;
++   HYPRE_ParVector par_b, par_x;
++   int local_size = *nrows;
++   double st, realtime_();
++
++   if (Container == NULL) return;
++   st = realtime_();
++   /* Start from Elmer's current iterate as a fresh container would: the
++      linear system is rescaled for every solve, so HYPRE's previous x is in
++      a different scaling and is a poor warm start. */
++   Container->vectors_initialized = 0;
++   phase24_refresh_ij_values(Container->A, local_size, rows, cols, vals, globaldofs, Container);
++   HYPRE_IJMatrixGetObject(Container->A, (void **) &parcsr_A);
++   Container->parcsr_A = parcsr_A;
++   Container->matrix_refresh_calls++;
++   if (*rebuildPtr && Container->Atilde != Container->A) {
++     double sa;
++     phase24_refresh_ij_values(Container->Atilde, local_size, rows, cols, precvals, globaldofs, Container);
++     HYPRE_IJMatrixGetObject(Container->Atilde, (void **) &parcsr_T);
++     HYPRE_IJVectorGetObject(Container->b, (void **) &par_b);
++     HYPRE_IJVectorGetObject(Container->x, (void **) &par_x);
++     sa = realtime_();
++     HYPRE_BoomerAMGSetup(Container->precond, parcsr_T, par_b, par_x);
++     phase24_tilde_matrix = parcsr_T;
++     if (getenv("PHASE24_HYPRE_REPORT") != NULL)
++       fprintf(stdout, "SolveHypre: Phase24 reuse: preconditioner rebuilt (AMG setup %.3f s, total %.3f s)\n",
++               realtime_() - sa, realtime_() - st);
++   } else if (getenv("PHASE24_HYPRE_REPORT") != NULL) {
++     fprintf(stdout, "SolveHypre: Phase24 reuse: matrix refreshed, AMG kept (%.3f s)\n",
++             realtime_() - st);
++   }
++}
++
 +void STDCALLBULL FC_FUNC(solvehypre3,SOLVEHYPRE3)
 + (
 +  int *nrows, int *rows, int *cols, double *vals, int *globaldofs,
@@ -5062,7 +5277,7 @@ index 5628f72ca..4f52577e6 100644
  
  /* destroy HYPRE data structure stored in a fortran environment */
  void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
-@@ -987,6 +2631,8 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -987,6 +2709,8 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
  
     if (Container==0) return;
  
@@ -5071,7 +5286,7 @@ index 5628f72ca..4f52577e6 100644
     myverb = verbosity;
     
     hypre_sol = Container->hypre_method / 100;
-@@ -995,27 +2641,10 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -995,27 +2719,10 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
     
     if(myverb > 10 ) fprintf(stdout,"SolveHypre: Destroying Hypre solver structures!\n");
  
@@ -5103,7 +5318,7 @@ index 5628f72ca..4f52577e6 100644
     if ( hypre_sol == 1) { /* boomer AMG */
       if(myverb > 10) fprintf(stdout,"SolveHypre: Destroying BoomerAMG solver\n");
       HYPRE_BoomerAMGDestroy(Container->solver);
-@@ -1047,6 +2676,41 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -1047,6 +2754,41 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
       HYPRE_ParCSRCOGMRESDestroy(Container->solver);
     }
  
@@ -5145,7 +5360,7 @@ index 5628f72ca..4f52577e6 100644
     if (Container->Atilde != Container->A) {
       HYPRE_IJMatrixDestroy(Container->Atilde);
     }
-@@ -1054,13 +2718,30 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
+@@ -1054,13 +2796,30 @@ void STDCALLBULL FC_FUNC(solvehypre4,SOLVEHYPRE4)
     if (Container->A) {
       HYPRE_IJMatrixDestroy(Container->A);
     }
@@ -5178,7 +5393,7 @@ index 5628f72ca..4f52577e6 100644
  
  
  void STDCALLBULL FC_FUNC(createhypreams,CREATEHYPREAMS)
-@@ -1306,4 +2987,55 @@ void STDCALLBULL FC_FUNC(createhypreams,CREATEHYPREAMS)
+@@ -1306,4 +3065,55 @@ void STDCALLBULL FC_FUNC(createhypreams,CREATEHYPREAMS)
     if(myverb>5) fprintf( stdout, "SolveHypre: AMS preconditioner setup time: %g\n", realtime_()-st );
  }
  
@@ -5235,7 +5450,7 @@ index 5628f72ca..4f52577e6 100644
 +
  #endif
 diff --git a/fem/src/SolverUtils.F90 b/fem/src/SolverUtils.F90
-index f6e7cc2b6..816dcd525 100644
+index f6e7cc2b6..41070938a 100644
 --- a/fem/src/SolverUtils.F90
 +++ b/fem/src/SolverUtils.F90
 @@ -64,6 +64,18 @@ MODULE SolverUtils
@@ -5308,7 +5523,87 @@ index f6e7cc2b6..816dcd525 100644
         CASE DEFAULT
           CALL Fatal('UpdateGlobalEquationsVec','Not implemented for given matrix type')
         END SELECT
-@@ -15437,6 +15457,10 @@ END FUNCTION SearchNodeL
+@@ -10052,13 +10072,15 @@ END FUNCTION SearchNodeL
+      TYPE(Solver_t), TARGET :: Solver  !< Solver to be initialized.
+ !------------------------------------------------------------------------------
+      CHARACTER(:), ALLOCATABLE :: Method
+-     LOGICAL :: GotIt, ExtrapolateInTime
+-     INTEGER :: i, Order,ndofs
++     LOGICAL :: GotIt, ExtrapolateInTime, Phase24BDF2Predictor, &
++          Phase24BDF2PredictorReset
++     INTEGER :: i, Order,ndofs, PredictorResetIndex
+      REAL(KIND=dp), POINTER CONTIG :: SaveValues(:)
+      TYPE(Matrix_t), POINTER :: A
+      TYPE(Variable_t), POINTER :: Var
+      TYPE(Solver_t), POINTER :: pSolver
+-     REAL(KIND=dp) :: eFact
++     REAL(KIND=dp) :: eFact, PredictorPreviousDt, PredictorStepStart
++     REAL(KIND=dp), POINTER :: PredictorResetTimes(:,:)
+      REAL(KIND=dp), ALLOCATABLE :: NewVals(:)
+      
+ !------------------------------------------------------------------------------
+@@ -10154,6 +10176,60 @@ END FUNCTION SearchNodeL
+        IF(.NOT.GotIt) eFact = 1._dp
+      END IF
+ 
++     ! The stock extrapolator uses one fixed coefficient.  That is a valid
++     ! linear predictor only for constant timesteps.  Phase24 production uses
++     ! variable-step BDF2, so opt in to x(n+1)^0 = x(n) + h(n+1)/h(n) *
++     ! (x(n)-x(n-1)).  Keep the existing path as the default and fall back to
++     ! the previous-step value at startup, after a rejected/discontinuous
++     ! history, or for a step-ratio outside the accepted BDF2 interval.
++     Phase24BDF2Predictor = ListGetLogical(Solver % Values, &
++          'Phase24 BDF2 Predictor', GotIt)
++     IF (.NOT. GotIt) Phase24BDF2Predictor = ListGetLogical( &
++          CurrentModel % Simulation, 'Phase24 BDF2 Predictor', GotIt)
++     IF (.NOT. GotIt) Phase24BDF2Predictor = .FALSE.
++     Phase24BDF2PredictorReset = .FALSE.
++     IF (Phase24BDF2Predictor) THEN
++       PredictorResetTimes => ListGetConstRealArray(Solver % Values, &
++            'Phase24 BDF1 Step Start Times', GotIt)
++       IF (GotIt .AND. ASSOCIATED(PredictorResetTimes)) THEN
++         BLOCK
++           TYPE(Variable_t), POINTER :: PredictorTimeVar
++           PredictorTimeVar => VariableGet(Solver % Mesh % Variables, 'time')
++           IF (ASSOCIATED(PredictorTimeVar)) THEN
++             PredictorStepStart = PredictorTimeVar % Values(1) - Solver % dt
++             DO PredictorResetIndex = 1, SIZE(PredictorResetTimes,1)
++               IF (ABS(PredictorStepStart-PredictorResetTimes(PredictorResetIndex,1)) &
++                    <= 1.0e-3_dp*Solver % dt) Phase24BDF2PredictorReset = .TRUE.
++             END DO
++           END IF
++         END BLOCK
++       END IF
++     END IF
++     IF (Phase24BDF2Predictor .AND. Method == 'bdf' .AND. &
++          Solver % Order >= 2 .AND. Solver % DoneTime > 1 .AND. &
++          .NOT. Phase24BDF2PredictorReset) THEN
++       PredictorPreviousDt = -1.0_dp
++       BLOCK
++         TYPE(Variable_t), POINTER :: PredictorDtVar
++         PredictorDtVar => VariableGet(Solver % Mesh % Variables, 'Timestep size')
++         IF (ASSOCIATED(PredictorDtVar)) THEN
++           IF (ASSOCIATED(PredictorDtVar % PrevValues)) &
++             PredictorPreviousDt = PredictorDtVar % PrevValues(1,1)
++         END IF
++       END BLOCK
++       IF (PredictorPreviousDt > 0.0_dp .AND. Solver % dt > 0.0_dp) THEN
++         eFact = Solver % dt / PredictorPreviousDt
++         IF (eFact >= 0.5_dp .AND. eFact <= 2.0_dp) THEN
++           ExtrapolateInTime = .TRUE.
++         ELSE
++           ExtrapolateInTime = .FALSE.
++           eFact = 0.0_dp
++         END IF
++       ELSE
++         ExtrapolateInTime = .FALSE.
++       END IF
++     END IF
++
+      IF ( Solver % TimeOrder>1 .OR. method/='bdf') THEN
+        IF( Solver % TimeOrder == 2 ) THEN         
+          Solver % Beta = -1 ! use this to select method later (for now)
+@@ -15437,6 +15513,10 @@ END FUNCTION SearchNodeL
          CALL BlockSolveExt( A, x, b, Solver )
        CASE('amgx')
          CALL AMGXSolver( A, x, b, Solver )
@@ -5319,7 +5614,7 @@ index f6e7cc2b6..816dcd525 100644
        CASE('rocalution')
          CALL ROCSolver( A, x, b, Solver )
        CASE('hypre')
-@@ -15462,6 +15486,8 @@ END FUNCTION SearchNodeL
+@@ -15462,6 +15542,8 @@ END FUNCTION SearchNodeL
          CALL BlockSolveExt( A, x, b, Solver )
        CASE('amgx')
          CALL AMGXSolver( A, x, b, Solver )
@@ -5328,7 +5623,7 @@ index f6e7cc2b6..816dcd525 100644
        CASE('rocalution')
          CALL ROCSolver( A, x, b, Solver )
        CASE('direct')
-@@ -15692,7 +15718,7 @@ END FUNCTION SearchNodeL
+@@ -15692,7 +15774,7 @@ END FUNCTION SearchNodeL
  #ifdef HAVE_AMGX
      INTERFACE
        SUBROUTINE AMGXSolve(AMGX, n, rows, cols, vals, b, x, &
@@ -5337,7 +5632,7 @@ index f6e7cc2b6..816dcd525 100644
  
           USE Types
           USE ISO_C_BINDING, ONLY: C_CHAR, C_INTPTR_T
-@@ -15702,15 +15728,15 @@ END FUNCTION SearchNodeL
+@@ -15702,15 +15784,15 @@ END FUNCTION SearchNodeL
           INTEGER(KIND=C_INTPTR_T) :: AMGX
           REAL(KIND=dp) :: vals(*), b(*), x(*), bnrm
           CHARACTER(KIND=C_CHAR) :: config(*)
@@ -5356,7 +5651,7 @@ index f6e7cc2b6..816dcd525 100644
      REAL(KIND=dp)  :: bnrm
  
      TYPE(Matrix_t), POINTER :: Bm
-@@ -15725,6 +15751,8 @@ END FUNCTION SearchNodeL
+@@ -15725,6 +15807,8 @@ END FUNCTION SearchNodeL
      END IF
  
      config = ListGetString( Solver % Values, 'AMGX Config')
@@ -5365,7 +5660,7 @@ index f6e7cc2b6..816dcd525 100644
      DO i=1,LEN_TRIM(config)
        cfg(i) = config(i:i)
      END DO
-@@ -15896,7 +15924,11 @@ END FUNCTION SearchNodeL
+@@ -15896,7 +15980,11 @@ END FUNCTION SearchNodeL
          bnrm = SQRT(ParallelReduction(SUM(bb**2)))
  
          CALL AMGXSolve( A % AMGX, n, Bm % Rows-1, Bm % Cols-1, Bm % Values,  &
@@ -5378,7 +5673,7 @@ index f6e7cc2b6..816dcd525 100644
  
          x = 0
          DO i=1,n
-@@ -15910,13 +15942,306 @@ END FUNCTION SearchNodeL
+@@ -15910,13 +15998,306 @@ END FUNCTION SearchNodeL
  
        CALL AMGXSolve( A % AMGX, n, A % Rows-1, A % Cols-1, &
          A % Values, b, x, nonlin_update, cfg, ELMER_COMM_WORLD, n, &
@@ -5686,7 +5981,7 @@ index f6e7cc2b6..816dcd525 100644
  !------------------------------------------------------------------------------
  
  
-@@ -19766,6 +20091,96 @@ SUBROUTINE EliminateLinearRestriction( StiffMatrix, ForceVector, RestMatrix, &
+@@ -19766,6 +20147,96 @@ SUBROUTINE EliminateLinearRestriction( StiffMatrix, ForceVector, RestMatrix, &
  
  END SUBROUTINE EliminateLinearRestriction
  
@@ -5783,7 +6078,7 @@ index f6e7cc2b6..816dcd525 100644
    
  
  !------------------------------------------------------------------------------
-@@ -19796,10 +20211,14 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -19796,10 +20267,14 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
    REAL(KIND=dp) :: scl, rowsum, Relax, val
    LOGICAL :: Found, ExportMultiplier, NotExplicit, Refactorize, EnforceDirichlet, &
        NonEmptyRow, ComplexSystem, ConstraintScaling, UseTranspose, EliminateConstraints, &
@@ -5800,7 +6095,7 @@ index f6e7cc2b6..816dcd525 100644
    LOGICAL, ALLOCATABLE :: TrueDof(:)
    INTEGER, ALLOCATABLE :: Iperm(:)
    REAL(KIND=dp) :: t0,rt0,st,rst
-@@ -19817,6 +20236,36 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -19817,6 +20292,36 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
  
    SolverPointer => Solver  
    Params => Solver % Values
@@ -5837,7 +6132,7 @@ index f6e7cc2b6..816dcd525 100644
  
    t0 = CPUTime()
    rt0 = RealTime()
-@@ -19842,6 +20291,9 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -19842,6 +20347,9 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
    IF(ASSOCIATED(AddMatrix)) AddVector => AddMatrix % RHS
  
    EliminateConstraints = ListGetLogical( Params, 'Eliminate Linear Constraints', Found)
@@ -5847,7 +6142,7 @@ index f6e7cc2b6..816dcd525 100644
    
    NumberOfRows = StiffMatrix % NumberOfRows
    
-@@ -19879,7 +20331,8 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -19879,7 +20387,8 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
    NumberOfRows = StiffMatrix % NumberOfRows
    IF(ASSOCIATED(AddMatrix)) NumberOfRows = MAX(NumberOfRows,AddMatrix % NumberOfRows)
    IF(ASSOCIATED(RestMatrix)) THEN
@@ -5857,7 +6152,7 @@ index f6e7cc2b6..816dcd525 100644
    END IF
  
    ALLOCATE( CollectionMatrix % RHS( NumberOfRows ), &
-@@ -19970,7 +20423,8 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -19970,7 +20479,8 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
    CALL Info(Caller,'Number of Rows / Nonzeros in original matrix: '&
        //I2S(StiffMatrix % NumberOfRows)//' / '//I2S(SIZE(StiffMatrix % Values)),Level=22) 
    
@@ -5867,7 +6162,7 @@ index f6e7cc2b6..816dcd525 100644
  
      CALL Info(Caller,'Adding ConstraintMatrix into CollectionMatrix',Level=10)
  
-@@ -20168,6 +20622,10 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -20168,6 +20678,10 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
      CollectionVector(i) = CollectionVector(i) + ForceVector(i)
    END DO
  
@@ -5878,7 +6173,7 @@ index f6e7cc2b6..816dcd525 100644
  !------------------------------------------------------------------------------
  ! Eliminate constraints instead of adding the Lagrange coefficient equations.
  ! Assumes biorthogonal basis for Lagrange coefficient interpolation, but not
-@@ -20226,6 +20684,9 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -20226,6 +20740,9 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
      
    CALL Info( Caller, 'CollectionVector done', Level=12 )
  
@@ -5888,7 +6183,7 @@ index f6e7cc2b6..816dcd525 100644
  !------------------------------------------------------------------------------
  ! Solve the Collection-system 
  !------------------------------------------------------------------------------
-@@ -20319,10 +20780,22 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -20319,10 +20836,22 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
    
  
    CALL Info(Caller,'Now solving the linear system with constraints!',Level=10)
@@ -5911,7 +6206,7 @@ index f6e7cc2b6..816dcd525 100644
  
    IF(DoOwnScaling) THEN
      CALL BackScaleLinearSystem( Solver,CollectionMatrix,CollectionVector,&
-@@ -20446,6 +20919,103 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
+@@ -20446,6 +20975,103 @@ RECURSIVE SUBROUTINE SolveWithLinearRestriction( StiffMatrix, ForceVector, &
      CALL Info( Caller, 'All done', Level=10 )
  CONTAINS
  
@@ -6273,7 +6568,7 @@ index 428110e0e..c95f39739 100644
  
        free(b_t); free(x_t);
 diff --git a/fem/src/modules/HeatSolve.F90 b/fem/src/modules/HeatSolve.F90
-index bc3335c28..f892f0ef9 100644
+index bc3335c28..4fff848aa 100644
 --- a/fem/src/modules/HeatSolve.F90
 +++ b/fem/src/modules/HeatSolve.F90
 @@ -41,6 +41,7 @@
@@ -6352,7 +6647,7 @@ index bc3335c28..f892f0ef9 100644
  ! Which compressibility model is used
       CHARACTER(LEN=MAX_NAME_LEN) :: CompressibilityFlag, ConvectionField
       INTEGER :: CompressibilityModel
-@@ -134,19 +166,51 @@ END SUBROUTINE HeatSolver_Init
+@@ -134,19 +166,54 @@ END SUBROUTINE HeatSolver_Init
          SmartHeaterControl, IntegralHeaterControl, HeaterControlLocal, SmartTolReached=.FALSE., &
          TransientHeaterControl, SmartHeaterAverage, ConstantBulk, SaveBulk, &
  	TransientAssembly, Converged, AnyMultiply, NeedFlowSol
@@ -6401,11 +6696,14 @@ index bc3335c28..f892f0ef9 100644
 +          Phase24CurrentHOld, Phase24CurrentRatio
 +     INTEGER :: Phase24CurrentOrder
 +     LOGICAL :: Phase24AdaptiveDebug
++     LOGICAL :: Phase24BDF2Predictor
++     LOGICAL :: Phase24BDF2PredictorActive, Phase24PredictorHistoryReady
++     REAL(KIND=dp) :: Phase24PredictorDelta, Phase24PredictorMaxDelta
 +     CHARACTER(LEN=MAX_NAME_LEN) :: Phase24LagModeName, Phase24OuterCapturePrefix
  
       REAL(KIND=dp), POINTER :: Temperature(:),PrevTemperature(:),FlowSolution(:), &
         ElectricCurrent(:), PhaseChangeIntervals(:,:),ForceVector(:), &
-@@ -156,6 +220,81 @@ END SUBROUTINE HeatSolver_Init
+@@ -156,6 +223,90 @@ END SUBROUTINE HeatSolver_Init
       REAL(KIND=dp), ALLOCATABLE :: vals(:)
       REAL(KIND=dp) :: Jx,Jy,Jz,JAbs, Power, MeltPoint, IntHeatSource
  
@@ -6445,6 +6743,15 @@ index bc3335c28..f892f0ef9 100644
 +     ! parallel to Matrix % Values.
 +     REAL(KIND=dp), ALLOCATABLE, SAVE :: Phase24PrecDelta(:)
 +     LOGICAL, SAVE :: Phase24LumpedPrec = .FALSE.
++     ! Circuit law and the Joule power used by the latest thermal solve, kept
++     ! so that the coupled residual P_circuit(T_TES) - P_used can be checked
++     ! after the solve ('TES Inner Circuit Power Residual Tolerance').
++     LOGICAL, SAVE :: TESResValid = .FALSE.
++     REAL(KIND=dp), SAVE :: TESResIBias, TESResRSh, TESResR0, TESResRMin, TESResAlpha, &
++          TESResBeta, TESResI0, TESResT0, TESResL, TESResPrevI, TESResP, TESResDt
++     REAL(KIND=dp) :: TESPowerTol, TESPowerRes, TESCoupledTolT, TESdPdT, TESdTCircuit, &
++          TESdkRel, TESdkTmax, TESdkTmin, TESdTk
++     REAL(KIND=dp), ALLOCATABLE :: TESdkNow(:)
 +     ! Fast elements whose body force only carries a 'Volumetric Heat Source'
 +     ! keep the cached operator; the source enters the RHS as
 +     ! int N_i sum_j N_j q_j (the generic form) from nodal values evaluated
@@ -6487,7 +6794,7 @@ index bc3335c28..f892f0ef9 100644
       INTEGER, ALLOCATABLE, SAVE :: Indexes(:), SaveIndexes(:)
  
       REAL(KIND=dp), ALLOCATABLE :: MASS(:,:), &
-@@ -216,6 +355,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -216,6 +367,10 @@ END SUBROUTINE HeatSolver_Init
       END INTERFACE
  
       REAL(KIND=dp) :: at,at0,totat,st,totst,t1
@@ -6498,7 +6805,7 @@ index bc3335c28..f892f0ef9 100644
  
  
       CALL Info('HeatSolver','-------------------------------------------',Level=6)
-@@ -233,6 +376,136 @@ END SUBROUTINE HeatSolver_Init
+@@ -233,6 +388,136 @@ END SUBROUTINE HeatSolver_Init
       IF ( .NOT. ASSOCIATED( Solver % Matrix ) ) RETURN
  
       SolverParams => GetSolverParams()
@@ -6635,7 +6942,7 @@ index bc3335c28..f892f0ef9 100644
  
       Radiosity = GetLogical( SolverParams,'Radiosity Model',Found ) 
       Spectral = GetLogical( SolverParams,'Spectral Model',Found )
-@@ -268,6 +541,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -268,6 +553,10 @@ END SUBROUTINE HeatSolver_Init
       LocalNodes = COUNT( TempPerm > 0 )
       IF ( LocalNodes <= 0 ) RETURN
       IF(SIZE(Temperature) < LocalNodes) LocalNodes = SIZE(Temperature)
@@ -6646,7 +6953,7 @@ index bc3335c28..f892f0ef9 100644
       
       
       NeedFlowSol = .FALSE.
-@@ -448,6 +725,12 @@ END SUBROUTINE HeatSolver_Init
+@@ -448,6 +737,12 @@ END SUBROUTINE HeatSolver_Init
       NonlinearIter = GetInteger(   SolverParams, &
                       'Nonlinear System Max Iterations', Found )
       IF ( .NOT.Found ) NonlinearIter = 1
@@ -6659,7 +6966,7 @@ index bc3335c28..f892f0ef9 100644
  
       NonlinearTol  = GetConstReal( SolverParams, &
                       'Nonlinear System Convergence Tolerance',    Found )
-@@ -639,6 +922,14 @@ END SUBROUTINE HeatSolver_Init
+@@ -639,6 +934,14 @@ END SUBROUTINE HeatSolver_Init
       END IF
  !------------------------------------------------------------------------------
       FirstTime = .TRUE.
@@ -6674,7 +6981,67 @@ index bc3335c28..f892f0ef9 100644
  
       ALLOCATE(PrevSolution(LocalNodes))
       
-@@ -666,13 +957,52 @@ END SUBROUTINE HeatSolver_Init
+@@ -656,6 +959,59 @@ END SUBROUTINE HeatSolver_Init
+      IF ( TransientSimulation ) THEN
+        PrevTemperature => Solver % Variable % PrevValues(:,1)
+      END IF
++     ! Apply event-boundary order resets before choosing the nonlinear initial
++     ! field and circuit state for this timestep.
++     IF (TransientSimulation .AND. Solver % Order > 1) THEN
++       BDFResetTimes => ListGetConstRealArray(SolverParams, &
++            'Phase24 BDF1 Step Start Times', Found)
++       IF (Found .AND. ASSOCIATED(BDFResetTimes)) THEN
++         BDFStepStart = GetTime() - Solver % dt
++         DO kReset = 1, SIZE(BDFResetTimes,1)
++           IF (ABS(BDFStepStart - BDFResetTimes(kReset,1)) <= 1.0e-3_dp*Solver % dt) THEN
++             IF (Solver % DoneTime /= 1) CALL Info('HeatSolve', &
++                  'Phase24 BDF order reset to 1 for this step',Level=4)
++             Solver % DoneTime = 1
++           END IF
++         END DO
++       END IF
++     END IF
++     Phase24BDF2Predictor = ListGetLogical(Model % Simulation, &
++          'Phase24 BDF2 Predictor',Found)
++     Phase24BDF2PredictorActive = .FALSE.
++     IF (Phase24BDF2Predictor .AND. TransientSimulation .AND. &
++          MIN(Solver % DoneTime,Solver % Order) == 2 .AND. Solver % dt > 0.0_dp) THEN
++       Phase24PredictorMaxDelta = ListGetConstReal(Model % Simulation, &
++            'Phase24 BDF2 Predictor Max Delta',Found)
++       IF (.NOT. Found) Phase24PredictorMaxDelta = 1.0e-5_dp
++       Phase24PredictorHistoryReady = .FALSE.
++       Phase24PredictorDelta = HUGE(1.0_dp)
++       IF (ASSOCIATED(Solver % Variable % PrevValues)) THEN
++         IF (SIZE(Solver % Variable % PrevValues,2) >= 2) THEN
++           CALL Phase24GetBDFCoefficients(2,Solver % dt,Phase24CurrentHOld, &
++                Phase24CurrentA0,Phase24CurrentA1,Phase24CurrentA2)
++           Phase24CurrentRatio = Solver % dt / Phase24CurrentHOld
++           Phase24PredictorDelta = Phase24CurrentRatio * MAXVAL(ABS( &
++                Solver % Variable % PrevValues(1:LocalNodes,1) - &
++                Solver % Variable % PrevValues(1:LocalNodes,2)))
++           Phase24PredictorHistoryReady = .TRUE.
++         END IF
++       END IF
++       ! A large extrapolated jump can move the electrothermal Picard solve
++       ! to a different branch before its usual two-iteration exit.  Require
++       ! every rank to stay within the trust region, particularly at pulses
++       ! and when the variable timestep grows sharply.
++       Phase24BDF2PredictorActive = ParallelReduction(MERGE(0.0_dp,1.0_dp, &
++            Phase24PredictorHistoryReady .AND. &
++            Phase24PredictorDelta <= Phase24PredictorMaxDelta)) < 0.5_dp
++       IF (Phase24BDF2PredictorActive) THEN
++           Temperature(1:LocalNodes) = Solver % Variable % PrevValues(1:LocalNodes,1) + &
++                Phase24CurrentRatio * (Solver % Variable % PrevValues(1:LocalNodes,1) - &
++                Solver % Variable % PrevValues(1:LocalNodes,2))
++           PrevSolution = Temperature(1:LocalNodes)
++       END IF
++     END IF
++     CALL ListAddLogical(SolverParams,'Phase24 BDF2 Predictor Active', &
++          Phase24BDF2PredictorActive)
+ !------------------------------------------------------------------------------
+      
+      totat = 0.0d0
+@@ -666,13 +1022,52 @@ END SUBROUTINE HeatSolver_Init
       CALL DefaultStart()
       
       
@@ -6728,7 +7095,7 @@ index bc3335c28..f892f0ef9 100644
  
         CALL Info( 'HeatSolve', ' ', Level=4 )
         CALL Info( 'HeatSolve', ' ', Level=4 )
-@@ -756,7 +1086,124 @@ END SUBROUTINE HeatSolver_Init
+@@ -756,7 +1151,106 @@ END SUBROUTINE HeatSolver_Init
         CALL StartAdvanceOutput( 'HeatSolve', 'Assembly:' )
         NofActive = GetNOFActive()
  
@@ -6738,24 +7105,6 @@ index bc3335c28..f892f0ef9 100644
 +     Phase24StaticAssemblyActive = .FALSE.
 +     Phase24PrismAssemblyActive = .FALSE.
 +     Phase24StaticCacheHit = .FALSE.
-+     ! Opt-in order reset: a step that starts at one of these times is taken
-+     ! with BDF1 (DoneTime=1), and BDF2 resumes on the next step.  BDF2 would
-+     ! otherwise extrapolate a source discontinuity (the 1 ns pulse) as a
-+     ! slope and amplify the deposited jump.
-+     IF (TransientSimulation .AND. Solver % Order > 1) THEN
-+       BDFResetTimes => ListGetConstRealArray(SolverParams, &
-+            'Phase24 BDF1 Step Start Times', Found)
-+       IF (Found .AND. ASSOCIATED(BDFResetTimes)) THEN
-+         BDFStepStart = GetTime() - Solver % dt
-+         DO kReset = 1, SIZE(BDFResetTimes,1)
-+           IF (ABS(BDFStepStart - BDFResetTimes(kReset,1)) <= 1.0e-3_dp*Solver % dt) THEN
-+             IF (Solver % DoneTime /= 1) CALL Info('HeatSolve', &
-+                  'Phase24 BDF order reset to 1 for this step',Level=4)
-+             Solver % DoneTime = 1
-+           END IF
-+         END DO
-+       END IF
-+     END IF
 +     Phase24CurrentOrder = MIN(Solver % DoneTime, Solver % Order)
 +     CALL Phase24GetBDFCoefficients(Phase24CurrentOrder,Solver % dt, &
 +          Phase24CurrentHOld,Phase24CurrentA0,Phase24CurrentA1,Phase24CurrentA2)
@@ -6854,7 +7203,7 @@ index bc3335c28..f892f0ef9 100644
           
           CALL AdvanceOutput(t,NofActive)
  !------------------------------------------------------------------------------
-@@ -765,6 +1212,19 @@ END SUBROUTINE HeatSolver_Init
+@@ -765,6 +1259,19 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
           Element => GetActiveElement(t)
  
@@ -6874,7 +7223,7 @@ index bc3335c28..f892f0ef9 100644
  !------------------------------------------------------------------------------
           IF ( Element % BodyId /= body_id ) THEN
  !------------------------------------------------------------------------------
-@@ -809,30 +1269,86 @@ END SUBROUTINE HeatSolver_Init
+@@ -809,30 +1316,86 @@ END SUBROUTINE HeatSolver_Init
  
           n = GetElementNOFNodes()
           CALL GetElementNodes( ElementNodes )
@@ -6975,7 +7324,7 @@ index bc3335c28..f892f0ef9 100644
           END IF
  !------------------------------------------------------------------------------
  
-@@ -955,6 +1471,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -955,6 +1518,7 @@ END SUBROUTINE HeatSolver_Init
             IF ( ALL(MU==0) ) C1 = 0.0D0 
           END IF
  
@@ -6983,7 +7332,7 @@ index bc3335c28..f892f0ef9 100644
           HeatCapacity(1:n) = Density(1:n) * HeatCapacity(1:n)
   
  !------------------------------------------------------------------------------
-@@ -1024,10 +1541,53 @@ END SUBROUTINE HeatSolver_Init
+@@ -1024,10 +1588,53 @@ END SUBROUTINE HeatSolver_Init
             END IF
           END IF
  
@@ -7038,7 +7387,7 @@ index bc3335c28..f892f0ef9 100644
  !------------------------------------------------------------------------------
             CALL DiffuseConvectiveCompose( &
                 MASS, STIFF, FORCE, LOAD, &
-@@ -1038,7 +1598,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -1038,7 +1645,7 @@ END SUBROUTINE HeatSolver_Init
                 Stabilize, UseBubbles, Element, n, ElementNodes )
  
  !------------------------------------------------------------------------------
@@ -7047,7 +7396,7 @@ index bc3335c28..f892f0ef9 100644
  !------------------------------------------------------------------------------
             CALL DiffuseConvectiveGenCompose( &
                 MASS, STIFF, FORCE, LOAD, &
-@@ -1049,6 +1609,7 @@ END SUBROUTINE HeatSolver_Init
+@@ -1049,6 +1656,7 @@ END SUBROUTINE HeatSolver_Init
                 Stabilize, Element, n, ElementNodes )
  !------------------------------------------------------------------------------
           END IF
@@ -7055,7 +7404,7 @@ index bc3335c28..f892f0ef9 100644
  !------------------------------------------------------------------------------
  
           ! The heat equation may have lower dimensional elements active also.
-@@ -1070,8 +1631,10 @@ END SUBROUTINE HeatSolver_Init
+@@ -1070,8 +1678,10 @@ END SUBROUTINE HeatSolver_Init
               CALL Default1stOrderTime( MASS, STIFF, FORCE )
             END IF
  
@@ -7066,7 +7415,7 @@ index bc3335c28..f892f0ef9 100644
           ELSE
              Bubbles = UseBubbles .AND. .NOT.Stabilize .AND. &
              ( ConvectionFlag == 'computed' .OR. ConvectionFlag == 'constant' )
-@@ -1096,13 +1659,22 @@ END SUBROUTINE HeatSolver_Init
+@@ -1096,13 +1706,22 @@ END SUBROUTINE HeatSolver_Init
                 CALL Condensate( N, STIFF, FORCE, TimeForce )
              END IF
  
@@ -7090,7 +7439,7 @@ index bc3335c28..f892f0ef9 100644
  
  
  1000  CONTINUE
-@@ -1112,6 +1684,8 @@ END SUBROUTINE HeatSolver_Init
+@@ -1112,6 +1731,8 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
  !     Neumann & Newton boundary conditions
  !------------------------------------------------------------------------------
@@ -7099,7 +7448,7 @@ index bc3335c28..f892f0ef9 100644
        DO bc_elem = 1, Solver % Mesh % NumberOfBoundaryElements
          
          Element => GetBoundaryElement(bc_elem)
-@@ -1135,9 +1709,16 @@ END SUBROUTINE HeatSolver_Init
+@@ -1135,9 +1756,16 @@ END SUBROUTINE HeatSolver_Init
          END IF
  
          HeatFluxBC = GetLogical( BC, 'Heat Flux BC', Found )
@@ -7116,7 +7465,7 @@ index bc3335c28..f892f0ef9 100644
          CALL AddHeatFluxBC()
  
          IF ( HeatGapBC ) THEN
-@@ -1149,16 +1730,43 @@ END SUBROUTINE HeatSolver_Init
+@@ -1149,16 +1777,43 @@ END SUBROUTINE HeatSolver_Init
          END IF
  
        END DO   ! Neumann & Newton BCs
@@ -7160,7 +7509,7 @@ index bc3335c28..f892f0ef9 100644
  
  !------------------------------------------------------------------------------
  !     Solve the system and check for convergence
-@@ -1248,11 +1856,107 @@ END SUBROUTINE HeatSolver_Init
+@@ -1248,11 +1903,107 @@ END SUBROUTINE HeatSolver_Init
  !     Check stepsize for nonlinear iteration
  !------------------------------------------------------------------------------
          IF( DefaultLinesearch( Converged ) ) GOTO 500
@@ -7247,8 +7596,8 @@ index bc3335c28..f892f0ef9 100644
 +                 'Phase24 lagging fallback: Krylov iteration growth requested fresh operator',Level=4)
 +          END IF
 +        END IF
-       END IF
- 
++      END IF
++
 +      IF (Phase24LaggingEnabled) THEN
 +        Phase24KrylovIterations = ListGetInteger(SolverParams, &
 +             'Phase24 HYPRE Native Last Krylov Iterations',Found)
@@ -7262,14 +7611,14 @@ index bc3335c28..f892f0ef9 100644
 +          CALL Info('HeatSolve', &
 +               'Phase24 lagging cooldown complete after fresh state',Level=4)
 +        END IF
-+      END IF
-+
+       END IF
+ 
 +      IF (Phase24WallProfiling) CALL Phase24Report()
 +
  
        IF( SmartHeaterControl .OR. IntegralHeaterControl) THEN
           CALL Info( 'HeatSolve', 'Heater Control Information', Level=4 )
-@@ -1324,6 +2028,8 @@ END SUBROUTINE HeatSolver_Init
+@@ -1324,6 +2075,8 @@ END SUBROUTINE HeatSolver_Init
  !------------------------------------------------------------------------------
       
        RelativeChange = Solver % Variable % NonlinChange
@@ -7278,7 +7627,7 @@ index bc3335c28..f892f0ef9 100644
  
        WRITE( Message, * ) 'Result Norm   : ',Norm
        CALL Info( 'HeatSolve', Message, Level=4 )
-@@ -1334,7 +2040,46 @@ END SUBROUTINE HeatSolver_Init
+@@ -1334,7 +2087,123 @@ END SUBROUTINE HeatSolver_Init
                 NewtonLinearization = .TRUE.
        Converged =  ( Solver % Variable % NonlinConverged > 0 ) .AND. &
            ( .NOT. SmartHeaterControl .OR. SmartTolReached )
@@ -7286,7 +7635,84 @@ index bc3335c28..f892f0ef9 100644
 +      ! Opt-in: also require the TES mean temperature to have settled between
 +      ! the last two iterates of this step (field-norm changes are dominated
 +      ! by the bath/absorber and can stop while the TES circuit still moves).
-+      IF (TransientSimulation) THEN
++      ! Opt-in: converge on the coupled residual of the final state instead of
++      ! on iterate changes.  The thermal solve is exact for the power it used,
++      ! so the remaining electrothermal inconsistency is P_circuit(T_TES) -
++      ! P_used.  Unlike increment tests this cannot be fooled by a good
++      ! (extrapolated) initial guess, and it allows a one-solve step when the
++      ! predictor is already consistent.
++      TESPowerTol = -1.0_dp
++      IF (TransientSimulation) TESPowerTol = GetConstReal(SolverParams, &
++           'TES Inner Circuit Power Residual Tolerance', Found)
++      TESCoupledTolT = -1.0_dp
++      IF (TransientSimulation) TESCoupledTolT = GetConstReal(SolverParams, &
++           'Phase24 Coupled Temperature Tolerance', Found)
++      IF (TransientSimulation .AND. TESCoupledTolT > 0.0_dp .AND. TESResValid) THEN
++        ! Both remaining nonlinearities, expressed as a bound on the TES
++        ! temperature error of accepting this iterate:
++        !  circuit: dT = F/(1/S + |dP/dT|) <= |F|/|dP/dT| for the negative
++        !           electrothermal feedback (dP/dT < 0), without knowing the
++        !           step's thermal response S;
++        !  k(T):    the membrane conductivity was evaluated at the iterate the
++        !           solve started from; dT <= max|dk/k| * membrane T drop.
++        ! This replaces the field-increment test, which measures predictor
++        ! error rather than inconsistency.
++        TESMeanNow = TESMeanTemperatureNow()
++        TESPowerRes = TESCircuitPowerAt(TESMeanNow) - TESResP
++        TESdPdT = (TESCircuitPowerAt(TESMeanNow+1.0e-7_dp) - &
++             TESCircuitPowerAt(TESMeanNow-1.0e-7_dp)) / 2.0e-7_dp
++        IF (TESdPdT < 0.0_dp) THEN
++          TESdTCircuit = ABS(TESPowerRes) / ABS(TESdPdT)
++        ELSE IF (iter > 1) THEN
++          ! Steps much shorter than L/R hold the current (dP/dT > 0): no
++          ! S-free bound exists, so use the TES change between iterates.
++          TESdTCircuit = ABS(TESMeanNow - TESExitPrevT)
++        ELSE
++          TESdTCircuit = HUGE(1.0_dp)
++        END IF
++        TESExitPrevT = TESMeanNow
++        TESdkRel = 0.0_dp
++        TESdkTmax = -HUGE(1.0_dp)
++        TESdkTmin = HUGE(1.0_dp)
++        IF (Phase24DynKNodeCount > 0 .AND. Phase24DynKMaterial > 0) THEN
++          ALLOCATE(TESdkNow(Phase24DynKNodeCount))
++          TESdkNow = ListGetReal(CurrentModel % Materials(Phase24DynKMaterial) % Values, &
++               'Heat Conductivity', Phase24DynKNodeCount, Phase24DynKNodes, Found)
++          DO i = 1, Phase24DynKNodeCount
++            IF (Phase24DynKNodal(i) > 0.0_dp) TESdkRel = MAX(TESdkRel, &
++                 ABS(TESdkNow(i) - Phase24DynKNodal(i)) / Phase24DynKNodal(i))
++            j = TempPerm(Phase24DynKNodes(i))
++            IF (j > 0) THEN
++              TESdkTmax = MAX(TESdkTmax, Temperature(j))
++              TESdkTmin = MIN(TESdkTmin, Temperature(j))
++            END IF
++          END DO
++          DEALLOCATE(TESdkNow)
++        END IF
++        TESdkRel = ParallelReduction(TESdkRel, 2)
++        TESdkTmax = ParallelReduction(TESdkTmax, 2)
++        TESdkTmin = ParallelReduction(TESdkTmin, 1)
++        IF (TESdkTmax >= TESdkTmin) THEN
++          TESdTk = TESdkRel * (TESdkTmax - TESdkTmin)
++          Converged = TESdTCircuit <= TESCoupledTolT .AND. TESdTk <= TESCoupledTolT .AND. &
++               ( .NOT. SmartHeaterControl .OR. SmartTolReached )
++        ELSE
++          ! No temperature-dependent conductivity: only the circuit couples.
++          TESdTk = 0.0_dp
++          IF (TESdTCircuit > TESCoupledTolT) Converged = .FALSE.
++        END IF
++        WRITE(Message,'(A,I0,A,ES11.3,A,ES11.3,A,ES11.3)') 'TES coupled error: iter=',iter, &
++             ', dT_circuit=',TESdTCircuit,', dT_k=',TESdTk,', field change=',RelativeChange
++        CALL Info('HeatSolve',TRIM(Message),Level=4)
++      ELSE IF (TransientSimulation .AND. TESPowerTol > 0.0_dp .AND. TESResValid) THEN
++        TESMeanNow = TESMeanTemperatureNow()
++        TESPowerRes = TESCircuitPowerAt(TESMeanNow) - TESResP
++        IF (ABS(TESPowerRes) > TESPowerTol * MAX(ABS(TESResP),1.0e-30_dp)) Converged = .FALSE.
++        WRITE(Message,'(A,I0,A,ES12.4,A,ES12.4)') 'TES coupled residual: iter=',iter, &
++             ', |dP|/P=',ABS(TESPowerRes)/MAX(ABS(TESResP),1.0e-30_dp), &
++             ', field change=',RelativeChange
++        CALL Info('HeatSolve',TRIM(Message),Level=4)
++      ELSE IF (TransientSimulation) THEN
 +        TESTempTol = GetConstReal(SolverParams, &
 +             'TES Inner Circuit Temperature Tolerance', Found)
 +        IF (Found .AND. TESTempTol > 0.0_dp) THEN
@@ -7326,7 +7752,17 @@ index bc3335c28..f892f0ef9 100644
  
        IF(SmartHeaterControl) THEN
          IF ( RelativeChange < SmartTol ) THEN
-@@ -1388,28 +2133,1243 @@ END SUBROUTINE HeatSolver_Init
+@@ -1369,6 +2238,9 @@ END SUBROUTINE HeatSolver_Init
+    END DO ! time interval
+    Solver % dt = Timestep
+ 
++   IF (TransientSimulation .AND. ListGetLogical(Model % Simulation, &
++        'Phase24 Step Controller',Found)) CALL Phase24StepController()
++
+    CALL DefaultFinish()
+    
+ !------------------------------------------------------------------------------
+@@ -1388,28 +2260,1363 @@ END SUBROUTINE HeatSolver_Init
       
  CONTAINS
  
@@ -8183,6 +8619,120 @@ index bc3335c28..f892f0ef9 100644
 +    Tmean = acc / MAX(ParallelReduction(REAL(cnt, dp)), 1.0_dp)
 +  END FUNCTION TESMeanTemperatureNow
 +
++  ! Error-controlled step size for variable-step BDF2 (no rejections).  The
++  ! local error of the converged TES temperature is estimated from the
++  ! quadratic predictor through the three previous steps:
++  !   p(t_n+1) - x(t_n+1) = -x'''/6 h(h+h1)(h+h1+h2)
++  !   LTE_BDF2 ~ (2/9) h^3 x'''   =>  LTE ~ 4/3 h^2 |x - p| / ((h+h1)(h+h1+h2))
++  ! The next step is dt*0.9*(tol/LTE)^(1/3), limited to [0.2, 2] x dt (BDF2
++  ! zero stability needs ratios below 1+sqrt(2)).  ElmerSolver uses the value
++  ! in the last timestep interval only ('Phase24 Step Controller'), so the
++  ! pulse and its nanosecond ramp keep their fixed steps.
++  SUBROUTINE Phase24StepController()
++    REAL(KIND=dp), SAVE :: HistT(4) = 0.0_dp, HistTime(4) = 0.0_dp
++    INTEGER, SAVE :: HistN = 0
++    REAL(KIND=dp) :: tnow, Tm, tol, tEnd, maxdt, h, h1, h2, p, err, fac, dtnext, remaining
++    REAL(KIND=dp) :: t0, t1, t2, L0, L1, L2
++    LOGICAL :: gotEnd, gotMax
++
++    tnow = GetTime()
++    Tm = TESMeanTemperatureNow()
++    HistT(1:3) = HistT(2:4); HistTime(1:3) = HistTime(2:4)
++    HistT(4) = Tm; HistTime(4) = tnow
++    HistN = MIN(HistN + 1, 4)
++
++    tol = ListGetCReal(Model % Simulation,'Phase24 Step Controller Tolerance',Found)
++    IF (.NOT. Found .OR. tol <= 0.0_dp) tol = 2.0e-8_dp
++    tEnd = ListGetCReal(Model % Simulation,'Phase24 Step Controller End Time',gotEnd)
++    maxdt = ListGetCReal(Model % Simulation,'Phase24 Step Controller Max Timestep',gotMax)
++
++    dtnext = Solver % dt
++    err = -1.0_dp
++    IF (HistN == 4) THEN
++      h = HistTime(4) - HistTime(3)
++      h1 = HistTime(3) - HistTime(2)
++      h2 = HistTime(2) - HistTime(1)
++      IF (h > 0.0_dp .AND. h1 > 0.0_dp .AND. h2 > 0.0_dp) THEN
++        t0 = HistTime(1); t1 = HistTime(2); t2 = HistTime(3)
++        L0 = (tnow-t1)*(tnow-t2)/((t0-t1)*(t0-t2))
++        L1 = (tnow-t0)*(tnow-t2)/((t1-t0)*(t1-t2))
++        L2 = (tnow-t0)*(tnow-t1)/((t2-t0)*(t2-t1))
++        p = L0*HistT(1) + L1*HistT(2) + L2*HistT(3)
++        err = (4.0_dp/3.0_dp) * h*h * ABS(Tm - p) / ((h+h1)*(h+h1+h2))
++        fac = 0.9_dp * (tol / MAX(err, 1.0e-300_dp))**(1.0_dp/3.0_dp)
++        ! Hysteresis: keep the step unless it must shrink or can grow by a
++        ! useful amount, so equal-dt runs keep the circuit Newton slope and the
++        ! step history smooth; growth is limited to 1.5x per step.
++        IF (fac >= 1.0_dp .AND. fac < 1.2_dp) fac = 1.0_dp
++        fac = MIN(MAX(fac, 0.2_dp), 1.5_dp)
++        dtnext = Solver % dt * fac
++      END IF
++    END IF
++    IF (gotMax .AND. maxdt > 0.0_dp) dtnext = MIN(dtnext, maxdt)
++    IF (gotEnd) THEN
++      remaining = tEnd - tnow
++      IF (remaining <= 1.0e-9_dp * Solver % dt) THEN
++        CALL ListAddConstReal(Model % Simulation,'Exit Condition',1.0_dp)
++      ELSE IF (remaining <= dtnext) THEN
++        dtnext = remaining
++      ELSE IF (remaining < 1.5_dp * dtnext) THEN
++        ! Avoid a tiny final step: split the rest in two.
++        dtnext = 0.5_dp * remaining
++      END IF
++    END IF
++    CALL ListAddConstReal(Model % Simulation,'Phase24 Controller Next Timestep',dtnext)
++    WRITE(Message,'(A,ES12.5,A,ES10.3,A,ES10.3,A,ES10.3)') 'Phase24 step controller: t=',tnow, &
++         ', dt=',Solver % dt,', lte=',err,', next dt=',dtnext
++    CALL Info('HeatSolve',TRIM(Message),Level=4)
++  END SUBROUTINE Phase24StepController
++
++  ! Element-averaged TES temperature of the converged previous step (history
++  ! slot 1).  A predictor may already have overwritten the current field.
++  FUNCTION TESMeanPreviousStep() RESULT(Tmean)
++    REAL(KIND=dp) :: Tmean
++    INTEGER :: t, i, n, p, body, cnt
++    LOGICAL :: gotBody
++    REAL(KIND=dp) :: acc
++    TYPE(Element_t), POINTER :: El
++
++    body = ListGetInteger(Solver % Values, 'TES Body ID', gotBody)
++    acc = 0.0_dp
++    cnt = 0
++    DO t = 1, Solver % NumberOfActiveElements
++      El => GetActiveElement(t)
++      IF (ParEnv % PEs > 1 .AND. El % PartIndex /= ParEnv % MyPE) CYCLE
++      IF (El % BodyId /= body) CYCLE
++      n = GetElementNOFNodes(El)
++      IF (n <= 0) CYCLE
++      DO i = 1, n
++        p = TempPerm(El % NodeIndexes(i))
++        IF (p > 0) acc = acc + Solver % Variable % PrevValues(p,1) / REAL(n, dp)
++      END DO
++      cnt = cnt + 1
++    END DO
++    acc = ParallelReduction(acc)
++    Tmean = acc / MAX(ParallelReduction(REAL(cnt, dp)), 1.0_dp)
++  END FUNCTION TESMeanPreviousStep
++
++  ! Joule power of the implicit-Euler circuit step at TES temperature T, with
++  ! the coefficients of the latest TESInnerCircuitUpdate call (same law).
++  FUNCTION TESCircuitPowerAt(T) RESULT(P)
++    REAL(KIND=dp), INTENT(IN) :: T
++    REAL(KIND=dp) :: P, Ac, Bc, Cc, Dc, Ic, Rc
++    Ac = TESResR0 * (1.0_dp + TESResAlpha * (T - TESResT0) / TESResT0 - TESResBeta)
++    Bc = TESResR0 * TESResBeta / TESResI0
++    Cc = TESResRSh + Ac + TESResL / TESResDt
++    Dc = MAX(Cc*Cc + 4.0_dp*Bc*(TESResIBias*TESResRSh + TESResL*TESResPrevI/TESResDt), 0.0_dp)
++    Ic = MAX(MIN((SQRT(Dc) - Cc) / (2.0_dp*Bc), TESResIBias), 0.0_dp)
++    Rc = Ac + Bc*ABS(Ic)
++    IF (Rc < TESResRMin) THEN
++      Rc = TESResRMin
++      Ic = (TESResIBias*TESResRSh + TESResL*TESResPrevI/TESResDt) / &
++           (TESResRSh + Rc + TESResL/TESResDt)
++    END IF
++    P = Ic*Ic*Rc
++  END FUNCTION TESCircuitPowerAt
++
 +  FUNCTION Phase24SourceOnlyBodyForce(List) RESULT(SourceOnly)
 +    ! True when the body force carries nothing but a volumetric heat source
 +    ! (and its name), i.e. it touches the RHS but never the operator.
@@ -8505,7 +9055,7 @@ index bc3335c28..f892f0ef9 100644
 -    INTEGER :: CircuitBody, t, i, n, p, LocalCount, TimeStepNow, IoStatus, SeriesUnit
 +    LOGICAL :: Enabled, GotIt, FoundState, FoundSeries, FoundIterationSeries, FreezePower, StepCommit
 +    LOGICAL :: RestartAudit, RestartAuditFatal, StateExists, StateOpenSuccess, StateParseSuccess
-+    LOGICAL :: AdaptiveRejected, AdaptiveRestoreTrialState
++    LOGICAL :: AdaptiveRejected, AdaptiveRestoreTrialState, BDF2Predictor
 +    INTEGER :: CircuitBody, t, i, n, p, LocalCount, TimeStepNow, IoStatus, SeriesUnit, IterationUnit
 +    INTEGER :: TrialId
      TYPE(Element_t), POINTER :: CircuitElement
@@ -8519,9 +9069,11 @@ index bc3335c28..f892f0ef9 100644
      REAL(KIND=dp) :: StateTemperature, StateCurrent, StateResistance, StatePower, StatePrevious, StateLoaded
 -    CHARACTER(LEN=MAX_NAME_LEN) :: StateFile, SeriesFile
 +    REAL(KIND=dp) :: MidTemperature, ElectricalTau, CommitCurrent, CommitResistance, CommitPower, StepDt
++    REAL(KIND=dp) :: PredictionRatio, PredictedPower, PreviousStepCurrent, SaveUpdateT
 +    LOGICAL :: UseNewton
 +    INTEGER :: sgn
 +    REAL(KIND=dp) :: Pk, Tk, Fk, dPdT, Snew, Pnew, hT, Tpm, Apm, Cpm, Dpm, Ipm, Rpm, Ppm(2)
++    REAL(KIND=dp) :: NewtonSecantMinRel
 +    REAL(KIND=dp), SAVE :: NewtonPrevP = 0.0_dp, NewtonPrevT = 0.0_dp
 +    REAL(KIND=dp), SAVE :: NewtonS = -1.0_dp, NewtonSdt = -1.0_dp
 +    LOGICAL, SAVE :: NewtonHasPrev = .FALSE.
@@ -8534,6 +9086,7 @@ index bc3335c28..f892f0ef9 100644
 +    REAL(KIND=dp), SAVE :: CircuitSweepTemperature = 0.0_dp
      REAL(KIND=dp), SAVE :: PreviousCircuitCurrent = 0.0_dp
 -    INTEGER, SAVE :: LastCircuitStep = -HUGE(1)
++    REAL(KIND=dp), SAVE :: PreviousCircuitPower = -1.0_dp
 +    REAL(KIND=dp), SAVE :: CircuitPrevResidual = 0.0_dp, CircuitOmega = 0.5_dp, CircuitOmegaCap = 0.5_dp
 +    REAL(KIND=dp), SAVE :: LastCircuitDt = -1.0_dp
 +    INTEGER, SAVE :: LastCircuitStep = -HUGE(1), CircuitIterInStep = 0, CircuitCallsInStep = 0
@@ -8544,6 +9097,7 @@ index bc3335c28..f892f0ef9 100644
 +    REAL(KIND=dp), SAVE :: SavedCircuitPower = 0.0_dp, SavedCircuitCurrent = 0.0_dp
 +    REAL(KIND=dp), SAVE :: SavedCircuitResistance = 0.0_dp, SavedCircuitAverageTemperature = 0.0_dp
 +    REAL(KIND=dp), SAVE :: SavedCircuitSweepTemperature = 0.0_dp, SavedPreviousCircuitCurrent = 0.0_dp
++    REAL(KIND=dp), SAVE :: SavedPreviousCircuitPower = -1.0_dp
 +    REAL(KIND=dp), SAVE :: SavedCircuitPrevResidual = 0.0_dp, SavedCircuitOmega = 0.5_dp
 +    REAL(KIND=dp), SAVE :: SavedCircuitOmegaCap = 0.5_dp, SavedLastCircuitDt = -1.0_dp
 +    INTEGER, SAVE :: SavedLastCircuitStep = -HUGE(1), SavedCircuitIterInStep = 0
@@ -8553,6 +9107,8 @@ index bc3335c28..f892f0ef9 100644
  
      Enabled = ListGetLogical(Solver % Values, 'TES Inner Circuit Update', GotIt)
      IF (.NOT. GotIt .OR. .NOT. Enabled) RETURN
++    BDF2Predictor = ListGetLogical(Solver % Values, 'Phase24 BDF2 Predictor Active', GotIt)
++    IF (.NOT. GotIt) BDF2Predictor = .FALSE.
 +    RestartAudit = ListGetLogical(Solver % Values, 'Phase24 Restart State Audit', GotIt)
 +    IF (.NOT. GotIt) RestartAudit = .FALSE.
 +    RestartAuditFatal = ListGetLogical(Solver % Values, 'Phase24 Restart Audit Fail Fast', GotIt)
@@ -8577,7 +9133,7 @@ index bc3335c28..f892f0ef9 100644
      CircuitBody = ListGetInteger(Solver % Values, 'TES Body ID', GotIt)
      IF (.NOT. GotIt) CALL Fatal('HeatSolver', 'TES Body ID is required for inner circuit update')
      LocalSum = 0.0_dp
-@@ -1431,6 +3391,54 @@ CONTAINS
+@@ -1431,6 +3638,56 @@ CONTAINS
      GlobalSum = ParallelReduction(LocalSum)
      GlobalCount = ParallelReduction(REAL(LocalCount, dp))
      IF (GlobalCount <= 0.0_dp) CALL Fatal('HeatSolver', 'No TES elements found for inner circuit update')
@@ -8598,6 +9154,7 @@ index bc3335c28..f892f0ef9 100644
 +      CircuitAverageTemperature = SavedCircuitAverageTemperature
 +      CircuitSweepTemperature = SavedCircuitSweepTemperature
 +      PreviousCircuitCurrent = SavedPreviousCircuitCurrent
++      PreviousCircuitPower = SavedPreviousCircuitPower
 +      CircuitPrevResidual = SavedCircuitPrevResidual
 +      CircuitOmega = SavedCircuitOmega
 +      CircuitOmegaCap = SavedCircuitOmegaCap
@@ -8617,6 +9174,7 @@ index bc3335c28..f892f0ef9 100644
 +      SavedCircuitAverageTemperature = CircuitAverageTemperature
 +      SavedCircuitSweepTemperature = CircuitSweepTemperature
 +      SavedPreviousCircuitCurrent = PreviousCircuitCurrent
++      SavedPreviousCircuitPower = PreviousCircuitPower
 +      SavedCircuitPrevResidual = CircuitPrevResidual
 +      SavedCircuitOmega = CircuitOmega
 +      SavedCircuitOmegaCap = CircuitOmegaCap
@@ -8632,7 +9190,7 @@ index bc3335c28..f892f0ef9 100644
      AverageT = GlobalSum / GlobalCount
      ! Collect the absorber average separately from active elements.  VTU
      ! partitions contain halo values, so a raw pointwise min/max is not a
-@@ -1456,6 +3464,32 @@ CONTAINS
+@@ -1456,6 +3713,32 @@ CONTAINS
      ELSE
        AbsorberAverageT = 0.0_dp
      END IF
@@ -8665,7 +9223,7 @@ index bc3335c28..f892f0ef9 100644
      IBias = GetConstReal(Model % Constants, 'TES Bias Current', GotIt)
      RSh = GetConstReal(Model % Constants, 'TES Shunt Resistance', GotIt)
      R0c = GetConstReal(Model % Constants, 'TES R0', GotIt)
-@@ -1474,12 +3508,21 @@ CONTAINS
+@@ -1474,12 +3757,21 @@ CONTAINS
        StatePower = 0.0_dp
        StatePrevious = 0.0_dp
        StateLoaded = 0.0_dp
@@ -8688,7 +9246,7 @@ index bc3335c28..f892f0ef9 100644
          END IF
        END IF
        StateLoaded = ParallelReduction(StateLoaded)
-@@ -1488,19 +3531,196 @@ CONTAINS
+@@ -1488,19 +3780,233 @@ CONTAINS
        StateResistance = ParallelReduction(StateResistance)
        StatePower = ParallelReduction(StatePower)
        StatePrevious = ParallelReduction(StatePrevious)
@@ -8727,6 +9285,7 @@ index bc3335c28..f892f0ef9 100644
 +        CircuitPowerInitialized = .TRUE.
        END IF
        CircuitInitialized = .TRUE.
++      PreviousCircuitPower = CircuitPower
        LastCircuitStep = GetTimeStep()
 +      IF (StepCommit .AND. TransientSimulation .AND. dt > 0.0_dp) LastCircuitDt = dt
 +      ! The serial body-force UDF samples Temperature during assembly and
@@ -8784,7 +9343,8 @@ index bc3335c28..f892f0ef9 100644
 +    ! one-iteration lag on top of the Picard lag.  Opt-in: use the current
 +    ! field (standard Picard); the converged fixed point is unchanged, only
 +    ! the number of coupled iterations is.
-+    IF (ListGetLogical(Solver % Values, 'TES Inner Circuit Current Temperature', GotIt) .OR. &
++    IF (BDF2Predictor .OR. &
++         ListGetLogical(Solver % Values, 'TES Inner Circuit Current Temperature', GotIt) .OR. &
 +         ListGetLogical(Solver % Values, 'TES Inner Circuit Newton', GotIt)) &
 +         UpdateTemperature = AverageT
 +    A = R0c * (1.0_dp + AlphaC * (UpdateTemperature - T0c) / T0c - BetaC)
@@ -8795,9 +9355,16 @@ index bc3335c28..f892f0ef9 100644
 +      ! This call starts a new timestep, so the values retained here belong
 +      ! to the converged preceding timestep.  Commit and emit that preceding
 +      ! state before computing any new-step circuit iterate.
++      ! The commit must see the converged field of that step: a timestep
++      ! predictor has already replaced the current field by its extrapolation,
++      ! which would otherwise leak into the emitted current and into the
++      ! inductor history (PreviousCircuitCurrent).
++      SaveUpdateT = UpdateTemperature
++      IF (ASSOCIATED(Solver % Variable % PrevValues)) UpdateTemperature = TESMeanPreviousStep()
 +      CommitCurrent = CircuitCurrent
 +      CommitResistance = CircuitResistance
 +      CommitPower = CircuitPower
++      PreviousStepCurrent = PreviousCircuitCurrent
 +      IF (StepCommit) THEN
 +        StepDt = LastCircuitDt
 +        IF (StepDt <= 0.0_dp) StepDt = dt
@@ -8867,6 +9434,33 @@ index bc3335c28..f892f0ef9 100644
 +      ELSE
 +        PreviousCircuitCurrent = CircuitCurrent
 +      END IF
++      IF (BDF2Predictor .AND. .NOT. FreezePower .AND. &
++           PreviousCircuitPower >= 0.0_dp .AND. dt > 0.0_dp) THEN
++        CALL Phase24GetBDFCoefficients(2,dt,StepDt, &
++             Phase24CurrentA0,Phase24CurrentA1,Phase24CurrentA2)
++        PredictionRatio = dt / StepDt
++        PredictedPower = CommitPower + PredictionRatio*(CommitPower-PreviousCircuitPower)
++        CircuitPower = MIN(MAX(PredictedPower,0.5_dp*CommitPower),1.5_dp*CommitPower)
++        CircuitCurrent = MIN(MAX(CommitCurrent + PredictionRatio* &
++             (CommitCurrent-PreviousStepCurrent),0.0_dp),IBias)
++        IF (ListGetLogical(Solver % Values,'TES Inner Circuit Predict From Temperature',GotIt)) THEN
++          ! Start from the circuit fixed point at the predicted TES
++          ! temperature (the field predictor has already been applied), so the
++          ! first solve begins from a consistent (T, P) pair.
++          Apm = R0c * (1.0_dp + AlphaC * (SaveUpdateT - T0c) / T0c - BetaC)
++          Cpm = RSh + Apm + Lc / dt
++          Dpm = MAX(Cpm*Cpm + 4.0_dp*B*(IBias*RSh + Lc*PreviousCircuitCurrent/dt), 0.0_dp)
++          Ipm = MAX(MIN((SQRT(Dpm) - Cpm) / (2.0_dp*B), IBias), 0.0_dp)
++          Rpm = Apm + B*ABS(Ipm)
++          IF (Rpm < RMin) THEN
++            Rpm = RMin
++            Ipm = (IBias*RSh + Lc*PreviousCircuitCurrent/dt) / (RSh + Rpm + Lc/dt)
++          END IF
++          CircuitPower = MIN(MAX(Ipm*Ipm*Rpm,0.5_dp*CommitPower),1.5_dp*CommitPower)
++          CircuitCurrent = Ipm
++        END IF
++      END IF
++      PreviousCircuitPower = CommitPower
 +      CircuitPrevResidual = 0.0_dp
 +      CircuitOmegaCap = 0.5_dp
 +      CircuitIterInStep = 0
@@ -8878,6 +9472,7 @@ index bc3335c28..f892f0ef9 100644
 +      NewtonPrevStepDt = LastCircuitDt
 +      LastCircuitDt = dt
 +      LastCircuitStep = TimeStepNow
++      UpdateTemperature = SaveUpdateT
 +    END IF
 +    ! The optional commit-only reconciliation above uses midpoint
 +    ! coefficients.  Restore the actual sweep coefficients before advancing
@@ -8887,7 +9482,7 @@ index bc3335c28..f892f0ef9 100644
      IF (TransientSimulation .AND. CircuitInitialized .AND. dt > 0.0_dp) THEN
        Cc = RSh + A + Lc / dt
        Disc = MAX(Cc*Cc + 4.0_dp*B*(IBias*RSh + Lc*PreviousCircuitCurrent/dt), 0.0_dp)
-@@ -1510,55 +3730,186 @@ CONTAINS
+@@ -1510,55 +4016,203 @@ CONTAINS
        RawCurrent = (SQRT(Disc) - (RSh + A)) / (2.0_dp*B)
      END IF
      RawCurrent = MAX(MIN(RawCurrent, IBias), 0.0_dp)
@@ -8924,6 +9519,9 @@ index bc3335c28..f892f0ef9 100644
 +      Pk = CircuitPower
 +      Tk = UpdateTemperature
 +      Fk = RawPower - Pk
++      NewtonSecantMinRel = 1.0e-10_dp
++      IF (ListGetLogical(Solver % Values,'TES Inner Circuit Newton Slope Reuse',GotIt)) &
++           NewtonSecantMinRel = 1.0e-7_dp
 +      IF (CircuitCallsInStep == 0) THEN
 +        ! The field still belongs to the previous step.  Predict P for the
 +        ! first solve by linear extrapolation of the last converged step
@@ -8933,14 +9531,17 @@ index bc3335c28..f892f0ef9 100644
 +        StepDt2 = StepDt1
 +        StepP1 = Pk
 +        StepDt1 = NewtonPrevStepDt
-+        IF (StepP2 > 0.0_dp .AND. ABS(StepDt1 - dt) <= 1.0e-9_dp*dt .AND. &
++        IF (.NOT. BDF2Predictor .AND. StepP2 > 0.0_dp .AND. ABS(StepDt1 - dt) <= 1.0e-9_dp*dt .AND. &
 +             ABS(StepDt2 - dt) <= 1.0e-9_dp*dt) THEN
 +          CircuitPower = MIN(MAX(2.0_dp*StepP1 - StepP2, 0.5_dp*Pk), 1.5_dp*Pk)
 +        END IF
 +      ELSE
-+        IF (NewtonHasPrev .AND. ABS(Pk - NewtonPrevP) > 1.0e-10_dp*MAX(Pk,1.0e-30_dp)) THEN
++        IF (NewtonHasPrev .AND. ABS(Pk - NewtonPrevP) > NewtonSecantMinRel*MAX(Pk,1.0e-30_dp)) THEN
 +          Snew = (Tk - NewtonPrevT) / (Pk - NewtonPrevP)
-+          IF (Snew > 0.0_dp) THEN
++          ! A secant over a power change near the linear-solve noise can be
++          ! wildly large and then freezes the Newton update; dT/dP of a step
++          ! can never exceed the static T/P.
++          IF (Snew > 0.0_dp .AND. Snew <= Tk / MAX(Pk,1.0e-30_dp)) THEN
 +            NewtonS = Snew
 +            NewtonSdt = dt
 +          END IF
@@ -8962,6 +9563,13 @@ index bc3335c28..f892f0ef9 100644
 +        dPdT = (Ppm(1) - Ppm(2)) / (2.0_dp*hT)
 +        IF (NewtonS > 0.0_dp .AND. ABS(NewtonSdt - dt) <= 1.0e-9_dp*dt) THEN
 +          Pnew = Pk + Fk / (1.0_dp - dPdT*NewtonS)
++        ELSE IF (NewtonS > 0.0_dp .AND. NewtonSdt > 0.0_dp .AND. &
++             dt >= 0.5_dp*NewtonSdt .AND. dt <= 2.0_dp*NewtonSdt .AND. &
++             ListGetLogical(Solver % Values,'TES Inner Circuit Newton Slope Reuse',GotIt)) THEN
++          ! dT/dP of a step grows with dt (between dt/C and 1/G); scale the
++          ! slope of the previous step size geometrically.  Only the rate of
++          ! the Newton iteration depends on this estimate, not its fixed point.
++          Pnew = Pk + Fk / (1.0_dp - dPdT*NewtonS*SQRT(dt/NewtonSdt))
 +        ELSE
 +          Pnew = Pk + 0.5_dp*Fk
 +        END IF
@@ -8997,6 +9605,10 @@ index bc3335c28..f892f0ef9 100644
 +      END IF
      END IF
      CircuitPowerInitialized = .TRUE.
++    TESResValid = TransientSimulation .AND. .NOT. FreezePower .AND. dt > 0.0_dp
++    TESResIBias = IBias; TESResRSh = RSh; TESResR0 = R0c; TESResRMin = RMin
++    TESResAlpha = AlphaC; TESResBeta = BetaC; TESResI0 = I0c; TESResT0 = T0c
++    TESResL = Lc; TESResPrevI = PreviousCircuitCurrent; TESResP = CircuitPower; TESResDt = dt
      CircuitCurrent = RawCurrent
 -    LastCircuitStep = TimeStepNow
 +    CircuitResistance = ResistanceC
@@ -9100,7 +9712,7 @@ index bc3335c28..f892f0ef9 100644
  
  !------------------------------------------------------------------------------
  ! To save some time tabulate data needed for the diffuse gray radiation. 
-@@ -1797,7 +4148,8 @@ CONTAINS
+@@ -1797,7 +4451,8 @@ CONTAINS
        IF ( HeatGapBC ) &
          CALL AddHeatGap( Solver, Element, STIFF, TempPerm)
  

@@ -310,6 +310,18 @@
           "ElmerGrid 14 2 gmsh/project_hybrid_fullconf_h8.msh -merge 1e-10 -out work/meshes/mesh_hybrid_fullconf_h8"
         ]
       }
+    },
+    "mesh_hybrid_fullconf_h8s16": {
+      "geometry": "single_pixel",
+      "dir": "mesh_hybrid_fullconf_h8s16",
+      "notes": "As mesh_hybrid_fullconf_h8 but 16 Stycast layers (speed test).",
+      "recipe": {
+        "generator": "generate_hybrid_prism_geometry.py",
+        "commands": [
+          "python generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json --output gmsh/project_hybrid_fullconf_h8s16.msh --stack-local-size 8e-6 --absorber-local-size 35e-6 --absorber-local-radius 50e-6 --disable-mesh-size-extend-from-boundary --stycast-layers 16 --si-1-layers 4 --sio2-1-layers 2 --sinx-layers 2 --conformal-tes-stack --conformal-abs",
+          "ElmerGrid 14 2 gmsh/project_hybrid_fullconf_h8s16.msh -merge 1e-10 -out work/meshes/mesh_hybrid_fullconf_h8s16"
+        ]
+      }
     }
   },
   "parameter_expressions": {

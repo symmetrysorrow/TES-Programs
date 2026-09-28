@@ -147,13 +147,16 @@ LONG_75MS_TAIL = [
 ]
 
 
-def bdf2_ratio_limited_schedule(end_after_pulse_s: float = 0.055) -> list[list[object]]:
+def bdf2_ratio_limited_schedule(end_after_pulse_s: float = 0.055, cap_scale: float = 1.0,
+                                coarse_after_s: float = 0.0) -> list[list[object]]:
     """75 ms schedule for variable-step BDF2.
 
     Variable-step BDF2 is zero-stable only for step ratios below 1+sqrt(2);
     growing the step by at most 2x keeps the pulse jump from being amplified
     (a 10x jump multiplied the response ~7x).  The cap follows the response
-    time scale (rise ~160 us, peak ~430 us, decay ~12 ms).
+    time scale (rise ~160 us, peak ~430 us, decay ~12 ms).  cap_scale
+    multiplies the caps from coarse_after_s on (the rise
+    and peak keep the base caps).
     """
     caps = [(100e-6, 2.5e-6), (200e-6, 5e-6), (500e-6, 10e-6), (1e-3, 25e-6),
             (2e-3, 50e-6), (5e-3, 100e-6), (15e-3, 250e-6), (35e-3, 500e-6),
@@ -163,6 +166,8 @@ def bdf2_ratio_limited_schedule(end_after_pulse_s: float = 0.055) -> list[list[o
     dt = 1e-9  # the 1 ns pulse window
     while t < end_after_pulse_s - 1e-15:
         cap = next(c for limit, c in caps if t < limit)
+        if t >= coarse_after_s:
+            cap *= cap_scale
         dt = min(dt, cap, end_after_pulse_s - t)
         steps.append(dt)
         t += dt
@@ -182,6 +187,30 @@ def trim_schedule(schedule: list[list[object]], window: str) -> list[list[object
         return copy.deepcopy(SHORT_STAGES)
     if window == "75ms_bdf2":
         return bdf2_ratio_limited_schedule()
+    if window == "75ms_bdf2c":
+        return bdf2_ratio_limited_schedule(cap_scale=2.0)
+    if window == "75ms_bdf2h":
+        return bdf2_ratio_limited_schedule(cap_scale=2.0, coarse_after_s=500e-6)
+    if window == "75ms_bdf2h15":
+        return bdf2_ratio_limited_schedule(cap_scale=1.5, coarse_after_s=500e-6)
+    if window in ("75ms_adapt", "1ms_adapt"):
+        # Fixed steps through the pulse and its nanosecond ramp (1 ns doubling
+        # to 2.048 us, ~4.1 us after the pulse); the last interval is driven by
+        # the solver's error controller ('Phase24 Step Controller' with an end
+        # time) and only bounds the number of steps.
+        fixed = bdf2_ratio_limited_schedule(end_after_pulse_s=4.095e-6)
+        return fixed + [["2.500000000000e-06[s]", 20000]]
+    if window in ("75ms_adapt500", "2ms_adapt500"):
+        # 75ms_bdf2h15 steps through the rise and peak (first 500 us after the
+        # pulse: the fixed caps follow the response time there), then the
+        # solver's error controller for the decay.
+        fixed = bdf2_ratio_limited_schedule(end_after_pulse_s=500e-6)
+        if fixed[-1][1] == 1 and len(fixed) > 1:
+            fixed = fixed[:-1]  # drop the remainder step that lands on 500 us
+        return fixed + [[fixed[-1][0], 20000]]
+    if window == "1ms_bdf2h15":
+        # First 1 ms after the pulse of 75ms_bdf2h15 (A/B tests of the solver).
+        return bdf2_ratio_limited_schedule(end_after_pulse_s=1e-3, cap_scale=1.5, coarse_after_s=500e-6)
     if window == "75ms_coarse":
         # Coarse schedule intended for BDF2 (bdf_order=2): same pulse
         # deposition grid, then steps that follow the response time scale.
@@ -404,6 +433,9 @@ def prepare_project(window: str, backend: str) -> tuple[Path, str]:
     if CONFORMAL_TES_STACK:
         candidate["conformal_tes_stack"] = True
     candidate.update(EXTRA_CASE_OPTIONS)
+    candidate.setdefault(
+        "phase24_bdf2_predictor", int(candidate.get("bdf_order", 1)) >= 2
+    )
     solver = {
         **candidate.get("solver", {}),
         "linear_system": "mumps" if backend == "mumps" else HYPRE_SYSTEM,
@@ -604,7 +636,7 @@ def evaluate_gate5(records: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--window", choices=("short", "40us", "100us", "1ms", "75ms", "nltest", "nltest2", "75ms_coarse", "75ms_bdf2"), default="short")
+    parser.add_argument("--window", choices=("short", "40us", "100us", "1ms", "75ms", "nltest", "nltest2", "75ms_coarse", "75ms_bdf2", "75ms_bdf2c", "75ms_bdf2h", "75ms_bdf2h15", "1ms_bdf2h15", "75ms_adapt", "1ms_adapt", "75ms_adapt500", "2ms_adapt500"), default="short")
     parser.add_argument("--backend", choices=("mumps", "hypre", "both"), default="both")
     parser.add_argument("--solver", type=Path, default=Path(r"D:\Github\TES-Programs\tools\elmer-hypre\install-stage11\bin\ElmerSolver.exe"))
     parser.add_argument("--runtime-bin", type=Path, default=Path(r"D:\Github\TES-Programs\tools\elmer-hypre\install-stage11\bin"))
@@ -752,7 +784,7 @@ def main() -> int:
         payload["restart_refinement"] = refinement_record
         payload["restart_refinement_paths"] = refinement_paths
     if {"mumps", "hypre"}.issubset(backends):
-        end_us = {"short": 0.9, "40us": 40.0, "100us": 100.0, "1ms": 1000.0, "75ms": 54980.0, "nltest": 6000.0, "nltest2": 900.0, "75ms_coarse": 54980.0, "75ms_bdf2": 54980.0}[args.window]
+        end_us = {"short": 0.9, "40us": 40.0, "100us": 100.0, "1ms": 1000.0, "75ms": 54980.0, "nltest": 6000.0, "nltest2": 900.0, "75ms_coarse": 54980.0, "75ms_bdf2": 54980.0, "75ms_bdf2c": 54980.0, "75ms_bdf2h": 54980.0, "75ms_bdf2h15": 54980.0, "1ms_bdf2h15": 980.0, "75ms_adapt": 54980.0, "1ms_adapt": 980.0, "75ms_adapt500": 54980.0, "2ms_adapt500": 1980.0}[args.window]
         series_ready = all(Path(paths[backend]["series"]).is_file() for backend in ("mumps", "hypre"))
         if series_ready:
             metrics = compare_waveforms(paths["hypre"]["series"], paths["mumps"]["series"], out / "comparison", end_us)

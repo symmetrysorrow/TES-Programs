@@ -1245,11 +1245,21 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             "  Timestepping Method = BDF",
             f"  BDF Order = {spec.get('bdf_order', 2 if spec.get('adaptive_time') else 1)}",
         ]
+        if spec.get("phase24_bdf2_predictor", False):
+            if int(spec.get("bdf_order", 2 if spec.get("adaptive_time") else 1)) < 2:
+                raise ValueError(
+                    f"{case_name}: phase24_bdf2_predictor requires bdf_order >= 2"
+                )
+            lines += [
+                "  Phase24 BDF2 Predictor = Logical True",
+            ]
         lines += _timestep_lines(spec, params)
         lines += _adaptive_time_lines(spec, params)
         lines.append(
             f"  Steady State Max Iterations = {spec.get('steady_state_max_iterations', 1)}"
         )
+        # Verbatim Simulation-section lines (e.g. the Phase24 step controller).
+        lines += [f"  {keyword}" for keyword in spec.get("extra_simulation_keywords", [])]
     else:
         raise ValueError(f"{case_name}: unknown template {template!r}")
 
