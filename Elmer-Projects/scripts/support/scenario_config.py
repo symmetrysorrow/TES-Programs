@@ -296,7 +296,7 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
             from scripts.support.run_phase24_gate4_5_nomortar import trim_schedule
             timesteps = trim_schedule([], "75ms_bdf2h15")
         elif scenario["project"].get("window"):
-            raise ValueError(f"unknown time window: {scenario['case']['window']}")
+            raise ValueError(f"unknown time window: {scenario['project']['window']}")
         else:
             timesteps = scenario["project"].get("timesteps", [["1[ms]", 20], ["10[us]", 2], ["1[ns]", 1], ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9], ["5[us]", 20]])
         pulse.update(template="pulse", mesh=mesh_name, restart_file_base=steady_name, restart_time=0.0, preexisting_restart=True, heat_source="circuit_inner", series_file=f"{pulse_name}_series.csv", iteration_series_file=f"{pulse_name}_iterations.csv", state_file=f"work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../work/meshes/{mesh_name}/{pulse_name}.result", tes_circuits=circuits, pulse=scenario["physics"]["pulse"], lumped_mass=True, vtu=False, timesteps=timesteps, output_intervals=[1] * len(timesteps))
