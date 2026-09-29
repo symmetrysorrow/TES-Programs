@@ -1,5 +1,7 @@
 # TES モデルの拡張ガイド
 
+> **Legacy workflow:** この文書は `cases/*.toml` + `tes_sim.py` の旧拡張経路を説明しています。新規計算は `projects/*.toml` + `projects/models/*.toml` を使い、多段 override は行いません。新方式は [シミュレーションの始め方](getting_started.md) と [project / model TOML 設計](toml_unification_plan.md) を参照してください。
+
 単ピクセル以外の構成（2TES、正方形の4隅・三角形の3隅に TES を置く構成など）や、材料・配線・回路の変更を行う実装者向けの手引きです。高速化済みの計算経路（Phase24 HYPRE、6ランク MPI）をそのまま使えるように、どこを書けば何が変わるかをまとめています。
 
 ## 1. 全体の流れ
