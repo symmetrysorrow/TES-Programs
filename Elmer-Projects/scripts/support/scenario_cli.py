@@ -1,4 +1,4 @@
-"""User-facing commands for the TOML scenario workflow."""
+"""User-facing commands for the project/model TOML workflow."""
 
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def explain(scenario: dict, mesh_name: str, steady: str, pulse: str) -> None:
             value = quantity(overrides[key], common, key) if key in overrides else common[key]
             source = tes["sources"].get(key, f"{scenario['model_file'].name} [parameters]")
             if key == "I_0" and key in overrides and key not in tes["circuit"]:
-                source = "derived from circuit overrides"
+                source = "derived from project circuit values"
             print(f"    {key} = {value:.9g}  [{source}]")
 
 
@@ -137,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         scenario = load_scenario(project_file)
         _, mesh_name, steady, pulse = compile_project(scenario)
         if args.action == "validate":
-            print(f"OK: {len(scenario['tes'])} TES; mesh {mesh_name}; case {scenario['name']}")
+            print(f"OK: {len(scenario['tes'])} TES; mesh {mesh_name}; project {scenario['name']}")
             return 0
         if args.action == "explain":
             explain(scenario, mesh_name, steady, pulse)
