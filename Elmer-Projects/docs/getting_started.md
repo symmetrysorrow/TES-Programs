@@ -53,4 +53,4 @@ ID が分からない場合は `python main.py show <名前>` で位置と一緒
 
 単ピクセル model は検証済みの `mesh_hybrid_fullconf_h8` を参照しています。この prebuilt mesh と矛盾する寸法変更はエラーになります。新しい寸法を使う場合は、生成型 mesh を持つ別 model を作成します。
 
-生成した内部 JSON と SIF は `generated/`、メッシュは `work/meshes/`、実行結果は `results/` に保存します。旧 TOML / JSON は `python main.py list --all` で確認できます。
+生成した内部 JSON と SIF は `generated/`、メッシュは `work/meshes/`、実行結果は `results/` に保存します。旧 TOML / JSON を再現する場合だけ `python main.py legacy list` を使います。通常の `list/show/check/mesh/run` は新project専用です。

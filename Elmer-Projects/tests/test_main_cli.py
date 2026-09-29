@@ -1,4 +1,4 @@
-"""The project CLI must not accidentally start a solver during inspection."""
+"""The project CLI must keep new and legacy workflows separate."""
 
 import main
 
@@ -18,16 +18,50 @@ def test_current_project_show_uses_same_entry_point(capsys):
     assert "240.00" in output
 
 
-def test_list_does_not_require_legacy_json(monkeypatch, capsys):
+def test_list_never_reads_legacy_json(monkeypatch, capsys):
     def fail(_):
         raise AssertionError("legacy JSON should not be read for the normal project list")
 
-    monkeypatch.setattr(main, "read_project", fail)
+    monkeypatch.setattr(main, "read_legacy_project", fail)
     assert main.main(["list"]) == 0
     output = capsys.readouterr().out
     assert "single_pixel_alpha240" in output
+    assert "Legacy JSON" not in output
 
 
-def test_legacy_toml_dry_run_never_starts_solver(capsys):
+def test_normal_parser_has_no_legacy_json_options():
+    parser = main.build_parser()
+    help_text = parser.format_help()
+    assert "--project" not in help_text
+    assert "--all" not in help_text
+    assert "--record-only" not in help_text
+
+
+def test_legacy_json_options_live_under_legacy_namespace():
+    args = main.build_parser().parse_args(
+        ["legacy", "list", "--project", "old_project.json"]
+    )
+    assert args.command == "legacy"
+    assert args.legacy_command == "list"
+    assert args.project == "old_project.json"
+
+
+def test_legacy_toml_is_not_accepted_by_normal_run(capsys):
     assert main.main(["run", "cases/single_pixel_h8.toml", "--dry-run"]) == 2
-    assert "no calculation was started" in capsys.readouterr().err
+    error = capsys.readouterr().err
+    assert "schema_version = 3" in error
+    assert "main.py legacy" in error
+
+
+def test_legacy_json_name_does_not_fallback_from_normal_show(capsys):
+    assert main.main(["show", "case_tes_shunt_internal"]) == 2
+    error = capsys.readouterr().err
+    assert "unknown project" in error
+    assert "main.py legacy" in error
+
+
+def test_legacy_namespace_has_its_own_help(capsys):
+    assert main.main(["legacy"]) == 0
+    output = capsys.readouterr().out
+    assert "python main.py legacy list" in output
+    assert "python main.py legacy toml show" in output

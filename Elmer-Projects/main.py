@@ -1,7 +1,7 @@
-"""Entry point for inspecting and running Elmer-Projects.
+"""Entry point for Elmer-Projects.
 
-New work starts from a TOML file in projects/. Legacy JSON and old TOML
-workflows remain available for reproducing older calculations.
+New simulations use projects/*.toml. Legacy JSON and old TOML workflows are
+available only through the explicit legacy namespace.
 """
 
 from __future__ import annotations
@@ -15,22 +15,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 
-def project_path(value: str) -> Path:
+def root_path(value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else ROOT / path
 
 
-def read_project(value: str) -> dict:
-    path = project_path(value)
+def read_legacy_project(value: str) -> dict:
+    path = root_path(value)
     if not path.is_file():
-        raise ValueError(f"project JSON not found: {path}")
+        raise ValueError(f"legacy project JSON not found: {path}")
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("project JSON must contain an object")
+        raise ValueError("legacy project JSON must contain an object")
     return data
 
 
-def check_project(data: dict) -> list[str]:
+def check_legacy_project(data: dict) -> list[str]:
     from scripts.support.reconcile_project import reconcile_project
 
     errors = []
@@ -56,51 +56,190 @@ def dispatch(script: str, args: list[str]) -> int:
     return subprocess.run([sys.executable, str(ROOT / script), *args], cwd=ROOT).returncode
 
 
-def scenario_action(command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 1) -> int:
+def resolve_project_toml(value: str) -> Path:
+    from scripts.support.scenario_config import PROJECT_DIR, read_toml
+
+    if value.lower().endswith(".toml"):
+        path = root_path(value)
+    else:
+        path = PROJECT_DIR / f"{value}.toml"
+
+    if not path.is_file():
+        raise ValueError(
+            f"unknown project: {value!r}; use 'python main.py list'. "
+            "Legacy inputs are under 'python main.py legacy ...'."
+        )
+
+    data = read_toml(path)
+    if data.get("schema_version") != 3:
+        display = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        raise ValueError(
+            f"{display} is not a schema_version = 3 project; "
+            "use 'python main.py legacy ...' for old inputs."
+        )
+    return path
+
+
+def project_action(command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 1) -> int:
     from scripts.support.scenario_cli import main as scenario_main
 
     action = {"show": "summary", "check": "validate", "mesh": "mesh", "run": "run"}[command]
-    target = str(project_path(value)) if value.lower().endswith(".toml") else value
-    args = [action, target, "--mpi-procs", str(mpi_procs)]
+    project_file = resolve_project_toml(value)
+    args = [action, str(project_file), "--mpi-procs", str(mpi_procs)]
     if dry_run:
         args.append("--dry-run")
     return scenario_main(args)
 
 
+def add_legacy_json_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--project",
+        default="elmer_project.json",
+        help="legacy project JSON to use",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="TES simulation: choose a project in projects/, inspect it, then run it.",
-        epilog="Start with: python main.py show single_pixel_alpha240; python main.py run single_pixel_alpha240 --dry-run",
+        description="TES simulation projects. New work starts in projects/*.toml.",
+        epilog=(
+            "Start with: python main.py list; python main.py show single_pixel_alpha240; "
+            "python main.py run single_pixel_alpha240 --dry-run"
+        ),
     )
     sub = parser.add_subparsers(dest="command")
 
-    for name, help_text in (
-        ("list", "list available projects"),
-        ("check", "validate a named project without calculating"),
-        ("show", "show model, TES positions and final run values"),
-        ("mesh", "build or reuse a project mesh (legacy JSON mesh names also work)"),
-        ("run", "run a project; build or reuse its mesh automatically"),
-    ):
-        p = sub.add_parser(name, help=help_text)
-        p.add_argument("--project", default="elmer_project.json", help="legacy project JSON to use")
-        if name == "list":
-            p.add_argument("--all", action="store_true", help="include legacy TOML and JSON entries")
-        if name in {"show", "mesh", "run"}:
-            p.add_argument("name", help="project name from projects/, or a legacy JSON case/mesh name")
-        if name == "check":
-            p.add_argument("name", nargs="?", help="project name (omit for legacy project JSON)")
-        if name == "mesh":
-            p.add_argument("--record-only", action="store_true", help="legacy JSON only: record provenance for an existing mesh")
-        if name == "run":
-            p.add_argument("--dry-run", action="store_true", help="print the run plan only")
-            p.add_argument("--force-deps", action="store_true", help="legacy JSON only: rerun restart dependencies")
-            p.add_argument("--skip-sync", action="store_true", help="legacy JSON only: skip SIF regeneration")
-            p.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
+    sub.add_parser("list", help="list schema-v3 projects")
 
-    toml = sub.add_parser("toml", help="use the legacy cases/*.toml / tes_sim.py workflow")
-    toml.add_argument("action", choices=("show", "run", "steady", "transient", "summary"))
-    toml.add_argument("case_file", help="example: cases/single_pixel_h8.toml")
+    check = sub.add_parser("check", help="validate a project without calculating")
+    check.add_argument("name", help="project name or projects/<name>.toml")
+
+    show = sub.add_parser("show", help="show model, TES IDs/positions and final run values")
+    show.add_argument("name", help="project name or projects/<name>.toml")
+
+    mesh = sub.add_parser("mesh", help="build or reuse the mesh for a project")
+    mesh.add_argument("name", help="project name or projects/<name>.toml")
+
+    run = sub.add_parser("run", help="run a project; build or reuse its mesh automatically")
+    run.add_argument("name", help="project name or projects/<name>.toml")
+    run.add_argument("--dry-run", action="store_true", help="print the run plan only")
+    run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
+
+    legacy = sub.add_parser(
+        "legacy",
+        help="reproduce old JSON or cases/*.toml workflows",
+        description="Legacy workflows. New projects should not use these commands.",
+    )
+    legacy_sub = legacy.add_subparsers(dest="legacy_command")
+
+    legacy_list = legacy_sub.add_parser("list", help="list legacy TOML and JSON entries")
+    add_legacy_json_options(legacy_list)
+
+    legacy_check = legacy_sub.add_parser("check", help="validate a legacy project JSON")
+    add_legacy_json_options(legacy_check)
+
+    legacy_show = legacy_sub.add_parser("show", help="show a legacy JSON case or mesh")
+    legacy_show.add_argument("name")
+    add_legacy_json_options(legacy_show)
+
+    legacy_mesh = legacy_sub.add_parser("mesh", help="build a legacy JSON mesh")
+    legacy_mesh.add_argument("name")
+    legacy_mesh.add_argument("--record-only", action="store_true", help="record provenance for an existing mesh")
+    add_legacy_json_options(legacy_mesh)
+
+    legacy_run = legacy_sub.add_parser("run", help="run a legacy JSON case")
+    legacy_run.add_argument("name")
+    legacy_run.add_argument("--dry-run", action="store_true", help="print the legacy run plan only")
+    legacy_run.add_argument("--force-deps", action="store_true", help="rerun restart dependencies")
+    legacy_run.add_argument("--skip-sync", action="store_true", help="skip SIF regeneration")
+    legacy_run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
+    add_legacy_json_options(legacy_run)
+
+    legacy_toml = legacy_sub.add_parser("toml", help="use the old cases/*.toml / tes_sim.py workflow")
+    legacy_toml.add_argument("action", choices=("show", "run", "steady", "transient", "summary"))
+    legacy_toml.add_argument("case_file", help="example: cases/single_pixel_h8.toml")
     return parser
+
+
+def legacy_main(args: argparse.Namespace) -> int:
+    if not args.legacy_command:
+        print("Legacy workflows:")
+        print("  python main.py legacy list")
+        print("  python main.py legacy show <json-case-or-mesh>")
+        print("  python main.py legacy run <json-case>")
+        print("  python main.py legacy toml show cases/<name>.toml")
+        return 0
+
+    if args.legacy_command == "toml":
+        path = root_path(args.case_file)
+        if not path.is_file():
+            raise ValueError(f"legacy TOML case not found: {path}")
+        return dispatch("tes_sim.py", [args.action, str(path)])
+
+    data = read_legacy_project(args.project)
+
+    if args.legacy_command == "list":
+        print("Legacy TOML cases:")
+        for path in sorted((ROOT / "cases").glob("*.toml")):
+            print(f"  {path.relative_to(ROOT)}")
+        for label, key in (
+            ("Legacy JSON geometries", "geometries"),
+            ("Legacy JSON meshes", "meshes"),
+            ("Legacy JSON cases", "cases"),
+        ):
+            print(f"{label} ({len(data.get(key, {}))}):")
+            for name, entry in data.get(key, {}).items():
+                detail = (
+                    entry.get("geometry", "")
+                    if key == "meshes"
+                    else entry.get("mesh", "")
+                    if key == "cases"
+                    else ""
+                )
+                print(f"  {name}" + (f"  [{detail}]" if detail else ""))
+        return 0
+
+    if args.legacy_command == "check":
+        errors = check_legacy_project(data)
+        if errors:
+            for error in errors:
+                print(error, file=sys.stderr)
+            return 1
+        print(
+            f"OK: {len(data.get('geometries', {}))} geometries, "
+            f"{len(data.get('meshes', {}))} meshes, {len(data.get('cases', {}))} cases"
+        )
+        return 0
+
+    name = args.name
+    cases, meshes = data.get("cases", {}), data.get("meshes", {})
+
+    if args.legacy_command == "show":
+        if name in cases:
+            print(json.dumps({"case": name, **cases[name]}, ensure_ascii=False, indent=2))
+        elif name in meshes:
+            print(json.dumps({"mesh": name, **meshes[name]}, ensure_ascii=False, indent=2))
+        else:
+            raise ValueError(f"unknown legacy case or mesh: {name}; use 'python main.py legacy list'")
+        return 0
+
+    if args.legacy_command == "mesh":
+        if name not in meshes:
+            raise ValueError(f"unknown legacy mesh: {name}; use 'python main.py legacy list'")
+        cmd = [name, "--project", str(root_path(args.project))]
+        if args.record_only:
+            cmd.append("--record-only")
+        return dispatch("build_mesh.py", cmd)
+
+    if name not in cases:
+        raise ValueError(f"unknown legacy case: {name}; use 'python main.py legacy list'")
+    cmd = [name, "--project", str(root_path(args.project)), "--mpi-procs", str(args.mpi_procs)]
+    for flag in ("dry_run", "force_deps", "skip_sync"):
+        if getattr(args, flag):
+            cmd.append("--" + flag.replace("_", "-"))
+    if args.dry_run and not args.skip_sync:
+        cmd.append("--skip-sync")
+    return dispatch("run.py", cmd)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -112,116 +251,28 @@ def main(argv: list[str] | None = None) -> int:
         print("  python main.py show single_pixel_alpha240")
         print("  python main.py run single_pixel_alpha240 --dry-run")
         print("  python main.py run single_pixel_alpha240")
+        print("\nOld workflows: python main.py legacy ...")
         return 0
 
     try:
-        if args.command == "toml":
-            path = project_path(args.case_file)
-            if not path.is_file():
-                raise ValueError(f"legacy TOML case not found: {path}")
-            return dispatch("tes_sim.py", [args.action, str(path)])
-
-        from scripts.support.scenario_config import PROJECT_DIR, read_toml
+        if args.command == "legacy":
+            return legacy_main(args)
 
         if args.command == "list":
+            from scripts.support.scenario_config import PROJECT_DIR, read_toml
+
             print("Projects (use 'show <name>' or 'run <name>'):")
             for path in sorted(PROJECT_DIR.glob("*.toml")):
                 if read_toml(path).get("schema_version") == 3:
                     print(f"  {path.stem}")
-            if not args.all:
-                print("Use --all to show legacy TOML and JSON entries.")
-                return 0
-
-            data = read_project(args.project)
-            print("Legacy TOML cases:")
-            for path in sorted((ROOT / "cases").glob("*.toml")):
-                print(f"  {path.relative_to(ROOT)}")
-            for label, key in (
-                ("Legacy JSON geometries", "geometries"),
-                ("Legacy JSON meshes", "meshes"),
-                ("Legacy JSON cases", "cases"),
-            ):
-                print(f"{label} ({len(data.get(key, {}))}):")
-                for name, entry in data.get(key, {}).items():
-                    detail = entry.get("geometry", "") if key == "meshes" else entry.get("mesh", "") if key == "cases" else ""
-                    print(f"  {name}" + (f"  [{detail}]" if detail else ""))
             return 0
 
-        if args.command in {"show", "check", "mesh", "run"} and args.name and not args.name.lower().endswith(".toml"):
-            candidate = PROJECT_DIR / f"{args.name}.toml"
-            if candidate.is_file() and read_toml(candidate).get("schema_version") == 3:
-                if args.command == "mesh" and getattr(args, "record_only", False):
-                    raise ValueError("--record-only is only for legacy JSON meshes")
-                return scenario_action(
-                    args.command,
-                    args.name,
-                    dry_run=getattr(args, "dry_run", False),
-                    mpi_procs=getattr(args, "mpi_procs", 1),
-                )
-
-        if args.command in {"show", "check", "mesh", "run"} and args.name and args.name.lower().endswith(".toml"):
-            path = project_path(args.name)
-            if not path.is_file():
-                raise ValueError(f"TOML file not found: {path}")
-            project = read_toml(path)
-            if project.get("schema_version") == 3:
-                if args.command == "mesh" and getattr(args, "record_only", False):
-                    raise ValueError("--record-only is only for legacy JSON meshes")
-                return scenario_action(
-                    args.command,
-                    args.name,
-                    dry_run=getattr(args, "dry_run", False),
-                    mpi_procs=getattr(args, "mpi_procs", 1),
-                )
-            if args.command == "check":
-                raise ValueError(f"{args.name} is a legacy TOML; use: python main.py toml show {args.name}")
-            if args.command == "mesh":
-                raise ValueError("legacy TOML mesh operations use tes_sim.py, not main.py mesh")
-            if getattr(args, "dry_run", False):
-                raise ValueError("--dry-run is unavailable for legacy TOML; no calculation was started")
-            return dispatch("tes_sim.py", [args.command, str(path)])
-
-        data = read_project(args.project)
-        if args.command == "check":
-            errors = check_project(data)
-            if errors:
-                for error in errors:
-                    print(error, file=sys.stderr)
-                return 1
-            print(
-                f"OK: {len(data.get('geometries', {}))} geometries, "
-                f"{len(data.get('meshes', {}))} meshes, {len(data.get('cases', {}))} cases"
-            )
-            return 0
-
-        name = args.name
-        cases, meshes = data.get("cases", {}), data.get("meshes", {})
-        if args.command == "show":
-            if name in cases:
-                print(json.dumps({"case": name, **cases[name]}, ensure_ascii=False, indent=2))
-            elif name in meshes:
-                print(json.dumps({"mesh": name, **meshes[name]}, ensure_ascii=False, indent=2))
-            else:
-                raise ValueError(f"unknown project, legacy case or mesh: {name}; use 'list --all'")
-            return 0
-
-        if args.command == "mesh":
-            if name not in meshes:
-                raise ValueError(f"unknown project or legacy mesh: {name}; use 'list --all'")
-            cmd = [name, "--project", str(project_path(args.project))]
-            if args.record_only:
-                cmd.append("--record-only")
-            return dispatch("build_mesh.py", cmd)
-
-        if name not in cases:
-            raise ValueError(f"unknown project or legacy case: {name}; use 'list --all'")
-        cmd = [name, "--project", str(project_path(args.project)), "--mpi-procs", str(args.mpi_procs)]
-        for flag in ("dry_run", "force_deps", "skip_sync"):
-            if getattr(args, flag):
-                cmd.append("--" + flag.replace("_", "-"))
-        if args.dry_run and not args.skip_sync:
-            cmd.append("--skip-sync")
-        return dispatch("run.py", cmd)
+        return project_action(
+            args.command,
+            args.name,
+            dry_run=getattr(args, "dry_run", False),
+            mpi_procs=getattr(args, "mpi_procs", 1),
+        )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

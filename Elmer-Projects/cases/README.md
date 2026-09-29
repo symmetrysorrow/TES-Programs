@@ -4,8 +4,8 @@
 新しい計算は `../projects/<名前>.toml` を作成し、`python main.py run <名前>` を使います。
 
 ```powershell
-python main.py list
-python main.py list --all
+python main.py legacy list
+python main.py legacy toml show cases/<名前>.toml
 ```
 
-`--all` を付けると、この legacy TOML と旧 JSON case も表示されます。
+通常の `python main.py list/show/run` は `projects/*.toml` 専用です。このディレクトリの入力は `legacy` 名前空間からだけ案内します。
