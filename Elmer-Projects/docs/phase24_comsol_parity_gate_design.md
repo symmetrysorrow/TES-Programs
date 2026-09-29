@@ -271,7 +271,7 @@ T0からの定常解と、同じ定常restartからのGate4短窓（23ステッ�
 | CPU fallback / native crash | なし |
 | Gate6 | **PASS** |
 
-再現用ランナーは`scripts/support/run_phase24_gate6_gpu_parity.py`、証跡は
+再現用ランナーは`src/support/run_phase24_gate6_gpu_parity.py`、証跡は
 `artifacts/phase24_gate6_gpu_parity/summary.md`および`summary.json`にある。
 この短窓判定に加え、100 µs GPU長時間solver実行も完走したが、物理parityは別途FAILとなった。
 Gate7は未実施である。
@@ -293,7 +293,7 @@ HIP HYPRE GPUで100 µs窓（175ステップ）を完走した。GPUとCPU-HYPRE
 ## Gate 3実装
 
 共形no-mortar版Gate 3の再現可能な実行・判定は
-`scripts/support/run_phase24_gate3_hypre_steady.py` で行う。
+`src/support/run_phase24_gate3_hypre_steady.py` で行う。
 `--source-project`、`--mesh`、`--base-case`、`--reference-current-uA`で共形メッシュ
 を選択できる。独立起動し、`run.py` のmanifest、solver.log、反復CSV、設定・実行
 環境のhashをartifactに保存する。`--audit-only` は既存結果を再実行せずに再判定
@@ -302,7 +302,7 @@ HIP HYPRE GPUで100 µs窓（175ステップ）を完走した。GPUとCPU-HYPRE
 現行refine20候補の実行例:
 
 ```text
-python scripts/support/run_phase24_gate3_hypre_steady.py --source-project artifacts/comparison/nomortar_refinement_probe/project.json --mesh mesh_singlepixel_conformal_gpu_refine20 --base-case case_tes_steady_singlepixel_conformal_gpu_fine --reference-current-uA 144.71078126230953 --variant conformal_refine20 --linear-tolerance 2e-8 --strong-threshold 0.5
+python src/support/run_phase24_gate3_hypre_steady.py --source-project artifacts/comparison/nomortar_refinement_probe/project.json --mesh mesh_singlepixel_conformal_gpu_refine20 --base-case case_tes_steady_singlepixel_conformal_gpu_fine --reference-current-uA 144.71078126230953 --variant conformal_refine20 --linear-tolerance 2e-8 --strong-threshold 0.5
 ```
 
 旧mortar版の試行結果（2026-09-18、履歴）:

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.support.build_cases import solver1_block
+from support.build_cases import solver1_block
 
 
 def commit(

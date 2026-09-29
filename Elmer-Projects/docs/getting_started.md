@@ -2,6 +2,17 @@
 
 新しい計算は **1実験につき1つの project TOML** を `projects/` に置きます。
 
+コマンドを覚えずに始める場合は、`questionary` を入れてメニューを開きます。
+
+```powershell
+python -m pip install questionary
+python main.py
+```
+
+メニューで project と操作を選べます。`計算を実行する` を選ぶと、dry-run で計画を確認するか、そのまま計算するかを選択できます。`python main.py --interactive` でもメニューを開けます。
+
+スクリプトやラッパーから使う場合は、引き続き次のコマンド形式を使えます。
+
 ```powershell
 python main.py list
 python main.py show single_pixel_alpha240
@@ -53,4 +64,4 @@ ID が分からない場合は `python main.py show <名前>` で位置と一緒
 
 単ピクセル model は検証済みの `mesh_hybrid_fullconf_h8` を参照しています。この prebuilt mesh と矛盾する寸法変更はエラーになります。新しい寸法を使う場合は、生成型 mesh を持つ別 model を作成します。
 
-生成した内部 JSON と SIF は `generated/`、メッシュは `work/meshes/`、実行結果は `results/` に保存します。旧 TOML / JSON を再現する場合だけ `python main.py legacy list` を使います。通常の `list/show/check/mesh/run` は新project専用です。
+生成した内部 JSON と SIF は `workspace/generated/`、メッシュは `workspace/work/meshes/`、実行結果は `outputs/results/` に保存します。旧 TOML / JSON を再現する場合だけ `python main.py legacy list` を使います。通常の `list/show/check/mesh/run` は新project専用です。

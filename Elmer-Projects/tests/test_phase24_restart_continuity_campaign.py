@@ -6,7 +6,7 @@ from pathlib import Path
 
 MODULE_PATH = (
     Path(__file__).resolve().parents[1]
-    / "scripts"
+    / "src"
     / "support"
     / "run_phase24_restart_continuity_campaign.py"
 )
@@ -36,7 +36,7 @@ def test_read_state_file_parses_five_value_checkpoint(tmp_path: Path) -> None:
 def test_set_short_variant_is_pulse_off_and_non_destructive() -> None:
     base = {
         "template": "pulse",
-        "state_file": "work/meshes/example/original.state",
+        "state_file": "workspace/work/meshes/example/original.state",
         "timesteps": [["18[us]", 1], ["1[us]", 2]],
         "output_intervals": [1, 1],
         "pulse": {
@@ -62,7 +62,7 @@ def test_set_short_variant_is_pulse_off_and_non_destructive() -> None:
     )
 
     assert base["pulse"]["energy"] == "1332[keV]"
-    assert base["state_file"] == "work/meshes/example/original.state"
+    assert base["state_file"] == "workspace/work/meshes/example/original.state"
     assert variant["pulse"]["energy"] == 0.0
     assert variant["timesteps"] == [["18[us]", 5]]
     assert variant["output_intervals"] == [1]

@@ -9,7 +9,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "scripts" / "search" / "single_pixel_search.py"
+MODULE_PATH = ROOT / "src" / "search" / "single_pixel_search.py"
 SPEC = importlib.util.spec_from_file_location("single_pixel_search", MODULE_PATH)
 assert SPEC and SPEC.loader
 SEARCH = importlib.util.module_from_spec(SPEC)
@@ -44,7 +44,7 @@ def test_mutation_scales_only_selected_expression() -> None:
     assert project["cases"][metadata["pulse_case"]]["restart_from"] == metadata["steady_case"]
     steady = project["cases"][metadata["steady_case"]]
     pulse = project["cases"][metadata["pulse_case"]]
-    assert steady["output_file_path"].startswith("../work/meshes/")
+    assert steady["output_file_path"].startswith("../workspace/work/meshes/")
     assert pulse["restart_file_path"] == steady["output_file_path"]
 
 

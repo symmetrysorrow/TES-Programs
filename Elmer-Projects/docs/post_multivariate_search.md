@@ -82,10 +82,10 @@ Elmer.
 Run from `Elmer-Projects`:
 
 ```powershell
-python scripts/search/post_multivariate_search.py prepare-references
-python scripts/search/post_multivariate_search.py prepare
-python scripts/search/post_multivariate_search.py run-all --limit 3
-python scripts/search/post_multivariate_search.py run-all --skip-scored
+python src/search/post_multivariate_search.py prepare-references
+python src/search/post_multivariate_search.py prepare
+python src/search/post_multivariate_search.py run-all --limit 3
+python src/search/post_multivariate_search.py run-all --skip-scored
 ```
 
 `prepare-references` reads the experiment location configured in

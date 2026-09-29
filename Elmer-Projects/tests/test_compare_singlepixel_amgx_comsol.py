@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from scripts.analysis.compare_singlepixel_amgx_comsol import (
+from analysis.compare_singlepixel_amgx_comsol import (
     Series,
     compare,
     crossing,

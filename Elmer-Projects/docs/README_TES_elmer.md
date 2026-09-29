@@ -1,6 +1,6 @@
 # TES shunt thermal-equilibrium prototype
 
-This directory now contains a first Elmer prototype for the mesh in `gmsh/project.msh`.
+This directory now contains a first Elmer prototype for the mesh in `workspace/gmsh/project.msh`.
 
 ## Reproducible Layout
 
@@ -9,38 +9,38 @@ The repository should now be interpreted with three roles:
 - Source of truth:
   - `elmer_project.json`
 - Generated artifacts:
-  - `generated/*.sif`
+  - `workspace/generated/*.sif`
   - `case_*.sif`
 - Frozen reproducible runs:
-  - `runs/<run_name>/`
-  - `runs/<run_name>.zip`
+  - `outputs/runs/<run_name>/`
+  - `outputs/runs/<run_name>.zip`
 
 The main rule is:
 
 - edit `elmer_project.json` (numeric fields are self-healing: `sync_elmer_parameters.py`
   and `generate_project_geometry.py` always recompute them from the paired
-  `*_expr`/`expression` fields via `scripts/support/reconcile_project.py` and write
+  `*_expr`/`expression` fields via `src/support/reconcile_project.py` and write
   the result back, so editing an expression is enough)
-- do not hand-edit `generated/*.sif` inside a reproducible workflow
-- freeze confirmed states into `runs/`
+- do not hand-edit `workspace/generated/*.sif` inside a reproducible workflow
+- freeze confirmed states into `outputs/runs/`
 
 To freeze the current confirmed state into a reproducible bundle:
 
 ```powershell
-python freeze_repro_run.py current_reference
+python src/freeze_repro_run.py current_reference
 ```
 
 This creates:
 
-- `runs/current_reference/`
-- `runs/current_reference.zip`
+- `outputs/runs/current_reference/`
+- `outputs/runs/current_reference.zip`
 
 Each frozen run contains copied inputs, copied generated files, copied mesh, copied results, and a `manifest.json`.
 
 ## Mesh IDs
 
-The active Gmsh mesh is `gmsh/project.msh`; the original centered mesh is kept
-as `gmsh/project_centered.msh`. The active Elmer mesh is in
+The active Gmsh mesh is `workspace/gmsh/project.msh`; the original centered mesh is kept
+as `workspace/gmsh/project_centered.msh`. The active Elmer mesh is in
 `mesh_shifted_merged/`. The important physical IDs are:
 
 - `100`: `abs`
@@ -151,8 +151,8 @@ There are currently two distinct Elmer workflows in this repository.
 This is the stable baseline workflow used for the main steady-state runs:
 
 ```powershell
-python generate_project_geometry.py
-ElmerGrid 14 2 gmsh\project.msh -merge 1e-10 -out mesh_shifted_merged
+python src/generate_project_geometry.py
+ElmerGrid 14 2 workspace/gmsh\project.msh -merge 1e-10 -out mesh_shifted_merged
 ElmerSolver case_constant_power.sif
 ```
 
@@ -165,8 +165,8 @@ This is the current experimental workflow for keeping the mesh pieces separate
 while only coupling the Z-stack interfaces with mortar:
 
 ```powershell
-python generate_project_geometry.py
-ElmerGrid 14 2 gmsh\project.msh -out mesh_shifted_unmerged
+python src/generate_project_geometry.py
+ElmerGrid 14 2 workspace/gmsh\project.msh -out mesh_shifted_unmerged
 ElmerSolver case_constant_power_unmerged_minimal_mortar.sif
 ```
 
@@ -184,10 +184,10 @@ investigation scaffold rather than a validated production case.
 ## Run
 
 ```powershell
-python generate_project_geometry.py
-ElmerGrid 14 2 gmsh\project.msh -merge 1e-10 -out mesh_shifted_merged
-elmerf90 tes_heat_source.f90 -o tes_heat_source_t0.dll
-elmerf90 tes_transient_heat_source.f90 -o tes_transient_heat_source_t0.dll
+python src/generate_project_geometry.py
+ElmerGrid 14 2 workspace/gmsh\project.msh -merge 1e-10 -out mesh_shifted_merged
+elmerf90 src/fortran/tes_heat_source.f90 -o build/udf/tes_heat_source_t0.dll
+elmerf90 src/fortran/tes_transient_heat_source.f90 -o build/udf/tes_transient_heat_source_t0.dll
 ElmerSolver case_constant_power.sif
 ElmerSolver case_tes_shunt_internal.sif
 ElmerSolver case_tes_shunt_transient.sif
@@ -199,7 +199,7 @@ Open the resulting `.vtu` files with ParaView.
 To print TES-only temperature summaries:
 
 ```powershell
-python scripts\analysis\summarize_tes_temperature.py
+python src\analysis\summarize_tes_temperature.py
 ```
 
 ## Temperature Reporting
@@ -222,9 +222,9 @@ Why:
 
 The analysis scripts now follow this convention:
 
-- `scripts/analysis/extract_tes_volume_avg.py`: prints both TES nodal average
+- `src/analysis/extract_tes_volume_avg.py`: prints both TES nodal average
   and TES volume average from the VTU result
-- `scripts/analysis/extract_tes_avg_ep.py`: reads temperature from the EP file,
+- `src/analysis/extract_tes_avg_ep.py`: reads temperature from the EP file,
   but uses `mesh.elements` body ID `101` to identify TES nodes safely
-- `scripts/analysis/summarize_tes_temperature.py`: treats TES volume average as
+- `src/analysis/summarize_tes_temperature.py`: treats TES volume average as
   the reference temperature for `T - T0`, `R_TES`, `I_TES`, and `P_TES`

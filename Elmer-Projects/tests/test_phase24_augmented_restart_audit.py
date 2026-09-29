@@ -4,7 +4,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "support" / "audit_phase24_restart_state.py"
+MODULE_PATH = Path(__file__).resolve().parents[1] / "src" / "support" / "audit_phase24_restart_state.py"
 SPEC = importlib.util.spec_from_file_location("phase24_restart_state_audit", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 audit = importlib.util.module_from_spec(SPEC)
@@ -28,24 +28,24 @@ HEADER = (
 
 def write_audit(path: Path, loaded: str = "T") -> None:
     rows = [
-        "load_after,1.02,1,1,0,work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,0,0,.5,.5,0,-1,-2147483647,0,0,F,F,checkpoint_or_default",
-        "circuit_init_after,1.02,1,1,0,work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,1.68,1.68,.5,.5,0,-1,1,1,1,T,T,loaded_or_default_then_init",
-        "pre_first_assembly,1.02,1,1,0,work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,1.68,1.68,.5,.5,0,-1,1,1,1,T,T,preserved_before_first_assembly",
+        "load_after,1.02,1,1,0,workspace/work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,0,0,.5,.5,0,-1,-2147483647,0,0,F,F,checkpoint_or_default",
+        "circuit_init_after,1.02,1,1,0,workspace/work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,1.68,1.68,.5,.5,0,-1,1,1,1,T,T,loaded_or_default_then_init",
+        "pre_first_assembly,1.02,1,1,0,workspace/work/state.state,T,T,T," + loaded + ",1e-4,1e-4,1e-2,3e-10,1.68,1.68,.5,.5,0,-1,1,1,1,T,T,preserved_before_first_assembly",
     ]
     path.write_text("\n".join((HEADER, *rows)) + "\n", encoding="utf-8")
 
 
 def test_checkpoint_path_uses_solver_cwd() -> None:
     root = Path("D:/repo")
-    assert resolve_runtime_state_path("work/meshes/gate3.state", root) == root / "work/meshes/gate3.state"
-    assert resolve_runtime_state_path("../../work/meshes/gate3.state", root) == Path("D:/work/meshes/gate3.state")
+    assert resolve_runtime_state_path("workspace/work/meshes/gate3.state", root) == root / "workspace/work/meshes/gate3.state"
+    assert resolve_runtime_state_path("../../workspace/work/meshes/gate3.state", root) == Path("D:/workspace/work/meshes/gate3.state")
 
 
 def test_state_audit_detects_load_failure_and_restoration(tmp_path: Path) -> None:
     audit = tmp_path / "audit.csv"
     write_audit(audit)
     saved = tmp_path / "saved.state"
-    actual = tmp_path / "work" / "state.state"
+    actual = tmp_path / "workspace/work" / "state.state"
     actual.parent.mkdir()
     saved.write_text("1.68 1e-4 1e-2 3e-10 1e-4\n", encoding="utf-8")
     actual.write_text(saved.read_text(encoding="utf-8"), encoding="utf-8")
@@ -66,7 +66,7 @@ def test_original_checkpoint_hash_is_protected(tmp_path: Path) -> None:
     write_audit(audit)
     saved = tmp_path / "saved.state"
     before = tmp_path / "before.state"
-    actual = tmp_path / "work" / "state.state"
+    actual = tmp_path / "workspace/work" / "state.state"
     actual.parent.mkdir()
     content = "1.68 1e-4 1e-2 3e-10 1e-4\n"
     saved.write_text(content, encoding="utf-8")

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.analysis.compare_mpi_series import compare
+from analysis.compare_mpi_series import compare
 
 
 def _series(path: Path, currents: list[float]) -> None:

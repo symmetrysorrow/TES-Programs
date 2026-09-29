@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.analysis import phase24_absolute_offset_diagnostic as diagnostic
+from analysis import phase24_absolute_offset_diagnostic as diagnostic
 
 
 def test_pair_report_separates_baseline_offset(tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_hypre_max_iterations_diagnostic as diagnostic
+from support import run_phase24_hypre_max_iterations_diagnostic as diagnostic
 
 
 def test_build_project_changes_only_max_iterations(tmp_path: Path, monkeypatch) -> None:
@@ -21,7 +21,7 @@ def test_build_project_changes_only_max_iterations(tmp_path: Path, monkeypatch) 
 
 
 def test_flexgmres_sif_uses_configured_max_iterations(tmp_path: Path) -> None:
-    from scripts.support.build_cases import solver1_block
+    from support.build_cases import solver1_block
 
     project_case = {
         "solver": {

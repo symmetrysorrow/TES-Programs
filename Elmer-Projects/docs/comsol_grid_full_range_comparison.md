@@ -10,8 +10,8 @@
 
 ## 生成スクリプト
 
-- `scripts/prep/prepare_comsol_timegrid_case.py`
-  - 実行: `python scripts/prep/prepare_comsol_timegrid_case.py`
+- `src/prep/prepare_comsol_timegrid_case.py`
+  - 実行: `python src/prep/prepare_comsol_timegrid_case.py`
   - 出力: `elmer_project_comsol_timegrid.json`
   - このスクリプトが以下のケース定義をすべて生成する。
 
@@ -24,7 +24,7 @@
 - パルス+500 µs〜180 ms: 100 µs一定刻み(1795ステップ)
 - 合計205ステージ・1999物理ステップ、絶対時刻0〜200.02 ms
 - 実行時間: 約5時間(1回目はMUMPSのメモリ不足`INFO(1)=-9`で失敗、再試行で完走)
-- 結果: `results/case_tes_mpi_comsol_grid_full_uniform_continuous/`
+- 結果: `outputs/results/case_tes_mpi_comsol_grid_full_uniform_continuous/`
   - `tes_mpi_comsol_grid_full_uniform_continuous_series.csv`(TES系列、1999行)
   - `tes_mpi_comsol_grid_full_uniform_continuous_iterations.csv`(非線形反復ログ)
   - `solver.log`, `manifest.json`
@@ -32,7 +32,7 @@
 実行コマンド:
 
 ```powershell
-python run.py case_tes_mpi_comsol_grid_full_uniform_continuous --project elmer_project_comsol_timegrid.json --mpi-procs 4 `
+python src/run.py case_tes_mpi_comsol_grid_full_uniform_continuous --project elmer_project_comsol_timegrid.json --mpi-procs 4 `
   --elmer-solver "D:\Github\TES-Programs\tools\elmer-hypre\install-phase13-step-commit\bin\ElmerSolver.exe" `
   --runtime-bin "C:\msys64\ucrt64\bin"
 ```
@@ -87,7 +87,7 @@ Aitken緩和履歴など、FortranモジュールのSAVE変数)がプロセス�
 
 ## 比較・プロット生成
 
-`scripts/analysis/plot_comsol_direct_mpi_current.py`(このタスクで拡張):
+`src/analysis/plot_comsol_direct_mpi_current.py`(このタスクで拡張):
 
 - `--skip-direct`: 直接法(serial)曲線を省略
 - `--linear-x`: 180 ms全体を見る際に既定のsymlogを線形軸に切替
@@ -98,8 +98,8 @@ Aitken緩和履歴など、FortranモジュールのSAVE変数)がプロセス�
 実行例:
 
 ```powershell
-python scripts/analysis/plot_comsol_direct_mpi_current.py `
-  --mpi results/case_tes_mpi_comsol_grid_full_uniform_continuous/tes_mpi_comsol_grid_full_uniform_continuous_series.csv `
+python src/analysis/plot_comsol_direct_mpi_current.py `
+  --mpi outputs/results/case_tes_mpi_comsol_grid_full_uniform_continuous/tes_mpi_comsol_grid_full_uniform_continuous_series.csv `
   --start-us -20000 --end-us 180000 --linear-x --skip-direct `
   --out artifacts/comparison/comsol_mpi_full_uniform_continuous_final
 ```
@@ -113,7 +113,7 @@ python scripts/analysis/plot_comsol_direct_mpi_current.py `
 ## 途中生成した非採択ケース(参考・履歴)
 
 生成はされているが最終結果には使わない中間ケース。いずれも
-`scripts/prep/prepare_comsol_timegrid_case.py`内に定義が残っている。
+`src/prep/prepare_comsol_timegrid_case.py`内に定義が残っている。
 
 | ケース名 | 内容 | 非採択の理由 |
 |---|---|---|

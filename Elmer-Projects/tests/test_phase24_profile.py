@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from scripts.analysis.phase24_profile import (
+from analysis.phase24_profile import (
     ProfileError,
     classify,
     make_profile,

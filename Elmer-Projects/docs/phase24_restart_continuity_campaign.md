@@ -18,14 +18,14 @@ It audits restart provenance and runs short pulse-OFF controls.
 From \`Elmer-Projects\`:
 
 \`\`\`powershell
-python scripts/support/run_phase24_restart_continuity_campaign.py
+python src/support/run_phase24_restart_continuity_campaign.py
 \`\`\`
 
 If the current Gate3 / Gate4-5 case definitions are in a local generated
 project that is not committed to main, pass it explicitly:
 
 \`\`\`powershell
-python scripts/support/run_phase24_restart_continuity_campaign.py \`
+python src/support/run_phase24_restart_continuity_campaign.py \`
   --project path\\to\\project.json
 \`\`\`
 
@@ -33,16 +33,16 @@ Useful isolation switches:
 
 \`\`\`powershell
 # Inspect existing artifacts only.
-python scripts/support/run_phase24_restart_continuity_campaign.py --audit-only
+python src/support/run_phase24_restart_continuity_campaign.py --audit-only
 
 # Generate the project and commands without starting Elmer.
-python scripts/support/run_phase24_restart_continuity_campaign.py --dry-run
+python src/support/run_phase24_restart_continuity_campaign.py --dry-run
 
 # Test the T0/fallback circuit initialization path too.
-python scripts/support/run_phase24_restart_continuity_campaign.py --include-state-fallback
+python src/support/run_phase24_restart_continuity_campaign.py --include-state-fallback
 
 # Add no-mortar matrix-capture + observable hold controls. Diagnostic only on a nonconforming mesh.
-python scripts/support/run_phase24_restart_continuity_campaign.py --include-no-mortar
+python src/support/run_phase24_restart_continuity_campaign.py --include-no-mortar
 \`\`\`
 
 ## Default short variants
@@ -518,7 +518,7 @@ constraint rows and must not be interpreted as two nonlinear solves.
 The campaign now parses the actual Elmer log:
 
 ```text
-results/<case>/solver.log
+outputs/results/<case>/solver.log
 ```
 
 instead of the wrapper's `restart_continuity_launcher.log` when available.

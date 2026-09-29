@@ -47,7 +47,7 @@ def test_legacy_json_options_live_under_legacy_namespace():
 
 
 def test_legacy_toml_is_not_accepted_by_normal_run(capsys):
-    assert main.main(["run", "cases/single_pixel_h8.toml", "--dry-run"]) == 2
+    assert main.main(["run", "projects/legacy/cases/single_pixel_h8.toml", "--dry-run"]) == 2
     error = capsys.readouterr().err
     assert "schema_version = 3" in error
     assert "main.py legacy" in error

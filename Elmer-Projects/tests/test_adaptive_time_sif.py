@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.support.build_cases import (
+from support.build_cases import (
     _adaptive_time_lines,
     _validate_adaptive_time_consistency,
 )

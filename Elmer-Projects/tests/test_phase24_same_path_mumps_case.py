@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_same_path_mumps_case as diagnostic
+from support import run_phase24_same_path_mumps_case as diagnostic
 
 
 def test_build_project_changes_only_linear_backend(tmp_path: Path, monkeypatch) -> None:

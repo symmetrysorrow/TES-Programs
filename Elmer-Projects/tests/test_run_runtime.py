@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 from pathlib import Path
 
-import run
+from src import run
 
 
 class RuntimeSifTests(unittest.TestCase):
@@ -27,7 +27,7 @@ class RuntimeSifTests(unittest.TestCase):
             source.write_text(source_text)
             udf = root / "matching.dll"
             udf.write_bytes(b"dll")
-            runtime_sif, applied = run.write_runtime_sif(source, root / "results", str(udf))
+            runtime_sif, applied = run.write_runtime_sif(source, root / "outputs/results", str(udf))
             self.assertTrue(applied)
             self.assertEqual(source.read_text(), source_text)
             runtime_text = runtime_sif.read_text()
@@ -42,7 +42,7 @@ class RuntimeSifTests(unittest.TestCase):
             source.write_text('Real Procedure "other" "TESTransientHeatSource"\n')
             udf.write_bytes(b"dll")
             with self.assertRaisesRegex(ValueError, "token"):
-                run.write_runtime_sif(source, root / "results", str(udf))
+                run.write_runtime_sif(source, root / "outputs/results", str(udf))
 
     def test_udf_is_not_applied_to_non_udf_dependency(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -50,7 +50,7 @@ class RuntimeSifTests(unittest.TestCase):
             source, udf = root / "steady.sif", root / "matching.dll"
             source.write_text('Procedure "HeatSolve" "HeatSolver"\n')
             udf.write_bytes(b"dll")
-            runtime_sif, applied = run.write_runtime_sif(source, root / "results", str(udf))
+            runtime_sif, applied = run.write_runtime_sif(source, root / "outputs/results", str(udf))
             self.assertFalse(applied)
             self.assertEqual(runtime_sif, source)
 
@@ -67,7 +67,7 @@ class RuntimeSifTests(unittest.TestCase):
             config = root / "amgx.json"
             config.write_text("{}")
             runtime_sif, applied = run.write_runtime_sif(
-                source, root / "results", None, str(config)
+                source, root / "outputs/results", None, str(config)
             )
             self.assertTrue(applied)
             runtime_text = runtime_sif.read_text()
@@ -94,7 +94,7 @@ class RuntimeSifTests(unittest.TestCase):
             config = root / "amgx.json"
             config.write_text("{}")
             runtime_sif, _ = run.write_runtime_sif(
-                source, root / "results", None, str(config)
+                source, root / "outputs/results", None, str(config)
             )
             self.assertIn(
                 "Eliminate Linear Constraints = Logical True",
@@ -283,7 +283,7 @@ class RuntimeSifTests(unittest.TestCase):
     def test_preexisting_mpi_restart_validates_every_rank_and_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            mesh = root / "work" / "meshes" / "mesh"
+            mesh = root / "workspace/work" / "meshes" / "mesh"
             mesh.mkdir(parents=True)
             model = {
                 "meshes": {"m": {"dir": "mesh"}},
@@ -292,7 +292,7 @@ class RuntimeSifTests(unittest.TestCase):
                         "mesh": "m",
                         "preexisting_restart": True,
                         "restart_file_base": "mapped",
-                        "state_file": "work/meshes/mesh/mapped.state",
+                        "state_file": "workspace/work/meshes/mesh/mapped.state",
                     }
                 },
             }

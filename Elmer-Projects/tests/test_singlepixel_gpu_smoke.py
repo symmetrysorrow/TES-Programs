@@ -4,7 +4,7 @@ import unittest
 import tempfile
 from pathlib import Path
 
-from scripts.prep.run_singlepixel_prod_v2_original_timegrid import (
+from prep.run_singlepixel_prod_v2_original_timegrid import (
     steady_state_from_iterations,
     truncate_timesteps,
 )

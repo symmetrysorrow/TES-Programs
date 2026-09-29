@@ -27,21 +27,21 @@ MPI計算での要素数を抑えつつ、吸収体中央に入射するパル�
 - 生成器: `generate_hybrid_prism_geometry.py`
 - Elmerメッシュ: `mesh_hybrid_abs_tet_layers_prism_conformal/`
 - 比較用プロジェクト: `elmer_project_hybrid_prism.json`
-- ケース定義生成器: `scripts/prep/prepare_hybrid_prism_case.py`
+- ケース定義生成器: `src/prep/prepare_hybrid_prism_case.py`
 
 プロジェクト生成:
 
 ```powershell
-python scripts/prep/prepare_hybrid_prism_case.py
-python run.py case_tes_pulse_hybrid_prism_fast_compare --project elmer_project_hybrid_prism.json --dry-run
+python src/prep/prepare_hybrid_prism_case.py
+python src/run.py case_tes_pulse_hybrid_prism_fast_compare --project elmer_project_hybrid_prism.json --dry-run
 ```
 
 メッシュ生成・変換:
 
 ```powershell
-python generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json
+python src/generate_hybrid_prism_geometry.py elmer_project_comsol_timegrid.json
 & 'C:\Program Files\Elmer 26.1-Release\bin\ElmerGrid.exe' 14 2 `
-  gmsh/project_hybrid_prism.msh -merge 1e-10 `
+  workspace/gmsh/project_hybrid_prism.msh -merge 1e-10 `
   -out mesh_hybrid_abs_tet_layers_prism_conformal
 ```
 
@@ -84,7 +84,7 @@ gfortran 16 / UCRT64で、Elmer本体・`libelmersolver`・`HeatSolve`を新規�
 再現例（標準結果を再実行せずcustomだけを確認）:
 
 ```powershell
-.\scripts\support\run_hybrid_prism_ab.ps1 -CustomOnly `
+.\src\support\run_hybrid_prism_ab.ps1 -CustomOnly `
   -CustomSolver ..\tools\elmer-hypre\install-phase1-gfortran16-release-retry5\bin\ElmerSolver.exe `
   -CustomRuntimeBin C:\msys64\ucrt64\bin `
   -UdfDll artifacts\hybrid_prism_diagnostics\udf-matching-release-retry5-20260724-201900\tes_transient_heat_source_t0.dll `
@@ -113,7 +113,7 @@ Phase13では `TESInnerCircuitUpdate` に opt-in の `"TES Inner Circuit Step Co
 
 実装・再現用の固定成果物は次のとおり。
 
-- 実装: `tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90`、`scripts/support/build_cases.py`、`scripts/prep/prepare_hybrid_prism_case.py`
+- 実装: `tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90`、`src/support/build_cases.py`、`src/prep/prepare_hybrid_prism_case.py`
 - matching build/install: `tools/elmer-hypre/build-phase13-step-commit` / `tools/elmer-hypre/install-phase13-step-commit`
 - matching UDF: `artifacts/hybrid_prism_diagnostics/phase13_udf/tes_transient_heat_source_t0.dll`
 - 結果・来歴: `artifacts/hybrid_prism_diagnostics/phase13/comparison.json`、`iteration_distribution.json`、`run_history.json`
@@ -250,9 +250,9 @@ Phase19の空間メッシュを固定し、熱源・restart・回路・UDFを変
 大きな交絡要因だが、残る波形差の主因が時間格子だけであるとはいえない。
 
 再現用プロジェクトは`elmer_project_hybrid_prism_phase19_timegrid.json`、生成器は
-`scripts/prep/prepare_phase19_timegrid_cases.py`である。出力は
-`results/case_tes_pulse_3x_phase19_time10us/`および
-`results/case_p19_pulse_time10us/`に保存する。
+`src/prep/prepare_phase19_timegrid_cases.py`である。出力は
+`outputs/results/case_tes_pulse_3x_phase19_time10us/`および
+`outputs/results/case_p19_pulse_time10us/`に保存する。
 
 ## Phase21: 5 us時間収束確認（2026-07-30）
 
@@ -268,8 +268,8 @@ Phase20と同じ比較を5 us格子（141ステップ）で実行した。10 us�
 評価対象は時間格子ではなく、積層部／接触／熱源空間分布である。
 
 5 usの再現用プロジェクトは`elmer_project_hybrid_prism_phase19_time5us.json`、
-出力は`results/case_tes_pulse_3x_phase19_time5us/`および
-`results/case_p19_pulse_time5us/`に保存する。
+出力は`outputs/results/case_tes_pulse_3x_phase19_time5us/`および
+`outputs/results/case_p19_pulse_time5us/`に保存する。
 
 ## Phase22: 熱源形状の感度（2026-07-30）
 
@@ -286,9 +286,9 @@ nodal FE積分で別々に正規化し、投入エネルギーを一致させた
 中心要素サイズに対する熱源分解能を先に定義する必要がある。
 
 実装は`tes_transient_heat_source.f90`の`Pulse Shape`（0: Gaussian、1: uniform
-sphere）と、`scripts/support/mesh_quantities.py`の形状別離散正規化である。
+sphere）と、`src/support/mesh_quantities.py`の形状別離散正規化である。
 再現用プロジェクトは`elmer_project_hybrid_prism_phase22_heatshape.json`、
-結果は`results/case_p19_pulse_rms_sphere_time5us/`に保存する。
+結果は`outputs/results/case_p19_pulse_rms_sphere_time5us/`に保存する。
 
 ## Phase23: 非線形連成収束許容値の切り分け（2026-07-30）
 
@@ -318,8 +318,8 @@ Phase19が`{1:9, 2:101, 3:30, 10:1}`から
 非線形許容値ではなく、prism積層部とtet吸収体の接続・面内有効熱伝導の離散化である。
 
 再現用プロジェクトは`elmer_project_hybrid_prism_phase23_pulse_tight.json`、
-出力は`results/case_tes_pulse_3x_phase23_tight/`および
-`results/case_p19_pulse_phase23_tight/`に保存する。
+出力は`outputs/results/case_tes_pulse_3x_phase23_tight/`および
+`outputs/results/case_p19_pulse_phase23_tight/`に保存する。
 
 ## Phase24: 中央prism stackの追加細分化（2026-07-31）
 
@@ -345,7 +345,7 @@ Phase19からPhase24への自己比較では、補正波形差は0.7693%、波�
 
 再現用プロジェクトは`elmer_project_hybrid_prism_phase24_stack14_tight.json`、
 メッシュは`mesh_hybrid_abs_tet_layers_prism_stack14_abs35r50_noextend/`、
-出力は`results/case_p19_pulse_phase24_stack14_tight/`に保存する。
+出力は`outputs/results/case_p19_pulse_phase24_stack14_tight/`に保存する。
 
 ## Phase25: Stycast--absorber mortar主従方向の短時間診断（2026-07-31）
 
@@ -368,7 +368,7 @@ absorber側16.667 um、Phase24では14.132 umに対し14.286 umであった。
 Stycast接触円の約1.8%の離散面積差である。
 
 再現用プロジェクトは`elmer_project_hybrid_prism_phase25_mortar_orientation.json`、
-生成器は`scripts/prep/prepare_phase25_mortar_orientation_case.py`である。
+生成器は`src/prep/prepare_phase25_mortar_orientation_case.py`である。
 
 ## Phase26: Stycast--absorber接触面積一致（2026-07-31）
 
@@ -393,7 +393,7 @@ Phase19からの自己比較では、基線差は0.0130%に留まる一方、波
 それぞれ+22.54 uK、-45.72 uK）であり、面積変更は主に過渡応答へ現れる。
 
 再現用プロジェクトは`elmer_project_hybrid_prism_phase26_stycast_area_tight.json`、
-生成器は`scripts/prep/prepare_phase26_stycast_area_cases.py`である。
+生成器は`src/prep/prepare_phase26_stycast_area_cases.py`である。
 
 ## Phase27: Phase23のCOMSOLパルス比較（2026-07-31）
 

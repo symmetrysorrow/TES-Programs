@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.analysis.parse_adaptive_native_log import (
+from analysis.parse_adaptive_native_log import (
     parse_native_solver_log,
     parse_summary_line,
 )
@@ -20,7 +20,7 @@ FULLY_BARE_FIXTURE = (
 
 def test_fixture_is_a_verbatim_prefix_of_the_frozen_20ns_baseline() -> None:
     """The fixture is trials 1-8 of the archived Gate-11C-0 baseline solver.log
-    (results/case_phase24_adaptive_continuous_post_event_20ns_baseline/solver.log,
+    (outputs/results/case_phase24_adaptive_continuous_post_event_20ns_baseline/solver.log,
     sha256 82a80b577aff22f1a32b8a03f29489ba24f2fb2efbfd480b8ca3e1b2fa409f5b) plus the
     real run's trailing summary line appended verbatim. It is not synthesized."""
     assert FIXTURE.exists()
@@ -88,7 +88,7 @@ def test_parses_trials_with_no_physical_events_configured() -> None:
     ADAPTIVE_RECOVERY_CASE) never print 'Adaptive event audit', and their
     'Adaptive trial start' lines omit the trailing ', landing=' field
     entirely -- both must parse without raising, from
-    results/case_phase24_adaptive_post_event_dt_recovery_10ns/solver.log
+    outputs/results/case_phase24_adaptive_post_event_dt_recovery_10ns/solver.log
     (trials 1-3, restart_position=3 anchor)."""
     records = parse_native_solver_log(NO_EVENT_AUDIT_FIXTURE)
     assert [r.trial_id for r in records] == [1, 2, 3]
@@ -103,7 +103,7 @@ def test_parses_trials_with_no_debug_and_no_trial_markers_at_all() -> None:
     'Adaptive trial start' -- 'Adaptive accept:'/'Adaptive rejection:' are the
     only unconditional per-trial lines (gated by AdaptiveDebug OR
     AdaptiveForcedFloor OR AdaptivePreviousRejected), from
-    results/case_phase24_adaptive_post_event_cooldown_2ns/solver.log (trials
+    outputs/results/case_phase24_adaptive_post_event_cooldown_2ns/solver.log (trials
     1-2, both event-forced accepts hence logged despite no debug flag)."""
     records = parse_native_solver_log(FULLY_BARE_FIXTURE)
     assert [r.trial_id for r in records] == [1, 2]

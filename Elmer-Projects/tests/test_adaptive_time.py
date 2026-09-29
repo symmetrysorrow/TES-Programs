@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.support.adaptive_time import (
+from support.adaptive_time import (
     AdaptiveConfig,
     AdaptiveController,
     OutputSchedule,

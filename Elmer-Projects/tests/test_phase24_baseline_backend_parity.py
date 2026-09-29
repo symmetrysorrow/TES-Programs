@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_baseline_backend_parity as diagnostic
+from support import run_phase24_baseline_backend_parity as diagnostic
 
 
 def test_build_project_creates_one_solve_hypre_and_mumps_variants(tmp_path: Path, monkeypatch) -> None:

@@ -38,7 +38,7 @@ MPI 版は、同じ入力・メッシュ・時間刻みで次をすべて満た�
 - `HeatSolve` が `Nonlinear System Min Iterations` を指定された場合に
   最低反復数を実際の終了判定へ反映するようにした。回帰ケース自体は
   直接法と同じ通常の収束判定を使う。
-- 直列restartは `scripts/prep/partition_elmer_restart.py` でrank別restartへ
+- 直列restartは `src/prep/partition_elmer_restart.py` でrank別restartへ
   変換できる。
 - 非適合Mortar界面を一般のMetis分割で跨ぐと熱パルスがTESへ伝わらない。
   現在は検証済みの `mesh_refined_3x_repart_x` を使用する。
@@ -59,7 +59,7 @@ MPI 版は、同じ入力・メッシュ・時間刻みで次をすべて満た�
 判定コマンド:
 
 ```powershell
-python scripts/analysis/check_mpi_transient_regression.py tes_mpi_legacy_regression_series.csv
+python src/analysis/check_mpi_transient_regression.py tes_mpi_legacy_regression_series.csv
 ```
 
 4条件をすべて満たしたため、この4-rank MUMPS構成をMPI過渡回帰の採択結果とする。

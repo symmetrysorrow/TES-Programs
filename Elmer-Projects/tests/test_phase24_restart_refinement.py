@@ -1,4 +1,4 @@
-from scripts.support import run_phase24_gate4_5_nomortar as runner
+from support import run_phase24_gate4_5_nomortar as runner
 
 
 def test_refinement_spec_is_full_constrained_steady_projection(monkeypatch) -> None:

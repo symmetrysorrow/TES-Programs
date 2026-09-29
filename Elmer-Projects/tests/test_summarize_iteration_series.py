@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from scripts.analysis.summarize_iteration_series import summarize
+from analysis.summarize_iteration_series import summarize
 
 
 def test_summarize_counts_iterations_per_timestep(tmp_path: Path) -> None:

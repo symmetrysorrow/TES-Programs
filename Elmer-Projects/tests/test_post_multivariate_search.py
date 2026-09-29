@@ -9,7 +9,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "scripts" / "search" / "post_multivariate_search.py"
+MODULE_PATH = ROOT / "src" / "search" / "post_multivariate_search.py"
 SPEC = importlib.util.spec_from_file_location("post_multivariate_search", MODULE_PATH)
 assert SPEC and SPEC.loader
 SEARCH = importlib.util.module_from_spec(SPEC)
@@ -54,7 +54,7 @@ def test_mutation_builds_dual_position_cases() -> None:
     steady = project["cases"][metadata["steady_case"]]
     assert steady["mesh"] == "mesh_dual_20mm_localrefine"
     steady_result_path = (
-        f"../work/meshes/{metadata['mesh_dir']}/{metadata['steady_case']}.result"
+        f"../workspace/work/meshes/{metadata['mesh_dir']}/{metadata['steady_case']}.result"
     )
     assert steady["output_file_path"] == steady_result_path
     for target in cfg["targets"]:

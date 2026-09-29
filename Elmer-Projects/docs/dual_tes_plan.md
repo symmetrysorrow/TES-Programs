@@ -16,7 +16,7 @@
 > を `case_dual20_pos30…pos150`(pulse、center明示x+y/z auto、restart from
 > `case_dual20_steady`)として追加。`case_dual20_steady`: ITER=75 / NRM=0.15140160、
 > L/R 対称性 1.21e-5。回帰: 単ピクセル SHA ビット一致、既存12ケースSIF無差分。
-> 電流比較スクリプト `scripts/analysis/dual20_current_scan.py`(未実行ケースは警告スキップ)。
+> 電流比較スクリプト `src/analysis/dual20_current_scan.py`(未実行ケースは警告スキップ)。
 
 > **タイムステップ収束 実施記録 (2026-07-15〜16):**
 > 5点スキャンの電流時系列が回復域で上下動(ギザギザ)。原因は**パルス後回復を
@@ -29,7 +29,7 @@
 > (1ns→10ns→100ns→1µs)を残し、以降40msまで10µs均一**(2112ステップ/ケース)で
 > 全5位置を再実行(各~2.2h)。5ケース同一刻み=残差は共通モードで位置比較に無影響。
 > 単ピクセル8ケースSIFはバイト不変。時系列比較スクリプト
-> `scripts/analysis/dual20_current_timeseries.py`(L/R別2図、位置は青シーケンシャル)。
+> `src/analysis/dual20_current_timeseries.py`(L/R別2図、位置は青シーケンシャル)。
 >
 > **収束後の物理(粗い刻みの誤りを訂正)**: TES_L(近傍)は入射位置に強く依存
 > (x=-8で深く速いディップ、中央で浅い)。TES_R(遠方)は**ディップ深さがほぼ
@@ -82,9 +82,9 @@
 >   **位置の頑健な指標はタイミング**であり振幅ではない。
 > - `run.py` を L/R 系列CSV両対応に修正(NTFS大小無視で `_l_`/`_r_` として
 >   書かれる問題も対処)。単ピクセルケースの挙動は不変。
-> 検証スクリプト: `scripts/analysis/dual_series_analysis.py`(系列)、
-> `scripts/analysis/dual_vtu_verify.py`(VTU場・エネルギー収支)。
-> プロット: `generated/dual_baseline_series.png` / `dual_pulse_center_LR.png` /
+> 検証スクリプト: `src/analysis/dual_series_analysis.py`(系列)、
+> `src/analysis/dual_vtu_verify.py`(VTU場・エネルギー収支)。
+> プロット: `workspace/generated/dual_baseline_series.png` / `dual_pulse_center_LR.png` /
 > `dual_pulse_offset_LR.png`。
 >
 > **未了(将来課題)**: dual のベースメッシュ動作点(TES≈167.3mK)は 3x比 約1.1mK
@@ -93,7 +93,7 @@
 > TES_R 450 tet、体積は同一 4.00e-14 m³)由来のノイズ。
 
 > **フェーズB 実施記録 (2026-07-14):**
-> `scripts/support/mesh_names.py`(mesh.names パーサ)新設。build_cases.py の
+> `src/support/mesh_names.py`(mesh.names パーサ)新設。build_cases.py の
 > `BODIES` 定数と BC リテラル(1804/1104/1305/1204/1105/1205/1004)を撤去し、
 > ケースのメッシュの mesh.names から名前引きで導出(材料ロールは `_L`/`_R` を
 > 剥がした基底名、bath = `SiO2_2*__zmin` 全境界、モルタル3意味論ペア×サイド展開、
@@ -127,7 +127,7 @@
 > `generate_project_geometry.py` の単スタック前提(body名・タグ101–109、
 > membrane分割、モルタルretag)を sides ループに一般化
 > (`tag = 101 + 9*side + role`、単ピクセルは従来値を厳密再現)。
-> 回帰: 単ピクセル `gmsh/project.msh` SHA256 ビット一致
+> 回帰: 単ピクセル `workspace/gmsh/project.msh` SHA256 ビット一致
 > (b42c9c3f…)、既存8ケースSIF無差分。
 >
 > **重要な発見**: 旧 `fragment_mortar_interfaces` は**最初から no-op だった**
@@ -164,7 +164,7 @@ TES 基板スタックを置く 2TES 構成**を追加する。電気回路(バ�
 
 | フェーズ | 内容 | 回帰ゲート |
 |---|---|---|
-| A | ジオメトリレジストリ化 + dual_tes ジオメトリ + メッシュ生成 | 単ピクセル `gmsh/project.msh` SHA256 ビット一致 + 生成 SIF 無差分 |
+| A | ジオメトリレジストリ化 + dual_tes ジオメトリ + メッシュ生成 | 単ピクセル `workspace/gmsh/project.msh` SHA256 ビット一致 + 生成 SIF 無差分 |
 | B | build_cases.py の body/BC データ駆動化(mesh.names 由来) | 既存 8 SIF バイト一致 |
 | C | UDF の回路多インスタンス化 + DLL 再ビルド | steady_3x = 30 反復 / NRM 0.15080609 再現 |
 | D | dual ケース定義・生成・実行・物理検証 | 対称性(中央パルスで L/R 一致)ほか下記 |
@@ -201,17 +201,17 @@ TES 基板スタックを置く 2TES 構成**を追加する。電気回路(バ�
 ### A-3. コード変更
 
 - `build_mesh.py`: レシピの `geometry` 名でレジストリから選択し、解決済み JSON
-  (`generated/_mesh_build_input.json`)に従来キー `geometry` として注入
+  (`workspace/generated/_mesh_build_input.json`)に従来キー `geometry` として注入
   → `generate_project_geometry.py` と vendored loader は無変更で済む想定。
 - `reconcile_project.py` / `sync_elmer_parameters.py` / ドリフト検査:
   `geometries` 配下の全ツリーの `*_expr` を評価するように更新。
 
 ### A-4. 回帰ゲート(A)
 
-1. 単ピクセルメッシュ再生成で `gmsh/project.msh` の SHA256 が
+1. 単ピクセルメッシュ再生成で `workspace/gmsh/project.msh` の SHA256 が
    `b42c9c3fbbeaeeb46d2971b15268bb694f39492d040187ddb049873cfd9b7bea` に一致。
-2. `python sync_elmer_parameters.py` 後、`generated/cases/` に git 差分なし。
-3. `python build_mesh.py mesh_dual_base` が成功し、`mesh.names` に 19 body と
+2. `python src/sync_elmer_parameters.py` 後、`workspace/generated/cases/` に git 差分なし。
+3. `python src/build_mesh.py mesh_dual_base` が成功し、`mesh.names` に 19 body と
    左右分のモルタル面が揃う。断面プレビュー(xz/yz)を出力して形状を目視確認。
 
 ## 3. フェーズ B: body/BC のデータ駆動化
@@ -233,7 +233,7 @@ TES 基板スタックを置く 2TES 構成**を追加する。電気回路(バ�
 
 ### 回帰ゲート(B)
 
-- `python sync_elmer_parameters.py` 後、既存 8 ケースの SIF が git 差分なし
+- `python src/sync_elmer_parameters.py` 後、既存 8 ケースの SIF が git 差分なし
   (バイト一致)。
 
 ## 4. フェーズ C: UDF の回路多インスタンス化
@@ -252,12 +252,12 @@ TES 基板スタックを置く 2TES 構成**を追加する。電気回路(バ�
   FileStarted まで**全て**含める(片側のコミットが他方を踏まない)。
   ロジック本体(暗黙結合+Aitken 緩和)は一切変更しない。
 - `AbsorberWindowPulseHeatSource` は無状態なので変更不要。
-- 再ビルド: `elmerf90 tes_transient_heat_source.f90 -o tes_transient_heat_source_t0.dll`
+- 再ビルド: `elmerf90 src/fortran/tes_transient_heat_source.f90 -o build/udf/tes_transient_heat_source_t0.dll`
   (Elmer 26.1、PATH は `C:\Program Files\Elmer 26.1-Release`)。
 
 ### 回帰ゲート(C)
 
-- `python run.py case_tes_steady_3x_refined` を再実行し、収束反復数 30・
+- `python src/run.py case_tes_steady_3x_refined` を再実行し、収束反復数 30・
   NRM 0.15080609 を再現(リファクタが数値経路を変えていない証明)。
 
 ## 5. フェーズ D: dual ケースの定義・生成・実行

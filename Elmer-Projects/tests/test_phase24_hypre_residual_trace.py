@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.support import run_phase24_hypre_residual_trace as diagnostic
+from support import run_phase24_hypre_residual_trace as diagnostic
 
 
 def test_parse_trace_and_failure_record(tmp_path: Path) -> None:

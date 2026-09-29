@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_gate3_hypre_steady as gate3
+from support import run_phase24_gate3_hypre_steady as gate3
 
 
 def test_build_project_is_independent_no_mortar_hypre_case(tmp_path: Path, monkeypatch) -> None:

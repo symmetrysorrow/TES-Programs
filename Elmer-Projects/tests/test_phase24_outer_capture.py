@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "support" / "phase24_outer_capture.py"
+SCRIPT = Path(__file__).parents[1] / "src" / "support" / "phase24_outer_capture.py"
 SPEC = importlib.util.spec_from_file_location("outer_capture", SCRIPT)
 assert SPEC and SPEC.loader
 outer_capture = importlib.util.module_from_spec(SPEC)

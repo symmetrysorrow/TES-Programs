@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "src"))
 
 
 def root_path(value: str) -> Path:
@@ -31,7 +32,7 @@ def read_legacy_project(value: str) -> dict:
 
 
 def check_legacy_project(data: dict) -> list[str]:
-    from scripts.support.reconcile_project import reconcile_project
+    from support.reconcile_project import reconcile_project
 
     errors = []
     model = reconcile_project(data)
@@ -53,11 +54,11 @@ def check_legacy_project(data: dict) -> list[str]:
 
 
 def dispatch(script: str, args: list[str]) -> int:
-    return subprocess.run([sys.executable, str(ROOT / script), *args], cwd=ROOT).returncode
+    return subprocess.run([sys.executable, str(ROOT / "src" / script), *args], cwd=ROOT).returncode
 
 
 def resolve_project_toml(value: str) -> Path:
-    from scripts.support.scenario_config import PROJECT_DIR, read_toml
+    from support.scenario_config import PROJECT_DIR, read_toml
 
     if value.lower().endswith(".toml"):
         path = root_path(value)
@@ -81,7 +82,7 @@ def resolve_project_toml(value: str) -> Path:
 
 
 def project_action(command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 1) -> int:
-    from scripts.support.scenario_cli import main as scenario_main
+    from support.scenario_cli import main as scenario_main
 
     action = {"show": "summary", "check": "validate", "mesh": "mesh", "run": "run"}[command]
     project_file = resolve_project_toml(value)
@@ -94,7 +95,7 @@ def project_action(command: str, value: str, *, dry_run: bool = False, mpi_procs
 def add_legacy_json_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--project",
-        default="elmer_project.json",
+        default="projects/legacy/elmer_project.json",
         help="legacy project JSON to use",
     )
 
@@ -106,6 +107,12 @@ def build_parser() -> argparse.ArgumentParser:
             "Start with: python main.py list; python main.py show single_pixel_alpha240; "
             "python main.py run single_pixel_alpha240 --dry-run"
         ),
+    )
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="open the guided menu (also used when no command is given)",
     )
     sub = parser.add_subparsers(dest="command")
 
@@ -127,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     legacy = sub.add_parser(
         "legacy",
-        help="reproduce old JSON or cases/*.toml workflows",
+        help="reproduce old JSON or projects/legacy/cases/*.toml workflows",
         description="Legacy workflows. New projects should not use these commands.",
     )
     legacy_sub = legacy.add_subparsers(dest="legacy_command")
@@ -155,10 +162,87 @@ def build_parser() -> argparse.ArgumentParser:
     legacy_run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
     add_legacy_json_options(legacy_run)
 
-    legacy_toml = legacy_sub.add_parser("toml", help="use the old cases/*.toml / tes_sim.py workflow")
+    legacy_toml = legacy_sub.add_parser("toml", help="use the old projects/legacy/cases/*.toml / tes_sim.py workflow")
     legacy_toml.add_argument("action", choices=("show", "run", "steady", "transient", "summary"))
-    legacy_toml.add_argument("case_file", help="example: cases/single_pixel_h8.toml")
+    legacy_toml.add_argument("case_file", help="example: projects/legacy/cases/single_pixel_h8.toml")
     return parser
+
+
+def interactive_main() -> int:
+    """Run a guided menu for users who do not want to enter CLI arguments."""
+    try:
+        import questionary
+    except ImportError:
+        install_command = f'"{sys.executable}" -m pip install questionary'
+        if sys.platform == "win32":
+            install_command = f"& {install_command}"
+        print(
+            "The interactive menu requires questionary for this Python interpreter.\n"
+            f"Install it with: {install_command}",
+            file=sys.stderr,
+        )
+        return 2
+
+    from support.scenario_config import PROJECT_DIR, read_toml
+
+    projects = [
+        path.stem
+        for path in sorted(PROJECT_DIR.glob("*.toml"))
+        if read_toml(path).get("schema_version") == 3
+    ]
+    actions = {
+        "プロジェクトの内容を見る": "show",
+        "プロジェクトを検証する": "check",
+        "計算を実行する": "run",
+        "終了": "exit",
+    }
+
+    try:
+        while True:
+            selected_action = questionary.select(
+                "何をしますか？",
+                choices=list(actions),
+            ).ask()
+            command = actions.get(selected_action)
+            if command in (None, "exit"):
+                return 0
+
+            if not projects:
+                print("schema-v3 project が見つかりません。projects/ を確認してください。")
+                return 1
+
+            project = questionary.select(
+                "プロジェクトを選んでください。",
+                choices=projects,
+            ).ask()
+            if project is None:
+                return 0
+
+            dry_run = False
+            if command == "run":
+                run_mode = questionary.select(
+                    "実行方法を選んでください。",
+                    choices=[
+                        questionary.Choice("実行計画だけ確認する（dry-run）", value="dry-run"),
+                        questionary.Choice("計算を実行する", value="run"),
+                        questionary.Choice("戻る", value="cancel"),
+                    ],
+                ).ask()
+                if run_mode in (None, "cancel"):
+                    continue
+                dry_run = run_mode == "dry-run"
+
+            try:
+                result = project_action(command, project, dry_run=dry_run)
+            except (ValueError, OSError, json.JSONDecodeError) as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                result = 2
+
+            if result != 0:
+                return result
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return 0
 
 
 def legacy_main(args: argparse.Namespace) -> int:
@@ -167,7 +251,7 @@ def legacy_main(args: argparse.Namespace) -> int:
         print("  python main.py legacy list")
         print("  python main.py legacy show <json-case-or-mesh>")
         print("  python main.py legacy run <json-case>")
-        print("  python main.py legacy toml show cases/<name>.toml")
+        print("  python main.py legacy toml show projects/legacy/cases/<name>.toml")
         return 0
 
     if args.legacy_command == "toml":
@@ -180,7 +264,7 @@ def legacy_main(args: argparse.Namespace) -> int:
 
     if args.legacy_command == "list":
         print("Legacy TOML cases:")
-        for path in sorted((ROOT / "cases").glob("*.toml")):
+        for path in sorted((ROOT / "projects" / "legacy" / "cases").glob("*.toml")):
             print(f"  {path.relative_to(ROOT)}")
         for label, key in (
             ("Legacy JSON geometries", "geometries"),
@@ -245,6 +329,8 @@ def legacy_main(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.interactive or (not args.command and sys.stdin.isatty()):
+        return interactive_main()
     if not args.command:
         print("TES simulation: edit a file in projects/, then run it.\n")
         print("  python main.py list")
@@ -259,7 +345,7 @@ def main(argv: list[str] | None = None) -> int:
             return legacy_main(args)
 
         if args.command == "list":
-            from scripts.support.scenario_config import PROJECT_DIR, read_toml
+            from support.scenario_config import PROJECT_DIR, read_toml
 
             print("Projects (use 'show <name>' or 'run <name>'):")
             for path in sorted(PROJECT_DIR.glob("*.toml")):

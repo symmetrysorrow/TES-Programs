@@ -5,8 +5,8 @@ import sys
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.support.build_cases import solver1_block
-from scripts.analysis.short_bt_regression import production_short_bt_action
+from support.build_cases import solver1_block
+from analysis.short_bt_regression import production_short_bt_action
 
 
 ROOT = Path(__file__).resolve().parents[1]

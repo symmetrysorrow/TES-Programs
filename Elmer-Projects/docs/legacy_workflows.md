@@ -11,17 +11,17 @@ python main.py legacy check
 python main.py legacy show <case-or-mesh>
 python main.py legacy mesh <mesh>
 python main.py legacy run <case> --dry-run
-python main.py legacy toml show cases/<name>.toml
+python main.py legacy toml show projects/legacy/cases/<name>.toml
 ```
 
 旧 JSON を別ファイルから読む場合だけ、legacyサブコマンドの `--project` を使います。
 
 ## 旧 JSON 経路のケース定義と実行
 
-**`run.py` で使うケースは `elmer_project.json` の `cases` セクションで定義**し、
-`python sync_elmer_parameters.py` が自己完結な SIF を `generated/cases/` に生成します。
+**`run.py` で使うケースは `projects/legacy/elmer_project.json` の `cases` セクションで定義**し、
+`python src/sync_elmer_parameters.py` が自己完結な SIF を `workspace/generated/cases/` に生成します。
 手書き SIF は存在しません(生成物を直接編集しない)。
-別系統の `tes_sim.py` は `cases/*.toml` を入力として使います。
+別系統の `tes_sim.py` は `projects/legacy/cases/*.toml` を入力として使います。
 
 定義済みケース(`template` / メッシュ):
 
@@ -50,57 +50,47 @@ python main.py legacy toml show cases/<name>.toml
 
 パルス中心はケース定義で `"center": "auto"`(abs重心)または
 `{"x": "1.5[mm]", "y": "auto", "z": "auto"}` 形式の明示指定が可能です。
-検証は `scripts/analysis/dual_series_analysis.py`(系列CSV)と
+検証は `src/analysis/dual_series_analysis.py`(系列CSV)と
 `dual_vtu_verify.py`(VTU場・エネルギー収支)。
 
-実行は `run.py` 経由が標準です(restart 依存を自動解決し、出力を `results/<case>/` に
+実行は `run.py` 経由が標準です(restart 依存を自動解決し、出力を `outputs/results/<case>/` に
 整理して `manifest.json` を書きます):
 
 ```powershell
-elmerf90 tes_transient_heat_source.f90 -o tes_transient_heat_source_t0.dll
-python run.py case_tes_pulse_20ms_3x_refined
+elmerf90 src/fortran/tes_transient_heat_source.f90 -o build/udf/tes_transient_heat_source_t0.dll
+python src/run.py case_tes_pulse_20ms_3x_refined
 ```
 
 依存ケース(`case_tes_steady_3x_refined`)の `.result` が無ければ先に自動実行されます。
 `--dry-run` で実行計画のみ表示、`--force-deps` で依存も再実行。
-`ElmerSolver generated\cases\<case>.sif` の直接実行も従来どおり可能です
+`ElmerSolver workspace/generated\cases\<case>.sif` の直接実行も従来どおり可能です
 (その場合の出力はメッシュディレクトリに残ります)。
 
-### RTX 3060 Ti / AMGX
+### GPU / AMGX
 
-単ピクセルproduction-v2の過渡熱ソルバーは、WSL上のCUDA版ElmerからAMGXを使って
-実行できます。最初は検証済みの同一メッシュ用定常結果を使った10ステップ試験を推奨します。
+GPU起動スクリプトとAMGX設定は削除しました。ここに記載していたGPU実行手順は現在利用できません。
 
-```powershell
-.\scripts\run_singlepixel_gpu_wsl.ps1 -SmokeSteps 10 -ReuseKnownSteady
-```
-
-完走後は `-SmokeSteps 10` を外すと全時間範囲を実行します。AMGX指定は対象の過渡ケース
-だけに適用され、restart依存ケースは元の線形ソルバーを維持します。MortarのLagrange
-乗数行はAMGXへ渡す前にElmer側で消去し、行equilibrationを適用します。このためMUMPSと
-完全に同一の離散連立系ではなく、系列値は別途検証が必要です。
-
-メッシュは `meshes` レジストリで管理し、`python build_mesh.py <mesh名>` で
-再生成できます(ジオメトリ生成器 gmsh 一式は `scripts/support/vendored/geometry/` に
+メッシュは `meshes` レジストリで管理し、`python src/build_mesh.py <mesh名>` で
+再生成できます(ジオメトリ生成器 gmsh 一式は `src/support/vendored/geometry/` に
 ベンダリング済みで、外部リポジトリ依存はありません)。
-各 `work/meshes/<mesh名>/PROVENANCE.json` にレシピとハッシュを記録します。
+各 `workspace/work/meshes/<mesh名>/PROVENANCE.json` にレシピとハッシュを記録します。
 
 ## 旧 JSON 経路の基本ワークフロー
 
-1. `elmer_project.json` を編集(**すべて式で記述**: `parameter_expressions`、materials の
+1. `projects/legacy/elmer_project.json` を編集(**すべて式で記述**: `parameter_expressions`、materials の
    expression、geometry の `*_expr`。数値はビルド時に式から導出され、ファイルには持たない)
-2. `python sync_elmer_parameters.py`(条件だけ変えた場合)/ `python build_mesh.py <mesh名>`(形状も変えた場合)
+2. `python src/sync_elmer_parameters.py`(条件だけ変えた場合)/ `python src/build_mesh.py <mesh名>`(形状も変えた場合)
 3. 必要なら `ElmerGrid ...` と `ElmerSolver ...` を実行
-4. 結果確認は `scripts/analysis/` を使用
-5. 比較・診断の確定結果は `artifacts/<調査名>/` に記録。旧 `case_constant_power` の再現用一式だけは、必要な旧ファイルがある場合に `freeze_repro_run.py` で `runs/` に凍結可能
+4. 結果確認は `src/analysis/` を使用
+5. 比較・診断の確定結果は `outputs/analysis/<調査名>/` に記録。旧 `case_constant_power` の再現用一式だけは、必要な旧ファイルがある場合に `freeze_repro_run.py` で `outputs/runs/` に凍結可能
 
 ## 代表コマンド
 
 ```powershell
-python generate_project_geometry.py
-python sync_elmer_parameters.py
-ElmerSolver generated\cases\case_constant_power.sif
-python scripts\analysis\summarize_tes_temperature.py
+python src/generate_project_geometry.py
+python src/sync_elmer_parameters.py
+ElmerSolver workspace/generated\cases\case_constant_power.sif
+python src\analysis\summarize_tes_temperature.py
 ```
 
 詳細は `docs/README_TES_elmer.md` を参照してください。

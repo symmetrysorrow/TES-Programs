@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.analysis.phase24_difference_evidence import load_series, mean_baseline
+from analysis.phase24_difference_evidence import load_series, mean_baseline
 
 
 def test_load_series_converts_units_and_collapses_duplicate_times(tmp_path: Path) -> None:

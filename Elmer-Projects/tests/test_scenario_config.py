@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from scripts.support.build_cases import body_force_blocks
-from scripts.support.scenario_config import ROOT, compile_project, load_scenario
+from support.build_cases import body_force_blocks
+from support.scenario_config import ROOT, compile_project, load_scenario
 
 PROJECTS = ROOT / "projects"
 MODELS = PROJECTS / "models"

@@ -39,7 +39,7 @@ cmake --install /home/symme/elmer-phase19-feature-cpu-build
 
 ## Phase B: matrix-free Schur diagnostic
 
-対象の block sizes は `nu=84636`、`nl=2898`、`D=0`。実行ログは `results/case_p19_hypre_block_schur_diag_cpu_time5us/solver.log` にある。各ベクトルについて `B^T v`、K solve、`B K^{-1}B^T v`、`Dv`、最終 `D v-B K^{-1}B^T v` の norm/min/max/nonzero/finite を記録した。全段階で `finite=T` だった。
+対象の block sizes は `nu=84636`、`nl=2898`、`D=0`。実行ログは `outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/solver.log` にある。各ベクトルについて `B^T v`、K solve、`B K^{-1}B^T v`、`Dv`、最終 `D v-B K^{-1}B^T v` の norm/min/max/nonzero/finite を記録した。全段階で `finite=T` だった。
 
 | vector | `||B^Tv||_2` | `||K^{-1}B^Tv||_2` | `||BK^{-1}B^Tv||_2` | oracle action norm | action relative error | gate |
 |---|---:|---:|---:|---:|---:|---|
@@ -53,9 +53,9 @@ cmake --install /home/symme/elmer-phase19-feature-cpu-build
 ```text
 ELMER_HOME=../tools/elmer-phase19-feature-cpu-install \
 LD_LIBRARY_PATH=../tools/elmer-phase19-feature-cpu-install/lib/elmersolver:../tools/hypre-cuda-install/lib \
-  ../tools/elmer-phase19-feature-cpu-install/bin/ElmerSolver_mpi generated/cases/case_p19_hypre_block_schur_diag_cpu_time5us.sif
-python scripts/analysis/validate_matrix_free_schur.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/matrix_free_validation_current.json
-python scripts/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/superlu_parity_cpu.json
+  ../tools/elmer-phase19-feature-cpu-install/bin/ElmerSolver_mpi workspace/generated/cases/case_p19_hypre_block_schur_diag_cpu_time5us.sif
+python src/analysis/validate_matrix_free_schur.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/matrix_free_validation_current.json
+python src/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --output artifacts/hypre_phase19_schur/superlu_parity_cpu.json
 ```
 
 vector 自体は 4/4 pass（最大相対誤差 `1.32e-16`）。以下の action error は monolithic/SciPy cross-backend 診断値であり、same-binary gateとは別である。monolithic oracle との action 差は最大 `5.0716e-7`。actual Elmer block に対して SciPy K oracle を通した `B K^{-1}B^T v` は all-ones `2.51e-10`、alternating `8.93e-11`、sine `8.61e-10`、basis `3.40e-16` で、strict `1e-10` は 2/4 pass（2/4 fail）だった。
@@ -89,7 +89,7 @@ same-binary oracle の再現手順（oracle生成はWSL、集計はWindows Pytho
 ```text
 cmake --build /home/symme/elmer-phase19-feature-cpu-build --target BlockSchurSuperLUOracle --parallel 4
 wsl.exe -d Ubuntu -- bash -lc 'export LD_LIBRARY_PATH=/home/symme/elmer-phase19-feature-cpu-build/fem/src:/usr/lib/x86_64-linux-gnu; .../BlockSchurSuperLUOracle <K.triplets> <btN.dat> <same_binary_kuN.dat>'
-python scripts/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --same-binary-solution-prefix results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us_same_binary --output artifacts/hypre_phase19_schur/same_binary_parity.json
+python src/analysis/check_superlu_parity.py --matrix case_p19_hypre_flexgmres_mgr_cpu_time5us_smoke_1step_a.dat --rows 87534 --c-start 84637 --elmer-prefix outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us --same-binary-solution-prefix outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/case_p19_hypre_block_schur_diag_cpu_time5us_same_binary --output artifacts/hypre_phase19_schur/same_binary_parity.json
 ```
 
 ### Block fingerprint / exact diff
@@ -123,18 +123,18 @@ CPU lower/full one-step、GPU、transient は未承認。same-binary correctness
 
 - [docs/hypre_gpu_phase19_schur_feature.patch](hypre_gpu_phase19_schur_feature.patch): base から clean apply できる feature patch。Schur stage diagnostics、production work-array zeroing、short-Bt回帰、optional serial SuperLU gate/oracle を含む。
 - feature source diff: `CMakeLists.txt`、`fem/src/CMakeLists.txt`、`fem/src/BlockSolve.F90`、`fem/src/SolveSuperLUStandard.c`、`fem/src/SOLVER.KEYWORDS`、`fem/src/SParIterSolver.F90`、`fem/src/SolveHypre.c`。
-- [scripts/support/build_elmer_hypre_gpu_wsl.ps1](../scripts/support/build_elmer_hypre_gpu_wsl.ps1): ParMETIS header discovery を portable 化。
-- [scripts/run_hypre_gpu_wsl.ps1](../scripts/run_hypre_gpu_wsl.ps1): HYPRE tag suffix、installed module/lib path、tag forwarding を修正。
-- [scripts/analysis/validate_matrix_free_schur.py](../scripts/analysis/validate_matrix_free_schur.py): SciPy cross-backend validator。
-- [scripts/analysis/check_superlu_parity.py](../scripts/analysis/check_superlu_parity.py): stage/same-binary/cross-backend/block/monolithicを分離したparity集計。
-- [scripts/analysis/short_bt_regression.py](../scripts/analysis/short_bt_regression.py): finite stale-tail regression。
+- [src/support/build_elmer_hypre_gpu_wsl.ps1](../src/support/build_elmer_hypre_gpu_wsl.ps1): ParMETIS header discovery を portable 化。
+- `run_hypre_gpu_wsl.ps1`: HYPRE tag suffix、installed module/lib path、tag forwarding を修正した後、GPU起動スクリプト整理に伴い削除。
+- [src/analysis/validate_matrix_free_schur.py](../src/analysis/validate_matrix_free_schur.py): SciPy cross-backend validator。
+- [src/analysis/check_superlu_parity.py](../src/analysis/check_superlu_parity.py): stage/same-binary/cross-backend/block/monolithicを分離したparity集計。
+- [src/analysis/short_bt_regression.py](../src/analysis/short_bt_regression.py): finite stale-tail regression。
 - [artifacts/hypre_phase19_schur/matrix_free_validation_current.json](../artifacts/hypre_phase19_schur/matrix_free_validation_current.json): 修正版 wrapper 後の 4-vector 再実行結果。
 - [artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json](../artifacts/hypre_phase19_schur/matrix_free_stage_metrics_cpu_superlu.json): 全 stage の診断要約。
 - [artifacts/hypre_phase19_schur/same_binary_parity.json](../artifacts/hypre_phase19_schur/same_binary_parity.json): same-binary K/Schur oracleとcross-backend比較。
 - [artifacts/hypre_phase19_schur/superlu_cross_backend.json](../artifacts/hypre_phase19_schur/superlu_cross_backend.json): SciPy comparisonをdiagnostic-onlyとして分離。
 - [artifacts/hypre_phase19_schur/short_bt_regression.json](../artifacts/hypre_phase19_schur/short_bt_regression.json): finite stale-tail regression結果。
 - [artifacts/hypre_phase19_schur/full_cpu_one_step.json](../artifacts/hypre_phase19_schur/full_cpu_one_step.json): lower baseline 未受理のため full CPU を未実行とした記録。
-- raw `*_K/B/Bt/D.triplets` と `_vN/_btN/_kuN/_bkuN/_dvN/_yN.dat` は validation中の外部artifactとして `results/case_p19_hypre_block_schur_diag_cpu_time5us/` に保持している。長期Git管理には含めない。
+- raw `*_K/B/Bt/D.triplets` と `_vN/_btN/_kuN/_bkuN/_dvN/_yN.dat` は validation中の外部artifactとして `outputs/results/case_p19_hypre_block_schur_diag_cpu_time5us/` に保持している。長期Git管理には含めない。
 - `tools/elmer-phase19-feature-gate`: isolated build source worktree。通常の `main` worktree は変更していない。
 
 ## Explicit verdict

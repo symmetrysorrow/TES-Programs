@@ -3,7 +3,7 @@ import csv
 
 import pytest
 
-from scripts.prep import run_singlepixel_resolution_pilot as pilot
+from prep import run_singlepixel_resolution_pilot as pilot
 
 
 def write_iterations(path, *, nonlinear_iter=3, temperature=0.1685, current=145e-6, resistance=0.015) -> None:
@@ -18,7 +18,7 @@ def test_case_complete_requires_success_series_and_matching_project(tmp_path, mo
     project = tmp_path / "pilot.json"
     project.write_text('{"end_us": 105}\n', encoding="utf-8")
     case = "case_pilot_tes_layers_1_pulse"
-    result = tmp_path / "results" / case
+    result = tmp_path / "outputs/results" / case
     result.mkdir(parents=True)
     (result / f"{case}_series.csv").write_text("time_s,tes_current_A\n", encoding="utf-8")
     (result / "manifest.json").write_text(json.dumps({
@@ -27,7 +27,7 @@ def test_case_complete_requires_success_series_and_matching_project(tmp_path, mo
         "restart_from": case.replace("_pulse", "_steady"),
     }), encoding="utf-8")
     write_iterations(result / f"{case}_iterations.csv")
-    steady = tmp_path / "results" / case.replace("_pulse", "_steady")
+    steady = tmp_path / "outputs/results" / case.replace("_pulse", "_steady")
     steady.mkdir()
     write_iterations(steady / f"{steady.name}_iterations.csv")
     assert pilot.case_complete(case, project)
@@ -41,7 +41,7 @@ def test_case_complete_rejects_iteration_cap_and_wrong_steady_branch(tmp_path, m
     project = tmp_path / "pilot.json"
     project.write_text("{}\n", encoding="utf-8")
     case = "case_pilot_tes_layers_2_pulse"
-    result = tmp_path / "results" / case
+    result = tmp_path / "outputs/results" / case
     result.mkdir(parents=True)
     (result / f"{case}_series.csv").write_text("time_s,tes_current_A\n", encoding="utf-8")
     (result / "manifest.json").write_text(json.dumps({
@@ -50,7 +50,7 @@ def test_case_complete_rejects_iteration_cap_and_wrong_steady_branch(tmp_path, m
         "restart_from": case.replace("_pulse", "_steady"),
     }), encoding="utf-8")
     write_iterations(result / f"{case}_iterations.csv", nonlinear_iter=pilot.PILOT_PULSE_NONLINEAR_MAX_ITERATIONS)
-    steady = tmp_path / "results" / case.replace("_pulse", "_steady")
+    steady = tmp_path / "outputs/results" / case.replace("_pulse", "_steady")
     steady.mkdir()
     write_iterations(steady / f"{steady.name}_iterations.csv", temperature=0.15, current=715e-6, resistance=1e-6)
     reason = pilot.case_failure_reason(case, project)
@@ -61,7 +61,7 @@ def test_case_complete_rejects_iteration_cap_and_wrong_steady_branch(tmp_path, m
 def test_steady_state_validation_rejects_low_temperature_branch(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(pilot, "ROOT", tmp_path)
     case = "case_pilot_stack_steady"
-    result = tmp_path / "results" / case
+    result = tmp_path / "outputs/results" / case
     result.mkdir(parents=True)
     write_iterations(result / f"{case}_iterations.csv", temperature=0.15, current=715e-6, resistance=1e-6)
     reason = pilot.steady_state_failure_reason(case)
@@ -82,7 +82,7 @@ def test_build_project_uses_pilot_nonlinear_limits_and_tolerance(tmp_path, monke
 def test_steady_iteration_cap_does_not_reject_iteration_25(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(pilot, "ROOT", tmp_path)
     case = "case_pilot_sio2_1_layers_1_alg5qg1_steady"
-    result = tmp_path / "results" / case
+    result = tmp_path / "outputs/results" / case
     result.mkdir(parents=True)
     write_iterations(result / f"{case}_iterations.csv", nonlinear_iter=25)
     assert pilot.iteration_failure_reason(case) is None
@@ -117,7 +117,7 @@ def test_build_project_namespaces_all_pilot_artifacts(tmp_path, monkeypatch) -> 
     assert mesh.endswith(f"_{suffix}")
     commands = project["meshes"][mesh]["recipe"]["commands"]
     assert f"_{suffix}.msh" in commands[0]
-    assert f"work/meshes/{mesh}" in commands[1]
+    assert f"workspace/work/meshes/{mesh}" in commands[1]
 
 
 def test_pilot_output_paths_are_versioned(tmp_path, monkeypatch) -> None:
@@ -131,7 +131,7 @@ def test_pilot_output_paths_are_versioned(tmp_path, monkeypatch) -> None:
 def test_mesh_complete_requires_elmer_mesh_header(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(pilot, "ROOT", tmp_path)
     assert not pilot.mesh_complete("mesh_pilot")
-    header = tmp_path / "work" / "meshes" / "mesh_pilot" / "mesh.header"
+    header = tmp_path / "workspace/work" / "meshes" / "mesh_pilot" / "mesh.header"
     header.parent.mkdir(parents=True)
     header.write_text("1 1 1\n", encoding="utf-8")
     assert pilot.mesh_complete("mesh_pilot")
@@ -139,10 +139,10 @@ def test_mesh_complete_requires_elmer_mesh_header(tmp_path, monkeypatch) -> None
 
 def test_mesh_complete_rejects_existing_bad_raw_mesh(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(pilot, "ROOT", tmp_path)
-    header = tmp_path / "work" / "meshes" / "mesh_pilot" / "mesh.header"
+    header = tmp_path / "workspace/work" / "meshes" / "mesh_pilot" / "mesh.header"
     header.parent.mkdir(parents=True)
     header.write_text("1 1 1\n", encoding="utf-8")
-    raw = tmp_path / "gmsh" / "pilot.msh"
+    raw = tmp_path / "workspace/gmsh" / "pilot.msh"
     monkeypatch.setattr(pilot, "inspect_mesh_file", lambda path: {"reasons": ["face ratio 21.3 exceeds 4"]})
     try:
         pilot.mesh_complete("mesh_pilot", raw)
@@ -156,10 +156,10 @@ def test_mesh_complete_rejects_existing_bad_raw_mesh(tmp_path, monkeypatch) -> N
 def test_raw_mesh_from_recipe_resolves_output_under_root(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(pilot, "ROOT", tmp_path)
     path = pilot.raw_mesh_from_recipe([
-        'python generate_hybrid_prism_geometry.py project.json --output "gmsh/pilot mesh.msh" --mesh-algorithm 5',
-        "ElmerGrid 14 2 gmsh/pilot.msh",
+        'python src/generate_hybrid_prism_geometry.py project.json --output "workspace/gmsh/pilot mesh.msh" --mesh-algorithm 5',
+        "ElmerGrid 14 2 workspace/gmsh/pilot.msh",
     ])
-    assert path == tmp_path / "gmsh" / "pilot mesh.msh"
+    assert path == tmp_path / "workspace/gmsh" / "pilot mesh.msh"
 
 
 def test_pilot_mesh_command_pins_algorithm_5(monkeypatch) -> None:
@@ -176,8 +176,8 @@ def test_mesh_recipe_quotes_elmergrid_path_with_spaces(monkeypatch) -> None:
     command = pilot.recipe_command(grid)
     assert grid[0] == elmergrid
     assert command.startswith(f'"{elmergrid}" ')
-    assert '"gmsh/pilot mesh.msh"' in command
-    assert '"work/meshes/mesh pilot"' in command
+    assert '"workspace/gmsh/pilot mesh.msh"' in command
+    assert '"workspace/work/meshes/mesh pilot"' in command
 
 
 def test_resolve_elmergrid_fails_clearly_when_absent(monkeypatch) -> None:

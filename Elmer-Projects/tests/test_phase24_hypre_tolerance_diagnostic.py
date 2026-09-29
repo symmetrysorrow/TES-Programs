@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_hypre_tolerance_diagnostic as diagnostic
+from support import run_phase24_hypre_tolerance_diagnostic as diagnostic
 
 
 def test_build_project_changes_only_linear_tolerance(tmp_path: Path, monkeypatch) -> None:

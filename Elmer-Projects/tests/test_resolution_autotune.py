@@ -1,8 +1,8 @@
 import argparse
 import json
 
-from scripts.prep import run_singlepixel_resolution_autotune as autotune
-from scripts.prep import run_singlepixel_resolution_pilot as pilot
+from prep import run_singlepixel_resolution_autotune as autotune
+from prep import run_singlepixel_resolution_pilot as pilot
 
 
 def test_spatial_selection_uses_first_accepted_refinement() -> None:

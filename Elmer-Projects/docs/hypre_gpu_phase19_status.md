@@ -115,7 +115,7 @@ dense `S`) gives `||Ax-b||/||b|| = 3.36e-11` and absolute constraint residual
 `6.70e-25`; the reconstructed primal norm is `45.75255699` versus the saved
 MUMPS primal norm `45.75255316` (relative difference `2.21e-6`, attributable to
 the ill-conditioned Schur reduction).  The calculation is recorded in
-`results/block_schur_reference.json`.
+`outputs/results/block_schur_reference.json`.
 
 MGR tuning was then limited to targeted comparisons.  Registering a dedicated
 GPU-capable BoomerAMG F solver reduced the baseline residual from `4.25e-6` to

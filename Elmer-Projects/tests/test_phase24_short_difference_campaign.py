@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from scripts.support.run_phase24_short_difference_campaign import build_project
+from support.run_phase24_short_difference_campaign import build_project
 
 
 def test_campaign_project_has_three_one_microsecond_variants(tmp_path: Path, monkeypatch) -> None:
     # Keep the test independent of the repository's generated campaign file.
-    import scripts.support.run_phase24_short_difference_campaign as campaign
+    import support.run_phase24_short_difference_campaign as campaign
 
     monkeypatch.setattr(campaign, "CAMPAIGN_DIR", tmp_path)
     monkeypatch.setattr(campaign, "PROJECT_PATH", tmp_path / "campaign.json")

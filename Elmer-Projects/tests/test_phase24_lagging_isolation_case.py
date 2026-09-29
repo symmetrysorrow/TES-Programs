@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_lagging_isolation_case as diagnostic
+from support import run_phase24_lagging_isolation_case as diagnostic
 
 
 def test_build_project_changes_only_lagging_policy(tmp_path: Path, monkeypatch) -> None:

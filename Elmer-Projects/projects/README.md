@@ -22,3 +22,6 @@ beta = 5.03
 
 TES ID は model の layout から決まり、`python main.py show <project>` で位置と一緒に
 確認できます。
+
+`templates/pipeline_template.json` は CLI が内部用 solver 設定を組み立てるための雛形です。
+個別の計算条件は TOML に記述し、CLI が作る中間 JSON は `workspace/generated/` に保存します。

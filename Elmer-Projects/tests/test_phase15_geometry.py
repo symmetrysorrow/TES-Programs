@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from generate_hybrid_prism_geometry import (
+from src.generate_hybrid_prism_geometry import (
     DEFAULT_OUT,
     GLOBAL_STACK_SIZE,
     assess_mesh_quality,
@@ -110,7 +110,7 @@ def test_independent_stack_layer_overrides() -> None:
 
 
 def test_stack25_profile_is_central_and_uses_50um_transition() -> None:
-    args = parse_args(["--output", "gmsh/project_hybrid_prism_stack25.msh", "--stack-local-size", "25e-6"])
+    args = parse_args(["--output", "workspace/gmsh/project_hybrid_prism_stack25.msh", "--stack-local-size", "25e-6"])
     profile = stack_local_field_profile(args.stack_local_size, args.stack_local_half_width, 0.0, 1e-3, 2e-6, 20e-6)
     expected = {
         "VIn": 25e-6,

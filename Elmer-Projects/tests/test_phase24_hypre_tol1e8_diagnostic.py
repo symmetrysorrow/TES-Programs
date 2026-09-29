@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.support import run_phase24_hypre_tol1e8_diagnostic as diagnostic
+from support import run_phase24_hypre_tol1e8_diagnostic as diagnostic
 
 
 def test_build_project_uses_same_short_window_and_only_tol1e8(tmp_path: Path, monkeypatch) -> None:

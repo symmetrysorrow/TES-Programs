@@ -66,11 +66,11 @@ equilibrium of the circuit-coupled case as well. Electrothermal feedback
 
 Output files: `mesh_shifted_merged/case_constant_power_fixed_t0001.vtu`,
 `mesh_shifted_merged/case_constant_power_t0001.vtu` (extracted with
-`scripts/analysis/extract_tes_volume_avg.py`).
+`src/analysis/extract_tes_volume_avg.py`).
 
 Note: the four-case comparison below (including the `fixedk` variants and the
 `150.015 / 157.008 / 170.441 / 180.955 mK` table) is the state BEFORE this
-fix and is kept for the record. `generated/tes_materials_fixedk.sif` still
+fix and is kept for the record. `workspace/generated/tes_materials_fixedk.sif` still
 contains the pre-fix fixed k value `2.826e-7`; the post-fix equivalent
 `k(T0)` is `2.877e-7`.
 
@@ -84,8 +84,8 @@ Source files:
 
 - [`elmer_project.json`](D:/github/Elmer-Projects/elmer_project.json)
 - [`elmer_geometry.json`](D:/github/Elmer-Projects/elmer_geometry.json)
-- [`generated/tes_shared_variables.sif`](D:/github/Elmer-Projects/generated/tes_shared_variables.sif)
-- [`generated/tes_case_constant_power.sif`](D:/github/Elmer-Projects/generated/tes_case_constant_power.sif)
+- [`workspace/generated/tes_shared_variables.sif`](D:/github/Elmer-Projects/workspace/generated/tes_shared_variables.sif)
+- [`workspace/generated/tes_case_constant_power.sif`](D:/github/Elmer-Projects/workspace/generated/tes_case_constant_power.sif)
 
 Important parameters at the time of this note:
 
@@ -123,22 +123,22 @@ This fixed power is `I0^2 * R0`.
 ### 1. Temperature-dependent membrane k + circuit-coupled TES heating
 
 - SIF: [`case_constant_power.sif`](D:/github/Elmer-Projects/case_constant_power.sif)
-- Materials include: [`generated/tes_materials.sif`](D:/github/Elmer-Projects/generated/tes_materials.sif)
+- Materials include: [`workspace/generated/tes_materials.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials.sif)
 
 ### 2. Temperature-dependent membrane k + fixed TES heating `I0^2 R0`
 
 - SIF: [`case_constant_power_fixed.sif`](D:/github/Elmer-Projects/case_constant_power_fixed.sif)
-- Materials include: [`generated/tes_materials.sif`](D:/github/Elmer-Projects/generated/tes_materials.sif)
+- Materials include: [`workspace/generated/tes_materials.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials.sif)
 
 ### 3. Fixed membrane k + circuit-coupled TES heating
 
 - SIF: [`case_constant_power_fixedk.sif`](D:/github/Elmer-Projects/case_constant_power_fixedk.sif)
-- Materials include: [`generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/generated/tes_materials_fixedk.sif)
+- Materials include: [`workspace/generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials_fixedk.sif)
 
 ### 4. Fixed membrane k + fixed TES heating `I0^2 R0`
 
 - SIF: [`case_constant_power_fixed_fixedk.sif`](D:/github/Elmer-Projects/case_constant_power_fixed_fixedk.sif)
-- Materials include: [`generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/generated/tes_materials_fixedk.sif)
+- Materials include: [`workspace/generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials_fixedk.sif)
 
 ## Fixed-k definition used in this comparison
 
@@ -146,13 +146,13 @@ The fixed membrane conductivity used here is:
 
 - `Heat Conductivity = 2.825930416659195e-07`
 
-This was set in [`generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/generated/tes_materials_fixedk.sif).
+This was set in [`workspace/generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials_fixedk.sif).
 
 ## Current results
 
 TES temperature was evaluated with:
 
-- [`scripts/analysis/extract_tes_volume_avg.py`](D:/github/Elmer-Projects/scripts/analysis/extract_tes_volume_avg.py)
+- [`src/analysis/extract_tes_volume_avg.py`](D:/github/Elmer-Projects/src/analysis/extract_tes_volume_avg.py)
 
 Using TES volume average:
 
@@ -205,10 +205,10 @@ Expected output files:
 ### B. Extract TES volume-average temperatures
 
 ```powershell
-python scripts/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_t0001.vtu
-python scripts/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixed_t0001.vtu
-python scripts/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixedk_t0001.vtu
-python scripts/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixed_fixedk_t0001.vtu
+python src/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_t0001.vtu
+python src/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixed_t0001.vtu
+python src/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixedk_t0001.vtu
+python src/analysis/extract_tes_volume_avg.py mesh_shifted_merged mesh_shifted_merged/case_constant_power_fixed_fixedk_t0001.vtu
 ```
 
 Expected TES volume averages:
@@ -230,4 +230,4 @@ case_constant_power_fixed_fixedk_t0001.vtu 0.180955321417300
 
 - [`case_constant_power_fixedk.sif`](D:/github/Elmer-Projects/case_constant_power_fixedk.sif)
 - [`case_constant_power_fixed_fixedk.sif`](D:/github/Elmer-Projects/case_constant_power_fixed_fixedk.sif)
-- [`generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/generated/tes_materials_fixedk.sif)
+- [`workspace/generated/tes_materials_fixedk.sif`](D:/github/Elmer-Projects/workspace/generated/tes_materials_fixedk.sif)

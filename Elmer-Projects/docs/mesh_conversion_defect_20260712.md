@@ -10,7 +10,7 @@ Elmer モデルは `G0 = 7.854e-8 W/K`(×1.0181 の較正係数付き)を要し�
 `ElmerGrid` が gmsh msh 4.1 ファイルのノード座標表を誤読し、変換後の Elmer メッシュが
 破損していた**ことが原因と特定した。
 
-- `gmsh/project.msh`(gmsh 側)は完全に正常。キャビティは正しく空いており、
+- `workspace/gmsh/project.msh`(gmsh 側)は完全に正常。キャビティは正しく空いており、
   全ボディの体積が設計値と一致する。
 - `ElmerGrid 14 2`(Elmer 26.1-Release)による変換で、39388 ノード中 **6111 ノードの
   座標が別ノードの座標と入れ替わり**、基板系ボディにウエハ全域を貫く巨大四面体が
@@ -71,7 +71,7 @@ node 27448: ( 1136.7,  3251.3,  104.4) um
 基板ボディに多数重なって存在する。これらが k=0.37 のシリコンとしてウエハ全域を
 熱的に直結し、キャビティも実質的に短絡していた。
 
-## 3. gmsh/project.msh は正常
+## 3. workspace/gmsh/project.msh は正常
 
 gmsh API で直接検査した結果、msh ファイル自体は正しい:
 
@@ -129,7 +129,7 @@ python - <<'EOF'
 EOF
 
 # gmsh 側が正常であることの確認:
-# gmsh.open("gmsh/project.msh") 後、エンティティ別体積を集計(本報告 3 節)
+# gmsh.open("workspace/gmsh/project.msh") 後、エンティティ別体積を集計(本報告 3 節)
 
 # 対策の検証:
 # gmsh で Mesh.MshFileVersion=2.2 を設定して書き出し → ElmerGrid 14 2 → 体積再検査
@@ -205,7 +205,7 @@ T0 の 0.74% 以内に収束する。
 
 - 標準メッシュのままだと固定電力で −4 mK、回路連成で −1.25 mK の
   メッシュ起因バイアスが乗る。精度が必要な計算では細分化メッシュを使う
-  (`MEMBRANE_REFINE_H=10e-6 python generate_project_geometry.py` →
+  (`MEMBRANE_REFINE_H=10e-6 python src/generate_project_geometry.py` →
   ElmerGrid)。ただし直接法(Umfpack)ではソルバー時間が約 5 分 → 約 3.3 時間
   に増える。中間の h(12–14 µm)や反復法ソルバーで折衷可能。
 

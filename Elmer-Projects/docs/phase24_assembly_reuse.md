@@ -78,19 +78,19 @@ CPU-only event は拒否する。以下のcorrectness gateを満たさないcand
 実行例:
 
 ```powershell
-python scripts/analysis/phase24_profile.py profile `
+python src/analysis/phase24_profile.py profile `
   --events phase24_events.json --total-wall 12.5 --case production_smoke `
   --output artifacts/assembly_wall_profile.json
 
-python scripts/analysis/phase24_profile.py log `
-  --log results/production_smoke/solver.log --total-wall 12.5 --case production_smoke `
+python src/analysis/phase24_profile.py log `
+  --log outputs/results/production_smoke/solver.log --total-wall 12.5 --case production_smoke `
   --output artifacts/assembly_wall_profile.json
 
-python scripts/analysis/phase24_profile.py validate `
+python src/analysis/phase24_profile.py validate `
   --baseline baseline_gate.json --candidate cached_gate.json `
   --output artifacts/phase24_regression_gate.json
 
-python scripts/analysis/phase24_profile.py classify `
+python src/analysis/phase24_profile.py classify `
   --baseline-profile artifacts/assembly_wall_profile.json `
   --candidate-profile artifacts/cached_profile.json `
   --gate artifacts/phase24_regression_gate.json `

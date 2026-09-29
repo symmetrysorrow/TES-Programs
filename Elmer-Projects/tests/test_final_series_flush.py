@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from scripts.support.final_series_flush import flush_final_series_row
+from support.final_series_flush import flush_final_series_row
 
 
 HEADER = "time_s,tes_temperature_K,tes_current_A,tes_resistance_ohm,tes_power_W\n"

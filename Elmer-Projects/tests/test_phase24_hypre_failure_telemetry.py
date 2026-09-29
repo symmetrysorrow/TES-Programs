@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.support import run_phase24_hypre_failure_telemetry as diagnostic
+from support import run_phase24_hypre_failure_telemetry as diagnostic
 
 
 def test_parse_failure_telemetry(tmp_path: Path) -> None:

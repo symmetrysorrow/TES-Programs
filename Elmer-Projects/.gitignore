@@ -1,7 +1,7 @@
 # Large generated workspaces (meshes, Gmsh intermediates, DLLs)
-work/
-generated/scenarios/
-generated/cases/case_*.sif
+workspace/work/
+workspace/generated/scenarios/
+workspace/generated/cases/case_*.sif
 *.ep
 *.vtu
 *.pvtu
@@ -9,9 +9,11 @@ generated/cases/case_*.sif
 
 # Build products and run logs
 *.dll
+*.so
 *.mod
 *.log
 *.out
+build/fortran/
 
 # Python caches
 __pycache__/
@@ -21,17 +23,22 @@ __pycache__/
 .ruff_cache/
 .cache/
 
+# Local Elmer installation and transient logs
+tools/
+logs/
+build/
+
 # JSON autosnapshots (git history is the real backup)
 autosave/
 
 # Superseded geometry artifacts
-gmsh/project.geo
-gmsh/project_centered.msh
+workspace/gmsh/project.geo
+workspace/gmsh/project_centered.msh
 
 # Reproducible frozen runs
-runs/*
-!runs/README.md
-!runs/.gitkeep
+outputs/runs/*
+!outputs/runs/README.md
+!outputs/runs/.gitkeep
 
 # Organized generated artifacts
 artifacts/logs/
@@ -39,7 +46,7 @@ artifacts/plots/
 artifacts/series/
 
 # Per-run outputs collected by run.py (curated results go to artifacts/)
-results/
+outputs/results/
 
 *.boundary
 *.elements

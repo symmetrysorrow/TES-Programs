@@ -9,10 +9,10 @@ import pytest
 
 sp = pytest.importorskip("scipy.sparse")
 
-from scripts.support.analyze_phase24_native_branch_operator_audit import (  # noqa: E402
+from support.analyze_phase24_native_branch_operator_audit import (  # noqa: E402
     LocalOperator, annulus_ntd_shape_factor,
 )
-from scripts.support.phase24_element_dissipation import _tet, _wedge  # noqa: E402
+from support.phase24_element_dissipation import _tet, _wedge  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "artifacts" / "phase24_native_branch_operator_audit"

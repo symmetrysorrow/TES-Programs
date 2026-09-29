@@ -1,12 +1,15 @@
 # GPU SinglePixel 比較状況
 
+> 履歴資料。GPU起動スクリプトとAMGX設定は削除済みのため、以下の実行コマンドは現在利用できません。
+
 2026-09-02 時点で、RTX 3060 Ti の CUDA/AMGX 実行基盤と、COMSOL のパルス立上がりを解像する比較ケースを用意した。
 
 ## 再現ケース
 
 ```powershell
-python scripts/prep/prepare_gpu_hybrid_prism_phase19.py
-.scriptsun_singlepixel_gpu_wsl.ps1 `
+python src/prep/prepare_gpu_hybrid_prism_phase19.py
+src/launchers
+un_singlepixel_gpu_wsl.ps1 `
   -Project elmer_project_gpu_hybrid_prism_phase19.json `
   -Case case_p19_gpu_amgx_phase19_time5us_smoke_7step
 ```
@@ -14,17 +17,18 @@ python scripts/prep/prepare_gpu_hybrid_prism_phase19.py
 本番の比較区間（20.020 ms のパルス後 100 us、5 us 以下の時間刻み）は次のケースである。
 
 ```powershell
-.scriptsun_singlepixel_gpu_wsl.ps1 `
+src/launchers
+un_singlepixel_gpu_wsl.ps1 `
   -Project elmer_project_gpu_hybrid_prism_phase19.json `
   -Case case_p19_gpu_amgx_phase19_time5us `
   -AmgxConfig config\amgx\tes_fgmres_aggregation_l1_1e-9.json
 ```
 
-出力は `results/<case>/solver.log` と同ディレクトリの系列CSVに保存される。COMSOL比較は次で作成できる。
+出力は `outputs/results/<case>/solver.log` と同ディレクトリの系列CSVに保存される。COMSOL比較は次で作成できる。
 
 ```powershell
-python scripts/analysis/compare_singlepixel_amgx_comsol.py `
-  --elmer results\case_p19_gpu_amgx_phase19_time5us\case_p19_gpu_amgx_phase19_time5us_series.csv `
+python src/analysis/compare_singlepixel_amgx_comsol.py `
+  --elmer outputs/results\case_p19_gpu_amgx_phase19_time5us\case_p19_gpu_amgx_phase19_time5us_series.csv `
   --out artifacts\comparison\comsol_gpu_amgx_phase19_time5us_100us `
   --end-us 100 `
   --solver-label "AMGX / RTX 3060 Ti / Phase19 hybrid-prism"

@@ -4,7 +4,7 @@ This search is the Elmer-versus-COMSOL single-pixel validation and one-factor
 model-sensitivity stage.  There is no experimental single-pixel transient under
 the same conditions as the PoST measurement, so it must not be used to fit the
 PoST experimental waveform.  The experimental multivariate fit is implemented
-separately in `scripts/search/post_multivariate_search.py`.
+separately in `src/search/post_multivariate_search.py`.
 
 ## First-stage variables
 
@@ -37,7 +37,7 @@ is for ranking sensitivities; promising candidates must later be rerun on the
 3x mesh and over the full experimental decay window.
 
 The generated search cases explicitly route result and restart files back to
-`work/meshes/mesh_shifted_merged`.  This avoids the legacy Elmer behavior that
+`workspace/work/meshes/mesh_shifted_merged`.  This avoids the legacy Elmer behavior that
 otherwise prepends a repository-root `mesh_shifted_merged` directory.
 
 ## Commands
@@ -45,15 +45,15 @@ otherwise prepends a repository-root `mesh_shifted_merged` directory.
 Run from `Elmer-Projects`:
 
 ```powershell
-python scripts/search/single_pixel_search.py prepare
-python scripts/search/single_pixel_search.py score-existing
-python scripts/search/single_pixel_search.py dry-run baseline
-python scripts/search/single_pixel_search.py run baseline
-python scripts/search/single_pixel_search.py run-all
+python src/search/single_pixel_search.py prepare
+python src/search/single_pixel_search.py score-existing
+python src/search/single_pixel_search.py dry-run baseline
+python src/search/single_pixel_search.py run baseline
+python src/search/single_pixel_search.py run-all
 ```
 
 `run-all --limit 3` executes only the first three candidates.  Each run is
-cached under `results/spsearch_*`; search metadata, scores, and the leaderboard
+cached under `outputs/results/spsearch_*`; search metadata, scores, and the leaderboard
 are written under `artifacts/search/single_pixel`.
 
 ## Waveform objective
@@ -102,16 +102,16 @@ Run the nominal case first because all later candidates need its calibrated
 coarse-mesh `G0` as a starting point:
 
 ```powershell
-python scripts/search/single_pixel_search.py prepare
-python scripts/search/single_pixel_search.py run baseline
-python scripts/search/single_pixel_search.py run-all
+python src/search/single_pixel_search.py prepare
+python src/search/single_pixel_search.py run baseline
+python src/search/single_pixel_search.py run-all
 ```
 
 After all low/high one-factor candidates have scores, produce the sensitivity
 ranking and the correlation matrix of sensitivity waveforms:
 
 ```powershell
-python scripts/search/single_pixel_search.py analyze-sensitivity
+python src/search/single_pixel_search.py analyze-sensitivity
 ```
 
 The outputs are:
@@ -128,10 +128,10 @@ the one-factor sensitivity results have selected the influential, weakly
 redundant shared variables, run the PoST-specific multivariate workflow:
 
 ```powershell
-python scripts/search/post_multivariate_search.py prepare-references
-python scripts/search/post_multivariate_search.py prepare
-python scripts/search/post_multivariate_search.py run-all --limit 3
-python scripts/search/post_multivariate_search.py run-all --skip-scored
+python src/search/post_multivariate_search.py prepare-references
+python src/search/post_multivariate_search.py prepare
+python src/search/post_multivariate_search.py run-all --limit 3
+python src/search/post_multivariate_search.py run-all --skip-scored
 ```
 
 That runner uses the dual-TES 20 mm geometry, both experimental channels, five

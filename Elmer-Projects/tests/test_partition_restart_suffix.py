@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.prep.partition_elmer_restart import map_serial_restart, result_layout
+from prep.partition_elmer_restart import map_serial_restart, result_layout
 
 
 def _result(path: Path, values: list[float]) -> None:

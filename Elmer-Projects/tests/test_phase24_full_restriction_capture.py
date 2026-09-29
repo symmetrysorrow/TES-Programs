@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[1]
-SCRIPT = ROOT / "scripts" / "support" / "phase24_full_restriction_capture.py"
+SCRIPT = ROOT / "src" / "support" / "phase24_full_restriction_capture.py"
 SPEC = importlib.util.spec_from_file_location("full_capture", SCRIPT)
 assert SPEC and SPEC.loader
 full_capture = importlib.util.module_from_spec(SPEC)

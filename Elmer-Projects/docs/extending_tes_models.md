@@ -1,6 +1,6 @@
 # TES モデルの拡張ガイド
 
-> **Legacy workflow:** この文書は `cases/*.toml` + `tes_sim.py` の旧拡張経路を説明しています。通常CLIからは `python main.py legacy toml ...` を入口にしてください。新規計算は `projects/*.toml` + `projects/models/*.toml` を使い、多段 override は行いません。新方式は [シミュレーションの始め方](getting_started.md) と [project / model TOML 設計](toml_unification_plan.md) を参照してください。
+> **Legacy workflow:** この文書は `projects/legacy/cases/*.toml` + `tes_sim.py` の旧拡張経路を説明しています。通常CLIからは `python main.py legacy toml ...` を入口にしてください。新規計算は `projects/*.toml` + `projects/models/*.toml` を使い、多段 override は行いません。新方式は [シミュレーションの始め方](getting_started.md) と [project / model TOML 設計](toml_unification_plan.md) を参照してください。
 
 単ピクセル以外の構成（2TES、正方形の4隅・三角形の3隅に TES を置く構成など）や、材料・配線・回路の変更を行う実装者向けの手引きです。高速化済みの計算経路（Phase24 HYPRE、6ランク MPI）をそのまま使えるように、どこを書けば何が変わるかをまとめています。
 
@@ -8,15 +8,15 @@
 
 ```
 メッシュ（Gmsh など、形は自由）
-   │  python tes_sim.py mesh-import foo.msh --name mesh_foo [--roles roles.toml]
+   │  python src/tes_sim.py mesh-import foo.msh --name mesh_foo [--roles roles.toml]
    ▼
 メッシュ登録（artifacts/phase24_conformal_hybrid/project.json の "meshes"）＋役割表
-   │  cases/<名前>.toml（メッシュ名・役割表・TES ごとのパラメータ・パルス・時間窓）
+   │  projects/legacy/cases/<名前>.toml（メッシュ名・役割表・TES ごとのパラメータ・パルス・時間窓）
    ▼
-python tes_sim.py run cases/<名前>.toml
-   │  分割 → 定常 → 過渡 → 要約（runs/<名前>/summary.json）
+python src/tes_sim.py run projects/legacy/cases/<名前>.toml
+   │  分割 → 定常 → 過渡 → 要約（outputs/runs/<名前>/summary.json）
    ▼
-scripts/support/build_cases.py が SIF を生成 → HeatSolve（N 回路）で計算 → results/<case>/
+src/support/build_cases.py が SIF を生成 → HeatSolve（N 回路）で計算 → outputs/results/<case>/
 ```
 
 - 形状はメッシュが決めます。コード側は、本体と境界の **名前** と **役割表** しか見ません。
@@ -53,8 +53,8 @@ bath_boundaries = ["bath"]                    # 浴温度（T_bath）に固定�
    - 浴に固定する面を境界の物理グループにする。
    - 要素は四面体（504）とプリズム（706）にする。これ以外の要素は汎用の遅い経路で組み立てられます。
 2. 界面は節点を共有させる（共形）のが基本です。共形にしない場合は、mortar 境界条件の設定が別途必要です。参考として `generate_hybrid_prism_geometry.py` の `--conformal-tes-stack`／`--conformal-abs` の作り方（TES の輪郭と Stycast 円盤を各層に刻み、吸収体側は周期写像で節点を一致させる）があります。直線上に並べるだけなら `--tes-x-positions` で作れます。
-3. `python tes_sim.py mesh-import foo.msh --name mesh_foo --roles roles.toml` で登録します。
-4. ケースファイルを書き、`python tes_sim.py run` で実行します。
+3. `python src/tes_sim.py mesh-import foo.msh --name mesh_foo --roles roles.toml` で登録します。
+4. ケースファイルを書き、`python src/tes_sim.py run` で実行します。
 
 TES の数は最大8です。発熱の UDF の入口 `TESParallelHeatSource1..8`（`tes_parallel_circuit.f90`）で決まっていて、関数をコピーすれば増やせます。
 
@@ -121,9 +121,9 @@ TES 内の電流分布を解くには、次の作業が必要です。
 ## 5. 変更したときの確認手順
 
 1. **単ピクセルが変わっていないこと**
-   - `tes_sim.py show cases/single_pixel_h8.toml` で設定を確認する。
+   - `tes_sim.py show projects/legacy/cases/single_pixel_h8.toml` で設定を確認する。
    - SIF 生成を dry-run し、`artifacts/phase24_conformal_hybrid/transient_75ms/mpi6_best_fag1.sif` と比べる（同一であること）。
-2. **メッシュ生成を変えたとき**: 既存の h8 メッシュを作り直し、`gmsh/project_hybrid_fullconf_h8.msh` とバイト比較する。
+2. **メッシュ生成を変えたとき**: 既存の h8 メッシュを作り直し、`workspace/gmsh/project_hybrid_fullconf_h8.msh` とバイト比較する。
 3. **計算結果**: パルス後 1 ms の区間（`1ms_bdf2h15`）で旧版と比べる。6ランクの計算は実行ごとに最大約 0.002 µA 揺らぐので、それ以下なら同じと見なす。
 
 ## 6. コードの所在
@@ -131,13 +131,13 @@ TES 内の電流分布を解くには、次の作業が必要です。
 | 役割 | 場所 |
 |---|---|
 | CLI、プリセット | `tes_sim.py` |
-| ケースファイルの例 | `cases/*.toml` |
-| SIF 生成（役割表、材料、回路定数） | `scripts/support/build_cases.py`（`set_active_roles`、`resolve_bodies`、`material_property_lines`、`numbered_inner_constants_block`） |
-| パルスの中心と正規化 | `scripts/support/mesh_quantities.py`（`set_pulse_bodies`） |
+| ケースファイルの例 | `projects/legacy/cases/*.toml` |
+| SIF 生成（役割表、材料、回路定数） | `src/support/build_cases.py`（`set_active_roles`、`resolve_bodies`、`material_property_lines`、`numbered_inner_constants_block`） |
+| パルスの中心と正規化 | `src/support/mesh_quantities.py`（`set_pulse_bodies`） |
 | 回路（N 個）、収束判定、刻み幅制御 | `tools/elmer-hypre/src/fem/src/modules/HeatSolve.F90`（`TESCircuitState_t`、`TESInnerCircuitUpdateOne`、`TESKey`） |
 | 高速組み立て（温度依存の k） | 同上（`Phase24BuildMetadata`、`Phase24EvaluateDynK`、`Phase24AssemblePrismElements`） |
 | TES の発熱 | `tes_parallel_circuit.f90`（`TESParallelHeatSource`、`TESParallelHeatSource1..8`） |
 | 線形ソルバー（HYPRE、前処理の使い回し） | `tools/elmer-hypre/src/fem/src/SolveHypre.c`、`SParIterSolver.F90` |
-| 実行（WSL、MPI） | `scripts/support/run_phase24_gpu_elmergpu.py`、`run.py` |
+| 実行（WSL、MPI） | `src/support/run_phase24_gpu_elmergpu.py`、`run.py` |
 
-Elmer 本体の変更は `artifacts/phase24_conformal_hybrid/elmer_native_source.patch`（上流 9916c3f05 からの累積）にまとめてあります。WSL のビルド手順は `scripts/support/build_elmer_hypre_cpu_elmergpu.sh` です。
+Elmer 本体の変更は `artifacts/phase24_conformal_hybrid/elmer_native_source.patch`（上流 9916c3f05 からの累積）にまとめてあります。WSL のビルド手順は `src/support/build_elmer_hypre_cpu_elmergpu.sh` です。
