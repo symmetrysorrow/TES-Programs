@@ -33,7 +33,7 @@
 - work/results: 計算途中と結果
 - artifacts: 残す価値のある解析結果
 
-旧 `cases/` は新規計算の入口ではありません。`python main.py list --all` で legacy と新 project を同時に確認できます。
+旧 `cases/` は新規計算の入口ではありません。新projectは `python main.py list`、旧形式は `python main.py legacy list` と入口を分けています。通常コマンドが旧形式へ自動フォールバックすることはありません。
 
 ## .dat / .csv
 
