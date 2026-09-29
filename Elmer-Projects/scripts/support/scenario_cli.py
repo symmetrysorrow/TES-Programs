@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts.support.scenario_config import CIRCUIT_KEYS, ROOT, CASE_DIR, compile_project, load_scenario, quantity, write_project
+from scripts.support.scenario_config import CIRCUIT_KEYS, ROOT, PROJECT_DIR, compile_project, load_scenario, quantity, write_project
 from scripts.support.reconcile_project import reconcile_project
 
 
@@ -82,14 +82,14 @@ def mesh_command(scenario: dict, project: Path, mesh_name: str) -> None:
     with msh.open("rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
             msh_digest.update(block)
-    provenance = {"mesh_hash": scenario["mesh_hash"], "source": str(scenario["case_file"]), "model": str(scenario["model_file"]),
+    provenance = {"mesh_hash": scenario["mesh_hash"], "source": str(scenario["project_file"]), "model": str(scenario["model_file"]),
                   "geometry": geometry, "mesh": mesh, "msh_sha256": msh_digest.hexdigest()}
     (target / "PROVENANCE.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
     print(f"mesh ready: {target.relative_to(ROOT)}")
 
 
 def explain(scenario: dict, mesh_name: str, steady: str, pulse: str) -> None:
-    print(f"case: {scenario['name']}")
+    print(f"project: {scenario['name']}")
     print(f"layout mesh: {mesh_name} (hash {scenario['mesh_hash']})")
     print(f"steady: {steady}; pulse: {pulse if scenario['physics']['pulse'] else '(none)'}")
     print(f"absorber: {scenario['geometry']['absorber_length']:.9g} m x {scenario['geometry']['absorber_width']:.9g} m")
@@ -109,7 +109,7 @@ def explain(scenario: dict, mesh_name: str, steady: str, pulse: str) -> None:
 def summary(scenario: dict) -> None:
     project, _, steady, _ = compile_project(scenario)
     common = reconcile_project(project)["parameters"]
-    print(f"Case: {scenario['name']} | Model: {scenario['model_file'].stem} | {len(scenario['tes'])} TES")
+    print(f"Project: {scenario['name']} | Model: {scenario['model_file'].relative_to(ROOT)} | {len(scenario['tes'])} TES")
     print(f"Absorber: {scenario['geometry']['absorber_length'] * 1e3:.4g} x {scenario['geometry']['absorber_width'] * 1e3:.4g} mm")
     print("TES       x [mm]   y [mm]   I_bias [uA]   R_sh [mohm]   alpha")
     for tes, values in zip(scenario["tes"], project["cases"][steady]["tes_circuits"]):
@@ -117,24 +117,24 @@ def summary(scenario: dict) -> None:
         shunt = quantity(values["R_sh"], common, "R_sh") if "R_sh" in values else common["R_sh"]
         alpha = quantity(values["alpha"], common, "alpha") if "alpha" in values else common["alpha"]
         print(f"{tes['id']:<9} {tes['x']*1e3:>6.2f}   {tes['y']*1e3:>6.2f}      {bias*1e6:>7.2f}        {shunt*1e3:>7.3f}      {alpha:>7.2f}")
-    print(f"Edit cases/{scenario['name']}.toml for run values; {scenario['model_file'].relative_to(ROOT)} for geometry and mesh.")
+    print(f"Edit {scenario['project_file'].relative_to(ROOT)} for run values; {scenario['model_file'].relative_to(ROOT)} for geometry and mesh.")
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="TOML component/layout/mesh/case workflow")
+    parser = argparse.ArgumentParser(description="project/model TOML workflow")
     parser.add_argument("action", choices=("validate", "summary", "explain", "compile", "mesh", "udf", "run"))
-    parser.add_argument("case_file", help="case name or cases/<name>.toml")
+    parser.add_argument("project_file", help="project name or projects/<name>.toml")
     parser.add_argument("--dry-run", action="store_true", help="show run plan without building or running")
     parser.add_argument("--mpi-procs", type=int, default=1)
     args = parser.parse_args(argv)
-    if args.case_file.lower().endswith(".toml"):
-        case_file = Path(args.case_file)
-        if not case_file.is_absolute():
-            case_file = ROOT / case_file
+    if args.project_file.lower().endswith(".toml"):
+        project_file = Path(args.project_file)
+        if not project_file.is_absolute():
+            project_file = ROOT / project_file
     else:
-        case_file = CASE_DIR / f"{args.case_file}.toml"
+        project_file = PROJECT_DIR / f"{args.project_file}.toml"
     try:
-        scenario = load_scenario(case_file)
+        scenario = load_scenario(project_file)
         _, mesh_name, steady, pulse = compile_project(scenario)
         if args.action == "validate":
             print(f"OK: {len(scenario['tes'])} TES; mesh {mesh_name}; case {scenario['name']}")
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.action == "run" and args.dry_run:
             mesh_dir = ROOT / "work" / "meshes" / mesh_name
             mesh_status = "reuse existing" if (mesh_dir / "mesh.names").is_file() else ("required prebuilt mesh missing" if scenario["source_mesh"] else "generate with Gmsh and convert with ElmerGrid")
-            print(f"Case: {scenario['name']} ({len(scenario['tes'])} TES)")
+            print(f"Project: {scenario['name']} ({len(scenario['tes'])} TES)")
             print(f"Mesh: {mesh_status}; model: {scenario['model_file'].relative_to(ROOT)}")
             print("Solve: steady" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
             print("Dry run: no generation or calculation. Remove --dry-run to execute.")
