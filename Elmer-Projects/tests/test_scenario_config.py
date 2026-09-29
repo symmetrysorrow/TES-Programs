@@ -67,6 +67,10 @@ def test_single_pixel_alpha_changes_steady_and_reuses_mesh() -> None:
     assert circuit["alpha"] == 240
     assert circuit["I_bias"] == "715[uA]"
     assert "I_0" in circuit
+    # The generated JSON is a flattened adapter for the legacy single-TES
+    # builder; user-facing ownership still remains in the project TOML.
+    assert project["parameter_expressions"]["alpha"] == "240"
+    assert project["parameter_expressions"]["I_bias"] == "715[uA]"
     assert project["cases"][pulse]["bdf_order"] == 2
     assert len(project["cases"][pulse]["timesteps"]) == 26
 
