@@ -7,33 +7,36 @@
 
 ## ここから始める
 
-`Elmer-Projects/` で次を実行します。用途別の入口は [シミュレーションの始め方](docs/getting_started.md) にまとめています。
+`Elmer-Projects/` で次を実行します。
 
 ```powershell
-python main.py list                    # ケース一覧
+python main.py list
 python main.py show single_pixel_alpha240
 python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
 ```
 
-値や体系を変更するときは [変更手順と今後の構成案](docs/getting_started.md) を参照してください。
-部品グループの複製と TOML 統一の設計は [統一計画](docs/toml_unification_plan.md) にあります。
+新しい計算の入口は **`projects/<実験名>.toml`** です。project は `model = "models/single_pixel.toml"` のように、同じ `projects/` 配下の model を明示的な相対パスで参照します。
 
-新しい計算では **１実験につき１つの [ケース TOML](cases/single_pixel_alpha240.toml)** を編集します。`model = "single_pixel"` が [単ピクセルのモデル](models/single_pixel.toml)を選びます。PoST 型には [PoST モデル](models/post_four_tes.toml)を参照する[ケース](cases/post_four_tes_nominal.toml)があります。形状を新しく設計するときだけモデルを作成・編集します。
+- `projects/*.toml`: その計算で実際に使う回路値、パルス、時間窓、solver 条件
+- `projects/models/*.toml`: 形状、材料、TES 配置、メッシュ
+- `cases/*.toml`: 旧 `tes_sim.py` 形式。既存結果の再現用
 
-**メッシュは形状を計算用の小さな要素に分割したもの**です。普段はメッシュ生成コマンドを使わず、`run` が必要なメッシュを生成し、同じ設定なら再利用します。
+**project/model 間の汎用 override はありません。** `I_bias`、`R_sh`、`alpha` などの実行時回路値は model に置かず、project の `[circuits."<TES ID>"]` に各 TES の最終値を明示します。ID は安定した参照名としてだけ使い、component → group → project → TES のような値の上書きチェーンは作りません。
 
-実行には Gmsh、ElmerGrid、ElmerSolver、`elmerf90` が必要です。`run` は回路ライブラリも必要に応じてビルドします。既存ケースの旧 JSON / TOML 経路も移行期間中は利用できます。
+メッシュ条件は複雑で通常は触らないため model 側にまとめています。project を読めば「どの model を使うか」は分かり、詳細が必要なときだけその1ファイルを開けば済みます。`python main.py show <project>` で model パス、TES ID・位置、実効回路値を確認できます。
+
+詳しい編集手順は [シミュレーションの始め方](docs/getting_started.md)、構成方針は [project/model 設計](docs/toml_unification_plan.md) を参照してください。
 
 ## まず触る場所
 
-- `cases/*.toml`: １実験ごとの回路値・パルス条件
-- `models/*.toml`: 再利用する形状・メッシュ・共通物性
+- `projects/*.toml`: １実験ごとの最終計算条件
+- `projects/models/*.toml`: 再利用する形状・材料・配置・メッシュ
 - `elmer_project.json`: 旧 JSON 経路の計算条件・形状定義
 - `generate_project_geometry.py`: JSON から Gmsh/Elmer 用ジオメトリを生成
 - `sync_elmer_parameters.py`: JSON から `generated/` の SIF 断片を再生成
-- `tes_transient_heat_source.f90`: TES 電熱結合 UDF(定常/時間依存/パルス熱源)
-- `tes_heat_source.f90`: 定電力熱源 UDF(constant power ケース用)
+- `tes_transient_heat_source.f90`: TES 電熱結合 UDF
+- `tes_heat_source.f90`: 定電力熱源 UDF
 
 ## 旧 JSON 経路のケース定義と実行
 
@@ -110,7 +113,7 @@ python run.py case_tes_pulse_20ms_3x_refined
 [ディレクトリとデータの案内](docs/directory_guide.md) にまとめています。
 モデル定義・数値スキームの詳細は [Elmer の技術資料](docs/README_TES_elmer.md) を参照してください。
 
-## 基本ワークフロー
+## 旧 JSON 経路の基本ワークフロー
 
 1. `elmer_project.json` を編集(**すべて式で記述**: `parameter_expressions`、materials の
    expression、geometry の `*_expr`。数値はビルド時に式から導出され、ファイルには持たない)

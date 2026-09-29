@@ -1,6 +1,6 @@
-# Shared TES model: dimensions, materials, reusable parts, layouts and meshes.
-# For alpha or pulse changes, edit a case in cases/ instead.
-model_version = 1
+# Reusable TES model: geometry, materials, layout and mesh only.
+# Run/circuit values live in the project TOML that references this file.
+model_version = 2
 
 [parameters]
 abs_dx = "1[mm]"
@@ -24,13 +24,7 @@ Stycast_dz = "20[um]"
 R_n = "125[mohm]"
 T_c = "0.1709[K]"
 dW = "0.001"
-R_0 = "15.527[mohm]"
 R_min = "1e-6[ohm]"
-alpha = "256.46"
-beta = "5.03"
-I_bias = "715[uA]"
-R_sh = "3.9[mohm]"
-I_0 = "I_bias*R_sh/(R_0+R_sh)"
 T_bath = "150[mK]"
 SiO2_1_dz = "1[um]"
 SiNx_dz = "1[um]"
@@ -40,7 +34,6 @@ Si_1_dz = "15[um]"
 G0 = "7.854e-6[W/K]"
 T_0 = "168.57[mK]"
 TES_volume = "TES_Au_dx*TES_Au_dy*TES_dz"
-L_tes = "12.3[nH]"
 dabs_dx = "20[mm]"
 tes_pitch = "19[mm]"
 
@@ -88,7 +81,7 @@ position = ["-2[mm]", "0[mm]"]
 id = "b"
 position = ["2[mm]", "0[mm]"]
 
-# Place two copies under one absorber. A group can change circuit values.
+# Place two copies under one absorber. Groups define position only; circuit values belong to projects.
 [layout]
 absorber_length = "16[mm]"
 absorber_width = "1[mm]"
@@ -102,7 +95,6 @@ origin = ["-5[mm]", "0[mm]"]
 id = "east"
 component = "tes_pair"
 origin = ["5[mm]", "0[mm]"]
-circuit = { R_sh = "3.8[mohm]" }
 
 # Element size and layer counts; run builds a new mesh only when needed.
 [mesh]
