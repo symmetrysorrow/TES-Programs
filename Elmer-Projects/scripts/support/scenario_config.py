@@ -287,6 +287,14 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         p.update({key: quantity(value, p, key) for key, value in values.items()})
         values["I_0"] = p["I_bias"] * p["R_sh"] / (p["R_0"] + p["R_sh"])
         circuits.append(values)
+
+    # The legacy SIF builder still reads the unsuffixed single-TES circuit
+    # from project parameters. Flatten the first circuit into the generated
+    # internal JSON only; user-facing model/project ownership stays separate.
+    # Multi-TES paths additionally consume tes_circuits below.
+    project["parameter_expressions"].update(
+        {key: str(value) for key, value in circuits[0].items()}
+    )
     steady.update(mesh=mesh_name, series_file=f"{steady_name}_series.csv", iteration_series_file=f"{steady_name}_iterations.csv", state_file=f"work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../work/meshes/{mesh_name}/{steady_name}.result", tes_circuits=circuits)
     steady["solver"].update(scenario["project"].get("solver", {}))
     project["cases"] = {steady_name: steady}
