@@ -1,0 +1,43 @@
+schema_version = 3
+model = "models/post_four_tes.toml"
+
+# TES IDs come from the model layout. "show" prints the IDs and positions.
+# Every table contains final values; no component/group/project override chain is applied.
+[circuits."west.a"]
+I_bias = "715[uA]"
+R_sh = "3.9[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 256.46
+beta = 5.03
+
+[circuits."west.b"]
+I_bias = "715[uA]"
+R_sh = "3.9[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 256.46
+beta = 5.03
+
+[circuits."east.a"]
+I_bias = "715[uA]"
+R_sh = "3.8[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 256.46
+beta = 5.03
+
+[circuits."east.b"]
+I_bias = "700[uA]"
+R_sh = "3.8[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 256.46
+beta = 5.03
+
+[pulse]
+energy = "1332[keV]"
+start = "20.02[ms]"
+duration = "1[ns]"
+sigma = "50[um]"
+center = "auto"
