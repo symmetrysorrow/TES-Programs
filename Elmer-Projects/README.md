@@ -3,7 +3,7 @@
 このリポジトリは、TES の Elmer 熱計算を「編集する場所」と「生成・保存されるもの」を分けて扱う前提で整理しています。
 
 **どこに何があるか迷ったら [ディレクトリとデータの案内](docs/directory_guide.md) を参照してください。**
-`cases/`、`generated/cases/`、`results/`、`runs/` はそれぞれ役割が異なります。
+`projects/`、`generated/`、`work/`、`results/` はそれぞれ役割が異なります。旧形式は [Legacy workflows](docs/legacy_workflows.md) に分離しています。
 
 ## ここから始める
 
@@ -20,8 +20,6 @@ python main.py run single_pixel_alpha240
 
 - `projects/*.toml`: その計算で実際に使う回路値、パルス、時間窓、solver 条件
 - `projects/models/*.toml`: 形状、材料、TES 配置、メッシュ
-- `cases/*.toml`: 旧 `tes_sim.py` 形式。既存結果の再現用
-
 **project/model 間の汎用 override はありません。** `I_bias`、`R_sh`、`alpha` などの実行時回路値は model に置かず、project の `[circuits."<TES ID>"]` に各 TES の最終値を明示します。ID は安定した参照名としてだけ使い、component → group → project → TES のような値の上書きチェーンは作りません。
 
 メッシュ条件は複雑で通常は触らないため model 側にまとめています。project を読めば「どの model を使うか」は分かり、詳細が必要なときだけその1ファイルを開けば済みます。`python main.py show <project>` で model パス、TES ID・位置、実効回路値を確認できます。
