@@ -1,6 +1,6 @@
 # シミュレーションの始め方
 
-新しい計算は **１実験につき１つのケースファイル**を `cases/` に置きます。まずケースを選びます。
+新しい計算は **1実験につき1つの project TOML** を `projects/` に置きます。
 
 ```powershell
 python main.py list
@@ -9,26 +9,48 @@ python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
 ```
 
-`show` は使用するモデル、TES の数・位置、`alpha`、バイアスなどを表示します。`--dry-run` は生成・計算しません。`run` は必要なメッシュと回路ライブラリを用意し、定常解とパルス応答を計算します。
+`show` は参照する model、TES の ID と位置、各 TES の最終的な `I_bias`、`R_sh`、`alpha` などを表示します。`--dry-run` は生成・計算を行いません。
 
-## alpha を変えた単ピクセル波形
+## project と model
 
-[`cases/single_pixel.toml`](../cases/single_pixel.toml) をコピーして別名を付け、`[circuit]` に `alpha = 240` のように書きます。[`cases/single_pixel_alpha240.toml`](../cases/single_pixel_alpha240.toml) がその例です。`model = "single_pixel"` は変えません。元の h8 メッシュを再利用し、alpha ごとに別の定常解から波形を計算します。
-
-```powershell
-python main.py show single_pixel_alpha240
-python main.py run single_pixel_alpha240
-```
-
-## 形状を変えるとき
-
-ケースの `model` で既存のモデルを選びます。`single_pixel` は１ TES、`post_four_tes` は２ TES の部品を２組置く PoST 型です。既存の PoST を使うだけなら[そのケース](../cases/post_four_tes_nominal.toml)をコピーし、モデルファイルは編集しません。まだない配置・メッシュを作るときは `models/` に新しいモデルファイルを作り、ケースの `model` をその名前にします。
+project は実行条件、model は通常変更しない構造条件です。
 
 | 編集対象 | 内容 |
 | --- | --- |
-| `cases/<名前>.toml` | モデルの選択、`alpha`、バイアス、個別 TES の回路値、パルス、時間窓 |
-| `models/<名前>.toml` | 共通値、材料、TES 部品、配置、メッシュ |
+| `projects/<名前>.toml` | model の選択、各 TES の回路値、パルス、時間窓、solver |
+| `projects/models/<名前>.toml` | 寸法、材料、TES 部品、配置、メッシュ |
 
-メッシュは形状を計算用の要素に分割したものです。物理値だけの変更では同じメッシュを使い、形状・要素寸法の変更では新しいメッシュを生成します。単ピクセルモデルは既存の `mesh_hybrid_fullconf_h8` を参照するため、その形状を変えるには別の生成モデルを作ります。
+project の `model` は名前ではなく相対パスです。
 
-生成した内部 JSON と SIF は `generated/`、メッシュは `work/meshes/`、実行結果は `results/` に保存します。旧ケースは `python main.py list --all` で表示できます。実行には Gmsh、ElmerGrid、ElmerSolver、`elmerf90` が必要です。
+```toml
+schema_version = 3
+model = "models/single_pixel.toml"
+```
+
+これにより project を開いた時点で model の場所が分かります。
+
+## 回路値を変える
+
+`projects/single_pixel.toml` をコピーして別名を付け、その TES の `[circuits."pixel.tes"]` を編集します。
+
+```toml
+[circuits."pixel.tes"]
+I_bias = "715[uA]"
+R_sh = "3.9[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 240
+beta = 5.03
+```
+
+これは override ではなく、この計算で使う**最終値**です。model、component、group から同名の回路値を継承して上書きする仕組みはありません。複数 TES の project では、model が定義する TES ID ごとに1つずつ完全な `circuits` テーブルを書きます。
+
+ID が分からない場合は `python main.py show <名前>` で位置と一緒に確認できます。
+
+## 形状・材料・メッシュを変える
+
+形状・材料・メッシュは model にまとまっています。通常の bias / alpha / pulse 変更で model を編集する必要はありません。新しい形状を作る場合は `projects/models/` に新しい model TOML を作り、project の `model` パスをそのファイルへ向けます。
+
+単ピクセル model は検証済みの `mesh_hybrid_fullconf_h8` を参照しています。この prebuilt mesh と矛盾する寸法変更はエラーになります。新しい寸法を使う場合は、生成型 mesh を持つ別 model を作成します。
+
+生成した内部 JSON と SIF は `generated/`、メッシュは `work/meshes/`、実行結果は `results/` に保存します。旧 TOML / JSON は `python main.py list --all` で確認できます。
