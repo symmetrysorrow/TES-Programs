@@ -67,8 +67,14 @@ def resolve_model_file(project_file: Path, value: object) -> Path:
     if not isinstance(value, str) or not value.strip():
         raise ValueError("model must be a relative TOML path such as models/single_pixel.toml")
     ref = Path(value)
-    if ref.is_absolute() or ref.suffix.lower() != ".toml":
-        raise ValueError("model must be a relative .toml path")
+    if (
+        ref.is_absolute()
+        or ref.suffix.lower() != ".toml"
+        or not ref.parts
+        or ref.parts[0] != "models"
+        or ".." in ref.parts
+    ):
+        raise ValueError("model must be a relative path under models/, e.g. models/single_pixel.toml")
     model_file = (project_file.parent / ref).resolve()
     if not model_file.is_file():
         raise ValueError(f"model TOML not found: {model_file}")
@@ -109,9 +115,9 @@ def load_scenario(project_file: Path) -> dict:
     reject_unknown(layout, {"absorber_length", "absorber_width", "stycast_diameter", "dimensions", "groups"}, "layout")
     reject_unknown(mesh, {"source", "global_size", "tes_local_size", "absorber_local_size", "absorber_local_radius", "stycast_layers", "si_1_layers", "sio2_1_layers", "sinx_layers"}, "mesh")
 
-    circuits = project.get("circuits")
-    if not isinstance(circuits, dict) or not circuits:
-        raise ValueError("project needs a [circuits.<TES ID>] table for every TES")
+    circuits = project.get("circuits", {})
+    if not isinstance(circuits, dict):
+        raise ValueError("circuits must be a table")
     if not isinstance(project.get("solver", {}), dict):
         raise ValueError("solver must be a table")
 
