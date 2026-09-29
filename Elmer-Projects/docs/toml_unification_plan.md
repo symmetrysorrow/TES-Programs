@@ -36,4 +36,4 @@ ID は値の継承階層ではなく、TES個体を安定して参照するた�
 
 ## 互換性
 
-旧 `cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。通常の `main.py list` は新しい project だけを表示し、`--all` で legacy を表示する。
+旧 `cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。ただし通常の `main.py list/show/check/mesh/run` からは完全に分離し、`main.py legacy ...` の明示的な名前空間からだけ案内する。通常コマンドは旧形式へフォールバックしない。
