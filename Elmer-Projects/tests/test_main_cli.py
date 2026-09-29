@@ -37,6 +37,15 @@ def test_normal_parser_has_no_legacy_json_options():
     assert "--record-only" not in help_text
 
 
+def test_legacy_json_options_live_under_legacy_namespace():
+    args = main.build_parser().parse_args(
+        ["legacy", "list", "--project", "old_project.json"]
+    )
+    assert args.command == "legacy"
+    assert args.legacy_command == "list"
+    assert args.project == "old_project.json"
+
+
 def test_legacy_toml_is_not_accepted_by_normal_run(capsys):
     assert main.main(["run", "cases/single_pixel_h8.toml", "--dry-run"]) == 2
     error = capsys.readouterr().err
