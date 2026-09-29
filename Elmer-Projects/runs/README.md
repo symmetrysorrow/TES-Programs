@@ -1,27 +1,16 @@
-# Runs Directory
+# runs: 実行状態と固定スナップショット
 
-This directory is reserved for reproducible frozen run bundles.
+ここには二種類のデータがあります。
 
-## Policy
+| 作成元 | 置かれるもの | 意味 |
+| --- | --- | --- |
+| `tes_sim.py` | `runs/<ケース名>/state.json`、`summary.json` | 実行状態と要約。入力・メッシュ・結果のコピーではない。 |
+| `freeze_repro_run.py` | `runs/<名前>/manifest.json`、`README.md`、入力・生成物・メッシュ・結果、対応する ZIP | 旧 `case_constant_power` の再現用に固定した一式。 |
 
-- Source of truth stays in the repository root as `elmer_project.json`.
-- Generated files are copied into each run bundle.
-- Mesh and solver outputs are frozen per run.
-- A run bundle must contain:
-  - `manifest.json`
-  - `README.md`
-  - copied input files
-  - copied generated files
-  - copied mesh files
-  - copied solver results
+`freeze_repro_run.py` は旧定電力ケース専用です。ルートの `elmer_project.json`、`case_constant_power.sif`、旧メッシュ `mesh_shifted_merged/` などがそろっている環境でのみ使います。任意の `run.py` / `tes_sim.py` ケースを凍結する汎用機能ではありません。
 
-## Create a frozen run
-
-```bat
+```powershell
 python freeze_repro_run.py current_reference
 ```
 
-This creates:
-
-- `runs/current_reference/`
-- `runs/current_reference.zip`
+通常の実行結果は `results/<case>/`、軽量な比較結果は `artifacts/`、手書きの TOML 入力は `cases/` を参照してください。全体の使い分けは [ディレクトリとデータの案内](../docs/directory_guide.md) にあります。

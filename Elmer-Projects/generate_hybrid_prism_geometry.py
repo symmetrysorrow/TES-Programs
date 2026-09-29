@@ -99,9 +99,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--tes-positions", type=str, default=None, metavar="X1:Y1,X2:Y2,...",
+        help="multi-TES x:y offsets in metres; supports groups placed in 2-D",
+    )
+    parser.add_argument(
         "--absorber-length", type=float, default=None, metavar="METERS",
         help="multi-TES absorber length along x (default: TES span + abs_dx)",
     )
+    parser.add_argument("--absorber-width", type=float, default=None, metavar="METERS",
+                        help="multi-TES absorber width along y (default: TES span + abs_dy)")
     parser.add_argument(
         "--absorber-refine-x", type=str, default=None, metavar="X1,X2,...",
         help=(
@@ -141,11 +147,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     if args.conformal_abs and not args.conformal_tes_stack:
         parser.error("--conformal-abs requires --conformal-tes-stack")
     args.tes_x = _parse_positions(parser, args.tes_x_positions, "--tes-x-positions")
+    if args.tes_positions and args.tes_x is not None:
+        parser.error("use either --tes-positions or --tes-x-positions")
+    args.tes_xy = _parse_xy_positions(parser, args.tes_positions)
     args.refine_x = _parse_positions(parser, args.absorber_refine_x, "--absorber-refine-x") or []
-    if args.tes_x is not None and not args.conformal_tes_stack:
-        parser.error("--tes-x-positions requires --conformal-tes-stack")
+    if (args.tes_x is not None or args.tes_xy is not None) and not args.conformal_tes_stack:
+        parser.error("multi-TES positions require --conformal-tes-stack")
     if args.absorber_length is not None and args.absorber_length <= 0.0:
         parser.error("--absorber-length must be positive")
+    if args.absorber_width is not None and args.absorber_width <= 0.0:
+        parser.error("--absorber-width must be positive")
     for name in ("stycast", "sio2_2", "si_2", "sio2_1", "si_1", "sinx", "tes"):
         if getattr(args, f"{name}_layers") < 1:
             parser.error(f"--{name.replace('_', '-')}-layers must be at least 1")
@@ -162,6 +173,18 @@ def _parse_positions(parser, text: str | None, flag: str) -> list[float] | None:
     if not values:
         parser.error(f"{flag} is empty")
     return values
+
+
+def _parse_xy_positions(parser, value: str | None) -> list[tuple[float, float]] | None:
+    if value is None:
+        return None
+    try:
+        points = [tuple(float(part) for part in pair.split(":")) for pair in value.split(",")]
+    except ValueError:
+        parser.error("--tes-positions needs X:Y pairs separated by commas")
+    if not points or any(len(point) != 2 for point in points):
+        parser.error("--tes-positions needs X:Y pairs separated by commas")
+    return points
 
 
 def stack_local_field_profile(
@@ -640,20 +663,30 @@ def main(argv: list[str] | None = None) -> int:
     # Single pixel: one stack at the pixel centre, unsuffixed body names.
     # Multi-TES (PoST): one full chip stack per TES x offset, bodies "_T<k>",
     # all under one long absorber.
-    multi = args.tes_x is not None
-    stack_x = [x0 + dx for dx in args.tes_x] if multi else [x0]
-    suffixes = [f"_T{k}" for k in range(1, len(stack_x) + 1)] if multi else [""]
+    multi = args.tes_x is not None or args.tes_xy is not None
+    if args.tes_xy is not None:
+        stack_positions = [(x0 + dx, y0 + dy) for dx, dy in args.tes_xy]
+    elif args.tes_x is not None:
+        stack_positions = [(x0 + dx, y0) for dx in args.tes_x]
+    else:
+        stack_positions = [(x0, y0)]
+    stack_x = [x for x, _ in stack_positions]
+    suffixes = [f"_T{k}" for k in range(1, len(stack_positions) + 1)] if multi else [""]
     if multi:
-        order = sorted(stack_x)
-        for left, right in zip(order, order[1:]):
-            if right - left < outer_x:
-                raise ValueError(
-                    f"TES stacks at x={left:g} and x={right:g} m overlap: pitch must be >= Si_dx={outer_x:g} m"
-                )
+        for i, (left_x, left_y) in enumerate(stack_positions):
+            for right_x, right_y in stack_positions[i + 1:]:
+                if abs(right_x - left_x) < outer_x and abs(right_y - left_y) < outer_y:
+                    raise ValueError(f"TES chip stacks at {(left_x, left_y)} and {(right_x, right_y)} overlap")
         abs_len = args.absorber_length if args.absorber_length else (max(stack_x) - min(stack_x) + abs_x)
         abs_cx = 0.5 * (max(stack_x) + min(stack_x))
+        stack_y = [y for _, y in stack_positions]
+        abs_width = args.absorber_width if args.absorber_width else (max(stack_y) - min(stack_y) + abs_y)
+        abs_cy = 0.5 * (max(stack_y) + min(stack_y))
+        if abs_len < max(stack_x) - min(stack_x) + sty_d or abs_width < max(stack_y) - min(stack_y) + sty_d:
+            raise ValueError("absorber does not cover all Stycast contacts")
     else:
         abs_len, abs_cx = abs_x, x0
+        abs_width, abs_cy = abs_y, y0
 
     gmsh.initialize()
     gmsh.model.add("single_pixel_hybrid_prism" if not multi else f"multi_tes_{len(stack_x)}_hybrid_prism")
@@ -664,17 +697,17 @@ def main(argv: list[str] | None = None) -> int:
     local_profiles = [
         q for q in (
             stack_local_field_profile(
-                args.stack_local_size, args.stack_local_half_width, xc, y0, z_sio2_1, z_abs, args.global_mesh_size
+                args.stack_local_size, args.stack_local_half_width, xc, yc, z_sio2_1, z_abs, args.global_mesh_size
             )
-            for xc in stack_x
+            for xc, yc in stack_positions
         ) if q is not None
     ]
     absorber_profiles = [
         q for q in (
             absorber_local_field_profile(
-                args.absorber_local_size, args.absorber_local_radius, xc, y0, z_abs, abs_z, args.global_mesh_size
+                args.absorber_local_size, args.absorber_local_radius, xc, yc, z_abs, abs_z, args.global_mesh_size
             )
-            for xc in stack_x + [x0 + dx for dx in args.refine_x]
+            for xc, yc in stack_positions + [(x0 + dx, y0) for dx in args.refine_x]
         ) if q is not None
     ]
     active_local_sizes = [q["VIn"] for q in local_profiles[:1] + absorber_profiles[:1]]
@@ -690,9 +723,9 @@ def main(argv: list[str] | None = None) -> int:
     faces_by_name: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(list))
     bath_faces: list[int] = []
     sty_tops: list[int] = []
-    for xc, sfx in zip(stack_x, suffixes):
+    for (xc, yc), sfx in zip(stack_positions, suffixes):
         ring, sty_top = _build_stack(
-            args, p, xc, y0, sfx, volumes, faces_by_name,
+            args, p, xc, yc, sfx, volumes, faces_by_name,
             dict(z_sio2_2=z_sio2_2, z_sio2_1=z_sio2_1, z_tes=z_tes, z_sty=z_sty),
             (outer_x, outer_y, mem_x, mem_y, tes_x, tes_y, tes_z, sty_d, sty_z),
         )
@@ -700,12 +733,12 @@ def main(argv: list[str] | None = None) -> int:
         sty_tops += sty_top
 
     # Only the absorber is deliberately left to the 3-D tetrahedral mesher.
-    abs_tag = gmsh.model.occ.addBox(abs_cx - abs_len / 2.0, y0 - abs_y / 2.0, z_abs, abs_len, abs_y, abs_z)
+    abs_tag = gmsh.model.occ.addBox(abs_cx - abs_len / 2.0, abs_cy - abs_width / 2.0, z_abs, abs_len, abs_width, abs_z)
     if args.conformal_abs:
         # Imprint the Stycast disks into the absorber bottom.  Each imprinted
         # face gets its Stycast top mesh through an identity periodic map, and
         # ElmerGrid -merge then fuses the coincident nodes: no mortar remains.
-        disks_abs = [gmsh.model.occ.addDisk(xc, y0, z_abs, sty_d / 2.0, sty_d / 2.0) for xc in stack_x]
+        disks_abs = [gmsh.model.occ.addDisk(xc, yc, z_abs, sty_d / 2.0, sty_d / 2.0) for xc, yc in stack_positions]
         result, _ = gmsh.model.occ.fragment(
             [(3, abs_tag)], [(2, d) for d in disks_abs], removeObject=True, removeTool=True
         )
@@ -729,8 +762,8 @@ def main(argv: list[str] | None = None) -> int:
             raise RuntimeError(f"cannot pair absorber disks {disks} with Stycast tops {sty_tops}")
         identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
         for sty_face in sty_tops:
-            cx = gmsh.model.occ.getCenterOfMass(2, sty_face)[0]
-            match = min(disks, key=lambda f: abs(gmsh.model.occ.getCenterOfMass(2, f)[0] - cx))
+            cx, cy, _ = gmsh.model.occ.getCenterOfMass(2, sty_face)
+            match = min(disks, key=lambda f: sum((a - b) ** 2 for a, b in zip(gmsh.model.occ.getCenterOfMass(2, f)[:2], (cx, cy))))
             gmsh.model.mesh.setPeriodic(2, [match], [sty_face], identity)
     _add_physical_volumes(volumes)
     _add_boundary_groups(faces_by_name, bath_faces)

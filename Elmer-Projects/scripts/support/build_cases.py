@@ -853,7 +853,9 @@ def body_force_blocks(heat_source: str, tes_body_names: list[str], with_pulse: b
     """
     dll, unprefixed_proc, unprefixed_label = HEAT_SOURCES[heat_source]
     lines: list[str] = []
-    multi_inner = heat_source == "circuit_inner" and len(tes_body_names) > 1
+    multi_inner = heat_source == "circuit_inner" and (
+        len(tes_body_names) > 1 or tes_body_names[0] != "TES"
+    )
     for i, name in enumerate(tes_body_names, start=1):
         side = name[len(_base_body_name(name)):].lstrip("_")
         if multi_inner:
@@ -1447,7 +1449,9 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     is_dual_tes = tes_sides != [""]
     tes_body_id = resolve_body_sif_ordinal(mesh_names, tes_body_names[0]) if not is_dual_tes else None
     # Inner (HeatSolve) circuits handle any number of TES bodies.
-    multi_inner = heat_source == "circuit_inner" and len(tes_body_names) > 1
+    multi_inner = heat_source == "circuit_inner" and (
+        len(tes_body_names) > 1 or tes_body_names[0] != "TES"
+    )
     tes_body_ids = [resolve_body_sif_ordinal(mesh_names, name) for name in tes_body_names]
 
     lines: list[str] = [

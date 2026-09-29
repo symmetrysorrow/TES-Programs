@@ -2,31 +2,45 @@
 
 このリポジトリは、TES の Elmer 熱計算を「編集する場所」と「生成・保存されるもの」を分けて扱う前提で整理しています。
 
+**どこに何があるか迷ったら [ディレクトリとデータの案内](docs/directory_guide.md) を参照してください。**
+`cases/`、`generated/cases/`、`results/`、`runs/` はそれぞれ役割が異なります。
+
+## ここから始める
+
+`Elmer-Projects/` で次を実行します。用途別の入口は [シミュレーションの始め方](docs/getting_started.md) にまとめています。
+
+```powershell
+python main.py list                    # ケース一覧
+python main.py show single_pixel_alpha240
+python main.py run single_pixel_alpha240 --dry-run
+python main.py run single_pixel_alpha240
+```
+
+値や体系を変更するときは [変更手順と今後の構成案](docs/getting_started.md) を参照してください。
+部品グループの複製と TOML 統一の設計は [統一計画](docs/toml_unification_plan.md) にあります。
+
+新しい計算では **１実験につき１つの [ケース TOML](cases/single_pixel_alpha240.toml)** を編集します。`model = "single_pixel"` が [単ピクセルのモデル](models/single_pixel.toml)を選びます。PoST 型には [PoST モデル](models/post_four_tes.toml)を参照する[ケース](cases/post_four_tes_nominal.toml)があります。形状を新しく設計するときだけモデルを作成・編集します。
+
+**メッシュは形状を計算用の小さな要素に分割したもの**です。普段はメッシュ生成コマンドを使わず、`run` が必要なメッシュを生成し、同じ設定なら再利用します。
+
+実行には Gmsh、ElmerGrid、ElmerSolver、`elmerf90` が必要です。`run` は回路ライブラリも必要に応じてビルドします。既存ケースの旧 JSON / TOML 経路も移行期間中は利用できます。
+
 ## まず触る場所
 
-- `elmer_project.json`: 現在の計算条件・形状定義を含む唯一の主ファイル
+- `cases/*.toml`: １実験ごとの回路値・パルス条件
+- `models/*.toml`: 再利用する形状・メッシュ・共通物性
+- `elmer_project.json`: 旧 JSON 経路の計算条件・形状定義
 - `generate_project_geometry.py`: JSON から Gmsh/Elmer 用ジオメトリを生成
 - `sync_elmer_parameters.py`: JSON から `generated/` の SIF 断片を再生成
 - `tes_transient_heat_source.f90`: TES 電熱結合 UDF(定常/時間依存/パルス熱源)
 - `tes_heat_source.f90`: 定電力熱源 UDF(constant power ケース用)
 
-## ディレクトリ案内
+## 旧 JSON 経路のケース定義と実行
 
-- `config/`: 実験・解析の設定ファイル
-- `scripts/`: 実行、前処理、解析、可視化のスクリプト
-- `tests/`: スクリプトの回帰テストとテスト用ログ断片
-- `generated/`: 設定から再生成できる SIF やメッシュ入力
-- `artifacts/`: 比較・診断ごとに整理した実験結果とレポート
-- `results/`, `work/`: 実行時の出力と作業用データ。容量が大きいため Git 管理対象外
-- `archive/`, `legacy/`: 過去の実行結果、旧ケース、移行用データ
-
-Python の `__pycache__` や pytest のキャッシュは再生成できるため、作業ツリーに残さず Git 対象から除外します。
-
-## ケース定義と実行
-
-**ケースは `elmer_project.json` の `cases` セクションで定義**し、
+**`run.py` で使うケースは `elmer_project.json` の `cases` セクションで定義**し、
 `python sync_elmer_parameters.py` が自己完結な SIF を `generated/cases/` に生成します。
 手書き SIF は存在しません(生成物を直接編集しない)。
+別系統の `tes_sim.py` は `cases/*.toml` を入力として使います。
 
 定義済みケース(`template` / メッシュ):
 
@@ -92,18 +106,9 @@ python run.py case_tes_pulse_20ms_3x_refined
 
 ## ディレクトリ構成
 
-- `docs/`: 説明資料(モデル定義・数値スキームの詳細は `docs/README_TES_elmer.md`)
-- `generated/`: JSON から生成された SIF 断片(手動編集しない)
-- `work/meshes/`: Git管理しない再生成可能なElmerメッシュ。単ピクセル・dual-TES・分割/seed別の派生メッシュをここへ集約し、restart `.result` もここに残す
-- `gmsh/`: ジオメトリ・メッシュ生成の中間物
-- `scripts/analysis|visualization|prep|support/`: 抽出・可視化・準備・補助
-- `artifacts/`: Git管理する軽量な比較表・図・報告（大容量の中間生成物は置かない）
-- `results/raw/`: `run.py` 経由ではない直接実行のログ・CSV出力の退避先。解析済み・確定したものだけ `artifacts/` に昇格する
-- `reference/`: 外部由来の参照データ(COMSOL 時系列 `SignglePixel.txt`、`tes.json`, `tes_test2.json`)
-- `runs/`: 凍結した再現用ラン(`python freeze_repro_run.py <name>`)
-- `archive/`: 過去の実験ケース・結果(例: `cases_mortar_debug_202607/`)
-- `legacy/`: 旧ケース・旧メッシュ(`legacy/meshes/` に引退メッシュ)
-- `scripts/support/vendored/`: 単位付き式評価器(Thermal-and-Electoric-Sim からベンダリング)
+入力から結果までの置き場所、`archive/` と `legacy/` の区別、`.dat` / `.csv` の読み方は
+[ディレクトリとデータの案内](docs/directory_guide.md) にまとめています。
+モデル定義・数値スキームの詳細は [Elmer の技術資料](docs/README_TES_elmer.md) を参照してください。
 
 ## 基本ワークフロー
 
@@ -112,7 +117,7 @@ python run.py case_tes_pulse_20ms_3x_refined
 2. `python sync_elmer_parameters.py`(条件だけ変えた場合)/ `python build_mesh.py <mesh名>`(形状も変えた場合)
 3. 必要なら `ElmerGrid ...` と `ElmerSolver ...` を実行
 4. 結果確認は `scripts/analysis/` を使用
-5. 確定結果は `python freeze_repro_run.py <run_name>` で `runs/` に凍結
+5. 比較・診断の確定結果は `artifacts/<調査名>/` に記録。旧 `case_constant_power` の再現用一式だけは、必要な旧ファイルがある場合に `freeze_repro_run.py` で `runs/` に凍結可能
 
 ## 代表コマンド
 
@@ -121,7 +126,6 @@ python generate_project_geometry.py
 python sync_elmer_parameters.py
 ElmerSolver generated\cases\case_constant_power.sif
 python scripts\analysis\summarize_tes_temperature.py
-python freeze_repro_run.py current_reference
 ```
 
 詳細は `docs/README_TES_elmer.md` を参照してください。
