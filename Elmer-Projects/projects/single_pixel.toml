@@ -1,0 +1,20 @@
+# One simulation project. Geometry/materials/mesh are in the referenced model.
+schema_version = 3
+model = "models/single_pixel.toml"
+window = "75ms_bdf2h15"
+
+# Final circuit values for this TES. There is no model/group override chain.
+[circuits."pixel.tes"]
+I_bias = "715[uA]"
+R_sh = "3.9[mohm]"
+L_tes = "12.3[nH]"
+R_0 = "15.527[mohm]"
+alpha = 256.46
+beta = 5.03
+
+[pulse]
+energy = "1332[keV]"
+start = "20.02[ms]"
+duration = "1[ns]"
+sigma = "50[um]"
+center = "auto"
