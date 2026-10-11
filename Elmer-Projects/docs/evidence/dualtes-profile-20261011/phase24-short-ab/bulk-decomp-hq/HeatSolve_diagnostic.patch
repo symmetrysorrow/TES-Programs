@@ -1,0 +1,278 @@
+--- a/HeatSolve.F90
++++ b/HeatSolve.F90
+@@ -116,7 +116,8 @@
+      USE MaterialModels
+      USE Adaptive
+      USE DefUtils
+-     USE SolverUtils, ONLY : SaveLinearSystem
++     USE SolverUtils, ONLY : SaveLinearSystem, SolverUtilsPhase24ProfileReset, &
++          SolverUtilsPhase24ProfileReport
+      USE CRSMatrix, ONLY : CRS_ClearPositionCache, CRS_Phase24CacheStats, &
+           CRS_PreparePositionCache, CRS_GlueLocalMatrixCached, CRS_AddLocalMatrixCachedTo
+      USE ElementDescription, ONLY : ElementInfo
+@@ -415,9 +416,22 @@
+ 
+      REAL(KIND=dp) :: at,at0,totat,st,totst,t1
+      REAL(KIND=dp) :: Phase24Tick, Phase24BulkStart, Phase24BoundaryStart, Phase24FinalizeStart, &
+-          Phase24SolveStart, Phase24IterationStart, Phase24UDF, &
++          Phase24SolveStart, Phase24IterationStart, Phase24AssemblyStart, &
++          Phase24SegmentStart, Phase24InitWall, Phase24PreInitWall, &
++          Phase24PreBulkWall, Phase24DirichletWall, Phase24PostWall, &
++          Phase24AssemblyWall, Phase24UDF, &
+           Phase24Bulk, Phase24Boundary, Phase24Finalize, Phase24Solve, &
+           Phase24Material, Phase24Local, Phase24Insert
++     INTEGER, PARAMETER :: PHASE24_PROFILE_BODIES = 512
++     INTEGER :: Phase24ProfileCounts(3,PHASE24_PROFILE_BODIES)
++     INTEGER :: Phase24ProfileBody, Phase24ProfileClass, Phase24ProfileOldBody
++     INTEGER :: Phase24ProfileOldClass, Phase24ProfileMat
++     LOGICAL :: Phase24ProfileFound
++     REAL(KIND=dp) :: Phase24ProfileMaterial(3,PHASE24_PROFILE_BODIES)
++     REAL(KIND=dp) :: Phase24ProfileLocal(3,PHASE24_PROFILE_BODIES)
++     REAL(KIND=dp) :: Phase24ProfileInsert(3,PHASE24_PROFILE_BODIES)
++     REAL(KIND=dp) :: Phase24ProfileGroup(3,PHASE24_PROFILE_BODIES)
++     REAL(KIND=dp) :: Phase24ProfileGroupStart, Phase24ProfileElapsed
+ 
+ 
+      CALL Info('HeatSolver','-------------------------------------------',Level=6)
+@@ -1081,6 +1095,12 @@
+        Phase24Material = 0.0_dp
+        Phase24Local = 0.0_dp
+        Phase24Insert = 0.0_dp
++       Phase24InitWall = 0.0_dp
++       Phase24PreInitWall = 0.0_dp
++       Phase24PreBulkWall = 0.0_dp
++       Phase24DirichletWall = 0.0_dp
++       Phase24PostWall = 0.0_dp
++       Phase24AssemblyWall = 0.0_dp
+        Phase24RHSOnly = .FALSE.
+        Phase24UsedLaggedOperator = .FALSE.
+        Phase24RecoveryThisSolve = .FALSE.
+@@ -1125,21 +1145,28 @@
+        CALL Info( 'HeatSolve', ' ', Level=4 )
+        CALL Info( 'HeatSolve', 'Starting Assembly...', Level=4 )
+ 
+-500    IF ( ConstantBulk .AND. ASSOCIATED(Solver % Matrix % BulkValues) ) THEN
++500    Phase24AssemblyStart = RealTime()
++       IF ( ConstantBulk .AND. ASSOCIATED(Solver % Matrix % BulkValues) ) THEN
+          Solver % Matrix % Values = Solver % Matrix % BulkValues
+          Solver % Matrix % RHS = Solver % Matrix % BulkRHS
+          GOTO 1000
+        END IF
+             
++       IF (Phase24WallProfiling) Phase24SegmentStart = RealTime()
+        IF(Radiosity) THEN
+          CALL RadiationFactors( Solver, .FALSE., NewtonLinearization)         
+          CALL TabulateBoundaryAverages(Solver % Mesh, Emiss, Reflect)         
+        ELSE
+          CALL TabulateBoundaryAverages(Solver % Mesh, Emiss) 
+        END IF
++       IF (Phase24WallProfiling) Phase24PreInitWall = &
++            RealTime() - Phase24SegmentStart
+          
+ !------------------------------------------------------------------------------
++       IF (Phase24WallProfiling) Phase24SegmentStart = RealTime()
+        CALL DefaultInitialize()
++       IF (Phase24WallProfiling) Phase24InitWall = &
++            RealTime() - Phase24SegmentStart
+ !------------------------------------------------------------------------------
+  
+        IF ( SmartHeaterControl .OR. IntegralHeaterControl ) THEN
+@@ -1198,8 +1225,20 @@
+        CALL StartAdvanceOutput( 'HeatSolve', 'Assembly:' )
+        NofActive = GetNOFActive()
+ 
+-     IF (Phase24WallProfiling) CALL ResetTimer('Phase24 Bulk Assembly')
++     IF (Phase24WallProfiling) THEN
++       Phase24SegmentStart = RealTime()
++       CALL ResetTimer('Phase24 Bulk Assembly')
++     END IF
+      Phase24BulkStart = RealTime()
++     Phase24ProfileCounts = 0
++     Phase24ProfileMaterial = 0.0_dp
++     Phase24ProfileLocal = 0.0_dp
++     Phase24ProfileInsert = 0.0_dp
++     Phase24ProfileGroup = 0.0_dp
++     Phase24ProfileOldBody = 0
++     Phase24ProfileOldClass = 0
++     Phase24ProfileGroupStart = 0.0_dp
++     CALL SolverUtilsPhase24ProfileReset()
+      Phase24StaticAssemblyActive = .FALSE.
+      Phase24PrismAssemblyActive = .FALSE.
+      Phase24StaticCacheHit = .FALSE.
+@@ -1320,6 +1359,33 @@
+          END IF
+ 
+ !------------------------------------------------------------------------------
++         IF (Phase24WallProfiling) THEN
++           Phase24ProfileBody = Element % BodyId
++           Phase24ProfileClass = 3
++           IF (ASSOCIATED(Element % TYPE)) THEN
++             SELECT CASE(Element % TYPE % ElementCode)
++             CASE(504)
++               Phase24ProfileClass = 1
++             CASE(706)
++               Phase24ProfileClass = 2
++             END SELECT
++           END IF
++           IF (Phase24ProfileBody > 0 .AND. Phase24ProfileBody <= PHASE24_PROFILE_BODIES) THEN
++             Phase24ProfileCounts(Phase24ProfileClass,Phase24ProfileBody) = &
++                  Phase24ProfileCounts(Phase24ProfileClass,Phase24ProfileBody) + 1
++             IF (Phase24ProfileOldBody /= Phase24ProfileBody .OR. &
++                  Phase24ProfileOldClass /= Phase24ProfileClass) THEN
++               IF (Phase24ProfileOldBody > 0) THEN
++                 Phase24ProfileElapsed = RealTime() - Phase24ProfileGroupStart
++                 Phase24ProfileGroup(Phase24ProfileOldClass,Phase24ProfileOldBody) = &
++                      Phase24ProfileGroup(Phase24ProfileOldClass,Phase24ProfileOldBody) + Phase24ProfileElapsed
++               END IF
++               Phase24ProfileOldBody = Phase24ProfileBody
++               Phase24ProfileOldClass = Phase24ProfileClass
++               Phase24ProfileGroupStart = RealTime()
++             END IF
++           END IF
++         END IF
+          IF ( Element % BodyId /= body_id ) THEN
+ !------------------------------------------------------------------------------
+            Equation => GetEquation()
+@@ -1565,7 +1631,13 @@
+            IF ( ALL(MU==0) ) C1 = 0.0D0 
+          END IF
+ 
+-         IF (Phase24WallProfiling) Phase24Material = Phase24Material + RealTime() - Phase24Tick
++          IF (Phase24WallProfiling) THEN
++            Phase24ProfileElapsed = RealTime() - Phase24Tick
++            Phase24Material = Phase24Material + Phase24ProfileElapsed
++            IF (Phase24ProfileBody > 0 .AND. Phase24ProfileBody <= PHASE24_PROFILE_BODIES) &
++                 Phase24ProfileMaterial(Phase24ProfileClass,Phase24ProfileBody) = &
++                 Phase24ProfileMaterial(Phase24ProfileClass,Phase24ProfileBody) + Phase24ProfileElapsed
++          END IF
+          HeatCapacity(1:n) = Density(1:n) * HeatCapacity(1:n)
+  
+ !------------------------------------------------------------------------------
+@@ -1703,7 +1775,13 @@
+                Stabilize, Element, n, ElementNodes )
+ !------------------------------------------------------------------------------
+          END IF
+-         IF (Phase24WallProfiling) Phase24Local = Phase24Local + RealTime() - Phase24Tick
++          IF (Phase24WallProfiling) THEN
++            Phase24ProfileElapsed = RealTime() - Phase24Tick
++            Phase24Local = Phase24Local + Phase24ProfileElapsed
++            IF (Phase24ProfileBody > 0 .AND. Phase24ProfileBody <= PHASE24_PROFILE_BODIES) &
++                 Phase24ProfileLocal(Phase24ProfileClass,Phase24ProfileBody) = &
++                 Phase24ProfileLocal(Phase24ProfileClass,Phase24ProfileBody) + Phase24ProfileElapsed
++          END IF
+ !------------------------------------------------------------------------------
+ 
+          ! The heat equation may have lower dimensional elements active also.
+@@ -1728,7 +1806,13 @@
+            IF (Phase24WallProfiling) Phase24Tick = RealTime()
+            CALL UpdateGlobalEquations( Solver % Matrix, STIFF, &
+                ForceHeater, FORCE, n, 1, TempPerm(Element % NodeIndexes) )
+-           IF (Phase24WallProfiling) Phase24Insert = Phase24Insert + RealTime() - Phase24Tick
++           IF (Phase24WallProfiling) THEN
++             Phase24ProfileElapsed = RealTime() - Phase24Tick
++             Phase24Insert = Phase24Insert + Phase24ProfileElapsed
++             IF (Phase24ProfileBody > 0 .AND. Phase24ProfileBody <= PHASE24_PROFILE_BODIES) &
++                  Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody) = &
++                  Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody) + Phase24ProfileElapsed
++           END IF
+          ELSE
+             Bubbles = UseBubbles .AND. .NOT.Stabilize .AND. &
+             ( ConvectionFlag == 'computed' .OR. ConvectionFlag == 'constant' )
+@@ -1760,14 +1844,51 @@
+             ELSE
+               CALL DefaultUpdateEquations( STIFF, FORCE, RHSOnly=Phase24RHSOnly )
+             END IF
+-            IF (Phase24WallProfiling) Phase24Insert = Phase24Insert + RealTime() - Phase24Tick
++            IF (Phase24WallProfiling) THEN
++              Phase24ProfileElapsed = RealTime() - Phase24Tick
++              Phase24Insert = Phase24Insert + Phase24ProfileElapsed
++              IF (Phase24ProfileBody > 0 .AND. Phase24ProfileBody <= PHASE24_PROFILE_BODIES) &
++                   Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody) = &
++                   Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody) + Phase24ProfileElapsed
++            END IF
+          END IF
+ !------------------------------------------------------------------------------
+       END DO     !  Bulk elements
+ !------------------------------------------------------------------------------
+       
+-      CALL DefaultFinishBulkAssembly()
+-      IF (Phase24WallProfiling) Phase24Bulk = RealTime() - Phase24BulkStart
++      IF (Phase24WallProfiling) THEN
++       IF (Phase24ProfileOldBody > 0) THEN
++         Phase24ProfileElapsed = RealTime() - Phase24ProfileGroupStart
++         Phase24ProfileGroup(Phase24ProfileOldClass,Phase24ProfileOldBody) = &
++              Phase24ProfileGroup(Phase24ProfileOldClass,Phase24ProfileOldBody) + Phase24ProfileElapsed
++       END IF
++       CALL SolverUtilsPhase24ProfileReport()
++       DO Phase24ProfileBody=1,MIN(PHASE24_PROFILE_BODIES,Model % NumberOfBodies)
++         Phase24ProfileMat = ListGetInteger(Model % Bodies(Phase24ProfileBody) % Values, 'Material', Phase24ProfileFound)
++         DO Phase24ProfileClass=1,3
++           IF (Phase24ProfileCounts(Phase24ProfileClass,Phase24ProfileBody) <= 0) CYCLE
++           WRITE(6,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,I0,5(A,ES13.5))') &
++                'PHASE24_BULK_LOCAL: rank=',ParEnv % MyPE,', iter=',iter, &
++                ', body=',Phase24ProfileBody,', material=',Phase24ProfileMat, &
++                ', class=',Phase24ProfileClass,', elements=', &
++                Phase24ProfileCounts(Phase24ProfileClass,Phase24ProfileBody), &
++                ', body_class_wall=',Phase24ProfileGroup(Phase24ProfileClass,Phase24ProfileBody), &
++                ', material_eval=',Phase24ProfileMaterial(Phase24ProfileClass,Phase24ProfileBody), &
++                ', local_calc=',Phase24ProfileLocal(Phase24ProfileClass,Phase24ProfileBody), &
++                ', global_update=',Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody), &
++                ', other=',MAX(0.0_dp,Phase24ProfileGroup(Phase24ProfileClass,Phase24ProfileBody) - &
++                   Phase24ProfileMaterial(Phase24ProfileClass,Phase24ProfileBody) - &
++                   Phase24ProfileLocal(Phase24ProfileClass,Phase24ProfileBody) - &
++                   Phase24ProfileInsert(Phase24ProfileClass,Phase24ProfileBody))
++         END DO
++       END DO
++     END IF
++     CALL DefaultFinishBulkAssembly()
++     IF (Phase24WallProfiling) THEN
++       Phase24Bulk = RealTime() - Phase24BulkStart
++       Phase24PreBulkWall = Phase24SegmentStart - Phase24AssemblyStart - &
++            Phase24PreInitWall - Phase24InitWall
++     END IF
+       IF (Phase24WallProfiling) CALL CheckTimer('Phase24 Bulk Assembly',Level=4,Delete=.TRUE.)
+ 
+ 
+@@ -1840,7 +1961,11 @@
+       IF (Phase24WallProfiling) CALL CheckTimer('Phase24 Matrix Finalization',Level=4,Delete=.TRUE.)
+       CALL Info( 'HeatSolve', 'Assembly done', Level=4 )
+ 
++      IF (Phase24WallProfiling) Phase24SegmentStart = RealTime()
+       CALL DefaultDirichletBCs()
++      IF (Phase24WallProfiling) Phase24DirichletWall = &
++           RealTime() - Phase24SegmentStart
++      IF (Phase24WallProfiling) Phase24SegmentStart = RealTime()
+       IF (Phase24LumpedPrec) CALL Phase24BuildLumpedPrec()
+ 
+       IF (Phase24VectorAssembly .AND. Phase24MetadataReady) &
+@@ -1860,6 +1985,19 @@
+         CALL ListAddInteger(SolverParams,'Phase24 Recovery Events',Phase24RecoveryCount)
+         IF (Phase24RHSOnly) CALL Info('HeatSolve', &
+              'Phase24 exact RHS-only assembly; matrix epoch unchanged',Level=4)
++      END IF
++      IF (Phase24WallProfiling) THEN
++        Phase24PostWall = RealTime() - Phase24SegmentStart
++        Phase24AssemblyWall = RealTime() - Phase24AssemblyStart
++        WRITE(Message,'(A,I0,A,I0,9(A,ES12.4))') &
++             'Phase24 rank wall: rank=',ParEnv % MyPE,', iter=',iter, &
++             ', preinit=',Phase24PreInitWall,', initialize=',Phase24InitWall, &
++             ', prebulk=',Phase24PreBulkWall,', bulk=',Phase24Bulk, &
++             ', boundary=',Phase24Boundary,', finalize=',Phase24Finalize, &
++             ', dirichlet=',Phase24DirichletWall,', post=',Phase24PostWall, &
++             ', assembly=',Phase24AssemblyWall
++        WRITE(6,'(A)') TRIM(Message)
++        FLUSH(6)
+       END IF
+ 
+ !------------------------------------------------------------------------------
+@@ -2738,8 +2876,8 @@
+       IF (ALL(nodeIds > 0) .AND. MAXVAL(nodeIds) <= SIZE(TempPerm)) THEN
+         eqIds = TempPerm(nodeIds)
+       END IF
+-      Phase24ElementNodes(:,i) = nodeIds
+-      Phase24ElementEq(:,i) = eqIds
++      Phase24ElementNodes(1:4,i) = nodeIds
++      Phase24ElementEq(1:4,i) = eqIds
+ 
+       CALL GetElementNodes(MetadataNodes, UElement=MetadataElement)
+       stat = ElementInfo(MetadataElement, MetadataNodes, 0.25_dp, 0.25_dp, &

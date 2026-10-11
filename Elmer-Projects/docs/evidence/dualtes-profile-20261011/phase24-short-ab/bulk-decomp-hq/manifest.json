@@ -1,0 +1,63 @@
+{
+  "base_commit": "8bc3e403988450ebb86d9d60654f8c42adf00f21",
+  "compiler": "GNU Fortran 16.1.0",
+  "openmp": "GNU libgomp 5.2",
+  "mpi": "MS-MPI",
+  "build": "Debug -O0 -g3 -fbacktrace -fno-omit-frame-pointer",
+  "omp_num_threads": 1,
+  "category_timing": "RealTime; group interval and existing per-element stage counters",
+  "csr_rhs_timing": "omp_get_wtime high-resolution, one sample per 32 body/class equation calls, scaled by call/sample",
+  "timer_probe": "1,000,000 omp_get_wtime calls = 0.044 s (44 ns/call)",
+  "runs": [
+    {
+      "case": "dualtes",
+      "ranks": 6,
+      "steps": 4,
+      "returncode": 0,
+      "started": "2026-10-11T19:03:00+09:00",
+      "finished": "2026-10-11T19:04:35+09:00",
+      "sif_sha256": "08ecb27597ca199ed0b6a3af2f6069ac15437c8f43fbb10fa70301ed39bcf7d3",
+      "log": "dualtes_6rank.solver.log",
+      "outputs": {
+        "dualtes_bulkdecomp_hq_1_series.csv": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431",
+        "dualtes_bulkdecomp_hq_1_iterations.csv": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f",
+        "dualtes_bulkdecomp_hq_2_series.csv": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623",
+        "dualtes_bulkdecomp_hq_2_iterations.csv": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+      }
+    },
+    {
+      "case": "singlepixel",
+      "ranks": 6,
+      "steps": 4,
+      "returncode": 0,
+      "started": "2026-10-11T19:04:35+09:00",
+      "finished": "2026-10-11T19:05:54+09:00",
+      "sif_sha256": "61e453719f317e95253674a8e8740c0c55e937b6e723aeebe64d557b2e708aba",
+      "log": "singlepixel_6rank.solver.log",
+      "outputs": {
+        "singlepixel_bulkdecomp_hq_1_series.csv": "2c05e9289f54b85c5fc9fda2306c4d73e4546c10fa74c4af07d52781e2f5845c",
+        "singlepixel_bulkdecomp_hq_1_iterations.csv": "6676fac921ff3ed1320e6375e7c2984deb069140feb2a543800dd6145f58b08c"
+      }
+    }
+  ],
+  "diagnostic_build_artifacts": {
+    "solver_sha256": "1e1bea9e80563a98f1007316c2265ca57eac135d48efd1ac958d0c559849346e",
+    "HeatSolve_dll_sha256": "c00e3e9834fb1b3daa1ca824173325f81d5ddb929ddb0670b7f3ce3f9bbf7637",
+    "libelmersolver_dll_sha256": "28bb6046bde238847a3c93780d056e562fed58201ea9c9b2f8666d250e3d6b2a",
+    "HeatSolve_profile_patch_sha256": "d33c9aabd1dbefd39f7b0e1293a668f087a28d68a3315185a67741a6dc3bc9ab",
+    "SolverUtils_profile_snapshot_sha256": "e4bf7e6847f831dc922657f49ea274ca5d1469f203dc44d2e1d8439123868119",
+    "opt_cache_trial": "isolated source only; Ninja Fortran dependency-generation stopped; no linked or executed optimization binary"
+  },
+  "gdb_attempts": [
+    {
+      "gdb": "gdb_attach_critical.gdb",
+      "log": "gdb_attach_critical.log",
+      "result": "attach/line-symbol resolution failed; target exception 0xc0000374; lock address/arguments not captured"
+    },
+    {
+      "gdb": "gdb_launch_critical_inspect.gdb",
+      "log": "gdb_launch_critical_inspect.log",
+      "result": "direct launch failed with 0xc0000135 before solver startup"
+    }
+  ]
+}

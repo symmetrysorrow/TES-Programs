@@ -1,0 +1,55 @@
+{
+  "base_commit": "8bc3e403988450ebb86d9d60654f8c42adf00f21",
+  "compiler": "GNU Fortran 16.1.0",
+  "openmp": "GNU libgomp 5.2",
+  "mpi": "MS-MPI",
+  "build": "Debug -O0 -g3 -fbacktrace -fno-omit-frame-pointer",
+  "omp_num_threads": 1,
+  "timing": "rank-local RealTime; no profiling barrier; CSR/RHS timed on every 32nd call and scaled by calls/sample count",
+  "runs": [
+    {
+      "case": "dualtes",
+      "ranks": 6,
+      "steps": 4,
+      "returncode": 0,
+      "command": [
+        "C:\\Program Files\\Microsoft MPI\\Bin\\mpiexec.exe",
+        "-n",
+        "6",
+        "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-runtime\\bin\\ElmerSolver_mpi.exe",
+        "D:\\github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\bulk-decomp\\dualtes_6rank.sif"
+      ],
+      "started": "2026-10-11T18:58:36+09:00",
+      "finished": "2026-10-11T19:00:21+09:00",
+      "sif_sha256": "84b57485aed507aa88aff37d6c817560a94bab6c1935e111c07979dfa305357a",
+      "log": "dualtes_6rank.solver.log",
+      "outputs": {
+        "dualtes_bulkdecomp_1_series.csv": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431",
+        "dualtes_bulkdecomp_1_iterations.csv": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f",
+        "dualtes_bulkdecomp_2_series.csv": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623",
+        "dualtes_bulkdecomp_2_iterations.csv": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+      }
+    },
+    {
+      "case": "singlepixel",
+      "ranks": 6,
+      "steps": 4,
+      "returncode": 0,
+      "command": [
+        "C:\\Program Files\\Microsoft MPI\\Bin\\mpiexec.exe",
+        "-n",
+        "6",
+        "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-runtime\\bin\\ElmerSolver_mpi.exe",
+        "D:\\github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\bulk-decomp\\singlepixel_6rank.sif"
+      ],
+      "started": "2026-10-11T19:00:21+09:00",
+      "finished": "2026-10-11T19:01:44+09:00",
+      "sif_sha256": "85ab474b3cc13482dc7caecb273d7ebee3c7e96de38fbc024f7ce7a1f3f5d162",
+      "log": "singlepixel_6rank.solver.log",
+      "outputs": {
+        "singlepixel_bulkdecomp_1_series.csv": "2c05e9289f54b85c5fc9fda2306c4d73e4546c10fa74c4af07d52781e2f5845c",
+        "singlepixel_bulkdecomp_1_iterations.csv": "6676fac921ff3ed1320e6375e7c2984deb069140feb2a543800dd6145f58b08c"
+      }
+    }
+  ]
+}
