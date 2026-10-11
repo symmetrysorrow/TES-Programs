@@ -1,0 +1,99 @@
+{
+  "schema": "phase24-release-build-environment-v1",
+  "source_commit": "5a8de867068be0568f09af40fb90fee300dfbede",
+  "source_patch_sha256": "3ac03ac6dcb0db4ba30fa110ec40bd41b54e38ec289c80d977927d03bb427f16",
+  "generator": "Ninja",
+  "build_type": "Release",
+  "parallel_jobs": 6,
+  "compiler_flags_reported_by_cmake": {
+    "Fortran": "-fopenmp -fallow-argument-mismatch -O3",
+    "C": "-fopenmp -O3 -DNDEBUG",
+    "CXX": "-fopenmp -O3 -DNDEBUG"
+  },
+  "toolchain": {
+    "distribution": "MSYS2 UCRT64 Rev5",
+    "gcc": {
+      "version": "16.1.0",
+      "path": "G:/Elmer-Migration/msys64/ucrt64/bin/gcc.exe",
+      "sha256": "f96a3bdb1d3a3967b309d75c7413399391e857b5be4cb17162572ed66f6772a0"
+    },
+    "gfortran": {
+      "version": "16.1.0",
+      "path": "G:/Elmer-Migration/msys64/ucrt64/bin/gfortran.exe",
+      "sha256": "f1f086d81f4c6701281df5543ca232cd741857f7c4611c43904d0e88e58718ce"
+    },
+    "gxx": {
+      "path": "G:/Elmer-Migration/msys64/ucrt64/bin/c++.exe",
+      "sha256": "798a6eb495b30cf771dc759b5508d269ecb0dddac739719e8b30fe0ac0744b69"
+    },
+    "cmake": {
+      "version": "4.4.0",
+      "path": "G:/Elmer-Migration/msys64/ucrt64/bin/cmake.exe",
+      "sha256": "38f0990c837d863460b9272a49a6bce4a9c78464dc5d54b3bed41b1d9ab88f04"
+    },
+    "ninja": {
+      "version": "1.13.2",
+      "path": "G:/Elmer-Migration/msys64/ucrt64/bin/ninja.exe",
+      "sha256": "6db3d9e4443835fe40d4b1425a0a13012ae810c449f74ba5cb059e6ca16df4f0"
+    },
+    "openmp": "5.2"
+  },
+  "mpi": {
+    "implementation": "Microsoft MPI",
+    "version": "10.1.12498.52",
+    "mpi_api_reported_by_cmake": "2.0",
+    "mpiexec": "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe",
+    "mpiexec_sha256": "161d18ac9f66d28add3aec8719f834297d0dc08ce07ec536c8aed5a9172fca8e",
+    "msmpi_dll": "C:/Windows/System32/msmpi.dll",
+    "msmpi_dll_sha256": "d8f74689e83d7e5a7277de15b221edea91f529529f8a16fd0e510236c0705dcb",
+    "import_library": "G:/Elmer-Migration/msys64/ucrt64/lib/libmsmpi.dll.a",
+    "import_library_sha256": "aa429c593ba51ac1b6015e673ec9cf51a688f1960258f8f1795987cd24cc5caa",
+    "wrappers": {
+      "mpicc": {
+        "path": "G:/Elmer-Migration/msys64/ucrt64/bin/mpicc.exe",
+        "sha256": "ae8bc8f8f4f86e1a239bb06f24ca0de950a32e41a29d053cc364bd9060f948de"
+      },
+      "mpif90": {
+        "path": "G:/Elmer-Migration/msys64/ucrt64/bin/mpif90.exe",
+        "sha256": "f61f03dabbf599b5d418be453d7acf0766febe3114c2e7803bfa8dbb2cbdd900"
+      },
+      "mpicxx": {
+        "path": "G:/Elmer-Migration/msys64/ucrt64/bin/mpicxx.exe",
+        "sha256": "352de1da1f9643975223dd15737d2179dd5283a4d61a342981ce28d9a678518b"
+      }
+    }
+  },
+  "hypre": {
+    "version": "2.33.0",
+    "include": "G:/Elmer-Migration/msys64/ucrt64/include",
+    "import_library": "G:/Elmer-Migration/msys64/ucrt64/lib/libHYPRE.dll.a",
+    "import_library_sha256": "efd9c57eb5480808bb3f9c659416ccac65058ce48836cbbdb857b28aa2a740c7",
+    "runtime_dll": "G:/Elmer-Migration/msys64/ucrt64/bin/libHYPRE.dll",
+    "runtime_dll_sha256": "82f8b1ce7cb3981cbc131cd72c9a3258e2efa724a6370353fdd1ed11af7be15b"
+  },
+  "openblas": {
+    "runtime": "G:/Elmer-Migration/elmer/bin/libopenblas.dll",
+    "runtime_sha256": "ac6fbe60646c9039b5d12d01822a233f656225b8e0ae438601c92194bb0c3827",
+    "import_library": "G:/Elmer-Migration/elmer/bin/libopenblas.dll.a",
+    "import_library_sha256": "4298e927749e3b4fbcb58f1eee62bf127ce6e7675a2428aed02c7904a001bb74"
+  },
+  "build_result": {
+    "configure": "PASS",
+    "build": "PASS",
+    "ninja_actions": "2237/2237",
+    "heat_solver_object": "fem/src/modules/CMakeFiles/HeatSolve.dir/HeatSolve.F90.obj",
+    "new_heat_solve_dll_sha256": "9687e206fd81d15b6bdf2b45caabc7e5e26bb84d19fc7f6b6f67b02bbc392a9d",
+    "old_validated_heat_solve_dll_sha256": "59384fbe0ae0a8c2bba0311c5f07247bcb00aed4f98f7264169f92092100643b",
+    "new_solver_exe_sha256": "4c673dc0639f4cabc29e2ccc4b3dd43576f210a9bddced67a9be20761a50c3b6",
+    "old_validated_solver_exe_sha256": "ec74448bb8a9143b000781feae22afd6e02af7e2e549596f98045f22ee1b5778",
+    "heat_solve_pe_timestamp_new": "2026-10-12 00:43:42 (objdump display)",
+    "heat_solve_pe_timestamp_old": "2026-10-11 20:48:44 (objdump display)",
+    "binary_byte_identity": false,
+    "binary_difference_fully_explained": false,
+    "runtime_simulation_executed": false
+  },
+  "logs": {
+    "configure": "configure.log",
+    "build": "build_release.log"
+  }
+}

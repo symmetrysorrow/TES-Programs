@@ -1,0 +1,161 @@
+{
+  "schema": "phase24-source-reconstruction-hashes-v1",
+  "reference": {
+    "repository": "ElmerCSC/elmerfem",
+    "tag": "release-26.1",
+    "commit": "5a8de867068be0568f09af40fb90fee300dfbede"
+  },
+  "patch": {
+    "path": "01_phase24_source_from_release_26_1.patch",
+    "sha256": "3ac03ac6dcb0db4ba30fa110ec40bd41b54e38ec289c80d977927d03bb427f16",
+    "bytes": 510081,
+    "apply_order": 1
+  },
+  "files": [
+    {
+      "path": "fem/src/BlockSolve.F90",
+      "before_git_blob": "fd722cfde0f90d5c08fe5079f64f6043849b0787",
+      "target_git_blob": "24e5a149063fd92969d4a8d5e8ffecc6092f4fb4",
+      "target_raw_sha256": "0db23bdbc1bb03681f6779358941f86960f58218052358d82a4fa9eb4269c72a",
+      "target_bytes": 221032,
+      "replayed_git_blob": "24e5a149063fd92969d4a8d5e8ffecc6092f4fb4",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/CMakeLists.txt",
+      "before_git_blob": "0e7d55ea128ed2f5ebac64df1ea65fac3954f3ce",
+      "target_git_blob": "af9c5ac86e5a9e92bd32d7415e472e1ea08fded5",
+      "target_raw_sha256": "6ddcd20181c5f4a00c6aa7fafbaaf23222d3618f7e1955a9912ac90260083f4e",
+      "target_bytes": 15145,
+      "replayed_git_blob": "af9c5ac86e5a9e92bd32d7415e472e1ea08fded5",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/CRSMatrix.F90",
+      "before_git_blob": "22fb87276019cdc19809921e1ab1306fd171e883",
+      "target_git_blob": "d102f143a0760d273e6288642ba25495b7892281",
+      "target_raw_sha256": "0b5231d6d9f4e75c91dc07a61a3e6534f09c2ded5f8ea8d0135d7af02e2a6519",
+      "target_bytes": 190083,
+      "replayed_git_blob": "d102f143a0760d273e6288642ba25495b7892281",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/DefUtils.F90",
+      "before_git_blob": "0683aa4168dff5300c533603cf77a5facc84ae94",
+      "target_git_blob": "57693d5acadc1944359015f0b3819932f38dfcc0",
+      "target_raw_sha256": "6ce0d62ae67fcf4332c5da4c92b08d0584339cf60e153462f146821e1c4c2020",
+      "target_bytes": 293675,
+      "replayed_git_blob": "57693d5acadc1944359015f0b3819932f38dfcc0",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/ElementDescription.F90",
+      "before_git_blob": "2c3dbb1c97c3c99d8377c227e8d5c2da5eeef67c",
+      "target_git_blob": "916cf5fad7e76d20d41e52905102c2ac88e0faa7",
+      "target_raw_sha256": "80044c74ec1f8b55d346e7220638a9da344591de0b4390188a09ca84aa7f03c8",
+      "target_bytes": 655358,
+      "replayed_git_blob": "916cf5fad7e76d20d41e52905102c2ac88e0faa7",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/ElementUtils.F90",
+      "before_git_blob": "fb36ee9b65854959da2ac625c75b1b7b7c50459a",
+      "target_git_blob": "c1bdeef71d5e546c1630d81b94d47576d6b14a86",
+      "target_raw_sha256": "442c33787c61537c042a507f4833755243001d7d7f678bcac43c6677881d18cd",
+      "target_bytes": 158111,
+      "replayed_git_blob": "c1bdeef71d5e546c1630d81b94d47576d6b14a86",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/ElmerSolver.F90",
+      "before_git_blob": "24f77448580862a35d65b340580075676df14d4c",
+      "target_git_blob": "529726b65dd67483be1ab21af6aea2bdfeb3612d",
+      "target_raw_sha256": "94502abfec3acfe0ec12e931fb37d341638bbf9ef1b76210aa1996c626998f21",
+      "target_bytes": 210942,
+      "replayed_git_blob": "529726b65dd67483be1ab21af6aea2bdfeb3612d",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/ListMatrix.F90",
+      "before_git_blob": "89213af359ec33a2121b42594b2f9dc177f5dffb",
+      "target_git_blob": "08c177f39b43fa07521b8c6fe2d42d2008ab0dc5",
+      "target_raw_sha256": "929ebfe07433d6a378292e492638af4f05af96270820dc8f1fb3780127088173",
+      "target_bytes": 35687,
+      "replayed_git_blob": "08c177f39b43fa07521b8c6fe2d42d2008ab0dc5",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/SOLVER.KEYWORDS",
+      "before_git_blob": "f2a0a7ff0acce231cc10195af1a0b2067569bb69",
+      "target_git_blob": "8d4518e3b54cb71484265a1b50bbfe305e5dc9c7",
+      "target_raw_sha256": "b7076f10ef7e639897885288245cf44007ab284d9e01b3150023e223f82316aa",
+      "target_bytes": 89687,
+      "replayed_git_blob": "8d4518e3b54cb71484265a1b50bbfe305e5dc9c7",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/SParIterSolver.F90",
+      "before_git_blob": "10a9385386dee29c355cc5fb6709dca0d9441353",
+      "target_git_blob": "0676c34a414e08ab0a0c910265a838386f6fc774",
+      "target_raw_sha256": "8c75f83b48d4e40ba20e91aaabbd3172d36fbd57b8ea9c024bfd4933cbd56574",
+      "target_bytes": 164500,
+      "replayed_git_blob": "0676c34a414e08ab0a0c910265a838386f6fc774",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/SolveHypre.c",
+      "before_git_blob": "5628f72ca6b07ad2afa1a87e502627aeded9408c",
+      "target_git_blob": "bd1789bc39c02e44a6540184a24163de146fbb61",
+      "target_raw_sha256": "5ef6ee098e34128d0e433cedde1b744e02121e0cc63b5cecf91f53eefca7677f",
+      "target_bytes": 127524,
+      "replayed_git_blob": "bd1789bc39c02e44a6540184a24163de146fbb61",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/SolverUtils.F90",
+      "before_git_blob": "f6e7cc2b6121137b5aac89c5c840aa4c5e41dfa7",
+      "target_git_blob": "10369885f5925fecfa5688499c9fdca1ccc273fc",
+      "target_raw_sha256": "e4bf7e6847f831dc922657f49ea274ca5d1469f203dc44d2e1d8439123868119",
+      "target_bytes": 1043333,
+      "replayed_git_blob": "10369885f5925fecfa5688499c9fdca1ccc273fc",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/TimeIntegrate.F90",
+      "before_git_blob": "8935bbd127328e957c8ad92d4440d0906bb2e0fe",
+      "target_git_blob": "df857562e8220b87ccd137cd0a3edd7d34e348ac",
+      "target_raw_sha256": "3eaa36b502069661e1842d9d21dce0898a6297e443f798eab7a2b62ea3777927",
+      "target_bytes": 42984,
+      "replayed_git_blob": "df857562e8220b87ccd137cd0a3edd7d34e348ac",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/VankaCreate.F90",
+      "before_git_blob": "dd641de778140335db555bfec842e03ad1b72ed9",
+      "target_git_blob": "1eaadf163e532e4da78987ba4b3f7a3fe4c9be05",
+      "target_raw_sha256": "e5447c600c4de5921d244f3f38b8e8c95f84a3ccab691f67935b38f533c0f6c6",
+      "target_bytes": 48281,
+      "replayed_git_blob": "1eaadf163e532e4da78987ba4b3f7a3fe4c9be05",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/amgx.c",
+      "before_git_blob": "428110e0e6b3b535772e61ab54f7cd19e7287eff",
+      "target_git_blob": "c95f39739e641a9e7425dd5f6807a8177af499cb",
+      "target_raw_sha256": "9b35ceeb892e3ab131094340cf3ae8d3c2fd28305fbc53796d699daff1c4b754",
+      "target_bytes": 12148,
+      "replayed_git_blob": "c95f39739e641a9e7425dd5f6807a8177af499cb",
+      "replay_matches_target": true
+    },
+    {
+      "path": "fem/src/modules/HeatSolve.F90",
+      "before_git_blob": "1cae7fd66cd4c3d79705c1cfea8c0e3d72d7baf6",
+      "target_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "target_raw_sha256": "bde260c7b801349b6c21beacc2772cadc0672fb373811e17d8bbb244fea6193d",
+      "target_bytes": 299540,
+      "replayed_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "replay_matches_target": true
+    }
+  ],
+  "replay_all_match": true
+}

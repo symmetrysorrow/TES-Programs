@@ -1,0 +1,27 @@
+{
+  "schema": "phase24-source-patch-order-v1",
+  "base": {
+    "repository": "ElmerCSC/elmerfem",
+    "tag": "release-26.1",
+    "commit": "5a8de867068be0568f09af40fb90fee300dfbede"
+  },
+  "steps": [
+    {
+      "order": 1,
+      "patch": "01_phase24_source_from_release_26_1.patch",
+      "sha256": "3ac03ac6dcb0db4ba30fa110ec40bd41b54e38ec289c80d977927d03bb427f16",
+      "operation": "git apply --check, verify 16 base git blobs, then git apply",
+      "result": "Reproduces all 16 modified tracked source files; all after blobs match source_hash_manifest.json"
+    }
+  ],
+  "archival_only_not_applied": [
+    {
+      "path": "historical Elmer-Projects/artifacts/phase24_conformal_hybrid/elmer_native_source.patch at commit 0f740c5572011b0c1061401373341c30c043b02b",
+      "reason": "HeatSolve base blob is not official release-26.1 and source preimage 9916c3f05 cannot be recovered"
+    },
+    {
+      "path": "../bulk-matc-cache/HeatSolve_generic_matc_node_cache.patch",
+      "reason": "It describes an intermediate source state and its code is already included in patch 01"
+    }
+  ]
+}

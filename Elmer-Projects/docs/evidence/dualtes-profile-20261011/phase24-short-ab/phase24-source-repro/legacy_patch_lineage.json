@@ -1,0 +1,57 @@
+{
+  "requested_local_revision": "9916c3f05",
+  "revision_kind": "Elmer runtime version suffix reported in prior docs/log fixtures; full Git commit object not present in current repo or official upstream clone",
+  "repository_lookup": {
+    "target_branch_git_cat_file": "not found",
+    "official_remote_ls_remote_prefix": "no ref advertised",
+    "official_remote_fetch_short_sha": "failed: couldn't find remote ref 9916c3f05"
+  },
+  "historical_cumulative_patch": {
+    "path_at_commit": "Elmer-Projects/artifacts/phase24_conformal_hybrid/elmer_native_source.patch",
+    "source_commit": "0f740c5572011b0c1061401373341c30c043b02b",
+    "sha256": "30153dd02451392e272dfac6f6ddbca7adb54e3c52d38ba7d4a9b51ca471afbc",
+    "bytes": 477274,
+    "apply_to_release_26_1_check": "FAIL at fem/src/modules/HeatSolve.F90 around line 666",
+    "excluding_heat_solver_check": "PASS for the remaining hunks; after applying them, 12 of the 15 non-HeatSolve modified files still differ from current isolated source",
+    "heat_solve_expected_preimage_blob_prefix": "bc3335c28",
+    "heat_solve_expected_result_blob_prefix": "b050ca5c7",
+    "release_26_1_heat_solve_preimage_blob": "1cae7fd66cd4c3d79705c1cfea8c0e3d72d7baf6",
+    "included_in_current_reproduction_order": false
+  },
+  "phase19_hypre_patches": {
+    "docs/hypre_gpu_phase19_blocksolve.patch": {
+      "sha256": "3f82890f09168ba616091094c09a0d72f1a1eaa58d7cd5af4d0c725d023a608a",
+      "kind": "human-readable guidance, not a unified machine patch"
+    },
+    "docs/hypre_gpu_phase19_blocksolve_full.patch": {
+      "sha256": "f1c4698dbcd7dc3fa5549261ba48a158a9d8935313546a9f6668a4dd16cf39b3",
+      "apply_to_release_26_1_check": "FAIL at fem/src/SOLVER.KEYWORDS"
+    },
+    "docs/hypre_gpu_phase19_schur_feature.patch": {
+      "sha256": "055d61062dd35e1e6a7ba486e506fd9b7dfe58495af90d79bee6a6bb8232474a",
+      "apply_to_release_26_1_check": "PASS",
+      "difference_from_current_isolated_source": "adds 3 SuperLU oracle/test source files absent from the isolated source and leaves 5 modified files different; it is a historical feature handoff, not the final Phase24 state",
+      "included_in_current_reproduction_order": false
+    }
+  },
+  "tracked_source_snapshot": {
+    "git_blob": "603c847f0de44b2a88d8801655b599d26c9ddf22",
+    "sha256": "965fa34d9d051467d821e87c62806c8cea866e1478e3fc83f6bc5d20d2fe3f50",
+    "relationship": "older snapshot; unified diff to the isolated current source is +393/-21 lines"
+  },
+  "isolated_current_source": {
+    "path_at_audit": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-src\\fem\\src\\modules\\HeatSolve.F90",
+    "git_managed": false,
+    "raw_sha256": "bde260c7b801349b6c21beacc2772cadc0672fb373811e17d8bbb244fea6193d",
+    "included_in_reconstruction_patch": true
+  },
+  "matc_cache_candidate_patch": {
+    "path": "../bulk-matc-cache/HeatSolve_generic_matc_node_cache.patch",
+    "sha256": "53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045",
+    "apply_to_release_26_1_check": "FAIL at fem/src/modules/HeatSolve.F90 around line 62",
+    "apply_check_to_tracked_source_snapshot": "FAIL at fem/src/modules/HeatSolve.F90 around line 1168",
+    "reverse_apply_check_to_isolated_current_source": "FAIL at fem/src/modules/HeatSolve.F90 around line 62",
+    "included_in_reconstruction_patch": "Its code is already present in the isolated current source captured by patch 01; do not apply it a second time."
+  },
+  "resolved_lineage_scope": "Exact current tracked Elmer source content is now replayable from official release-26.1 using the new patch. Historical ancestry through missing local revision 9916c3f05 is not recovered."
+}

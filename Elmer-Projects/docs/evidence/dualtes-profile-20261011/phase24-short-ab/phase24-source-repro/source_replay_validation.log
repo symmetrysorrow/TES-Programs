@@ -1,0 +1,8 @@
+﻿SOURCE REPLAY VALIDATION
+UTC date: 2026-10-12
+Base: ElmerCSC/elmerfem release-26.1 5a8de867068be0568f09af40fb90fee300dfbede
+Procedure: replay_source_and_build.ps1 against a fresh detached Git worktree.
+Checks: base HEAD and clean status; 16 input Git blobs; patch SHA-256; git apply --check; apply; 16 output Git blobs.
+Result: SOURCE_REPLAY_PASS files=16
+No runtime simulation was run by this validation.
+Git emitted trailing-whitespace warnings for preserved source lines in the patch; application and all output blob checks passed.
