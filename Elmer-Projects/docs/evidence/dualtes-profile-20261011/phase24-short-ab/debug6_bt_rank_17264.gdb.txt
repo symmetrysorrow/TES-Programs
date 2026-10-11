@@ -1,0 +1,870 @@
+[New Thread 17264.0x8104]
+[New Thread 17264.0x7bc4]
+[New Thread 17264.0x4388]
+[New Thread 17264.0x7ec8]
+[New Thread 17264.0x2628]
+Breakpoint 1 at 0x7ffd635fde16: file C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/modules/HeatSolve.F90, line 1156.
+[Thread 17264.0x2628 exited with code 0]
+[Switching to Thread 17264.0x7f74]
+
+Thread 1 received signal SIGSEGV, Segmentation fault.
+0x00007ffe82ac3895 in ?? () from G:\Elmer-Migration\msys64\ucrt64\bin\libwinpthread-1.dll
+
+Thread 5 (Thread 17264.0x7ec8):
+#0  0x00007ffebcd45894 in ntdll!ZwWaitForWorkViaWorkerFactory () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#1  0x00007ffebcc04d0e in ntdll!TpCallbackMayRunLong () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#2  0x00007ffebbbdcdf7 in KERNEL32!BaseThreadInitThunk () from C:\WINDOWS\System32\kernel32.dll
+No symbol table info available.
+#3  0x00007ffebcc5ee4c in ntdll!RtlUserThreadStart () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#4  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+Thread 4 (Thread 17264.0x4388):
+#0  0x00007ffebcd45894 in ntdll!ZwWaitForWorkViaWorkerFactory () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#1  0x00007ffebcc04d0e in ntdll!TpCallbackMayRunLong () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#2  0x00007ffebbbdcdf7 in KERNEL32!BaseThreadInitThunk () from C:\WINDOWS\System32\kernel32.dll
+No symbol table info available.
+#3  0x00007ffebcc5ee4c in ntdll!RtlUserThreadStart () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#4  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+Thread 3 (Thread 17264.0x7bc4):
+#0  0x00007ffebcd45894 in ntdll!ZwWaitForWorkViaWorkerFactory () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#1  0x00007ffebcc04d0e in ntdll!TpCallbackMayRunLong () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#2  0x00007ffebbbdcdf7 in KERNEL32!BaseThreadInitThunk () from C:\WINDOWS\System32\kernel32.dll
+No symbol table info available.
+#3  0x00007ffebcc5ee4c in ntdll!RtlUserThreadStart () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#4  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+Thread 2 (Thread 17264.0x8104):
+#0  0x00007ffebcd45894 in ntdll!ZwWaitForWorkViaWorkerFactory () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#1  0x00007ffebcc04d0e in ntdll!TpCallbackMayRunLong () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#2  0x00007ffebbbdcdf7 in KERNEL32!BaseThreadInitThunk () from C:\WINDOWS\System32\kernel32.dll
+No symbol table info available.
+#3  0x00007ffebcc5ee4c in ntdll!RtlUserThreadStart () from C:\WINDOWS\SYSTEM32\ntdll.dll
+No symbol table info available.
+#4  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+Thread 1 (Thread 17264.0x7f74):
+#0  0x00007ffe82ac3895 in ?? () from G:\Elmer-Migration\msys64\ucrt64\bin\libwinpthread-1.dll
+No symbol table info available.
+#1  0x00007ffd55159fb1 in crsmatrix::crs_preparepositioncache (gmtr=..., capacity=164693) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/CRSMatrix.F90:99
+        newcapacity = 0
+        newindices = <not allocated>
+        newpositions = <not allocated>
+#2  0x00007ffd63621da1 in heatsolver::phase24assemblestaticelements (active=.FALSE., rhsonly=<error reading variable: Cannot access memory at address 0x0>) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/modules/HeatSolve.F90:3114
+        eq = <optimized out>
+        historyscale1 = 6.9528015880166129e-310
+        historyscale2 = 4.1428339548318325e-312
+        i = <optimized out>
+        idx = 195
+        j = <optimized out>
+        k = <optimized out>
+        load4 = (-nan(0xfffffffffffff), 6.9530855175126583e-310, 1.2881032840328718e-311, 6.9527192090977147e-310)
+        localforce = (6.9528015957787794e-310, 4.142833955385186e-312, 1.2864481286414378e-319, 4.9406564584124654e-324)
+        localmass = ((1.2881036052071618e-311, 1.2881036051834467e-311, 0, 1.5316035021078643e-322) (1.5316035021078643e-322, 1.2881034216518931e-311, 4.9406564584124654e-324, 1.2881744376201698e-311) (9.6829284155087606e-310, 4.9406564584124654e-324, 1.2882289558748813e-311, 1.2864975352060219e-319) (1.2882329826600909e-311, 1.2864975352060219e-319, 4.1428339678949282e-312, 1.2881036321554784e-311))
+        localstiff = ((4.9406564584124654e-324, 1.2882289558748813e-311, 0, 1.2881032840328718e-311) (0, 4.142833955385186e-312, 1.2882329826600909e-311, 6.9530878659476299e-310) (1.2881032840328718e-311, -nan(0xfffffffffffff), 0, 1.2882329826521858e-311) (6.5781869569824072e-313, 6.7903865326204749e-313, 4.1428339535670245e-312, 6.9527896377765317e-310))
+        onlyrhs = .FALSE.
+        order = -1
+        previousdt = 1.2882328022905574e-311
+        sourceterm = <optimized out>
+        srck = <optimized out>
+        timescale = 2.2544709485381921e-319
+        usebdf = .TRUE.
+        wsrc = <optimized out>
+        transientassembly = .TRUE.
+        solver = ( solverid = 1, values = 0x25f0ed57570, timeorder = 1, donetime = 1, order = 2, nofeigenvalues = 0, timesvisited = 0, procedure = 140726270630474, linbeforeproc = 0, linafterproc = 0, alpha = 1.5019595633573895e-321, beta = 1, dt = 1.8e-05, newtonactive = .FALSE., periodicflipactive = .FALSE., solverexecwhen = 0, solvermode = 0, multigridlevel = 1, multigridtotal = 0, multigridsweep = 0, multigridsolver = .FALSE., multigridequalsplit = .FALSE., mesh = 0x25f065012e0, meshtag = 1, meshchanged = .FALSE., activeelements = <error reading variable: value requires 658772 bytes, which is more than max-value-size>
+#3  0x00007ffd635ff189 in heatsolver (model=..., solver=..., timestep=1.8e-05, transientsimulation=.TRUE.) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/modules/HeatSolve.F90:1275
+        phase24_prism_max_q = 8
+        phase_spatial_1 = 1
+        phase_spatial_2 = 2
+        phase_temporal = 3
+        n = 6
+        elementnodes = ( numberofnodes = 0, xyz = <not allocated>, x = (187.6875, 0, -216.5625, 0, 59.0625, 0), y = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 9.0836720246177059e+223), z = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 4.8591048872552613e-308) )
+        element = 0x25f13e4d130
+        nodeindexes = ()
+        tempperm = <error reading variable tempperm (value requires 182528 bytes, which is more than max-value-size)>
+        found = .TRUE.
+        k = 1425536100
+        material = 0x0
+        phasechangeintervals = <error reading variable phasechangeintervals (value requires 8830452760552 bytes, which is more than max-value-size)>
+        i = 2
+        j = 1000307488
+        temperature = <error reading variable temperature (value requires 365056 bytes, which is more than max-value-size)>
+        prevsolution = <error reading variable prevsolution (value requires 365056 bytes, which is more than max-value-size)>
+        phasemodel = '\000\000\000\000\000\000A\006_\002\000\000\002\000\000\000\000\000\000\000\004\000\000\000\000\000\000\000\r\000\000\000\000\000\000\000D!¡º\376\177\000\000\000\000R\006_\002\000\000\000\000\000\000√\000\000\000\r\000\000\000\000\000\000\000\002\000\000\000\376\177\000\000\020Y\224\025_\002\000\000 "\227\025_\002\000\000\000\000\000\000\000\000\000\000\001\000\000\000_\002', '\000' <repeats 18 times>, '\r\000\000\000'
+        phasechangemodel = 607
+        localtemperature = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 7.1260338753269816e-67)
+        s = 2.7182766082265138e-311
+        prevtemperature = <error reading variable prevtemperature (value requires 365056 bytes, which is more than max-value-size)>
+        phasespatial = .FALSE.
+        enthalpyfraction = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 0)
+        work = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 8.9038281552082327e+252)
+        density = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.288103704960992e-311)
+        heatcapacity = (1.3980687583758918e-152, 1.1432300379693312e+243, 3.9999983498367386e+252, 2.1999303302519349e-152, 3.9972716553953388e+252, 6.0138403123980989e-154)
+        enthalpy = (1.6937577411919202e+190, 1.2805998846208599e-152, 2.4381298139080421e-152, 4.1933429523800263e+228, 2.4320698745772514e-152, 9.0836720291586219e+223)
+        emissivity = 1.2882373007543103e-311
+        spectral = .FALSE.
+        reflect = <not allocated>
+        bc_elem = 0
+        newtonlinearization = .TRUE.
+        stefanboltzmann = 1.2882289351399343e-311
+        areas = <not allocated>
+        emiss = <not allocated>
+        radiationelement = 0xc33b9f7e00
+        k1 = 13
+        k2 = 0
+        stiffmatrix = 0x25f14a4ac10
+        dt = 1.8e-05
+        heattransfercoeff = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 8.9038980681126468e+252)
+        load = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 9.1799293630362117e-72)
+        atext = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 6.0134700169881728e-154)
+        bc = 0x398
+        radiationflag = '\000\000\000\000≥)MX\375\177', '\000' <repeats 18 times>, '\200\031R\006_\002\000\000®\002R\006_\002\000\000\220\000\000\000\000\000\000\000b\003MX\375\177\000\000`%`X\375\177\000\000 \000\000\000\000\000\000\000`%`X\375\177\000\000¿\fR\006_\002\000\000\000\000\000\000√', '\000' <repeats 11 times>, '\002', '\000' <repeats 15 times>, ' \000\000\000'
+        isradiosity = .TRUE.
+        radiosity = .FALSE.
+        forcevector = <error reading variable forcevector (value requires 365056 bytes, which is more than max-value-size)>
+        visiblefraction = 3.9525251667299724e-323
+        text = 0
+        heatgapbc = .TRUE.
+        phasevelocity = ((-0.78867513459481287, 0.78867513459481287, 0) (-0.21132486540518713, 0.21132486540518713, 0) (-0.78867513459481287, 0, 0.78867513459481287) (-0.21132486540518713, 0, 0.21132486540518713) (-0.31100423396407306, -0.083333333333333343, -0.10566243270259357) (0.31100423396407306, 0.083333333333333343, 0.10566243270259357))
+        latentheat = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 9.0766075771317951e+223)
+        parent = 0x25f0e9f5540
+        normal = (1.2880514451159203e-311, 1.2881726417449062e-311, 1.2881726402014451e-311)
+        varname = 'temperature', ' ' <repeats 117 times>
+        gotit = .FALSE.
+        infbc = .TRUE.
+        heatconductivityiso = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.1929861243421174e-311)
+        stiff = ((1.2882225491794083e-311, 1.2882224816939936e-311, 1.9172019776256022e-309, 1.917159537709773e-309, 1.9171170977939438e-309, 2.2702384174506923e-309, 1.5455556348781322e-309, 1.5455131947935846e-309, 1.5454919749221858e-309, 1.5454495349198408e-309, 2.4416744574426922e-309, 2.441632017526863e-309) (2.4415895776110338e-309, 1.1682223430721143e-309, 1.1681799031562851e-309, 1.1681586832862055e-309, 2.4404861395032282e-309, 2.4404436998836457e-309, 2.4404012599678166e-309, 2.4415683576528376e-309, 7.9683063965090094e-310, 7.9678819973507175e-310, 1.1681162431960749e-309, 2.4395312413108225e-309) (2.439488801777489e-309, 2.4394463618616599e-309, 7.9672454024401146e-310, 2.4394039219458307e-309, 4.3677039375608047e-310, 4.3672795384025129e-310, 4.366855139244221e-310, 2.4876156663278313e-310, 2.4871912671695394e-310, 2.4867668680112476e-310, 2.4723372966325849e-310, 2.4719128974710322e-310) (2.4714884983127403e-310, 2.4710640991544485e-310, 2.4591809227222762e-310, 2.4587565235639843e-310, 2.4583321244056924e-310, 2.2372626023877385e-309, 2.2533897708659023e-309, 2.2553844469103929e-309, 2.2489123597477462e-309, 2.2439893295109628e-309, 2.2419097736318198e-309, 2.2366260041159971e-309) (2.2154272661589774e-309, 2.1967324832369321e-309, 2.2130294109039516e-309, 2.1481599995707243e-309, 2.097656499732826e-309, 2.0699856746148741e-309, 2.0361610616988443e-309, 1.8836320042353722e-309, 2.2363925845796035e-309, 2.2358620856291547e-309, 2.2518194939738243e-309, 2.23433424865922e-309) (2.2334430104268022e-309, 1.3542577141162071e-309, 1.2923378769216954e-309, 1.8363539378375148e-309, 1.7582432728994829e-309, 1.6993578896808341e-309, 1.6466050743049178e-309, 1.4454610932330652e-309, 1.4139706756811338e-309, 2.2359894053734556e-309, 2.2223449724406812e-309, 2.2133477102814648e-309) (2.1935707095098118e-309, 2.166430383338366e-309, 2.1443404071433603e-309, 2.1202345349555344e-309, 2.0522245698411845e-309, 1.995206542927261e-309, 1.973095346779978e-309, 1.9559496207813947e-309, 1.9085017948862513e-309, 1.8608842093255677e-309, 1.8131180840599416e-309, 2.2215598339950696e-309) (2.1770191423422144e-309, 2.209464457986029e-309, 1.3377698068155108e-309, 1.3000831615563175e-309, 1.2859294496243835e-309, 1.2023440354057665e-309, 1.1376231637675857e-309, 1.161962455504809e-309, 9.741870479197135e-310, 6.8262482615434198e-310, 7.6635878006549566e-310, 1.7374477141424155e-309) (1.7127052432084167e-309, 1.6403664066775531e-309, 1.5880592104184262e-309, 1.5326539003044703e-309, 1.4898744651447667e-309, 1.4399439041745101e-309, 1.3626608174524958e-309, 2.1916184732021109e-309, 2.1707592547517573e-309, 2.1777194009350365e-309, 2.1234811885247477e-309, 2.0976777196891695e-309) (2.0278003982820705e-309, 2.1769554824234415e-309, 2.1303352349199016e-309, 1.9453184218715539e-309, 1.9080986156818968e-309, 1.8120146462574192e-309, 2.2307905155809327e-309, 2.2217932535330342e-309, 2.1784620994696757e-309, 2.1275978603597935e-309, 1.3513081401398563e-309, 1.2859506695943434e-309) (1.2545875716501333e-309, 1.1860895476392157e-309, 1.0788863202623331e-309, 1.1857288083597713e-309, 1.0633533110785048e-309, 1.0381864409742726e-309, 1.0007119953001985e-309, 9.6465928679355144e-310, 8.6978485498920251e-310, 9.1466506595228321e-310, 6.7192996740575702e-310, 6.9578120005602926e-310) (7.0806755568980411e-310, 8.1722301920714138e-310, 7.6767441748212902e-310, 7.6432166412594645e-310, 6.9525070111739852e-310, 7.3813623606065737e-310, 1.7127264629295256e-309, 1.6401329871405518e-309, 1.5148291356636723e-309, 1.5081024089857592e-309, 1.4011962610280109e-309, 2.1757883845801169e-309))
+        force = (1.3980686942070823e-152, 1.1803324831620584e+243, 2.1632189948838789e-27, 2.3128435363715711e+161, 2.893518474708549e-80, 8.6735744644960246e+217, 1.9818757587504786e+214, 2.0899527903735556e-76, 2.2753787586516538e+161, 7.2802005544377904e+199, 9.3022644208962729e+242, 9.2861476280862623e+242)
+        transientassembly = .TRUE.
+        constantbulk = .FALSE.
+        mass = ((1.2882240363644325e-311, 1.2882224816939936e-311, 0, 0, 0, 0, 0, 0, 0, 0, 1.2882355968088533e-311, 1.2882355962278321e-311) (1.2882355962831675e-311, 0, 0, 0, 0, 0, 4.9406564584124654e-324, 3.9525251667299724e-323, 0, 0, 0, 0) (1.2882355962831675e-311, 0, 0, 0, -nan(0xfffffffffffff), 0, 0, 0, -nan(0xfffffffffffff), 0, 0, 0) (0, 0, 0, 0, 0, 0, 0, 0, 0, 1.2882355963385028e-311, 0, 0) (0, <repeats 11 times>, 1.2882355963938382e-311) (0, <repeats 12 times>) (0, 1.2882355964491735e-311, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) (0, 0, 0, 1.2882355965045089e-311, 0, 0, 0, 0, 0, 0, 0, 0) (0, 0, 0, 0, 0, 1.2882355965598442e-311, 0, 0, 0, 0, 0, 0) (0, 0, 0, 0, 0, 0, 0, 1.2882355966151796e-311, 0, 0, 0, 0) (0, <repeats 12 times>) (-nan(0xfffffffffffff), 0, <repeats 11 times>))
+        phase24vectorassembly = .TRUE.
+        phase24rhsonly = .FALSE.
+        tesc = (( body = 8, newtonprevp = 0, newtonprevt = 0, newtons = -1, newtonsdt = -1, newtonhasprev = .FALSE., stepp1 = -1, stepp2 = -1, stepdt1 = -1, stepdt2 = -1, newtonprevstepdt = -1, circuitpower = 3.1322336071521081e-10, circuitcurrent = 0.00013953414990605081, circuitresistance = 0.016084355097856065, circuitaveragetemperature = 0.16868580258741467, circuitsweeptemperature = 0.16868561787127759, previouscircuitcurrent = 0.00013953414990605081, previouscircuitpower = 3.1322336071521081e-10, circuitprevresidual = 0, circuitomega = 0.5, circuitomegacap = 0.5, lastcircuitdt = -1, lastcircuitstep = 1, circuititerinstep = 1, circuitcallsinstep = 1, circuitinitialized = .TRUE., circuitpowerinitialized = .TRUE., seriesstarted = .FALSE., iterationseriesstarted = .TRUE., savedcircuitpower = 0, savedcircuitcurrent = 0, savedcircuitresistance = 0, savedcircuitaveragetemperature = 0, savedcircuitsweeptemperature = 0, savedpreviouscircuitcurrent = 0, savedpreviouscircuitpower = -1, savedcircuitprevresidual = 0, savedcircuitomega = 0.5, savedcircuitomegacap = 0.5, savedlastcircuitdt = -1, savedlastcircuitstep = -2147483647, savedcircuititerinstep = 0, savedcircuitcallsinstep = 0, savedtrialid = -1, savedcircuitinitialized = .FALSE., savedcircuitpowerinitialized = .FALSE., savedadaptivestate = .FALSE., resvalid = .FALSE., resibias = 0, resrsh = 0, resr0 = 0, resrmin = 0, resalpha = 0, resbeta = 0, resi0 = 1, rest0 = 1, resl = 0, resprevi = 0, resp = 0, resdt = 1, exitprevt = 0 ), ( body = 17, newtonprevp = 0, newtonprevt = 0, newtons = -1, newtonsdt = -1, newtonhasprev = .FALSE., stepp1 = -1, stepp2 = -1, stepdt1 = -1, stepdt2 = -1, newtonprevstepdt = -1, circuitpower = 3.1323606787003966e-10, circuitcurrent = 0.00013954216295043379, circuitresistance = 0.016083207519798096, circuitaveragetemperature = 0.16868556943758983, circuitsweeptemperature = 0.16868541566517739, previouscircuitcurrent = 0.00013954216295043379, previouscircuitpower = 3.1323606787003966e-10, circuitprevresidual = 0, circuitomega = 0.5, circuitomegacap = 0.5, lastcircuitdt = -1, lastcircuitstep = 1, circuititerinstep = 1, circuitcallsinstep = 1, circuitinitialized = .TRUE., circuitpowerinitialized = .TRUE., seriesstarted = .FALSE., iterationseriesstarted = .TRUE., savedcircuitpower = 0, savedcircuitcurrent = 0, savedcircuitresistance = 0, savedcircuitaveragetemperature = 0, savedcircuitsweeptemperature = 0, savedpreviouscircuitcurrent = 0, savedpreviouscircuitpower = -1, savedcircuitprevresidual = 0, savedcircuitomega = 0.5, savedcircuitomegacap = 0.5, savedlastcircuitdt = -1, savedlastcircuitstep = -2147483647, savedcircuititerinstep = 0, savedcircuitcallsinstep = 0, savedtrialid = -1, savedcircuitinitialized = .FALSE., savedcircuitpowerinitialized = .FALSE., savedadaptivestate = .FALSE., resvalid = .FALSE., resibias = 0, resrsh = 0, resr0 = 0, resrmin = 0, resalpha = 0, resbeta = 0, resi0 = 1, rest0 = 1, resl = 0, resprevi = 0, resp = 0, resdt = 1, exitprevt = 0 ))
+        iter = 1
+        phase24currenta0 = 55555.555555555555
+        phase24currenta1 = -55555.555555555555
+        phase24currenta2 = 0
+        tesnumbered = .FALSE.
+        tesncirc = 2
+        phase24wallprofiling = .TRUE.
+        phase24bulk = 0
+        phase24material = 0
+        phase24local = 0
+        phase24insert = 0
+        phase24boundary = 0
+        phase24finalize = 0
+        phase24solve = 0
+        phase24udf = 1.8769999999999998
+        phase24fullrebuildcount = 0
+        phase24laggedreusecount = 0
+        phase24forcedrebuildcount = 0
+        phase24recoverycount = 0
+        phase24precdelta = <not allocated>
+        phase24prismcount = 0
+        phase24metadataelements = 164693
+        phase24lumpedprec = .FALSE.
+        phase24dynamicprismcount = 0
+        phase24dynknodal = <not allocated>
+        phase24prismelements = <error reading variable phase24prismelements (value requires 658772 bytes, which is more than max-value-size)>
+        phase24prismslot = <error reading variable phase24prismslot (value requires 658772 bytes, which is more than max-value-size)>
+        phase24elementeq = <error reading variable phase24elementeq (value requires 3952632 bytes, which is more than max-value-size)>
+        phase24prismmass = <error reading variable phase24prismmass (value requires 9521280 bytes, which is more than max-value-size)>
+        phase24prismstiff = <error reading variable phase24prismstiff (value requires 9521280 bytes, which is more than max-value-size)>
+        phase24prismrhocp = <error reading variable phase24prismrhocp (value requires 264480 bytes, which is more than max-value-size)>
+        phase24prismvolume = <error reading variable phase24prismvolume (value requires 264480 bytes, which is more than max-value-size)>
+        phase24elementpart = <error reading variable phase24elementpart (value requires 658772 bytes, which is more than max-value-size)>
+        phase24prismdynamick = <error reading variable phase24prismdynamick (value requires 132240 bytes, which is more than max-value-size)>
+        phase24prismknodeslot = <error reading variable phase24prismknodeslot (value requires 793440 bytes, which is more than max-value-size)>
+        phase24prismnq = <error reading variable phase24prismnq (value requires 132240 bytes, which is more than max-value-size)>
+        phase24prismbasis = <error reading variable phase24prismbasis (value requires 12695040 bytes, which is more than max-value-size)>
+        phase24prismgrad = <error reading variable phase24prismgrad (value requires 38085120 bytes, which is more than max-value-size)>
+        phase24prismweight = <error reading variable phase24prismweight (value requires 2115840 bytes, which is more than max-value-size)>
+        phase24elementsrc = <error reading variable phase24elementsrc (value requires 658772 bytes, which is more than max-value-size)>
+        phase24srcload = <error reading variable phase24srcload (value requires 365056 bytes, which is more than max-value-size)>
+        phase24elementnodes = <error reading variable phase24elementnodes (value requires 3952632 bytes, which is more than max-value-size)>
+        phase24dynkmatcount = 0
+        phase24dynkstart = <not allocated>
+        phase24dynkcount = <not allocated>
+        phase24dynkmats = <not allocated>
+        phase24dynknodes = <not allocated>
+        phase24srccount = 1
+        phase24srcnodestart = (1)
+        phase24srcnodecount = (26039)
+        phase24srcbf = (3)
+        phase24srcnodelist = <error reading variable phase24srcnodelist (value requires 104156 bytes, which is more than max-value-size)>
+        phase24staticcount = 0
+        phase24staticelements = <error reading variable phase24staticelements (value requires 658772 bytes, which is more than max-value-size)>
+        phase24staticstiff = <error reading variable phase24staticstiff (value requires 21080704 bytes, which is more than max-value-size)>
+        phase24spatialmass = <error reading variable phase24spatialmass (value requires 21080704 bytes, which is more than max-value-size)>
+        phase24staticrhocp = <error reading variable phase24staticrhocp (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24elementvolume = <error reading variable phase24elementvolume (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24metadataready = .TRUE.
+        phase24elementclass = <error reading variable phase24elementclass (value requires 658772 bytes, which is more than max-value-size)>
+        phase24elementbody = <error reading variable phase24elementbody (value requires 658772 bytes, which is more than max-value-size)>
+        phase24elementgrad = <error reading variable phase24elementgrad (value requires 15810528 bytes, which is more than max-value-size)>
+        phase24statick = <error reading variable phase24statick (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24dynamicelements = <error reading variable phase24dynamicelements (value requires 658772 bytes, which is more than max-value-size)>
+        phase24genericelements = <error reading variable phase24genericelements (value requires 658772 bytes, which is more than max-value-size)>
+        phase24operatorkreference = <error reading variable phase24operatorkreference (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24operatormassreference = <error reading variable phase24operatormassreference (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24operatorreactionreference = <error reading variable phase24operatorreactionreference (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24operatorkcurrent = <error reading variable phase24operatorkcurrent (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24operatormasscurrent = <error reading variable phase24operatormasscurrent (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24operatorreactioncurrent = <error reading variable phase24operatorreactioncurrent (value requires 1317544 bytes, which is more than max-value-size)>
+        phase24elementdynmat = <error reading variable phase24elementdynmat (value requires 658772 bytes, which is more than max-value-size)>
+        phase24dynamiccount = 0
+        phase24genericcount = 0
+        phase24fasttetcount = 0
+        phase24fastprismcount = 0
+        phase24prismk = <error reading variable phase24prismk (value requires 264480 bytes, which is more than max-value-size)>
+        phase24dynknodecount = 0
+        phase24genericprismcount = 0
+        phase24genericothercount = 0
+        phase24laggedcsrvalues = <not allocated>
+        phase24operatorreferencevalid = .FALSE.
+        phase24operatorsnapshotvalid = .FALSE.
+        phase24operatordt = -1
+        phase24operatororder = -1
+        phase24staticcsrvalues = <not allocated>
+        phase24staticcachedt = -1
+        phase24staticcachea0 = -1
+        phase24staticcacheorder = -1
+        phase24staticcachevaluecount = 0
+        phase24staticcachelumped = .FALSE.
+        phase24staticcachevalid = .FALSE.
+        phase24coeffrelchange = 0
+        phase24laggingactive = .FALSE.
+        phase24boundarymatrixinvariant = .FALSE.
+        phase24lhsunsafe = .FALSE.
+        phase24forcerebuild = .FALSE.
+        phase24lagthreshold = 0.00050000000000000001
+        phase24lagreusecount = 0
+        phase24lagmaxreuse = 3
+        phase24lagcandidate = .TRUE.
+        phase24lagmode = 0
+        phase24previousrelativechange = -1
+        nonlineartol = 1e-08
+        phase24usedlaggedoperator = .FALSE.
+        phase24matrixchanged = .TRUE.
+        phase24laggedreusethistimestep = 0
+        solverparams = 0x25f0ed57570
+        phase24outercaptureprefix = 'phase24_outer_capture', ' ' <repeats 107 times>
+        phase24matrixepoch = 1
+        phase24rhsepoch = 0
+        allocationsdone = .TRUE.
+        anymultiply = .FALSE.
+        at = 5.9329999999999998
+        at0 = 5.9329999999999998
+        bdfresettimes = <not associated>
+        bdfstepstart = 0
+        bf_id = 195
+        body_id = -1
+        bodyforce = 0x25f00000000
+        bubbles = .TRUE.
+        c0 = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.4960114549045962e+161)
+        c1 = 6.9530855771509765e-310
+        checklatentheatrelease = .FALSE.
+        compressibilityflag = ' Çü;√\000\000\000Õ<√º\376\177\000\000`‰P\006_\002\000\000\000\000\000\000\375\177\000\000\200\031R\006_\002\000\000®\002R\006_\002\000\000\001\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000@\375k\026_\002\000\000 \000\000\000\000\000\000\000\r\000\000\000\000\000\000\000¿\fR\006_\002\000\000\000\000A\006_\002', '\000' <repeats 26 times>
+        compressibilitymodel = 0
+        constants = 0x25f064b0ba0
+        controlpoint = (4.9406564584124654e-324, 4.9406564584124654e-324, 1.2882343237439749e-311)
+        convectionfield = '\000' <repeats 80 times>, 'DèyòOy\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\r\000\000\000\000\000\000\000 Æ\237;√', '\000' <repeats 11 times>
+        convectionflag = ' ' <repeats 128 times>
+        converged = .FALSE.
+        cumulativetime = 0
+        densitysol = 0x0
+        dist = 2.3715151000379834e-322
+        donetime = 0
+        dpressuredt = (0, 0, 0, 1.3351101830141542e-306, 1.0013265257806286e-307, 6.1144513101535442e-154)
+        dt0 = 0
+        electricconductivity = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 0)
+        equation = 0x0
+        firstsolveresidual = .TRUE.
+        firstsolvetol = 4.9406564584124654e-324
+        firsttime = .FALSE.
+        flowperm = ()
+        flowsol = 0x0
+        flowsolution = <not associated>
+        forceheater = <not associated>
+        foundcp = .FALSE.
+        foundk = .FALSE.
+        gasconstant = (0, 0, 0, 0, 1.875, 0)
+        gotmeltpoint = .FALSE.
+        gotsavedtol = .FALSE.
+        heatconductivity = (((1.2882355967258503e-311, 1.288103676542336e-311, 6.3659873728958169e-314) (1.4821969375237396e-323, 6.3659873728958169e-314, 6.3659873743780139e-314) (6.3659873728958169e-314, 1.4821969375237396e-323, 1.4821969375237396e-323)) ((1.4821969375237396e-323, 6.3659873728958169e-314, 1.4821969375237396e-323) (6.3659873728958169e-314, 1.4821969375237396e-323, 6.3659873743780139e-314) (6.3659873728958169e-314, 6.3659873743780139e-314, 6.3659873728958169e-314)) ((6.3659873743780139e-314, 0, 6.3659873728958169e-314) (6.3659873728958169e-314, 1.4821969375237396e-323, 6.3659873743780139e-314) (6.3659873743780139e-314, 0, 1.4821969375237396e-323)) ((6.3659873728958169e-314, 6.3659873743780139e-314, 0) (6.3659873743780139e-314, 0, 6.3659873728958169e-314) (6.3659873743780139e-314, 0, 1.4821969375237396e-323)) ((6.3659873743780139e-314, 6.3659873743780139e-314, 6.3659873743780139e-314) (0, 0, 6.3659873743780139e-314) (6.3659873728958169e-314, 6.3659873728958169e-314, 1.4821969375237396e-323)) ((6.3659873728958169e-314, 6.3659873743780139e-314, 1.4821969375237396e-323) (6.3659873743780139e-314, 6.3659873743780139e-314, 1.4821969375237396e-323) (6.3659873743780139e-314, 6.3659873728958169e-314, 0)))
+        heaterarea = <not allocated>
+        heatercontrollocal = .FALSE.
+        heaterdensity = <not allocated>
+        heaterscaling = <not allocated>
+        heatersource = <not allocated>
+        heatertarget = <not allocated>
+        heatexpansioncoeff = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 7.4906191048110135e+247)
+        heatfluxbc = .TRUE.
+        heattransfermultiplier = 6.4228533959362051e-323
+        hwrk = <not associated>
+        indexes = (0, 1634754890, 1702061422, 1885424223, 959344225, 12851)
+        integralheatercontrol = .FALSE.
+        integralheaters = <not associated>
+        isradiation = .FALSE.
+        istat = 0
+        jx = 4.9406564584124654e-324
+        jy = 1.4821969375237396e-323
+        jz = 1.2881032840328718e-311
+        kreset = 0
+        l = 1
+        localnodes = 45632
+        meltpoint = 0
+        mindist = 0
+        minnonlineariter = 1
+        mu = ((1.5063506742071427e-153, 2.4381298139080421e-152, 9.7745540557426288e+199) (2.8730296437945877e+161, 6.1286330870307635e-62, 3.6033337819847521e+252) (5.3946219193232773e-62, 6.6943145474481028e+151, 4.6769730904701662e-62) (6.1892509542511302e+223, 8.8213175210658958e+199, 2.9987607934756775e+180) (7.1878174578170988e+252, 7.1053889747420907e+159, 4.2451415089620831e+175) (8.9998127392100588e-96, 4.2462176034958802e+180, 4.5957735033749246e-72))
+        nb = 0
+        nd = 607
+        needflowsol = .FALSE.
+        newtoniter = 0
+        newtontol = 1
+        nodalval = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.288103704960992e-311)
+        nofactive = 164693
+        nonlineariter = 120
+        norm = 0
+        nsdofs = 0
+        perfusiondensity = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 5.9313047373837547e-143)
+        perfusionheatcapacity = (1.288103654708587e-311, 0, 1.2881036550959345e-311, 0, 1.2881036878939883e-311, 1.0869444208507424e-322)
+        perfusionrate = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.2888925890163368e-311)
+        perfusionreftemperature = (1.2881036865580348e-311, 0, 0, 0, 0, 1.2881037116644747e-311)
+        permeability = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.2926435659074398e-57)
+        phase24adaptivedebug = .FALSE.
+        phase24assemblystart = 7.8120000000000003
+        phase24assemblywall = 0
+        phase24bdf2predictor = .TRUE.
+        phase24bdf2predictoractive = .FALSE.
+        phase24bodycachesize = 19
+        phase24bodyheatcapacity = (0, <repeats 19 times>)
+        phase24bodyheatconductivity = (0, <repeats 19 times>)
+        phase24bodymaterialcached = (.FALSE., <repeats 19 times>)
+        phase24bodymaterialknown = (.FALSE., <repeats 19 times>)
+        phase24boundarymatrixinvariantnext = .TRUE.
+        phase24boundarystart = 1.2881038348152775e-311
+        phase24bulkstart = 7.8209999999999997
+        phase24caseacount = 0
+        phase24casebcount = 0
+        phase24currenthold = 1.8e-05
+        phase24currentorder = 1
+        phase24currentratio = 1
+        phase24dirichletwall = 0
+        phase24elementid = -1128193724
+        phase24eligible = .TRUE.
+        phase24epochready = .TRUE.
+        phase24fallbackrebuild = .FALSE.
+        phase24fastelement = .FALSE.
+        phase24finalconfirmationdone = .FALSE.
+        phase24finalizestart = 1.2880514451159203e-311
+        phase24initwall = 0.0060000000000002274
+        phase24iterationlimit = 120
+        phase24iterationstart = 5.9329999999999998
+        phase24krylovabsolutegrowth = 8
+        phase24krylovbaseline = 0
+        phase24kryloviterations = 0
+        phase24krylovrelativegrowth = 0.5
+        phase24laggingenabled = .FALSE.
+        phase24lagmodename = 'disabled', ' ' <repeats 120 times>
+        phase24lagresidualgrowth = 1.25
+        phase24outercapture = .FALSE.
+        phase24outercapturemaxiter = 3
+        phase24outercapturestep = 1
+        phase24postwall = 0
+        phase24prebulkwall = 0
+        phase24predictordelta = 4.9406564584124654e-324
+        phase24predictorhistoryready = .FALSE.
+        phase24predictormaxdelta = 4.1428340325384773e-312
+        phase24preinitwall = 0.0019999999999997797
+        phase24prismassemblyactive = .FALSE.
+        phase24recoverycooldown = 0
+        phase24recoverythissolve = .FALSE.
+        phase24segmentstart = 7.8209999999999997
+        phase24solvestart = 0
+        phase24staticassemblyactive = .FALSE.
+        phase24staticcachehit = .FALSE.
+        phase24staticlocal = .TRUE.
+        phase24staticmatrixreuse = .FALSE.
+        phase24structureepoch = 1
+        phase24tick = 5.9340000000000002
+        phase24usecachedmaterial = .TRUE.
+        phasechange = .FALSE.
+        powerrelax = 4.9406564584124654e-324
+        powerscaling = 1
+        powersensitivity = 0
+        powertimescale = 0
+        pressure = (1.5063506742071427e-153, 2.8653072930174482e+161, 7.6851799512410835e+170, 8.9888399762118408e-96, 7.6769243009032728e+170, 3.9415346936251788e+180)
+        pressurecoeff = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.7451559670503027e-310)
+        prevnorm = 1.5810100666919889e-322
+        prevpowerscaling = 1
+        realwork = <not associated>
+        referencepressure = 0
+        referencetemperature = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 6.0134700169881728e-154)
+        relativechange = 1.2881032840328718e-311
+        relax = 1
+        savebulk = .FALSE.
+        savedlintol = 6.9530878659476299e-310
+        savedresidualmode = .TRUE.
+        saveindexes = (0, 0, 0, 0, 0, -1)
+        saverelax = 1
+        smartheateraverage = .FALSE.
+        smartheaterbc = 0
+        smartheatercontrol = .FALSE.
+        smartheaternode = 0
+        smartheaters = <not associated>
+        smarttol = 1.9762625833649862e-322
+        smarttolreached = .FALSE.
+        specificheatratio = 4.9406564584124654e-324
+        st = 0
+        stabilize = .FALSE.
+        stabilizeflag = ' ' <repeats 128 times>
+        t = 1
+        tempsol = 0x25f1515e420
+        tesallvalid = .FALSE.
+        tescoupledtolt = 0
+        tesdknow = <not allocated>
+        tesdkrel = 1.0609335799931231e-314
+        tesdktmax = 4.9406564584124654e-324
+        tesdktmin = 1.0609335799931231e-314
+        tesdpdt = 1.5810100666919889e-322
+        tesdtcircuit = 4.9406564584124654e-324
+        tesdtk = 0
+        tesdtone = 4.1378917923921623e-312
+        tesk = 32766
+        tesmeannow = 4.1428339749106604e-312
+        tespowerres = 1.2881038360899669e-311
+        tespowertol = 0
+        testemptol = 9.8813129168249309e-324
+        timeforce = (16504.8583984375, 0, -43572.826171875, 0, 42625.5908203125, 0, -18944.70703125, 0, 3739.0869140625, 0, -263.935546875, 0)
+        timevar = 0x0
+        totat = 0
+        totst = 0
+        transientheatercontrol = .FALSE.
+        u = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 6.0134700169881728e-154)
+        usebubbles = .TRUE.
+        v = (1.6079322106853585e-95, 7.6244992349813797e-96, 3.1504910037572271e+44, 923684.58643472753, 5.7125374527206593e-110, 0)
+        viscosity = (7.5657536075277853e-307, 9.346057158299311e-307, 2.8927572903557508e-307, 1.3351101830141542e-306, 1.0013265257806286e-307, 1.3329878208576991e-311)
+        w = (1.5063506742071427e-153, 2.8653072930174482e+161, 7.6851799512410835e+170, 8.9888399762118408e-96, 7.6769243009032728e+170, 3.9415346936251788e+180)
+        xave = 1.9762625833649862e-323
+        xx = <not associated>
+        yave = 9.8813129168249309e-324
+        yy = <not associated>
+#4  0x00007ffd54f9cd91 in loadmod::execsolver (fptr=140726270630474, model=..., solver=..., dt=1.8e-05, transient=.TRUE.) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/LoadMod.F90:464
+        cfptr = {void (void)} 0x7ffd635f1a4a <heatsolver>
+        pptr = 0x7ffd635f1a4a <heatsolver>
+#5  0x00007ffd5539d49d in mainutils::singlesolver (model=..., solver=0x25f0ed577b0, dt=1.8e-05, transientsimulation=.TRUE.) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/MainUtils.F90:5419
+        postactive = .FALSE.
+        procname = '\003\0003\000;\0000', '\000' <repeats 17 times>, '\001', '\000' <repeats 15 times>, '\001\000\000\000\000\000\000\000\230\206\237;√\000\000\000\001\000\000\000\000\000\000\000\364\206\237;√\000\000\000\v ¡º\376\177', '\000' <repeats 19 times>, '\033R\006_\002\000\000\031\000\000\000\000\000\000\000rùÆU\375\177\000\000\354\206\237;√\000\000\000'
+        comm_active = 0
+        dobc = .FALSE.
+        dobulk = .FALSE.
+        .equationname = 13
+        equationname = 0x25f166bcc40
+        found = .FALSE.
+        gotit = .TRUE.
+        group_active = 195
+        group_world = 1000307600
+        i = 0
+        ierr = 11
+        m = 0x0
+        maxdim = 3
+        meactive = .TRUE.
+        memb = <not allocated>
+        mesh = <error reading variable mesh (Cannot access memory at address 0x10100000050)>
+        n = 6
+        parallel = .TRUE.
+        slavenotparallel = .FALSE.
+        solveraddr = 140726270630474
+        solverparams = 0x25f0ed57570
+        useorigmesh = .FALSE.
+        caller = 'SingleSolver'
+#6  0x00007ffd5539a710 in mainutils::solveractivate (model=..., solver=0x25f0ed577b0, dt=1.8e-05, transientsimulation=.TRUE.) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/MainUtils.F90:5810
+        .coordtransform = 1
+        coordtransform = 0x25f13e87b60
+        ct = 0
+        dtscal = 1
+        execi = 1
+        execintervals = <not associated>
+        execintervalsoffset = <error reading variable execintervalsoffset (value requires 559550039938372 bytes, which is more than max-value-size)>
+        found = .FALSE.
+        gotcoordtransform = .FALSE.
+        gotloops = .FALSE.
+        i = 0
+        ispassivebc = .FALSE.
+        iterv = 0x25f14d26900
+        j = 2
+        k = 0
+        mesh = 0x25f065012e0
+        n = 195
+        namespacefound = .FALSE.
+        params = 0x25f0ed57570
+        passivebcid = 0
+        pmesh = <error reading variable pmesh (Cannot access memory at address 0x54)>
+        rst = 4.9406564584124654e-324
+        rt0 = 5.4535291827807498e-312
+        scan = 1
+        scanningloops = 1
+        scanvar = <error reading variable scanvar (Cannot access memory at address 0x4f)>
+        soutputpe = 0
+        st = 0
+        .str = 1
+        str = 0x25f13e87c00
+        t0 = 0
+        tcond = 0
+        timederivativeactive = .TRUE.
+        timei = 0
+        timei0 = 0
+        timestep = 8
+        timevar = 0x0
+        timing = .FALSE.
+        var = <error reading variable var (Cannot access memory at address 0x66)>
+#7  0x00007ffd553af793 in solveequations::solvecoupled () at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/MainUtils.F90:3389
+        firsttime = .FALSE.
+        prevmesh = 0x25f065012e0
+        prevmeshnonodes = 45632
+#8  0x00007ffd553b133d in mainutils::solveequations (model=..., dt=1.8e-05, transientsimulation=.TRUE., coupledminiter=0, coupledmaxiter=1, steadystatereached=.FALSE., realtimestep=1, beforetime=<error reading variable: Cannot access memory at address 0x0>, attime=<error reading variable: Cannot access memory at address 0x0>, aftertime=<error reading variable: Cannot access memory at address 0x0>) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/MainUtils.F90:3076
+        i = 1
+        scanning = .FALSE.
+        steadyit = 0x25f13e87850
+        donethis = (.FALSE.)
+        mesh = 0x0
+        k = 1
+        solver = 0x25f0ed577b0
+        found = .FALSE.
+        afterconverged = (.FALSE.)
+        n = 45632
+        stat = .FALSE.
+        calculatederivative = .FALSE.
+        needsol = .FALSE.
+        istat = 104923136
+        transientsolver = .TRUE.
+        sscond = 0
+        testdivergence = .FALSE.
+        divergenceexit = .FALSE.
+        testconvergence = .FALSE.
+        coupledabort = .TRUE.
+        execslot = .TRUE.
+        iterv = 0x25f15e10080
+        k1 = <not associated>
+        k2 = <not associated>
+        k3 = (1.288103441234185e-311)
+        k4 = <not associated>
+        nsolvers = 1
+        parenv_save = ( pes = 6, mype = 0, initialized = .TRUE., activecomm = -2080374784, active = (.TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE.), isneighbour = <not associated>, numofneighbours = 0, numberofthreads = 1, externalinit = .FALSE. )
+        rk2_err = 6.9530878692452216e-310
+        rk2_errorestimate = <not allocated>
+        rkcoeff = <not allocated>
+        rkorder = 0
+        rungekutta = .FALSE.
+        stime = 0x25f13e87580
+        timevar = 0x25f1515e910
+        visited = <optimized out>
+        prevdt = <optimized out>
+#9  0x00007ffd558eacda in elmersolver::execsimulation (timeintervals=3, coupledminiter=0, coupledmaxiter=1, outputintervals=..., transient=.TRUE., scanning=.FALSE.) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/ElmerSolver.F90:4081
+        mesh = 0x7ffd54f81ec0 <lists::listentryallocate+297>
+        meshr = 0
+        .meshstr = 838518941576
+        meshstr = 0x0
+        isolver = <error reading variable isolver (Cannot access memory at address 0x91)>
+        adaptivepostrejectmaxgrowth = 1.2
+        adaptivetimeepsilon = 9.9999999999999998e-13
+        caller = 'ExecSimulation'
+        adaptiveabsolutetolerance = 1e-08
+        adaptiveacceptedatfloor = .FALSE.
+        adaptiveacceptedbyerror = .FALSE.
+        adaptiveacceptedcount = 0
+        adaptiveaccepteddt = 0
+        adaptiveappliedgrowthfactor = 0
+        adaptivebaseorder = <not allocated>
+        adaptivebdf1count = 0
+        adaptivebdf2count = 0
+        adaptivebdf2reentrypending = .FALSE.
+        adaptivebdf2reentrypendingbeforeaccept = .TRUE.
+        adaptivebdf2reentrysucceeded = .TRUE.
+        adaptivecontrollerdt = 6.9530878680643553e-310
+        adaptivecooldownbeforeaccept = 195
+        adaptivedebug = .FALSE.
+        adaptivedecrease = 1.288103424466091e-311
+        adaptivediscontinuity = .TRUE.
+        adaptivedtbeforeeventclip = 1.2880514451159203e-311
+        adaptivedtminclamped = .FALSE.
+        adaptiveeventclipped = .TRUE.
+        adaptiveeventcount = 0
+        adaptiveeventdistance = 0
+        adaptiveeventenddifference = 1.2881032840328718e-311
+        adaptiveeventendpointsnapped = .TRUE.
+        adaptiveeventforced = .TRUE.
+        adaptiveeventforcedafterrollback = .TRUE.
+        adaptiveeventforcedbeforetrial = .TRUE.
+        adaptiveeventlanding = .FALSE.
+        adaptiveforcebdf1 = .TRUE.
+        adaptiveforcedfloor = .TRUE.
+        adaptivegrowthcooldownremaining = 0
+        adaptiveincrease = 4.2439915869206077e-313
+        adaptiveinitialtimestep = -1
+        adaptiveinterpolationcount = 0
+        adaptivekeepsmallest = 607
+        adaptivelimit = 6.9530855175126583e-310
+        adaptivemaxgrowth = 1.5
+        adaptivemaxrejected = 12
+        adaptivemaxrejectedinrow = 0
+        adaptivemaxshrink = 0.5
+        adaptivemaxtimestep = 6.9530855771509765e-310
+        adaptivemintimestep = 6.9514278645654819e-310
+        adaptivenextevent = 4.9406564584124654e-324
+        adaptivepreviousdt = -1
+        adaptivepreviousdtbeforeaccept = 7.9050503334599447e-323
+        adaptivepreviousrejected = .FALSE.
+        adaptiveproposedend = 0
+        adaptiveproposednextdt = 0
+        adaptiveratiomax = 2
+        adaptiveratiomin = 0.5
+        adaptiverejectedbeforeaccept = 0
+        adaptiverejectedcount = 0
+        adaptiverejectedinrow = 0
+        adaptiverejectnextdt = 1.2881038360899669e-311
+        adaptiverelativetolerance = 0.0001
+        adaptiverollbackenddt = 7.9050503334599447e-323
+        adaptiverollbackstartdt = 9.8813129168249309e-323
+        adaptiverough = .TRUE.
+        adaptivesmart = .TRUE.
+        adaptivestepend = 8.3991159793011913e-323
+        adaptivesteporder = 32765
+        adaptivestepstart = 1.288103834811325e-311
+        adaptivetheta = 0
+        adaptivetime = .FALSE.
+        adaptivetrialid = 0
+        adaptvars = <not allocated>
+        allocstat = 195
+        cum_timestep = 1
+        cumtime = 6.9527192090977147e-310
+        ddt = -1
+        debughyprematrixepoch = 607
+        debugmatrixepoch = 105226112
+        debugpreconditionerepoch = 32758
+        debugrhsepoch = -367300536
+        debugsolvererr = 1.2882164643143444e-311
+        debugsolvermaxabsdiff = 4.9406564584124654e-324
+        debugsolvermaxabsvalue = 4.9406564584124654e-324
+        debugsolvermaxdiffindex = 0
+        debugstructureepoch = 1
+        divergencecontrol = .FALSE.
+        doit = .FALSE.
+        dt = 1.8e-05
+        dtfunc = 0
+        execthis = .FALSE.
+        exitcond = 0
+        found = .FALSE.
+        fullvars = <not allocated>
+        havedivergence = .FALSE.
+        i = 2
+        interval = 1
+        islice = 0
+        isperiodic = .FALSE.
+        itime = 0
+        j = 20
+        k = 1000319168
+        maxerr = 6.9514278645654819e-310
+        maxtime = 6.9530878680643553e-310
+        newtime = 4.3890000000000002
+        nperiodic = 0
+        nslices = 1
+        nsolvers = 1
+        ntimes = 1
+        outputdecoupling = .FALSE.
+        parallelslices = .FALSE.
+        paralleltime = .FALSE.
+        physicaleventtimes = <not associated>
+        predcorrcontrol = .FALSE.
+        prevmeshi = 0
+        prevtime = 4.3890000000000002
+        realtimestep = 1
+        requestedoutputcount = 0
+        requestedoutputindex = 1
+        requestedoutputtimes = <not associated>
+        smallestcount = 20
+        solver = 0x25f0ed577b0
+        steadystatereached = .FALSE.
+        stepcontrol = -1
+        stepcount = 4
+        timeleft = 4.1428340180722352e-312
+        timeperiod = 1.7976931348623157e+308
+        timestep = 1
+#10 0x00007ffd558da774 in elmersolver (initialize=0) at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/ElmerSolver.F90:713
+        gotit = .FALSE.
+        .outputfile = 0
+        outputfile = 0x0
+        .postfile = 0
+        postfile = 0x0
+        mesh = 0x0
+        .outputname = 61
+        outputname = 0x25f06500820
+        .postname = 0
+        postname = 0x0
+        totaltimesteps = 4
+        stime = (0.020018000000000001)
+        savedsteps = 0
+        sstep = (1)
+        timesteps = (1, 2, 1)
+        sslice = (0)
+        ssliceratio = (0)
+        ssliceweight = (1)
+        ssector = (0)
+        timestepsizes = ((1.8e-05, 9.9999999999999995e-07, 1.0000000000000001e-09))
+        gottimestepratios = .FALSE.
+        timestepratios = <not associated>
+        speriodiccycle = (0)
+        speriodictime = (0)
+        sprevsizes = ((0) (0) (0) (0) (0))
+        ssize = (1.8e-05)
+        sinterval = (1)
+        steadyit = (1)
+        sangle = (0)
+        sanglevelo = (0)
+        rt0 = 0.002
+        s = 0
+        lastsaved = .TRUE.
+        .when = 1
+        when = 0x25f13e87af0
+        sfinish = (-1)
+        .restartfile = 36
+        restartfile = 0x25f064aea00
+        found = .FALSE.
+        var = 0x25f1515e910
+        t = 203116
+        transient = .TRUE.
+        worka = <not associated>
+        initdirichlet = .TRUE.
+        n = 3
+        solver = 0x25f0ed577b0
+        nonlinit = (1)
+        sproduce = (-1)
+        sscan = (0)
+        docontrol = .FALSE.
+        ssweep = (1.5810100666919889e-322)
+        isweep = 1
+        spar = (0)
+        eq = 'heat equation', ' ' <repeats 2035 times>
+        activesolvers = (1)
+        timeintervals = 3
+        timestep = 2
+        outputintervals = (1, 1, 1)
+        scanning = .FALSE.
+        coupledmaxiter = 1
+        coupledminiter = 0
+        firstload = .FALSE.
+        dt = 0
+        extrudedmesh = 0x0
+        i = 2
+        k = 0
+        j = 8
+        control = 0x25f064c5cb0
+        controlprocedure = 2607150374212
+        .coordtransform = 1
+        coordtransform = 0x25f13e87810
+        ct0 = 0.002
+        doit = .FALSE.
+        .execcommand = 1
+        execcommand = 0x25f13e87d10
+        extmethod = 0
+        finishearly = .FALSE.
+        firsttime = .TRUE.
+        gotmodelname = .TRUE.
+        gotoptimiters = .TRUE.
+        gotparams = .FALSE.
+        iostat = 0
+        ipar = <not allocated>
+        isolver = 0x7ffe82ac416f
+        meshdir = '\000\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\003\0003\000;\0000\000\000\000\000\000\000\000\000\000 \000\000\000\000\000\000\000\360\003C\006_\002\000\000\003\0003\000;\0000\000\000\000√º\376\177\000\000\360\003C\006_\002\000\000\001\000\000\000\000\000\000\000\020\004C\006_\002\000\000\000\000A\006_\002\000\000\000\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\000\000\352π\376\177\000\000\000\364\235F\001\000\000\000\000\004C\006_\002\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\360\003C\006_\002\000\000\000\000\000\000\001\000\000\000îm\037∫\376\177\000\000\004\000\000\000\000\000\000\000∏ÈD'...
+        meshindex = 0
+        meshmode = .FALSE.
+        meshname = '\000' <repeats 64 times>, 'R\000\000\000\000\000\000\000\020\b\034∫\376\177', '\000' <repeats 18 times>, '∞ÿ\237;√\000\000\000\020\b\034∫\376\177', '\000' <repeats 18 times>, '–ÿ\237;√', '\000' <repeats 19 times>, ' ', '\000' <repeats 23 times>, '0“A\006_\002\000\000 ', '\000' <repeats 15 times>...
+        modelname = 'D:\\github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\dualtes_vector_debug_6rank.sif', ' ' <repeats 3938 times>
+        ni = 0
+        noargs = 1
+        nr = -1128082205
+        nthreads = 1
+        optimiters = 1
+        optionstring = 'D:\\github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\dualtes_vector_debug_6rank.sif', ' ' <repeats 1890 times>
+        parallelenv = 0x7ffd55a914c0 <__spariterglobals_MOD_parenv_common>
+        proccontrol = .FALSE.
+        rpar = <not allocated>
+        silent = .FALSE.
+        .str = 1
+        str = 0x25f13e87990
+        threads = '\000' <repeats 2048 times>
+        tlen = 0
+        version = .FALSE.
+#11 0x00007ff6ea1b17a7 in solver () at C:/Users/Nao/AppData/Local/Temp/phase24-debug-src/fem/src/Solver.F90:57
+        initialize = 0
+        ct = 0.001
+        .datestr = 20
+        datestr = 0x25f06459de0
+        rt = 0.001
+        silent = .FALSE.
+        tlen = 0
+        toutput = ' ' <repeats 128 times>
+From                To                  Syms Read   Shared Object Library
+0x00007ffebcbe1000  0x00007ffebce46830  Yes (*)     C:\WINDOWS\SYSTEM32\ntdll.dll
+0x00007ffebbbb1000  0x00007ffebbc7a6ac  Yes (*)     C:\WINDOWS\System32\kernel32.dll
+0x00007ffeba171000  0x00007ffeba570e7c  Yes (*)     C:\WINDOWS\System32\KernelBase.dll
+0x00007ffeb9ea1000  0x00007ffeb9febec0  Yes (*)     C:\WINDOWS\System32\ucrtbase.dll
+0x00007ffd54f11000  0x00007ffd55bf5050  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\fem\src\libelmersolver.dll
+0x00007ffd58631000  0x00007ffd589d1234  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libgfortran-5.dll
+0x00007ffebb4f1000  0x00007ffebb5aab10  Yes (*)     C:\WINDOWS\System32\advapi32.dll
+0x00007ffebc2b1000  0x00007ffebc3585f4  Yes (*)     C:\WINDOWS\System32\msvcrt.dll
+0x00007ffebcaf1000  0x00007ffebcb97618  Yes (*)     C:\WINDOWS\System32\sechost.dll
+0x00007ffd524e1000  0x00007ffd54f0c8fc  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libopenblas.dll
+0x00007ffebc191000  0x00007ffebc2a7858  Yes (*)     C:\WINDOWS\System32\rpcrt4.dll
+0x00007ffe82ae1000  0x00007ffe82b0a04c  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libgcc_s_seh-1.dll
+0x00007ffe82011000  0x00007ffe8206617c  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libgomp-1.dll
+0x00007ffd57f91000  0x00007ffd5846f270  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libHYPRE.dll
+0x00007ffe82071000  0x00007ffe820db058  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libquadmath-0.dll
+0x00007ffe820e1000  0x00007ffe8214c064  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\fhutiter\src\libfhuti.dll
+0x00007ffd58471000  0x00007ffd586296fc  Yes (*)     C:\WINDOWS\SYSTEM32\msmpi.dll
+0x00007ffd6d671000  0x00007ffd6d6e504c  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\mathlibs\src\arpack\libarpack.dll
+0x00007ffd6acb1000  0x00007ffd6acdf178  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\matc\src\libmatc.dll
+0x00007ffebbca1000  0x00007ffebbd20210  Yes (*)     C:\WINDOWS\System32\ws2_32.dll
+0x00007ffd64be1000  0x00007ffd64c4a04c  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\mathlibs\src\parpack\libparpack.dll
+0x00007ffe82ac1000  0x00007ffe82ad5058  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libwinpthread-1.dll
+0x00007ffeb8fe1000  0x00007ffeb904b1e4  Yes (*)     C:\WINDOWS\SYSTEM32\mswsock.dll
+0x00007ffeaf951000  0x00007ffeaf97a994  Yes (*)     C:\WINDOWS\SYSTEM32\ntdsapi.dll
+0x00007ffeb85d1000  0x00007ffeb861f39c  Yes (*)     C:\WINDOWS\SYSTEM32\authz.dll
+0x00007ffd57d51000  0x00007ffd57f83070  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libsuperlu_dist.dll
+0x00007ffeb9241000  0x00007ffeb924b044  Yes (*)     C:\WINDOWS\SYSTEM32\cryptbase.dll
+0x00007ffeb8d91000  0x00007ffeb8d9c090  Yes (*)     C:\WINDOWS\SYSTEM32\dsparse.dll
+0x00007ffd78991000  0x00007ffd78a2a074  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libmetis.dll
+0x00007ffe81fc1000  0x00007ffe8200f064  Yes (*)     G:\Elmer-Migration\msys64\ucrt64\bin\libparmetis.dll
+0x00007ffeb9de1000  0x00007ffeb9e8b860  Yes (*)     C:\WINDOWS\System32\bcryptprimitives.dll
+0x00007ffe797a1000  0x00007ffe797b7154  Yes (*)     C:\WINDOWS\system32\NapiNSP.dll
+0x00007ffeb8471000  0x00007ffeb85c76ac  Yes (*)     C:\WINDOWS\SYSTEM32\dnsapi.dll
+0x00007ffeb83e1000  0x00007ffeb8412128  Yes (*)     C:\WINDOWS\SYSTEM32\IPHLPAPI.DLL
+0x00007ffebab81000  0x00007ffebab89028  Yes (*)     C:\WINDOWS\System32\nsi.dll
+0x00007ffe79771000  0x00007ffe797820d8  Yes (*)     C:\WINDOWS\System32\winrnr.dll
+0x00007ffe79741000  0x00007ffe79766180  Yes (*)     C:\WINDOWS\system32\nlansp_c.dll
+0x00007ffeba0c1000  0x00007ffeba162894  Yes (*)     C:\WINDOWS\System32\msvcp_win.dll
+0x00007ffeb1051000  0x00007ffeb106522c  Yes (*)     C:\WINDOWS\system32\wshbth.dll
+0x00007ffeb0561000  0x00007ffeb05e562c  Yes (*)     C:\WINDOWS\System32\FWPUCLNT.DLL
+0x00007ffeb2131000  0x00007ffeb213a090  Yes (*)     C:\Windows\System32\rasadhlp.dll
+0x00007ffe19eb1000  0x00007ffe19ebe060  Yes         D:\github\TES-Programs\Elmer-Projects\build\udf\tes_parallel_circuit.dll
+0x00007ffe12641000  0x00007ffe12650048  Yes         D:\github\TES-Programs\Elmer-Projects\build\udf\tes_transient_heat_source_t0.dll
+0x00007ffd635f1000  0x00007ffd636580a0  Yes         C:\Users\Nao\AppData\Local\Temp\phase24-debug-build\fem\src\modules\HeatSolve.dll
+(*): Shared library is missing debugging information.
+[Inferior 1 (process 17264) detached]

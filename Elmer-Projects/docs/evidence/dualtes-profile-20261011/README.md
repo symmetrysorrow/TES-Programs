@@ -52,6 +52,10 @@ The full DualTES baseline completed successfully with solver-reported CPU and RE
 
 The manifests preserve input and runtime artifact hashes. Large mesh binaries and restart state files are deliberately omitted; their hashes and paths remain recorded in the manifests.
 
+## Follow-up: Phase24 vector SIGSEGV and rank timing
+
+The initial follow-up investigation is recorded in [`phase24-short-ab/stage1-3-results_ja.md`](phase24-short-ab/stage1-3-results_ja.md). A Debug-symbol 6-rank run located Vector Assembly SIGSEGVs at OpenMP critical-section entry points in the CSR position cache. A Vector OFF Debug run added same-clock per-rank assembly measurements and showed substantial work imbalance between bulk assembly and `DefaultDirichletBCs()`. Vector ON did not complete, so no OFF/ON numerical or speed comparison is available yet. These Debug `-O0` measurements are diagnostic and are not production performance numbers.
+
 ## Recommended next probe (still short; no full 75 ms run)
 
 1. Rebuild an isolated diagnostic HeatSolve module from the exact source used for the run, or establish the source-to-DLL mapping first.

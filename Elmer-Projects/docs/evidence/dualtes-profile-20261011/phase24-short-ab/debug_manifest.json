@@ -1,0 +1,62 @@
+{
+  "runs": [
+    {
+      "name": "dualtes_vector_debug_1rank",
+      "ranks": 1,
+      "started": "2026-10-11T15:04:33+09:00",
+      "finished": "2026-10-11T15:05:12+09:00",
+      "command": [
+        "C:\\Program Files\\Microsoft MPI\\Bin\\mpiexec.exe",
+        "-n",
+        "1",
+        "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-runtime\\bin\\ElmerSolver_mpi.exe",
+        "D:\\Github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\dualtes_vector_debug_1rank.sif"
+      ],
+      "exit_code": 4294967293,
+      "source_sif_sha256": "576da5fd5223c008811dfacf36cb06e28579c673fff8388d2e905bec132a843b",
+      "debug_sif_sha256": "83618e9f4d94d8b913494accade97e7188f537c894e9581bfc15f56f624e3530",
+      "solver_sha256": "6ff58c0052e8f80f3bbed2f3d70e0ef06d446fc15cd58e1e809ef58f06f1886d",
+      "heat_solve_debug_sha256": "43cefbe55c18aaa309834000f71ec1e97fc6ab89c5f1b10564e6d1cd3cca2717",
+      "libelmersolver_debug_sha256": "da16b2b40af616c84a19ebd1b82e3037d804a1f031dab29a16851c3e095cc514",
+      "initial_state_sha256": {
+        "dualtes_vector_debug_1rank_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "dualtes_vector_debug_1rank_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "generated_output_sha256": {
+        "dualtes_vector_debug_1rank_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "dualtes_vector_debug_1rank_2_iterations.csv": "bd3ae794055b2c76c01561f968fe67b7b5f8fa5b6499fd4afcd8d0d383cbe173",
+        "dualtes_vector_debug_1rank_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "log": "dualtes_vector_debug_1rank.solver.log"
+    },
+    {
+      "name": "dualtes_vector_debug_6rank",
+      "ranks": 6,
+      "started": "2026-10-11T15:25:22+09:00",
+      "finished": "2026-10-11T15:25:28+09:00",
+      "command": [
+        "C:\\Program Files\\Microsoft MPI\\Bin\\mpiexec.exe",
+        "-n",
+        "6",
+        "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-runtime\\bin\\ElmerSolver_mpi.exe",
+        "D:\\Github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\phase24-short-ab\\dualtes_vector_debug_6rank.sif"
+      ],
+      "exit_code": 4294967293,
+      "source_sif_sha256": "576da5fd5223c008811dfacf36cb06e28579c673fff8388d2e905bec132a843b",
+      "debug_sif_sha256": "f1e6cba3b13b42ccc592923abbf990da6308250efef927c926b0832ffb4cd605",
+      "solver_sha256": "1e1bea9e80563a98f1007316c2265ca57eac135d48efd1ac958d0c559849346e",
+      "heat_solve_debug_sha256": "c00e3e9834fb1b3daa1ca824173325f81d5ddb929ddb0670b7f3ce3f9bbf7637",
+      "libelmersolver_debug_sha256": "f167d175d21f33eccf43af4491e74c6c836d224407cb282e79c2cd7b6ebb1196",
+      "initial_state_sha256": {
+        "dualtes_vector_debug_6rank_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "dualtes_vector_debug_6rank_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "generated_output_sha256": {
+        "dualtes_vector_debug_6rank_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "dualtes_vector_debug_6rank_2_iterations.csv": "bd3ae794055b2c76c01561f968fe67b7b5f8fa5b6499fd4afcd8d0d383cbe173",
+        "dualtes_vector_debug_6rank_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "log": "dualtes_vector_debug_6rank.solver.log"
+    }
+  ]
+}
