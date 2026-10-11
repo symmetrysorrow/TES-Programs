@@ -1,0 +1,77 @@
+{
+  "created": "2026-10-11T14:30:48+09:00",
+  "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\elmer-latest\\bin\\ElmerSolver_mpi.exe",
+  "solver_sha256": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+  "heat_solver_sha256": "be54d5d6087c38ce14bb02241e292ac9e3f2baf2f846a70543fbc39ca2b4002f",
+  "mpi_ranks": 6,
+  "variants": [
+    {
+      "name": "dualtes_vector",
+      "source_sif": "D:\\Github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\dualtes-short\\case.sif",
+      "source_sif_sha256": "55ec49f26b048a2fb1d57ac10737a90f7eec7f94573ac95b8fb2ee631643948e",
+      "sif": "dualtes_vector.sif",
+      "sif_sha256": "576da5fd5223c008811dfacf36cb06e28579c673fff8388d2e905bec132a843b",
+      "vector_assembly": true,
+      "static_matrix_reuse": false,
+      "initial_tes_state_sha256": {
+        "phase24_short_ab_dualtes_vector_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "phase24_short_ab_dualtes_vector_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "generated_output_sha256": {
+        "phase24_short_ab_dualtes_vector_1_iterations.csv": "98c9e4340d0687211539b856e7ad0273075ff43e6fc8ba3b04b89da693039cc2",
+        "phase24_short_ab_dualtes_vector_2_iterations.csv": "bd3ae794055b2c76c01561f968fe67b7b5f8fa5b6499fd4afcd8d0d383cbe173",
+        "phase24_short_ab_dualtes_vector_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "phase24_short_ab_dualtes_vector_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "started": "2026-10-11T14:43:24+09:00",
+      "finished": "2026-10-11T14:43:33+09:00",
+      "exit_code": 4294967293,
+      "log": "dualtes_vector.solver.log"
+    },
+    {
+      "name": "singlepixel_vector",
+      "source_sif": "D:\\Github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\singlepixel-short\\case.sif",
+      "source_sif_sha256": "1b61ef3835fe9e79f09641653e4c003e6bf877170b3ef581ce0c21dd3d5df57d",
+      "sif": "singlepixel_vector.sif",
+      "sif_sha256": "2814d4fae476645becb9652d50ab2dce2707902e4a30f4fa33bbdf21e74dd178",
+      "vector_assembly": true,
+      "static_matrix_reuse": false,
+      "initial_tes_state_sha256": {
+        "phase24_short_ab_singlepixel_vector_1.state": "d25c11f4a28d0171cea9b8e5c10abf8a35338a36854bd5ceeb9d374c3c79ab5a"
+      },
+      "generated_output_sha256": {
+        "phase24_short_ab_singlepixel_vector_1_iterations.csv": "6b25338966df30e513fcf47dca30778ba02182ceb5f0e35d0827a2a2fccf9bb4",
+        "phase24_short_ab_singlepixel_vector_1.state": "d25c11f4a28d0171cea9b8e5c10abf8a35338a36854bd5ceeb9d374c3c79ab5a"
+      },
+      "started": "2026-10-11T14:44:13+09:00",
+      "finished": "2026-10-11T14:44:20+09:00",
+      "exit_code": 4294967293,
+      "log": "singlepixel_vector.solver.log"
+    },
+    {
+      "name": "dualtes_hypre_report",
+      "source_sif": "D:\\Github\\TES-Programs-dualtes-profile-evidence-20261011\\Elmer-Projects\\docs\\evidence\\dualtes-profile-20261011\\dualtes-short\\case.sif",
+      "source_sif_sha256": "55ec49f26b048a2fb1d57ac10737a90f7eec7f94573ac95b8fb2ee631643948e",
+      "sif": "dualtes_hypre_report.sif",
+      "sif_sha256": "7ba4de93307579cc51ff4cfb9319b540c530a5d86bbad0fd38ca5f2ea8671c7d",
+      "vector_assembly": false,
+      "static_matrix_reuse": false,
+      "initial_tes_state_sha256": {
+        "phase24_short_ab_dualtes_hypre_report_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "phase24_short_ab_dualtes_hypre_report_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "generated_output_sha256": {
+        "phase24_short_ab_dualtes_hypre_report_1_series.csv": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431",
+        "phase24_short_ab_dualtes_hypre_report_1_iterations.csv": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f",
+        "phase24_short_ab_dualtes_hypre_report_2_series.csv": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623",
+        "phase24_short_ab_dualtes_hypre_report_2_iterations.csv": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73",
+        "phase24_short_ab_dualtes_hypre_report_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+        "phase24_short_ab_dualtes_hypre_report_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+      },
+      "started": "2026-10-11T14:46:14+09:00",
+      "finished": "2026-10-11T14:48:02+09:00",
+      "exit_code": 0,
+      "log": "dualtes_hypre_report.solver.log"
+    }
+  ]
+}

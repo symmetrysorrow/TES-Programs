@@ -1,0 +1,218 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 14:44:13
+ParCommInit: 
+ParCommInit: 
+ParCommInit: 
+Initialize #PEs: 6
+ParCommInit: 
+Initialize #PEs: 6
+Initialize #PEs: 6
+MAIN: 
+Initialize #PEs: 6
+OMP_NUM_THREADS not set. Using only 1 thread per task.
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: 9916c3f05, Compiled: 2026-10-06)
+MAIN:  Running in parallel using 6 tasks.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  MUMPS library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: D:\Github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_vector.sif
+ Caught LUA error:...er-latest/share/elmersolver/lua-scripts/defaults.lua:58: r
+LoadInputFile: Scanning input file: D:\Github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_vector.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+LoadInputFile: Loading input file: D:\Github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_vector.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [phase24 bdf2 predictor] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse energy] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse start time] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse duration] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse transition zone] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse sigma] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse shape] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse radius] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center x] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center y] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center z] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse discrete norm] in section: [constants]
+CheckKeyword:  Unlisted keyword: [phase24 wall profiling] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 vector assembly] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 static matrix reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+Loading user function library: [tes_transient_heat_source_t0]...[AbsorberWindowPulseHeatSource]
+LoadInputFile: Number of BCs: 1
+LoadInputFile: Number of Body Forces: 2
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: workspace/work/meshes/mesh_hybrid_fullconf_h8
+LoadMesh: Elapsed REAL time:     2.1340 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 9033
+OptimizeBandwidth: Optimized bandwidth for heat equation: 3289
+LoadRestartFile: 
+LoadRestartFile: --------------------------------------------
+LoadRestartFile: Reading data from file: mesh_hybrid_fullconf_h8/../workspace/work/meshes/mesh_hybrid_fullconf_h8/case_toml_1b5ec032c418_steady.result.0
+LoadRestartFile: ASCII 3
+LoadRestartFile: Reading ascii restart file version 3
+LoadRestartFile: Total number of dofs in restart file: 1
+LoadRestartFile: Reading time sequence:    1.000E+00
+LoadRestartFile: Reading variables on timestep: 1
+LoadRestartFile: Time spent for restart (s):      8.2700E-01
+LoadRestartFile: All done
+LoadRestartFile: --------------------------------------------
+MAIN: Number of timesteps to be saved: 4
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 1/4:   2.002E-02
+MAIN: -------------------------------------
+MAIN: 
+ParallelInitMatrix: Creating communication structures for matrix!
+ParallelInitMatrix: Allocating communication structures for matrix!
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 dynamic-k prisms: elements=16693, node slots=10407, materials=1
+HeatSolve: Phase24 fast source: body force=2, elements=236916, nodes=43829
+HeatSolve: Phase24 fast source: body force=1, elements=550, nodes=668
+HeatSolve: Phase24 metadata: static=236916, dynamic=0, generic=0
+HeatSolve: Phase24 element accounting: total=260136, fast_tet=236916, fast_prism=23220, generic_prism=0, generic_other=0, accounted=260136, fast_percent= 100.000%
+HeatSolve: TES inner circuits: 1, numbered keywords=F
+HeatSolve: TES circuit elements: local=550, global=9278, mean T=  1.687107E-01, active elements=260136
+Phase24 UDF Circuit: Elapsed REAL time:     0.2480 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Backtrace for this error:
+#0  0x389fde14
+#1  0x389657d3
+#2  0xb9f2f2e3
+#3  0xd465107f
+#4  0xbcd4631e
+#5  0xbcca4034
+#6  0xbcd45c5d
+#7  0x986a3894
+#8  0x278ba176
+#9  0x25bcf01b
+#10  0x25baf0b4
+#11  0x276fcd90
+#12  0x27b0d24c
+#13  0x27b0a4bf
+#14  0x27b1f542
+#15  0x27b210ec
+#16  0x28059b5d
+#17  0x280495f7
+#18  0xd46517a6
+#19  0xd4651ab5
+#20  0xd4651159
+#21  0xbbbdcdf6
+#22  0xbcc5ee4b
+#23  0xffffffff
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Backtrace for this error:
+#0  0x389fde14
+#1  0x389657d3
+#2  0xb9f2f2e3
+#3  0xd465107f
+#4  0xbcd4631e
+#5  0xbcca4034
+#6  0xbcd45c5d
+#7  0x986a3894
+#8  0x278ba176
+#9  0x25bcf01b
+#10  0x25baf0b4
+#11  0x276fcd90
+#12  0x27b0d24c
+#13  0x27b0a4bf
+#14  0x27b1f542
+#15  0x27b210ec
+#16  0x28059b5d
+#17  0x280495f7
+#18  0xd46517a6
+#19  0xd4651ab5
+#20  0xd4651159
+#21  0xbbbdcdf6
+#22  0xbcc5ee4b
+#23  0xffffffff
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Backtrace for this error:
+
+Backtrace for this error:
+
+Backtrace for this error:
+#0  0x389fde14
+#0  0x389fde14
+#0  0x389fde14
+#1  0x389657d3
+#1  0x389657d3
+#1  0x389657d3
+#2  0xb9f2f2e3
+#2  0xb9f2f2e3
+
+job aborted:
+[ranks] message
+
+[0] terminated
+
+[1-2] process exited without calling finalize
+
+[3-5] terminated
+
+---- error analysis -----
+
+[1-2] on DESKTOP-H418SKL
+D:\Github\TES-Programs\Elmer-Projects\workspace\work\elmer-latest\bin\ElmerSolver_mpi.exe ended prematurely and may have crashed. exit code 3
+
+---- error analysis -----
