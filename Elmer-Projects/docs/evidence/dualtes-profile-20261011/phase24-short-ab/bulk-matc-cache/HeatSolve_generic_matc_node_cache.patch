@@ -1,0 +1,365 @@
+--- a/fem/src/modules/HeatSolve.F90
++++ b/fem/src/modules/HeatSolve.F90
+@@ -62,6 +62,8 @@
+   ! CRS glue path for the legacy HeatSolve route without changing the
+   ! physical model or enabling timestep/matrix-value reuse.
+   CALL ListAddNewLogical( Params,'Phase24 Vector Assembly',.FALSE.)
++  CALL ListAddNewLogical( Params,'Phase24 Dynamic K Node Cache',.FALSE.)
++  CALL ListAddNewLogical( Params,'Phase24 Dynamic K Node Cache Verify',.FALSE.)
+   CALL ListAddNewLogical( Params,'Phase24 Wall Profiling',.FALSE.)
+   CALL ListAddNewLogical( Params,'Phase24 Static Matrix Reuse',.FALSE.)
+   CALL ListAddNewString( Params,'Phase24 Operator Lagging','disabled',.FALSE.)
+@@ -142,6 +144,7 @@
+ 
+      INTEGER :: i,j,k,l,m,n,nd,t,tt,iter,k1,k2,body_id,eq_id,istat,LocalNodes,bf_id
+      INTEGER :: Phase24ElementId, Phase24OuterCaptureStep, Phase24OuterCaptureMaxIter
++     INTEGER :: Phase24DynKCacheSlot, Phase24DynKCacheNode
+ 
+      TYPE(Nodes_t)   :: ElementNodes
+      TYPE(Element_t),POINTER :: Element,Parent,RadiationElement
+@@ -168,6 +171,8 @@
+         TransientHeaterControl, SmartHeaterAverage, ConstantBulk, SaveBulk, &
+ 	TransientAssembly, Converged, AnyMultiply, NeedFlowSol
+      LOGICAL :: Phase24VectorAssembly
++     LOGICAL :: Phase24DynKNodeCache, Phase24DynKNodeCacheVerify
++     LOGICAL :: Phase24UseDynKNodeCache
+      LOGICAL :: Phase24OuterCapture
+      LOGICAL :: Phase24Eligible
+      LOGICAL :: Phase24WallProfiling
+@@ -257,6 +262,14 @@
+      INTEGER, ALLOCATABLE, SAVE :: Phase24PrismKNodeSlot(:,:), Phase24DynKNodes(:)
+      INTEGER, ALLOCATABLE, SAVE :: Phase24DynKMats(:), Phase24DynKStart(:), Phase24DynKCount(:), &
+           Phase24ElementDynMat(:)
++     LOGICAL, ALLOCATABLE, SAVE :: Phase24DynKCacheSafe(:)
++     INTEGER, ALLOCATABLE, SAVE :: Phase24GenericKNodeSlot(:,:), Phase24GenericKNodes(:)
++     INTEGER, ALLOCATABLE, SAVE :: Phase24GenericKMats(:), Phase24GenericKStart(:), Phase24GenericKCount(:)
++     REAL(KIND=dp), ALLOCATABLE, SAVE :: Phase24GenericKNodal(:)
++     INTEGER, SAVE :: Phase24GenericKMatCount=0, Phase24GenericKNodeCount=0
++     LOGICAL, SAVE :: Phase24GenericKCacheReady=.FALSE.
++     INTEGER, SAVE :: Phase24GenericKCacheHits=0, Phase24GenericKMatcCalls=0
++     INTEGER, SAVE :: Phase24GenericKVerifyCount=0
+      INTEGER, SAVE :: Phase24DynKNodeCount = 0, Phase24DynKMatCount = 0, &
+           Phase24DynamicPrismCount = 0
+      ! Optional preconditioning matrix for thin wedges: the stiffness with the
+@@ -461,6 +474,11 @@
+           'Phase24 Outer HeatSolve Capture Max Iterations', Found)
+      IF (.NOT. Found .OR. Phase24OuterCaptureMaxIter < 1) Phase24OuterCaptureMaxIter = 3
+      Phase24VectorAssembly = GetLogical(SolverParams, 'Phase24 Vector Assembly', Found)
++     Phase24DynKNodeCache = GetLogical(SolverParams, 'Phase24 Dynamic K Node Cache', Found)
++     IF (.NOT. Found) Phase24DynKNodeCache = .FALSE.
++     Phase24DynKNodeCacheVerify = GetLogical(SolverParams, &
++          'Phase24 Dynamic K Node Cache Verify',Found)
++     IF (.NOT. Found) Phase24DynKNodeCacheVerify = .FALSE.
+      Phase24LumpedPrec = GetLogical(SolverParams, 'Phase24 Prism Lumped Preconditioner', Found)
+      Phase24WallProfiling = GetLogical(SolverParams, 'Phase24 Wall Profiling', Found)
+      Phase24StaticMatrixReuse = GetLogical(SolverParams, 'Phase24 Static Matrix Reuse', Found)
+@@ -541,8 +559,9 @@
+        END IF
+      END IF
+      Phase24VectorAssembly = Phase24Eligible
+-     IF (.NOT. Phase24VectorAssembly) THEN
++     IF (.NOT. Phase24VectorAssembly .AND. .NOT. Phase24DynKNodeCache) THEN
+        CALL Phase24ClearMetadata()
++       CALL Phase24ClearGenericDynKCache()
+        IF (ALLOCATED(Phase24BodyMaterialKnown)) DEALLOCATE(Phase24BodyMaterialKnown)
+        IF (ALLOCATED(Phase24BodyMaterialCached)) DEALLOCATE(Phase24BodyMaterialCached)
+        IF (ALLOCATED(Phase24BodyHeatCapacity)) DEALLOCATE(Phase24BodyHeatCapacity)
+@@ -570,6 +589,8 @@
+      IF (Phase24VectorAssembly .AND. (.NOT. AllocationsDone .OR. Solver % MeshChanged)) THEN
+        CALL CRS_ClearPositionCache()
+        CALL Phase24ClearMetadata()
++     ELSE IF (Phase24DynKNodeCache .AND. (.NOT. AllocationsDone .OR. Solver % MeshChanged)) THEN
++       CALL Phase24ClearGenericDynKCache()
+      END IF
+ 
+      IF (.NOT. Phase24EpochReady .OR. .NOT. AllocationsDone .OR. Solver % MeshChanged) THEN
+@@ -615,8 +636,9 @@
+      IF ( LocalNodes <= 0 ) RETURN
+      IF(SIZE(Temperature) < LocalNodes) LocalNodes = SIZE(Temperature)
+ 
+-     IF (Phase24VectorAssembly .AND. .NOT. Phase24MetadataReady) THEN
+-       CALL Phase24BuildMetadata()
++     IF (Phase24VectorAssembly .AND. .NOT. Phase24MetadataReady) CALL Phase24BuildMetadata()
++     IF (Phase24DynKNodeCache .AND. .NOT. Phase24GenericKCacheReady) THEN
++       CALL Phase24BuildGenericDynKCache()
+      END IF
+      
+      
+@@ -1168,6 +1190,11 @@
+        IF (Phase24WallProfiling) Phase24InitWall = &
+             RealTime() - Phase24SegmentStart
+ !------------------------------------------------------------------------------
++       IF (Phase24DynKNodeCache .AND. Phase24GenericKCacheReady .AND. &
++            Phase24GenericKNodeCount > 0) THEN
++         CALL Phase24EvaluateGenericDynKCache()
++         Phase24GenericKCacheHits = 0
++       END IF
+  
+        IF ( SmartHeaterControl .OR. IntegralHeaterControl ) THEN
+           IF( SmartHeaterControl) ForceHeater = 0.0d0
+@@ -1480,6 +1507,37 @@
+            END IF
+          END IF
+ 
++         Phase24UseDynKNodeCache = .FALSE.
++         IF (Phase24DynKNodeCache .AND. Phase24GenericKCacheReady) THEN
++           IF (Phase24ElementId > 0 .AND. Phase24ElementId <= SIZE(Phase24GenericKNodeSlot,2)) THEN
++             IF (ALL(Phase24GenericKNodeSlot(1:n,Phase24ElementId) > 0)) THEN
++               Phase24UseDynKNodeCache = .TRUE.
++               Phase24GenericKCacheHits = Phase24GenericKCacheHits + 1
++               IF (Phase24DynKNodeCacheVerify .AND. Phase24GenericKVerifyCount < 2) THEN
++                 CALL ListGetRealArray(Material,'Heat Conductivity',Hwrk,n, &
++                      Element % NodeIndexes)
++                 IF (SIZE(Hwrk,1) /= 1 .OR. SIZE(Hwrk,2) /= 1) &
++                      CALL Fatal('HeatSolve','Dynamic-k verification expected scalar MATC output')
++                 DO j=1,n
++                   Phase24DynKCacheNode = Phase24GenericKNodeSlot(j,Phase24ElementId)
++                   IF (Hwrk(1,1,j) /= Phase24GenericKNodal(Phase24DynKCacheNode)) THEN
++                     WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,ES16.8,A,ES16.8)') &
++                          'PHASE24_MATC_VERIFY_MISMATCH rank=',ParEnv % MyPE, &
++                          ', element=',Phase24ElementId,', node=',Element % NodeIndexes(j), &
++                          ', old=',Hwrk(1,1,j),', cached=',Phase24GenericKNodal(Phase24DynKCacheNode)
++                   END IF
++                 END DO
++                 WRITE(*,'(A,I0,A,I0,A,I0,A,ES12.4)') &
++                      'PHASE24_MATC_VERIFY rank=',ParEnv % MyPE,', element=',Phase24ElementId, &
++                      ', material=',ListGetInteger(CurrentModel % Bodies(Element % BodyId) % Values, &
++                      'Material',GotIt),', max_abs=',MAXVAL(ABS(Hwrk(1,1,1:n)- &
++                      Phase24GenericKNodal(Phase24GenericKNodeSlot(1:n,Phase24ElementId))))
++                 Phase24GenericKVerifyCount = Phase24GenericKVerifyCount + 1
++               END IF
++             END IF
++           END IF
++         END IF
++
+          IF (Phase24UseCachedMaterial) THEN
+            ! Only constant scalar properties enter this cache.  MATC/UDF and
+            ! anisotropic properties stay on the generic per-element path.
+@@ -1490,10 +1548,20 @@
+            END DO
+          ELSE
+            HeatCapacity(1:n) = GetReal( Material, 'Heat Capacity', Found )
+-
+-           CALL ListGetRealArray( Material,'Heat Conductivity',Hwrk,n, &
+-                        Element % NodeIndexes )
+            HeatConductivity = 0.0d0
++           IF (Phase24UseDynKNodeCache) THEN
++             ! The guarded cache is material/node scoped and refreshed from the
++             ! current Temperature at every nonlinear assembly.  It is used
++             ! only for scalar MATC depending solely on Temperature.
++             DO i=1,n
++               Phase24DynKCacheNode = Phase24GenericKNodeSlot(i,Phase24ElementId)
++               HeatConductivity(1,1,i) = Phase24GenericKNodal(Phase24DynKCacheNode)
++               HeatConductivity(2,2,i) = Phase24GenericKNodal(Phase24DynKCacheNode)
++               HeatConductivity(3,3,i) = Phase24GenericKNodal(Phase24DynKCacheNode)
++             END DO
++           ELSE
++             CALL ListGetRealArray( Material,'Heat Conductivity',Hwrk,n, &
++                          Element % NodeIndexes )
+            IF ( SIZE(Hwrk,1) == 1 ) THEN
+              DO i=1,3
+                HeatConductivity( i,i,1:n ) = Hwrk( 1,1,1:n )
+@@ -1508,6 +1576,7 @@
+                  HeatConductivity( i,j,1:n ) = Hwrk(i,j,1:n)
+                END DO
+              END DO
++           END IF
+            END IF
+          END IF
+ !------------------------------------------------------------------------------
+@@ -2665,6 +2734,7 @@
+     IF (ALLOCATED(Phase24DynKMats)) DEALLOCATE(Phase24DynKMats)
+     IF (ALLOCATED(Phase24DynKStart)) DEALLOCATE(Phase24DynKStart)
+     IF (ALLOCATED(Phase24DynKCount)) DEALLOCATE(Phase24DynKCount)
++    IF (ALLOCATED(Phase24DynKCacheSafe)) DEALLOCATE(Phase24DynKCacheSafe)
+     IF (ALLOCATED(Phase24ElementDynMat)) DEALLOCATE(Phase24ElementDynMat)
+     Phase24DynKNodeCount = 0
+     Phase24DynKMatCount = 0
+@@ -3014,7 +3084,9 @@
+         ! Distinct temperature-dependent materials, in order of appearance.
+         ALLOCATE(Phase24DynKMats(CurrentModel % NumberOfMaterials), &
+              Phase24DynKStart(CurrentModel % NumberOfMaterials), &
+-             Phase24DynKCount(CurrentModel % NumberOfMaterials))
++             Phase24DynKCount(CurrentModel % NumberOfMaterials), &
++             Phase24DynKCacheSafe(CurrentModel % NumberOfMaterials))
++        Phase24DynKCacheSafe = .FALSE.
+         Phase24DynKMatCount = 0
+         DO i=1,nPrism
+           IF (.NOT. Phase24PrismDynamicK(i)) CYCLE
+@@ -3028,6 +3100,12 @@
+         ALLOCATE(NodeMark(Solver % Mesh % NumberOfNodes))
+         nDynNodes = 0
+         DO m=1,Phase24DynKMatCount
++          Phase24DynKCacheSafe(m) = Phase24IsTemperatureOnlyMatc( &
++               CurrentModel % Materials(Phase24DynKMats(m)) % Values)
++          WRITE(Message,'(A,I0,A,L1,A,I0)') 'Phase24 dynamic-k node-cache material=', &
++               Phase24DynKMats(m), ', safe_temperature_matc=',Phase24DynKCacheSafe(m), &
++               ', unique_nodes=',Phase24DynKCount(m)
++          CALL Info('HeatSolve',TRIM(Message),Level=4)
+           NodeMark = 0
+           Phase24DynKStart(m) = nDynNodes + 1
+           DO i=1,nPrism
+@@ -3514,11 +3592,163 @@
+   ! Nodal conductivity of every temperature-dependent material at its slots
+   ! (serial: ValueList/UDF calls are not thread-safe), one ListGetReal per
+   ! material with the current Temperature.
++
++
++  SUBROUTINE Phase24ClearGenericDynKCache()
++    IF (ALLOCATED(Phase24GenericKNodeSlot)) DEALLOCATE(Phase24GenericKNodeSlot)
++    IF (ALLOCATED(Phase24GenericKNodes)) DEALLOCATE(Phase24GenericKNodes)
++    IF (ALLOCATED(Phase24GenericKNodal)) DEALLOCATE(Phase24GenericKNodal)
++    IF (ALLOCATED(Phase24GenericKMats)) DEALLOCATE(Phase24GenericKMats)
++    IF (ALLOCATED(Phase24GenericKStart)) DEALLOCATE(Phase24GenericKStart)
++    IF (ALLOCATED(Phase24GenericKCount)) DEALLOCATE(Phase24GenericKCount)
++    Phase24GenericKMatCount = 0
++    Phase24GenericKNodeCount = 0
++    Phase24GenericKCacheReady = .FALSE.
++  END SUBROUTINE Phase24ClearGenericDynKCache
++
++  SUBROUTINE Phase24BuildGenericDynKCache()
++    INTEGER :: e,m,k,j,matId,nBulk,nNodes,node,nDynNodes,slot,nK
++    INTEGER, ALLOCATABLE :: NodeMark(:)
++    LOGICAL :: found,gotMat
++    REAL(KIND=dp) :: cacheBuildStart
++    TYPE(Element_t), POINTER :: el
++    TYPE(ValueList_t), POINTER :: mat
++
++    CALL Phase24ClearGenericDynKCache()
++    cacheBuildStart = RealTime()
++    nBulk = Solver % Mesh % NumberOfBulkElements
++    nNodes = Solver % Mesh % NumberOfNodes
++    ALLOCATE(Phase24GenericKNodeSlot(6,nBulk))
++    Phase24GenericKNodeSlot = 0
++    ALLOCATE(Phase24GenericKMats(MAX(1,CurrentModel % NumberOfMaterials)), &
++         Phase24GenericKStart(MAX(1,CurrentModel % NumberOfMaterials)), &
++         Phase24GenericKCount(MAX(1,CurrentModel % NumberOfMaterials)))
++    Phase24GenericKMatCount = 0
++    DO e=1,nBulk
++      el => Solver % Mesh % Elements(e)
++      IF (.NOT. ASSOCIATED(el % TYPE)) CYCLE
++      IF (el % TYPE % ElementCode /= 706) CYCLE
++      IF (SIZE(el % NodeIndexes) < 6) CYCLE
++      IF (el % BodyId <= 0 .OR. el % BodyId > CurrentModel % NumberOfBodies) CYCLE
++      matId = ListGetInteger(CurrentModel % Bodies(el % BodyId) % Values,'Material',gotMat)
++      IF (.NOT. gotMat .OR. matId <= 0 .OR. matId > CurrentModel % NumberOfMaterials) CYCLE
++      mat => CurrentModel % Materials(matId) % Values
++      IF (.NOT. Phase24IsTemperatureOnlyMatc(mat)) CYCLE
++      IF (.NOT. ANY(Phase24GenericKMats(1:Phase24GenericKMatCount) == matId)) THEN
++        Phase24GenericKMatCount = Phase24GenericKMatCount + 1
++        Phase24GenericKMats(Phase24GenericKMatCount) = matId
++      END IF
++    END DO
++    IF (Phase24GenericKMatCount == 0) THEN
++      Phase24GenericKCacheReady = .TRUE.
++      CALL Info('HeatSolve','Phase24 dynamic-k generic cache: no safe temperature-only MATC prisms',Level=4)
++      IF (Phase24DynKNodeCacheVerify) WRITE(*,'(A,I0,A,ES12.4)') &
++           'PHASE24_MATC_CACHE_BUILD rank=',ParEnv % MyPE,', wall_seconds=',RealTime()-cacheBuildStart
++      RETURN
++    END IF
++    ALLOCATE(NodeMark(nNodes))
++    nDynNodes = 0
++    DO m=1,Phase24GenericKMatCount
++      NodeMark = 0
++      Phase24GenericKStart(m) = nDynNodes + 1
++      DO e=1,nBulk
++        el => Solver % Mesh % Elements(e)
++        IF (.NOT. ASSOCIATED(el % TYPE)) CYCLE
++        IF (el % TYPE % ElementCode /= 706 .OR. SIZE(el % NodeIndexes) < 6) CYCLE
++        IF (el % BodyId <= 0 .OR. el % BodyId > CurrentModel % NumberOfBodies) CYCLE
++        matId = ListGetInteger(CurrentModel % Bodies(el % BodyId) % Values,'Material',gotMat)
++        IF (.NOT. gotMat .OR. matId /= Phase24GenericKMats(m)) CYCLE
++        DO j=1,6
++          node = el % NodeIndexes(j)
++          IF (node <= 0 .OR. node > nNodes) CYCLE
++          IF (NodeMark(node) == 0) THEN
++            nDynNodes = nDynNodes + 1
++            NodeMark(node) = nDynNodes
++          END IF
++          Phase24GenericKNodeSlot(j,e) = NodeMark(node)
++        END DO
++      END DO
++      Phase24GenericKCount(m) = nDynNodes - Phase24GenericKStart(m) + 1
++    END DO
++    ALLOCATE(Phase24GenericKNodes(nDynNodes),Phase24GenericKNodal(nDynNodes))
++    DO e=1,nBulk
++      el => Solver % Mesh % Elements(e)
++      IF (.NOT. ASSOCIATED(el % TYPE)) CYCLE
++      IF (el % TYPE % ElementCode /= 706 .OR. SIZE(el % NodeIndexes) < 6) CYCLE
++      DO j=1,6
++        slot = Phase24GenericKNodeSlot(j,e)
++        IF (slot > 0) Phase24GenericKNodes(slot) = el % NodeIndexes(j)
++      END DO
++    END DO
++    Phase24GenericKNodal = 0.0_dp
++    Phase24GenericKNodeCount = nDynNodes
++    Phase24GenericKCacheReady = .TRUE.
++    DEALLOCATE(NodeMark)
++    DO m=1,Phase24GenericKMatCount
++      WRITE(Message,'(A,I0,A,I0)') 'Phase24 generic dynamic-k cache material=', &
++           Phase24GenericKMats(m),', unique_nodes=',Phase24GenericKCount(m)
++      CALL Info('HeatSolve',TRIM(Message),Level=4)
++    END DO
++    IF (Phase24DynKNodeCacheVerify) WRITE(*,'(A,I0,A,I0,A,I0,A,ES12.4)') &
++         'PHASE24_MATC_CACHE_BUILD rank=',ParEnv % MyPE,', materials=',Phase24GenericKMatCount, &
++         ', unique_nodes=',Phase24GenericKNodeCount,', wall_seconds=',RealTime()-cacheBuildStart
++  END SUBROUTINE Phase24BuildGenericDynKCache
++
++  SUBROUTINE Phase24EvaluateGenericDynKCache()
++    INTEGER :: m,a,c
++    LOGICAL :: gotK
++    REAL(KIND=dp) :: cacheEvalStart
++    cacheEvalStart = RealTime()
++    DO m=1,Phase24GenericKMatCount
++      a=Phase24GenericKStart(m); c=Phase24GenericKCount(m)
++      IF (c <= 0) CYCLE
++      Phase24GenericKMatcCalls = Phase24GenericKMatcCalls + 1
++      Phase24GenericKNodal(a:a+c-1) = ListGetReal( &
++           CurrentModel % Materials(Phase24GenericKMats(m)) % Values, &
++           'Heat Conductivity',c,Phase24GenericKNodes(a:a+c-1),gotK)
++      IF (.NOT. gotK) CALL Fatal('HeatSolve','Phase24 generic dynamic-k cache evaluation failed')
++    END DO
++    IF (Phase24DynKNodeCacheVerify) WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,ES12.4)') &
++         'PHASE24_MATC_CACHE_EVAL rank=',ParEnv % MyPE,', materials=',Phase24GenericKMatCount, &
++         ', unique_nodes=',Phase24GenericKNodeCount,', listgetreal_calls=',Phase24GenericKMatCount, &
++         ', previous_assembly_hits=',Phase24GenericKCacheHits,', wall_seconds=',RealTime()-cacheEvalStart
++  END SUBROUTINE Phase24EvaluateGenericDynKCache
++
++  LOGICAL FUNCTION Phase24IsTemperatureOnlyMatc(MaterialList)
++    TYPE(ValueList_t), POINTER :: MaterialList
++    TYPE(ValueListEntry_t), POINTER :: entry
++    CHARACTER(LEN=MAX_STRING_LEN) :: dependency
++    INTEGER :: nConductivity,nLower
++
++    Phase24IsTemperatureOnlyMatc = .FALSE.
++    entry => ListFind(MaterialList,'Heat Conductivity',Found)
++    IF (.NOT. ASSOCIATED(entry)) RETURN
++    IF (entry % TYPE /= LIST_TYPE_VARIABLE_SCALAR_STR) RETURN
++    IF (entry % PROCEDURE /= 0 .OR. entry % LuaFun) RETURN
++    IF (.NOT. ALLOCATED(entry % DependName)) RETURN
++    dependency = ADJUSTL(entry % DependName)
++    nLower = StringToLowerCase(dependency,entry % DependName)
++    IF (TRIM(dependency) /= 'temperature') RETURN
++    ! Additive/anisotropic conductivity entries change the property expression
++    ! and therefore invalidate the scalar nodal cache assumption.
++    nConductivity = 0
++    entry => MaterialList % Head
++    DO WHILE (ASSOCIATED(entry))
++      IF (INDEX(TRIM(entry % Name),'heat conductivity') == 1) nConductivity = nConductivity + 1
++      entry => entry % Next
++    END DO
++    IF (nConductivity /= 1) RETURN
++    Phase24IsTemperatureOnlyMatc = .TRUE.
++  END FUNCTION Phase24IsTemperatureOnlyMatc
++
+   SUBROUTINE Phase24EvaluateDynK(kNodal)
+     REAL(KIND=dp), INTENT(OUT) :: kNodal(:)
+     INTEGER :: m, a, c
+     LOGICAL :: gotK
+     DO m = 1, Phase24DynKMatCount
++      IF (Phase24DynKNodeCache .AND. .NOT. Phase24VectorAssembly) THEN
++        IF (.NOT. Phase24DynKCacheSafe(m)) CYCLE
++      END IF
+       a = Phase24DynKStart(m); c = Phase24DynKCount(m)
+       IF (c <= 0) CYCLE
+       kNodal(a:a+c-1) = ListGetReal(CurrentModel % Materials(Phase24DynKMats(m)) % Values, &

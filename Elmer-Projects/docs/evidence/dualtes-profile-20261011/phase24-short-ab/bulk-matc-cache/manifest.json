@@ -1,0 +1,158 @@
+{
+  "repository": "symmetrysorrow/TES-Programs",
+  "branch": "codex/dualtes-profile-evidence-20261011",
+  "base_commit": "260eea155cda8a101ef6dba2fafc6c8e7f43a05c",
+  "created_at_local": "2026-10-11 Asia/Tokyo",
+  "experiment": {
+    "steps": 4,
+    "mpi_ranks": 6,
+    "vector_assembly": false,
+    "cache_default": false,
+    "build": "isolated Debug -O0, -g3, -fbacktrace, -fno-omit-frame-pointer",
+    "release_comparison": false,
+    "full_75ms_run": false,
+    "same_restart_state_files": [
+      "phase24_short_ab_dualtes_vector_1.state",
+      "phase24_short_ab_dualtes_vector_2.state"
+    ],
+    "cache_off_wall_s": 88,
+    "cache_on_wall_s": 39,
+    "cache_off_on_order": "OFF then ON, one sample each",
+    "final_verify_run": {
+      "returncode": 0,
+      "started": "2026-10-11T20:21:05+09:00",
+      "elapsed_wall_seconds": 36.99699569999939,
+      "finished": "2026-10-11T20:21:42+09:00"
+    },
+    "numeric_summary": "numeric_comparison.json",
+    "matrix_rhs_summary": "matrix_rhs_hashes.json",
+    "restart_state_hashes": {
+      "phase24_short_ab_dualtes_vector_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+      "phase24_short_ab_dualtes_vector_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+    },
+    "comparison_limitations": [
+      "Release build and repeated timing samples not collected",
+      "Matrix/RHS binary capture covers first transient step first nonlinear assembly only",
+      "HYPRE iteration and residual fields unavailable in solver log (-1)"
+    ]
+  },
+  "production_files_modified": false,
+  "files": {
+    "HeatSolve_generic_matc_node_cache.patch": {
+      "sha256": "53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045",
+      "bytes": 19023
+    },
+    "dualtes_cache_off_6rank.sif": {
+      "sha256": "bd3aee3b70bf2c75afd048952b774c82c42a9d0c84290d5027eaa148d6e371ce",
+      "bytes": 8619
+    },
+    "dualtes_cache_on_6rank.sif": {
+      "sha256": "751017e2cc009f1c9ffe302a5655e78fe8e9d86d5c936b9aa9fcdf4054b5ffec",
+      "bytes": 8687
+    },
+    "dualtes_field_off_6rank.sif": {
+      "sha256": "0b54020afb7562ae183d964a92bab544244c39d86af41470873354d2cd65b64b",
+      "bytes": 8662
+    },
+    "dualtes_field_on_6rank.sif": {
+      "sha256": "c40e8ebafb9e277a00f8ecbd91500c42b925533dd6c83b91d85cde46626e8757",
+      "bytes": 8730
+    },
+    "dualtes_cache_verify_final_6rank.sif": {
+      "sha256": "e212c8556a32a398303b9983fa8d63aef89d20eec07ca7092b453d794fa4f064",
+      "bytes": 8684
+    },
+    "run_matc_cache_ab.py": {
+      "sha256": "b21e629c039fcdb86de71700b94e38d5bc4cc194ddea5e3167bfff69a072d4f3",
+      "bytes": 5477
+    },
+    "build_off_control.log": {
+      "sha256": "5212bf81e50f75df083be586a63fa872e366aeb95c32a38da6646c362ffd1637",
+      "bytes": 6296
+    },
+    "build_trial_debug.log": {
+      "sha256": "5212bf81e50f75df083be586a63fa872e366aeb95c32a38da6646c362ffd1637",
+      "bytes": 6296
+    },
+    "dualtes_cache_off_6rank.solver.log": {
+      "sha256": "976c00ce60fc6e96867cc66fef0f7196a0452282cab58e9c72f3a9b351bc3a1f",
+      "bytes": 140412
+    },
+    "dualtes_cache_on_6rank.solver.log": {
+      "sha256": "6813753e4882b436fdb965d658314de82da15135f5668f45e9d6bc74885321a8",
+      "bytes": 140476
+    },
+    "dualtes_field_off_6rank.solver.log": {
+      "sha256": "915e726cdbffa438619243edbb46be6a72eb63b5126f59306a10b5fd4496c118",
+      "bytes": 139661
+    },
+    "dualtes_field_on_6rank.solver.log": {
+      "sha256": "8366031a1be416b6c1af8a56105d725497aa1ddade734d91ac76b03b89d636b9",
+      "bytes": 141894
+    },
+    "dualtes_cache_verify_final_6rank.solver.log": {
+      "sha256": "9aef72a150f05197a56fdc99a9f0a8b7b35283ec8b0fea854c61457b9c484a0d",
+      "bytes": 143441
+    },
+    "matrix_rhs_hashes.json": {
+      "sha256": "b0aee568100a58868f39daeea397b9ebc12ddb6470d808811f626f7382858dd4",
+      "bytes": 10735
+    },
+    "numeric_comparison.json": {
+      "sha256": "0df6ba33140b24708d7a28c9f16e089464ac357f342cf385e0f829d1477308c3",
+      "bytes": 10163
+    },
+    "report_ja.md": {
+      "sha256": "0abe56ada5eab27c1187320e7ab87301740ec2b3acd3f7c42d68b96bc4da0f41",
+      "bytes": 3268
+    },
+    "build_failure_diagnosis_ja.md": {
+      "sha256": "52b5d153d42b9fbbc16e11be34f71c294cdc4ba75ea2cbe6f5b6010faecd5fe0",
+      "bytes": 1415
+    },
+    "build_failure_diagnosis.log": {
+      "sha256": "2ea559463016a19f1f57c5d6337835f216c1dfd50114274d413591aa4553f75b",
+      "bytes": 382
+    },
+    "dualtes_cache_verify_6rank.solver.log": {
+      "sha256": "56c30204cd2c4330c07d92b961497c779ddc5f34a5a0a4d39d0b746e5fa8abb9",
+      "bytes": 143310
+    },
+    "dualtes_field_off_1_series.csv": {
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431",
+      "bytes": 449
+    },
+    "dualtes_field_off_1_iterations.csv": {
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f",
+      "bytes": 1688
+    },
+    "dualtes_field_off_2_series.csv": {
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623",
+      "bytes": 449
+    },
+    "dualtes_field_off_2_iterations.csv": {
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73",
+      "bytes": 1688
+    },
+    "dualtes_field_on_1_series.csv": {
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431",
+      "bytes": 449
+    },
+    "dualtes_field_on_1_iterations.csv": {
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f",
+      "bytes": 1688
+    },
+    "dualtes_field_on_2_series.csv": {
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623",
+      "bytes": 449
+    },
+    "dualtes_field_on_2_iterations.csv": {
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73",
+      "bytes": 1688
+    },
+    ".gitattributes": {
+      "sha256": "6f0930f6784f74922cf8839841ba4c662b6a59e4e29260ae6ad67113f69f0a59",
+      "bytes": 148
+    }
+  }
+}
