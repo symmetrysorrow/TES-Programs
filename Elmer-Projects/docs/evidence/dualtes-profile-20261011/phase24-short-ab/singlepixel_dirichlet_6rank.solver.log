@@ -1,0 +1,1198 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/11 17:19:34
+ParCommInit: 
+ParCommInit: 
+Initialize #PEs: 6
+ParCommInit: Initialize #PEs: 6
+ParCommInit: 
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: unknown, Compiled: 2026-10-11)
+MAIN:  Running in parallel using 6 tasks.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+Initialize #PEs: 6
+Initialize #PEs: 6
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: D:\github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_dirichlet_6rank.sif
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+LoadInputFile: Scanning input file: D:\github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_dirichlet_6rank.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+LoadInputFile: 
+ Caught LUA error:[string "loadfile(os.getenv("ELMER_HOME") .. "/share..."]:1: attempt to call a nil value
+ Caught LUA error:[string "loadstring(readsif("D:\github\TES-Programs-..."]:1: attempt to call global 'readsif' (a nil value)
+Loading input file: D:\github\TES-Programs-dualtes-profile-evidence-20261011\Elmer-Projects\docs\evidence\dualtes-profile-20261011\phase24-short-ab\singlepixel_dirichlet_6rank.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [phase24 bdf2 predictor] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse energy] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse start time] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse duration] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse transition zone] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse sigma] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse shape] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse radius] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center x] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center y] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center z] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse discrete norm] in section: [constants]
+CheckKeyword:  Unlisted keyword: [phase24 wall profiling] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 vector assembly] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 static matrix reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+Loading user function library: [tes_transient_heat_source_t0]...[AbsorberWindowPulseHeatSource]
+LoadInputFile: Number of BCs: 1
+LoadInputFile: Number of Body Forces: 2
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: workspace/work/meshes/mesh_hybrid_fullconf_h8
+LoadMesh: Elapsed REAL time:     2.0760 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 9033
+OptimizeBandwidth: Optimized bandwidth for heat equation: 3289
+LoadRestartFile: 
+LoadRestartFile: --------------------------------------------
+LoadRestartFile: Reading data from file: mesh_hybrid_fullconf_h8/../workspace/work/meshes/mesh_hybrid_fullconf_h8/case_toml_1b5ec032c418_steady.result.0
+LoadRestartFile: ASCII 3
+LoadRestartFile: Reading ascii restart file version 3
+LoadRestartFile: Total number of dofs in restart file: 1
+LoadRestartFile: Reading time sequence:    1.000E+00
+LoadRestartFile: Reading variables on timestep: 1
+LoadRestartFile: Time spent for restart (s):      6.8900E-01
+LoadRestartFile: All done
+LoadRestartFile: --------------------------------------------
+MAIN: Number of timesteps to be saved: 4
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 1/4:   2.002E-02
+MAIN: -------------------------------------
+MAIN: 
+ParallelInitMatrix: Creating communication structures for matrix!
+ParallelInitMatrix: Allocating communication structures for matrix!
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: TES inner circuits: 1, numbered keywords=F
+HeatSolve: TES circuit elements: local=550, global=9278, mean T=  1.687107E-01, active elements=260136
+Phase24 UDF Circuit: Elapsed REAL time:     0.0260 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ............Elapsed REAL time:    12.9900 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  1.7043E+01, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  1.7033E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  1.7041E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  1.7042E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  1.7034E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  1.7035E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=4, call=1, total=  3.0380E+00, local_count=  0.0000E+00, count_reduce=  3.0260E+00, communicate=  0.0000E+00, scale=  1.1000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=0, call=1, total=  1.2000E-02, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  1.1000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=5, call=1, total=  1.9780E+00, local_count=  0.0000E+00, count_reduce=  1.9660E+00, communicate=  1.0000E-03, scale=  1.0000E-02, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+Phase24 enforce: rank=3, call=1, total=  3.0870E+00, local_count=  0.0000E+00, count_reduce=  3.0750E+00, communicate=  0.0000E+00, scale=  1.1000E-02, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.9482E+04
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.9680E+00, boundary=  1.0000E-03, finalize=  1.0000E-03, dirichlet=  3.0390E+00, post=  0.0000E+00, assembly=  1.3015E+01
+Phase24 rank wall: rank=0, iter=1, preinit=  2.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  1.2990E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.6000E-02, post=  0.0000E+00, assembly=  1.3015E+01
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=5, iter=1, preinit=  1.0000E-03, initialize=  7.0000E-03, prebulk=  0.0000E+00, bulk=  1.1027E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.9790E+00, post=  0.0000E+00, assembly=  1.3015E+01
+Phase24 rank wall: rank=3, iter=1, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  1.0000E-03, bulk=  9.9190E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  3.0880E+00, post=  0.0000E+00, assembly=  1.3016E+01
+Phase24 enforce: rank=2, call=1, total=  4.3660E+00, local_count=  0.0000E+00, count_reduce=  4.3520E+00, communicate=  1.0000E-03, scale=  1.0000E-02, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  2.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  4.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.5660E+00, boundary=  6.2000E-02, finalize=  0.0000E+00, dirichlet=  4.3800E+00, post=  0.0000E+00, assembly=  1.3018E+01
+Phase24 enforce: rank=1, call=1, total=  5.1850E+00, local_count=  0.0000E+00, count_reduce=  5.1710E+00, communicate=  0.0000E+00, scale=  1.1000E-02, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  5.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  7.7390E+00, boundary=  6.9000E-02, finalize=  0.0000E+00, dirichlet=  5.1990E+00, post=  0.0000E+00, assembly=  1.3018E+01
+N
+N
+N
+N
+N
+N
+A
+A
+A
+A
+A
+A
+T
+T
+T
+T
+T
+T
+I
+I
+I
+I
+I
+I
+V
+V
+V
+V
+V
+V
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+X
+X
+X
+X
+X
+X
+V
+V
+V
+V
+V
+V
+E
+E
+E
+E
+E
+E
+C
+C
+C
+C
+C
+C
+_
+_
+_
+_
+_
+_
+C
+C
+C
+C
+C
+C
+A
+A
+A
+A
+A
+A
+P
+P
+P
+P
+P
+P
+T
+T
+T
+T
+T
+T
+U
+U
+U
+U
+U
+U
+R
+R
+R
+R
+R
+R
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+C
+C
+C
+C
+C
+C
+A
+A
+A
+A
+A
+A
+N
+N
+N
+N
+N
+N
+D
+D
+D
+D
+D
+D
+I
+I
+I
+I
+I
+I
+D
+D
+D
+D
+D
+D
+A
+A
+A
+A
+A
+A
+T
+T
+T
+T
+T
+T
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+S
+S
+S
+S
+S
+S
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+N
+N
+N
+N
+N
+N
+_
+_
+_
+_
+_
+_
+B
+B
+B
+B
+B
+B
+U
+U
+U
+U
+U
+U
+T
+T
+T
+T
+T
+T
+_
+_
+_
+_
+_
+_
+S
+S
+S
+S
+S
+S
+E
+E
+E
+E
+E
+E
+L
+L
+L
+L
+L
+L
+E
+E
+E
+E
+E
+E
+C
+C
+C
+C
+C
+C
+T
+T
+T
+T
+T
+T
+O
+O
+O
+O
+O
+O
+R
+R
+R
+R
+R
+R
+_
+_
+_
+_
+_
+_
+M
+M
+M
+M
+M
+I
+I
+I
+I
+I
+S
+S
+M
+S
+S
+S
+M
+M
+I
+M
+M
+M
+A
+A
+S
+A
+A
+A
+T
+T
+M
+T
+T
+T
+C
+C
+A
+C
+C
+C
+H
+H
+T
+H
+H
+H
+ 
+ 
+C
+ 
+ 
+ 
+g
+g
+H
+g
+g
+g
+l
+l
+ 
+l
+l
+l
+o
+o
+g
+o
+o
+o
+b
+b
+l
+b
+b
+b
+a
+a
+o
+a
+a
+a
+l
+l
+b
+l
+l
+l
+_
+_
+a
+_
+_
+_
+s
+s
+l
+s
+s
+s
+i
+i
+_
+i
+i
+i
+z
+z
+s
+z
+z
+z
+e
+e
+i
+e
+e
+e
+=
+=
+z
+=
+=
+=
+5
+5
+e
+5
+5
+5
+5
+5
+=
+5
+5
+5
+8
+8
+5
+8
+7
+8
+7
+8
+5
+1
+4
+7
+4
+0
+7
+2
+1
+9
+ 
+ 
+3
+ 
+ 
+ 
+l
+l
+7
+l
+l
+l
+o
+o
+ 
+o
+o
+o
+c
+c
+l
+c
+c
+c
+a
+a
+o
+a
+a
+a
+l
+l
+c
+l
+l
+l
+_
+_
+a
+_
+_
+_
+s
+s
+l
+s
+s
+s
+i
+i
+_
+i
+i
+i
+z
+z
+s
+z
+z
+z
+e
+e
+i
+e
+e
+e
+=
+=
+z
+=
+=
+=
+5
+5
+e
+5
+5
+5
+9
+9
+=
+7
+6
+9
+3
+3
+5
+8
+9
+4
+7
+9
+7
+9
+5
+8
+2
+4
+0
+0
+1
+2
+ 
+ 
+2
+ 
+ 
+ 
+m
+m
+1
+m
+m
+m
+a
+a
+ 
+a
+a
+a
+t
+t
+m
+t
+t
+t
+r
+r
+a
+r
+r
+r
+i
+i
+t
+i
+i
+i
+x
+x
+r
+x
+x
+x
+_
+_
+i
+_
+_
+_
+e
+e
+x
+e
+e
+e
+p
+p
+_
+p
+p
+p
+o
+o
+e
+o
+o
+o
+c
+c
+p
+c
+c
+c
+h
+h
+o
+h
+h
+h
+=
+=
+c
+=
+=
+=
+0
+0
+h
+0
+0
+0
+ 
+ 
+=
+ 
+ 
+ 
+r
+r
+0
+r
+r
+r
+o
+o
+ 
+o
+o
+o
+u
+u
+r
+u
+u
+u
+n
+n
+o
+n
+n
+n
+d
+d
+u
+d
+d
+d
+s
+s
+n
+s
+s
+s
+=
+=
+d
+=
+=
+=
+2
+2
+s
+2
+2
+2
+0
+0
+=
+0
+0
+0
+0
+0
+2
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
+
+0
+
+
+
+0
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.05
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3970 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  3.1080000000058341E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.7389999999959613E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.8159999999982972E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  3.2699999999990581E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  1.0000000000012221E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.9699999999999847E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.6000000000000689E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)   13.04   13.04
+HeatSolve: iter:    1 Solve:    (s)    0.40    0.40
+HeatSolve:  Result Norm   :   0.16315355920280097
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117040E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0190 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ...........Elapsed REAL time:    11.8700 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  2.9354E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  1.0000E-03, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  2.9344E+01, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  2.9353E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  2.9352E+01, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  2.9345E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  2.9346E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=5, call=2, total=  2.0620E+00, local_count=  0.0000E+00, count_reduce=  2.0530E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+Phase24 enforce: rank=4, call=2, total=  3.0370E+00, local_count=  0.0000E+00, count_reduce=  3.0280E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=3, call=2, total=  2.9260E+00, local_count=  0.0000E+00, count_reduce=  2.9160E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.9482E+04
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 enforce: rank=0, call=2, total=  1.0000E-02, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=5, iter=2, preinit=  1.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.8190E+00, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  2.0640E+00, post=  0.0000E+00, assembly=  1.1891E+01
+, constrained=  1.9000E+01
+Phase24 rank wall: rank=4, iter=2, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.8460E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  3.0380E+00, post=  0.0000E+00, assembly=  1.1892E+01
+Phase24 rank wall: rank=3, iter=2, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.9560E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.9280E+00, post=  0.0000E+00, assembly=  1.1892E+01
+Phase24 rank wall: rank=0, iter=2, preinit=  3.0000E-03, initialize=  4.0000E-03, prebulk=  0.0000E+00, bulk=  1.1870E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.2000E-02, post=  0.0000E+00, assembly=  1.1891E+01
+Phase24 enforce: rank=1, call=2, total=  4.8310E+00, local_count=  0.0000E+00, count_reduce=  4.8180E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  4.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=2, preinit=  7.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  6.9810E+00, boundary=  5.8000E-02, finalize=  0.0000E+00, dirichlet=  4.8440E+00, post=  0.0000E+00, assembly=  1.1895E+01
+Phase24 enforce: rank=2, call=2, total=  4.0260E+00, local_count=  0.0000E+00, count_reduce=  4.0130E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  4.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=2, preinit=  4.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  7.7930E+00, boundary=  5.4000E-02, finalize=  0.0000E+00, dirichlet=  4.0380E+00, post=  0.0000E+00, assembly=  1.1895E+01
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.039
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16315356     0.49093039E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3650 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  3.0689999999957820E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.1460000000037667E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.3570000000004754E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  2.9799999999997340E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  1.0000000000012221E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.6499999999999844E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.8999999999998352E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    2 Assembly: (s)   11.91   24.95
+HeatSolve: iter:    2 Solve:    (s)    0.37    0.76
+HeatSolve:  Result Norm   :   0.16315355920360194
+HeatSolve:  Relative Change :    4.9093038792873744E-012
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 2/4:   2.002E-02
+MAIN: Estimated time left:  1.3 minutes
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117040E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0240 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ............Elapsed REAL time:    12.5450 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0020 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  4.2312E+01, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  4.2302E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  4.2310E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  4.2311E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  4.2303E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  4.2304E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=3, call=3, total=  3.0010E+00, local_count=  0.0000E+00, count_reduce=  2.9900E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=4, call=3, total=  2.7900E+00, local_count=  1.0000E-03, count_reduce=  2.7780E+00, communicate=  0.0000E+00, scale=  1.1000E-02, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=5, call=3, total=  2.1140E+00, local_count=  0.0000E+00, count_reduce=  2.1020E+00, communicate=  1.0000E-03, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  0.0000E+00
+Phase24 enforce: rank=0, call=3, total=  1.1000E-02, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=3, iter=1, preinit=  1.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  9.5590E+00, boundary=  0.0000E+00, finalize=  1.0000E-03, dirichlet=  3.0020E+00, post=  0.0000E+00, assembly=  1.2569E+01
+, constrained=  1.9000E+01
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.7700E+00, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  2.7910E+00, post=  0.0000E+00, assembly=  1.2569E+01
+Phase24 rank wall: rank=5, iter=1, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  1.0447E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.1150E+00, post=  0.0000E+00, assembly=  1.2570E+01
+Phase24 rank wall: rank=0, iter=1, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  1.2545E+01, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  1.4000E-02, post=  0.0000E+00, assembly=  1.2568E+01
+Phase24 enforce: rank=2, call=3, total=  4.2070E+00, local_count=  0.0000E+00, count_reduce=  4.1920E+00, communicate=  1.0000E-03, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  5.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.2800E+00, boundary=  6.3000E-02, finalize=  0.0000E+00, dirichlet=  4.2200E+00, post=  0.0000E+00, assembly=  1.2573E+01
+Phase24 enforce: rank=1, call=3, total=  5.0400E+00, local_count=  0.0000E+00, count_reduce=  5.0260E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  4.0000E-03, initialize=  4.0000E-03, prebulk=  0.0000E+00, bulk=  7.4250E+00, boundary=  8.4000E-02, finalize=  0.0000E+00, dirichlet=  5.0550E+00, post=  0.0000E+00, assembly=  1.2572E+01
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.039
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.30679322E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3800 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  3.2089999999984080E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.5820000000000931E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.4070000000014460E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  3.4700000000005105E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.0000000000024443E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.7999999999999545E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.4000000000000909E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)   12.59   12.59
+HeatSolve: iter:    1 Solve:    (s)    0.38    0.38
+HeatSolve:  Result Norm   :   0.16315355920310140
+HeatSolve:  Relative Change :    3.0679321560394689E-012
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 3/4:   2.002E-02
+MAIN: Estimated time left: 25.9 seconds
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117038E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0240 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ............Elapsed REAL time:    12.3890 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  5.5132E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  5.5132E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  5.5130E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  5.5122E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  5.5123E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  5.5124E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=4, call=4, total=  2.7830E+00, local_count=  0.0000E+00, count_reduce=  2.7740E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=5, call=4, total=  2.0720E+00, local_count=  0.0000E+00, count_reduce=  2.0640E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+Phase24 enforce: rank=3, call=4, total=  2.8570E+00, local_count=  0.0000E+00, count_reduce=  2.8480E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=0, call=4, total=  9.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-02, prebulk=  0.0000E+00, bulk=  9.6170E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.7840E+00, post=  0.0000E+00, assembly=  1.2413E+01
+Phase24 rank wall: rank=5, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-02, prebulk=  0.0000E+00, bulk=  1.0327E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.0730E+00, post=  0.0000E+00, assembly=  1.2412E+01
+Phase24 rank wall: rank=3, iter=1, preinit=  1.0000E-03, initialize=  3.2000E-02, prebulk=  0.0000E+00, bulk=  9.5220E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  2.8580E+00, post=  0.0000E+00, assembly=  1.2413E+01
+Phase24 rank wall: rank=0, iter=1, preinit=  3.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  1.2389E+01, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.1000E-02, post=  0.0000E+00, assembly=  1.2411E+01
+Phase24 enforce: rank=2, call=4, total=  4.2050E+00, local_count=  0.0000E+00, count_reduce=  4.1940E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 enforce: rank=1, call=4, total=  4.9310E+00, local_count=  0.0000E+00, count_reduce=  4.9200E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.7021E+04
+Phase24 rank wall: rank=2, iter=1, preinit=  1.0000E-02, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.1040E+00, boundary=  7.7000E-02, finalize=  0.0000E+00, dirichlet=  4.2200E+00, post=  0.0000E+00, assembly=  1.2416E+01
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  1.3000E-02, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  7.3810E+00, boundary=  6.3000E-02, finalize=  0.0000E+00, dirichlet=  4.9540E+00, post=  0.0000E+00, assembly=  1.2416E+01
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.038
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.24619671E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3540 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  3.3129999999997324E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.3719999999998151E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.3880000000003818E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  3.1600000000007356E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  9.9999999999766942E-04
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.5399999999999920E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.4000000000000909E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)   12.44   12.44
+HeatSolve: iter:    1 Solve:    (s)    0.35    0.35
+HeatSolve:  Result Norm   :   0.16315355920269972
+HeatSolve:  Relative Change :    2.4619670712169212E-012
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 4/4:   2.002E-02
+MAIN: Estimated time left: 12.8 seconds
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117036E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0230 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ...........Elapsed REAL time:    11.2750 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0020 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  6.6809E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  6.6807E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  6.6808E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  6.6799E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  6.6800E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  6.6800E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=4, call=5, total=  2.6000E+00, local_count=  0.0000E+00, count_reduce=  2.5890E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=3, call=5, total=  2.7480E+00, local_count=  0.0000E+00, count_reduce=  2.7370E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=5, call=5, total=  1.9990E+00, local_count=  0.0000E+00, count_reduce=  1.9880E+00, communicate=  1.0000E-03, scale=  9.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  0.0000E+00
+Phase24 enforce: rank=0, call=5, total=  1.2000E-02, local_count=  1.0000E-03, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  1.0000E-02, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.6910E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  2.6010E+00, post=  0.0000E+00, assembly=  1.1298E+01
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=3, iter=1, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  8.5410E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.7500E+00, post=  0.0000E+00, assembly=  1.1299E+01
+Phase24 rank wall: rank=0, iter=1, preinit=  2.0000E-03, initialize=  4.0000E-03, prebulk=  0.0000E+00, bulk=  1.1275E+01, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  1.4000E-02, post=  0.0000E+00, assembly=  1.1297E+01
+Phase24 rank wall: rank=5, iter=1, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.2900E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.0000E+00, post=  0.0000E+00, assembly=  1.1298E+01
+Phase24 enforce: rank=1, call=5, total=  4.7290E+00, local_count=  0.0000E+00, count_reduce=  4.7150E+00, communicate=  1.0000E-03, scale=  9.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  4.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  6.4900E+00, boundary=  6.2000E-02, finalize=  0.0000E+00, dirichlet=  4.7400E+00, post=  0.0000E+00, assembly=  1.1301E+01
+Phase24 enforce: rank=2, call=5, total=  3.9920E+00, local_count=  0.0000E+00, count_reduce=  3.9780E+00, communicate=  1.0000E-03, scale=  9.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  6.0000E-03, initialize=  4.0000E-03, prebulk=  0.0000E+00, bulk=  7.2330E+00, boundary=  5.6000E-02, finalize=  0.0000E+00, dirichlet=  4.0030E+00, post=  0.0000E+00, assembly=  1.1302E+01
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.098
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16321702     0.38887092E-03 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3520 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  2.8899999999702501E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.0790000000183113E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.0510000000105464E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  2.5500000000089074E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.0000000000095497E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.5200000000000387E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.3000000000003240E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)   11.32   11.32
+HeatSolve: iter:    1 Solve:    (s)    0.35    0.35
+HeatSolve:  Result Norm   :   0.16321701721508905
+HeatSolve:  Relative Change :    3.8887091530025105E-004
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117027E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0180 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: ...........Elapsed REAL time:    11.7980 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0020 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  7.9001E+01, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  7.8999E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  7.8991E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  7.9000E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  7.8992E+01, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  7.8992E+01, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=5, call=6, total=  2.0540E+00, local_count=  0.0000E+00, count_reduce=  2.0450E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+Phase24 enforce: rank=4, call=6, total=  2.7920E+00, local_count=  0.0000E+00, count_reduce=  2.7830E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.9394E+04
+Phase24 enforce: rank=3, call=6, total=  2.8330E+00, local_count=  0.0000E+00, count_reduce=  2.8250E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=0, call=6, total=  8.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+Phase24 rank wall: rank=5, iter=2, preinit=  2.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.7550E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.0550E+00, post=  0.0000E+00, assembly=  1.1818E+01
+Phase24 rank wall: rank=4, iter=2, preinit=  1.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  9.0180E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.7930E+00, post=  0.0000E+00, assembly=  1.1818E+01
+Phase24 rank wall: rank=3, iter=2, preinit=  1.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  8.9760E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  2.8340E+00, post=  0.0000E+00, assembly=  1.1818E+01
+Phase24 rank wall: rank=0, iter=2, preinit=  2.0000E-03, initialize=  4.0000E-03, prebulk=  0.0000E+00, bulk=  1.1798E+01, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  1.1000E-02, post=  0.0000E+00, assembly=  1.1817E+01
+Phase24 enforce: rank=2, call=6, total=  4.2390E+00, local_count=  0.0000E+00, count_reduce=  4.2270E+00, communicate=  0.0000E+00, scale=  9.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  3.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=2, preinit=  3.0000E-03, initialize=  5.0000E-03, prebulk=  0.0000E+00, bulk=  7.5120E+00, boundary=  5.0000E-02, finalize=  0.0000E+00, dirichlet=  4.2510E+00, post=  0.0000E+00, assembly=  1.1821E+01
+Phase24 enforce: rank=1, call=6, total=  5.0450E+00, local_count=  0.0000E+00, count_reduce=  5.0320E+00, communicate=  1.0000E-03, scale=  8.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  4.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=2, preinit=  4.0000E-03, initialize=  6.0000E-03, prebulk=  0.0000E+00, bulk=  6.6970E+00, boundary=  5.7000E-02, finalize=  0.0000E+00, dirichlet=  5.0580E+00, post=  0.0000E+00, assembly=  1.1822E+01
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 0.032
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16321702     0.12958054E-12 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.2900 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  3.0030000000000427E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  5.2960000000004612E+00
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  3.1859999999994528E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  3.1300000000004502E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  2.0000000000095497E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  2.9000000000000625E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.8000000000000682E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    2 Assembly: (s)   11.84   23.16
+HeatSolve: iter:    2 Solve:    (s)    0.29    0.64
+HeatSolve:  Result Norm   :   0.16321701721506790
+HeatSolve:  Relative Change :    1.2958053626993593E-013
+MAIN: *** Elmer Solver: ALL DONE ***
+MAIN: The end
+SOLVER TOTAL TIME(CPU,REAL):        79.35       79.35
+ELMER SOLVER FINISHED AT: 2026/10/11 17:20:54
