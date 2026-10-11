@@ -1,0 +1,57 @@
+{
+  "case": "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse",
+  "started": "2026-10-11T00:03:09",
+  "finished": "2026-10-11T02:27:24",
+  "exit_code": 0,
+  "inputs_sha256": {
+    "6a01a20b0b9e.json": "0722847555608ecadcf9c8b5a87467cabcbf820ee52b86b897ec40cce93d9504",
+    "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse.sif": "6c8c7178a86352477311568bf0bd742a0b0eaf30aa3f6bf9d8e1aeefc549d999",
+    "mesh.header": "fc9f78ef87294094c5dc87710dc2bd9924410f1308810ba0225c51aa3f727c7e",
+    "build\\udf\\tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+    "build\\udf\\tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+  },
+  "preexisting_restart_inputs_sha256": {
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.0": "0533dbdb29df9fc77fd5083ab839dd699708224076eb802b67d6001f9d9c8dcf",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.1": "3b0e94b4a89d5afbc77105cccddfd38aa370a8bc2de42951e4af7a507070ee9b",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.2": "4676050fa40837387c74af67a453d0762c0a8a89fd69719b95658d1a826048b1",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.3": "eb04b911c02ae2ee2f3acf7167faba4f29e07265f4d536c95831aa2b743472f2",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.4": "4724fdc10e152c9ee157d7dbed99b7a3748e9d5aaa654130219253e4a3848ec6",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady.result.5": "a189095c56a7f27a1e658c13edbf4b57707dbb77992e2250621c95c5d94fe878",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+    "workspace\\work\\meshes\\mesh_toml_95333801e1a3\\case_toml_2cc534365acf_steady_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+  },
+  "runtime_sif": null,
+  "runtime_sif_sha256": "6c8c7178a86352477311568bf0bd742a0b0eaf30aa3f6bf9d8e1aeefc549d999",
+  "runtime_override_applied": false,
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\elmer-latest\\bin\\ElmerSolver.exe",
+  "elmer_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\elmer-latest",
+  "runtime_bin": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\udf",
+  "toolchain_bin": "G:\\Elmer-Migration\\msys64\\ucrt64\\bin",
+  "amgx_config": null,
+  "amgx_config_sha256": null,
+  "runtime_artifacts_sha256": {
+    "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+    "libelmersolver": "ed94078a3a8df50cd299a856fa06e0dc3b0e74de5c8d78aecd507f33761135d9",
+    "HeatSolve": "be54d5d6087c38ce14bb02241e292ac9e3f2baf2f846a70543fbc39ca2b4002f"
+  },
+  "mesh": "mesh_toml_95333801e1a3",
+  "restart_from": null,
+  "collected_outputs": [
+    "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse_1_series.csv",
+    "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse_2_series.csv",
+    "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse_iterations_1.csv",
+    "case_elongated_absorber_dual_tes_6a01a20b0b9e_pulse_iterations_2.csv"
+  ],
+  "result_file": null,
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16549243     0.61178082E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16549243     0.15057459E-11 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16549172     0.42874544E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16549172     0.82272982E-11 ) :: heat equation"
+  ],
+  "solver_completed": true,
+  "errors": []
+}

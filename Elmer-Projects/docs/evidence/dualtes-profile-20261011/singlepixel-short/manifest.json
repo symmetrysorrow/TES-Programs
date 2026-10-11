@@ -1,0 +1,54 @@
+{
+  "case": "case_singlepixel_profile_4step_20261011",
+  "started": "2026-10-11T11:33:30",
+  "finished": "2026-10-11T11:35:01",
+  "exit_code": 0,
+  "inputs_sha256": {
+    "profile_project.json": "3a9797703824c84779b2e4d08475c8a69b379a791afb5b81c7cce141d05fc920",
+    "case_singlepixel_profile_4step_20261011.sif": "1b61ef3835fe9e79f09641653e4c003e6bf877170b3ef581ce0c21dd3d5df57d",
+    "mesh.header": "18af4388ba3f8e009de1110dcd126aa8119bc1183e63b9d8f091de2944af1b07",
+    "build\\udf\\tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+    "build\\udf\\tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+  },
+  "preexisting_restart_inputs_sha256": {
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.0": "3b0bdf5c5a6ffccff45f7604c140660dc6019001dc10ce2825eb0fb0205ae20b",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.1": "35bf338276c3a29e11f5389c3d8e434674188dbfdcbc8340b4c5561992b5e79b",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.2": "ffb09e5bf20d1c11fb1818f8353d1a00e112a1a1041f3f41c199a7ac097e118d",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.3": "48af5fe2c5d22129d8499e8c15f8e930dfff68cd22cc7b1ba048e0a902b0e12d",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.4": "4ef7ff42efabe0be193198d448a11b600ed2ddb8fe58154995c461b772fbbbba",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_toml_1b5ec032c418_steady.result.5": "4d69412bcab678556fe6a2339617947d4bc754d53c74e4c0b2c4d4994cd6c3ae",
+    "workspace\\work\\meshes\\mesh_hybrid_fullconf_h8\\case_singlepixel_profile_4step_20261011.state": "d25c11f4a28d0171cea9b8e5c10abf8a35338a36854bd5ceeb9d374c3c79ab5a"
+  },
+  "runtime_sif": null,
+  "runtime_sif_sha256": "1b61ef3835fe9e79f09641653e4c003e6bf877170b3ef581ce0c21dd3d5df57d",
+  "runtime_override_applied": false,
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\elmer-latest\\bin\\ElmerSolver.exe",
+  "elmer_prefix": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\elmer-latest",
+  "runtime_bin": "D:\\Github\\TES-Programs\\Elmer-Projects\\workspace\\work\\udf",
+  "toolchain_bin": "G:\\Elmer-Migration\\msys64\\ucrt64\\bin",
+  "amgx_config": null,
+  "amgx_config_sha256": null,
+  "runtime_artifacts_sha256": {
+    "solver": "64922c6d98390e7edebb16db87df8118b46fda4b68ed9a483eb7b8e556a26448",
+    "libelmersolver": "ed94078a3a8df50cd299a856fa06e0dc3b0e74de5c8d78aecd507f33761135d9",
+    "HeatSolve": "be54d5d6087c38ce14bb02241e292ac9e3f2baf2f846a70543fbc39ca2b4002f"
+  },
+  "mesh": "mesh_hybrid_fullconf_h8",
+  "restart_from": null,
+  "collected_outputs": [
+    "case_singlepixel_profile_4step_20261011_iterations.csv",
+    "case_singlepixel_profile_4step_20261011_series.csv"
+  ],
+  "result_file": null,
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.30679322E-11 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.24619671E-11 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16321702     0.38887092E-03 ) :: heat equation",
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16321702     0.12958054E-12 ) :: heat equation"
+  ],
+  "solver_completed": true,
+  "errors": []
+}

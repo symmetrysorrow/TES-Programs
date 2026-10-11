@@ -1,0 +1,68 @@
+Phase24 opt-in change for the external `tools/elmer-hypre` source tree.
+
+Apply the equivalent hunks to:
+`src/fem/src/modules/HeatSolve.F90`
+
+```diff
+@@
+   ! Default variable name
+   CALL ListAddNewString( Params,'Variable','Temperature')
++
++  ! Phase24 is deliberately opt-in.  This selects the existing vectorized
++  ! CRS glue path for the legacy HeatSolve route without changing the
++  ! physical model or enabling timestep/matrix-value reuse.
++  CALL ListAddNewLogical( Params,'Phase24 Vector Assembly',.FALSE.)
+@@
+         TransientAssembly, Converged, AnyMultiply, NeedFlowSol
++     LOGICAL :: Phase24VectorAssembly
+@@
+     SolverParams => GetSolverParams()
++     Phase24VectorAssembly = GetLogical(SolverParams, 'Phase24 Vector Assembly', Found)
+@@
+-            CALL DefaultUpdateEquations( STIFF, FORCE )
++            CALL DefaultUpdateEquations( STIFF, FORCE, VecAssembly=Phase24VectorAssembly )
+@@
+-      CALL DefaultUpdateEquations( STIFF, FORCE )
++      CALL DefaultUpdateEquations( STIFF, FORCE, VecAssembly=Phase24VectorAssembly )
+```
+
+The working external source tree has this change applied. The default remains
+`False`; enable it only in a dedicated comparison SIF:
+
+```text
+  Phase24 Vector Assembly = Logical True
+```
+
+This patch is intentionally limited to the existing vectorized CRS glue. It
+does not enable matrix-value reuse, HYPRE/preconditioner reuse, or a new GPU
+backend. A production default change requires the Phase24 regression gate and
+same-case wall benchmark to pass first.
+
+The cache implementation additionally records pointer identity for the CSR
+`Rows` and `Cols` arrays. A same-sized reallocation therefore starts a fresh
+destination cache instead of using positions from the previous CSR storage.
+The opt-in flag is also checked at solver initialization: only a 3-D scalar
+P1-tetra bulk mesh enters the Phase24 vector/cache path; unsupported cases
+fall back to generic Elmer assembly automatically.
+
+For eligible bodies, `HeatSolve.F90` also caches constant scalar `Heat Capacity`
+and isotropic `Heat Conductivity` values by body id. If either property is
+MATC/UDF, time-dependent, or anisotropic, that body is marked non-cacheable and
+continues through `GetReal`/`ListGetRealArray` on the generic path.
+
+The working source tree also has the opt-in wall markers enabled by:
+
+```diff
+@@
++  CALL ListAddNewLogical( Params,'Phase24 Wall Profiling',.FALSE.)
+@@
++     LOGICAL :: Phase24WallProfiling
+@@
++     Phase24WallProfiling = GetLogical(SolverParams, 'Phase24 Wall Profiling', Found)
+```
+
+With `Phase24 Wall Profiling = Logical True`, the legacy route emits REAL-time
+measurements for UDF/circuit, bulk assembly, boundary assembly, matrix
+finalization, and the linear solve. These are coarse first-stage measurements;
+the bulk section must be split further before claiming a complete assembly
+breakdown.
