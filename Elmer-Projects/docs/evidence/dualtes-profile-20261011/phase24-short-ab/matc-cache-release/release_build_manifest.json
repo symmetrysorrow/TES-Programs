@@ -1,0 +1,69 @@
+{
+  "repository": "symmetrysorrow/TES-Programs",
+  "branch": "codex/dualtes-profile-evidence-20261011",
+  "base_commit": "0fc6660b731139f45e49efcbd4bdb07594f84434",
+  "worktree": "D:\\github\\TES-Programs-dualtes-profile-evidence-20261011",
+  "build": {
+    "type": "Release",
+    "generator": "Ninja",
+    "c_compiler": "G:/Elmer-Migration/msys64/ucrt64/bin/cc.exe",
+    "c_flags_release": "-O3 -DNDEBUG",
+    "cxx_compiler": "G:/Elmer-Migration/msys64/ucrt64/bin/c++.exe",
+    "cxx_flags_release": "-O3 -DNDEBUG",
+    "fortran_compiler": "G:/Elmer-Migration/msys64/ucrt64/bin/gfortran.exe",
+    "fortran_flags_release": "-O3",
+    "fortran_module_directory": "C:/Users/Nao/AppData/Local/Temp/phase24-release-modules",
+    "full_build": "1771/1771 targets succeeded; exit code 0",
+    "mpi": "MS-MPI, 6 ranks in experiments",
+    "hypre": "linked; same isolated Release build",
+    "solver_sha256": "ec74448bb8a9143b000781feae22afd6e02af7e2e549596f98045f22ee1b5778",
+    "HeatSolve_dll_sha256": "59384fbe0ae0a8c2bba0311c5f07247bcb00aed4f98f7264169f92092100643b",
+    "build_log": "release_build.log",
+    "configure_log": "release_configure.log"
+  },
+  "experiment": {
+    "steps": 4,
+    "vector_assembly": false,
+    "cache_default": false,
+    "omp_threads": 1,
+    "dualtes_trials_per_mode": 3,
+    "singlepixel_trials_per_mode": 1,
+    "initial_dualtes_state_files": [
+      "phase24_short_ab_dualtes_vector_1.state",
+      "phase24_short_ab_dualtes_vector_2.state"
+    ],
+    "singlepixel_state": "phase24_short_ab_singlepixel_vector_1.state",
+    "singlepixel_state_sha256": "d25c11f4a28d0171cea9b8e5c10abf8a35338a36854bd5ceeb9d374c3c79ab5a",
+    "all_matrix_rhs_captures": "Release; before/after DefaultSolve; max 120 nonlinear iterations; captured every actual solve at each timestep",
+    "75ms_full_case_executed": false,
+    "dualtes_initial_state_sha256": {
+      "phase24_short_ab_dualtes_vector_1.state": "217bb13c2e474356c1a34d5af02a344efafc86f6987a3d1fb3182f2220325815",
+      "phase24_short_ab_dualtes_vector_2.state": "4e0e0983f2f623a72f3f297fe57766f498f90243f8ac98da5d64792c39086b7b"
+    },
+    "dualtes_mesh": "mesh_toml_95333801e1a3",
+    "dualtes_restart": "case_toml_2cc534365acf_steady.result",
+    "singlepixel_mesh": "mesh_hybrid_fullconf_h8",
+    "singlepixel_restart": "case_toml_1b5ec032c418_steady.result"
+  },
+  "source": {
+    "candidate_patch": "../bulk-matc-cache/HeatSolve_generic_matc_node_cache.patch",
+    "candidate_patch_sha256": "53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045",
+    "tracked_product_source_changed": false,
+    "release_source_note": "Release DLL was built from the previously prepared isolated MATC-cache diagnostic source represented by the candidate patch; no product source file is tracked in this repository."
+  },
+  "results": {
+    "dualtes_performance": "release_runs.json",
+    "dualtes_temperature": "release_dualtes_field_comparison.json",
+    "dualtes_linear_system": "release_all_assembly_comparison.json",
+    "dualtes_tes_and_solver": "dualtes_numerical_logs.json",
+    "singlepixel_performance": "singlepixel_release_runs.json + singlepixel_on_perf_run.json",
+    "singlepixel_temperature": "singlepixel_temperature_comparison.json",
+    "singlepixel_tes_and_solver": "singlepixel_numerical_logs.json",
+    "singlepixel_performance_numerics": "singlepixel_performance_numerical_comparison.json"
+  },
+  "caveats": [
+    "Result shard hashes and all captured matrix/RHS shard hashes are recorded; large raw result and linear-system shards remain in isolated Temp runtime and are regenerable with the included scripts.",
+    "Single-pixel speed test has one trial per mode; dualtes has three.",
+    "Cache validation is limited to checked Temperature-only scalar MATC material expressions and rank-local model layout."
+  ]
+}
