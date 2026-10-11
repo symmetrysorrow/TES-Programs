@@ -1,0 +1,11 @@
+{
+  "source_revision": "ElmerCSC/elmerfem release-26.1 5a8de867068be0568f09af40fb90fee300dfbede",
+  "storage": "ValueListEntry_t stores CValue as a string; Lists.F90 passes it to Matc().",
+  "parser": "matc/src/parser.c creates TREE/CLAUSE nodes; matc/src/eval.c evaluates the parsed tree.",
+  "public_elmer_purity_api_found": false,
+  "material7_expression": "(7.854e-06)*(0.5*((tx+1.0e-12)+abs(tx-1.0e-12)))^(4.252-1)*0.4*((0.0007)-(0.0005))/(8*((1e-06)+(1.5e-05)+(1e-06))*(0.0005))",
+  "manual_lexical_observation": ["numeric constants", "tx", "parentheses", "basic arithmetic", "power", "abs"],
+  "ast_validation_executed": false,
+  "purity_proven": false,
+  "safe_gate_required": "Parse without evaluation; walk the complete tree; allow only scalar numbers, tx, audited pure arithmetic operators and explicitly whitelisted non-shadowable pure builtins; reject all other nodes and all parse errors."
+}

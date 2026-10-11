@@ -11,13 +11,17 @@ files=[]
 for p in sorted(here.rglob('*')):
     if p.is_file() and p.name != 'safety_manifest.json':
         files.append({'path':p.relative_to(here).as_posix(),'bytes':p.stat().st_size,'sha256':h(p)})
+audit=json.loads((here/'safety_audit_results.json').read_text(encoding='utf-8'))
+runtime_cases=[x for x in audit.get('fixtures',[]) if x.get('status') == 'PASS_RUNTIME']
 manifest={
  'repository':'symmetrysorrow/TES-Programs',
  'branch':'codex/dualtes-profile-evidence-20261011',
  'base_commit':'329b27b9a196175efe48a91bc6e3083d91f3233a',
  'decision':'BLOCKED_NOT_SAFE_TO_ENABLE',
  'production_files_modified':False,
- 'runtime_negative_tests_executed':False,
+ 'runtime_negative_tests_executed':bool(runtime_cases),
+ 'runtime_negative_test_count':len(runtime_cases),
+ 'runtime_negative_test_ids':[x['id'] for x in runtime_cases],
  'isolated_source':{'path':str(source),'git_managed':False,'sha256':h(source) if source.exists() else None},
  'previous_release_build':{
   'solver':str(build/'fem/src/ElmerSolver_mpi.exe'),

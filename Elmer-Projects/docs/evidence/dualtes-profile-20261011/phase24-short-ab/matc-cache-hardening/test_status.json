@@ -1,0 +1,18 @@
+{
+  "schema": "matc-cache-hardening-test-status-v1",
+  "cache_default": "OFF",
+  "vector_assembly": "OFF",
+  "production_dll_or_sif_modified": false,
+  "full_75ms_simulation_run": false,
+  "safety_hardened_dll_built": false,
+  "tests": [
+    {"id":"time_dependency_fallback_6rank_4step","status":"PASS_RUNTIME_PREVIOUS_EVIDENCE","return_code":0,"wall_seconds":95.7831128,"log":"../matc-cache-safety/matc_safety_time_dependency.solver.log","meaning":"Declared Time dependency chose generic fallback; not a cache-on numerical comparison."},
+    {"id":"material7_expression_ast_purity","status":"NOT_RUN","reason":"No parse-only AST safety API or hardened binary."},
+    {"id":"hidden_dependency_and_function_negative_cases","status":"NOT_RUN","reason":"No hardened binary."},
+    {"id":"coordinate_anisotropic_lua_and_shared_node_cases","status":"NOT_RUN","reason":"No hardened binary or runtime fixtures."},
+    {"id":"same_process_model_mesh_material_replacement","status":"NOT_RUN","reason":"No identity/generation invalidation implementation."},
+    {"id":"solver_finalize_reinitialize_off_on_off","status":"NOT_RUN","reason":"No proven lifecycle release path or lifecycle harness."},
+    {"id":"dualtes_singlepixel_4step_numerical_regression","status":"NOT_RUN","reason":"No hardened build; prior candidate results are not reused as hardened results."},
+    {"id":"release_performance_after_numeric_gate","status":"NOT_RUN","reason":"Numerical gate not passed."}
+  ]
+}

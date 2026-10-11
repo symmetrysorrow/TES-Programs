@@ -1,0 +1,28 @@
+{
+  "repository": "ElmerCSC/elmerfem",
+  "reference_tag": "release-26.1",
+  "reference_commit": "5a8de867068be0568f09af40fb90fee300dfbede",
+  "reference_files": {
+    "fem/src/modules/HeatSolve.F90": "fddcaed084563ede6b534dd5bb658d8dbad424fb95f98bb8bd890ba50498e819",
+    "fem/src/Lists.F90": "4f641d128d80672dc43888460bbeb2c7519719cfc3225ccb8ff688d95a2d4dcc",
+    "matc/src/parser.c": "8ddf30c20de8ace2eaddd5ec2f1634dea690a6f755e9d0383394cba9d9bc926a",
+    "matc/src/eval.c": "594fef16510a9291c64c7551d18941c3a9a70504d4ee990703bfb64f224d1c9d"
+  },
+  "isolated_phase24_source": {
+    "git_managed": false,
+    "path_at_audit": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-debug-src\\fem\\src\\modules\\HeatSolve.F90",
+    "sha256": "bde260c7b801349b6c21beacc2772cadc0672fb373811e17d8bbb244fea6193d"
+  },
+  "tracked_source_snapshot": {
+    "path": "Elmer-Projects/docs/evidence/dualtes-profile-20261011/source/HeatSolve.F90",
+    "sha256": "965fa34d9d051467d821e87c62806c8cea866e1478e3fc83f6bc5d20d2fe3f50"
+  },
+  "candidate_patch": {
+    "path": "Elmer-Projects/docs/evidence/dualtes-profile-20261011/phase24-short-ab/bulk-matc-cache/HeatSolve_generic_matc_node_cache.patch",
+    "sha256": "53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045",
+    "applies_to_pristine_reference": false,
+    "check_result": "git apply --check failed at fem/src/modules/HeatSolve.F90 hunk near line 62"
+  },
+  "reproducible_hardening_patch_created": false,
+  "reason": "The complete Phase24 source delta from the upstream reference is not recorded, and no parser/lifecycle hardening was implemented or built."
+}

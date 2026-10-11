@@ -1,0 +1,11 @@
+{
+  "command": "git -C <clean Elmer release-26.1 checkout> apply --check <candidate patch>",
+  "exit_code": 1,
+  "stderr": [
+    "error: patch failed: fem/src/modules/HeatSolve.F90:62",
+    "error: fem/src/modules/HeatSolve.F90: patch does not apply"
+  ],
+  "checkout_head": "5a8de867068be0568f09af40fb90fee300dfbede",
+  "checkout_worktree_modified": false,
+  "interpretation": "The patch assumes pre-existing Phase24 source edits; applying it to a pristine checkout is unsafe and was not attempted."
+}
