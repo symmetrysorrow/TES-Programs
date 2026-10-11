@@ -1,0 +1,16 @@
+﻿{
+  "schema": "phase24-matc-cache-negative-fixtures-v1",
+  "note": "Fixtures are specifications for a future runtime harness. They are not claimed as executed Elmer tests.",
+  "cases": [
+    {"id":"temperature_only_positive", "material_fragment":"Heat Conductivity = Variable Temperature\n  Real MATC \"tx*tx\"", "expected":"cache candidate only if expression purity is proven"},
+    {"id":"time_dependency", "material_fragment":"Heat Conductivity = Variable Temperature, Time\n  Real MATC \"tx + 1.0e-3*ty\"", "expected":"generic fallback"},
+    {"id":"coordinate_dependency", "material_fragment":"Heat Conductivity = Variable Coordinate 1\n  Real MATC \"tx\"", "expected":"generic fallback"},
+    {"id":"anisotropic_or_multiple_entries", "material_fragment":"Heat Conductivity 1 = Variable Temperature\nHeat Conductivity 2 = 2.0", "expected":"generic fallback"},
+    {"id":"lua_or_external_procedure", "material_fragment":"Heat Conductivity = Variable Temperature\n  Real Procedure \"test_udf\" \"Conductivity\"", "expected":"generic fallback"},
+    {"id":"hidden_dependency_same_metadata", "material_fragment":"Heat Conductivity = Variable Temperature\n  Real MATC \"tx + unlisted_time_state\"", "expected":"generic fallback unless parser proves pure Temperature-only expression", "runtime_semantics":"unverified; fixture must first be checked against MATC grammar"},
+    {"id":"multiple_material_shared_node", "material_fragment":"Two adjacent bodies use distinct Temperature-only conductivity entries and share a mesh node", "expected":"independent material/node cache values"},
+    {"id":"model_or_mesh_replacement", "material_fragment":"Reuse the same solver process; replace material/body map or node connectivity without changing counts", "expected":"invalidate and rebuild before lookup"},
+    {"id":"cache_off_on_off", "material_fragment":"Toggle the option OFF, ON, then OFF in one process", "expected":"OFF runs never read stale cached values"},
+    {"id":"restart_first_assembly", "material_fragment":"Restart at a later time and evaluate first nonlinear assembly", "expected":"values use restarted Temperature and current time"}
+  ]
+}

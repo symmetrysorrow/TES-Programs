@@ -1,0 +1,207 @@
+{
+  "candidate": "HeatSolve_generic_matc_node_cache.patch",
+  "patch_sha256": "53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045",
+  "release_build_sha256": {
+    "solver": "ec74448bb8a9143b000781feae22afd6e02af7e2e549596f98045f22ee1b5778",
+    "HeatSolve": "59384fbe0ae0a8c2bba0311c5f07247bcb00aed4f98f7264169f92092100643b"
+  },
+  "prior_release_metrics": {
+    "dualtes_off_median_s": 71.00401830000192,
+    "dualtes_on_median_s": 25.614678199999616,
+    "dualtes_ratio": 2.7720050880827767,
+    "singlepixel_off_s": 53.666,
+    "singlepixel_on_s": 28.7
+  },
+  "runtime_safety_cases_executed_now": 1,
+  "blockers": [
+    "expression_purity_proven",
+    "model_mesh_cache_identity",
+    "solver_finalize_deallocation"
+  ],
+  "integration_decision": "BLOCKED_NOT_SAFE_TO_ENABLE",
+  "checks": [
+    {
+      "name": "candidate_patch_hash",
+      "status": "PASS",
+      "detail": "sha256=53f97c44e82215fb3d230c0b90b024b126cd1dfde716a3ff3ec56c171c02c045"
+    },
+    {
+      "name": "temperature_metadata_gate",
+      "status": "PASS",
+      "detail": "The candidate rejects declared dependencies other than Temperature."
+    },
+    {
+      "name": "procedure_and_lua_gate",
+      "status": "PASS",
+      "detail": "Procedure and Lua entries are excluded by the current classifier."
+    },
+    {
+      "name": "single_conductivity_entry_gate",
+      "status": "PASS",
+      "detail": "Multiple Heat Conductivity entries are excluded by the current classifier."
+    },
+    {
+      "name": "expression_purity_proven",
+      "status": "FAIL",
+      "detail": "The classifier does not inspect the MATC expression text (CValue); hidden names, impure calls, or unrecognized syntax are not proven absent."
+    },
+    {
+      "name": "model_mesh_cache_identity",
+      "status": "FAIL",
+      "detail": "The cache is invalidated on AllocationsDone/MeshChanged, but no model/material identity or generation signature is stored and compared."
+    },
+    {
+      "name": "solver_finalize_deallocation",
+      "status": "FAIL",
+      "detail": "SAVE-allocated arrays have a clear routine, but this patch has no demonstrated solver-finalization call to it."
+    },
+    {
+      "name": "per_assembly_re_evaluation",
+      "status": "PASS",
+      "detail": "The cache value array is recomputed from current Temperature before an assembly in the candidate source."
+    },
+    {
+      "name": "rank_local_mapping",
+      "status": "PASS",
+      "detail": "Maps are allocated in the solver process and indexed with that rank local mesh; no MPI value sharing was added."
+    },
+    {
+      "name": "release_numeric_and_speed_evidence",
+      "status": "PASS",
+      "detail": "DualTES -O3 medians: OFF=71.004s, ON=25.615s; prior 4-step numerical evidence retained."
+    },
+    {
+      "name": "explicit_time_fallback_runtime",
+      "status": "PASS",
+      "detail": "6-rank 4-step isolated test-copy completed in 95.78311280000344s; fallback log observed=True"
+    },
+    {
+      "name": "fixture:temperature_only_positive",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "name": "fixture:time_dependency",
+      "status": "PASS_RUNTIME",
+      "detail": "Runtime fallback message observed in the isolated 6-rank 4-step test-copy."
+    },
+    {
+      "name": "fixture:coordinate_dependency",
+      "status": "PASS_STATIC",
+      "detail": "Static guard rejects declared non-Temperature dependencies; runtime fixture not run."
+    },
+    {
+      "name": "fixture:anisotropic_or_multiple_entries",
+      "status": "PASS",
+      "detail": "The single-entry guard is present; runtime tensor fixture was not run."
+    },
+    {
+      "name": "fixture:lua_or_external_procedure",
+      "status": "PASS",
+      "detail": "Static guard rejects procedure/Lua-backed ValueList entries."
+    },
+    {
+      "name": "fixture:hidden_dependency_same_metadata",
+      "status": "FAIL",
+      "detail": "Classifier admits a Temperature-declared entry without inspecting its expression; actual MATC runtime semantics are not executed here."
+    },
+    {
+      "name": "fixture:multiple_material_shared_node",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "name": "fixture:model_or_mesh_replacement",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "name": "fixture:cache_off_on_off",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "name": "fixture:restart_first_assembly",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "temperature_only_positive",
+      "material_fragment": "Heat Conductivity = Variable Temperature\n  Real MATC \"tx*tx\"",
+      "expected": "cache candidate only if expression purity is proven",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "id": "time_dependency",
+      "material_fragment": "Heat Conductivity = Variable Temperature, Time\n  Real MATC \"tx + 1.0e-3*ty\"",
+      "expected": "generic fallback",
+      "status": "PASS_RUNTIME",
+      "detail": "Runtime fallback message observed in the isolated 6-rank 4-step test-copy."
+    },
+    {
+      "id": "coordinate_dependency",
+      "material_fragment": "Heat Conductivity = Variable Coordinate 1\n  Real MATC \"tx\"",
+      "expected": "generic fallback",
+      "status": "PASS_STATIC",
+      "detail": "Static guard rejects declared non-Temperature dependencies; runtime fixture not run."
+    },
+    {
+      "id": "anisotropic_or_multiple_entries",
+      "material_fragment": "Heat Conductivity 1 = Variable Temperature\nHeat Conductivity 2 = 2.0",
+      "expected": "generic fallback",
+      "status": "PASS",
+      "detail": "The single-entry guard is present; runtime tensor fixture was not run."
+    },
+    {
+      "id": "lua_or_external_procedure",
+      "material_fragment": "Heat Conductivity = Variable Temperature\n  Real Procedure \"test_udf\" \"Conductivity\"",
+      "expected": "generic fallback",
+      "status": "PASS",
+      "detail": "Static guard rejects procedure/Lua-backed ValueList entries."
+    },
+    {
+      "id": "hidden_dependency_same_metadata",
+      "material_fragment": "Heat Conductivity = Variable Temperature\n  Real MATC \"tx + unlisted_time_state\"",
+      "expected": "generic fallback unless parser proves pure Temperature-only expression",
+      "runtime_semantics": "unverified; fixture must first be checked against MATC grammar",
+      "status": "FAIL",
+      "detail": "Classifier admits a Temperature-declared entry without inspecting its expression; actual MATC runtime semantics are not executed here."
+    },
+    {
+      "id": "multiple_material_shared_node",
+      "material_fragment": "Two adjacent bodies use distinct Temperature-only conductivity entries and share a mesh node",
+      "expected": "independent material/node cache values",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "id": "model_or_mesh_replacement",
+      "material_fragment": "Reuse the same solver process; replace material/body map or node connectivity without changing counts",
+      "expected": "invalidate and rebuild before lookup",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "id": "cache_off_on_off",
+      "material_fragment": "Toggle the option OFF, ON, then OFF in one process",
+      "expected": "OFF runs never read stale cached values",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    },
+    {
+      "id": "restart_first_assembly",
+      "material_fragment": "Restart at a later time and evaluate first nonlinear assembly",
+      "expected": "values use restarted Temperature and current time",
+      "status": "SKIP",
+      "detail": "Requires an Elmer runtime fixture or same-process model lifecycle harness."
+    }
+  ],
+  "limits": [
+    "This static audit does not establish MATC parser semantics.",
+    "No safety-hardened Elmer DLL was built for negative fixtures.",
+    "Prior Release A/B runs validate the tested DualTES and single-pixel models only."
+  ]
+}

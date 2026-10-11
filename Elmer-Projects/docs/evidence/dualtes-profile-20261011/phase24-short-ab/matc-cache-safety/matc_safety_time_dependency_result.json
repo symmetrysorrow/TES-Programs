@@ -1,0 +1,21 @@
+{
+  "case": "matc_safety_time_dependency",
+  "fixture": "Material 7 test-copy changes declared conductivity dependency Temperature -> Time; cache option remains True",
+  "runtime_isolated": true,
+  "ranks": 6,
+  "steps": 4,
+  "returncode": 0,
+  "started": "2026-10-11T23:03:28+09:00",
+  "wall_seconds": 95.78311280000344,
+  "sif_sha256": "565d879638457de4abcb9003908a175876356d3183c5dccb4347422f96e727cf",
+  "solver_sha256": "ec74448bb8a9143b000781feae22afd6e02af7e2e549596f98045f22ee1b5778",
+  "HeatSolve_sha256": "59384fbe0ae0a8c2bba0311c5f07247bcb00aed4f98f7264169f92092100643b",
+  "log": "matc_safety_time_dependency.solver.log",
+  "log_sha256": "bdb9d17474664927680e893ca1c2a792dc091b0932b48b61a0a7a763c33b842f",
+  "fallback_messages": [
+    "HeatSolve: Phase24 dynamic-k generic cache: no safe temperature-only MATC prisms"
+  ],
+  "fallback_observed": true,
+  "production_files_modified": false,
+  "interpretation": "fallback behavior only; altered-material outputs are not numerical or performance evidence"
+}
