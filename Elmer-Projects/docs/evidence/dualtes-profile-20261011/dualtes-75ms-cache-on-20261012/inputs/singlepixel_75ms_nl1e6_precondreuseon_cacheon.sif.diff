@@ -1,0 +1,47 @@
+--- singlepixel_75ms_cache_on.sif
++++ singlepixel_75ms_nl1e6_precondreuseon_cacheon.sif
+@@ -17,10 +17,10 @@
+   Timestep Intervals(26) = 1 2 1 1 1 1 1 1 1 1 1 1 1 1 40 21 31 1 14 14 21 1 27 27 12 1
+   Output Intervals(26) = 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+   Steady State Max Iterations = 1
+-  Solver Input File = workspace/generated/cases/singlepixel75_full_cache_on.sif
++  Solver Input File = workspace/generated/cases/singlepixel75_full_nl1e6_precondreuseon_cacheon.sif
+   Restart File = case_toml_1b5ec032c418_steady.result
+   Restart Position = 0
+-  Output File = singlepixel75_full_cache_on.result
++  Output File = singlepixel75_full_nl1e6_precondreuseon_cacheon.result
+   Restart Time = Real 0.02
+ End
+ 
+@@ -30,7 +30,7 @@
+ 
+ Constants
+   Stefan Boltzmann = Real 5.670374419e-8
+-  TES Series File = String "singlepixel75_full_cache_on_1_series.csv"
++  TES Series File = String "singlepixel75_full_nl1e6_precondreuseon_cacheon_1_series.csv"
+   TES State File = String "workspace/work/meshes/mesh_hybrid_fullconf_h8/phase24_short_ab_singlepixel_vector_1.state"
+   TES Bias Current = Real 0.000715
+   TES Shunt Resistance = Real 0.0039
+@@ -43,7 +43,7 @@
+   TES T0 = Real 0.16857
+   TES Volume = Real 4e-14
+   TES Inductance = Real 1.23e-08
+-  TES Iteration Series File = String "singlepixel75_full_cache_on_1_iterations.csv"
++  TES Iteration Series File = String "singlepixel75_full_nl1e6_precondreuseon_cacheon_1_iterations.csv"
+   Pulse Energy = Real 2.134099276488e-13
+   Pulse Start Time = Real 0.02002
+   Pulse Duration = Real 1e-09
+@@ -71,10 +71,11 @@
+   Phase24 Dynamic K Node Cache = Logical True
+   Phase24 Dynamic K Node Cache Verify = Logical False
+   Phase24 Static Matrix Reuse = Logical False
+-  "TES Inner Circuit Update" = Logical True
++    Phase24 Precond Matrix Reuse = Logical True
++"TES Inner Circuit Update" = Logical True
+   "TES Body ID" = Integer 8
+   Nonlinear System Max Iterations = 120
+-  Nonlinear System Convergence Tolerance = 1e-08
++  Nonlinear System Convergence Tolerance = 1e-6
+   Nonlinear System Relaxation Factor = 1.0
+ ! Lumped mass + BDF1 keeps the discrete maximum principle when dt is
+ ! below the element diffusion limit (h^2*rho*c/6k): prevents unphysical
