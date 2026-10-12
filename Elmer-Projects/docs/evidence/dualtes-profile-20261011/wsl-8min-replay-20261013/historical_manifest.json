@@ -1,0 +1,52 @@
+{
+  "case": "case_phase24_g45_pre_75ms_bdf2h15_hypre_gpu",
+  "started": "2026-09-28T09:42:09",
+  "finished": "2026-09-28T09:50:34",
+  "exit_code": 0,
+  "inputs_sha256": {
+    "project.json": "0ad5620e5087beacbe06e18edeb6834f9c76ef1e16fba1ef589f84e0b6a5e0ea",
+    "case_phase24_g45_pre_75ms_bdf2h15_hypre_gpu.sif": "210a753a8eccd9f3cc158f829b44df2dbb83a4ac4410592b569e2843feedbf00",
+    "mesh.header": "18af4388ba3f8e009de1110dcd126aa8119bc1183e63b9d8f091de2944af1b07",
+    "tes_transient_heat_source_t0.dll": "b544da87dfe14760b1530bdf072fda3389ae47143dfec332bbcbdb916b143624",
+    "tes_heat_source_t0.dll": "8a2d8bb30f275e8d02b8e2ab8386a3c0ab30662a6bcc30b1f10743f341534d72"
+  },
+  "preexisting_restart_inputs_sha256": {
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.0": "a0c9c60caa96659f2daa33530ce9d3d0c4f53e7b45246a8a9a67c6c853b93c75",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.1": "ec5cf5379b108c5be32d01722b20789a1472ba9ae0d9d47e40937a1edef6da60",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.2": "3047336e9a42f64dbbb57023d2d724e1dfb99cf639d74b708846e965d1c24377",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.3": "f2211e8b54976f77210fda71f36e787dc1c09e3d41415fef8c03f6c193e46451",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.4": "afecb885b1b1799d4f791557ec0cb9b12113cdec6bc12d2c902454ab33735e92",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g3_mesh_hybrid_fullconf_h8_mpifix2_e98bb2.result.5": "194761dbb1539d4eb4823a65d3d4b5401a2eafafff32c59a371b7944dea33b3a",
+    "workspace/work/meshes/mesh_hybrid_fullconf_h8/case_phase24_g45_pre_75ms_bdf2h15_hypre_gpu.state": "746eceddcb4e771de0445d74e2e7f377fdbc87e2f63be073377ae66799bfe4cf"
+  },
+  "runtime_sif": null,
+  "runtime_sif_sha256": "210a753a8eccd9f3cc158f829b44df2dbb83a4ac4410592b569e2843feedbf00",
+  "runtime_override_applied": false,
+  "udf_applied": false,
+  "udf_dll": null,
+  "udf_sha256": null,
+  "solver": "/opt/elmer-gpu/cpu/elmer/bin/ElmerSolver_mpi",
+  "elmer_prefix": "/opt/elmer-gpu/cpu/elmer",
+  "runtime_bin": null,
+  "toolchain_bin": null,
+  "amgx_config": null,
+  "amgx_config_sha256": null,
+  "runtime_artifacts_sha256": {
+    "solver": "16b512caf1a49b3d23d4d8e23e636cd4e1df643531e81a65a3f71bd7a1d48c56"
+  },
+  "mesh": "mesh_hybrid_fullconf_h8",
+  "restart_from": null,
+  "collected_outputs": [
+    "case_phase24_g45_pre_75ms_bdf2h15_hypre_gpu_iterations.csv",
+    "case_phase24_g45_pre_75ms_bdf2h15_hypre_gpu_series.csv"
+  ],
+  "result_file": null,
+  "convergence_tail": [
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16315826     0.17759304E-06 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315771     0.33438090E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315731     0.24970884E-05 ) :: heat equation",
+    "ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16315734     0.22831303E-06 ) :: heat equation"
+  ],
+  "solver_completed": true,
+  "errors": []
+}
