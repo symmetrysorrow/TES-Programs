@@ -14,6 +14,8 @@ DualTES過渡 / SinglePixel過渡のwall比は **0.7762**（約0.78倍）です�
 
 両方ともWSLのElmerGPU distro、同じElmerSolver MPI実行ファイル、6 MPI rank・各rank 1 threadです。solver SHA-256は `16b512caf1a49b3d23d4d8e23e636cd4e1df643531e81a65a3f71bd7a1d48c56` です（Elmer 26.1、build logのrevision表示はunknown）。今回のSolver・ElmerSolver library（HeatSolveを含む）・libmatc・TES UDFのSHA-256は`build_manifest.txt`に保存しました。
 
+**source provenance追補:** 計測後にbuild cacheを監査し、`CMAKE_HOME_DIRECTORY=/root/src/elmer`を確認しました。現存source treeの主要16ファイルは[`measured-wsl-source`](../../../../patches/elmer-26.1/measured-wsl-source/)へ保存し、隔離Release再構築手順を[`elmer_fastpath_build_repro_ja.md`](../../../elmer_fastpath_build_repro_ja.md)へ追加しました。実測時にsource-file hashを保存していなかったため、保存snapshotと過去solver binaryが完全一致することは遡及確認できません。既存の別checkout HEAD `9916c3f`や01 source replay patchも、このbuild sourceそのものとは一致しないため、過去solverの完全なsource来歴が証明済みとは扱いません。
+
 過渡でSinglePixel replay SIFと揃えた条件は、BDF2、BDF2 predictor、同一の明示timestep scheduleとBDF1切替時刻、非線形許容値 `1e-6`、最大120反復、緩和係数1.0、HYPRE PCG + BoomerAMG、線形許容値 `1e-12`、最大4000反復、BoomerAMG relax type 8、Vector Assembly ON、Phase24 preconditioner reuse ON、TES inner-circuit Newton ON、TES温度予測ON、step commit ONです。MATC Dynamic K Node CacheはDualTES入力で明示OFF、SinglePixel入力では指定なし（既定OFF）です。
 
 DualTES固有のメッシュ、2回路、TES定数、pulse、熱源、restartは保持しています。SinglePixelの1回路モデルへの置換はしていません。DualTES meshは131,633要素（prism 33,060）、SinglePixel replay meshは236,916要素（prism 23,220）で、各々6-way partitionを使っています。物理入力とmeshが違うため、wall比は今回の2ケースに対する実測であり、TES回路数だけの追加コストを表すものではありません。DualTES過渡は定常出力の0.02 s restartから0.07502 sまで計算しました。隔離コピーのSIFだけを変更し、本番DLL・元SIF・元meshは編集していません。
