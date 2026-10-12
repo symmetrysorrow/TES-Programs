@@ -1,0 +1,203 @@
+diff --git a/fem/src/modules/HeatSolve.F90 b/fem/src/modules/HeatSolve.F90
+index e9b6351..47ed584 100644
+--- a/fem/src/modules/HeatSolve.F90
++++ b/fem/src/modules/HeatSolve.F90
+@@ -3717,10 +3717,20 @@ CONTAINS
+   END SUBROUTINE Phase24EvaluateGenericDynKCache
+ 
+   LOGICAL FUNCTION Phase24IsTemperatureOnlyMatc(MaterialList)
++    USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_CHAR, C_INT, C_NULL_CHAR
++    INTERFACE
++      INTEGER(C_INT) FUNCTION MatcExpressionIsTemperatureOnly(Expression) &
++          BIND(C,NAME='mtc_expression_is_temperature_only')
++        IMPORT :: C_CHAR, C_INT
++        CHARACTER(KIND=C_CHAR), INTENT(IN) :: Expression(*)
++      END FUNCTION MatcExpressionIsTemperatureOnly
++    END INTERFACE
+     TYPE(ValueList_t), POINTER :: MaterialList
+     TYPE(ValueListEntry_t), POINTER :: entry
+     CHARACTER(LEN=MAX_STRING_LEN) :: dependency
++    CHARACTER(KIND=C_CHAR), ALLOCATABLE :: expression(:)
+     INTEGER :: nConductivity,nLower
++    INTEGER :: i, expressionLength, allocStatus
+ 
+     Phase24IsTemperatureOnlyMatc = .FALSE.
+     entry => ListFind(MaterialList,'Heat Conductivity',Found)
+@@ -3728,6 +3738,7 @@ CONTAINS
+     IF (entry % TYPE /= LIST_TYPE_VARIABLE_SCALAR_STR) RETURN
+     IF (entry % PROCEDURE /= 0 .OR. entry % LuaFun) RETURN
+     IF (.NOT. ALLOCATED(entry % DependName)) RETURN
++    IF (.NOT. ALLOCATED(entry % CValue)) RETURN
+     dependency = ADJUSTL(entry % DependName)
+     nLower = StringToLowerCase(dependency,entry % DependName)
+     IF (TRIM(dependency) /= 'temperature') RETURN
+@@ -3740,6 +3751,19 @@ CONTAINS
+       entry => entry % Next
+     END DO
+     IF (nConductivity /= 1) RETURN
++    entry => ListFind(MaterialList,'Heat Conductivity',Found)
++    IF (.NOT. ASSOCIATED(entry)) RETURN
++    IF (.NOT. ALLOCATED(entry % CValue)) RETURN
++    IF (INDEX(entry % CValue,C_NULL_CHAR) /= 0) RETURN
++    expressionLength = LEN_TRIM(entry % CValue)
++    IF (expressionLength <= 0) RETURN
++    ALLOCATE(expression(expressionLength+1),STAT=allocStatus)
++    IF (allocStatus /= 0) RETURN
++    DO i=1,expressionLength
++      expression(i) = entry % CValue(i:i)
++    END DO
++    expression(expressionLength+1) = C_NULL_CHAR
++    IF (MatcExpressionIsTemperatureOnly(expression) /= 1) RETURN
+     Phase24IsTemperatureOnlyMatc = .TRUE.
+   END FUNCTION Phase24IsTemperatureOnlyMatc
+ 
+diff --git a/matc/src/elmer/fnames.h b/matc/src/elmer/fnames.h
+index dee3c99..94cb6a0 100644
+--- a/matc/src/elmer/fnames.h
++++ b/matc/src/elmer/fnames.h
+@@ -182,6 +182,8 @@ void free_tree( TREE *);
+ void free_clause( CLAUSE *);
+ 
+ VARIABLE *doit( char *);
++int matc_parse_temperature_only_expression( const char * );
++int mtc_expression_is_temperature_only( const char * );
+ 
+ /* printclause.c */
+ 
+diff --git a/matc/src/matc.c b/matc/src/matc.c
+index 9816158..b549096 100644
+--- a/matc/src/matc.c
++++ b/matc/src/matc.c
+@@ -306,6 +306,26 @@ char * mtc_domath( char *str )
+   return math_out_str;
+ }
+ 
++/* Parse-only safety gate. Isolate MATC's diagnostic string so syntax errors
++ * cannot replace the caller's last evaluation result. */
++int mtc_expression_is_temperature_only(const char *expression)
++{
++  char *saved_output = math_out_str;
++  int saved_count = math_out_count;
++  int saved_allocated = math_out_allocated;
++  int accepted;
++
++  math_out_str = NULL;
++  math_out_count = 0;
++  math_out_allocated = 0;
++  accepted = matc_parse_temperature_only_expression(expression);
++  free(math_out_str);
++  math_out_str = saved_output;
++  math_out_count = saved_count;
++  math_out_allocated = saved_allocated;
++  return accepted;
++}
++
+ char *doread(void)
+ /*======================================================================
+ ?  doread() is really the main loop of this program. Function reads
+diff --git a/matc/src/parser.c b/matc/src/parser.c
+index cdd2bf0..bda1bb1 100644
+--- a/matc/src/parser.c
++++ b/matc/src/parser.c
+@@ -1418,6 +1418,101 @@ void free_clause(CLAUSE *root)
+     FREEMEM((char *)root);
+ }
+ 
++/* Inspect an expression without evaluating it.  The MATC lexer/parser use
++ * thread-local static cursors and the shared MATC allocation list, so run
++ * parsing with saved cursors and a private allocation list. */
++static int temperature_tree_is_pure(TREE *root, int depth, int *nodes)
++{
++  if (root == NULL || depth > 256 || ++(*nodes) > 4096) return FALSE;
++  if (NEXT(root) != NULL || LINK(root) != NULL || SUBS(root) != NULL) return FALSE;
++  switch (ETYPE(root))
++  {
++    case ETYPE_NUMBER:
++      return ARGS(root) == NULL && LEFT(root) == NULL && RIGHT(root) == NULL;
++    case ETYPE_EQUAT:
++      return ARGS(root) == NULL && LEFT(root) != NULL && RIGHT(root) == NULL &&
++             temperature_tree_is_pure(LEFT(root), depth + 1, nodes);
++    case ETYPE_NAME:
++      if (SDATA(root) == NULL) return FALSE;
++      if (strcmp(SDATA(root), "tx") == 0)
++        return ARGS(root) == NULL && com_check("tx") == NULL && fnc_check("tx") == NULL;
++      if (strcmp(SDATA(root), "abs") == 0 && ARGS(root) != NULL &&
++          NEXT(ARGS(root)) == NULL && LINK(ARGS(root)) == NULL && fnc_check("abs") == NULL)
++      {
++        COMMAND *cmd = com_check("abs");
++        /* CMDFLAG_PW means element-wise execution, not purity.  Purity is
++         * established here by the exact registered function identity; the
++         * audited func_abs implementation only returns abs(arg). */
++        if (cmd == NULL || cmd->sub != (VARIABLE *(*)())func_abs ||
++            cmd->minp != 1 || cmd->maxp != 1) return FALSE;
++        return temperature_tree_is_pure(ARGS(root), depth + 1, nodes);
++      }
++      return FALSE;
++    case ETYPE_OPER:
++      if (ARGS(root) != NULL || LEFT(root) == NULL) return FALSE;
++      if (VDATA(root) == opr_minus)
++        return RIGHT(root) == NULL && temperature_tree_is_pure(LEFT(root), depth + 1, nodes);
++      if (VDATA(root) == opr_add || VDATA(root) == opr_subs ||
++          VDATA(root) == opr_mul || VDATA(root) == opr_div || VDATA(root) == opr_pow)
++        return RIGHT(root) != NULL &&
++               temperature_tree_is_pure(LEFT(root), depth + 1, nodes) &&
++               temperature_tree_is_pure(RIGHT(root), depth + 1, nodes);
++      return FALSE;
++    default:
++      return FALSE;
++  }
++}
++
++int matc_parse_temperature_only_expression(const char *expression)
++{
++  SYMTYPE saved_symbol = symbol, saved_bendsym = bendsym;
++  char saved_csymbol[sizeof(csymbol)], saved_buf[sizeof(buf)];
++  char *saved_str = str;
++  LIST *saved_alloc_head = ALLOC_HEAD;
++  jmp_buf local_jmp;
++  jmp_buf *saved_jmpbuf = jmpbuf;
++  CLAUSE *root;
++  int nodes = 0, jump_status;
++  volatile int accepted = FALSE;
++  size_t length;
++
++  if (expression == NULL) return FALSE;
++  length = strlen(expression);
++  if (length == 0 || length >= sizeof(buf)) return FALSE;
++  memcpy(saved_csymbol, csymbol, sizeof(csymbol));
++  memcpy(saved_buf, buf, sizeof(buf));
++
++  ALLOC_HEAD = NULL;
++  jmpbuf = &local_jmp;
++  jump_status = setjmp(local_jmp);
++  if (jump_status == 0)
++  {
++    str = buf;
++    memcpy(buf, expression, length + 1);
++    scan();
++    if (symbol != nullsym)
++    {
++      root = parse();
++      /* One expression statement has a single RHS clause. */
++      if (symbol == nullsym && root != NULL && root->data == assignsym &&
++          root->this == NULL && LINK(root) != NULL && LINK(root)->this != NULL &&
++          LINK(root)->link == NULL)
++        accepted = temperature_tree_is_pure(LINK(root)->this, 0, &nodes);
++    }
++  }
++
++  /* error_matc() already freed this private list before longjmp. */
++  mem_free_all();
++  ALLOC_HEAD = saved_alloc_head;
++  jmpbuf = saved_jmpbuf;
++  str = saved_str;
++  symbol = saved_symbol;
++  bendsym = saved_bendsym;
++  memcpy(csymbol, saved_csymbol, sizeof(csymbol));
++  memcpy(buf, saved_buf, sizeof(buf));
++  return accepted;
++}
++
+ VARIABLE *doit(char *line)
+ {
+   CLAUSE *ptr, *root;

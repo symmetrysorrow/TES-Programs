@@ -1,0 +1,60 @@
+{
+  "schema": "phase24-matc-ast-patch-source-hashes-v1",
+  "patch": {
+    "path": "02_matc_ast_purity_validator.patch",
+    "sha256": "a08ef5b1e37f7592382f1d817e2715c8698480c3356a665231bc8712a173dd21",
+    "order": 2
+  },
+  "files": [
+    {
+      "path": "fem/src/modules/HeatSolve.F90",
+      "before_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "after_git_blob": "47ed58430e57d7bd9aec2969ab039042e617f0bf",
+      "before_raw_sha256": "bde260c7b801349b6c21beacc2772cadc0672fb373811e17d8bbb244fea6193d",
+      "after_raw_sha256": "58eaca60f5e503cfcb3b064b7cb9b4525aa2a0e9b1e20aa8328d1719f7ce7290"
+    },
+    {
+      "path": "matc/src/elmer/fnames.h",
+      "before_git_blob": "dee3c997d4aa769b299a5867db3b33fcec9a379b",
+      "after_git_blob": "94cb6a0db58ce8d683cdfee715970ecd2e80e965",
+      "before_raw_sha256": "78b8bc65d153b2877291cd0ba2c5ba553c38f69659277e7a18c49ae1d1340366",
+      "after_raw_sha256": "f71d6c3de50bbfd991120445c499629fab76dbc9992bf6c01736dfc507c37290"
+    },
+    {
+      "path": "matc/src/matc.c",
+      "before_git_blob": "9816158380039b5c71f05d62761750340f145d74",
+      "after_git_blob": "b549096551de20330dd53c57d5811f429766bef5",
+      "before_raw_sha256": "16629189bdcb5d13ae0db6c4de35fcee1b142d09e8e40593cd180f1819641a1c",
+      "after_raw_sha256": "2e14cd356180dd3a30f637a88e172c472039b35ad9fa4e36981dc99f521fca33"
+    },
+    {
+      "path": "matc/src/parser.c",
+      "before_git_blob": "cdd2bf0099b1ff74327670c102fe4853bb2bb294",
+      "after_git_blob": "bda1bb1a547b862178dc78397e5377bb2c48acbb",
+      "before_raw_sha256": "8ddf30c20de8ace2eaddd5ec2f1634dea690a6f755e9d0383394cba9d9bc926a",
+      "after_raw_sha256": "af64857e11af8a5f2742c8112253e74502a130b932d58beb7b3dea148c66e01c"
+    }
+  ],
+  "binaries": {
+    "ElmerSolver_mpi.exe": {
+      "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\fem\\src\\ElmerSolver_mpi.exe",
+      "sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5"
+    },
+    "HeatSolve.dll": {
+      "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\fem\\src\\modules\\HeatSolve.dll",
+      "sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+    },
+    "libmatc.dll": {
+      "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\matc\\src\\libmatc.dll",
+      "sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a"
+    },
+    "libHYPRE.dll": {
+      "path": "G:\\Elmer-Migration\\msys64\\ucrt64\\bin\\libHYPRE.dll",
+      "sha256": "82f8b1ce7cb3981cbc131cd72c9a3258e2efa724a6370353fdd1ed11af7be15b"
+    },
+    "msmpi.dll": {
+      "path": "C:\\Windows\\System32\\msmpi.dll",
+      "sha256": "d8f74689e83d7e5a7277de15b221edea91f529529f8a16fd0e510236c0705dcb"
+    }
+  }
+}

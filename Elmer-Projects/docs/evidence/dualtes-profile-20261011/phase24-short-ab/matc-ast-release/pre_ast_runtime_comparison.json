@@ -1,0 +1,839 @@
+{
+  "baseline": "saved four-step runtime on reconstructed 01-only Release before AST API",
+  "candidate": "same Release configuration after 02 MATC AST purity patch",
+  "note": "solver/HeatSolve SHA are compared; the candidate MATC DLL hash is separately recorded in manifest",
+  "comparisons": [
+    {
+      "case": "dualtes",
+      "mode": "off",
+      "pre_ast_wall_seconds": 71.61095550000027,
+      "final_wall_seconds": 73.07818159999442,
+      "pre_ast_solver_sha256": "4c673dc0639f4cabc29e2ccc4b3dd43576f210a9bddced67a9be20761a50c3b6",
+      "final_solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "result_norms_identical": true,
+      "hypre_records_identical": true,
+      "tes_csv_hashes_identical": true,
+      "all_nodes_all_four_steps": [
+        {
+          "rank": 0,
+          "timestep": 1,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 2,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 3,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 4,
+          "nodes": 45632,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908006925856236e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 1,
+          "timestep": 1,
+          "nodes": 46395,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 2,
+          "nodes": 46395,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 3,
+          "nodes": 46395,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.291188349883865e-16,
+          "changed_values": 1
+        },
+        {
+          "rank": 1,
+          "timestep": 4,
+          "nodes": 46395,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.58237669978795e-16,
+          "changed_values": 3
+        },
+        {
+          "rank": 2,
+          "timestep": 1,
+          "nodes": 46234,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 2,
+          "nodes": 46234,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 3,
+          "nodes": 46234,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.291188349883865e-16,
+          "changed_values": 1
+        },
+        {
+          "rank": 2,
+          "timestep": 4,
+          "nodes": 46234,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.58237669978795e-16,
+          "changed_values": 5
+        },
+        {
+          "rank": 3,
+          "timestep": 1,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 3,
+          "timestep": 2,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 3,
+          "timestep": 3,
+          "nodes": 45848,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.290800773046042e-16,
+          "changed_values": 21
+        },
+        {
+          "rank": 3,
+          "timestep": 4,
+          "nodes": 45848,
+          "max_abs_K": 1.3877787807814457e-16,
+          "max_rel": 8.227001930058594e-16,
+          "changed_values": 138
+        },
+        {
+          "rank": 4,
+          "timestep": 1,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 2,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 3,
+          "nodes": 45581,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908007740005576e-16,
+          "changed_values": 26
+        },
+        {
+          "rank": 4,
+          "timestep": 4,
+          "nodes": 45581,
+          "max_abs_K": 1.3877787807814457e-16,
+          "max_rel": 8.227001930058594e-16,
+          "changed_values": 197
+        },
+        {
+          "rank": 5,
+          "timestep": 1,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 2,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 3,
+          "nodes": 45728,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908007756255135e-16,
+          "changed_values": 34
+        },
+        {
+          "rank": 5,
+          "timestep": 4,
+          "nodes": 45728,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908007757337506e-16,
+          "changed_values": 215
+        }
+      ],
+      "max_abs_K": 1.3877787807814457e-16,
+      "max_rel": 8.227001930058594e-16,
+      "changed_values": 645
+    },
+    {
+      "case": "dualtes",
+      "mode": "on",
+      "pre_ast_wall_seconds": 31.57770039999741,
+      "final_wall_seconds": 31.777776000002632,
+      "pre_ast_solver_sha256": "4c673dc0639f4cabc29e2ccc4b3dd43576f210a9bddced67a9be20761a50c3b6",
+      "final_solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "result_norms_identical": true,
+      "hypre_records_identical": true,
+      "tes_csv_hashes_identical": true,
+      "all_nodes_all_four_steps": [
+        {
+          "rank": 0,
+          "timestep": 1,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 2,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 3,
+          "nodes": 45632,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 4,
+          "nodes": 45632,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908006925856236e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 1,
+          "timestep": 1,
+          "nodes": 46395,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 2,
+          "nodes": 46395,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 3,
+          "nodes": 46395,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 4,
+          "nodes": 46395,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.6454003453744438e-16,
+          "changed_values": 2
+        },
+        {
+          "rank": 2,
+          "timestep": 1,
+          "nodes": 46234,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 2,
+          "nodes": 46234,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 3,
+          "nodes": 46234,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 4,
+          "nodes": 46234,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2908006925856236e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 3,
+          "timestep": 1,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 3,
+          "timestep": 2,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 3,
+          "timestep": 3,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 3,
+          "timestep": 4,
+          "nodes": 45848,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 1,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 2,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 3,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 4,
+          "timestep": 4,
+          "nodes": 45581,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 1,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 2,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 3,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 4,
+          "nodes": 45728,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        }
+      ],
+      "max_abs_K": 5.551115123125783e-17,
+      "max_rel": 3.2908006925856236e-16,
+      "changed_values": 10
+    },
+    {
+      "case": "singlepixel",
+      "mode": "off",
+      "pre_ast_wall_seconds": 52.27640370000154,
+      "final_wall_seconds": 68.3889971000026,
+      "pre_ast_solver_sha256": "4c673dc0639f4cabc29e2ccc4b3dd43576f210a9bddced67a9be20761a50c3b6",
+      "final_solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "result_norms_identical": true,
+      "hypre_records_identical": true,
+      "tes_csv_hashes_identical": true,
+      "all_nodes_all_four_steps": [
+        {
+          "rank": 0,
+          "timestep": 1,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 2,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 3,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 4,
+          "nodes": 57890,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.399458829058509e-16,
+          "changed_values": 8
+        },
+        {
+          "rank": 1,
+          "timestep": 1,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 2,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 3,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 4,
+          "nodes": 57021,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.399458829058509e-16,
+          "changed_values": 2
+        },
+        {
+          "rank": 2,
+          "timestep": 1,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 2,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 3,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 4,
+          "nodes": 56951,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.7007267131906593e-16,
+          "changed_values": 10
+        },
+        {
+          "rank": 3,
+          "timestep": 1,
+          "nodes": 59482,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.645150273073666e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 3,
+          "timestep": 2,
+          "nodes": 59482,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.93544288305236e-16,
+          "changed_values": 19
+        },
+        {
+          "rank": 3,
+          "timestep": 3,
+          "nodes": 59482,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580590033283685e-16,
+          "changed_values": 59
+        },
+        {
+          "rank": 3,
+          "timestep": 4,
+          "nodes": 59482,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580603236686215e-16,
+          "changed_values": 54
+        },
+        {
+          "rank": 4,
+          "timestep": 1,
+          "nodes": 59394,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.645151184687549e-16,
+          "changed_values": 5
+        },
+        {
+          "rank": 4,
+          "timestep": 2,
+          "nodes": 59394,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.93544288305236e-16,
+          "changed_values": 24
+        },
+        {
+          "rank": 4,
+          "timestep": 3,
+          "nodes": 59394,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580590033283685e-16,
+          "changed_values": 78
+        },
+        {
+          "rank": 4,
+          "timestep": 4,
+          "nodes": 59394,
+          "max_abs_K": 1.3877787807814457e-16,
+          "max_rel": 8.225755754826506e-16,
+          "changed_values": 60
+        },
+        {
+          "rank": 5,
+          "timestep": 1,
+          "nodes": 59372,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 2,
+          "nodes": 59372,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 5,
+          "timestep": 3,
+          "nodes": 59372,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.6451513522774296e-16,
+          "changed_values": 12
+        },
+        {
+          "rank": 5,
+          "timestep": 4,
+          "nodes": 59372,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.935453308495157e-16,
+          "changed_values": 17
+        }
+      ],
+      "max_abs_K": 1.3877787807814457e-16,
+      "max_rel": 8.225755754826506e-16,
+      "changed_values": 352
+    },
+    {
+      "case": "singlepixel",
+      "mode": "on",
+      "pre_ast_wall_seconds": 28.60792500000389,
+      "final_wall_seconds": 29.879448699997738,
+      "pre_ast_solver_sha256": "4c673dc0639f4cabc29e2ccc4b3dd43576f210a9bddced67a9be20761a50c3b6",
+      "final_solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "result_norms_identical": true,
+      "hypre_records_identical": true,
+      "tes_csv_hashes_identical": true,
+      "all_nodes_all_four_steps": [
+        {
+          "rank": 0,
+          "timestep": 1,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 2,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 3,
+          "nodes": 57890,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 0,
+          "timestep": 4,
+          "nodes": 57890,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2902981678941197e-16,
+          "changed_values": 5
+        },
+        {
+          "rank": 1,
+          "timestep": 1,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 2,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 3,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 1,
+          "timestep": 4,
+          "nodes": 57021,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 1,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 2,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 3,
+          "nodes": 56951,
+          "max_abs_K": 0.0,
+          "max_rel": 0.0,
+          "changed_values": 0
+        },
+        {
+          "rank": 2,
+          "timestep": 4,
+          "nodes": 56951,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.291485323144184e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 3,
+          "timestep": 1,
+          "nodes": 59482,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.6451519247188893e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 3,
+          "timestep": 2,
+          "nodes": 59482,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2903038494378057e-16,
+          "changed_values": 20
+        },
+        {
+          "rank": 3,
+          "timestep": 3,
+          "nodes": 59482,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.935455774156714e-16,
+          "changed_values": 89
+        },
+        {
+          "rank": 3,
+          "timestep": 4,
+          "nodes": 59482,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580608858454286e-16,
+          "changed_values": 78
+        },
+        {
+          "rank": 4,
+          "timestep": 1,
+          "nodes": 59394,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.645150228865594e-16,
+          "changed_values": 3
+        },
+        {
+          "rank": 4,
+          "timestep": 2,
+          "nodes": 59394,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2902951823608595e-16,
+          "changed_values": 11
+        },
+        {
+          "rank": 4,
+          "timestep": 3,
+          "nodes": 59394,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.935442773532705e-16,
+          "changed_values": 41
+        },
+        {
+          "rank": 4,
+          "timestep": 4,
+          "nodes": 59394,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580590364710267e-16,
+          "changed_values": 45
+        },
+        {
+          "rank": 5,
+          "timestep": 1,
+          "nodes": 59372,
+          "max_abs_K": 2.7755575615628914e-17,
+          "max_rel": 1.6451523518907017e-16,
+          "changed_values": 4
+        },
+        {
+          "rank": 5,
+          "timestep": 2,
+          "nodes": 59372,
+          "max_abs_K": 5.551115123125783e-17,
+          "max_rel": 3.2902951823608595e-16,
+          "changed_values": 11
+        },
+        {
+          "rank": 5,
+          "timestep": 3,
+          "nodes": 59372,
+          "max_abs_K": 8.326672684688674e-17,
+          "max_rel": 4.935454537438462e-16,
+          "changed_values": 58
+        },
+        {
+          "rank": 5,
+          "timestep": 4,
+          "nodes": 59372,
+          "max_abs_K": 1.1102230246251565e-16,
+          "max_rel": 6.580605462504353e-16,
+          "changed_values": 54
+        }
+      ],
+      "max_abs_K": 1.1102230246251565e-16,
+      "max_rel": 6.580608858454286e-16,
+      "changed_values": 427
+    }
+  ]
+}

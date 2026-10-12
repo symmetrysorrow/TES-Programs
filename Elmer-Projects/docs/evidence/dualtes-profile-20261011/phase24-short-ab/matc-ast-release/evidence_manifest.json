@@ -1,0 +1,267 @@
+{
+  "schema": "phase24-matc-ast-source-build-v1",
+  "upstream": {
+    "repository": "ElmerCSC/elmerfem",
+    "commit": "5a8de867068be0568f09af40fb90fee300dfbede"
+  },
+  "patches": [
+    {
+      "path": "Elmer-Projects/docs/evidence/dualtes-profile-20261011/phase24-short-ab/phase24-source-repro/01_phase24_source_from_release_26_1.patch",
+      "sha256": "3ac03ac6dcb0db4ba30fa110ec40bd41b54e38ec289c80d977927d03bb427f16",
+      "order": 1,
+      "matches_existing_manifest": true
+    },
+    {
+      "path": "Elmer-Projects/docs/evidence/dualtes-profile-20261011/phase24-short-ab/matc-ast-release/02_matc_ast_purity_validator.patch",
+      "sha256": "a08ef5b1e37f7592382f1d817e2715c8698480c3356a665231bc8712a173dd21",
+      "order": 2,
+      "file_count": 4
+    }
+  ],
+  "phase24_01_files": [
+    {
+      "path": "fem/src/BlockSolve.F90",
+      "target_git_blob": "24e5a149063fd92969d4a8d5e8ffecc6092f4fb4",
+      "replayed_01_index_git_blob": "24e5a149063fd92969d4a8d5e8ffecc6092f4fb4",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/CMakeLists.txt",
+      "target_git_blob": "af9c5ac86e5a9e92bd32d7415e472e1ea08fded5",
+      "replayed_01_index_git_blob": "af9c5ac86e5a9e92bd32d7415e472e1ea08fded5",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/CRSMatrix.F90",
+      "target_git_blob": "d102f143a0760d273e6288642ba25495b7892281",
+      "replayed_01_index_git_blob": "d102f143a0760d273e6288642ba25495b7892281",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/DefUtils.F90",
+      "target_git_blob": "57693d5acadc1944359015f0b3819932f38dfcc0",
+      "replayed_01_index_git_blob": "57693d5acadc1944359015f0b3819932f38dfcc0",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/ElementDescription.F90",
+      "target_git_blob": "916cf5fad7e76d20d41e52905102c2ac88e0faa7",
+      "replayed_01_index_git_blob": "916cf5fad7e76d20d41e52905102c2ac88e0faa7",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/ElementUtils.F90",
+      "target_git_blob": "c1bdeef71d5e546c1630d81b94d47576d6b14a86",
+      "replayed_01_index_git_blob": "c1bdeef71d5e546c1630d81b94d47576d6b14a86",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/ElmerSolver.F90",
+      "target_git_blob": "529726b65dd67483be1ab21af6aea2bdfeb3612d",
+      "replayed_01_index_git_blob": "529726b65dd67483be1ab21af6aea2bdfeb3612d",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/ListMatrix.F90",
+      "target_git_blob": "08c177f39b43fa07521b8c6fe2d42d2008ab0dc5",
+      "replayed_01_index_git_blob": "08c177f39b43fa07521b8c6fe2d42d2008ab0dc5",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/SOLVER.KEYWORDS",
+      "target_git_blob": "8d4518e3b54cb71484265a1b50bbfe305e5dc9c7",
+      "replayed_01_index_git_blob": "8d4518e3b54cb71484265a1b50bbfe305e5dc9c7",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/SParIterSolver.F90",
+      "target_git_blob": "0676c34a414e08ab0a0c910265a838386f6fc774",
+      "replayed_01_index_git_blob": "0676c34a414e08ab0a0c910265a838386f6fc774",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/SolveHypre.c",
+      "target_git_blob": "bd1789bc39c02e44a6540184a24163de146fbb61",
+      "replayed_01_index_git_blob": "bd1789bc39c02e44a6540184a24163de146fbb61",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/SolverUtils.F90",
+      "target_git_blob": "10369885f5925fecfa5688499c9fdca1ccc273fc",
+      "replayed_01_index_git_blob": "10369885f5925fecfa5688499c9fdca1ccc273fc",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/TimeIntegrate.F90",
+      "target_git_blob": "df857562e8220b87ccd137cd0a3edd7d34e348ac",
+      "replayed_01_index_git_blob": "df857562e8220b87ccd137cd0a3edd7d34e348ac",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/VankaCreate.F90",
+      "target_git_blob": "1eaadf163e532e4da78987ba4b3f7a3fe4c9be05",
+      "replayed_01_index_git_blob": "1eaadf163e532e4da78987ba4b3f7a3fe4c9be05",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/amgx.c",
+      "target_git_blob": "c95f39739e641a9e7425dd5f6807a8177af499cb",
+      "replayed_01_index_git_blob": "c95f39739e641a9e7425dd5f6807a8177af499cb",
+      "matches_01": true
+    },
+    {
+      "path": "fem/src/modules/HeatSolve.F90",
+      "target_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "replayed_01_index_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "matches_01": true
+    }
+  ],
+  "phase24_01_all_match": true,
+  "patch_02_files": [
+    {
+      "path": "fem/src/modules/HeatSolve.F90",
+      "before_git_blob": "e9b6351b1ddf0c14a044abb7d7934d8da221b713",
+      "after_git_blob": "47ed58430e57d7bd9aec2969ab039042e617f0bf",
+      "before_raw_sha256": "bde260c7b801349b6c21beacc2772cadc0672fb373811e17d8bbb244fea6193d",
+      "after_raw_sha256": "58eaca60f5e503cfcb3b064b7cb9b4525aa2a0e9b1e20aa8328d1719f7ce7290"
+    },
+    {
+      "path": "matc/src/elmer/fnames.h",
+      "before_git_blob": "dee3c997d4aa769b299a5867db3b33fcec9a379b",
+      "after_git_blob": "94cb6a0db58ce8d683cdfee715970ecd2e80e965",
+      "before_raw_sha256": "78b8bc65d153b2877291cd0ba2c5ba553c38f69659277e7a18c49ae1d1340366",
+      "after_raw_sha256": "f71d6c3de50bbfd991120445c499629fab76dbc9992bf6c01736dfc507c37290"
+    },
+    {
+      "path": "matc/src/matc.c",
+      "before_git_blob": "9816158380039b5c71f05d62761750340f145d74",
+      "after_git_blob": "b549096551de20330dd53c57d5811f429766bef5",
+      "before_raw_sha256": "16629189bdcb5d13ae0db6c4de35fcee1b142d09e8e40593cd180f1819641a1c",
+      "after_raw_sha256": "2e14cd356180dd3a30f637a88e172c472039b35ad9fa4e36981dc99f521fca33"
+    },
+    {
+      "path": "matc/src/parser.c",
+      "before_git_blob": "cdd2bf0099b1ff74327670c102fe4853bb2bb294",
+      "after_git_blob": "bda1bb1a547b862178dc78397e5377bb2c48acbb",
+      "before_raw_sha256": "8ddf30c20de8ace2eaddd5ec2f1634dea690a6f755e9d0383394cba9d9bc926a",
+      "after_raw_sha256": "af64857e11af8a5f2742c8112253e74502a130b932d58beb7b3dea148c66e01c"
+    }
+  ],
+  "build": {
+    "configuration": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_C_COMPILER": "G:/Elmer-Migration/msys64/ucrt64/bin/cc.exe",
+      "CMAKE_CXX_COMPILER": null,
+      "CMAKE_Fortran_COMPILER": null,
+      "CMAKE_MAKE_PROGRAM": null,
+      "WITH_MPI": "ON",
+      "WITH_Hypre": "ON",
+      "WITH_OpenMP": "ON"
+    },
+    "compiler": {
+      "gcc": "gcc.exe (Rev5, Built by MSYS2 project) 16.1.0",
+      "gfortran": "GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0",
+      "cmake": "cmake version 4.4.0",
+      "ninja": "1.13.2"
+    },
+    "clean_release_build_log": "build_release_ast.log",
+    "final_incremental_matc_build_log": "build_matc_ast_final.log",
+    "binaries": {
+      "ElmerSolver_mpi.exe": {
+        "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\fem\\src\\ElmerSolver_mpi.exe",
+        "sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5"
+      },
+      "HeatSolve.dll": {
+        "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\fem\\src\\modules\\HeatSolve.dll",
+        "sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+      },
+      "libmatc.dll": {
+        "path": "C:\\Users\\Nao\\AppData\\Local\\Temp\\phase24-repro-release-build\\matc\\src\\libmatc.dll",
+        "sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a"
+      },
+      "libHYPRE.dll": {
+        "path": "G:\\Elmer-Migration\\msys64\\ucrt64\\bin\\libHYPRE.dll",
+        "sha256": "82f8b1ce7cb3981cbc131cd72c9a3258e2efa724a6370353fdd1ed11af7be15b"
+      },
+      "msmpi.dll": {
+        "path": "C:\\Windows\\System32\\msmpi.dll",
+        "sha256": "d8f74689e83d7e5a7277de15b221edea91f529529f8a16fd0e510236c0705dcb"
+      }
+    }
+  },
+  "tests": {
+    "ast_unit_test_exit": 0,
+    "ast_unit_test_log": "matc_ast_purity_test_final.log",
+    "final_four_step_runs": "runtime_runs.json",
+    "dualtes_matrix_rhs": "matrix_rhs_comparison.json"
+  },
+  "runtime_summary": {
+    "vector_assembly": false,
+    "runs": [
+      {
+        "case": "dualtes",
+        "mode": "off",
+        "returncode": 0,
+        "wall_seconds": 73.07818159999442,
+        "ranks": 6,
+        "steps": 4,
+        "cache": false,
+        "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+        "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+      },
+      {
+        "case": "dualtes",
+        "mode": "on",
+        "returncode": 0,
+        "wall_seconds": 31.777776000002632,
+        "ranks": 6,
+        "steps": 4,
+        "cache": true,
+        "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+        "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+      },
+      {
+        "case": "singlepixel",
+        "mode": "off",
+        "returncode": 0,
+        "wall_seconds": 68.3889971000026,
+        "ranks": 6,
+        "steps": 4,
+        "cache": false,
+        "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+        "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+      },
+      {
+        "case": "singlepixel",
+        "mode": "on",
+        "returncode": 0,
+        "wall_seconds": 29.879448699997738,
+        "ranks": 6,
+        "steps": 4,
+        "cache": true,
+        "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+        "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd"
+      }
+    ],
+    "pre_ast_comparison": "pre_ast_runtime_comparison.json",
+    "matrix_rhs_comparison": {
+      "comparison": "final corrected MATC purity gate, reconstructed Release, DualTES timestep 1 assembly capture",
+      "off_rc": 0,
+      "on_rc": 0,
+      "off_capture_files": 76,
+      "on_capture_files": 76,
+      "matched_files": 76,
+      "missing_files": [],
+      "matrix_and_sparsity_metadata_byte_identical": true,
+      "differing_non_rhs_files": [],
+      "rhs_files_compared": 24,
+      "rhs_values_compared": 1101672,
+      "rhs_changed_values": 0,
+      "rhs_row_maps_identical": true,
+      "rhs_max_abs_difference": 0.0,
+      "rhs_max_relative_difference": 0.0
+    },
+    "source_replay_log": "source_replay_apply.log"
+  },
+  "artifact_inventory": "artifact_inventory.json"
+}
