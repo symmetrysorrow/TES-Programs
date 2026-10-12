@@ -1,0 +1,49 @@
+diff --git a/fem/src/modules/HeatSolve.F90 b/fem/src/modules/HeatSolve.F90
+index 47ed58430e57d7bd9aec2969ab039042e617f0bf..a746878f8ed6a206b8174010059d0d8147c2245e 100644
+--- a/fem/src/modules/HeatSolve.F90
++++ b/fem/src/modules/HeatSolve.F90
+@@ -263,13 +263,16 @@
+      INTEGER, ALLOCATABLE, SAVE :: Phase24DynKMats(:), Phase24DynKStart(:), Phase24DynKCount(:), &
+           Phase24ElementDynMat(:)
+      LOGICAL, ALLOCATABLE, SAVE :: Phase24DynKCacheSafe(:)
+-     INTEGER, ALLOCATABLE, SAVE :: Phase24GenericKNodeSlot(:,:), Phase24GenericKNodes(:)
+-     INTEGER, ALLOCATABLE, SAVE :: Phase24GenericKMats(:), Phase24GenericKStart(:), Phase24GenericKCount(:)
+-     REAL(KIND=dp), ALLOCATABLE, SAVE :: Phase24GenericKNodal(:)
+-     INTEGER, SAVE :: Phase24GenericKMatCount=0, Phase24GenericKNodeCount=0
+-     LOGICAL, SAVE :: Phase24GenericKCacheReady=.FALSE.
+-     INTEGER, SAVE :: Phase24GenericKCacheHits=0, Phase24GenericKMatcCalls=0
+-     INTEGER, SAVE :: Phase24GenericKVerifyCount=0
++     ! Generic MATC cache storage belongs to this recursive HeatSolver
++     ! activation. Without SAVE, each activation rebuilds the mesh/material
++     ! map and allocatable locals are released on every normal or early return.
++     INTEGER, ALLOCATABLE :: Phase24GenericKNodeSlot(:,:), Phase24GenericKNodes(:)
++     INTEGER, ALLOCATABLE :: Phase24GenericKMats(:), Phase24GenericKStart(:), Phase24GenericKCount(:)
++     REAL(KIND=dp), ALLOCATABLE :: Phase24GenericKNodal(:)
++     INTEGER :: Phase24GenericKMatCount, Phase24GenericKNodeCount
++     LOGICAL :: Phase24GenericKCacheReady
++     INTEGER :: Phase24GenericKCacheHits, Phase24GenericKMatcCalls
++     INTEGER :: Phase24GenericKVerifyCount
+      INTEGER, SAVE :: Phase24DynKNodeCount = 0, Phase24DynKMatCount = 0, &
+           Phase24DynamicPrismCount = 0
+      ! Optional preconditioning matrix for thin wedges: the stiffness with the
+@@ -447,6 +450,10 @@
+      REAL(KIND=dp) :: Phase24ProfileGroupStart, Phase24ProfileElapsed
+ 
+ 
++     ! Start each activation with no inherited material/node association.
++     ! The arrays are automatic allocatables and are freed at this activation's
++     ! return; the map is then reused only among assemblies in this call.
++     CALL Phase24ClearGenericDynKCache()
+      CALL Info('HeatSolver','-------------------------------------------',Level=6)
+      CALL Info('HeatSolver','Solving the energy equation for temperature',Level=5)
+ 
+@@ -3606,6 +3613,9 @@
+     Phase24GenericKMatCount = 0
+     Phase24GenericKNodeCount = 0
+     Phase24GenericKCacheReady = .FALSE.
++    Phase24GenericKCacheHits = 0
++    Phase24GenericKMatcCalls = 0
++    Phase24GenericKVerifyCount = 0
+   END SUBROUTINE Phase24ClearGenericDynKCache
+ 
+   SUBROUTINE Phase24BuildGenericDynKCache()

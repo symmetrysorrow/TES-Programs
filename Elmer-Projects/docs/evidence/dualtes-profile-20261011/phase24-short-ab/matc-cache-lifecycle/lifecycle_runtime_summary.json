@@ -1,0 +1,90 @@
+{
+  "verify_run": {
+    "returncode": 0,
+    "wall_seconds": 34.067964700006996,
+    "ranks": 6,
+    "steps": 4,
+    "cache": true,
+    "verify": true,
+    "solver_sha256": "e76e2413900683ac6a0ef35a132e175b8bbc56570baaf36a4602133359af2f80",
+    "heat_solve_sha256": "b296d0b1859c3ba0edcf4e515a209fde5a02c60d976067664603807ca32e2fe1",
+    "sif_sha256": "57872cadbfceedc0c6951fb702bc1491aeb234453a34b33fb898cef5be3affd4",
+    "log": "lifecycle_dualtes_verify.solver.log"
+  },
+  "no_safe_temperature_only_message_count": 4,
+  "map_build_lines": 24,
+  "matc_eval_lines": 24,
+  "rank_summary": {
+    "0": {
+      "map_build_activations": 4,
+      "materials": 0,
+      "unique_nodes": 0,
+      "matc_eval_assemblies": 0,
+      "listgetreal_calls_per_assembly": [],
+      "reported_previous_assembly_hits": [],
+      "mean_build_wall_seconds": 0.00475
+    },
+    "1": {
+      "map_build_activations": 4,
+      "materials": 1,
+      "unique_nodes": 20441,
+      "matc_eval_assemblies": 6,
+      "listgetreal_calls_per_assembly": [
+        1
+      ],
+      "reported_previous_assembly_hits": [
+        33413
+      ],
+      "mean_build_wall_seconds": 0.35975
+    },
+    "2": {
+      "map_build_activations": 4,
+      "materials": 1,
+      "unique_nodes": 18780,
+      "matc_eval_assemblies": 6,
+      "listgetreal_calls_per_assembly": [
+        1
+      ],
+      "reported_previous_assembly_hits": [
+        30657
+      ],
+      "mean_build_wall_seconds": 0.3335
+    },
+    "3": {
+      "map_build_activations": 4,
+      "materials": 0,
+      "unique_nodes": 0,
+      "matc_eval_assemblies": 0,
+      "listgetreal_calls_per_assembly": [],
+      "reported_previous_assembly_hits": [],
+      "mean_build_wall_seconds": 0.005
+    },
+    "4": {
+      "map_build_activations": 4,
+      "materials": 1,
+      "unique_nodes": 17088,
+      "matc_eval_assemblies": 6,
+      "listgetreal_calls_per_assembly": [
+        1
+      ],
+      "reported_previous_assembly_hits": [
+        27807
+      ],
+      "mean_build_wall_seconds": 0.30325
+    },
+    "5": {
+      "map_build_activations": 4,
+      "materials": 1,
+      "unique_nodes": 22024,
+      "matc_eval_assemblies": 6,
+      "listgetreal_calls_per_assembly": [
+        1
+      ],
+      "reported_previous_assembly_hits": [
+        36023
+      ],
+      "mean_build_wall_seconds": 0.388
+    }
+  },
+  "semantics": "eligible prism element hit counts are observed in previous_assembly_hits; node maps are rebuilt once per HeatSolver activation; nodal conductivity is re-evaluated once per eligible material at each nonlinear assembly."
+}
