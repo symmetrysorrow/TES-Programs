@@ -1,0 +1,298 @@
+{
+  "schema": "phase24-dualtes-ast-rank-audit-v1",
+  "repository": "symmetrysorrow/TES-Programs",
+  "branch": "codex/dualtes-profile-evidence-20261011",
+  "requested_base_commit": "5f341c76bb886c87401e29acc4247d17bdc1f3c5",
+  "recorded_from_commit": "5f341c76bb886c87401e29acc4247d17bdc1f3c5",
+  "runtime": {
+    "configuration": "Release",
+    "mpi": "Microsoft MPI",
+    "ranks": 6,
+    "steps": 4,
+    "vector_assembly": false,
+    "verify_run_cache": true,
+    "performance_run_cache_verify": false,
+    "default_cache_setting": "OFF",
+    "full_75ms_run": false
+  },
+  "binaries": {
+    "fem/src/ElmerSolver_mpi.exe": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+    "fem/src/modules/HeatSolve.dll": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+    "matc/src/libmatc.dll": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a"
+  },
+  "ast_test": {
+    "log": "matc_ast_purity_test.log",
+    "passed": true
+  },
+  "diagnostic_returncode": 0,
+  "performance_run_returncodes": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "files": [
+    {
+      "path": "analyze_dualtes_rankaudit.py",
+      "bytes": 4754,
+      "sha256": "0af84ab84a607a5199b6095965fdffad617ab81c1145260ba7827e97272f3d52"
+    },
+    {
+      "path": "dualtes_rankaudit_verify.sif",
+      "bytes": 8399,
+      "sha256": "e234d1a65c4a0e1ed4472e1ce8bf1a3d3e41946c058c3a671c7663084396eb95"
+    },
+    {
+      "path": "dualtes_rankaudit_verify.solver.log",
+      "bytes": 147021,
+      "sha256": "bdfd75f9cb9378d5c29ab043faeebffbfc4cc470aed1b284acc228f1e3d24064"
+    },
+    {
+      "path": "dualtes_rankaudit_verify.stderr.log",
+      "bytes": 2130,
+      "sha256": "9b3a9a4df54f471016d0c86b6a2a32e44efedc23eaf10f837c772b6d0393cd1f"
+    },
+    {
+      "path": "make_evidence_manifest.py",
+      "bytes": 2225,
+      "sha256": "333803ff1b888424fe9f15ae30328598401e258a8fc7bdd02d9f8ee170ddd810"
+    },
+    {
+      "path": "matc_ast_purity_test.log",
+      "bytes": 1261,
+      "sha256": "343f60bd412959e6566b41c749436b885dc0a8b0da358af32c7ab4c914e92431"
+    },
+    {
+      "path": "performance_repeats.json",
+      "bytes": 29929,
+      "sha256": "356452fb0d87a0903c92fa8b4adf23d272770a01e5737e7421ecaa4051a55810"
+    },
+    {
+      "path": "rank_audit.json",
+      "bytes": 11316,
+      "sha256": "9c7a06f6c644673b0d005b6cc4835e4a5157de2f8082bb86e164a934ad8205fe"
+    },
+    {
+      "path": "rankaudit_perf_off_1.sif",
+      "bytes": 8333,
+      "sha256": "3fd55a6467aac9f85d0756547b6cddb2b62ec67c552396dea7afd18a60fa00e3"
+    },
+    {
+      "path": "rankaudit_perf_off_1.solver.log",
+      "bytes": 142291,
+      "sha256": "61d824e49b2a80ffb423561cd0b4386d62b0a466f4c1b75e05b6b308de9784b8"
+    },
+    {
+      "path": "rankaudit_perf_off_1.stderr.log",
+      "bytes": 2130,
+      "sha256": "043a6e191b51cf7d50f40c1b9ae4bb560300dabd4b70878d2fe5f9c9f2fe7eb8"
+    },
+    {
+      "path": "rankaudit_perf_off_1_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_off_1_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_off_1_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_off_1_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "rankaudit_perf_off_2.sif",
+      "bytes": 8333,
+      "sha256": "166c2c0609255ac9a5dee978afcc09b5a8997828b3d7cee55b6c728a4899cc14"
+    },
+    {
+      "path": "rankaudit_perf_off_2.solver.log",
+      "bytes": 142290,
+      "sha256": "65777a37aff969b913d23fe3065b7c40fcb93871c5c3d83a977f82570ca86a6e"
+    },
+    {
+      "path": "rankaudit_perf_off_2.stderr.log",
+      "bytes": 2130,
+      "sha256": "86b161c8e956fb1460c401ff08b70d621abd59a86f8a29d55ac4b6207d7bc271"
+    },
+    {
+      "path": "rankaudit_perf_off_2_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_off_2_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_off_2_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_off_2_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "rankaudit_perf_off_3.sif",
+      "bytes": 8333,
+      "sha256": "470fc808e51dcda3a72071fb10fac3fedc2c5e5fb38735c4927af392cf7c5fb6"
+    },
+    {
+      "path": "rankaudit_perf_off_3.solver.log",
+      "bytes": 142289,
+      "sha256": "432886c222ed748d6be79155cc22ba857b234485b3129a014d3c43df81ea6d31"
+    },
+    {
+      "path": "rankaudit_perf_off_3.stderr.log",
+      "bytes": 2130,
+      "sha256": "05524f181bdf6722015e2242088906cd713b25657f2b6215139f6308cabefe2c"
+    },
+    {
+      "path": "rankaudit_perf_off_3_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_off_3_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_off_3_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_off_3_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "rankaudit_perf_on_1.sif",
+      "bytes": 8380,
+      "sha256": "c489aae8ff9894488170a6a2d8a15e1b59942737c7c04a696142e61d0e797098"
+    },
+    {
+      "path": "rankaudit_perf_on_1.solver.log",
+      "bytes": 142460,
+      "sha256": "0fccadfbb2b2059273e88d5d9f452b151cc16c3c37ab13529046954c0d540524"
+    },
+    {
+      "path": "rankaudit_perf_on_1.stderr.log",
+      "bytes": 2130,
+      "sha256": "d9b365356a14138df78c5422a0fe3463a08bb2c459c9dc3d08c2bd69926ca515"
+    },
+    {
+      "path": "rankaudit_perf_on_1_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_on_1_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_on_1_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_on_1_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "rankaudit_perf_on_2.sif",
+      "bytes": 8380,
+      "sha256": "9ccb95a32e11706958dd94a4b070f0cd23012c06e385cf4c3e66118ef9b37330"
+    },
+    {
+      "path": "rankaudit_perf_on_2.solver.log",
+      "bytes": 142465,
+      "sha256": "189bcfc4087d454dee1fbb81462c1246158aaa7645d03bbfac0f37f3df79cd57"
+    },
+    {
+      "path": "rankaudit_perf_on_2.stderr.log",
+      "bytes": 2130,
+      "sha256": "f72ea416f7dd540c984da1fe7187dcc7cd143b5e3036e4ae2a81c5ef0cb64ec0"
+    },
+    {
+      "path": "rankaudit_perf_on_2_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_on_2_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_on_2_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_on_2_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "rankaudit_perf_on_3.sif",
+      "bytes": 8380,
+      "sha256": "f3254e19382622c62d5044a67f0d34e93ee46e91050d7a47fbcf180f3661579e"
+    },
+    {
+      "path": "rankaudit_perf_on_3.solver.log",
+      "bytes": 142463,
+      "sha256": "bcb84556b261a7e289cd94bc9c73d606b2e3ededdb22d487bc9a76ad570afd0f"
+    },
+    {
+      "path": "rankaudit_perf_on_3.stderr.log",
+      "bytes": 2130,
+      "sha256": "149fcad10b7c4388085d76b9e33245ac4ac85622dfaba82381e8726f38be92cc"
+    },
+    {
+      "path": "rankaudit_perf_on_3_1_iterations.csv",
+      "bytes": 1688,
+      "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+    },
+    {
+      "path": "rankaudit_perf_on_3_1_series.csv",
+      "bytes": 449,
+      "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+    },
+    {
+      "path": "rankaudit_perf_on_3_2_iterations.csv",
+      "bytes": 1688,
+      "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+    },
+    {
+      "path": "rankaudit_perf_on_3_2_series.csv",
+      "bytes": 449,
+      "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+    },
+    {
+      "path": "report_ja.md",
+      "bytes": 6453,
+      "sha256": "f74fc2e563ef2569b2203a2c4c3833b1b31a7c20bb804a16ac02e019fb1b2ced"
+    },
+    {
+      "path": "run_dualtes_rankaudit_perf.py",
+      "bytes": 4048,
+      "sha256": "ccbc62663622615943cd05f2bd870ea8638df5a8dac0b7aa27d15e885652b258"
+    }
+  ]
+}

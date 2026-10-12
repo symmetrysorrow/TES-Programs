@@ -1,0 +1,385 @@
+{
+  "schema": "dualtes-ast-rank-cache-audit-v1",
+  "rank_audit_log": "dualtes_rankaudit_verify.solver.log",
+  "rankless_no_safe_message_count": 1,
+  "no_safe_callsite_source": "01_phase24_source_from_release_26_1.patch: Phase24BuildGenericDynKCache returns through this message when the local eligible material count is zero",
+  "no_safe_branch_ranks": [
+    0,
+    3
+  ],
+  "all_six_solver_build_returncode": 0,
+  "rank_rows": [
+    {
+      "rank": 0,
+      "material7_prism_elements": 0,
+      "matc_metadata_gate": "NOT_EVALUATED: no local Material 7 prism candidates",
+      "ast_gate": "NOT_EVALUATED: no local candidate element",
+      "unique_nodes": 0,
+      "matc_evaluations_per_assembly": 0,
+      "assembly_evaluation_events": 0,
+      "matc_evaluation_calls_total": 0,
+      "cache_hits_per_reuse_assembly": 0,
+      "cache_hit_elements_total": 0,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [],
+      "build": {
+        "material_count": 0,
+        "unique_nodes": 0,
+        "wall_seconds": 0.005
+      },
+      "assembly_evaluations": []
+    },
+    {
+      "rank": 1,
+      "material7_prism_elements": 33413,
+      "matc_metadata_gate": "PASS (global Material 7 scalar Variable Temperature, no Lua/procedure, one conductivity entry)",
+      "ast_gate": "PASS (cache builder accepted material; standalone AST test accepts exact expression)",
+      "unique_nodes": 20441,
+      "matc_evaluations_per_assembly": 1,
+      "assembly_evaluation_events": 6,
+      "matc_evaluation_calls_total": 6,
+      "cache_hits_per_reuse_assembly": 33413,
+      "cache_hit_elements_total": 167065,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [
+        {
+          "element": 14,
+          "material": 7,
+          "max_abs": 0.0
+        },
+        {
+          "element": 15,
+          "material": 7,
+          "max_abs": 0.0
+        }
+      ],
+      "build": {
+        "material_count": 1,
+        "unique_nodes": 20441,
+        "wall_seconds": 0.28
+      },
+      "assembly_evaluations": [
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 0,
+          "wall_seconds": 0.844
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 33413,
+          "wall_seconds": 0.933
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 33413,
+          "wall_seconds": 0.869
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 33413,
+          "wall_seconds": 0.812
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 33413,
+          "wall_seconds": 0.91
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 20441,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 33413,
+          "wall_seconds": 0.862
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "material7_prism_elements": 30657,
+      "matc_metadata_gate": "PASS (global Material 7 scalar Variable Temperature, no Lua/procedure, one conductivity entry)",
+      "ast_gate": "PASS (cache builder accepted material; standalone AST test accepts exact expression)",
+      "unique_nodes": 18780,
+      "matc_evaluations_per_assembly": 1,
+      "assembly_evaluation_events": 6,
+      "matc_evaluation_calls_total": 6,
+      "cache_hits_per_reuse_assembly": 30657,
+      "cache_hit_elements_total": 153285,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [
+        {
+          "element": 14,
+          "material": 7,
+          "max_abs": 0.0
+        },
+        {
+          "element": 15,
+          "material": 7,
+          "max_abs": 0.0
+        }
+      ],
+      "build": {
+        "material_count": 1,
+        "unique_nodes": 18780,
+        "wall_seconds": 0.234
+      },
+      "assembly_evaluations": [
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 0,
+          "wall_seconds": 0.794
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 30657,
+          "wall_seconds": 0.865
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 30657,
+          "wall_seconds": 0.84
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 30657,
+          "wall_seconds": 0.786
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 30657,
+          "wall_seconds": 0.815
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 18780,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 30657,
+          "wall_seconds": 0.837
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "material7_prism_elements": 0,
+      "matc_metadata_gate": "NOT_EVALUATED: no local Material 7 prism candidates",
+      "ast_gate": "NOT_EVALUATED: no local candidate element",
+      "unique_nodes": 0,
+      "matc_evaluations_per_assembly": 0,
+      "assembly_evaluation_events": 0,
+      "matc_evaluation_calls_total": 0,
+      "cache_hits_per_reuse_assembly": 0,
+      "cache_hit_elements_total": 0,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [],
+      "build": {
+        "material_count": 0,
+        "unique_nodes": 0,
+        "wall_seconds": 0.005
+      },
+      "assembly_evaluations": []
+    },
+    {
+      "rank": 4,
+      "material7_prism_elements": 27807,
+      "matc_metadata_gate": "PASS (global Material 7 scalar Variable Temperature, no Lua/procedure, one conductivity entry)",
+      "ast_gate": "PASS (cache builder accepted material; standalone AST test accepts exact expression)",
+      "unique_nodes": 17088,
+      "matc_evaluations_per_assembly": 1,
+      "assembly_evaluation_events": 6,
+      "matc_evaluation_calls_total": 6,
+      "cache_hits_per_reuse_assembly": 27807,
+      "cache_hit_elements_total": 139035,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [
+        {
+          "element": 99822,
+          "material": 7,
+          "max_abs": 0.0
+        },
+        {
+          "element": 99823,
+          "material": 7,
+          "max_abs": 0.0
+        }
+      ],
+      "build": {
+        "material_count": 1,
+        "unique_nodes": 17088,
+        "wall_seconds": 0.21
+      },
+      "assembly_evaluations": [
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 0,
+          "wall_seconds": 0.715
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 27807,
+          "wall_seconds": 0.758
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 27807,
+          "wall_seconds": 0.728
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 27807,
+          "wall_seconds": 0.713
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 27807,
+          "wall_seconds": 0.756
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 17088,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 27807,
+          "wall_seconds": 0.742
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "material7_prism_elements": 36023,
+      "matc_metadata_gate": "PASS (global Material 7 scalar Variable Temperature, no Lua/procedure, one conductivity entry)",
+      "ast_gate": "PASS (cache builder accepted material; standalone AST test accepts exact expression)",
+      "unique_nodes": 22024,
+      "matc_evaluations_per_assembly": 1,
+      "assembly_evaluation_events": 6,
+      "matc_evaluation_calls_total": 6,
+      "cache_hits_per_reuse_assembly": 36023,
+      "cache_hit_elements_total": 180115,
+      "fallback_candidate_elements": 0,
+      "verify_samples": [
+        {
+          "element": 50527,
+          "material": 7,
+          "max_abs": 0.0
+        },
+        {
+          "element": 50528,
+          "material": 7,
+          "max_abs": 0.0
+        }
+      ],
+      "build": {
+        "material_count": 1,
+        "unique_nodes": 22024,
+        "wall_seconds": 0.294
+      },
+      "assembly_evaluations": [
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 0,
+          "wall_seconds": 0.936
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 36023,
+          "wall_seconds": 1.034
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 36023,
+          "wall_seconds": 0.947
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 36023,
+          "wall_seconds": 0.94
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 36023,
+          "wall_seconds": 0.974
+        },
+        {
+          "materials": 1,
+          "unique_nodes": 22024,
+          "listgetreal_calls": 1,
+          "previous_assembly_hits": 36023,
+          "wall_seconds": 0.946
+        }
+      ]
+    }
+  ],
+  "ast_unit_test_log": "matc_ast_purity_test.log",
+  "ast_unit_test_result": "RESULT failures=0",
+  "performance": {
+    "off": {
+      "seconds": [
+        74.84125319999293,
+        74.27793820000079,
+        75.83519389999856
+      ],
+      "mean": 74.98479509999743,
+      "sample_stdev": 0.7884887675715865,
+      "median": 74.84125319999293,
+      "returncodes": [
+        0,
+        0,
+        0
+      ]
+    },
+    "on": {
+      "seconds": [
+        25.61524389999977,
+        25.40094200000749,
+        27.982586199999787
+      ],
+      "mean": 26.332924033335683,
+      "sample_stdev": 1.4326619539086176,
+      "median": 25.61524389999977,
+      "returncodes": [
+        0,
+        0,
+        0
+      ]
+    },
+    "speedup_off_over_on": 2.8475681244161035,
+    "wall_reduction_percent": 64.8823151437316
+  }
+}

@@ -1,0 +1,1351 @@
+{
+  "build": "AST-purity reconstructed Release; same binary for all six runs",
+  "order": [
+    [
+      "off",
+      1
+    ],
+    [
+      "on",
+      1
+    ],
+    [
+      "on",
+      2
+    ],
+    [
+      "off",
+      2
+    ],
+    [
+      "off",
+      3
+    ],
+    [
+      "on",
+      3
+    ]
+  ],
+  "records": [
+    {
+      "case": "DualTES",
+      "mode": "off",
+      "repeat": 1,
+      "returncode": 0,
+      "wall_seconds": 74.84125319999293,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": false,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "3fd55a6467aac9f85d0756547b6cddb2b62ec67c552396dea7afd18a60fa00e3",
+      "stdout_log": "rankaudit_perf_off_1.solver.log",
+      "stderr_log": "rankaudit_perf_off_1.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_off_1_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_off_1_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_off_1_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_off_1_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.0",
+          "bytes": 9491992,
+          "sha256": "695377863c30f3be45946bbf6aa35bf7acd9428c5028de7dca7855a1a2c75d47"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.1",
+          "bytes": 9650696,
+          "sha256": "37c03884496d390b60f458e6c30f1ea956344fee366adcba786ebd7b1b82e209"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.2",
+          "bytes": 9617208,
+          "sha256": "ec4f52cd118f1e98b709fefad4bde14561fbc6996dbe55dd2eb3c144921102bb"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.3",
+          "bytes": 9536920,
+          "sha256": "ebbc7d2a97b9e1762f738f2be8d0eaaa723cceaee39458ebdf0d8cf636daa4c2"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.4",
+          "bytes": 9481384,
+          "sha256": "c9396e1d702b85e47aafff955a807c4633be47aaf8ed8d59dd4aecb9a4edc71a"
+        },
+        {
+          "file": "rankaudit_perf_off_1.result.5",
+          "bytes": 9511960,
+          "sha256": "eba56bc857241f65fa47e7967a7807901ea7324adbf628093c5ca37cd607fb6f"
+        }
+      ]
+    },
+    {
+      "case": "DualTES",
+      "mode": "on",
+      "repeat": 1,
+      "returncode": 0,
+      "wall_seconds": 25.61524389999977,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": true,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "c489aae8ff9894488170a6a2d8a15e1b59942737c7c04a696142e61d0e797098",
+      "stdout_log": "rankaudit_perf_on_1.solver.log",
+      "stderr_log": "rankaudit_perf_on_1.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_on_1_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_on_1_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_on_1_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_on_1_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.0",
+          "bytes": 9491992,
+          "sha256": "95474bd8bf0ad87078c609bf8d80048d20a44f0da150a1bfd74f94f5a0ad1f0f"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.1",
+          "bytes": 9650696,
+          "sha256": "2ea48ffbffdc453548571363ee8ce7ab4d1b00d95ae83ac0af1c64d8970acedb"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.2",
+          "bytes": 9617208,
+          "sha256": "7b5e912dae4759a4ad57d0cc265517375bd1fe950b2ccb0239dc9f0d0bc037b0"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.3",
+          "bytes": 9536920,
+          "sha256": "f4e20b3055f12adbf122375ae734c8355f9715ba46497bedabfc3e7512af0f03"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.4",
+          "bytes": 9481384,
+          "sha256": "596b3df839468c30407c88fb0105ff59f1457ec3b14a4a0b83a1cdc92380454e"
+        },
+        {
+          "file": "rankaudit_perf_on_1.result.5",
+          "bytes": 9511960,
+          "sha256": "ce4cf186ee1773e0c995061c785d31875e66481d3a861b2107a94569c3c73345"
+        }
+      ]
+    },
+    {
+      "case": "DualTES",
+      "mode": "on",
+      "repeat": 2,
+      "returncode": 0,
+      "wall_seconds": 25.40094200000749,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": true,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "9ccb95a32e11706958dd94a4b070f0cd23012c06e385cf4c3e66118ef9b37330",
+      "stdout_log": "rankaudit_perf_on_2.solver.log",
+      "stderr_log": "rankaudit_perf_on_2.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_on_2_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_on_2_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_on_2_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_on_2_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.0",
+          "bytes": 9491992,
+          "sha256": "af475beffd6566db59dcaab46553e93055b3e0b09e2e3e5aba43a4221894f184"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.1",
+          "bytes": 9650696,
+          "sha256": "0502751df655ba861b55eefb969f70c935e57768e130f7f3ae701618ea3fcbcd"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.2",
+          "bytes": 9617208,
+          "sha256": "5d348c8d1163abbdd7472b782703e1b2e313a21f18019c7019dd8c2670159468"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.3",
+          "bytes": 9536920,
+          "sha256": "1eb4978fdbc863808c1b7a9aa64f874601225dc304a12610816f00373669edce"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.4",
+          "bytes": 9481384,
+          "sha256": "3b712e0fda8cb38e806036be5968a55321dea74bb797a50f413345873c6340fa"
+        },
+        {
+          "file": "rankaudit_perf_on_2.result.5",
+          "bytes": 9511960,
+          "sha256": "fa5e772adf906ea89be4c0505cb02455ac8af224bef7211ede79708444370b3e"
+        }
+      ]
+    },
+    {
+      "case": "DualTES",
+      "mode": "off",
+      "repeat": 2,
+      "returncode": 0,
+      "wall_seconds": 74.27793820000079,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": false,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "166c2c0609255ac9a5dee978afcc09b5a8997828b3d7cee55b6c728a4899cc14",
+      "stdout_log": "rankaudit_perf_off_2.solver.log",
+      "stderr_log": "rankaudit_perf_off_2.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_off_2_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_off_2_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_off_2_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_off_2_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.0",
+          "bytes": 9491992,
+          "sha256": "cb2624d336ec8c02845d17801ef7f1b77731a1ae5d267b2626ca426745cf1bff"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.1",
+          "bytes": 9650696,
+          "sha256": "e447c077db7d3d060f1dbef98e98db2355179c5abd8988af8f3a22f0d8f9214a"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.2",
+          "bytes": 9617208,
+          "sha256": "f2af405042d9051e896b62fb5f7f4be43017b1e336ded00317eeb87478b7de1b"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.3",
+          "bytes": 9536920,
+          "sha256": "2ecf14716158ace97176f02783302a711498c44fd2b26eb99f4b6f4adb14559b"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.4",
+          "bytes": 9481384,
+          "sha256": "84a725faf0f8151ef350dbc2577fed99833bbd465e3ec305421d1d1304f2e371"
+        },
+        {
+          "file": "rankaudit_perf_off_2.result.5",
+          "bytes": 9511960,
+          "sha256": "b0e2284b4ab146da84811464e9d313c44f7a39f71d74c3841efad23901e45ab9"
+        }
+      ]
+    },
+    {
+      "case": "DualTES",
+      "mode": "off",
+      "repeat": 3,
+      "returncode": 0,
+      "wall_seconds": 75.83519389999856,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": false,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "470fc808e51dcda3a72071fb10fac3fedc2c5e5fb38735c4927af392cf7c5fb6",
+      "stdout_log": "rankaudit_perf_off_3.solver.log",
+      "stderr_log": "rankaudit_perf_off_3.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_off_3_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_off_3_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_off_3_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_off_3_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.0",
+          "bytes": 9491992,
+          "sha256": "e1e7d9a8a5f74cb21e7c1ce050ce597bea999b22f7439b9a4d09a54259657a75"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.1",
+          "bytes": 9650696,
+          "sha256": "1ecd3b88e6050fec7eabf669fb08c3586a847b40772f9c4cf82abf889fa96709"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.2",
+          "bytes": 9617208,
+          "sha256": "f1e5c28bed492064b9f518615b82bc4b4ab495db9e0a9d601a3e33fc2d3c9c63"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.3",
+          "bytes": 9536920,
+          "sha256": "0e9b3b77d226458733bad72439eef8eaf64ce5a0983ea2062c281c4aa5e5cfe3"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.4",
+          "bytes": 9481384,
+          "sha256": "b11f1467983acfd9ae4d244c16e9075953d99f1230a6267bfc98183250624b5f"
+        },
+        {
+          "file": "rankaudit_perf_off_3.result.5",
+          "bytes": 9511960,
+          "sha256": "17fc291654aedff9cbb9efb6b3c85f8a3635ac6257278bb784f0b3a094af09ad"
+        }
+      ]
+    },
+    {
+      "case": "DualTES",
+      "mode": "on",
+      "repeat": 3,
+      "returncode": 0,
+      "wall_seconds": 27.982586199999787,
+      "ranks": 6,
+      "steps": 4,
+      "vector_assembly": false,
+      "cache_verify": false,
+      "cache_enabled": true,
+      "solver_sha256": "70e1d4cd12b6177b44961f7afbb85379b4faa568b7e44fc432fc1ef4cba683a5",
+      "heat_solve_sha256": "9f9a1ddb7e5737defa9508233024880a5d7083e765e69d3685673ba4fa8dc6fd",
+      "matc_sha256": "3fb50c8464cc171ac7b3227394e45d688f1eb2418848481a5badec9325b7fc7a",
+      "sif_sha256": "f3254e19382622c62d5044a67f0d34e93ee46e91050d7a47fbcf180f3661579e",
+      "stdout_log": "rankaudit_perf_on_3.solver.log",
+      "stderr_log": "rankaudit_perf_on_3.stderr.log",
+      "result_norms": [
+        0.16541551045040612,
+        0.16541551040087787,
+        0.16541551008208444,
+        0.16541550976030406,
+        0.16541845406041666,
+        0.16541845405997213
+      ],
+      "hypre_pcg": [
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          77,
+          9.481e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          3,
+          8.95e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          6.961e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          1,
+          8.16e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          4,
+          1.029e-12
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ],
+        [
+          1,
+          3.73e-13
+        ]
+      ],
+      "outputs": [
+        {
+          "file": "rankaudit_perf_on_3_1_series.csv",
+          "sha256": "de9668053d770af46cf49de06b9c2dd60c338ca628f95dce65485e2f90b82431"
+        },
+        {
+          "file": "rankaudit_perf_on_3_1_iterations.csv",
+          "sha256": "8cb4fc4b3b5dc3b1806d9b43b173b425a85f52abb507b8e60e0c866836adfe7f"
+        },
+        {
+          "file": "rankaudit_perf_on_3_2_series.csv",
+          "sha256": "ca79414a79582a7712b1e0e0dcc7fe00d34687d73aa7b96ef12b51432f360623"
+        },
+        {
+          "file": "rankaudit_perf_on_3_2_iterations.csv",
+          "sha256": "d3e1fa2e5721a3f621f5b2518d203875578abfd91b932c5a6f33028c97613a73"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.0",
+          "bytes": 9491992,
+          "sha256": "585b49e727b87b97f4cad0aa1a5374c4e0bbad670c66ad791897edf883d1ccf7"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.1",
+          "bytes": 9650696,
+          "sha256": "6db5ab9c44e8ac5b50788ffc607d2b1db1f618d0e670d2a52257a170f1a503bc"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.2",
+          "bytes": 9617208,
+          "sha256": "633ad3cff6d4e8e83581002556e8a6105e87ead07905b8081341f6148f2cb9c1"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.3",
+          "bytes": 9536920,
+          "sha256": "944c7bbe753459737e4ec5eddbba73753afd2b8dbd31cdd9fa289062b5fcdbbf"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.4",
+          "bytes": 9481384,
+          "sha256": "f7340e573bbaa6202b366d1d45e06b1a122ccf74facc69dfa3622b385f3fba8b"
+        },
+        {
+          "file": "rankaudit_perf_on_3.result.5",
+          "bytes": 9511960,
+          "sha256": "3292bac2aa64cfd20251c561cefebaa04874db5a072b6df17197a4af968aae5d"
+        }
+      ]
+    }
+  ]
+}
