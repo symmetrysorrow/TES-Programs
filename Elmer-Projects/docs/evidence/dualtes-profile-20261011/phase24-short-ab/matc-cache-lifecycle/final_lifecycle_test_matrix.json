@@ -1,0 +1,76 @@
+{
+  "base_commit": "5ef7888636a2d238177eb5234ecb131e4d97651b",
+  "upstream_elmer_commit": "5a8de867068be0568f09af40fb90fee300dfbede",
+  "patch_sequence": [
+    "01_phase24_source_from_release_26_1.patch",
+    "02_matc_ast_purity_validator.patch",
+    "03_matc_cache_lifecycle.patch"
+  ],
+  "default_cache": "OFF",
+  "vector_assembly": "OFF",
+  "full_75ms_run": "NOT_RUN",
+  "lifecycle": {
+    "same_model_multiple_activation_four_step_debug_bounds_check": "PASS; 6 MPI ranks; restart input; cache ON; 0 verifier element delta; normal exit",
+    "same_model_multiple_activation_release_dualtes_and_singlepixel": "PASS; OFF/ON 4-step; six ranks; exact scalar output tables, field max errors documented in comparison JSON",
+    "restart_first_assembly": "PASS; restart states used by first activation in the above runs",
+    "same_process_solver_reinitialization": "SKIP; no supported isolated reinitialize harness implemented",
+    "same_process_model_switch": "SKIP; ReloadInput module documents incomplete reload semantics; unsafe to claim a lifecycle test without dedicated harness",
+    "same_process_body_material_mapping_change": "SKIP",
+    "same_process_material_expression_change": "SKIP",
+    "same_node_count_connectivity_change": "SKIP",
+    "shared_node_different_material": "SKIP; no synthetic mesh fixture was built",
+    "same_process_cache_off_on_off": "SKIP",
+    "pre_cache_early_return": "STATIC_ONLY; entry clears activation-local state; no runtime early-return fixture",
+    "allocatable_scope_release": "LANGUAGE_AND_STATIC_AUDIT; local allocatables have no SAVE and belong to recursive HeatSolver activation; no heap leak detector available",
+    "double_free_or_out_of_bounds": "DEBUG_RUNTIME_PASS for executed normal 4-step case; broader mutation paths not exercised"
+  },
+  "memory_diagnostics": {
+    "debug_flags": "-O0 -g -fcheck=all -finit-real=snan -finit-integer=-999 -fbacktrace -ffpe-trap=invalid,zero,overflow",
+    "debug_solver_returncode": 0,
+    "address_sanitizer": "UNAVAILABLE; GCC linker lacks libasan; exact probe log included",
+    "uninitialized_detection_limit": "sentinel initialization options are not a complete uninitialized-memory detector"
+  },
+  "matc_negative_runtime": {
+    "time_or_external_symbol": "CACHE_REJECTED; Generic MATC failed on undeclared ty, nonzero solver exit",
+    "time_property_dependency": "CACHE_REJECTED; Variable Time SIF fixture completed one step through Generic evaluation",
+    "coordinate_property_dependency": "CACHE_REJECTED; Variable Coordinate 1 SIF fixture completed one step through Generic evaluation",
+    "coordinate_symbol": "CACHE_REJECTED; Generic MATC failed on undeclared x, nonzero solver exit",
+    "unregistered_symbol": "CACHE_REJECTED; Generic MATC failed on undeclared identifier, nonzero solver exit",
+    "unknown_function": "CACHE_REJECTED; Generic MATC failed as expected, nonzero solver exit",
+    "assignment": "CACHE_REJECTED; Generic MATC did not evaluate successfully, nonzero solver exit",
+    "syntax_error": "CACHE_REJECTED; Generic input/evaluation failed, nonzero solver exit",
+    "procedure": "CACHE_REJECTED; one-step generic calculation completed successfully",
+    "anisotropic_conductivity_components": "CACHE_REJECTED; one-step generic calculation completed successfully",
+    "multiple_conductivity_components": "CACHE_REJECTED; one-step generic calculation completed successfully",
+    "lua": "SKIP; no matching conductivity Lua fixture",
+    "fallback_and_physics_status_are_separate": true
+  },
+  "numeric_regression": {
+    "release_dualtes_and_singlepixel_four_step_off_on": "PASS",
+    "temperature_scope": "all ranks and all nodes at all four result timesteps",
+    "temperature_max_abs_K": {
+      "dualtes": 1.3877787807814457e-16,
+      "singlepixel": 8.326672684688674e-17
+    },
+    "tes_csv": "byte-identical SHA256 by case and mode pair",
+    "result_norm_and_hypre": "equal in captured OFF/ON release logs",
+    "matrix_rhs": "NOT_RECAPTURED in this final replay; prior 03 capture is preserved separately"
+  },
+  "performance": {
+    "final_release_each_case_each_mode_repeats": 3,
+    "verify": false,
+    "dualtes_summary": "final_release_performance_summary.json",
+    "singlepixel_summary": "final_release_performance_summary.json",
+    "older_release_same_host_followup": "old03_dualtes_performance_summary.json",
+    "same_host_old03_means_s": {
+      "off": 86.33676463334025,
+      "on": 31.171510033333714
+    },
+    "same_host_final_release_means_s": {
+      "off": 84.74668010000217,
+      "on": 31.215007433333085
+    },
+    "historical_03_mean_reproduction": "NOT_REPRODUCED; old DLL remeasurement was faster on both modes, cause cannot be isolated without prior host load telemetry"
+  },
+  "decision": "experimental candidate only; default remains OFF because same-process model/mesh/material mutation and reinitialization tests are not complete"
+}

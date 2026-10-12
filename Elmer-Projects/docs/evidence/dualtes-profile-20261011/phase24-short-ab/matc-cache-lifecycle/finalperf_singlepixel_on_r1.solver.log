@@ -1,0 +1,1882 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/12 15:50:51
+ParCommInit: 
+ParCommInit: 
+ParCommInit: 
+Initialize #PEs: 6
+ParCommInit: 
+Initialize #PEs: 6
+Initialize #PEs: 6
+MAIN: 
+Initialize #PEs: 6
+
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: 5a8de86, Compiled: 2026-10-12)
+MAIN:  Running in parallel using 6 tasks.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  Lua interpreter linked in.
+MAIN: =============================================================
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: finalperf_singlepixel_on_r1.sif
+LoadInputFile: Scanning input file: finalperf_singlepixel_on_r1.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+LoadInputFile: Loading input file: finalperf_singlepixel_on_r1.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [phase24 bdf2 predictor] in section: [simulation]
+CheckKeyword:  Unlisted keyword: [tes series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse energy] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse start time] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse duration] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse transition zone] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse sigma] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse shape] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse radius] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center x] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center y] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse center z] in section: [constants]
+CheckKeyword:  Unlisted keyword: [pulse discrete norm] in section: [constants]
+CheckKeyword:  Unlisted keyword: [phase24 wall profiling] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 vector assembly] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 dynamic k node cache] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 dynamic k node cache verify] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 static matrix reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Body ID] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource]
+Loading user function library: [tes_transient_heat_source_t0]...[AbsorberWindowPulseHeatSource]
+LoadInputFile: Number of BCs: 1
+LoadInputFile: Number of Body Forces: 2
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 10
+ElmerAsciiMesh: Base mesh name: workspace/work/meshes/mesh_hybrid_fullconf_h8
+LoadMesh: Elapsed REAL time:     2.0330 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 9033
+OptimizeBandwidth: Optimized bandwidth for heat equation: 3289
+LoadRestartFile: 
+LoadRestartFile: --------------------------------------------
+LoadRestartFile: Reading data from file: mesh_hybrid_fullconf_h8/case_toml_1b5ec032c418_steady.result.0
+LoadRestartFile: ASCII 3
+LoadRestartFile: Reading ascii restart file version 3
+LoadRestartFile: Total number of dofs in restart file: 1
+LoadRestartFile: Reading time sequence:    1.000E+00
+LoadRestartFile: Reading variables on timestep: 1
+LoadRestartFile: Time spent for restart (s):      7.0500E-01
+LoadRestartFile: All done
+LoadRestartFile: --------------------------------------------
+MAIN: Number of timesteps to be saved: 4
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 1/4:   2.002E-02
+MAIN: -------------------------------------
+MAIN: 
+ParallelInitMatrix: Creating communication structures for matrix!
+ParallelInitMatrix: Allocating communication structures for matrix!
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 generic dynamic-k cache material=7, unique_nodes=10407
+HeatSolve: TES inner circuits: 1, numbered keywords=F
+HeatSolve: TES circuit elements: local=550, global=9278, mean T=  1.687107E-01, active elements=260136
+Phase24 UDF Circuit: Elapsed REAL time:     0.0510 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=1, material=4, class=2, elements=8401, body_class_wall=  1.41000E-01, material_eval=  8.00000E-03, local_calc=  1.07000E-01, global_update=  6.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=2, material=5, class=2, elements=8401, body_class_wall=  1.39000E-01, material_eval=  1.30000E-02, local_calc=  1.00000E-01, global_update=  6.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=3, material=4, class=2, elements=20441, body_class_wall=  3.67000E-01, material_eval=  3.30000E-02, local_calc=  2.68000E-01, global_update=  1.40000E-02, other=  5.20000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=4, material=5, class=2, elements=33626, body_class_wall=  5.69000E-01, material_eval=  3.90000E-02, local_calc=  4.26000E-01, global_update=  2.60000E-02, other=  7.80000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=5, material=7, class=2, elements=7291, body_class_wall=  1.30000E-01, material_eval=  4.00000E-03, local_calc=  9.30000E-02, global_update=  6.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=6, material=6, class=2, elements=16812, body_class_wall=  2.85000E-01, material_eval=  2.30000E-02, local_calc=  2.03000E-01, global_update=  1.60000E-02, other=  4.30000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=7, material=7, class=2, elements=3652, body_class_wall=  7.30000E-02, material_eval=  5.00000E-03, local_calc=  5.60000E-02, global_update=  3.00000E-03, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=8, material=2, class=2, elements=484, body_class_wall=  5.00000E-03, material_eval=  1.00000E-03, local_calc=  4.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  3.19028E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  3.19028E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  6.39136E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  3.20023E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=1, material=4, class=2, elements=8072, body_class_wall=  1.38000E-01, material_eval=  1.10000E-02, local_calc=  9.80000E-02, global_update=  6.00000E-03, other=  2.30000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=2, material=5, class=2, elements=8072, body_class_wall=  1.50000E-01, material_eval=  8.00000E-03, local_calc=  1.12000E-01, global_update=  9.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=3, material=4, class=2, elements=20739, body_class_wall=  3.65000E-01, material_eval=  1.00000E-02, local_calc=  2.69000E-01, global_update=  1.80000E-02, other=  6.80000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=4, material=5, class=2, elements=32221, body_class_wall=  5.42000E-01, material_eval=  3.40000E-02, local_calc=  4.10000E-01, global_update=  2.80000E-02, other=  7.00000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=5, material=7, class=2, elements=9101, body_class_wall=  1.47000E-01, material_eval=  8.00000E-03, local_calc=  1.16000E-01, global_update=  6.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=6, material=6, class=2, elements=16110, body_class_wall=  3.02000E-01, material_eval=  1.50000E-02, local_calc=  2.33000E-01, global_update=  1.20000E-02, other=  4.20000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=7, material=7, class=2, elements=4424, body_class_wall=  5.40000E-02, material_eval=  2.00000E-03, local_calc=  3.80000E-02, global_update=  3.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=8, material=2, class=2, elements=439, body_class_wall=  5.00000E-03, material_eval=  0.00000E+00, local_calc=  2.00000E-03, global_update=  1.00000E-03, other=  2.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=9, material=3, class=2, elements=18, body_class_wall=  1.00000E-03, material_eval=  1.00000E-03, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+.
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  3.19893E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=3, material=4, class=2, elements=5094, body_class_wall=  8.80000E-02, material_eval=  3.00000E-03, local_calc=  6.90000E-02, global_update=  5.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=5, material=7, class=2, elements=10358, body_class_wall=  1.59000E-01, material_eval=  9.00000E-03, local_calc=  1.15000E-01, global_update=  7.00000E-03, other=  2.80000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=7, material=7, class=2, elements=5318, body_class_wall=  8.60000E-02, material_eval=  3.00000E-03, local_calc=  5.40000E-02, global_update=  8.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=8, material=2, class=2, elements=2666, body_class_wall=  5.20000E-02, material_eval=  2.00000E-03, local_calc=  3.20000E-02, global_update=  2.00000E-03, other=  1.60000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=9, material=3, class=2, elements=76108, body_class_wall=  1.25100E+00, material_eval=  9.20000E-02, local_calc=  9.25000E-01, global_update=  5.40000E-02, other=  1.80000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=10, material=1, class=1, elements=25290, body_class_wall=  4.07000E-01, material_eval=  2.70000E-02, local_calc=  1.82000E-01, global_update=  1.60000E-02, other=  1.82000E-01
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  9.59735E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=3, material=4, class=2, elements=5264, body_class_wall=  7.80000E-02, material_eval=  6.00000E-03, local_calc=  5.90000E-02, global_update=  4.00000E-03, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=5, material=7, class=2, elements=10583, body_class_wall=  1.87000E-01, material_eval=  8.00000E-03, local_calc=  1.33000E-01, global_update=  9.00000E-03, other=  3.70000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=7, material=7, class=2, elements=5396, body_class_wall=  9.50000E-02, material_eval=  7.00000E-03, local_calc=  7.30000E-02, global_update=  3.00000E-03, other=  1.20000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=8, material=2, class=2, elements=2405, body_class_wall=  4.20000E-02, material_eval=  4.00000E-03, local_calc=  2.20000E-02, global_update=  2.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=9, material=3, class=2, elements=77802, body_class_wall=  1.33400E+00, material_eval=  9.00000E-02, local_calc=  9.50000E-01, global_update=  7.20000E-02, other=  2.22000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=10, material=1, class=1, elements=20817, body_class_wall=  3.51000E-01, material_eval=  1.90000E-02, local_calc=  1.73000E-01, global_update=  1.50000E-02, other=  1.44000E-01
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  9.59761E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=3, material=4, class=2, elements=6268, body_class_wall=  1.10000E-01, material_eval=  6.00000E-03, local_calc=  7.30000E-02, global_update=  1.00000E-02, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=5, material=7, class=2, elements=12534, body_class_wall=  2.10000E-01, material_eval=  7.00000E-03, local_calc=  1.63000E-01, global_update=  9.00000E-03, other=  3.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=7, material=7, class=2, elements=6318, body_class_wall=  1.08000E-01, material_eval=  5.00000E-03, local_calc=  8.40000E-02, global_update=  3.00000E-03, other=  1.60000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=8, material=2, class=2, elements=2734, body_class_wall=  4.40000E-02, material_eval=  2.00000E-03, local_calc=  2.80000E-02, global_update=  5.00000E-03, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=9, material=3, class=2, elements=73811, body_class_wall=  1.30600E+00, material_eval=  8.30000E-02, local_calc=  9.55000E-01, global_update=  7.30000E-02, other=  1.95000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=10, material=1, class=1, elements=18884, body_class_wall=  2.83000E-01, material_eval=  1.80000E-02, local_calc=  1.48000E-01, global_update=  1.20000E-02, other=  1.05000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  3.19437E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  3.19961E-02, rhs_est=  6.39997E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=3, material=4, class=2, elements=5734, body_class_wall=  7.20000E-02, material_eval=  7.00000E-03, local_calc=  5.00000E-02, global_update=  6.00000E-03, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=4, material=5, class=2, elements=112, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=5, material=7, class=2, elements=11245, body_class_wall=  1.42000E-01, material_eval=  5.00000E-03, local_calc=  1.05000E-01, global_update=  1.30000E-02, other=  1.90000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=6, material=6, class=2, elements=56, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=7, material=7, class=2, elements=5448, body_class_wall=  5.80000E-02, material_eval=  2.00000E-03, local_calc=  4.90000E-02, global_update=  2.00000E-03, other=  5.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=8, material=2, class=2, elements=550, body_class_wall=  8.00000E-03, material_eval=  0.00000E+00, local_calc=  6.00000E-03, global_update=  0.00000E+00, other=  2.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=9, material=3, class=2, elements=37, body_class_wall=  2.00000E-03, material_eval=  0.00000E+00, local_calc=  2.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=10, material=1, class=1, elements=236916, body_class_wall=  3.32200E+00, material_eval=  2.08000E-01, local_calc=  1.55800E+00, global_update=  1.21000E-01, other=  1.43500E+00
+Elapsed REAL time:     3.6050 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  1.0000E-03, setup=  0.0000E+00, pack=  1.0000E-03, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=0, call=1, local_constraints=19, global_constraints=8544, total=  6.0000E-03, local_count=  0.0000E+00, count_reduce=  1.0000E-03, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=4, call=1, local_constraints=0, global_constraints=8544, total=  1.4930E+00, local_count=  0.0000E+00, count_reduce=  1.4870E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=3, call=1, local_constraints=0, global_constraints=8544, total=  1.5490E+00, local_count=  0.0000E+00, count_reduce=  1.5430E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=5, call=1, local_constraints=0, global_constraints=8544, total=  1.4600E+00, local_count=  0.0000E+00, count_reduce=  1.4540E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=4, iter=1, preinit=  0.0000E+00, initialize=  2.0000E-03, prebulk=  5.4700E-01, bulk=  2.0880E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  1.4950E+00, post=  0.0000E+00, assembly=  4.1320E+00
+Phase24 rank wall: rank=0, iter=1, preinit=  2.0000E-03, initialize=  1.0000E-03, prebulk=  5.1500E-01, bulk=  3.6050E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  4.1310E+00
+Phase24 rank wall: rank=5, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  6.0500E-01, bulk=  2.0610E+00, boundary=  2.0000E-03, finalize=  0.0000E+00, dirichlet=  1.4620E+00, post=  0.0000E+00, assembly=  4.1330E+00
+Phase24 enforce: rank=1, call=1, local_constraints=4348, global_constraints=8544, total=  1.9840E+00, local_count=  0.0000E+00, count_reduce=  1.9780E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=3, iter=1, preinit=  0.0000E+00, initialize=  3.0000E-03, prebulk=  5.3400E-01, bulk=  2.0430E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.5510E+00, post=  0.0000E+00, assembly=  4.1320E+00
+Phase24 rank wall: rank=1, iter=1, preinit=  3.0000E-03, initialize=  2.0000E-03, prebulk=  3.6600E-01, bulk=  1.7120E+00, boundary=  5.4000E-02, finalize=  0.0000E+00, dirichlet=  1.9960E+00, post=  0.0000E+00, assembly=  4.1330E+00
+Phase24 enforce: rank=2, call=1, local_constraints=4177, global_constraints=8544, total=  1.9460E+00, local_count=  0.0000E+00, count_reduce=  1.9390E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  3.0000E-03, initialize=  2.0000E-03, prebulk=  4.2100E-01, bulk=  1.7050E+00, boundary=  4.9000E-02, finalize=  0.0000E+00, dirichlet=  1.9520E+00, post=  0.0000E+00, assembly=  4.1330E+00
+N
+N
+N
+N
+N
+N
+A
+A
+A
+A
+A
+A
+T
+T
+T
+T
+T
+T
+I
+I
+I
+I
+I
+I
+V
+V
+V
+V
+V
+V
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+X
+X
+X
+X
+X
+X
+V
+V
+V
+V
+V
+V
+E
+E
+E
+E
+E
+E
+C
+C
+C
+C
+C
+C
+_
+_
+_
+_
+_
+_
+C
+C
+C
+C
+C
+C
+A
+A
+A
+A
+A
+A
+P
+P
+P
+P
+P
+P
+T
+T
+T
+T
+T
+T
+U
+U
+U
+U
+U
+U
+R
+R
+R
+R
+R
+R
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+C
+C
+C
+C
+C
+C
+A
+A
+A
+A
+A
+A
+N
+N
+N
+N
+N
+N
+D
+D
+D
+D
+D
+D
+I
+I
+I
+I
+I
+I
+D
+D
+D
+D
+D
+D
+A
+A
+A
+A
+A
+A
+T
+T
+T
+T
+T
+T
+E
+E
+E
+E
+E
+E
+_
+_
+_
+_
+_
+_
+S
+S
+S
+S
+S
+S
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+E
+N
+N
+N
+N
+N
+N
+_
+_
+_
+_
+_
+_
+B
+B
+B
+B
+B
+B
+U
+U
+U
+U
+U
+U
+T
+T
+T
+T
+T
+T
+_
+_
+_
+_
+_
+_
+S
+S
+S
+S
+S
+S
+E
+E
+E
+E
+E
+E
+L
+L
+L
+L
+L
+L
+E
+E
+E
+E
+E
+E
+C
+C
+C
+C
+C
+C
+T
+T
+T
+T
+T
+T
+O
+O
+O
+O
+O
+O
+R
+R
+R
+R
+R
+R
+_
+_
+_
+_
+_
+_
+M
+M
+M
+M
+M
+M
+I
+I
+I
+I
+I
+I
+S
+S
+S
+S
+S
+S
+M
+M
+M
+M
+M
+M
+A
+A
+A
+A
+A
+A
+T
+T
+T
+T
+T
+T
+C
+C
+C
+C
+C
+C
+H
+H
+H
+H
+H
+H
+ 
+ 
+ 
+ 
+ 
+ 
+g
+g
+g
+g
+g
+g
+l
+l
+l
+l
+l
+l
+o
+o
+o
+o
+o
+o
+b
+b
+b
+b
+b
+b
+a
+a
+a
+a
+a
+a
+l
+l
+l
+l
+l
+l
+_
+_
+_
+_
+_
+_
+s
+s
+s
+s
+s
+s
+i
+i
+i
+i
+i
+i
+z
+z
+z
+z
+z
+z
+e
+e
+e
+e
+e
+e
+=
+=
+=
+=
+=
+=
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+8
+7
+8
+8
+8
+7
+8
+4
+1
+7
+7
+3
+0
+1
+2
+4
+9
+7
+ 
+ 
+ 
+ 
+ 
+ 
+l
+l
+l
+l
+l
+l
+o
+o
+o
+o
+o
+o
+c
+c
+c
+c
+c
+c
+a
+a
+a
+a
+a
+a
+l
+l
+l
+l
+l
+l
+_
+_
+_
+_
+_
+_
+s
+s
+s
+s
+s
+s
+i
+i
+i
+i
+i
+i
+z
+z
+z
+z
+z
+z
+e
+e
+e
+e
+e
+e
+=
+=
+=
+=
+=
+=
+5
+5
+5
+5
+5
+5
+9
+6
+7
+9
+9
+7
+3
+9
+8
+3
+4
+0
+9
+5
+9
+7
+8
+2
+4
+1
+0
+2
+2
+1
+ 
+ 
+ 
+ 
+ 
+ 
+m
+m
+m
+m
+m
+m
+a
+a
+a
+a
+a
+a
+t
+t
+t
+t
+t
+t
+r
+r
+r
+r
+r
+r
+i
+i
+i
+i
+i
+i
+x
+x
+x
+x
+x
+x
+_
+_
+_
+_
+_
+_
+e
+e
+e
+e
+e
+e
+p
+p
+p
+p
+p
+p
+o
+o
+o
+o
+o
+o
+c
+c
+c
+c
+c
+c
+h
+h
+h
+h
+h
+h
+=
+=
+=
+=
+=
+=
+0
+0
+0
+0
+0
+0
+ 
+ 
+ 
+ 
+ 
+ 
+r
+r
+r
+r
+r
+r
+o
+o
+o
+o
+o
+o
+u
+u
+u
+u
+u
+u
+n
+n
+n
+n
+n
+n
+d
+d
+d
+d
+d
+d
+s
+s
+s
+s
+s
+s
+=
+=
+=
+=
+=
+=
+2
+2
+2
+2
+2
+2
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
+
+
+
+
+
+SolveHypre: Phase24 PCG+AMG setup 0.214 s (total since entry 0.273 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+SolveHypre: Required iterations 1 (method 601) to norm 7.02838e-12
+SolveHypre: Solution time (method 601): 0.048
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356      2.0000000     ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3420 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4710000000000019E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.2200000000000486E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.7699999999999978E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.4199999999999591E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  9.9999999999944578E-04
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.4200000000000053E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  5.1000000000000156E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    4.18    4.18
+HeatSolve: iter:    1 Solve:    (s)    0.34    0.34
+HeatSolve:  Result Norm   :   0.16315355920280097
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117040E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0270 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+SolveHypre: Phase24 PCG+AMG setup 0.214 s (total since entry 0.273 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  3.19483E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  3.19867E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=1, material=4, class=2, elements=8401, body_class_wall=  1.52000E-01, material_eval=  9.00000E-03, local_calc=  1.12000E-01, global_update=  1.00000E-02, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=2, material=5, class=2, elements=8401, body_class_wall=  1.23000E-01, material_eval=  9.00000E-03, local_calc=  8.30000E-02, global_update=  6.00000E-03, other=  2.50000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=3, material=4, class=2, elements=20441, body_class_wall=  3.29000E-01, material_eval=  2.70000E-02, local_calc=  2.43000E-01, global_update=  1.50000E-02, other=  4.40000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=4, material=5, class=2, elements=33626, body_class_wall=  5.65000E-01, material_eval=  4.30000E-02, local_calc=  4.03000E-01, global_update=  1.80000E-02, other=  1.01000E-01
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=5, material=7, class=2, elements=7291, body_class_wall=  1.23000E-01, material_eval=  9.00000E-03, local_calc=  8.50000E-02, global_update=  3.00000E-03, other=  2.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=6, material=6, class=2, elements=16812, body_class_wall=  2.86000E-01, material_eval=  1.80000E-02, local_calc=  2.12000E-01, global_update=  1.60000E-02, other=  4.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=7, material=7, class=2, elements=3652, body_class_wall=  6.20000E-02, material_eval=  1.00000E-03, local_calc=  4.70000E-02, global_update=  3.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=8, material=2, class=2, elements=484, body_class_wall=  1.00000E-02, material_eval=  1.00000E-03, local_calc=  7.00000E-03, global_update=  0.00000E+00, other=  2.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.214 s (total since entry 0.274 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=1, material=4, class=2, elements=8072, body_class_wall=  1.33000E-01, material_eval=  1.30000E-02, local_calc=  8.70000E-02, global_update=  1.00000E-02, other=  2.30000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=2, material=5, class=2, elements=8072, body_class_wall=  1.29000E-01, material_eval=  1.10000E-02, local_calc=  9.60000E-02, global_update=  8.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=3, material=4, class=2, elements=20739, body_class_wall=  3.26000E-01, material_eval=  1.90000E-02, local_calc=  2.27000E-01, global_update=  1.10000E-02, other=  6.90000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=4, material=5, class=2, elements=32221, body_class_wall=  5.35000E-01, material_eval=  3.80000E-02, local_calc=  3.86000E-01, global_update=  2.60000E-02, other=  8.50000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=5, material=7, class=2, elements=9101, body_class_wall=  1.30000E-01, material_eval=  5.00000E-03, local_calc=  9.90000E-02, global_update=  6.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=6, material=6, class=2, elements=16110, body_class_wall=  2.73000E-01, material_eval=  2.50000E-02, local_calc=  1.89000E-01, global_update=  1.30000E-02, other=  4.60000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=7, material=7, class=2, elements=4424, body_class_wall=  5.20000E-02, material_eval=  4.00000E-03, local_calc=  3.90000E-02, global_update=  0.00000E+00, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=8, material=2, class=2, elements=439, body_class_wall=  8.00000E-03, material_eval=  0.00000E+00, local_calc=  6.00000E-03, global_update=  0.00000E+00, other=  2.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=9, material=3, class=2, elements=18, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+SolveHypre: Phase24 PCG+AMG setup 0.215 s (total since entry 0.274 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  6.39938E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  3.19775E-02, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=3, material=4, class=2, elements=5094, body_class_wall=  8.20000E-02, material_eval=  4.00000E-03, local_calc=  5.60000E-02, global_update=  5.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=5, material=7, class=2, elements=10358, body_class_wall=  1.62000E-01, material_eval=  7.00000E-03, local_calc=  1.20000E-01, global_update=  8.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=7, material=7, class=2, elements=5318, body_class_wall=  8.00000E-02, material_eval=  5.00000E-03, local_calc=  5.00000E-02, global_update=  3.00000E-03, other=  2.20000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=8, material=2, class=2, elements=2666, body_class_wall=  4.60000E-02, material_eval=  3.00000E-03, local_calc=  2.80000E-02, global_update=  3.00000E-03, other=  1.20000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=9, material=3, class=2, elements=76108, body_class_wall=  1.17500E+00, material_eval=  8.20000E-02, local_calc=  8.27000E-01, global_update=  5.60000E-02, other=  2.10000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=10, material=1, class=1, elements=25290, body_class_wall=  4.11000E-01, material_eval=  2.80000E-02, local_calc=  1.64000E-01, global_update=  1.30000E-02, other=  2.06000E-01
+SolveHypre: Phase24 PCG+AMG setup 0.215 s (total since entry 0.274 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  6.39849E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  3.19746E-02, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=3, material=4, class=2, elements=5264, body_class_wall=  8.80000E-02, material_eval=  6.00000E-03, local_calc=  6.30000E-02, global_update=  4.00000E-03, other=  1.50000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=5, material=7, class=2, elements=10583, body_class_wall=  1.65000E-01, material_eval=  9.00000E-03, local_calc=  1.18000E-01, global_update=  1.00000E-02, other=  2.80000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=7, material=7, class=2, elements=5396, body_class_wall=  8.20000E-02, material_eval=  7.00000E-03, local_calc=  5.30000E-02, global_update=  6.00000E-03, other=  1.60000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=8, material=2, class=2, elements=2405, body_class_wall=  4.60000E-02, material_eval=  4.00000E-03, local_calc=  3.20000E-02, global_update=  3.00000E-03, other=  7.00000E-03
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=9, material=3, class=2, elements=77802, body_class_wall=  1.29600E+00, material_eval=  8.20000E-02, local_calc=  9.46000E-01, global_update=  5.50000E-02, other=  2.13000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=10, material=1, class=1, elements=20817, body_class_wall=  3.23000E-01, material_eval=  2.10000E-02, local_calc=  1.46000E-01, global_update=  1.40000E-02, other=  1.42000E-01
+.
+SolveHypre: Phase24 PCG+AMG setup 0.215 s (total since entry 0.274 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=7.028e-12
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  3.19722E-02
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  1.27976E-01, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  3.19503E-02, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=3, material=4, class=2, elements=6268, body_class_wall=  1.53000E-01, material_eval=  5.00000E-03, local_calc=  1.23000E-01, global_update=  4.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=5, material=7, class=2, elements=12534, body_class_wall=  2.92000E-01, material_eval=  1.00000E-02, local_calc=  2.32000E-01, global_update=  1.20000E-02, other=  3.80000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=7, material=7, class=2, elements=6318, body_class_wall=  1.62000E-01, material_eval=  1.30000E-02, local_calc=  1.28000E-01, global_update=  4.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=8, material=2, class=2, elements=2734, body_class_wall=  6.90000E-02, material_eval=  3.00000E-03, local_calc=  5.40000E-02, global_update=  6.00000E-03, other=  6.00000E-03
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=9, material=3, class=2, elements=73811, body_class_wall=  1.75400E+00, material_eval=  6.80000E-02, local_calc=  1.39700E+00, global_update=  7.10000E-02, other=  2.18000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=10, material=1, class=1, elements=18884, body_class_wall=  3.07000E-01, material_eval=  2.00000E-02, local_calc=  1.20000E-01, global_update=  1.20000E-02, other=  1.55000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  2.23995E-01, rhs_est=  3.20037E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=3, material=4, class=2, elements=5734, body_class_wall=  8.70000E-02, material_eval=  8.00000E-03, local_calc=  6.30000E-02, global_update=  3.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=4, material=5, class=2, elements=112, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=5, material=7, class=2, elements=11245, body_class_wall=  1.58000E-01, material_eval=  4.00000E-03, local_calc=  1.15000E-01, global_update=  6.00000E-03, other=  3.30000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=6, material=6, class=2, elements=56, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=7, material=7, class=2, elements=5448, body_class_wall=  7.90000E-02, material_eval=  2.00000E-03, local_calc=  6.40000E-02, global_update=  2.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=8, material=2, class=2, elements=550, body_class_wall=  6.00000E-03, material_eval=  0.00000E+00, local_calc=  4.00000E-03, global_update=  1.00000E-03, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=9, material=3, class=2, elements=37, body_class_wall=  1.00000E-03, material_eval=  1.00000E-03, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=10, material=1, class=1, elements=236916, body_class_wall=  3.27500E+00, material_eval=  2.15000E-01, local_calc=  1.40400E+00, global_update=  1.52000E-01, other=  1.50400E+00
+Elapsed REAL time:     3.6070 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=4, call=2, local_constraints=0, global_constraints=8544, total=  1.6590E+00, local_count=  0.0000E+00, count_reduce=  1.6540E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=3, call=2, local_constraints=0, global_constraints=8544, total=  1.6730E+00, local_count=  0.0000E+00, count_reduce=  1.6680E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=0, call=2, local_constraints=19, global_constraints=8544, total=  6.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+, constrained=  0.0000E+00
+Phase24 enforce: rank=5, call=2, local_constraints=0, global_constraints=8544, total=  7.6800E-01, local_count=  0.0000E+00, count_reduce=  7.6200E-01, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=4, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  4.9100E-01, bulk=  2.0000E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.6600E+00, post=  0.0000E+00, assembly=  4.1540E+00
+Phase24 rank wall: rank=5, iter=2, preinit=  0.0000E+00, initialize=  2.0000E-03, prebulk=  6.4500E-01, bulk=  2.7370E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  7.6800E-01, post=  0.0000E+00, assembly=  4.1530E+00
+Phase24 enforce: rank=1, call=2, local_constraints=4348, global_constraints=8544, total=  2.0720E+00, local_count=  0.0000E+00, count_reduce=  2.0660E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=0, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.3400E-01, bulk=  3.6070E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  4.1510E+00
+Phase24 rank wall: rank=3, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.2000E-01, bulk=  1.9560E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.6750E+00, post=  0.0000E+00, assembly=  4.1540E+00
+Phase24 enforce: rank=2, call=2, local_constraints=4177, global_constraints=8544, total=  2.0820E+00, local_count=  0.0000E+00, count_reduce=  2.0760E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.6951E+04
+Phase24 rank wall: rank=1, iter=2, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  3.6500E-01, bulk=  1.6520E+00, boundary=  4.9000E-02, finalize=  0.0000E+00, dirichlet=  2.0830E+00, post=  0.0000E+00, assembly=  4.1540E+00
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=2, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  4.3500E-01, bulk=  1.5890E+00, boundary=  3.4000E-02, finalize=  0.0000E+00, dirichlet=  2.0910E+00, post=  0.0000E+00, assembly=  4.1540E+00
+SolveHypre: Phase24 PCG+AMG setup 0.221 s (total since entry 0.286 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+SolveHypre: Required iterations 1 (method 601) to norm 6.20876e-12
+SolveHypre: Solution time (method 601): 0.038
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16315356     0.49093039E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3460 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5629999999999953E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.3000000000000576E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.6500000000000021E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.6399999999999615E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  9.9999999999944578E-04
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.4600000000000009E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.6999999999999247E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    4.18    8.36
+HeatSolve: iter:    2 Solve:    (s)    0.35    0.69
+HeatSolve:  Result Norm   :   0.16315355920360194
+HeatSolve:  Relative Change :    4.9093038792873744E-012
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_hybrid_fullconf_h8/finalperf_singlepixel_on_r1.result.0
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 2/4:   2.002E-02
+MAIN: Estimated time left: 30.9 seconds
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 generic dynamic-k cache material=7, unique_nodes=10407
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117040E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0210 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+SolveHypre: Phase24 PCG+AMG setup 0.221 s (total since entry 0.286 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  3.18250E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=1, material=4, class=2, elements=8072, body_class_wall=  1.37000E-01, material_eval=  8.00000E-03, local_calc=  1.04000E-01, global_update=  3.00000E-03, other=  2.20000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=2, material=5, class=2, elements=8072, body_class_wall=  1.14000E-01, material_eval=  7.00000E-03, local_calc=  8.60000E-02, global_update=  5.00000E-03, other=  1.60000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=3, material=4, class=2, elements=20739, body_class_wall=  3.08000E-01, material_eval=  2.40000E-02, local_calc=  2.17000E-01, global_update=  1.00000E-02, other=  5.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=4, material=5, class=2, elements=32221, body_class_wall=  4.89000E-01, material_eval=  3.30000E-02, local_calc=  3.51000E-01, global_update=  1.60000E-02, other=  8.90000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=5, material=7, class=2, elements=9101, body_class_wall=  1.75000E-01, material_eval=  1.00000E-02, local_calc=  1.17000E-01, global_update=  1.30000E-02, other=  3.50000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=6, material=6, class=2, elements=16110, body_class_wall=  2.45000E-01, material_eval=  1.60000E-02, local_calc=  1.69000E-01, global_update=  5.00000E-03, other=  5.50000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=7, material=7, class=2, elements=4424, body_class_wall=  8.30000E-02, material_eval=  8.00000E-03, local_calc=  5.60000E-02, global_update=  4.00000E-03, other=  1.50000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=8, material=2, class=2, elements=439, body_class_wall=  6.00000E-03, material_eval=  1.00000E-03, local_calc=  5.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=9, material=3, class=2, elements=18, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  1.00000E-03, other=  0.00000E+00
+SolveHypre: Phase24 PCG+AMG setup 0.221 s (total since entry 0.286 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  6.39811E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  3.19673E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=1, material=4, class=2, elements=8401, body_class_wall=  1.36000E-01, material_eval=  1.20000E-02, local_calc=  9.30000E-02, global_update=  7.00000E-03, other=  2.40000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=2, material=5, class=2, elements=8401, body_class_wall=  1.28000E-01, material_eval=  8.00000E-03, local_calc=  9.60000E-02, global_update=  4.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=3, material=4, class=2, elements=20441, body_class_wall=  3.39000E-01, material_eval=  2.40000E-02, local_calc=  2.45000E-01, global_update=  1.40000E-02, other=  5.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=4, material=5, class=2, elements=33626, body_class_wall=  5.38000E-01, material_eval=  4.60000E-02, local_calc=  3.76000E-01, global_update=  2.10000E-02, other=  9.50000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=5, material=7, class=2, elements=7291, body_class_wall=  1.08000E-01, material_eval=  4.00000E-03, local_calc=  8.20000E-02, global_update=  2.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=6, material=6, class=2, elements=16812, body_class_wall=  2.87000E-01, material_eval=  1.40000E-02, local_calc=  2.04000E-01, global_update=  1.90000E-02, other=  5.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=7, material=7, class=2, elements=3652, body_class_wall=  6.20000E-02, material_eval=  5.00000E-03, local_calc=  4.70000E-02, global_update=  2.00000E-03, other=  8.00000E-03
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=8, material=2, class=2, elements=484, body_class_wall=  1.20000E-02, material_eval=  1.00000E-03, local_calc=  5.00000E-03, global_update=  0.00000E+00, other=  6.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.222 s (total since entry 0.286 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  0.00000E+00, rhs_est=  3.19823E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=3, material=4, class=2, elements=5264, body_class_wall=  9.20000E-02, material_eval=  1.00000E-02, local_calc=  6.10000E-02, global_update=  4.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=5, material=7, class=2, elements=10583, body_class_wall=  1.56000E-01, material_eval=  1.00000E-02, local_calc=  1.10000E-01, global_update=  9.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=7, material=7, class=2, elements=5396, body_class_wall=  8.70000E-02, material_eval=  8.00000E-03, local_calc=  5.50000E-02, global_update=  4.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=8, material=2, class=2, elements=2405, body_class_wall=  3.80000E-02, material_eval=  3.00000E-03, local_calc=  2.30000E-02, global_update=  2.00000E-03, other=  1.00000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=9, material=3, class=2, elements=77802, body_class_wall=  1.19500E+00, material_eval=  9.00000E-02, local_calc=  8.32000E-01, global_update=  5.90000E-02, other=  2.14000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=10, material=1, class=1, elements=20817, body_class_wall=  3.14000E-01, material_eval=  2.20000E-02, local_calc=  1.37000E-01, global_update=  1.00000E-02, other=  1.45000E-01
+SolveHypre: Phase24 PCG+AMG setup 0.222 s (total since entry 0.285 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  3.19744E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  6.39938E-02, rhs_est=  3.19969E-02
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  0.00000E+00, rhs_est=  3.19699E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=3, material=4, class=2, elements=5094, body_class_wall=  8.90000E-02, material_eval=  8.00000E-03, local_calc=  6.20000E-02, global_update=  6.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=5, material=7, class=2, elements=10358, body_class_wall=  1.56000E-01, material_eval=  6.00000E-03, local_calc=  1.12000E-01, global_update=  1.20000E-02, other=  2.60000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=7, material=7, class=2, elements=5318, body_class_wall=  7.20000E-02, material_eval=  5.00000E-03, local_calc=  4.80000E-02, global_update=  5.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=8, material=2, class=2, elements=2666, body_class_wall=  3.70000E-02, material_eval=  3.00000E-03, local_calc=  1.90000E-02, global_update=  2.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=9, material=3, class=2, elements=76108, body_class_wall=  1.22300E+00, material_eval=  7.10000E-02, local_calc=  8.59000E-01, global_update=  5.60000E-02, other=  2.37000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=10, material=1, class=1, elements=25290, body_class_wall=  3.95000E-01, material_eval=  3.70000E-02, local_calc=  1.57000E-01, global_update=  1.00000E-02, other=  1.91000E-01
+.
+SolveHypre: Phase24 PCG+AMG setup 0.222 s (total since entry 0.286 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.209e-12
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  3.19722E-02
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  6.39917E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=3, material=4, class=2, elements=6268, body_class_wall=  1.58000E-01, material_eval=  8.00000E-03, local_calc=  1.17000E-01, global_update=  5.00000E-03, other=  2.80000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=5, material=7, class=2, elements=12534, body_class_wall=  3.15000E-01, material_eval=  1.50000E-02, local_calc=  2.56000E-01, global_update=  9.00000E-03, other=  3.50000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=7, material=7, class=2, elements=6318, body_class_wall=  1.47000E-01, material_eval=  5.00000E-03, local_calc=  1.18000E-01, global_update=  7.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=8, material=2, class=2, elements=2734, body_class_wall=  7.50000E-02, material_eval=  1.00000E-03, local_calc=  6.10000E-02, global_update=  2.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=9, material=3, class=2, elements=73811, body_class_wall=  1.78900E+00, material_eval=  8.30000E-02, local_calc=  1.42100E+00, global_update=  6.10000E-02, other=  2.24000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=10, material=1, class=1, elements=18884, body_class_wall=  2.95000E-01, material_eval=  2.00000E-02, local_calc=  1.20000E-01, global_update=  1.00000E-02, other=  1.45000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  6.40074E-02, rhs_est=  3.19961E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=3, material=4, class=2, elements=5734, body_class_wall=  7.90000E-02, material_eval=  6.00000E-03, local_calc=  5.30000E-02, global_update=  6.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=4, material=5, class=2, elements=112, body_class_wall=  3.00000E-03, material_eval=  0.00000E+00, local_calc=  3.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=5, material=7, class=2, elements=11245, body_class_wall=  1.83000E-01, material_eval=  8.00000E-03, local_calc=  1.44000E-01, global_update=  7.00000E-03, other=  2.40000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=6, material=6, class=2, elements=56, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  1.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=7, material=7, class=2, elements=5448, body_class_wall=  9.10000E-02, material_eval=  4.00000E-03, local_calc=  6.80000E-02, global_update=  6.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=8, material=2, class=2, elements=550, body_class_wall=  8.00000E-03, material_eval=  0.00000E+00, local_calc=  4.00000E-03, global_update=  1.00000E-03, other=  3.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=9, material=3, class=2, elements=37, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=10, material=1, class=1, elements=236916, body_class_wall=  3.25500E+00, material_eval=  2.27000E-01, local_calc=  1.39800E+00, global_update=  1.09000E-01, other=  1.52100E+00
+Elapsed REAL time:     3.6200 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  1.0000E-03, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  1.0000E-03, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  1.0000E-03, setup=  0.0000E+00, pack=  0.0000E+00, send=  1.0000E-03, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=0, call=3, local_constraints=19, global_constraints=8544, total=  6.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=3, call=3, local_constraints=0, global_constraints=8544, total=  1.6350E+00, local_count=  0.0000E+00, count_reduce=  1.6290E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=4, call=3, local_constraints=0, global_constraints=8544, total=  1.7200E+00, local_count=  0.0000E+00, count_reduce=  1.7140E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=5, call=3, local_constraints=0, global_constraints=8544, total=  7.1800E-01, local_count=  0.0000E+00, count_reduce=  7.1200E-01, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=0, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.0200E-01, bulk=  3.6200E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  4.1320E+00
+Phase24 rank wall: rank=3, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.2300E-01, bulk=  1.9750E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  1.6360E+00, post=  0.0000E+00, assembly=  4.1360E+00
+Phase24 rank wall: rank=5, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  6.3100E-01, bulk=  2.7840E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  7.1800E-01, post=  0.0000E+00, assembly=  4.1370E+00
+Phase24 enforce: rank=1, call=3, local_constraints=4348, global_constraints=8544, total=  2.0770E+00, local_count=  0.0000E+00, count_reduce=  2.0700E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  3.9200E-01, bulk=  1.6120E+00, boundary=  4.0000E-02, finalize=  0.0000E+00, dirichlet=  2.0870E+00, post=  0.0000E+00, assembly=  4.1370E+00
+Phase24 enforce: rank=2, call=3, local_constraints=4177, global_constraints=8544, total=  2.1010E+00, local_count=  0.0000E+00, count_reduce=  2.0940E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.6951E+04
+Phase24 rank wall: rank=4, iter=1, preinit=  0.0000E+00, initialize=  2.0000E-03, prebulk=  5.3000E-01, bulk=  1.8830E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  1.7210E+00, post=  0.0000E+00, assembly=  4.1360E+00
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  4.2800E-01, bulk=  1.5600E+00, boundary=  3.6000E-02, finalize=  0.0000E+00, dirichlet=  2.1080E+00, post=  0.0000E+00, assembly=  4.1370E+00
+SolveHypre: Phase24 PCG+AMG setup 0.207 s (total since entry 0.271 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+SolveHypre: Required iterations 1 (method 601) to norm 6.93919e-12
+SolveHypre: Solution time (method 601): 0.037
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.30679322E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3310 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5749999999999567E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.4500000000000632E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.6710000000000402E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.2899999999999601E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  1.0000000000012221E-03
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.3099999999999952E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  2.0999999999999019E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    4.15    4.15
+HeatSolve: iter:    1 Solve:    (s)    0.33    0.33
+HeatSolve:  Result Norm   :   0.16315355920310140
+HeatSolve:  Relative Change :    3.0679321560394689E-012
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_hybrid_fullconf_h8/finalperf_singlepixel_on_r1.result.0
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 3/4:   2.002E-02
+MAIN: Estimated time left: 11.1 seconds
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 generic dynamic-k cache material=7, unique_nodes=10407
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117038E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0200 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+SolveHypre: Phase24 PCG+AMG setup 0.206 s (total since entry 0.270 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  3.19028E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  3.20023E-02, rhs_est=  3.20023E-02
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=1, material=4, class=2, elements=8072, body_class_wall=  1.44000E-01, material_eval=  1.10000E-02, local_calc=  1.02000E-01, global_update=  7.00000E-03, other=  2.40000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=2, material=5, class=2, elements=8072, body_class_wall=  1.23000E-01, material_eval=  6.00000E-03, local_calc=  8.50000E-02, global_update=  8.00000E-03, other=  2.40000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=3, material=4, class=2, elements=20739, body_class_wall=  3.58000E-01, material_eval=  2.60000E-02, local_calc=  2.49000E-01, global_update=  1.50000E-02, other=  6.80000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=4, material=5, class=2, elements=32221, body_class_wall=  4.83000E-01, material_eval=  3.40000E-02, local_calc=  3.46000E-01, global_update=  1.60000E-02, other=  8.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=5, material=7, class=2, elements=9101, body_class_wall=  1.50000E-01, material_eval=  1.00000E-02, local_calc=  1.01000E-01, global_update=  5.00000E-03, other=  3.40000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=6, material=6, class=2, elements=16110, body_class_wall=  2.68000E-01, material_eval=  1.80000E-02, local_calc=  1.96000E-01, global_update=  7.00000E-03, other=  4.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=7, material=7, class=2, elements=4424, body_class_wall=  7.60000E-02, material_eval=  4.00000E-03, local_calc=  4.70000E-02, global_update=  7.00000E-03, other=  1.80000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=8, material=2, class=2, elements=439, body_class_wall=  1.60000E-02, material_eval=  1.00000E-03, local_calc=  9.00000E-03, global_update=  0.00000E+00, other=  6.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=9, material=3, class=2, elements=18, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+SolveHypre: Phase24 PCG+AMG setup 0.205 s (total since entry 0.269 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  3.17542E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=1, material=4, class=2, elements=8401, body_class_wall=  1.56000E-01, material_eval=  1.00000E-02, local_calc=  1.12000E-01, global_update=  6.00000E-03, other=  2.80000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=2, material=5, class=2, elements=8401, body_class_wall=  1.58000E-01, material_eval=  6.00000E-03, local_calc=  1.18000E-01, global_update=  9.00000E-03, other=  2.50000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=3, material=4, class=2, elements=20441, body_class_wall=  3.96000E-01, material_eval=  2.00000E-02, local_calc=  3.00000E-01, global_update=  2.00000E-02, other=  5.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=4, material=5, class=2, elements=33626, body_class_wall=  6.22000E-01, material_eval=  4.30000E-02, local_calc=  4.55000E-01, global_update=  2.50000E-02, other=  9.90000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=5, material=7, class=2, elements=7291, body_class_wall=  1.46000E-01, material_eval=  7.00000E-03, local_calc=  1.14000E-01, global_update=  5.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=6, material=6, class=2, elements=16812, body_class_wall=  3.17000E-01, material_eval=  2.10000E-02, local_calc=  2.22000E-01, global_update=  1.10000E-02, other=  6.30000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=7, material=7, class=2, elements=3652, body_class_wall=  5.90000E-02, material_eval=  2.00000E-03, local_calc=  4.40000E-02, global_update=  1.00000E-03, other=  1.20000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=8, material=2, class=2, elements=484, body_class_wall=  1.50000E-02, material_eval=  1.00000E-03, local_calc=  9.00000E-03, global_update=  0.00000E+00, other=  5.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.207 s (total since entry 0.271 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  3.19886E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=3, material=4, class=2, elements=5264, body_class_wall=  8.40000E-02, material_eval=  1.00000E-02, local_calc=  5.00000E-02, global_update=  4.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=5, material=7, class=2, elements=10583, body_class_wall=  1.73000E-01, material_eval=  1.20000E-02, local_calc=  1.30000E-01, global_update=  1.10000E-02, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=7, material=7, class=2, elements=5396, body_class_wall=  8.90000E-02, material_eval=  5.00000E-03, local_calc=  6.50000E-02, global_update=  6.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=8, material=2, class=2, elements=2405, body_class_wall=  5.70000E-02, material_eval=  5.00000E-03, local_calc=  3.40000E-02, global_update=  3.00000E-03, other=  1.50000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=9, material=3, class=2, elements=77802, body_class_wall=  1.30000E+00, material_eval=  9.30000E-02, local_calc=  8.99000E-01, global_update=  7.50000E-02, other=  2.33000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=10, material=1, class=1, elements=20817, body_class_wall=  3.10000E-01, material_eval=  2.20000E-02, local_calc=  1.30000E-01, global_update=  9.00000E-03, other=  1.49000E-01
+SolveHypre: Phase24 PCG+AMG setup 0.207 s (total since entry 0.271 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  9.59678E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=3, material=4, class=2, elements=5094, body_class_wall=  8.40000E-02, material_eval=  1.00000E-02, local_calc=  6.00000E-02, global_update=  4.00000E-03, other=  1.00000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=5, material=7, class=2, elements=10358, body_class_wall=  1.61000E-01, material_eval=  8.00000E-03, local_calc=  1.16000E-01, global_update=  6.00000E-03, other=  3.10000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=7, material=7, class=2, elements=5318, body_class_wall=  7.70000E-02, material_eval=  2.00000E-03, local_calc=  6.20000E-02, global_update=  1.00000E-03, other=  1.20000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=8, material=2, class=2, elements=2666, body_class_wall=  5.90000E-02, material_eval=  5.00000E-03, local_calc=  3.30000E-02, global_update=  2.00000E-03, other=  1.90000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=9, material=3, class=2, elements=76108, body_class_wall=  1.24600E+00, material_eval=  9.00000E-02, local_calc=  8.50000E-01, global_update=  6.80000E-02, other=  2.38000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=10, material=1, class=1, elements=25290, body_class_wall=  3.96000E-01, material_eval=  2.80000E-02, local_calc=  1.78000E-01, global_update=  5.00000E-03, other=  1.85000E-01
+.
+SolveHypre: Phase24 PCG+AMG setup 0.206 s (total since entry 0.270 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=6.939e-12
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  9.59838E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  3.19503E-02, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=3, material=4, class=2, elements=6268, body_class_wall=  1.55000E-01, material_eval=  7.00000E-03, local_calc=  1.13000E-01, global_update=  1.20000E-02, other=  2.30000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=5, material=7, class=2, elements=12534, body_class_wall=  2.81000E-01, material_eval=  8.00000E-03, local_calc=  2.22000E-01, global_update=  1.20000E-02, other=  3.90000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=7, material=7, class=2, elements=6318, body_class_wall=  1.27000E-01, material_eval=  5.00000E-03, local_calc=  9.90000E-02, global_update=  2.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=8, material=2, class=2, elements=2734, body_class_wall=  6.50000E-02, material_eval=  3.00000E-03, local_calc=  4.80000E-02, global_update=  1.00000E-03, other=  1.30000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=9, material=3, class=2, elements=73811, body_class_wall=  1.44000E+00, material_eval=  7.70000E-02, local_calc=  1.07300E+00, global_update=  7.10000E-02, other=  2.19000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=10, material=1, class=1, elements=18884, body_class_wall=  3.12000E-01, material_eval=  3.00000E-02, local_calc=  1.11000E-01, global_update=  1.30000E-02, other=  1.58000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  1.91992E-01, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=3, material=4, class=2, elements=5734, body_class_wall=  8.50000E-02, material_eval=  6.00000E-03, local_calc=  6.10000E-02, global_update=  7.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=4, material=5, class=2, elements=112, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=5, material=7, class=2, elements=11245, body_class_wall=  1.57000E-01, material_eval=  7.00000E-03, local_calc=  1.19000E-01, global_update=  8.00000E-03, other=  2.30000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=6, material=6, class=2, elements=56, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  1.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=7, material=7, class=2, elements=5448, body_class_wall=  6.20000E-02, material_eval=  3.00000E-03, local_calc=  4.10000E-02, global_update=  2.00000E-03, other=  1.60000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=8, material=2, class=2, elements=550, body_class_wall=  7.00000E-03, material_eval=  0.00000E+00, local_calc=  6.00000E-03, global_update=  0.00000E+00, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=9, material=3, class=2, elements=37, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=10, material=1, class=1, elements=236916, body_class_wall=  3.18400E+00, material_eval=  2.22000E-01, local_calc=  1.33000E+00, global_update=  1.25000E-01, other=  1.50700E+00
+Elapsed REAL time:     3.4960 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0000 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  1.0000E-03, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  1.0000E-03, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  1.0000E-03, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  1.0000E-03, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=0, call=4, local_constraints=19, global_constraints=8544, total=  6.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=3, call=4, local_constraints=0, global_constraints=8544, total=  1.5090E+00, local_count=  0.0000E+00, count_reduce=  1.5030E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=4, call=4, local_constraints=0, global_constraints=8544, total=  1.5120E+00, local_count=  0.0000E+00, count_reduce=  1.5060E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=5, call=4, local_constraints=0, global_constraints=8544, total=  1.0370E+00, local_count=  0.0000E+00, count_reduce=  1.0310E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=0, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.3100E-01, bulk=  3.4960E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  4.0380E+00
+Phase24 rank wall: rank=3, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.0300E-01, bulk=  2.0240E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  1.5100E+00, post=  0.0000E+00, assembly=  4.0400E+00
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.0900E-01, bulk=  2.0140E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.5130E+00, post=  0.0000E+00, assembly=  4.0400E+00
+Phase24 rank wall: rank=5, iter=1, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  6.1600E-01, bulk=  2.3820E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.0390E+00, post=  0.0000E+00, assembly=  4.0400E+00
+Phase24 enforce: rank=1, call=4, local_constraints=4348, global_constraints=8544, total=  1.7700E+00, local_count=  0.0000E+00, count_reduce=  1.7640E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  1.0000E-03, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 enforce: rank=2, call=4, local_constraints=4177, global_constraints=8544, total=  1.9290E+00, local_count=  0.0000E+00, count_reduce=  1.9230E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  3.0000E-03, initialize=  1.0000E-03, prebulk=  3.6200E-01, bulk=  1.8690E+00, boundary=  2.9000E-02, finalize=  0.0000E+00, dirichlet=  1.7760E+00, post=  0.0000E+00, assembly=  4.0400E+00
+Phase24 rank wall: rank=2, iter=1, preinit=  3.0000E-03, initialize=  1.0000E-03, prebulk=  4.2700E-01, bulk=  1.6210E+00, boundary=  4.9000E-02, finalize=  0.0000E+00, dirichlet=  1.9390E+00, post=  0.0000E+00, assembly=  4.0400E+00
+SolveHypre: Phase24 PCG+AMG setup 0.213 s (total since entry 0.278 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+SolveHypre: Required iterations 1 (method 601) to norm 9.00907e-12
+SolveHypre: Solution time (method 601): 0.036
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16315356     0.24619671E-11 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3360 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5580000000000034E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.3800000000001376E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.5579999999999607E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.4200000000002078E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.3600000000000207E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.9999999999999574E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    4.06    4.06
+HeatSolve: iter:    1 Solve:    (s)    0.34    0.34
+HeatSolve:  Result Norm   :   0.16315355920269972
+HeatSolve:  Relative Change :    2.4619670712169212E-012
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_hybrid_fullconf_h8/finalperf_singlepixel_on_r1.result.0
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Time: 4/4:   2.002E-02
+MAIN: Estimated time left:  5.5 seconds
+MAIN: -------------------------------------
+MAIN: 
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 generic dynamic-k cache material=7, unique_nodes=10407
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117036E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0190 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+SolveHypre: Phase24 PCG+AMG setup 0.213 s (total since entry 0.278 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  3.19028E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  3.19620E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=1, material=4, class=2, elements=8072, body_class_wall=  1.14000E-01, material_eval=  4.00000E-03, local_calc=  7.80000E-02, global_update=  5.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=2, material=5, class=2, elements=8072, body_class_wall=  1.16000E-01, material_eval=  7.00000E-03, local_calc=  7.60000E-02, global_update=  4.00000E-03, other=  2.90000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=3, material=4, class=2, elements=20739, body_class_wall=  3.44000E-01, material_eval=  2.10000E-02, local_calc=  2.48000E-01, global_update=  1.60000E-02, other=  5.90000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=4, material=5, class=2, elements=32221, body_class_wall=  4.88000E-01, material_eval=  3.80000E-02, local_calc=  3.50000E-01, global_update=  1.70000E-02, other=  8.30000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=5, material=7, class=2, elements=9101, body_class_wall=  1.29000E-01, material_eval=  3.00000E-03, local_calc=  1.03000E-01, global_update=  5.00000E-03, other=  1.80000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=6, material=6, class=2, elements=16110, body_class_wall=  2.76000E-01, material_eval=  1.60000E-02, local_calc=  2.02000E-01, global_update=  1.10000E-02, other=  4.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=7, material=7, class=2, elements=4424, body_class_wall=  6.00000E-02, material_eval=  4.00000E-03, local_calc=  4.00000E-02, global_update=  5.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=8, material=2, class=2, elements=439, body_class_wall=  9.00000E-03, material_eval=  0.00000E+00, local_calc=  5.00000E-03, global_update=  0.00000E+00, other=  4.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=1, body=9, material=3, class=2, elements=18, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  1.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.213 s (total since entry 0.278 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  0.00000E+00, rhs_est=  3.19867E-02
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=1, material=4, class=2, elements=8401, body_class_wall=  1.21000E-01, material_eval=  6.00000E-03, local_calc=  8.60000E-02, global_update=  3.00000E-03, other=  2.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=2, material=5, class=2, elements=8401, body_class_wall=  1.35000E-01, material_eval=  7.00000E-03, local_calc=  8.90000E-02, global_update=  6.00000E-03, other=  3.30000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=3, material=4, class=2, elements=20441, body_class_wall=  3.71000E-01, material_eval=  3.30000E-02, local_calc=  2.66000E-01, global_update=  2.10000E-02, other=  5.10000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=4, material=5, class=2, elements=33626, body_class_wall=  5.63000E-01, material_eval=  3.60000E-02, local_calc=  4.06000E-01, global_update=  2.80000E-02, other=  9.30000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=5, material=7, class=2, elements=7291, body_class_wall=  1.38000E-01, material_eval=  1.00000E-02, local_calc=  9.40000E-02, global_update=  7.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=6, material=6, class=2, elements=16812, body_class_wall=  2.71000E-01, material_eval=  1.70000E-02, local_calc=  1.91000E-01, global_update=  7.00000E-03, other=  5.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=7, material=7, class=2, elements=3652, body_class_wall=  5.90000E-02, material_eval=  3.00000E-03, local_calc=  4.50000E-02, global_update=  3.00000E-03, other=  8.00000E-03
+PHASE24_BULK_LOCAL: rank=1, iter=1, body=8, material=2, class=2, elements=484, body_class_wall=  1.10000E-02, material_eval=  0.00000E+00, local_calc=  9.00000E-03, global_update=  1.00000E-03, other=  1.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.214 s (total since entry 0.278 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  3.18496E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  6.39785E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=3, material=4, class=2, elements=5094, body_class_wall=  8.30000E-02, material_eval=  5.00000E-03, local_calc=  6.10000E-02, global_update=  6.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=5, material=7, class=2, elements=10358, body_class_wall=  1.69000E-01, material_eval=  5.00000E-03, local_calc=  1.21000E-01, global_update=  7.00000E-03, other=  3.60000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=7, material=7, class=2, elements=5318, body_class_wall=  7.20000E-02, material_eval=  5.00000E-03, local_calc=  5.60000E-02, global_update=  1.00000E-03, other=  1.00000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=8, material=2, class=2, elements=2666, body_class_wall=  5.40000E-02, material_eval=  5.00000E-03, local_calc=  3.20000E-02, global_update=  0.00000E+00, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=9, material=3, class=2, elements=76108, body_class_wall=  1.16600E+00, material_eval=  8.00000E-02, local_calc=  8.33000E-01, global_update=  5.30000E-02, other=  2.00000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=1, body=10, material=1, class=1, elements=25290, body_class_wall=  3.69000E-01, material_eval=  2.20000E-02, local_calc=  1.52000E-01, global_update=  7.00000E-03, other=  1.88000E-01
+.
+SolveHypre: Phase24 PCG+AMG setup 0.214 s (total since entry 0.278 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  3.19267E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=3, material=4, class=2, elements=5264, body_class_wall=  9.00000E-02, material_eval=  1.00000E-02, local_calc=  5.20000E-02, global_update=  7.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=5, material=7, class=2, elements=10583, body_class_wall=  1.86000E-01, material_eval=  1.00000E-02, local_calc=  1.34000E-01, global_update=  7.00000E-03, other=  3.50000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=7, material=7, class=2, elements=5396, body_class_wall=  9.10000E-02, material_eval=  7.00000E-03, local_calc=  6.30000E-02, global_update=  3.00000E-03, other=  1.80000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=8, material=2, class=2, elements=2405, body_class_wall=  3.70000E-02, material_eval=  2.00000E-03, local_calc=  2.50000E-02, global_update=  0.00000E+00, other=  1.00000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=9, material=3, class=2, elements=77802, body_class_wall=  1.33200E+00, material_eval=  7.60000E-02, local_calc=  9.42000E-01, global_update=  6.30000E-02, other=  2.51000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=1, body=10, material=1, class=1, elements=20817, body_class_wall=  2.94000E-01, material_eval=  1.50000E-02, local_calc=  1.24000E-01, global_update=  8.00000E-03, other=  1.47000E-01
+SolveHypre: Phase24 PCG+AMG setup 0.213 s (total since entry 0.277 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.009e-12
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  3.19773E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=3, material=4, class=2, elements=6268, body_class_wall=  1.58000E-01, material_eval=  6.00000E-03, local_calc=  1.26000E-01, global_update=  8.00000E-03, other=  1.80000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=5, material=7, class=2, elements=12534, body_class_wall=  2.62000E-01, material_eval=  9.00000E-03, local_calc=  2.12000E-01, global_update=  6.00000E-03, other=  3.50000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=7, material=7, class=2, elements=6318, body_class_wall=  1.57000E-01, material_eval=  9.00000E-03, local_calc=  1.27000E-01, global_update=  3.00000E-03, other=  1.80000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=8, material=2, class=2, elements=2734, body_class_wall=  7.60000E-02, material_eval=  3.00000E-03, local_calc=  5.60000E-02, global_update=  0.00000E+00, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=9, material=3, class=2, elements=73811, body_class_wall=  1.71500E+00, material_eval=  8.60000E-02, local_calc=  1.36600E+00, global_update=  6.40000E-02, other=  1.99000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=1, body=10, material=1, class=1, elements=18884, body_class_wall=  2.94000E-01, material_eval=  2.00000E-02, local_calc=  1.08000E-01, global_update=  9.00000E-03, other=  1.57000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  1.27992E-01, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=3, material=4, class=2, elements=5734, body_class_wall=  8.30000E-02, material_eval=  7.00000E-03, local_calc=  5.70000E-02, global_update=  5.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=4, material=5, class=2, elements=112, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=5, material=7, class=2, elements=11245, body_class_wall=  1.32000E-01, material_eval=  7.00000E-03, local_calc=  9.60000E-02, global_update=  6.00000E-03, other=  2.30000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=6, material=6, class=2, elements=56, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=7, material=7, class=2, elements=5448, body_class_wall=  7.10000E-02, material_eval=  5.00000E-03, local_calc=  4.60000E-02, global_update=  5.00000E-03, other=  1.50000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=8, material=2, class=2, elements=550, body_class_wall=  1.30000E-02, material_eval=  2.00000E-03, local_calc=  9.00000E-03, global_update=  1.00000E-03, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=9, material=3, class=2, elements=37, body_class_wall=  1.00000E-03, material_eval=  0.00000E+00, local_calc=  1.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=1, body=10, material=1, class=1, elements=236916, body_class_wall=  3.09400E+00, material_eval=  2.32000E-01, local_calc=  1.28000E+00, global_update=  1.25000E-01, other=  1.45700E+00
+Elapsed REAL time:     3.3960 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0010 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  1.0000E-03, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=0, call=5, local_constraints=19, global_constraints=8544, total=  6.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=3, call=5, local_constraints=0, global_constraints=8544, total=  1.5090E+00, local_count=  0.0000E+00, count_reduce=  1.5030E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=4, call=5, local_constraints=0, global_constraints=8544, total=  1.3570E+00, local_count=  0.0000E+00, count_reduce=  1.3510E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+Phase24 enforce: rank=5, call=5, local_constraints=0, global_constraints=8544, total=  6.0900E-01, local_count=  0.0000E+00, count_reduce=  6.0300E-01, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=0, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.2700E-01, bulk=  3.3960E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  3.9340E+00
+Phase24 rank wall: rank=3, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.0900E-01, bulk=  1.9130E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.5100E+00, post=  0.0000E+00, assembly=  3.9360E+00
+Phase24 rank wall: rank=4, iter=1, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.4200E-01, bulk=  2.0320E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.3580E+00, post=  0.0000E+00, assembly=  3.9360E+00
+Phase24 rank wall: rank=5, iter=1, preinit=  0.0000E+00, initialize=  2.0000E-03, prebulk=  6.5800E-01, bulk=  2.6640E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  6.1100E-01, post=  0.0000E+00, assembly=  3.9360E+00
+Phase24 enforce: rank=1, call=5, local_constraints=4348, global_constraints=8544, total=  1.8450E+00, local_count=  0.0000E+00, count_reduce=  1.8380E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=1, preinit=  3.0000E-03, initialize=  1.0000E-03, prebulk=  3.6700E-01, bulk=  1.6730E+00, boundary=  3.9000E-02, finalize=  0.0000E+00, dirichlet=  1.8530E+00, post=  0.0000E+00, assembly=  3.9360E+00
+Phase24 enforce: rank=2, call=5, local_constraints=4177, global_constraints=8544, total=  1.9160E+00, local_count=  0.0000E+00, count_reduce=  1.9090E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=1, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  4.3000E-01, bulk=  1.5380E+00, boundary=  3.7000E-02, finalize=  0.0000E+00, dirichlet=  1.9270E+00, post=  0.0000E+00, assembly=  3.9370E+00
+SolveHypre: Phase24 PCG+AMG setup 0.140 s (total since entry 0.204 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+SolveHypre: Required iterations 8 (method 601) to norm 8.21487e-12
+SolveHypre: Solution time (method 601): 0.096
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16321702     0.38887092E-03 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.3230 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.5119999999999436E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.5299999999996459E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.4890000000001322E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.4199999999996038E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  9.9999999999766942E-04
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  3.2300000000000040E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.8999999999998352E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    1 Assembly: (s)    3.95    3.95
+HeatSolve: iter:    1 Solve:    (s)    0.32    0.32
+HeatSolve:  Result Norm   :   0.16321701721508905
+HeatSolve:  Relative Change :    3.8887091530025105E-004
+TESInnerCircuit: T=  1.687107E-01 I=  1.386783E-04 P=  3.117027E-10
+TESInnerCircuit: AbsorberT=  1.500000E-01
+TESInnerCircuit: StycastT=  1.571589E-01
+Phase24 UDF Circuit: Elapsed REAL time:     0.0140 (s)
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+: .
+SolveHypre: Phase24 PCG+AMG setup 0.140 s (total since entry 0.204 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+PHASE24_INSERT_SPLIT: rank=1, body=1, material=4, class=2, calls=8401, csr_est=  3.19483E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=2, material=5, class=2, calls=8401, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=3, material=4, class=2, calls=20441, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=4, material=5, class=2, calls=33626, csr_est=  6.39839E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=5, material=7, class=2, calls=7291, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=6, material=6, class=2, calls=16812, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=7, material=7, class=2, calls=3652, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=1, body=8, material=2, class=2, calls=484, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=1, material=4, class=2, elements=8401, body_class_wall=  1.29000E-01, material_eval=  1.20000E-02, local_calc=  8.60000E-02, global_update=  9.00000E-03, other=  2.20000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=2, material=5, class=2, elements=8401, body_class_wall=  1.51000E-01, material_eval=  1.30000E-02, local_calc=  1.05000E-01, global_update=  7.00000E-03, other=  2.60000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=3, material=4, class=2, elements=20441, body_class_wall=  3.33000E-01, material_eval=  1.50000E-02, local_calc=  2.38000E-01, global_update=  1.10000E-02, other=  6.90000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=4, material=5, class=2, elements=33626, body_class_wall=  5.39000E-01, material_eval=  3.30000E-02, local_calc=  3.96000E-01, global_update=  2.20000E-02, other=  8.80000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=5, material=7, class=2, elements=7291, body_class_wall=  9.60000E-02, material_eval=  1.00000E-02, local_calc=  6.00000E-02, global_update=  7.00000E-03, other=  1.90000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=6, material=6, class=2, elements=16812, body_class_wall=  2.75000E-01, material_eval=  1.50000E-02, local_calc=  1.98000E-01, global_update=  1.20000E-02, other=  5.00000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=7, material=7, class=2, elements=3652, body_class_wall=  5.90000E-02, material_eval=  2.00000E-03, local_calc=  4.40000E-02, global_update=  1.00000E-03, other=  1.20000E-02
+PHASE24_BULK_LOCAL: rank=1, iter=2, body=8, material=2, class=2, elements=484, body_class_wall=  1.60000E-02, material_eval=  1.00000E-03, local_calc=  1.20000E-02, global_update=  1.00000E-03, other=  2.00000E-03
+SolveHypre: Phase24 PCG+AMG setup 0.140 s (total since entry 0.203 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+PHASE24_INSERT_SPLIT: rank=2, body=1, material=4, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=2, material=5, class=2, calls=8072, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=3, material=4, class=2, calls=20739, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=4, material=5, class=2, calls=32221, csr_est=  3.19947E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=5, material=7, class=2, calls=9101, csr_est=  3.19386E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=6, material=6, class=2, calls=16110, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=7, material=7, class=2, calls=4424, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=8, material=2, class=2, calls=439, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=2, body=9, material=3, class=2, calls=18, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=1, material=4, class=2, elements=8072, body_class_wall=  1.30000E-01, material_eval=  1.00000E-02, local_calc=  8.60000E-02, global_update=  7.00000E-03, other=  2.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=2, material=5, class=2, elements=8072, body_class_wall=  1.47000E-01, material_eval=  1.50000E-02, local_calc=  9.50000E-02, global_update=  8.00000E-03, other=  2.90000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=3, material=4, class=2, elements=20739, body_class_wall=  3.32000E-01, material_eval=  2.80000E-02, local_calc=  2.30000E-01, global_update=  1.10000E-02, other=  6.30000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=4, material=5, class=2, elements=32221, body_class_wall=  5.32000E-01, material_eval=  3.70000E-02, local_calc=  3.81000E-01, global_update=  1.80000E-02, other=  9.60000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=5, material=7, class=2, elements=9101, body_class_wall=  1.39000E-01, material_eval=  1.30000E-02, local_calc=  9.00000E-02, global_update=  8.00000E-03, other=  2.80000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=6, material=6, class=2, elements=16110, body_class_wall=  2.59000E-01, material_eval=  1.60000E-02, local_calc=  1.86000E-01, global_update=  1.00000E-02, other=  4.70000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=7, material=7, class=2, elements=4424, body_class_wall=  6.20000E-02, material_eval=  4.00000E-03, local_calc=  3.90000E-02, global_update=  5.00000E-03, other=  1.40000E-02
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=8, material=2, class=2, elements=439, body_class_wall=  4.00000E-03, material_eval=  0.00000E+00, local_calc=  3.00000E-03, global_update=  0.00000E+00, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=2, iter=2, body=9, material=3, class=2, elements=18, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+SolveHypre: Phase24 PCG+AMG setup 0.140 s (total since entry 0.203 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+PHASE24_INSERT_SPLIT: rank=4, body=3, material=4, class=2, calls=5264, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=4, material=5, class=2, calls=1, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=5, material=7, class=2, calls=10583, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=6, material=6, class=2, calls=2, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=7, material=7, class=2, calls=5396, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=8, material=2, class=2, calls=2405, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=9, material=3, class=2, calls=77802, csr_est=  9.59659E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=4, body=10, material=1, class=1, calls=20817, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=3, material=4, class=2, elements=5264, body_class_wall=  8.30000E-02, material_eval=  4.00000E-03, local_calc=  5.40000E-02, global_update=  6.00000E-03, other=  1.90000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=4, material=5, class=2, elements=1, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=5, material=7, class=2, elements=10583, body_class_wall=  1.74000E-01, material_eval=  1.10000E-02, local_calc=  1.28000E-01, global_update=  1.40000E-02, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=6, material=6, class=2, elements=2, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=7, material=7, class=2, elements=5396, body_class_wall=  8.60000E-02, material_eval=  7.00000E-03, local_calc=  5.80000E-02, global_update=  4.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=8, material=2, class=2, elements=2405, body_class_wall=  4.30000E-02, material_eval=  4.00000E-03, local_calc=  3.20000E-02, global_update=  1.00000E-03, other=  6.00000E-03
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=9, material=3, class=2, elements=77802, body_class_wall=  1.28000E+00, material_eval=  8.40000E-02, local_calc=  9.23000E-01, global_update=  6.70000E-02, other=  2.06000E-01
+PHASE24_BULK_LOCAL: rank=4, iter=2, body=10, material=1, class=1, elements=20817, body_class_wall=  3.24000E-01, material_eval=  3.00000E-02, local_calc=  1.20000E-01, global_update=  2.00000E-02, other=  1.54000E-01
+.
+SolveHypre: Phase24 PCG+AMG setup 0.139 s (total since entry 0.202 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+PHASE24_INSERT_SPLIT: rank=5, body=3, material=4, class=2, calls=6268, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=4, material=5, class=2, calls=8, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=5, material=7, class=2, calls=12534, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=6, material=6, class=2, calls=4, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=7, material=7, class=2, calls=6318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=8, material=2, class=2, calls=2734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=9, material=3, class=2, calls=73811, csr_est=  3.19920E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=5, body=10, material=1, class=1, calls=18884, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=3, material=4, class=2, elements=6268, body_class_wall=  9.10000E-02, material_eval=  7.00000E-03, local_calc=  6.80000E-02, global_update=  6.00000E-03, other=  1.00000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=4, material=5, class=2, elements=8, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=5, material=7, class=2, elements=12534, body_class_wall=  2.03000E-01, material_eval=  1.20000E-02, local_calc=  1.47000E-01, global_update=  1.00000E-02, other=  3.40000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=6, material=6, class=2, elements=4, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=7, material=7, class=2, elements=6318, body_class_wall=  1.21000E-01, material_eval=  7.00000E-03, local_calc=  8.30000E-02, global_update=  1.00000E-02, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=8, material=2, class=2, elements=2734, body_class_wall=  5.00000E-02, material_eval=  3.00000E-03, local_calc=  2.50000E-02, global_update=  2.00000E-03, other=  2.00000E-02
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=9, material=3, class=2, elements=73811, body_class_wall=  1.16900E+00, material_eval=  8.10000E-02, local_calc=  8.11000E-01, global_update=  6.10000E-02, other=  2.16000E-01
+PHASE24_BULK_LOCAL: rank=5, iter=2, body=10, material=1, class=1, elements=18884, body_class_wall=  3.14000E-01, material_eval=  2.30000E-02, local_calc=  1.28000E-01, global_update=  7.00000E-03, other=  1.56000E-01
+SolveHypre: Phase24 PCG+AMG setup 0.140 s (total since entry 0.203 s)
+SolveHypre: Phase24 PCG iterations=8 final_rel_res=8.215e-12
+PHASE24_INSERT_SPLIT: rank=3, body=3, material=4, class=2, calls=5094, csr_est=  3.18428E-02, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=5, material=7, class=2, calls=10358, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=7, material=7, class=2, calls=5318, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=8, material=2, class=2, calls=2666, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=9, material=3, class=2, calls=76108, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=3, body=10, material=1, class=1, calls=25290, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=3, material=4, class=2, elements=5094, body_class_wall=  1.06000E-01, material_eval=  1.20000E-02, local_calc=  6.70000E-02, global_update=  6.00000E-03, other=  2.10000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=5, material=7, class=2, elements=10358, body_class_wall=  1.64000E-01, material_eval=  1.20000E-02, local_calc=  1.20000E-01, global_update=  7.00000E-03, other=  2.50000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=7, material=7, class=2, elements=5318, body_class_wall=  5.50000E-02, material_eval=  2.00000E-03, local_calc=  4.50000E-02, global_update=  0.00000E+00, other=  8.00000E-03
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=8, material=2, class=2, elements=2666, body_class_wall=  5.30000E-02, material_eval=  2.00000E-03, local_calc=  3.30000E-02, global_update=  3.00000E-03, other=  1.50000E-02
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=9, material=3, class=2, elements=76108, body_class_wall=  1.27500E+00, material_eval=  7.10000E-02, local_calc=  9.07000E-01, global_update=  7.10000E-02, other=  2.26000E-01
+PHASE24_BULK_LOCAL: rank=3, iter=2, body=10, material=1, class=1, elements=25290, body_class_wall=  3.86000E-01, material_eval=  3.20000E-02, local_calc=  1.66000E-01, global_update=  8.00000E-03, other=  1.80000E-01
+.PHASE24_INSERT_SPLIT: rank=0, body=1, material=4, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=2, material=5, class=2, calls=19, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=3, material=4, class=2, calls=5734, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=4, material=5, class=2, calls=112, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=5, material=7, class=2, calls=11245, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=6, material=6, class=2, calls=56, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=7, material=7, class=2, calls=5448, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=8, material=2, class=2, calls=550, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=9, material=3, class=2, calls=37, csr_est=  0.00000E+00, rhs_est=  0.00000E+00
+PHASE24_INSERT_SPLIT: rank=0, body=10, material=1, class=1, calls=236916, csr_est=  6.39921E-02, rhs_est=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=1, material=4, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=2, material=5, class=2, elements=19, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=3, material=4, class=2, elements=5734, body_class_wall=  6.50000E-02, material_eval=  4.00000E-03, local_calc=  4.90000E-02, global_update=  1.00000E-03, other=  1.10000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=4, material=5, class=2, elements=112, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=5, material=7, class=2, elements=11245, body_class_wall=  1.22000E-01, material_eval=  2.00000E-03, local_calc=  9.70000E-02, global_update=  6.00000E-03, other=  1.70000E-02
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=6, material=6, class=2, elements=56, body_class_wall=  3.00000E-03, material_eval=  0.00000E+00, local_calc=  3.00000E-03, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=7, material=7, class=2, elements=5448, body_class_wall=  5.00000E-02, material_eval=  5.00000E-03, local_calc=  3.40000E-02, global_update=  2.00000E-03, other=  9.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=8, material=2, class=2, elements=550, body_class_wall=  5.00000E-03, material_eval=  0.00000E+00, local_calc=  4.00000E-03, global_update=  0.00000E+00, other=  1.00000E-03
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=9, material=3, class=2, elements=37, body_class_wall=  0.00000E+00, material_eval=  0.00000E+00, local_calc=  0.00000E+00, global_update=  0.00000E+00, other=  0.00000E+00
+PHASE24_BULK_LOCAL: rank=0, iter=2, body=10, material=1, class=1, elements=236916, body_class_wall=  3.07200E+00, material_eval=  2.26000E-01, local_calc=  1.27600E+00, global_update=  1.15000E-01, other=  1.45500E+00
+Elapsed REAL time:     3.3190 (s)
+Phase24 Boundary Assembly: Elapsed REAL time:     0.0000 (s)
+Phase24 Matrix Finalization: Elapsed REAL time:     0.0000 (s)
+HeatSolve: Assembly done
+Phase24 dirichlet comm: rank=5, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=0, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=3, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=4, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=5, local_bc=0
+Phase24 dirichlet comm: rank=1, total=  0.0000E+00, setup=  0.0000E+00, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 dirichlet comm: rank=2, total=  1.0000E-03, setup=  1.0000E-03, pack=  0.0000E+00, send=  0.0000E+00, recv_wait=  0.0000E+00, unpack=  0.0000E+00, neighbours=4, local_bc=0
+Phase24 enforce: rank=3, call=6, local_constraints=0, global_constraints=8544, total=  1.2800E+00, local_count=  0.0000E+00, count_reduce=  1.2740E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9482E+04
+Phase24 enforce: rank=0, call=6, local_constraints=19, global_constraints=8544, total=  5.0000E-03, local_count=  0.0000E+00, count_reduce=  0.0000E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.7890E+04
+Phase24 enforce: rank=5, call=6, local_constraints=0, global_constraints=8544, total=  1.2850E+00, local_count=  0.0000E+00, count_reduce=  1.2790E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  1.0000E-03, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9372E+04
+Phase24 enforce: rank=4, call=6, local_constraints=0, global_constraints=8544, total=  1.3300E+00, local_count=  0.0000E+00, count_reduce=  1.3240E+00, communicate=  0.0000E+00, scale=  6.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  0.0000E+00, nrows=  5.9394E+04
+, constrained=  0.0000E+00
+, constrained=  1.9000E+01
+, constrained=  0.0000E+00
+, constrained=  0.0000E+00
+Phase24 rank wall: rank=3, iter=2, preinit=  1.0000E-03, initialize=  2.0000E-03, prebulk=  5.2500E-01, bulk=  2.0400E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.2800E+00, post=  0.0000E+00, assembly=  3.8490E+00
+Phase24 rank wall: rank=0, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.1700E-01, bulk=  3.3190E+00, boundary=  0.0000E+00, finalize=  0.0000E+00, dirichlet=  7.0000E-03, post=  0.0000E+00, assembly=  3.8470E+00
+Phase24 rank wall: rank=5, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  6.1000E-01, bulk=  1.9490E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.2870E+00, post=  0.0000E+00, assembly=  3.8490E+00
+Phase24 rank wall: rank=4, iter=2, preinit=  1.0000E-03, initialize=  1.0000E-03, prebulk=  5.2500E-01, bulk=  1.9900E+00, boundary=  1.0000E-03, finalize=  0.0000E+00, dirichlet=  1.3310E+00, post=  0.0000E+00, assembly=  3.8490E+00
+Phase24 enforce: rank=1, call=6, local_constraints=4348, global_constraints=8544, total=  1.8370E+00, local_count=  0.0000E+00, count_reduce=  1.8310E+00, communicate=  0.0000E+00, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.7021E+04
+, constrained=  4.3480E+03
+Phase24 rank wall: rank=1, iter=2, preinit=  3.0000E-03, initialize=  1.0000E-03, prebulk=  3.4800E-01, bulk=  1.6010E+00, boundary=  4.8000E-02, finalize=  0.0000E+00, dirichlet=  1.8480E+00, post=  0.0000E+00, assembly=  3.8490E+00
+Phase24 enforce: rank=2, call=6, local_constraints=4177, global_constraints=8544, total=  1.7680E+00, local_count=  0.0000E+00, count_reduce=  1.7610E+00, communicate=  1.0000E-03, scale=  5.0000E-03, owner_scan=  0.0000E+00, owner_reduce=  0.0000E+00, symmetric_elim=  0.0000E+00, row_sweep=  1.0000E-03, nrows=  5.6951E+04
+, constrained=  4.1770E+03
+Phase24 rank wall: rank=2, iter=2, preinit=  4.0000E-03, initialize=  1.0000E-03, prebulk=  4.2200E-01, bulk=  1.6070E+00, boundary=  4.0000E-02, finalize=  0.0000E+00, dirichlet=  1.7760E+00, post=  0.0000E+00, assembly=  3.8500E+00
+SolveHypre: Phase24 PCG+AMG setup 0.138 s (total since entry 0.202 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+SolveHypre: Required iterations 1 (method 601) to norm 9.62273e-13
+SolveHypre: Solution time (method 601): 0.032
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16321702     0.12958054E-12 ) :: heat equation
+Phase24 Linear Solve: Elapsed REAL time:     0.2560 (s)
+HeatSolve: Phase24 CSR cache: builds=0, hits=0, invalidations=0
+PHASE24_EVENT: component=element_traversal wall_seconds=  1.4949999999999548E+00
+PHASE24_EVENT: component=material_property_evaluation wall_seconds=  2.3699999999997701E-01
+PHASE24_EVENT: component=local_element_calculation wall_seconds=  1.4630000000000472E+00
+PHASE24_EVENT: component=global_sparse_insertion wall_seconds=  1.2400000000002009E-01
+PHASE24_EVENT: component=boundary_element_assembly wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=matrix_format_conversion wall_seconds=  0.0000000000000000E+00
+PHASE24_EVENT: component=hypre_solve wall_seconds=  2.5600000000000023E-01
+PHASE24_EVENT: component=udf_circuit wall_seconds=  1.3999999999999346E-02
+HeatSolve: Phase24 operator counters: full_matrix lagged_reuse forced_rebuild recovery=0 0 0 0
+HeatSolve: iter:    2 Assembly: (s)    3.86    7.82
+HeatSolve: iter:    2 Solve:    (s)    0.26    0.58
+HeatSolve:  Result Norm   :   0.16321701721506790
+HeatSolve:  Relative Change :    1.2958053626993593E-013
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_hybrid_fullconf_h8/finalperf_singlepixel_on_r1.result.0
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: *** Elmer Solver: ALL DONE ***
+SolveHypre: Phase24 PCG+AMG setup 0.139 s (total since entry 0.203 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+SolveHypre: Phase24 PCG+AMG setup 0.139 s (total since entry 0.203 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+SolveHypre: Phase24 PCG+AMG setup 0.139 s (total since entry 0.202 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+SolveHypre: Phase24 PCG+AMG setup 0.138 s (total since entry 0.201 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+SolveHypre: Phase24 PCG+AMG setup 0.139 s (total since entry 0.202 s)
+SolveHypre: Phase24 PCG iterations=1 final_rel_res=9.623e-13
+MAIN: The end
+SOLVER TOTAL TIME(CPU,REAL):        34.27       34.27
+ELMER SOLVER FINISHED AT: 2026/10/12 15:51:25
