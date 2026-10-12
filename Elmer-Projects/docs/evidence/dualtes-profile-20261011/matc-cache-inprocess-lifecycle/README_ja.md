@@ -1,62 +1,75 @@
-﻿# MATC Node Cache 同一プロセス寿命調査
+# MATC Node Cache 同一プロセス寿命検証
 
 ## 結果
 
-**B: 実行ハーネス未完成。PASSは報告しない。**
+**PASS。公式Elmer 26.1の実`HeatSolver`とGeneric MATC Node Cacheを使い、Mesh Modeで異なる2 meshを同じOSプロセスから順に処理した。**
 
-公式Elmer 26.1では `Mesh Mode` が同一 `ElmerSolver` プロセス内で `LoadModel` とsolver初期化を繰り返す経路であることを確認した。`ReloadInput` は安全なModel/Mesh差し替えAPIとして使わない。
+- Cache ON: PID `39424`、HeatSolver activation `1, 2` が`meshA`、続く`3, 4` が`meshA1`。
+- Cache OFF: PID `34760`、同じmesh順と4 activationをGeneric経路で実行。
+- ONの各activationでmaterial 1種・6 nodeのcache mapを1回構築し、assembly中に2回評価。2回目にはcache hitを記録。
+- 各activation終了時に割り当て済み6配列をすべて実際に`DEALLOCATE`し、全配列が未割当てであることを記録。
+- `meshA`と`meshA1`はnode数をともに6に保ちながらprism connectivity/node対応を変更。map fingerprintはA=`12ac3491e6d8d13969f914ae24d733b7f08b8723d48baf50a0bf0f39dde406a8`、B=`ab36c89d350ac43dea515933f0ead051e3fdd8340c4f9afe59cd208d66b33a3b`で異なり、Elmer mesh fixtureの期待node順と一致した。
+- 各assemblyのcached MATC値とGeneric MATC評価の`max_abs`は0。ON/OFFの全24 nodal temperature比較も`max_abs=0`、`max_rel=0`だった。許容差は`atol=1e-13`、`rtol=1e-12`。
+- Mesh A/BそれぞれのON/OFF Elmer `.result`ファイルもSHA-256が一致し、byte単位で同一だった。
+- OFF→ON→OFFの同一プロセス切替は**SKIP**。Solver optionは各ModelのSolver ValueListから読むため、この同一設定SIFによるMesh Mode試験で実行時にoptionを書き換える安全なAPIを使わなかった。代替として、同じmesh/物理入力のOFFとONを別プロセスで比較した。
 
-今回は実際の同一PIDログとcacheの解放ログを得る04パッチおよびランナーを完成できていない。既存01・02・03の再監査や4-step結果を今回の寿命検証として扱わない。
+判定詳細は[`pass_fail_skip.json`](pass_fail_skip.json)、通常Releaseの無診断ビルド確認は[`normal_release_build_validation.json`](normal_release_build_validation.json)に保存した。実行ログは`logs/cache_on_raw.log`、`logs/cache_off_raw.log`と読みやすいUTF-8版にある。
 
-## 公式ソースとパッチ適用済み構造
+## Elmer 26.1 Mesh Mode経路
 
-公式tag `release-26.1`、commit `5a8de867068be0568f09af40fb90fee300dfbede` を確認した。既存01→02→03は隔離ソースに順番通り適用可能で、MATC cache stateは `HeatSolver` の非 `SAVE` local allocatableになっている。
+調査した公式ソースはtag `release-26.1`、commit `5a8de867068be0568f09af40fb90fee300dfbede`。既存パッチ01→02→03適用後の隔離ソースに独立patch 04を作った。`ReloadInput`は使用していない。
 
-- `fem/src/ElmerSolver.F90:388-413`: `Mesh Mode` の繰り返しで `FreeModel(CurrentModel)`、`MeshIndex` 増分、同じ `ModelName` で `LoadModel(...)` を実行する。1つのElmerSolverプロセスの実行ループ内にあるため、ここが安全な複数activation入口。
-- `fem/src/ElmerSolver.F90:429`: 読んだ `Mesh Mode` を以後の繰り返し制御に使う。
-- `fem/src/ModelDescription.F90:279-302`: `ReloadInputFile` は既存Modelに対して `LoadInputFile` を呼ぶだけで、`FreeModel` と `LoadModel` のmesh reload lifecycleを実行しない。
-- `fem/src/modules/ReloadInput.F90:36-68`: `ReloadInput` のコメント自体が「carefully」「not all information may be read」と制限を明記。Model/Mesh変更を保証できないため本ハーネスには使わない。
-- `fem/src/modules/HeatSolve.F90:112`: `HeatSolver` entry。
-- `fem/src/modules/HeatSolve.F90:2536`: cache helperを含む内部 `CONTAINS` 節。
-- `fem/src/modules/HeatSolve.F90:3606-3727`: `Phase24ClearGenericDynKCache`、`Phase24BuildGenericDynKCache`。Build/clear/evaluate routineはHeatSolver内部手続きであり、cache配列と `CurrentModel`、`Solver` をホスト関連で参照する。独立driverからは直接呼べない。
-- `fem/src/modules/HeatSolve.F90:3718` 以降: Generic評価は `ListGetReal` に現在の `Temperature` nodal valuesを渡す。各assembly評価の同値確認にもこのElmer MATC経路が必要。
+- [`ElmerSolver.F90`のMesh Mode loop](https://github.com/ElmerCSC/elmerfem/blob/release-26.1/fem/src/ElmerSolver.F90)は`MeshIndex=0`から始まり、loopごとに`FreeModel(CurrentModel)`、MeshIndex更新、`LoadModel(...,MeshIndex)`を通る。これにより同一ElmerSolverプロセスでMesh A→Mesh BのModel loadとsolver activationが実際に発生する。
+- `HeatSolver`はsolver activationごとに呼び出される。diagnostic buildではmodule内のSAVE activation counterとOS `getpid()`で各呼び出しを識別した。
+- ElmerのMesh DB形式は`Mesh DB "fixtures/meshes" "meshA"`。Mesh Modeは連番mesh名を順に読み、`meshA`の次に`meshA1`を読む。各mesh directoryにはElmerGrid形式の`mesh.header`, `mesh.nodes`, `mesh.elements`, `mesh.boundary`を置いた。
+- ElmerSolverは次のmesh番号を要求し続ける仕様なので、test-only compile macro時に2 meshを処理した後loopを抜けるガードを追加した。macroなしReleaseのpreprocessed sourceに診断markerが残らず、`HeatSolve.dll`と`ElmerSolver_mpi.exe`をビルドできたことを記録した。
 
-## 実装を止めた具体的な障害
+今回の実行では、2 meshそれぞれで2 timestepを計算した。そのためHeatSolverは各meshにつき2 activation発生し、A activation終了後にB activationが始まった。
 
-Harness入口に使えるElmer APIは見つかったが、既存MATC cache実装は独立した型/モジュール/APIではない。手続きは `HeatSolver` 内部で、動的cache stateを非 `SAVE` ローカル配列に持つ。よって通常のテストdriverから「本番と同じ実装」を呼ぶ手段がない。ここで似た配列処理を複製したテストを書くと模擬実装となり、要求された本番cacheの証拠にならない。
+## Fixtureと設定
 
-Mesh Modeで2つのfixture meshを読み込む実行試験、PID/activation idの付与、activation終了時の解放配列数記録をつなぐ独立04変更まで今回完成していない。従って同一PID・複数activationの実行ログ、build/release数、cache/Generic差分の証拠は未取得である。
+- [`meshmode_cache_on.sif`](meshmode_cache_on.sif)と[`meshmode_cache_off.sif`](meshmode_cache_off.sif)はMesh Modeを有効にした短い過渡問題。initial temperature=1、timestep=0.001、2 step、密度/比熱/ソースは1。
+- Body 1はMaterial 7を参照し、temperature-only MATC conductivity `1.0 + tx*tx`を使う。Cache ON/OFF以外の物理設定を揃えた。
+- Vector Assemblyは両SIFでOFF。ONのSIFのみNode CacheとGeneric verificationをONにする。既定Cache-OFF設定やProduction DLL/SIFには変更を加えていない。
+- Mesh A/Bはいずれも6-node prismを1要素持つ。A connectivityは`1 2 3 4 5 6`、Bは`3 1 2 6 4 5`。material assignmentはどちらもmaterial 7。
 
-## 最小設計変更案
+## ログと自動判定
 
-次の独立04で本番実装とtestが同じコードを通るようにする。
+`PHASE24_LIFECYCLE`診断はtest compile時のみ有効で、各activationのPID/rank/id/model/material/node、mapのmaterial/element/local-node/node/slot、build/eval/hit、cache clearの割当数/実解放数、cached-vs-Generic max差を記録する。
 
-1. 新規 `fem/src/modules/Phase24GenericDynKCache.F90` に `TYPE Phase24GenericDynKCache_t` を置き、`NodeSlot`, `Nodes`, `Materials`, `Start`, `Count`, `Nodal`, `Ready`, cache hit/eval/build counterを保持する。
-2. `BuildGenericDynKCache(Cache, Model, Solver, ActivationId, Pid)`、`EvaluateGenericDynKCache(Cache, Model, Temperature, ...)`、`ClearGenericDynKCache(Cache, FreedArrays)`を同モジュールに実装する。既存HeatSolver内部手続きのマップ構築、 MATC `ListGetReal` 評価をこのモジュールへ移す。コピーした別実装は作らない。
-3. `HeatSolver.F90` はローカル `Phase24GenericDynKCache_t` を所有し、現状のBuild/Evaluate/Clear呼び出しを同モジュールに置き換える。cache optionの既定値は `.FALSE.` のまま。通常終了時には明示clearし、Fortran自動解放も維持する。
-4. 新規test-only modeは `ElmerSolver.F90` の既存 `Mesh Mode` を使う。短いSIFと `mesh` / `mesh1` fixtureをこの成果物ディレクトリに置く。Mesh AはMaterial 7の六節点prism、Mesh Bは別node connectivityまたは別material assignmentにし、両方にtemperature-only MATC式を置く。
-5. 各HeatSolver activation entry/exit、cache build/clear/evalで `getpid()`、activation ID、材料数、node数、build count、解放配列数、material/node/slot対応、hit数、cached値と `ListGetReal` Generic値のmax abs/rel差分を記録する。assemblyごとに温度を変え、MATC値を再評価した回数と差分を記録する。
-6. 実行スクリプトは公式26.1 clean checkoutに01→02→03→04を適用してbuildし、Mesh Modeの1 rank・短時間SIFを起動する。ログ検査は同一PIDかつactivation Aの終了行より後にB開始行があること、A/B map build各1回以上、release数、Bのmaterial/node mapがfixtureに一致、assembly evalとGeneric差分が許容誤差内であることを必須にする。
+診断ログ上、cache clearはactivation開始時にも呼ばれるが、寿命判定に使うのは終了時の`allocated_before=6`, `freed_arrays=6`, `all_unallocated=T`。終了ログと次activation開始ログの順もcheckerが検査する。BのmapはB自身のmesh connectivityに一致する。BではAの前回slot tableはすでに未割当てであり、MATC値はBのModel/温度を用いてassemblyごとに再評価される。
 
-### 04 patchで変更するファイル
+`check_lifecycle.py`はPID一致、activation順、Mesh Mode完了marker、fixture connectivityから計算したmap fingerprint、build/clear、cache hit、Generic差分、ON/OFF nodal temperature許容差を自動判定する。fallbackだけで全期間を計算した試験はPASSにならない。
 
-- `fem/src/modules/Phase24GenericDynKCache.F90` (追加)
-- `fem/src/modules/HeatSolve.F90` (cache ownershipとmodule呼び出しへ置換。01/02/03 patchファイル自体は変更しない)
-- `fem/src/modules/CMakeLists.txt` または実際のmodule source list (新規moduleの依存順を追加)
-- test-onlyのSIF、2つのmesh fixture、runner、ログ検査器はこのディレクトリに追加
+## 再実行
 
-## 制約と未実施
+必要なもの: 公式Elmer 26.1 source checkout、そこへ適用済みの既存01→02→03、CMake/Ninja、GNU Fortran/C/C++、MS-MPI、Elmerの依存ライブラリ、Python 3。実行環境に応じて compiler、source/build/install pathを指定する。
 
-- 01・02・03パッチファイルは変更していない。
-- production DLL/SIF、物理モデル、Vector Assembly設定には触れていない。
-- 75 ms本計算は実行していない。
-- 同一PID実行やcache寿命のPASSは報告しない。
+1. 01→03適用済みで未変更のElmer sourceに診断buildを作成する。スクリプトがpatch 04を検査・適用し、test-only macro付きReleaseをbuild/installする。
 
-## 再開手順
+   ```powershell
+   .\build_diagnostic_solver.ps1 `
+     -ElmerSource C:\src\elmerfem `
+     -BuildDir C:\build\elmer-cache-diag `
+     -InstallDir C:\install\elmer-cache-diag `
+     -FortranCompiler G:\Elmer-Migration\msys64\ucrt64\bin\gfortran.exe `
+     -CCompiler G:\Elmer-Migration\msys64\ucrt64\bin\cc.exe `
+     -CxxCompiler G:\Elmer-Migration\msys64\ucrt64\bin\c++.exe
+   ```
 
-1. Elmer公式 `release-26.1` (`5a8de867068be0568f09af40fb90fee300dfbede`) のclean checkoutを用意する。
-2. 既存 `phase24-source-repro/replay_source_and_build.ps1` と `matc-cache-lifecycle/replay_01_02_03_and_build.ps1` のmanifest検証を使い01→02→03を適用する。
-3. 上記のmodule抽出とtest modeを独立04として実装し、clean Release buildする。
-4. fixtureでMesh Modeを2回通し、PIDが同じの生ログと数値比較JSONを保存する。
-5. ログ判定スクリプトを再実行し、全条件を満たした場合だけAへ更新する。
+2. `ElmerGrid 14 2 fixtures/meshes/meshA.msh -out fixtures/meshes/meshA`と同様にA/Bを変換する。保存済みのElmerGrid出力も同梱している。
+3. 同一のdiagnostic `ElmerSolver_mpi.exe`をそれぞれ1 MPI rankで実行し、自動判定を行う。
 
+   ```powershell
+   .\run_meshmode.ps1 -ElmerHome C:\install\elmer-cache-diag
+   ```
+
+`run_meshmode.ps1`は同じSIF/mesh入力でONとOFFを順に実行して生ログを保存し、最後に`check_lifecycle.py`を実行する。通常Releaseの既定OFF確認には診断macroなしで`HeatSolve`と`ElmerSolver_mpi.exe`を再buildする。今回の検証ではこの2 targetが成功し、Fortran flagsは空、preprocessed sourceからdiagnostic markerが除外されることを確認した。
+
+## Patchと制約
+
+- 独立変更は[`04_matc_cache_meshmode_diagnostics.patch`](04_matc_cache_meshmode_diagnostics.patch)のみ。変更対象は`fem/src/ElmerSolver.F90`と`fem/src/modules/HeatSolve.F90`。
+- Generic cache Build/Evaluate/Clear本体を移動・複製していない。診断は既存routineの周囲に追加した。
+- パッチ01/02/03ファイル、Production DLL/SIF、TESモデル、production Vector Assembly設定は変更していない。
+- 75 ms本計算、6-rank実行、長時間性能測定は行っていない。
+- ソースpatch pre/post SHA-256は[`patch04_source_manifest.json`](patch04_source_manifest.json)、最終artifact一覧は[`SHA256SUMS`](SHA256SUMS)を参照。

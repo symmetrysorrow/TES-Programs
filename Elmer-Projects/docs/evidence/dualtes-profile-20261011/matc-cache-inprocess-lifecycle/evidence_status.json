@@ -1,15 +1,38 @@
-﻿{
-  "result": "B_NOT_IMPLEMENTED",
+{
+  "result": "A_TEST_HARNESS_COMPLETE_PASS",
   "official_elmer_tag": "release-26.1",
   "official_elmer_commit": "5a8de867068be0568f09af40fb90fee300dfbede",
-  "patch_sequence_inspected": ["01", "02", "03"],
-  "safe_same_process_entry": "ElmerSolver.F90 Mesh Mode loop: FreeModel -> MeshIndex++ -> LoadModel",
-  "reloadinput_used": false,
-  "activation_log": "NOT_CAPTURED",
-  "same_pid_multiple_activations": "NOT_VERIFIED",
-  "cache_release_count": "NOT_CAPTURED",
-  "cached_vs_generic_delta": "NOT_CAPTURED",
+  "base_repository_commit": "a1fd2ca78b47e04969fa9d208ab2a99dac2e1e70",
+  "patch_sequence_applied_before_04": ["01", "02", "03"],
+  "patch_04": "04_matc_cache_meshmode_diagnostics.patch",
+  "same_process_meshmode": {
+    "cache_on_pid": 39424,
+    "cache_off_pid": 34760,
+    "mesh_order": ["meshA", "meshA1"],
+    "cache_on_activation_ids": [1, 2, 3, 4],
+    "cache_off_activation_ids": [1, 2, 3, 4],
+    "one_mpi_rank": true
+  },
+  "cache_evidence": {
+    "on_builds": 4,
+    "on_evaluations": 8,
+    "on_hits": 4,
+    "deallocated_arrays_per_activation": 6,
+    "cache_generic_max_abs": 0.0,
+    "different_mapping_fingerprints": true
+  },
+  "cache_on_off_temperature": {
+    "values_compared": 24,
+    "max_abs": 0.0,
+    "max_rel": 0.0,
+    "atol": 1e-13,
+    "rtol": 1e-12
+  },
+  "cache_default_off": true,
+  "vector_assembly_off": true,
+  "runtime_off_on_off_toggle": "SKIP_UNSUPPORTED_SAME_MODEL_RUNTIME_MUTATION_NOT_ATTEMPTED",
+  "normal_release_heat_solver_and_elmer_solver_targets": "PASS_DIAGNOSTIC_MACRO_ABSENT",
   "75ms_full_run": "NOT_RUN",
-  "production_sif_dll_model_vector_settings_changed": false,
+  "production_dll_sif_model_vector_settings_changed": false,
   "existing_patches_01_02_03_modified": false
 }

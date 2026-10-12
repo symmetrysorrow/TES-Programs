@@ -1,0 +1,309 @@
+diff --git a/fem/src/ElmerSolver.F90 b/fem/src/ElmerSolver.F90
+--- a/fem/src/ElmerSolver.F90
++++ b/fem/src/ElmerSolver.F90
+@@ -88,8 +88,18 @@
+      USE DefUtils, ONLY : GetSimulation, GetCompilationDate, GetRevision, GetVersion, &
+          GetReal, GetCReal, GetLogical, GetElementNOFNodes, GetElementDOFs, GetBC, &
+          GetElementFamily, GetElementNodes, VectorElementEdgeDOFs
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_INT
++#endif
+ 
+      IMPLICIT NONE
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     INTERFACE
++       INTEGER(C_INT) FUNCTION Phase24DiagGetPid() BIND(C,NAME='getpid')
++         IMPORT C_INT
++       END FUNCTION Phase24DiagGetPid
++     END INTERFACE
++#endif
+ !------------------------------------------------------------------------------
+ 
+      INTEGER :: Initialize
+@@ -152,6 +162,9 @@
+      INTEGER :: iostat, iSweep = 1, OptimIters
+      LOGICAL :: GotOptimIters
+      INTEGER :: MeshIndex
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     INTEGER :: Phase24DiagMeshPassCount
++#endif
+      TYPE(Mesh_t), POINTER :: ExtrudedMesh
+ 
+      TYPE(Model_t), POINTER, SAVE :: Control
+@@ -381,6 +394,9 @@
+ !    Read Model and mesh from Elmer mesh data base
+ !------------------------------------------------------------------------------
+      MeshIndex = 0
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     Phase24DiagMeshPassCount = 0
++#endif
+      DO WHILE( .TRUE. )
+ 
+        IF ( initialize==2 ) GOTO 1
+@@ -718,6 +734,14 @@
+        CALL CompareToReferenceSolution( )
+ 
+        IF ( Initialize >= 2 ) EXIT
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++       IF ( MeshMode ) THEN
++         Phase24DiagMeshPassCount = Phase24DiagMeshPassCount + 1
++         WRITE(*,'(A,I0,A,I0,A,I0)') 'PHASE24_MESHMODE_PASS pid=',Phase24DiagGetPid(), &
++              ' completed=',Phase24DiagMeshPassCount,' mesh_index=',MeshIndex
++         IF ( Phase24DiagMeshPassCount >= 2 ) EXIT
++       END IF
++#endif
+      END DO
+ 
+      IF( ListGetLogical( CurrentModel % Simulation,'Echo Keywords at End', GotIt ) ) THEN
+diff --git a/fem/src/modules/HeatSolve.F90 b/fem/src/modules/HeatSolve.F90
+--- a/fem/src/modules/HeatSolve.F90
++++ b/fem/src/modules/HeatSolve.F90
+@@ -123,9 +123,23 @@
+      USE CRSMatrix, ONLY : CRS_ClearPositionCache, CRS_Phase24CacheStats, &
+           CRS_PreparePositionCache, CRS_GlueLocalMatrixCached, CRS_AddLocalMatrixCachedTo
+      USE ElementDescription, ONLY : ElementInfo
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_INT
++#endif
+ 
+ !------------------------------------------------------------------------------
+      IMPLICIT NONE
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     INTERFACE
++       INTEGER(C_INT) FUNCTION Phase24DiagGetPid() BIND(C,NAME='getpid')
++         IMPORT C_INT
++       END FUNCTION Phase24DiagGetPid
++     END INTERFACE
++     INTEGER, SAVE :: Phase24DiagNextActivation = 0
++     INTEGER :: Phase24DiagActivation, Phase24DiagPid
++     INTEGER :: Phase24DiagBuilds, Phase24DiagEvaluations, Phase24DiagNode, Phase24DiagDof
++     REAL(KIND=dp) :: Phase24DiagMaxAbs
++#endif
+ !------------------------------------------------------------------------------
+      INTEGER, PARAMETER :: PHASE_SPATIAL_1 = 1
+      INTEGER, PARAMETER :: PHASE_SPATIAL_2 = 2
+@@ -448,11 +462,28 @@
+      REAL(KIND=dp) :: Phase24ProfileInsert(3,PHASE24_PROFILE_BODIES)
+      REAL(KIND=dp) :: Phase24ProfileGroup(3,PHASE24_PROFILE_BODIES)
+      REAL(KIND=dp) :: Phase24ProfileGroupStart, Phase24ProfileElapsed
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     REAL(KIND=dp) :: Phase24DiagVerifyAbs, Phase24DiagVerifyRel, Phase24DiagMaxRel
++#endif
+ 
+ 
+      ! Start each activation with no inherited material/node association.
+      ! The arrays are automatic allocatables and are freed at this activation's
+      ! return; the map is then reused only among assemblies in this call.
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     Phase24DiagNextActivation = Phase24DiagNextActivation + 1
++     Phase24DiagActivation = Phase24DiagNextActivation
++     Phase24DiagPid = Phase24DiagGetPid()
++     Phase24DiagBuilds = 0
++     Phase24DiagEvaluations = 0
++     Phase24DiagMaxAbs = 0.0_dp
++     Phase24DiagMaxRel = 0.0_dp
++     WRITE(*,'(A,I0,A,I0,A,I0,A,A,A,I0,A,I0,A,I0)') &
++          'PHASE24_LIFECYCLE event=ACTIVATION_START pid=',Phase24DiagPid, &
++          ' rank=',ParEnv % MyPE,' activation=',Phase24DiagActivation, &
++          ' mesh=',TRIM(Solver % Mesh % Name),' materials=',Model % NumberOfMaterials, &
++          ' nodes=',Solver % Mesh % NumberOfNodes,' bulk_elements=',Solver % Mesh % NumberOfBulkElements
++#endif
+      CALL Phase24ClearGenericDynKCache()
+      CALL Info('HeatSolver','-------------------------------------------',Level=6)
+      CALL Info('HeatSolver','Solving the energy equation for temperature',Level=5)
+@@ -1539,6 +1570,20 @@
+                       ', material=',ListGetInteger(CurrentModel % Bodies(Element % BodyId) % Values, &
+                       'Material',GotIt),', max_abs=',MAXVAL(ABS(Hwrk(1,1,1:n)- &
+                       Phase24GenericKNodal(Phase24GenericKNodeSlot(1:n,Phase24ElementId))))
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++                 Phase24DiagVerifyAbs = MAXVAL(ABS(Hwrk(1,1,1:n)- &
++                      Phase24GenericKNodal(Phase24GenericKNodeSlot(1:n,Phase24ElementId))))
++                 Phase24DiagVerifyRel = MAXVAL(ABS(Hwrk(1,1,1:n)- &
++                      Phase24GenericKNodal(Phase24GenericKNodeSlot(1:n,Phase24ElementId))) / &
++                      MAX(ABS(Hwrk(1,1,1:n)),TINY(1.0_dp)))
++                 Phase24DiagMaxAbs = MAX(Phase24DiagMaxAbs,Phase24DiagVerifyAbs)
++                 Phase24DiagMaxRel = MAX(Phase24DiagMaxRel,Phase24DiagVerifyRel)
++                 WRITE(*,'(A,I0,A,I0,A,I0,A,ES12.4,A,ES12.4)') &
++                      'PHASE24_LIFECYCLE_VERIFY pid=',Phase24DiagPid,', activation=', &
++                      Phase24DiagActivation,', material=', &
++                      ListGetInteger(CurrentModel % Bodies(Element % BodyId) % Values, &
++                      'Material',GotIt),', max_abs=',Phase24DiagVerifyAbs,', max_rel=',Phase24DiagVerifyRel
++#endif
+                  Phase24GenericKVerifyCount = Phase24GenericKVerifyCount + 1
+                END IF
+              END IF
+@@ -2533,6 +2578,25 @@
+      END IF
+    END IF
+      
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++     IF (ASSOCIATED(TempPerm) .AND. ASSOCIATED(Temperature)) THEN
++       DO Phase24DiagNode=1,Solver % Mesh % NumberOfNodes
++         Phase24DiagDof = TempPerm(Phase24DiagNode)
++         IF (Phase24DiagDof <= 0 .OR. Phase24DiagDof > SIZE(Temperature)) CYCLE
++         WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,ES24.16)') &
++              'PHASE24_LIFECYCLE_TEMP pid=',Phase24DiagPid,', rank=',ParEnv % MyPE, &
++              ', activation=',Phase24DiagActivation,', node=',Phase24DiagNode, &
++              ', value=',Temperature(Phase24DiagDof)
++       END DO
++     END IF
++     CALL Phase24ClearGenericDynKCache()
++     WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,I0,A,ES12.4,A,ES12.4)') &
++          'PHASE24_LIFECYCLE event=ACTIVATION_END pid=',Phase24DiagPid, &
++          ' rank=',ParEnv % MyPE,' activation=',Phase24DiagActivation, &
++          ' builds=',Phase24DiagBuilds,' evaluations=',Phase24DiagEvaluations, &
++          ' hits=',Phase24GenericKCacheHits,' max_abs=',Phase24DiagMaxAbs, &
++          ' max_rel=',Phase24DiagMaxRel
++#endif
+ CONTAINS
+ 
+   ! Save exactly the outer HeatSolve system around DefaultSolve.  The regular
+@@ -3604,18 +3668,70 @@
+ 
+ 
+   SUBROUTINE Phase24ClearGenericDynKCache()
+-    IF (ALLOCATED(Phase24GenericKNodeSlot)) DEALLOCATE(Phase24GenericKNodeSlot)
+-    IF (ALLOCATED(Phase24GenericKNodes)) DEALLOCATE(Phase24GenericKNodes)
+-    IF (ALLOCATED(Phase24GenericKNodal)) DEALLOCATE(Phase24GenericKNodal)
+-    IF (ALLOCATED(Phase24GenericKMats)) DEALLOCATE(Phase24GenericKMats)
+-    IF (ALLOCATED(Phase24GenericKStart)) DEALLOCATE(Phase24GenericKStart)
+-    IF (ALLOCATED(Phase24GenericKCount)) DEALLOCATE(Phase24GenericKCount)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    INTEGER :: Phase24DiagFreedArrays, Phase24DiagAllocatedBefore
++    LOGICAL :: Phase24DiagAllUnallocated
++    Phase24DiagFreedArrays = 0
++    Phase24DiagAllocatedBefore = 0
++    IF (ALLOCATED(Phase24GenericKNodeSlot)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++    IF (ALLOCATED(Phase24GenericKNodes)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++    IF (ALLOCATED(Phase24GenericKNodal)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++    IF (ALLOCATED(Phase24GenericKMats)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++    IF (ALLOCATED(Phase24GenericKStart)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++    IF (ALLOCATED(Phase24GenericKCount)) Phase24DiagAllocatedBefore = Phase24DiagAllocatedBefore + 1
++#endif
++    IF (ALLOCATED(Phase24GenericKNodeSlot)) THEN
++      DEALLOCATE(Phase24GenericKNodeSlot)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
++    IF (ALLOCATED(Phase24GenericKNodes)) THEN
++      DEALLOCATE(Phase24GenericKNodes)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
++    IF (ALLOCATED(Phase24GenericKNodal)) THEN
++      DEALLOCATE(Phase24GenericKNodal)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
++    IF (ALLOCATED(Phase24GenericKMats)) THEN
++      DEALLOCATE(Phase24GenericKMats)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
++    IF (ALLOCATED(Phase24GenericKStart)) THEN
++      DEALLOCATE(Phase24GenericKStart)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
++    IF (ALLOCATED(Phase24GenericKCount)) THEN
++      DEALLOCATE(Phase24GenericKCount)
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagFreedArrays = Phase24DiagFreedArrays + 1
++#endif
++    END IF
+     Phase24GenericKMatCount = 0
+     Phase24GenericKNodeCount = 0
+     Phase24GenericKCacheReady = .FALSE.
+     Phase24GenericKCacheHits = 0
+     Phase24GenericKMatcCalls = 0
+     Phase24GenericKVerifyCount = 0
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    Phase24DiagAllUnallocated = .NOT. ALLOCATED(Phase24GenericKNodeSlot) .AND. &
++         .NOT. ALLOCATED(Phase24GenericKNodes) .AND. .NOT. ALLOCATED(Phase24GenericKNodal) .AND. &
++         .NOT. ALLOCATED(Phase24GenericKMats) .AND. .NOT. ALLOCATED(Phase24GenericKStart) .AND. &
++         .NOT. ALLOCATED(Phase24GenericKCount)
++    WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,L1)') 'PHASE24_LIFECYCLE event=CACHE_CLEAR pid=', &
++         Phase24DiagPid,', rank=',ParEnv % MyPE,', activation=',Phase24DiagActivation, &
++         ', allocated_before=',Phase24DiagAllocatedBefore,', freed_arrays=',Phase24DiagFreedArrays, &
++         ', all_unallocated=',Phase24DiagAllUnallocated
++#endif
+   END SUBROUTINE Phase24ClearGenericDynKCache
+ 
+   SUBROUTINE Phase24BuildGenericDynKCache()
+@@ -3653,6 +3769,9 @@
+     END DO
+     IF (Phase24GenericKMatCount == 0) THEN
+       Phase24GenericKCacheReady = .TRUE.
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++      Phase24DiagBuilds = Phase24DiagBuilds + 1
++#endif
+       CALL Info('HeatSolve','Phase24 dynamic-k generic cache: no safe temperature-only MATC prisms',Level=4)
+       IF (Phase24DynKNodeCacheVerify) WRITE(*,'(A,I0,A,ES12.4)') &
+            'PHASE24_MATC_CACHE_BUILD rank=',ParEnv % MyPE,', wall_seconds=',RealTime()-cacheBuildStart
+@@ -3695,6 +3814,9 @@
+     Phase24GenericKNodal = 0.0_dp
+     Phase24GenericKNodeCount = nDynNodes
+     Phase24GenericKCacheReady = .TRUE.
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    Phase24DiagBuilds = Phase24DiagBuilds + 1
++#endif
+     DEALLOCATE(NodeMark)
+     DO m=1,Phase24GenericKMatCount
+       WRITE(Message,'(A,I0,A,I0)') 'Phase24 generic dynamic-k cache material=', &
+@@ -3704,6 +3826,28 @@
+     IF (Phase24DynKNodeCacheVerify) WRITE(*,'(A,I0,A,I0,A,I0,A,ES12.4)') &
+          'PHASE24_MATC_CACHE_BUILD rank=',ParEnv % MyPE,', materials=',Phase24GenericKMatCount, &
+          ', unique_nodes=',Phase24GenericKNodeCount,', wall_seconds=',RealTime()-cacheBuildStart
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    DO e=1,nBulk
++      el => Solver % Mesh % Elements(e)
++      IF (.NOT. ASSOCIATED(el % TYPE)) CYCLE
++      IF (el % TYPE % ElementCode /= 706 .OR. SIZE(el % NodeIndexes) < 6) CYCLE
++      IF (el % BodyId <= 0 .OR. el % BodyId > CurrentModel % NumberOfBodies) CYCLE
++      matId = ListGetInteger(CurrentModel % Bodies(el % BodyId) % Values,'Material',gotMat)
++      IF (.NOT. gotMat) CYCLE
++      DO j=1,6
++        slot = Phase24GenericKNodeSlot(j,e)
++        IF (slot <= 0) CYCLE
++        WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,I0,A,I0,A,I0)') &
++             'PHASE24_LIFECYCLE_MAP pid=',Phase24DiagPid,', rank=',ParEnv % MyPE, &
++             ', activation=',Phase24DiagActivation,', material=',matId,', element=',e, &
++             ', local_node=',j,', node=',el % NodeIndexes(j),', slot=',slot
++      END DO
++    END DO
++    WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,I0)') &
++         'PHASE24_LIFECYCLE event=CACHE_BUILD pid=',Phase24DiagPid,', rank=',ParEnv % MyPE, &
++         ', activation=',Phase24DiagActivation,', materials=',Phase24GenericKMatCount, &
++         ', nodes=',Phase24GenericKNodeCount,', builds=',Phase24DiagBuilds
++#endif
+   END SUBROUTINE Phase24BuildGenericDynKCache
+ 
+   SUBROUTINE Phase24EvaluateGenericDynKCache()
+@@ -3711,6 +3855,9 @@
+     LOGICAL :: gotK
+     REAL(KIND=dp) :: cacheEvalStart
+     cacheEvalStart = RealTime()
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    Phase24DiagEvaluations = Phase24DiagEvaluations + 1
++#endif
+     DO m=1,Phase24GenericKMatCount
+       a=Phase24GenericKStart(m); c=Phase24GenericKCount(m)
+       IF (c <= 0) CYCLE
+@@ -3724,6 +3871,12 @@
+          'PHASE24_MATC_CACHE_EVAL rank=',ParEnv % MyPE,', materials=',Phase24GenericKMatCount, &
+          ', unique_nodes=',Phase24GenericKNodeCount,', listgetreal_calls=',Phase24GenericKMatCount, &
+          ', previous_assembly_hits=',Phase24GenericKCacheHits,', wall_seconds=',RealTime()-cacheEvalStart
++#ifdef PHASE24_MATC_LIFECYCLE_DIAGNOSTICS
++    WRITE(*,'(A,I0,A,I0,A,I0,A,I0,A,I0,A,I0)') &
++         'PHASE24_LIFECYCLE event=CACHE_EVAL pid=',Phase24DiagPid,', rank=',ParEnv % MyPE, &
++         ', activation=',Phase24DiagActivation,', evaluation=',Phase24DiagEvaluations, &
++         ', hits=',Phase24GenericKCacheHits,', materials=',Phase24GenericKMatCount
++#endif
+   END SUBROUTINE Phase24EvaluateGenericDynKCache
+ 
+   LOGICAL FUNCTION Phase24IsTemperatureOnlyMatc(MaterialList)

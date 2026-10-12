@@ -1,0 +1,17 @@
+{
+  "schema": "phase24-matc-cache-meshmode-diagnostics-v1",
+  "patch": "04_matc_cache_meshmode_diagnostics.patch",
+  "patch_sha256": "00023ecca48509eebf979d6431561f282d58c43314b7095dbe6f1bc4fb879504",
+  "files": [
+    {
+      "path": "fem/src/ElmerSolver.F90",
+      "pre04_sha256": "94502abfec3acfe0ec12e931fb37d341638bbf9ef1b76210aa1996c626998f21",
+      "diagnostic_sha256": "5fc339dfd1bc5d33b08f8446931a8ad240eb1a9571b8d570de154170b2dff023"
+    },
+    {
+      "path": "fem/src/modules/HeatSolve.F90",
+      "pre04_sha256": "873c749894d226cabc213a31a1ad2e61e379b35bca7c8493ad8f678df6b3f489",
+      "diagnostic_sha256": "4c5eea419acbdc0a5f8e5678d40542666734787f4b6de7080e45893d048576a8"
+    }
+  ]
+}
