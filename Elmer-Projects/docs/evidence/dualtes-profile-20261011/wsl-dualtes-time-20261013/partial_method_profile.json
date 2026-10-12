@@ -1,0 +1,258 @@
+{
+  "steady": {
+    "run_record": {
+      "case": "dualtes_steady",
+      "start_utc": "2026-10-12T16:03:15Z",
+      "end_utc": "2026-10-12T16:05:24Z",
+      "wall_seconds": 129.572,
+      "exit_code": 0,
+      "normal_completion": true,
+      "last_logged_step": null,
+      "step_count": null,
+      "last_logged_time_s": null,
+      "solver_cpu_real_seconds": [
+        121.27,
+        124.35
+      ],
+      "mpi_ranks": 6,
+      "omp_threads_per_rank": 1,
+      "solver": "/opt/elmer-gpu/cpu/elmer/bin/ElmerSolver_mpi",
+      "solver_sha256": "16b512caf1a49b3d23d4d8e23e636cd4e1df643531e81a65a3f71bd7a1d48c56",
+      "sif": "/mnt/d/Github/TES-Programs-dualtes-profile-evidence-20261011/Elmer-Projects/docs/evidence/dualtes-profile-20261011/wsl-dualtes-time-20261013/inputs/dualtes_wsl_steady_20261013.sif",
+      "sif_sha256": "00b031e25f832564161d9de27b11e6668c12e0c7b6674f6099844361c4c5c09f",
+      "log": "/mnt/d/Github/TES-Programs-dualtes-profile-evidence-20261011/Elmer-Projects/docs/evidence/dualtes-profile-20261011/wsl-dualtes-time-20261013/runs/attempt4/steady/solver.log"
+    },
+    "step_lines": 0,
+    "last_step": null,
+    "computechange_records": 45,
+    "computechange_iteration_index_max": 45,
+    "temperature_iteration_peak": 45,
+    "temperature_iteration_count_at_configured_cap_120": 0,
+    "coupled_error_records": 44,
+    "coupled_error_records_excluding_huge_sentinel": 44,
+    "coupled_temperature_error_max_finite_K": 0.0006722,
+    "coupled_circuit_error_max_finite_K": 0.0006722,
+    "coupled_material_k_error_max_finite_K": 0.0006431,
+    "hypre_solve_calls": 45,
+    "hypre_reported_solution_time_sum_s": 81.27264,
+    "hypre_reported_solution_time_max_s": 4.61552,
+    "assembly_reported_first_column_sum_s": 21.61,
+    "solve_reported_first_column_sum_s": 82.91,
+    "preconditioner_reuse_last": {
+      "reused": true,
+      "age": 2,
+      "iterations_field": "-1",
+      "fresh_iterations_field": "-1",
+      "rebuilds": 3,
+      "reuses": 42
+    },
+    "adaptive_retry_or_step_failure_markers": 0,
+    "all_done": true,
+    "tes_iteration_series": {
+      "1": {
+        "rows": 45,
+        "tes_temperature_K": {
+          "min": 0.16754799960536315,
+          "max": 0.16924708820438422,
+          "last": 0.16868499340952722
+        },
+        "raw_current_A": {
+          "min": 0.0001208459551533188,
+          "max": 0.00018058271723845001,
+          "last": 0.00013956196107850388
+        },
+        "raw_power_W": {
+          "min": 2.8002434092504955e-10,
+          "max": 3.7637544773505183e-10,
+          "last": 3.1320611864510435e-10
+        },
+        "first_time_s": 1.0,
+        "last_time_s": 1.0
+      },
+      "2": {
+        "rows": 45,
+        "tes_temperature_K": {
+          "min": 0.16754748717264054,
+          "max": 0.16924653254376285,
+          "last": 0.16868476127191864
+        },
+        "raw_current_A": {
+          "min": 0.00012086381307617441,
+          "max": 0.0001806019431945848,
+          "last": 0.00013956993999648322
+        },
+        "raw_power_W": {
+          "min": 2.800573036487939e-10,
+          "max": 3.764019772440253e-10,
+          "last": 3.132196818927679e-10
+        },
+        "first_time_s": 1.0,
+        "last_time_s": 1.0
+      }
+    }
+  },
+  "transient": {
+    "run_record": {
+      "case": "dualtes_transient_75ms",
+      "start_utc": "2026-10-12T16:05:25Z",
+      "end_utc": "2026-10-12T16:14:29Z",
+      "wall_seconds": 544.914,
+      "exit_code": 0,
+      "normal_completion": true,
+      "last_logged_step": 225,
+      "step_count": 225,
+      "last_logged_time_s": 0.07502,
+      "solver_cpu_real_seconds": [
+        537.51,
+        544.8
+      ],
+      "mpi_ranks": 6,
+      "omp_threads_per_rank": 1,
+      "solver": "/opt/elmer-gpu/cpu/elmer/bin/ElmerSolver_mpi",
+      "solver_sha256": "16b512caf1a49b3d23d4d8e23e636cd4e1df643531e81a65a3f71bd7a1d48c56",
+      "sif": "/mnt/d/Github/TES-Programs-dualtes-profile-evidence-20261011/Elmer-Projects/docs/evidence/dualtes-profile-20261011/wsl-dualtes-time-20261013/inputs/dualtes_wsl_transient_20261013.sif",
+      "sif_sha256": "517c963e6ab81554e08ce8a8044b66a46b70769c3571ce2c0032d68397b16856",
+      "log": "/mnt/d/Github/TES-Programs-dualtes-profile-evidence-20261011/Elmer-Projects/docs/evidence/dualtes-profile-20261011/wsl-dualtes-time-20261013/runs/attempt4/transient/solver.log"
+    },
+    "step_lines": 225,
+    "last_step": {
+      "index": 225,
+      "count": 225,
+      "time_s": 0.07502
+    },
+    "computechange_records": 420,
+    "computechange_iteration_index_max": 120,
+    "temperature_iteration_peak": 120,
+    "temperature_iteration_count_at_configured_cap_120": 1,
+    "coupled_error_records": 419,
+    "coupled_error_records_excluding_huge_sentinel": 407,
+    "coupled_temperature_error_max_finite_K": 5.591e-07,
+    "coupled_circuit_error_max_finite_K": 5.591e-07,
+    "coupled_material_k_error_max_finite_K": 1.715e-07,
+    "hypre_solve_calls": 420,
+    "hypre_reported_solution_time_sum_s": 198.612497,
+    "hypre_reported_solution_time_max_s": 2.93905,
+    "assembly_reported_first_column_sum_s": 183.89,
+    "solve_reported_first_column_sum_s": 216.43,
+    "preconditioner_reuse_last": {
+      "reused": true,
+      "age": 20,
+      "iterations_field": "-1",
+      "fresh_iterations_field": "-1",
+      "rebuilds": 20,
+      "reuses": 400
+    },
+    "adaptive_retry_or_step_failure_markers": 0,
+    "all_done": true,
+    "tes_final_series": {
+      "1": {
+        "rows": 225,
+        "tes_temperature_K": {
+          "min": 0.168684913410967,
+          "max": 0.16874045126863893,
+          "last": 0.16872002578385065
+        },
+        "tes_current_A": {
+          "min": 0.00013766019632492684,
+          "max": 0.00013956471502879868,
+          "last": 0.00013836003374210036
+        },
+        "tes_resistance_ohm": {
+          "min": 0.01607997826782822,
+          "max": 0.01635639942237961,
+          "last": 0.016253940388840392
+        },
+        "tes_power_W": {
+          "min": 3.099585626633568e-10,
+          "max": 3.1321319883307716e-10,
+          "last": 3.1115729055769904e-10
+        },
+        "first_time_s": 0.020018,
+        "last_time_s": 0.07502000000000002
+      },
+      "2": {
+        "rows": 225,
+        "tes_temperature_K": {
+          "min": 0.16868469305707753,
+          "max": 0.1687402402116456,
+          "last": 0.16871980585075963
+        },
+        "tes_current_A": {
+          "min": 0.00013766759680454744,
+          "max": 0.00013957229205143701,
+          "last": 0.00013836756580167138
+        },
+        "tes_resistance_ohm": {
+          "min": 0.016078893538232934,
+          "max": 0.016355310758912778,
+          "last": 0.016252843312820092
+        },
+        "tes_power_W": {
+          "min": 3.0997074537971744e-10,
+          "max": 3.13225960225114e-10,
+          "last": 3.1117016495289577e-10
+        },
+        "first_time_s": 0.020018,
+        "last_time_s": 0.07502000000000002
+      }
+    },
+    "tes_iteration_series": {
+      "1": {
+        "rows": 420,
+        "tes_temperature_K": {
+          "min": 0.16868491327770893,
+          "max": 0.16874049722949053,
+          "last": 0.16872002578385065
+        },
+        "raw_current_A": {
+          "min": 0.00013765971657438215,
+          "max": 0.00013956471502879868,
+          "last": 0.00013836003374210036
+        },
+        "raw_power_W": {
+          "min": 3.099584377519144e-10,
+          "max": 3.132132991612894e-10,
+          "last": 3.1115729055769904e-10
+        },
+        "first_time_s": 0.020018,
+        "last_time_s": 0.07502000000000002
+      },
+      "2": {
+        "rows": 420,
+        "tes_temperature_K": {
+          "min": 0.16868469283160611,
+          "max": 0.16874027466908284,
+          "last": 0.16871980585075963
+        },
+        "raw_current_A": {
+          "min": 0.00013766732063879973,
+          "max": 0.00013957229205143701,
+          "last": 0.00013836756580167138
+        },
+        "raw_power_W": {
+          "min": 3.0997145591470484e-10,
+          "max": 3.1322605794635527e-10,
+          "last": 3.1117016495289577e-10
+        },
+        "first_time_s": 0.020018,
+        "last_time_s": 0.07502000000000002
+      }
+    }
+  },
+  "comparison": {
+    "singlepixel_transient_wall_seconds": 560,
+    "dualtes_transient_wall_seconds": 544.914,
+    "dualtes_over_singlepixel_transient_ratio": 0.9730607142857143,
+    "dualtes_steady_wall_seconds": 129.572,
+    "dualtes_steady_plus_transient_wall_seconds": 674.486,
+    "singlepixel_source_run_record": "../wsl-8min-replay-20261013/run_record.json",
+    "singlepixel_temperature_iteration_peak": 5
+  },
+  "notes": [
+    "Hypre iteration count is not available from this build's method-601 log: the solver prints Required iterations -1; reported solution-time values are still accumulated.",
+    "Material-property evaluation and output-I/O time are not separately instrumented; their effects are included in measured wall time.",
+    "Assembly and solve first-column timings are summed from HeatSolve timing lines and are component evidence, not an additive partition of total wall time.",
+    "DualTES reached the configured nonlinear maximum of 120 temperature iterations once at the pulse-start step; the solver proceeded to ALL DONE, but this is a numerical-convergence caution for interpreting the timing comparison.",
+    "The raw TES final-series files omit the last accepted timestep; the reconciled series adds that row from each circuit's accepted iteration CSV, preserving the raw series files."
+  ]
+}

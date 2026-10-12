@@ -1,0 +1,442 @@
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ELMER SOLVER (v 26.1) STARTED AT: 2026/10/13 01:21:07
+ParCommInit: Initialize #PEs: 6
+ParCommInit: Initialize #PEs: 6
+MAIN: 
+MAIN: =============================================================
+MAIN: ElmerSolver finite element software, Welcome!
+MAIN: This program is free software licensed under (L)GPL
+MAIN: Copyright 1st April 1995 - , CSC - IT Center for Science Ltd.
+MAIN: Webpage http://www.csc.fi/elmer, Email elmeradm@csc.fi
+MAIN: Version: 26.1 (Rev: unknown, Compiled: 2026-09-27)
+MAIN:  Running in parallel using 6 tasks.
+MAIN:  Running with just one thread per task.
+MAIN:  HYPRE library linked in.
+MAIN:  MUMPS library linked in.
+MAIN: =============================================================
+ParCommInit: Initialize #PEs: 6
+ParCommInit: Initialize #PEs: 6
+MAIN: 
+MAIN: 
+MAIN: -------------------------------------
+MAIN: Reading Model: workspace/generated/cases/dualtes_wsl_steady_20261013_newton.sif
+LoadInputFile: Scanning input file: workspace/generated/cases/dualtes_wsl_steady_20261013_newton.sif
+LoadInputFile: Scanning only size info
+LoadInputFile: First time visiting
+LoadInputFile: Reading base load of sif file
+LoadInputFile: Loading input file: workspace/generated/cases/dualtes_wsl_steady_20261013_newton.sif
+LoadInputFile: Reading base load of sif file
+CheckKeyword:  Unlisted keyword: [tes circuit count] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 1 state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 bias current] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 shunt resistance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 inductance] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 r0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 rmin] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 alpha] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 beta] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 i0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 tc] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 t0] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 volume] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 iteration series file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes 2 state file] in section: [constants]
+CheckKeyword:  Unlisted keyword: [tes inner circuit newton] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 coupled temperature tolerance] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 prism lumped preconditioner] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 precond matrix reuse] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 dynamic k node cache verify] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 dynamic k node cache] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [phase24 vector assembly] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [TES Inner Circuit Update] in section: [solver 1]
+CheckKeyword:  Unlisted keyword: [tes body ids] in section: [solver 1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource1]
+Loading user function library: [tes_parallel_circuit]...[TESParallelHeatSource2]
+LoadInputFile: Number of BCs: 1
+LoadInputFile: Number of Body Forces: 2
+LoadInputFile: Number of Initial Conditions: 1
+LoadInputFile: Number of Materials: 7
+LoadInputFile: Number of Equations: 1
+LoadInputFile: Number of Solvers: 1
+LoadInputFile: Number of Bodies: 19
+ElmerAsciiMesh: Base mesh name: workspace/work/meshes/mesh_toml_95333801e1a3
+LoadMesh: Elapsed REAL time:     0.5703 (s)
+MAIN: -------------------------------------
+OptimizeBandwidth: Initial bandwidth for heat equation: 8147
+OptimizeBandwidth: Optimized bandwidth for heat equation: 4400
+MAIN: Number of timesteps to be saved: 1
+MAIN: 
+MAIN: -------------------------------------
+MAIN:  Steady state iteration:            1
+MAIN: -------------------------------------
+MAIN: 
+ParallelInitMatrix: Creating communication structures for matrix!
+ParallelInitMatrix: Allocating communication structures for matrix!
+HeatSolver: Solving the energy equation for temperature
+HeatSolve: Phase24 metadata: static=131633, dynamic=0, generic=0
+HeatSolve: Phase24 element accounting: total=164693, fast_tet=131633, fast_prism=33060, generic_prism=0, generic_other=0, accounted=164693, fast_percent= 100.000%
+HeatSolve: TES inner circuits: 2, numbered keywords=T
+HeatSolve: TES circuit elements: local=0, global=9250, mean T=  1.685700E-01, active elements=164693
+HeatSolve: TES circuit elements: local=0, global=9246, mean T=  1.685700E-01, active elements=164693
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           1
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44630 local_size=45632 matrix_epoch=2 rounds=4000
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44098 local_size=45728 matrix_epoch=2 rounds=4000
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44784 local_size=45848 matrix_epoch=2 rounds=4000
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44116 local_size=45581 matrix_epoch=2 rounds=4000
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44871 local_size=46395 matrix_epoch=2 rounds=4000
+NATIVE_XVEC_CAPTURE_CANDIDATE_SEEN_BUT_SELECTOR_MISMATCH global_size=44874 local_size=46234 matrix_epoch=2 rounds=4000
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 2.10712
+HypreSolver: Phase24 precond reuse: reused=F, age=0, its=-1, fresh_its=-1, rebuilds=1, reuses=0
+ComputeChange: NS (ITER=1) (NRM,RELC): ( 0.16444146      2.0000000     ) :: heat equation
+HeatSolve: iter:    1 Assembly: (s)    1.02    1.02
+HeatSolve: iter:    1 Solve:    (s)    2.34    2.34
+HeatSolve:  Result Norm   :   0.16444146229938264
+HeatSolve:  Relative Change :    2.0000000000000000
+TESInnerCircuit1: T=  1.675480E-01 I=  1.805827E-04 P=  3.481389E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.614788E-01
+TESInnerCircuit2: T=  1.675475E-01 I=  1.806019E-04 P=  3.481521E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.614788E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           2
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 2.11537
+HypreSolver: Phase24 precond reuse: reused=T, age=1, its=-1, fresh_its=-1, rebuilds=1, reuses=1
+ComputeChange: NS (ITER=2) (NRM,RELC): ( 0.16729233     0.17187682E-01 ) :: heat equation
+HeatSolve: iter:    2 Assembly: (s)    0.38    1.40
+HeatSolve: iter:    2 Solve:    (s)    2.14    4.47
+HeatSolve:  Result Norm   :   0.16729232973642838
+HeatSolve:  Relative Change :    1.7187681843024216E-002
+HeatSolve: TES coupled error: iter=2, dT_circuit=  3.293E-03, dT_k=  1.414E-03, field change=  1.719E-02
+TESInnerCircuit1: T=  1.709462E-01 I=  7.396199E-05 P=  3.247066E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.637703E-01
+TESInnerCircuit2: T=  1.709459E-01 I=  7.396851E-05 P=  3.247131E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.637703E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           3
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 2.05994
+HypreSolver: Phase24 precond reuse: reused=T, age=2, its=-1, fresh_its=-1, rebuilds=1, reuses=2
+ComputeChange: NS (ITER=3) (NRM,RELC): ( 0.16579351     0.89995736E-02 ) :: heat equation
+HeatSolve: iter:    3 Assembly: (s)    0.39    1.79
+HeatSolve: iter:    3 Solve:    (s)    2.07    6.54
+HeatSolve:  Result Norm   :   0.16579351445713464
+HeatSolve:  Relative Change :    8.9995735659228384E-003
+HeatSolve: TES coupled error: iter=3, dT_circuit=  6.371E-04, dT_k=  6.530E-04, field change=  9.000E-03
+TESInnerCircuit1: T=  1.691306E-01 I=  1.246186E-04 P=  3.179543E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.626119E-01
+TESInnerCircuit2: T=  1.691302E-01 I=  1.246317E-04 P=  3.179627E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.626119E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           4
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.9147
+HypreSolver: Phase24 precond reuse: reused=T, age=3, its=-1, fresh_its=-1, rebuilds=1, reuses=3
+ComputeChange: NS (ITER=4) (NRM,RELC): ( 0.16560430     0.11419110E-02 ) :: heat equation
+HeatSolve: iter:    4 Assembly: (s)    0.38    2.17
+HeatSolve: iter:    4 Solve:    (s)    1.94    8.48
+HeatSolve:  Result Norm   :   0.16560430105087384
+HeatSolve:  Relative Change :    1.1419110048794146E-003
+HeatSolve: TES coupled error: iter=4, dT_circuit=  3.052E-04, dT_k=  9.243E-05, field change=  1.142E-03
+TESInnerCircuit1: T=  1.689107E-01 I=  1.318962E-04 P=  3.117909E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.624489E-01
+TESInnerCircuit2: T=  1.689104E-01 I=  1.319072E-04 P=  3.118026E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.624489E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           5
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.8448
+HypreSolver: Phase24 precond reuse: reused=T, age=4, its=-1, fresh_its=-1, rebuilds=1, reuses=4
+ComputeChange: NS (ITER=5) (NRM,RELC): ( 0.16532388     0.16947821E-02 ) :: heat equation
+HeatSolve: iter:    5 Assembly: (s)    0.38    2.55
+HeatSolve: iter:    5 Solve:    (s)    1.88   10.36
+HeatSolve:  Result Norm   :   0.16532387548075350
+HeatSolve:  Relative Change :    1.6947820705955508E-003
+HeatSolve: TES coupled error: iter=5, dT_circuit=  1.353E-04, dT_k=  1.200E-04, field change=  1.695E-03
+TESInnerCircuit1: T=  1.685745E-01 I=  1.433818E-04 P=  3.136754E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622252E-01
+TESInnerCircuit2: T=  1.685742E-01 I=  1.433901E-04 P=  3.136873E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622252E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           6
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.89863
+HypreSolver: Phase24 precond reuse: reused=T, age=5, its=-1, fresh_its=-1, rebuilds=1, reuses=5
+ComputeChange: NS (ITER=6) (NRM,RELC): ( 0.16544644     0.74111558E-03 ) :: heat equation
+HeatSolve: iter:    6 Assembly: (s)    0.36    2.92
+HeatSolve: iter:    6 Solve:    (s)    1.93   12.29
+HeatSolve:  Result Norm   :   0.16544644499934638
+HeatSolve:  Relative Change :    7.4111557781227251E-004
+HeatSolve: TES coupled error: iter=6, dT_circuit=  4.628E-05, dT_k=  5.381E-05, field change=  7.411E-04
+TESInnerCircuit1: T=  1.687233E-01 I=  1.382481E-04 P=  3.131936E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.623197E-01
+TESInnerCircuit2: T=  1.687231E-01 I=  1.382565E-04 P=  3.132059E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.623197E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           7
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.8334
+HypreSolver: Phase24 precond reuse: reused=T, age=6, its=-1, fresh_its=-1, rebuilds=1, reuses=6
+ComputeChange: NS (ITER=7) (NRM,RELC): ( 0.16541109     0.21373716E-03 ) :: heat equation
+HeatSolve: iter:    7 Assembly: (s)    0.41    3.32
+HeatSolve: iter:    7 Solve:    (s)    1.87   14.15
+HeatSolve:  Result Norm   :   0.16541108672403534
+HeatSolve:  Relative Change :    2.1373716431275853E-004
+HeatSolve: TES coupled error: iter=7, dT_circuit=  5.082E-06, dT_k=  1.553E-05, field change=  2.137E-04
+TESInnerCircuit1: T=  1.686802E-01 I=  1.397283E-04 P=  3.132410E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622928E-01
+TESInnerCircuit2: T=  1.686799E-01 I=  1.397365E-04 P=  3.132535E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622928E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           8
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.80383
+HypreSolver: Phase24 precond reuse: reused=T, age=7, its=-1, fresh_its=-1, rebuilds=1, reuses=7
+ComputeChange: NS (ITER=8) (NRM,RELC): ( 0.16541661     0.33369630E-04 ) :: heat equation
+HeatSolve: iter:    8 Assembly: (s)    0.38    3.71
+HeatSolve: iter:    8 Solve:    (s)    1.84   16.00
+HeatSolve:  Result Norm   :   0.16541660652291135
+HeatSolve:  Relative Change :    3.3369630104588933E-005
+HeatSolve: TES coupled error: iter=8, dT_circuit=  2.567E-06, dT_k=  2.457E-06, field change=  3.337E-05
+TESInnerCircuit1: T=  1.686870E-01 I=  1.394942E-04 P=  3.132250E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622968E-01
+TESInnerCircuit2: T=  1.686867E-01 I=  1.395021E-04 P=  3.132376E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622968E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION           9
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.37842
+HypreSolver: Phase24 precond reuse: reused=T, age=8, its=-1, fresh_its=-1, rebuilds=1, reuses=8
+ComputeChange: NS (ITER=9) (NRM,RELC): ( 0.16541538     0.74394957E-05 ) :: heat equation
+HeatSolve: iter:    9 Assembly: (s)    0.40    4.11
+HeatSolve: iter:    9 Solve:    (s)    1.40   17.40
+HeatSolve:  Result Norm   :   0.16541537591135588
+HeatSolve:  Relative Change :    7.4394957005609270E-006
+HeatSolve: TES coupled error: iter=9, dT_circuit=  7.884E-07, dT_k=  5.434E-07, field change=  7.439E-06
+TESInnerCircuit1: T=  1.686855E-01 I=  1.395460E-04 P=  3.132179E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622959E-01
+TESInnerCircuit2: T=  1.686852E-01 I=  1.395539E-04 P=  3.132307E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622959E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          10
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.70931
+HypreSolver: Phase24 precond reuse: reused=T, age=9, its=-1, fresh_its=-1, rebuilds=1, reuses=9
+ComputeChange: NS (ITER=10) (NRM,RELC): ( 0.16541514     0.14502425E-05 ) :: heat equation
+HeatSolve: iter:   10 Assembly: (s)    0.40    4.50
+HeatSolve: iter:   10 Solve:    (s)    1.74   19.14
+HeatSolve:  Result Norm   :   0.16541513601911748
+HeatSolve:  Relative Change :    1.4502425245327611E-006
+HeatSolve: TES coupled error: iter=10, dT_circuit=  3.815E-07, dT_k=  1.093E-07, field change=  1.450E-06
+TESInnerCircuit1: T=  1.686852E-01 I=  1.395558E-04 P=  3.132113E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622957E-01
+TESInnerCircuit2: T=  1.686849E-01 I=  1.395635E-04 P=  3.132242E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622957E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          11
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.28387
+HypreSolver: Phase24 precond reuse: reused=T, age=10, its=-1, fresh_its=-1, rebuilds=1, reuses=10
+ComputeChange: NS (ITER=11) (NRM,RELC): ( 0.16541484     0.18137878E-05 ) :: heat equation
+HeatSolve: iter:   11 Assembly: (s)    0.41    4.91
+HeatSolve: iter:   11 Solve:    (s)    1.32   20.45
+HeatSolve:  Result Norm   :   0.16541483599142770
+HeatSolve:  Relative Change :    1.8137878376159290E-006
+HeatSolve: TES coupled error: iter=11, dT_circuit=  9.457E-08, dT_k=  1.302E-07, field change=  1.814E-06
+TESInnerCircuit1: T=  1.686848E-01 I=  1.395682E-04 P=  3.132126E-10
+TESInnerCircuit1: AbsorberT=  1.500000E-01
+TESInnerCircuit1: StycastT=  1.622955E-01
+TESInnerCircuit2: T=  1.686846E-01 I=  1.395758E-04 P=  3.132255E-10
+TESInnerCircuit2: AbsorberT=  1.500000E-01
+TESInnerCircuit2: StycastT=  1.622955E-01
+HeatSolve: 
+HeatSolve: 
+HeatSolve: -------------------------------------
+HeatSolve:  TEMPERATURE ITERATION          12
+HeatSolve: -------------------------------------
+HeatSolve: 
+HeatSolve: Starting Assembly...
+HeatSolve: Assembly:
+HeatSolve: Phase24 fast static assembly entered: elements=131633, order=0
+HeatSolve: Phase24 fast prism assembly entered: elements=33060, order=0
+HeatSolve: Assembly done
+HeatSolve: Phase24 operator decision: coeff_change=  0.0000E+00, boundary_invariant=T, lhs_safe=T, force=F, candidate=F
+HeatSolve: Phase24 fresh operator stored for adaptive lagging
+SolveHypre: Required iterations -1 (method 601) to norm -1
+SolveHypre: Solution time (method 601): 1.30831
+HypreSolver: Phase24 precond reuse: reused=T, age=11, its=-1, fresh_its=-1, rebuilds=1, reuses=11
+ComputeChange: NS (ITER=12) (NRM,RELC): ( 0.16541493     0.59459547E-06 ) :: heat equation
+HeatSolve: iter:   12 Assembly: (s)    0.38    5.29
+HeatSolve: iter:   12 Solve:    (s)    1.34   21.80
+HeatSolve:  Result Norm   :   0.16541493434636950
+HeatSolve:  Relative Change :    5.9459547247925799E-007
+HeatSolve: TES coupled error: iter=12, dT_circuit=  4.818E-08, dT_k=  4.334E-08, field change=  5.946E-07
+ComputeChange: SS (ITER=1) (NRM,RELC): ( 0.16541493      2.0000000     ) :: heat equation
+SaveResult: -----------------------------------------
+SaveResult: Saving results to file: mesh_toml_95333801e1a3/dualtes_wsl_steady_20261013_newton.result.0
+SaveResult: Done writing results file
+SaveResult: -----------------------------------------
+MAIN: *** Elmer Solver: ALL DONE ***
+MAIN: The end
+SOLVER TOTAL TIME(CPU,REAL):        31.78       33.25
+ELMER SOLVER FINISHED AT: 2026/10/13 01:21:40
