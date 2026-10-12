@@ -30,6 +30,7 @@
     "TES Inner Circuit Step Commit": "Logical True",
     "Apply Mortar BCs": "False",
     "Restart Time": "Real 0.02",
+    "Steady State Convergence Tolerance": "1e-09",
     "Phase24 Dynamic K Node Cache": "not specified; solver default OFF"
   },
   "dualtes": {
@@ -59,6 +60,7 @@
     "TES Inner Circuit Step Commit": "Logical True",
     "Apply Mortar BCs": "False",
     "Restart Time": "Real 0.02",
+    "Steady State Convergence Tolerance": "1e-6",
     "Phase24 Dynamic K Node Cache": "Logical False"
   },
   "exactly_equal_solver_controls": {
@@ -87,9 +89,16 @@
     "TES Inner Circuit Predict From Temperature": true,
     "TES Inner Circuit Step Commit": true,
     "Apply Mortar BCs": true,
-    "Restart Time": true
+    "Restart Time": true,
+    "Steady State Convergence Tolerance": false
   },
-  "all_listed_controls_match": true,
+  "all_listed_controls_match": false,
+  "all_active_transient_controls_match": true,
+  "transient_inactive_steady_tolerance": {
+    "singlepixel": "1e-09",
+    "dualtes": "1e-6",
+    "applies_to_transient_steps": false
+  },
   "model_specific_exceptions": [
     "Mesh, body IDs, two TES circuits, circuit constants, pulse/source, and input-specific restart result differ by model."
   ]

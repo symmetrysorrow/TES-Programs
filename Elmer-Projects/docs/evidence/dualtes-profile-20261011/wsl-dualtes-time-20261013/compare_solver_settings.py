@@ -20,6 +20,7 @@ keys = [
     "Phase24 Coupled Temperature Tolerance", "Phase24 Vector Assembly",
     "TES Inner Circuit Newton", "TES Inner Circuit Predict From Temperature",
     "TES Inner Circuit Step Commit", "Apply Mortar BCs", "Restart Time",
+    "Steady State Convergence Tolerance",
 ]
 
 
@@ -37,11 +38,12 @@ def read_sif(path):
 single = read_sif(single_path)
 dual = read_sif(dual_path)
 same = {key: single[key] == dual[key] for key in keys}
-for key in ("Nonlinear System Convergence Tolerance", "Nonlinear System Relaxation Factor", "Linear System Convergence Tolerance", "Phase24 Coupled Temperature Tolerance", "Restart Time"):
+for key in ("Nonlinear System Convergence Tolerance", "Nonlinear System Relaxation Factor", "Linear System Convergence Tolerance", "Phase24 Coupled Temperature Tolerance", "Restart Time", "Steady State Convergence Tolerance"):
     try:
         same[key] = float(single[key].split()[-1]) == float(dual[key].split()[-1])
     except (AttributeError, ValueError, IndexError):
         pass
+active_keys = [key for key in keys if key != "Steady State Convergence Tolerance"]
 report = {
     "singlepixel_sif": str(single_path.relative_to(ROOT.parent.parent)),
     "singlepixel_sif_sha256": __import__("hashlib").sha256(single_path.read_bytes()).hexdigest(),
@@ -51,7 +53,13 @@ report = {
     "dualtes": dual,
     "exactly_equal_solver_controls": same,
     "all_listed_controls_match": all(same.values()),
+    "all_active_transient_controls_match": all(same[key] for key in active_keys),
+    "transient_inactive_steady_tolerance": {
+        "singlepixel": single["Steady State Convergence Tolerance"],
+        "dualtes": dual["Steady State Convergence Tolerance"],
+        "applies_to_transient_steps": False,
+    },
     "model_specific_exceptions": ["Mesh, body IDs, two TES circuits, circuit constants, pulse/source, and input-specific restart result differ by model."],
 }
 (ROOT / "solver_settings_comparison.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-print(json.dumps({"all_listed_controls_match": report["all_listed_controls_match"], "differences": [k for k, v in same.items() if not v]}, indent=2))
+print(json.dumps({"all_active_transient_controls_match": report["all_active_transient_controls_match"], "all_listed_controls_match": report["all_listed_controls_match"], "differences": [k for k, v in same.items() if not v]}, indent=2))

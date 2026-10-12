@@ -18,7 +18,7 @@ DualTES過渡 / SinglePixel過渡のwall比は **0.7762**（約0.78倍）です�
 
 DualTES固有のメッシュ、2回路、TES定数、pulse、熱源、restartは保持しています。SinglePixelの1回路モデルへの置換はしていません。DualTES meshは131,633要素（prism 33,060）、SinglePixel replay meshは236,916要素（prism 23,220）で、各々6-way partitionを使っています。物理入力とmeshが違うため、wall比は今回の2ケースに対する実測であり、TES回路数だけの追加コストを表すものではありません。DualTES過渡は定常出力の0.02 s restartから0.07502 sまで計算しました。隔離コピーのSIFだけを変更し、本番DLL・元SIF・元meshは編集していません。
 
-`solver_settings_comparison.json`で両過渡SIFの時間積分・timestep・非線形・線形solver・HYPRE・再利用・Newton回路設定を機械比較し、列挙した全設定が一致することを確認しました。モデル固有のmesh・body ID・2回路定数・pulse・restart結果は比較対象外です。
+`solver_settings_comparison.json`で両過渡SIFの時間積分・timestep・非線形・線形solver・HYPRE・再利用・Newton回路設定を機械比較し、過渡で使う列挙設定が一致することを確認しました。SIF上は`Steady State Convergence Tolerance`のみSinglePixelが`1e-9`、DualTESが`1e-6`です。これはsteady-state mode用のフィールドで、今回のTransientでは実際の非線形許容値`1e-6`とPhase24連成許容値`1e-7`を使用しています。モデル固有のmesh・body ID・2回路定数・pulse・restart結果は比較対象外です。
 
 ## 反復・収束とプロファイル
 
