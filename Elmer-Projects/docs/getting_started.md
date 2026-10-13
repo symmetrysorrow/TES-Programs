@@ -19,7 +19,7 @@ python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
 ```
 
-`run` は ElmerGPU Phase24 backend を使います。計算機には `ElmerGPU` WSL distribution と
+`run` は ElmerGPU backend を使います。計算機には `ElmerGPU` WSL distribution と
 `/opt/elmer-gpu` の実行環境が必要です。以前のローカル Elmer 経路を再現する場合は
 `python main.py legacy1 run single_pixel_alpha240` を使えます。旧 JSON / 旧ケース TOML
 形式は `python main.py legacy2 ...` に残しています。

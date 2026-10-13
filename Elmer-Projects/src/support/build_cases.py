@@ -1487,10 +1487,10 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             "  Timestepping Method = BDF",
             f"  BDF Order = {spec.get('bdf_order', 2 if spec.get('adaptive_time') else 1)}",
         ]
-        if spec.get("phase24_bdf2_predictor", False):
+        if spec.get("bdf2_predictor", False):
             if int(spec.get("bdf_order", 2 if spec.get("adaptive_time") else 1)) < 2:
                 raise ValueError(
-                    f"{case_name}: phase24_bdf2_predictor requires bdf_order >= 2"
+                    f"{case_name}: bdf2_predictor requires bdf_order >= 2"
                 )
             lines += [
                 "  Phase24 BDF2 Predictor = Logical True",

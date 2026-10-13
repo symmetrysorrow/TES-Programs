@@ -101,12 +101,13 @@ def runtime_environment(
         raise FileNotFoundError(f"ElmerSolver not found: {solver}")
     prefix = solver.parent.parent
     udf_dir = ROOT / "build" / "udf"
-    parts = [str(solver.parent), str(prefix / "share" / "elmersolver" / "lib"), str(udf_dir)]
+    parts = [str(solver.parent), str(prefix / "share" / "elmersolver" / "lib")]
     if runtime_bin:
         runtime = Path(runtime_bin).resolve()
         if not runtime.is_dir():
             raise FileNotFoundError(f"runtime DLL directory not found: {runtime}")
         parts.append(str(runtime))
+    parts.append(str(udf_dir))
     env = os.environ.copy()
     env["ELMER_HOME"] = str(prefix)
     native_library_path = env.get("LD_LIBRARY_PATH", "")
@@ -492,30 +493,64 @@ def result_file_of(model: dict, case_name: str) -> Path | None:
 
 
 def restart_result_is_reusable(
-    result: Path, case_name: str, project_path: Path
+    result: Path,
+    case_name: str,
+    project_path: Path,
+    *,
+    mpi_procs: int = 1,
+    backend: str | None = None,
+    solver: str | None = None,
+    required_paths: list[Path] | None = None,
 ) -> bool:
     """Return whether a restart result may safely be reused.
 
     Elmer can create a ``.result`` before a later nonlinear iteration or a
     direct-solver allocation fails.  A restart also must not be reused after
-    its project has been regenerated with different solver settings.  When a
-    manifest is available, its status and project hash are authoritative;
-    untracked legacy results remain reusable for backwards compatibility.
+    its project has been regenerated with different solver settings. Reuse
+    requires current project/SIF hashes and explicit run provenance.
     """
-    if not result.is_file():
+    if mpi_procs < 1:
+        return False
+    # ``result`` may be the serial file, the MPI rank-zero file, or the
+    # common base. Resolve the complete result set from the requested mode.
+    result_base = result
+    for suffix in (".result.0", ".result"):
+        if result.name.endswith(suffix):
+            result_base = result.with_name(result.name[:-len(suffix)] + ".result")
+            break
+    results = (
+        [result_base] if mpi_procs == 1
+        else [result_base.with_name(f"{result_base.name}.{rank}") for rank in range(mpi_procs)]
+    )
+    if any(not path.is_file() or path.stat().st_size == 0 for path in results):
+        return False
+    if required_paths and any(not path.is_file() or path.stat().st_size == 0 for path in required_paths):
         return False
     manifest_path = ROOT / "outputs/results" / case_name / "manifest.json"
     if not manifest_path.is_file():
-        return True
+        # Untracked results have no provenance to establish rank/backend or
+        # solver compatibility. Fail closed for restart reuse.
+        return False
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
     inputs = manifest.get("inputs_sha256", {})
+    sif_path = ROOT / "workspace/generated/cases" / f"{case_name}.sif"
+    if not sif_path.is_file() or inputs.get(sif_path.name) != sha256(sif_path):
+        return False
     return (
         manifest.get("exit_code") == 0
+        and manifest.get("solver_completed") is True
         and not manifest.get("errors")
         and inputs.get(project_path.name) == sha256(project_path)
+        and manifest.get("mpi_procs") == mpi_procs
+        and (backend is None or manifest.get("backend") == backend)
+        and (
+            solver is None
+            or manifest.get("solver") == (solver if solver.startswith("/") else str(Path(solver).resolve()))
+        )
+        and manifest.get("runtime_sif_sha256")
     )
 
 
@@ -564,6 +599,7 @@ def run_case(
     amgx_config: str | None = None,
     amgx_constraint_mode: str = "default",
     amgx_constraint_penalty: float = 1.0e4,
+    backend: str = "native",
 ) -> int:
     spec = model["cases"][case_name]
     sif = ROOT / "workspace/generated" / "cases" / f"{case_name}.sif"
@@ -769,6 +805,8 @@ def run_case(
         "udf_dll": str(Path(udf_dll).resolve()) if udf_applied else None,
         "udf_sha256": sha256(Path(udf_dll).resolve()) if udf_applied else None,
         "solver": str(solver_path),
+        "backend": backend,
+        "mpi_procs": mpi_procs,
         "elmer_prefix": str(prefix),
         "runtime_bin": str(Path(runtime_bin).resolve()) if runtime_bin else None,
         "toolchain_bin": str(Path(toolchain_bin).resolve()) if toolchain_bin else None,
@@ -866,6 +904,7 @@ def main() -> int:
         default=1,
         help="number of MPI ranks; requires a mesh/partitioning.N directory when N > 1",
     )
+    parser.add_argument("--backend", choices=("native", "elmergpu"), default="native", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     project_path = Path(args.project)
@@ -892,7 +931,10 @@ def main() -> int:
         if result is None:
             raise ValueError(f"'{name}' is a restart dependency but does not set output_result")
         if not target_preexisting and (
-            args.force_deps or not restart_result_is_reusable(result, name, project_path)
+            args.force_deps or not restart_result_is_reusable(
+                result, name, project_path, mpi_procs=args.mpi_procs,
+                backend=args.backend, solver=args.elmer_solver,
+            )
         ):
             plan.append(name)
         else:
@@ -913,6 +955,7 @@ def main() -> int:
             model, name, project_path, args.elmer_solver, args.mpi_procs,
             args.udf_dll, args.runtime_bin, args.toolchain_bin, target_amgx_config,
             args.amgx_constraint_mode, args.amgx_constraint_penalty,
+            args.backend,
         )
         if code != 0:
             print(f"aborting chain: {name} failed")

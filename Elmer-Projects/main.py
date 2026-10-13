@@ -1,6 +1,6 @@
 """Entry point for Elmer-Projects.
 
-New project/model TOMLs run through the ElmerGPU Phase24 backend by default.
+New project/model TOMLs run through the ElmerGPU backend by default.
 The former native project runner and older JSON/TOML workflows remain under
 the legacy1 and legacy2 commands.
 """

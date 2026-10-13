@@ -250,7 +250,7 @@ def cmd_transient(cfg: dict) -> str:
             "--reference-case", steady_case,
             "--solver-option", f"nonlinear_convergence_tolerance={s['nonlinear_tolerance']!r}",
             "--case-option", f"bdf_order={s['bdf_order']}",
-            "--case-option", f"phase24_bdf2_predictor={json.dumps(bool(s['predictor']))}",
+            "--case-option", f"bdf2_predictor={json.dumps(bool(s['predictor']))}",
             "--case-option", "pulse=" + json.dumps(pulse),
             "--case-option", "extra_simulation_keywords=" + json.dumps(
                 [f"Phase24 BDF2 Predictor Max Delta = Real {s['predictor_max_delta']!r}"]),

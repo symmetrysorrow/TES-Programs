@@ -3,6 +3,13 @@ import json
 from src import run
 
 
+def manifest_inputs(tmp_path, case, project):
+    sif = tmp_path / "workspace/generated/cases" / f"{case}.sif"
+    sif.parent.mkdir(parents=True, exist_ok=True)
+    sif.write_text("Solver = test", encoding="utf-8")
+    return {project.name: run.sha256(project), sif.name: run.sha256(sif)}
+
+
 def test_restart_result_is_not_reused_after_failed_run(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(run, "ROOT", tmp_path)
     case = "case_steady"
@@ -13,12 +20,15 @@ def test_restart_result_is_not_reused_after_failed_run(tmp_path, monkeypatch) ->
     manifest.parent.mkdir(parents=True)
     project = tmp_path / "project.json"
     project.write_text("{}", encoding="utf-8")
-    manifest.write_text(json.dumps({"exit_code": 3, "errors": ["MUMPS failed"]}), encoding="utf-8")
+    manifest.write_text(json.dumps({
+        "exit_code": 3, "errors": ["MUMPS failed"],
+        "inputs_sha256": manifest_inputs(tmp_path, case, project),
+    }), encoding="utf-8")
 
     assert not run.restart_result_is_reusable(restart, case, project)
 
 
-def test_restart_result_reuses_success_or_untracked_legacy_result(tmp_path, monkeypatch) -> None:
+def test_restart_result_reuses_success_with_provenance_only(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(run, "ROOT", tmp_path)
     case = "case_steady"
     restart = tmp_path / "workspace/work" / "meshes" / "mesh" / f"{case}.result"
@@ -27,16 +37,27 @@ def test_restart_result_reuses_success_or_untracked_legacy_result(tmp_path, monk
     project = tmp_path / "project.json"
     project.write_text("{}", encoding="utf-8")
 
-    assert run.restart_result_is_reusable(restart, case, project)
+    assert not run.restart_result_is_reusable(restart, case, project)
 
     manifest = tmp_path / "outputs/results" / case / "manifest.json"
     manifest.parent.mkdir(parents=True)
     manifest.write_text(json.dumps({
         "exit_code": 0,
         "errors": [],
-        "inputs_sha256": {project.name: run.sha256(project)},
+        "solver_completed": True,
+        "runtime_sif_sha256": "sif-hash",
+        "mpi_procs": 1,
+        "backend": "native",
+        "solver": str((tmp_path / "solver").resolve()),
+        "inputs_sha256": manifest_inputs(tmp_path, case, project),
     }), encoding="utf-8")
-    assert run.restart_result_is_reusable(restart, case, project)
+    assert run.restart_result_is_reusable(
+        restart, case, project, backend="native", solver=str(tmp_path / "solver")
+    )
+    assert not run.restart_result_is_reusable(
+        restart, case, project, mpi_procs=2, backend="native",
+        solver=str(tmp_path / "solver"),
+    )
 
 
 def test_restart_result_is_not_reused_after_project_change(tmp_path, monkeypatch) -> None:
@@ -52,8 +73,81 @@ def test_restart_result_is_not_reused_after_project_change(tmp_path, monkeypatch
     manifest.write_text(json.dumps({
         "exit_code": 0,
         "errors": [],
-        "inputs_sha256": {project.name: run.sha256(project)},
+        "solver_completed": True,
+        "runtime_sif_sha256": "sif-hash",
+        "mpi_procs": 1,
+        "backend": "native",
+        "solver": str((tmp_path / "solver").resolve()),
+        "inputs_sha256": manifest_inputs(tmp_path, case, project),
     }), encoding="utf-8")
 
     project.write_text('{"linear_system": "iterative_hypre_boomeramg"}', encoding="utf-8")
     assert not run.restart_result_is_reusable(restart, case, project)
+
+
+def test_restart_requires_matching_mpi_count_and_every_rank(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(run, "ROOT", tmp_path)
+    case = "case_steady"
+    mesh = tmp_path / "workspace/work/meshes/mesh"
+    mesh.mkdir(parents=True)
+    project = tmp_path / "project.json"
+    project.write_text("{}", encoding="utf-8")
+    inputs = manifest_inputs(tmp_path, case, project)
+    for rank in range(4):
+        (mesh / f"{case}.result.{rank}").write_bytes(b"restart")
+    manifest = tmp_path / "outputs/results" / case / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({
+        "exit_code": 0, "errors": [], "solver_completed": True,
+        "runtime_sif_sha256": "sif-hash", "mpi_procs": 4, "backend": "elmergpu",
+        "solver": "/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+        "inputs_sha256": inputs,
+    }), encoding="utf-8")
+
+    assert run.restart_result_is_reusable(
+        mesh / f"{case}.result", case, project, mpi_procs=4,
+        backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+    )
+    assert not run.restart_result_is_reusable(
+        mesh / f"{case}.result", case, project, mpi_procs=2,
+        backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+    )
+    # A parallel restart set cannot satisfy a serial request, even if its
+    # manifest is otherwise successful.
+    assert not run.restart_result_is_reusable(
+        mesh / f"{case}.result", case, project, mpi_procs=1,
+        backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+    )
+    (mesh / f"{case}.result.2").unlink()
+    assert not run.restart_result_is_reusable(
+        mesh / f"{case}.result", case, project, mpi_procs=4,
+        backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+    )
+
+
+def test_restart_rejects_backend_solver_and_state_mismatch(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(run, "ROOT", tmp_path)
+    case = "case_steady"
+    mesh = tmp_path / "workspace/work/meshes/mesh"
+    mesh.mkdir(parents=True)
+    result = mesh / f"{case}.result"
+    result.write_bytes(b"restart")
+    state = mesh / f"{case}_1.state"
+    state.write_bytes(b"state")
+    project = tmp_path / "project.json"
+    project.write_text("{}", encoding="utf-8")
+    inputs = manifest_inputs(tmp_path, case, project)
+    manifest = tmp_path / "outputs/results" / case / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({
+        "exit_code": 0, "errors": [], "solver_completed": True,
+        "runtime_sif_sha256": "sif-hash", "mpi_procs": 1, "backend": "native",
+        "solver": str((tmp_path / "solver").resolve()),
+        "inputs_sha256": inputs,
+    }), encoding="utf-8")
+    assert not run.restart_result_is_reusable(result, case, project, backend="elmergpu")
+    assert not run.restart_result_is_reusable(result, case, project, solver="other-solver")
+    state.unlink()
+    assert not run.restart_result_is_reusable(
+        result, case, project, required_paths=[state]
+    )

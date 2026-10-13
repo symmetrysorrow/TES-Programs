@@ -393,7 +393,7 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
     ):
         if not isinstance(keywords, list) or any(not isinstance(item, str) for item in keywords):
             raise ValueError(f"solver.{label} must be an array of SIF keyword strings")
-    phase24_keys = (
+    performance_option_keys = (
         "phase24_vector_assembly", "phase24_wall_profiling", "phase24_static_matrix_reuse",
         "phase24_operator_lagging", "phase24_operator_lag_threshold",
         "phase24_operator_lag_max_reuse", "phase24_operator_lag_residual_growth",
@@ -401,8 +401,8 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         "phase24_preconditioner_lag_max_age", "phase24_preconditioner_lag_krylov_relative_growth",
         "phase24_preconditioner_lag_nonlinear_threshold", "phase24_hypre_reuse",
     )
-    phase24_options = {key: solver_config.pop(key) for key in phase24_keys if key in solver_config}
-    steady.update(phase24_options)
+    performance_options = {key: solver_config.pop(key) for key in performance_option_keys if key in solver_config}
+    steady.update(performance_options)
     steady["extra_solver_keywords"] = steady_extra_solver_keywords
     steady["solver"].update(solver_config)
     project["cases"] = {steady_name: steady}
@@ -437,12 +437,12 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         pulse["output_result"] = bool(scenario["project"].get("save_field", False))
         if not pulse["output_result"]:
             pulse.pop("output_file_path", None)
-        pulse.update(phase24_options)
+        pulse.update(performance_options)
         pulse["extra_solver_keywords"] = transient_extra_solver_keywords
         pulse["solver"].update(solver_config)
         if scenario["project"].get("window"):
             pulse["bdf_order"] = 2
-            pulse["phase24_bdf2_predictor"] = True
+            pulse["bdf2_predictor"] = True
         project["cases"][pulse_name] = pulse
     return project, mesh_name, steady_name, pulse_name
 

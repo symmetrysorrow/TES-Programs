@@ -277,9 +277,19 @@ def main(argv: list[str] | None = None) -> int:
             partition = result.parent / f"partitioning.{args.mpi_procs}"
             if args.backend == "native" and not partition.is_dir():
                 raise ValueError(f"MPI mesh partition missing: {partition}; partition the mesh before --mpi-procs {args.mpi_procs}")
-            result = result.with_name(result.name + ".0")
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
-        reusable = restart_result_is_reusable(result, steady, steady_project) and all(p.is_file() for p in states)
+        solver = (
+            f"/opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
+            if args.backend == "elmergpu" else (runtime_args[1] if runtime_args else None)
+        )
+        if solver is None:
+            from src.run import ELMERSOLVER
+
+            solver = ELMERSOLVER
+        reusable = restart_result_is_reusable(
+            result, steady, steady_project, mpi_procs=args.mpi_procs,
+            backend=args.backend, solver=solver, required_paths=states,
+        )
         if not reusable:
             if args.backend == "elmergpu":
                 from support.elmergpu_backend import run_case as run_elmergpu_case

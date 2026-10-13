@@ -1,4 +1,4 @@
-# Rebuilding the ElmerGPU Phase24 solver
+# Rebuilding the ElmerGPU solver
 
 The HIP build uses upstream source revisions pinned in
 [`elmergpu-sources.lock`](elmergpu-sources.lock), with TES/Phase24 changes and

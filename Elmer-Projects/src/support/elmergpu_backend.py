@@ -144,7 +144,7 @@ export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero OCL_ICD_VENDORS=/opt/elmer-gpu/
 {"".join(f"export {kv}" + chr(10) for kv in (extra_env or []))}
 cd '{_wsl_path(ROOT)}'
 export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --elmer-solver {GPU_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
+python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --backend elmergpu --elmer-solver {GPU_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
 """
     log = project.parent / f"{case}.gpu_launcher.log"
     start = time.monotonic()
