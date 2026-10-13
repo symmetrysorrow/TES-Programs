@@ -108,6 +108,14 @@ def test_restart_requires_matching_mpi_count_and_every_rank(tmp_path, monkeypatc
         mesh / f"{case}.result", case, project, mpi_procs=4,
         backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
     )
+    # The historical manifest name and the current logical backend identify
+    # the same pinned WSL solver path; the alias itself must not invalidate it.
+    assert run.restart_result_is_reusable(
+        mesh / f"{case}.result", case, project, mpi_procs=4,
+        backend="elmer_wsl", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",
+    )
+    assert run.normalize_backend_name("elmergpu") == "elmer_wsl"
+    assert run.normalize_backend_name("native") == "native"
     assert not run.restart_result_is_reusable(
         mesh / f"{case}.result", case, project, mpi_procs=2,
         backend="elmergpu", solver="/opt/elmer-gpu/elmer/bin/ElmerSolver_mpi",

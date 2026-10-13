@@ -1,7 +1,7 @@
 # Legacy workflows
 
 この文書は、以前の計算経路を再現する方法を説明します。
-新しい計算は `projects/*.toml` と `main.py list/check/mesh/run` を使い、ElmerGPU Phase24
+新しい計算は `projects/*.toml` と `main.py list/check/mesh/run` を使い、Elmer WSL
 backend で実行します。
 
 旧経路は `legacy1` / `legacy2` と、後方互換の `legacy` 名前空間に残しています。

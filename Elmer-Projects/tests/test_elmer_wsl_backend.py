@@ -1,8 +1,9 @@
 import json
+from types import SimpleNamespace
 
 import pytest
 
-from support import elmergpu_backend
+from support import elmer_wsl_backend
 from support.build_cases import solver1_block
 
 
@@ -13,9 +14,9 @@ def test_fast_settings_apply_to_transient_and_are_idempotent(tmp_path):
         "solver": {}, "extra_solver_keywords": [],
     }}}), encoding="utf-8")
 
-    elmergpu_backend.configure_fast_case(project_path, "pulse")
+    elmer_wsl_backend.configure_fast_case(project_path, "pulse")
     first = json.loads(project_path.read_text(encoding="utf-8"))
-    elmergpu_backend.configure_fast_case(project_path, "pulse")
+    elmer_wsl_backend.configure_fast_case(project_path, "pulse")
     second = json.loads(project_path.read_text(encoding="utf-8"))
 
     keywords = second["cases"]["pulse"]["extra_solver_keywords"]
@@ -32,19 +33,19 @@ def test_partition_reuses_complete_partition_and_rejects_incomplete(tmp_path, mo
     for rank in (1, 2):
         for suffix in ("nodes", "elements", "boundary"):
             (partition / f"part.{rank}.{suffix}").write_text("ok", encoding="ascii")
-    monkeypatch.setattr(elmergpu_backend.subprocess, "run", lambda *a, **kw: pytest.fail("unexpected partition"))
+    monkeypatch.setattr(elmer_wsl_backend.subprocess, "run", lambda *a, **kw: pytest.fail("unexpected partition"))
 
-    elmergpu_backend.ensure_partition(mesh, 2)
+    elmer_wsl_backend.ensure_partition(mesh, 2)
     (partition / "part.2.boundary").unlink()
     with pytest.raises(RuntimeError, match="incomplete 2-rank mesh partition"):
-        elmergpu_backend.ensure_partition(mesh, 2)
+        elmer_wsl_backend.ensure_partition(mesh, 2)
 
 
 def test_partition_dry_run_does_not_create_or_run(tmp_path, monkeypatch):
     mesh = tmp_path / "mesh"
-    monkeypatch.setattr(elmergpu_backend.subprocess, "run", lambda *a, **kw: pytest.fail("dry run launched ElmerGrid"))
+    monkeypatch.setattr(elmer_wsl_backend.subprocess, "run", lambda *a, **kw: pytest.fail("dry run launched ElmerGrid"))
 
-    elmergpu_backend.ensure_partition(mesh, 4, dry_run=True)
+    elmer_wsl_backend.ensure_partition(mesh, 4, dry_run=True)
     assert not mesh.exists()
 
 
@@ -65,3 +66,23 @@ def test_cpu_and_gpu_hypre_are_written_to_sif(linear_system, expected):
     }))
 
     assert expected in sif
+
+
+def test_wsl_launcher_keeps_existing_distro_but_uses_canonical_backend(tmp_path, monkeypatch):
+    command_calls = []
+
+    def fake_run(command, **kwargs):
+        command_calls.append(command)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(elmer_wsl_backend, "ROOT", tmp_path)
+    monkeypatch.setattr(elmer_wsl_backend.subprocess, "run", fake_run)
+    project = tmp_path / "steady.json"
+    record = elmer_wsl_backend.run_wsl(project, "case_steady", "prepared_mesh")
+
+    command = command_calls[0]
+    assert command[:5] == ["wsl.exe", "-d", "ElmerGPU", "-u", "root"]
+    assert "--backend elmer_wsl" in command[-1]
+    assert "/opt/elmer-gpu/elmer/bin/ElmerSolver" in command[-1]
+    assert record["exit_code"] == 0
+    assert record["launcher_log"].endswith(".wsl_launcher.log")

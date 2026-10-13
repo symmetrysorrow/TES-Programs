@@ -545,7 +545,7 @@ def prepare_project(window: str, backend: str) -> tuple[Path, str]:
         candidate["conformal_tes_stack"] = True
     candidate.update(EXTRA_CASE_OPTIONS)
     candidate.setdefault(
-        "phase24_bdf2_predictor", int(candidate.get("bdf_order", 1)) >= 2
+        "bdf2_predictor", candidate.get("phase24_bdf2_predictor", int(candidate.get("bdf_order", 1)) >= 2)
     )
     solver = {
         **candidate.get("solver", {}),

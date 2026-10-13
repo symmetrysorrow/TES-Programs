@@ -201,11 +201,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mpi-procs", type=int, default=1)
     parser.add_argument(
         "--backend",
-        choices=("elmergpu", "native"),
-        default="elmergpu",
-        help="calculation runtime (default: ElmerGPU; native preserves the former local solver path)",
+        choices=("elmer_wsl", "elmergpu", "native"),
+        default="elmer_wsl",
+        help="calculation runtime (default: elmer_wsl; native preserves the former local solver path)",
     )
     args = parser.parse_args(argv)
+    # Only the CLI boundary accepts the historical backend name.
+    from src.run import normalize_backend_name
+    args.backend = normalize_backend_name(args.backend)
     if args.project_file.lower().endswith(".toml"):
         project_file = Path(args.project_file)
         if not project_file.is_absolute():
@@ -234,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Mesh: {mesh_status} ({mesh_name}); model: {scenario['model_file'].relative_to(ROOT)}")
             print("Solve: steady (reuse a compatible result or calculate)" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
             print(f"MPI ranks: {args.mpi_procs}")
-            print(f"Backend: {'ElmerGPU (WSL)' if args.backend == 'elmergpu' else 'native Elmer'}")
+            print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmergpu' else 'native Elmer'}")
             linear_system = scenario["project"].get("solver", {}).get("linear_system", "")
             if linear_system:
                 print(f"Linear solver: {linear_system} (HYPRE GPU: {'enabled' if linear_system.endswith('_gpu') else 'disabled'})")
@@ -255,19 +258,19 @@ def main(argv: list[str] | None = None) -> int:
         runtime_args = solver_runtime_args(scenario) if args.backend == "native" else []
         udf_dir = ensure_circuit_udf() if args.backend == "native" else None
         linear_system = scenario["project"].get("solver", {}).get("linear_system", "")
-        print(f"Backend: {'ElmerGPU (WSL)' if args.backend == 'elmergpu' else 'native Elmer'}")
+        print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmergpu' else 'native Elmer'}")
         print(f"Linear solver: {linear_system or '(solver default)'}; HYPRE GPU: {'enabled' if linear_system.endswith('_gpu') else 'disabled'}")
-        if args.backend == "elmergpu":
+        if args.backend == "elmer_wsl":
             print(f"Solver runtime: /opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}")
         elif runtime_args:
             print(f"Solver runtime: {runtime_args[1]}")
-        if args.backend == "elmergpu":
-            from support.elmergpu_backend import configure_fast_case
+        if args.backend == "elmer_wsl":
+            from support.elmer_wsl_backend import configure_fast_case
 
             configure_fast_case(steady_project, steady)
         mesh_dir = ROOT / "workspace/work" / "meshes" / mesh_name
-        if args.mpi_procs > 1 and args.backend == "elmergpu":
-            from support.elmergpu_backend import ensure_partition
+        if args.mpi_procs > 1 and args.backend == "elmer_wsl":
+            from support.elmer_wsl_backend import ensure_partition
 
             ensure_partition(mesh_dir, args.mpi_procs)
         # Keep the steady project stable when only pulse parameters change.
@@ -280,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
         solver = (
             f"/opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
-            if args.backend == "elmergpu" else (runtime_args[1] if runtime_args else None)
+            if args.backend == "elmer_wsl" else (runtime_args[1] if runtime_args else None)
         )
         if solver is None:
             from src.run import ELMERSOLVER
@@ -291,21 +294,21 @@ def main(argv: list[str] | None = None) -> int:
             backend=args.backend, solver=solver, required_paths=states,
         )
         if not reusable:
-            if args.backend == "elmergpu":
-                from support.elmergpu_backend import run_case as run_elmergpu_case
+            if args.backend == "elmer_wsl":
+                from support.elmer_wsl_backend import run_case as run_elmer_wsl_case
 
-                run_elmergpu_case(steady_project, steady, mesh_name, args.mpi_procs)
+                run_elmer_wsl_case(steady_project, steady, mesh_name, args.mpi_procs)
             else:
                 run_command([sys.executable, str(ROOT / "src" / "run.py"), steady, "--project", str(steady_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir), *runtime_args])
         else:
             print(f"reusing steady: {steady}")
         if scenario["physics"]["pulse"]:
             pulse_project, _, _, _ = write_project(scenario)
-            if args.backend == "elmergpu":
-                from support.elmergpu_backend import configure_fast_case, run_case as run_elmergpu_case
+            if args.backend == "elmer_wsl":
+                from support.elmer_wsl_backend import configure_fast_case, run_case as run_elmer_wsl_case
 
                 configure_fast_case(pulse_project, pulse)
-                run_elmergpu_case(pulse_project, pulse, mesh_name, args.mpi_procs)
+                run_elmer_wsl_case(pulse_project, pulse, mesh_name, args.mpi_procs)
             else:
                 run_command([sys.executable, str(ROOT / "src" / "run.py"), pulse, "--project", str(pulse_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir), *runtime_args])
         return 0

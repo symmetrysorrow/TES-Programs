@@ -2,7 +2,7 @@
 
 このディレクトリは `tes_sim.py` 系の旧 TOML を既存結果の再現用に残す場所です。
 新しい計算は `projects/<名前>.toml` と対応する model TOML を作成し、
-`python main.py run <名前>` で ElmerGPU Phase24 backend を使います。
+`python main.py run <名前>` で Elmer WSL backend を使います。
 
 ```powershell
 python main.py legacy2 list

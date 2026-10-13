@@ -25,7 +25,7 @@ beta = 5.03
 `templates/pipeline_template.json` は CLI が内部用 solver 設定を組み立てるための雛形です。
 個別の計算条件は TOML に記述し、CLI が作る中間 JSON は `workspace/generated/` に保存します。
 
-通常の `python main.py run <project>` は内部 JSON を作ったあと、ElmerGPU Phase24 backend
+通常の `python main.py run <project>` は内部 JSON を作ったあと、Elmer WSL backend
 で計算します。以前のローカル Elmer 実行は `python main.py legacy1 run <project>` から使えます。
 
 Public TES IDs are explicit model mappings. For example, `tes_ids = { tes = "tes_1" }` maps a component-local TES ID to the project-facing ID. Projects refer to `[circuits.tes_1]`. Edit the project TOML for circuit values and the model TOML for geometry and mesh settings.

@@ -1,7 +1,7 @@
 # Elmer-Projects
 
 TES の Elmer 計算プロジェクトです。日常の計算では `projects/*.toml` の条件と
-`projects/models/*.toml` の形状・材料・メッシュ設定を編集し、ElmerGPU WSL
+`projects/models/*.toml` の形状・材料・メッシュ設定を編集し、`ElmerGPU` という名前の WSL
 ディストリビューション上でソルバーを実行します。
 
 ソースとコンパイル済みライブラリの配置は
@@ -13,17 +13,20 @@ TES の Elmer 計算プロジェクトです。日常の計算では `projects/*
 ```text
 python main.py run <project>
   → scenario_cli.py (TOML 読み込み、ケース生成、restart 判定)
-  → elmergpu_backend.py (設定適用、MPI 分割、WSL 起動)
+  → elmer_wsl_backend.py (設定適用、MPI 分割、WSL 起動)
   → WSL: src/run.py (SIF、manifest、結果・restart 管理)
   → ElmerSolver
 ```
 
-ElmerGPU は Windows から WSL の Elmer 実行環境を選ぶバックエンドです。
+`elmer_wsl` は Windows から WSL の Elmer 実行環境を選ぶバックエンドです。
 これは HYPRE の GPU 演算を強制する指定ではありません。既定の
 `iterative_hypre_pcg_boomeramg` は CPU HYPRE を使います。
 `linear_system` を `_gpu` で終わる対応値にした場合に限り、生成 SIF の
-`HYPRE GPU = Logical True` が有効になります。ElmerGPU 環境に GPU 対応
+`HYPRE GPU = Logical True` が有効になります。WSL 環境に GPU 対応
 ElmerSolver/HYPRE がインストールされている必要があります。
+
+旧 `--backend elmergpu` も互換エイリアスとして使えます。現在の WSL ディストリ名
+`ElmerGPU` とインストール先 `/opt/elmer-gpu` は変更しません。
 
 ## 実行
 

@@ -36,7 +36,7 @@ ID は値の継承階層ではなく、TES個体を安定して参照するた�
 
 ## 互換性
 
-旧 `projects/legacy/cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。新式 project/model TOML の通常 `run` は ElmerGPU Phase24 backend を使い、以前のローカル実行は `main.py legacy1 ...`、旧 JSON / 旧ケース TOML は `main.py legacy2 ...` と従来の `main.py legacy ...` に残す。通常コマンドは旧入力形式へフォールバックしない。
+旧 `projects/legacy/cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。新式 project/model TOML の通常 `run` は Elmer WSL backend を使い、以前のローカル実行は `main.py legacy1 ...`、旧 JSON / 旧ケース TOML は `main.py legacy2 ...` と従来の `main.py legacy ...` に残す。通常コマンドは旧入力形式へフォールバックしない。
 
 ## Public TES IDs
 
