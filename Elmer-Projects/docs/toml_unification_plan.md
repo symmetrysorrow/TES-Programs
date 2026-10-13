@@ -36,4 +36,8 @@ ID は値の継承階層ではなく、TES個体を安定して参照するた�
 
 ## 互換性
 
-旧 `projects/legacy/cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。ただし通常の `main.py list/show/check/mesh/run` からは完全に分離し、`main.py legacy ...` の明示的な名前空間からだけ案内する。通常コマンドは旧形式へフォールバックしない。
+旧 `projects/legacy/cases/*.toml` / `tes_sim.py` と `elmer_project.json` / `run.py` は再現用として残す。新式 project/model TOML の通常 `run` は ElmerGPU Phase24 backend を使い、以前のローカル実行は `main.py legacy1 ...`、旧 JSON / 旧ケース TOML は `main.py legacy2 ...` と従来の `main.py legacy ...` に残す。通常コマンドは旧入力形式へフォールバックしない。
+
+## Public TES IDs
+
+Model format v3 maps each component-local TES ID to a stable public ID in `layout.groups[].tes_ids`. Projects use public IDs as `[circuits.tes_1]` keys. Model format v2 remains supported with its historical `<group>.<local_id>` IDs. Mesh identity depends on TES positions and physical settings, not public ID spelling.

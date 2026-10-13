@@ -1,7 +1,8 @@
 """Entry point for Elmer-Projects.
 
-New simulations use projects/*.toml. Legacy JSON and old TOML workflows are
-available only through the explicit legacy namespace.
+New project/model TOMLs run through the ElmerGPU Phase24 backend by default.
+The former native project runner and older JSON/TOML workflows remain under
+the legacy1 and legacy2 commands.
 """
 
 from __future__ import annotations
@@ -81,12 +82,19 @@ def resolve_project_toml(value: str) -> Path:
     return path
 
 
-def project_action(command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 1) -> int:
+def project_action(
+    command: str,
+    value: str,
+    *,
+    dry_run: bool = False,
+    mpi_procs: int = 1,
+    backend: str = "elmergpu",
+) -> int:
     from support.scenario_cli import main as scenario_main
 
-    action = {"show": "summary", "check": "validate", "mesh": "mesh", "run": "run"}[command]
+    action = {"check": "validate", "mesh": "mesh", "run": "run"}[command]
     project_file = resolve_project_toml(value)
-    args = [action, str(project_file), "--mpi-procs", str(mpi_procs)]
+    args = [action, str(project_file), "--mpi-procs", str(mpi_procs), "--backend", backend]
     if dry_run:
         args.append("--dry-run")
     return scenario_main(args)
@@ -102,11 +110,31 @@ def add_legacy_json_options(parser: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="TES simulation projects. New work starts in projects/*.toml.",
-        epilog=(
-            "Start with: python main.py list; python main.py show single_pixel_alpha240; "
-            "python main.py run single_pixel_alpha240 --dry-run"
+        description=(
+            "TES simulation CLI. Project/model TOMLs run on ElmerGPU by default.\n\n"
+            "Folders:\n"
+            "  projects/*.toml          run settings and final circuit values\n"
+            "  projects/models/*.toml   geometry, materials, layout, and mesh settings\n"
+            "  projects/legacy/         inputs for retained legacy1/legacy2 commands\n"
+            "  src/                     simulation and CLI implementation\n"
+            "  workspace/generated/     generated project files\n"
+            "  workspace/work/meshes/   prepared Elmer mesh files\n"
+            "  outputs/results/         simulation results\n\n"
+            "Edit projects/<name>.toml for circuit values, pulse conditions, and solver settings.\n"
+            "Edit the referenced projects/models/<model>.toml for geometry, materials, TES layout,\n"
+            "public TES ID mappings, and mesh settings."
         ),
+        epilog=(
+            "Basic workflow:\n"
+            "  python main.py list\n"
+            "  python main.py check single_pixel_alpha240\n"
+            "  python main.py mesh single_pixel_alpha240\n"
+            "  python main.py run single_pixel_alpha240 --dry-run\n"
+            "  python main.py run single_pixel_alpha240\n\n"
+            "Use `python main.py legacy1 --help` for the former native TOML runner.\n"
+            "Use `python main.py legacy2 --help` for the older JSON and TOML runners."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "-i",
@@ -118,24 +146,63 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("list", help="list schema-v3 projects")
 
-    check = sub.add_parser("check", help="validate a project without calculating")
+    check = sub.add_parser(
+        "check",
+        help="validate project, model, and mesh files",
+        description="Validate a project configuration and the mesh files it resolves to.",
+        epilog=(
+            "Checks:\n"
+            "  Project config       project TOML structure and schema version\n"
+            "  Model config         model version, sections, and references\n"
+            "  Units/dimensions     dimensioned expressions parse and resolve\n"
+            "  TES/circuit mapping  public TES IDs and required circuit values match\n"
+            "  Mesh definition      mesh sizes and layer counts are valid\n"
+            "  Mesh files           header, nodes, elements, boundary, and names files\n"
+            "                       exist and are non-empty; counts and TES body names match\n\n"
+            "This command does not generate mesh files or run a calculation. It exits\n"
+            "with status 2 if a configuration check fails or required mesh files are missing."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     check.add_argument("name", help="project name or projects/<name>.toml")
-
-    show = sub.add_parser("show", help="show model, TES IDs/positions and final run values")
-    show.add_argument("name", help="project name or projects/<name>.toml")
 
     mesh = sub.add_parser("mesh", help="build or reuse the mesh for a project")
     mesh.add_argument("name", help="project name or projects/<name>.toml")
 
-    run = sub.add_parser("run", help="run a project; build or reuse its mesh automatically")
+    run = sub.add_parser("run", help="run a project on ElmerGPU; build or reuse its mesh automatically")
     run.add_argument("name", help="project name or projects/<name>.toml")
     run.add_argument("--dry-run", action="store_true", help="print the run plan only")
     run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
+    run.add_argument("--backend", choices=("elmergpu", "native"), default="elmergpu",
+                     help="calculation runtime (default: elmergpu)")
+
+    legacy1 = sub.add_parser(
+        "legacy1",
+        help="run project/model TOMLs with the former local Elmer backend",
+        description="Compatibility entry point for the previous native project/model TOML calculation path.",
+    )
+    legacy1_sub = legacy1.add_subparsers(dest="legacy1_command", required=True)
+    legacy1_sub.add_parser("list", help="list project/model TOMLs")
+    legacy1_check = legacy1_sub.add_parser("check", help="validate a project and its mesh")
+    legacy1_check.add_argument("name")
+    legacy1_mesh = legacy1_sub.add_parser("mesh", help="build or reuse a project mesh")
+    legacy1_mesh.add_argument("name")
+    legacy1_run = legacy1_sub.add_parser("run", help="run with the former local solver backend")
+    legacy1_run.add_argument("name")
+    legacy1_run.add_argument("--dry-run", action="store_true")
+    legacy1_run.add_argument("--mpi-procs", type=int, default=1)
+
+    legacy2 = sub.add_parser(
+        "legacy2",
+        help="reproduce the older JSON and legacy-case TOML workflows",
+        description="Compatibility alias for the original legacy JSON and src/tes_sim.py commands.",
+    )
+    legacy2.add_argument("args", nargs=argparse.REMAINDER, help="same subcommands and options as `legacy`")
 
     legacy = sub.add_parser(
         "legacy",
         help="reproduce old JSON or projects/legacy/cases/*.toml workflows",
-        description="Legacy workflows. New projects should not use these commands.",
+        description="Original JSON and legacy-case TOML workflows (also available as legacy2).",
     )
     legacy_sub = legacy.add_subparsers(dest="legacy_command")
 
@@ -191,7 +258,6 @@ def interactive_main() -> int:
         if read_toml(path).get("schema_version") == 3
     ]
     actions = {
-        "プロジェクトの内容を見る": "show",
         "プロジェクトを検証する": "check",
         "計算を実行する": "run",
         "終了": "exit",
@@ -332,22 +398,36 @@ def main(argv: list[str] | None = None) -> int:
     if args.interactive or (not args.command and sys.stdin.isatty()):
         return interactive_main()
     if not args.command:
-        print("TES simulation: edit a file in projects/, then run it.\n")
-        print("  python main.py list")
-        print("  python main.py show single_pixel_alpha240")
-        print("  python main.py run single_pixel_alpha240 --dry-run")
-        print("  python main.py run single_pixel_alpha240")
-        print("\nOld workflows: python main.py legacy ...")
+        build_parser().print_help()
         return 0
 
     try:
         if args.command == "legacy":
             return legacy_main(args)
+        if args.command == "legacy2":
+            legacy_args = build_parser().parse_args(["legacy", *args.args])
+            return legacy_main(legacy_args)
+        if args.command == "legacy1":
+            if args.legacy1_command == "list":
+                from support.scenario_config import PROJECT_DIR, read_toml
+
+                print("Project/model TOMLs (former native runner):")
+                for path in sorted(PROJECT_DIR.glob("*.toml")):
+                    if read_toml(path).get("schema_version") == 3:
+                        print(f"  {path.stem}")
+                return 0
+            return project_action(
+                args.legacy1_command,
+                args.name,
+                dry_run=getattr(args, "dry_run", False),
+                mpi_procs=getattr(args, "mpi_procs", 1),
+                backend="native",
+            )
 
         if args.command == "list":
             from support.scenario_config import PROJECT_DIR, read_toml
 
-            print("Projects (use 'show <name>' or 'run <name>'):")
+            print("Projects (use 'check <name>' or 'run <name>'):")
             for path in sorted(PROJECT_DIR.glob("*.toml")):
                 if read_toml(path).get("schema_version") == 3:
                     print(f"  {path.stem}")
@@ -358,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
             args.name,
             dry_run=getattr(args, "dry_run", False),
             mpi_procs=getattr(args, "mpi_procs", 1),
+            backend=getattr(args, "backend", "elmergpu"),
         )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)

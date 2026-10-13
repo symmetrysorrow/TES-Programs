@@ -585,6 +585,7 @@ def run_case(
     )
     env, solver_path, prefix = runtime_environment(elmer_solver, runtime_bin, toolchain_bin)
     mesh_anchor: Path | None = None
+    created_mesh_anchor = False
     if amgx_config:
         # Linux Elmer prefixes restart/output names with the mesh basename.
         # The ../workspace/work/meshes/... paths therefore need that basename
@@ -592,6 +593,26 @@ def run_case(
         # by the POSIX filesystem. The real mesh remains under workspace/work.
         mesh_anchor = ROOT / model["meshes"][spec["mesh"]]["dir"]
         mesh_anchor.mkdir(parents=True, exist_ok=True)
+    elif spec.get("preexisting_restart"):
+        # Elmer resolves Restart File relative to the mesh basename even when
+        # launched from ROOT.  The actual mesh/restart lives under
+        # workspace/work/meshes/<mesh>; expose that directory at the basename
+        # expected by LoadRestartFile for the duration of this run.
+        mesh_anchor = ROOT / mesh_dir.name
+        if not mesh_anchor.exists():
+            if os.name == "nt":
+                link = subprocess.run(
+                    ["cmd.exe", "/d", "/c", "mklink", "/J", str(mesh_anchor), str(mesh_dir)],
+                    capture_output=True,
+                    text=True,
+                )
+                if link.returncode:
+                    raise OSError(f"could not create Elmer restart mesh junction: {link.stdout}{link.stderr}")
+            else:
+                mesh_anchor.symlink_to(mesh_dir, target_is_directory=True)
+            created_mesh_anchor = True
+        elif not mesh_anchor.is_dir():
+            raise FileExistsError(f"Elmer restart mesh anchor already exists and is not a directory: {mesh_anchor}")
 
     inputs = {
         project_path.name: sha256(project_path),
@@ -631,9 +652,9 @@ def run_case(
             stderr=subprocess.STDOUT,
             env=env,
         )
-    if mesh_anchor is not None:
+    if mesh_anchor is not None and created_mesh_anchor:
         try:
-            mesh_anchor.rmdir()
+            os.rmdir(mesh_anchor)
         except OSError:
             pass
     finished = datetime.now().isoformat(timespec="seconds")

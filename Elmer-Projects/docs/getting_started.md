@@ -15,12 +15,15 @@ python main.py
 
 ```powershell
 python main.py list
-python main.py show single_pixel_alpha240
 python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
 ```
 
-`show` は参照する model、TES の ID と位置、各 TES の最終的な `I_bias`、`R_sh`、`alpha` などを表示します。`--dry-run` は生成・計算を行いません。
+`run` は ElmerGPU Phase24 backend を使います。計算機には `ElmerGPU` WSL distribution と
+`/opt/elmer-gpu` の実行環境が必要です。以前のローカル Elmer 経路を再現する場合は
+`python main.py legacy1 run single_pixel_alpha240` を使えます。旧 JSON / 旧ケース TOML
+形式は `python main.py legacy2 ...` に残しています。
+
 
 ## project と model
 
@@ -42,10 +45,10 @@ model = "models/single_pixel.toml"
 
 ## 回路値を変える
 
-`projects/single_pixel.toml` をコピーして別名を付け、その TES の `[circuits."pixel.tes"]` を編集します。
+`projects/single_pixel.toml` をコピーして別名を付け、その TES の `[circuits.tes_1]` を編集します。
 
 ```toml
-[circuits."pixel.tes"]
+[circuits.tes_1]
 I_bias = "715[uA]"
 R_sh = "3.9[mohm]"
 L_tes = "12.3[nH]"
@@ -56,7 +59,6 @@ beta = 5.03
 
 これは override ではなく、この計算で使う**最終値**です。model、component、group から同名の回路値を継承して上書きする仕組みはありません。複数 TES の project では、model が定義する TES ID ごとに1つずつ完全な `circuits` テーブルを書きます。
 
-ID が分からない場合は `python main.py show <名前>` で位置と一緒に確認できます。
 
 ## 形状・材料・メッシュを変える
 
@@ -64,4 +66,6 @@ ID が分からない場合は `python main.py show <名前>` で位置と一緒
 
 単ピクセル model は検証済みの `mesh_hybrid_fullconf_h8` を参照しています。この prebuilt mesh と矛盾する寸法変更はエラーになります。新しい寸法を使う場合は、生成型 mesh を持つ別 model を作成します。
 
-生成した内部 JSON と SIF は `workspace/generated/`、メッシュは `workspace/work/meshes/`、実行結果は `outputs/results/` に保存します。旧 TOML / JSON を再現する場合だけ `python main.py legacy list` を使います。通常の `list/show/check/mesh/run` は新project専用です。
+## Public TES IDs
+
+Use `[circuits.tes_1]` in a project. The referenced model assigns `tes_1` through `layout.groups[].tes_ids`; public IDs are independent of component-local and layout group IDs. Edit the project TOML for circuit and run values, and the model TOML for geometry, mesh settings, and ID mappings.

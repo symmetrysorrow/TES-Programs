@@ -1,9 +1,14 @@
 schema_version = 3
 model = "models/post_four_tes.toml"
+window = "75ms_bdf2h15"
 
-# TES IDs come from the model layout. "show" prints the IDs and positions.
+# Default CPU route selected from the single-pixel solver comparison.
+[solver]
+linear_system = "iterative_hypre_pcg_boomeramg"
+
+# Public TES IDs are assigned explicitly in the model layout.
 # Every table contains final values; no component/group/project override chain is applied.
-[circuits."west.a"]
+[circuits.tes_1]
 I_bias = "715[uA]"
 R_sh = "3.9[mohm]"
 L_tes = "12.3[nH]"
@@ -11,7 +16,7 @@ R_0 = "15.527[mohm]"
 alpha = 256.46
 beta = 5.03
 
-[circuits."west.b"]
+[circuits.tes_2]
 I_bias = "715[uA]"
 R_sh = "3.9[mohm]"
 L_tes = "12.3[nH]"
@@ -19,7 +24,7 @@ R_0 = "15.527[mohm]"
 alpha = 256.46
 beta = 5.03
 
-[circuits."east.a"]
+[circuits.tes_3]
 I_bias = "715[uA]"
 R_sh = "3.8[mohm]"
 L_tes = "12.3[nH]"
@@ -27,7 +32,7 @@ R_0 = "15.527[mohm]"
 alpha = 256.46
 beta = 5.03
 
-[circuits."east.b"]
+[circuits.tes_4]
 I_bias = "700[uA]"
 R_sh = "3.8[mohm]"
 L_tes = "12.3[nH]"

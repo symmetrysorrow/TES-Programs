@@ -25,6 +25,27 @@ def run_command(argv: list[str], *, cwd: Path = ROOT) -> None:
     subprocess.run(argv, cwd=cwd, check=True)
 
 
+def solver_runtime_args(scenario: dict) -> list[str]:
+    """Use the repository's HYPRE build for projects requesting HYPRE."""
+    if os.name != "nt" or "hypre" not in scenario["project"].get("solver", {}).get("linear_system", "").lower():
+        return []
+    # This runtime includes the multi-TES HeatSolve module; stage11 predates it.
+    solver = ROOT / "workspace/work/elmer-latest/bin/ElmerSolver.exe"
+    if not solver.is_file():
+        raise RuntimeError(f"HYPRE-enabled ElmerSolver not found: {solver}")
+    candidates = []
+    if os.environ.get("ELMER_HOME"):
+        candidates.append(Path(os.environ["ELMER_HOME"]).parent / "msys64/ucrt64/bin")
+    hypre_dll = shutil.which("libHYPRE.dll")
+    if hypre_dll:
+        candidates.append(Path(hypre_dll).parent)
+    candidates.append(Path("C:/msys64/ucrt64/bin"))
+    toolchain = next((p for p in candidates if (p / "libHYPRE.dll").is_file()), None)
+    if toolchain is None:
+        raise RuntimeError("HYPRE runtime DLLs not found; add MSYS2 ucrt64/bin to PATH")
+    return ["--elmer-solver", str(solver), "--toolchain-bin", str(toolchain)]
+
+
 def ensure_circuit_udf() -> Path:
     source = ROOT / "src" / "fortran" / "tes_parallel_circuit.f90"
     target_dir = ROOT / "workspace/work" / "udf"
@@ -121,12 +142,69 @@ def summary(scenario: dict) -> None:
     print(f"Edit {scenario['project_file'].relative_to(ROOT)} for run values; {scenario['model_file'].relative_to(ROOT)} for geometry and mesh.")
 
 
+def check_mesh_files(scenario: dict, mesh_name: str) -> None:
+    mesh_dir = ROOT / "workspace" / "work" / "meshes" / mesh_name
+    required = ("mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary", "mesh.names")
+    missing = [name for name in required if not (mesh_dir / name).is_file()]
+    empty = [name for name in required if (mesh_dir / name).is_file() and (mesh_dir / name).stat().st_size == 0]
+    if missing or empty:
+        details = []
+        if missing:
+            details.append(f"missing: {', '.join(missing)}")
+        if empty:
+            details.append(f"empty: {', '.join(empty)}")
+        raise ValueError(f"{mesh_dir}: {'; '.join(details)}")
+
+    header = (mesh_dir / "mesh.header").read_text(encoding="utf-8").splitlines()
+    try:
+        counts = [int(value) for value in header[0].split()]
+    except (IndexError, ValueError) as exc:
+        raise ValueError(f"{mesh_dir / 'mesh.header'} has an invalid element-count header") from exc
+    if len(counts) != 3 or any(count <= 0 for count in counts):
+        raise ValueError(f"{mesh_dir / 'mesh.header'} must declare positive node, element, and boundary counts")
+
+    from support.mesh_names import parse_mesh_names
+
+    names = parse_mesh_names(mesh_dir / "mesh.names")
+    tes_bodies = [name for name in names.bodies if name == "TES" or name.startswith("TES_T")]
+    if not names.bodies or not names.boundaries:
+        raise ValueError(f"{mesh_dir / 'mesh.names'} must define body and boundary names")
+    if len(tes_bodies) != len(scenario["tes"]):
+        raise ValueError(
+            f"{mesh_dir / 'mesh.names'} has {len(tes_bodies)} TES bodies; expected {len(scenario['tes'])}"
+        )
+
+
+def check_report(scenario: dict, mesh_name: str) -> bool:
+    for label in (
+        "Project config",
+        "Model config",
+        "Units/dimensions",
+        "TES/circuit mapping",
+        "Mesh definition",
+    ):
+        print(f"{label:<21} OK")
+    try:
+        check_mesh_files(scenario, mesh_name)
+    except (OSError, ValueError) as exc:
+        print(f"{'Mesh files':<21} ERROR: {exc}")
+        return False
+    print(f"{'Mesh files':<21} OK")
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="project/model TOML workflow")
     parser.add_argument("action", choices=("validate", "summary", "explain", "compile", "mesh", "udf", "run"))
     parser.add_argument("project_file", help="project name or projects/<name>.toml")
-    parser.add_argument("--dry-run", action="store_true", help="show run plan without building or running")
+    parser.add_argument("--dry-run", action="store_true", help="print the run plan without building or running")
     parser.add_argument("--mpi-procs", type=int, default=1)
+    parser.add_argument(
+        "--backend",
+        choices=("elmergpu", "native"),
+        default="elmergpu",
+        help="calculation runtime (default: ElmerGPU; native preserves the former local solver path)",
+    )
     args = parser.parse_args(argv)
     if args.project_file.lower().endswith(".toml"):
         project_file = Path(args.project_file)
@@ -138,8 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         scenario = load_scenario(project_file)
         _, mesh_name, steady, pulse = compile_project(scenario)
         if args.action == "validate":
-            print(f"OK: {len(scenario['tes'])} TES; mesh {mesh_name}; project {scenario['name']}")
-            return 0
+            return 0 if check_report(scenario, mesh_name) else 2
         if args.action == "explain":
             explain(scenario, mesh_name, steady, pulse)
             return 0
@@ -150,12 +227,18 @@ def main(argv: list[str] | None = None) -> int:
             ensure_circuit_udf()
             return 0
         if args.action == "run" and args.dry_run:
+            runtime_args = solver_runtime_args(scenario) if args.backend == "native" else []
             mesh_dir = ROOT / "workspace/work" / "meshes" / mesh_name
             mesh_status = "reuse existing" if (mesh_dir / "mesh.names").is_file() else ("required prebuilt mesh missing" if scenario["source_mesh"] else "generate with Gmsh and convert with ElmerGrid")
-            print(f"Project: {scenario['name']} ({len(scenario['tes'])} TES)")
-            print(f"Mesh: {mesh_status}; model: {scenario['model_file'].relative_to(ROOT)}")
-            print("Solve: steady" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
-            print("Dry run: no generation or calculation. Remove --dry-run to execute.")
+            print(f"Execution plan: {scenario['name']}")
+            print(f"Mesh: {mesh_status} ({mesh_name}); model: {scenario['model_file'].relative_to(ROOT)}")
+            print("Solve: steady (reuse a compatible result or calculate)" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
+            print(f"MPI ranks: {args.mpi_procs}")
+            print(f"Backend: {'ElmerGPU (WSL)' if args.backend == 'elmergpu' else 'native Elmer'}")
+            if runtime_args:
+                print(f"Solver: {runtime_args[1]}")
+                print(f"Toolchain DLLs: {runtime_args[3]}")
+            print("Dry run: no mesh generation or calculation.")
             return 0
         steady_project, _, _, _ = write_project(scenario, steady_only=True)
         if args.action == "compile":
@@ -166,7 +249,12 @@ def main(argv: list[str] | None = None) -> int:
         mesh_command(scenario, steady_project, mesh_name)
         if args.action == "mesh":
             return 0
-        udf_dir = ensure_circuit_udf()
+        runtime_args = solver_runtime_args(scenario) if args.backend == "native" else []
+        udf_dir = ensure_circuit_udf() if args.backend == "native" else None
+        if args.backend == "elmergpu":
+            from support.elmergpu_backend import configure_fast_gpu_case
+
+            configure_fast_gpu_case(steady_project, steady)
         # Keep the steady project stable when only pulse parameters change.
         from src.run import restart_result_is_reusable
         result = ROOT / "workspace/work" / "meshes" / mesh_name / f"{steady}.result"
@@ -178,12 +266,22 @@ def main(argv: list[str] | None = None) -> int:
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
         reusable = restart_result_is_reusable(result, steady, steady_project) and all(p.is_file() for p in states)
         if not reusable:
-            run_command([sys.executable, str(ROOT / "src" / "run.py"), steady, "--project", str(steady_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
+            if args.backend == "elmergpu":
+                from support.elmergpu_backend import run_case as run_elmergpu_case
+
+                run_elmergpu_case(steady_project, steady, mesh_name, args.mpi_procs)
+            else:
+                run_command([sys.executable, str(ROOT / "src" / "run.py"), steady, "--project", str(steady_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir), *runtime_args])
         else:
             print(f"reusing steady: {steady}")
         if scenario["physics"]["pulse"]:
             pulse_project, _, _, _ = write_project(scenario)
-            run_command([sys.executable, str(ROOT / "src" / "run.py"), pulse, "--project", str(pulse_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
+            if args.backend == "elmergpu":
+                from support.elmergpu_backend import run_case as run_elmergpu_case
+
+                run_elmergpu_case(pulse_project, pulse, mesh_name, args.mpi_procs)
+            else:
+                run_command([sys.executable, str(ROOT / "src" / "run.py"), pulse, "--project", str(pulse_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir), *runtime_args])
         return 0
     except (ValueError, OSError, RuntimeError, subprocess.CalledProcessError) as exc:
         print(f"error: {exc}", file=sys.stderr)

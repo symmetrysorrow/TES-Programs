@@ -3,8 +3,13 @@ schema_version = 3
 model = "models/single_pixel.toml"
 window = "75ms_bdf2h15"
 
+# Use the measured fastest CPU solver route for steady and transient runs.
+[solver]
+linear_system = "iterative_hypre_pcg_boomeramg"
+linear_system_convergence_tolerance = 1e-11
+
 # Final circuit values for this TES. There is no model/group override chain.
-[circuits."pixel.tes"]
+[circuits.tes_1]
 I_bias = "715[uA]"
 R_sh = "3.9[mohm]"
 L_tes = "12.3[nH]"

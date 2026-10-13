@@ -32,6 +32,25 @@ ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 CIRCUIT_KEYS = {"I_bias", "R_sh", "L_tes", "R_0", "R_min", "alpha", "beta", "I_0", "T_c", "T_0", "TES_volume"}
 PROJECT_CIRCUIT_KEYS = {"I_bias", "R_sh", "L_tes", "R_0", "alpha", "beta"}
 MODEL_FORBIDDEN_PARAMETERS = PROJECT_CIRCUIT_KEYS | {"I_0"}
+DEFAULT_LINEAR_SYSTEM = "iterative_hypre_pcg_boomeramg"
+LINEAR_SYSTEMS = {
+    "direct",
+    "iterative",
+    "iterative_hypre_boomeramg",
+    "iterative_hypre_flexgmres_boomeramg",
+    "iterative_hypre_flexgmres_boomeramg_gpu",
+    "iterative_hypre_flexgmres_mgr",
+    "iterative_hypre_flexgmres_mgr_gpu",
+    "iterative_hypre_pcg_boomeramg",
+    "iterative_hypre_pcg_boomeramg_gpu",
+    "iterative_hypre_block_diag",
+    "iterative_hypre_block_diag_gpu",
+    "iterative_hypre_block_lower",
+    "iterative_hypre_block_lower_gpu",
+    "iterative_hypre_block_full",
+    "iterative_hypre_block_full_gpu",
+    "mumps",
+}
 
 
 def read_toml(path: Path) -> dict:
@@ -92,7 +111,7 @@ def load_scenario(project_file: Path) -> dict:
     project = read_toml(project_file)
     reject_unknown(
         project,
-        {"schema_version", "name", "model", "circuits", "pulse", "solver", "timesteps", "window", "save_field"},
+        {"schema_version", "name", "model", "circuits", "pulse", "solver", "timesteps", "window", "save_field", "steady_state_min_iterations", "steady_state_max_iterations"},
         "project",
     )
     if project.get("schema_version") != 3:
@@ -102,8 +121,9 @@ def load_scenario(project_file: Path) -> dict:
     model_file = resolve_model_file(project_file, project.get("model"))
     config = read_toml(model_file)
     reject_unknown(config, {"model_version", "parameters", "materials", "components", "layout", "mesh"}, "model")
-    if config.get("model_version") != 2:
-        raise ValueError(f"{model_file} needs model_version = 2")
+    model_version = config.get("model_version")
+    if model_version not in {2, 3}:
+        raise ValueError(f"{model_file} needs model_version = 2 or 3")
 
     layout, mesh = config.get("layout", {}), config.get("mesh", {})
     defaults = {"parameters": config.get("parameters", {}), "materials": config.get("materials", {})}
@@ -124,8 +144,26 @@ def load_scenario(project_file: Path) -> dict:
     circuits = project.get("circuits", {})
     if not isinstance(circuits, dict):
         raise ValueError("circuits must be a table")
-    if not isinstance(project.get("solver", {}), dict):
+    solver = project.get("solver", {})
+    if not isinstance(solver, dict):
         raise ValueError("solver must be a table")
+    # TOML scenarios use conformal interfaces (mortar is disabled), so PCG is
+    # valid here.  This is the fastest solver route measured on the single-pixel
+    # steady case; callers can still select another backend explicitly.
+    solver.setdefault("linear_system", DEFAULT_LINEAR_SYSTEM)
+    project["solver"] = solver
+    linear_system = solver["linear_system"]
+    if not isinstance(linear_system, str) or linear_system not in LINEAR_SYSTEMS:
+        allowed = ", ".join(sorted(LINEAR_SYSTEMS))
+        raise ValueError(
+            f"unknown solver.linear_system {linear_system!r}; expected one of: {allowed}"
+        )
+    steady_state_min_iterations = project.get("steady_state_min_iterations", 1)
+    steady_state_max_iterations = project.get("steady_state_max_iterations", 1)
+    if not isinstance(steady_state_min_iterations, int) or steady_state_min_iterations < 1:
+        raise ValueError("steady_state_min_iterations must be a positive integer")
+    if not isinstance(steady_state_max_iterations, int) or steady_state_max_iterations < steady_state_min_iterations:
+        raise ValueError("steady_state_max_iterations must be an integer >= steady_state_min_iterations")
 
     base = json.loads(BASE_PROJECT.read_text(encoding="utf-8"))
     original_geometry_parameters = reconcile_project(base)["parameters"]
@@ -150,7 +188,7 @@ def load_scenario(project_file: Path) -> dict:
     tes = []
     group_ids = set()
     for group in groups:
-        reject_unknown(group, {"id", "component", "origin"}, "group")
+        reject_unknown(group, {"id", "component", "origin", "tes_ids"}, "group")
         group_id = require_id(group.get("id"), "group id")
         if group_id in group_ids:
             raise ValueError(f"duplicate group id: {group_id}")
@@ -162,6 +200,21 @@ def load_scenario(project_file: Path) -> dict:
         reject_unknown(component, {"tes"}, f"component {component_name}")
         if not isinstance(component.get("tes"), list) or not component["tes"]:
             raise ValueError(f"component {component_name} needs at least one [[tes]]")
+        local_ids = [require_id(item.get("id"), f"component {component_name} TES id") for item in component["tes"]]
+        if len(set(local_ids)) != len(local_ids):
+            raise ValueError(f"component {component_name} has duplicate TES IDs")
+        if model_version == 3:
+            public_ids = group.get("tes_ids")
+            if not isinstance(public_ids, dict):
+                raise ValueError(f"group {group_id}: tes_ids must map component TES IDs to public TES IDs")
+            missing_local = set(local_ids) - set(public_ids)
+            extra_local = set(public_ids) - set(local_ids)
+            if missing_local:
+                raise ValueError(f"group {group_id}: missing public TES ID for component TES {sorted(missing_local)[0]!r}")
+            if extra_local:
+                raise ValueError(f"group {group_id}: tes_ids contains unknown component TES IDs: {sorted(extra_local)}")
+        elif "tes_ids" in group:
+            raise ValueError(f"group {group_id}: tes_ids requires model_version = 3")
         origin = group.get("origin", ["0[mm]", "0[mm]"])
         if not isinstance(origin, list) or len(origin) != 2:
             raise ValueError(f"group {group_id} origin needs [x, y]")
@@ -169,17 +222,25 @@ def load_scenario(project_file: Path) -> dict:
         for item in component.get("tes", []):
             reject_unknown(item, {"id", "position"}, f"component {component_name} TES")
             local_id = require_id(item.get("id"), f"component {component_name} TES id")
+            public_id = (
+                require_id(group["tes_ids"][local_id], f"group {group_id} public TES ID for {local_id!r}")
+                if model_version == 3 else f"{group_id}.{local_id}"
+            )
             position = item.get("position")
             if not isinstance(position, list) or len(position) != 2:
                 raise ValueError(f"component {component_name}.{local_id} position needs [x, y]")
             x = gx + quantity(position[0], context, f"{group_id}.{local_id} x")
             y = gy + quantity(position[1], context, f"{group_id}.{local_id} y")
-            tes.append({"id": f"{group_id}.{local_id}", "x": x, "y": y})
+            tes.append({"id": public_id, "group_id": group_id, "component": component_name,
+                        "local_id": local_id, "x": x, "y": y})
 
     if not 1 <= len(tes) <= 8:
         raise ValueError("the current numbered circuit UDF supports 1 to 8 TES")
     if len({(t["x"], t["y"]) for t in tes}) != len(tes):
         raise ValueError("two TES stacks have the same position")
+    if len({t["id"] for t in tes}) != len(tes):
+        duplicate = next(t["id"] for i, t in enumerate(tes) if t["id"] in {x["id"] for x in tes[:i]})
+        raise ValueError(f"duplicate public TES ID: {duplicate}")
 
     expected_ids = {t["id"] for t in tes}
     actual_ids = set(circuits)
@@ -271,13 +332,22 @@ def load_scenario(project_file: Path) -> dict:
 
     physics = {"parameters": expressions, "tes_circuits": [t["circuit"] for t in tes], "pulse": project.get("pulse", {})}
     geometry_params = {k: v for k, v in context.items() if k.endswith(("_dx", "_dy", "_dz"))}
-    geometry_identity = {k: v for k, v in geometry.items() if k != "stycast_diameter"}
+    geometry_identity = {k: v for k, v in geometry.items() if k not in {"stycast_diameter", "tes"}}
+    geometry_identity["tes"] = [{"x": t["x"], "y": t["y"]} for t in geometry["tes"]]
     if contact_diameter != 498.0e-6:
         geometry_identity["stycast_diameter"] = contact_diameter
     mesh_hash = digest({"geometry": geometry_identity, "mesh": mesh_values if source_mesh is None else {"source": source_mesh}, "dimensions": geometry_params})
-    steady_hash = digest({"geometry_mesh": mesh_hash, "parameters": expressions, "tes_circuits": physics["tes_circuits"], "materials": base["materials"], "solver": project.get("solver", {})})
+    # TOML scenario meshes are generated with --conformal-tes-stack and
+    # --conformal-abs in scenario_cli.mesh_command.  The contact geometry is
+    # therefore shared-node, so applying the legacy mortar constraints here
+    # would rebuild projectors over already-conformal interfaces (and can
+    # double-couple those faces).  Include the coupling mode in the steady
+    # identity so a restart created with the previous mortar-enabled SIF is
+    # never reused for this formulation.
+    apply_mortar_bcs = False
+    steady_hash = digest({"geometry_mesh": mesh_hash, "parameters": expressions, "tes_circuits": physics["tes_circuits"], "materials": base["materials"], "solver": project.get("solver", {}), "steady_state_min_iterations": steady_state_min_iterations, "steady_state_max_iterations": steady_state_max_iterations, "apply_mortar_bcs": apply_mortar_bcs})
     pulse_hash = digest({"steady": steady_hash, "pulse": physics["pulse"], "timesteps": project.get("timesteps"), "window": project.get("window"), "save_field": bool(project.get("save_field", False))})
-    return {"name": name, "project_file": project_file, "model_file": model_file, "project": project, "base": base, "context": context, "tes": tes, "geometry": geometry, "mesh": mesh_values, "source_mesh": source_mesh, "physics": physics, "mesh_hash": mesh_hash, "steady_hash": steady_hash, "pulse_hash": pulse_hash}
+    return {"name": name, "project_file": project_file, "model_file": model_file, "project": project, "base": base, "context": context, "tes": tes, "geometry": geometry, "mesh": mesh_values, "source_mesh": source_mesh, "physics": physics, "mesh_hash": mesh_hash, "steady_hash": steady_hash, "pulse_hash": pulse_hash, "steady_state_min_iterations": steady_state_min_iterations, "steady_state_max_iterations": steady_state_max_iterations}
 
 def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
     name = scenario["name"]
@@ -292,6 +362,12 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
     else:
         project["meshes"] = {mesh_name: {"geometry": "toml_layout", "dir": mesh_name, "notes": f"TOML mesh {scenario['mesh_hash']}", "recipe": {"generator": "generate_hybrid_prism_geometry.py"}}}
     steady = copy.deepcopy(scenario["base"]["cases"]["case_conformal_hybrid_steady_base"])
+    steady["apply_mortar_bcs"] = False
+    # Save only the final converged steady field.  The pulse restart therefore
+    # cannot select one of the earlier, still-settling steady iterations.
+    steady["steady_state_min_iterations"] = scenario["steady_state_min_iterations"]
+    steady["steady_state_max_iterations"] = scenario["steady_state_max_iterations"]
+    steady["output_intervals"] = scenario["steady_state_max_iterations"]
     circuits = []
     for circuit in scenario["physics"]["tes_circuits"]:
         values = dict(circuit)
@@ -308,22 +384,62 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         {key: str(value) for key, value in circuits[0].items()}
     )
     steady.update(mesh=mesh_name, series_file=f"{steady_name}_series.csv", iteration_series_file=f"{steady_name}_iterations.csv", state_file=f"workspace/work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../workspace/work/meshes/{mesh_name}/{steady_name}.result", tes_circuits=circuits)
-    steady["solver"].update(scenario["project"].get("solver", {}))
+    solver_config = dict(scenario["project"].get("solver", {}))
+    steady_extra_solver_keywords = solver_config.pop("steady_extra_solver_keywords", [])
+    transient_extra_solver_keywords = solver_config.pop("extra_solver_keywords", [])
+    for label, keywords in (
+        ("steady_extra_solver_keywords", steady_extra_solver_keywords),
+        ("extra_solver_keywords", transient_extra_solver_keywords),
+    ):
+        if not isinstance(keywords, list) or any(not isinstance(item, str) for item in keywords):
+            raise ValueError(f"solver.{label} must be an array of SIF keyword strings")
+    phase24_keys = (
+        "phase24_vector_assembly", "phase24_wall_profiling", "phase24_static_matrix_reuse",
+        "phase24_operator_lagging", "phase24_operator_lag_threshold",
+        "phase24_operator_lag_max_reuse", "phase24_operator_lag_residual_growth",
+        "phase24_preconditioner_lagging", "phase24_preconditioner_lag_threshold",
+        "phase24_preconditioner_lag_max_age", "phase24_preconditioner_lag_krylov_relative_growth",
+        "phase24_preconditioner_lag_nonlinear_threshold", "phase24_hypre_reuse",
+    )
+    phase24_options = {key: solver_config.pop(key) for key in phase24_keys if key in solver_config}
+    steady.update(phase24_options)
+    steady["extra_solver_keywords"] = steady_extra_solver_keywords
+    steady["solver"].update(solver_config)
     project["cases"] = {steady_name: steady}
     if scenario["physics"]["pulse"]:
         pulse = copy.deepcopy(scenario["base"]["cases"]["case_conformal_hybrid_steady_base"])
-        if scenario["project"].get("window") == "75ms_bdf2h15":
+        pulse["apply_mortar_bcs"] = False
+        if scenario["project"].get("window") in {
+            "75ms_bdf2h15", "1ms_bdf2h15", "1ms_bdf2fixed2p5", "1ms_bdf2fixed1p25",
+            "singlepixel_hybrid_1p48ms",
+            "1ms_bdf2fixed2p5_5",
+        }:
             from support.run_phase24_gate4_5_nomortar import trim_schedule
-            timesteps = trim_schedule([], "75ms_bdf2h15")
+            timesteps = trim_schedule([], scenario["project"]["window"])
+            # These pulse-centered windows start with a 20 us pre-pulse lead
+            # (18 us + two 1 us steps).  The steady restart must therefore be
+            # positioned at pulse_start - 20 us so those steps land on the
+            # configured absolute pulse time.
+            pre_pulse_lead = sum(
+                quantity(size, scenario["context"], "timestep size") * int(count)
+                for size, count in timesteps[:2]
+            )
+            pulse_restart_time = (
+                quantity(scenario["physics"]["pulse"]["start"], scenario["context"], "pulse.start")
+                - pre_pulse_lead
+            )
         elif scenario["project"].get("window"):
             raise ValueError(f"unknown time window: {scenario['project']['window']}")
         else:
             timesteps = scenario["project"].get("timesteps", [["1[ms]", 20], ["10[us]", 2], ["1[ns]", 1], ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9], ["5[us]", 20]])
-        pulse.update(template="pulse", mesh=mesh_name, restart_file_base=steady_name, restart_time=0.0, preexisting_restart=True, heat_source="circuit_inner", series_file=f"{pulse_name}_series.csv", iteration_series_file=f"{pulse_name}_iterations.csv", state_file=f"workspace/work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../workspace/work/meshes/{mesh_name}/{pulse_name}.result", tes_circuits=circuits, pulse=scenario["physics"]["pulse"], lumped_mass=True, vtu=False, timesteps=timesteps, output_intervals=[1] * len(timesteps))
+            pulse_restart_time = 0.0
+        pulse.update(template="pulse", mesh=mesh_name, restart_file_base=steady_name, restart_time=pulse_restart_time, preexisting_restart=True, heat_source="circuit_inner", series_file=f"{pulse_name}_series.csv", iteration_series_file=f"{pulse_name}_iterations.csv", state_file=f"workspace/work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../workspace/work/meshes/{mesh_name}/{pulse_name}.result", tes_circuits=circuits, pulse=scenario["physics"]["pulse"], lumped_mass=True, vtu=False, timesteps=timesteps, output_intervals=[1] * len(timesteps))
         pulse["output_result"] = bool(scenario["project"].get("save_field", False))
         if not pulse["output_result"]:
             pulse.pop("output_file_path", None)
-        pulse["solver"].update(scenario["project"].get("solver", {}))
+        pulse.update(phase24_options)
+        pulse["extra_solver_keywords"] = transient_extra_solver_keywords
+        pulse["solver"].update(solver_config)
         if scenario["project"].get("window"):
             pulse["bdf_order"] = 2
             pulse["phase24_bdf2_predictor"] = True

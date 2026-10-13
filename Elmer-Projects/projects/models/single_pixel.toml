@@ -1,6 +1,6 @@
 # Reusable TES model: geometry, materials, layout and mesh only.
 # Run/circuit values live in the project TOML that references this file.
-model_version = 2
+model_version = 3
 
 [parameters]
 abs_dx = "1[mm]"
@@ -87,6 +87,7 @@ absorber_width = "1[mm]"
 id = "pixel"
 component = "tes_single"
 origin = ["0[mm]", "0[mm]"]
+tes_ids = { tes = "tes_1" }
 
 # Use the validated existing h8 mesh for the single-pixel waveform.
 # Its geometry is fixed; changing dimensions requires a newly generated mesh.

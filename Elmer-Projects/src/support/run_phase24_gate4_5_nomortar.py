@@ -183,6 +183,89 @@ def bdf2_ratio_limited_schedule(end_after_pulse_s: float = 0.055, cap_scale: flo
     return schedule
 
 
+def fixed_post_pulse_schedule(end_after_pulse_s: float, max_step_s: float) -> list[list[object]]:
+    """Pulse-centered BDF2 schedule with a fixed, fine post-pulse step.
+
+    Keep the geometric nanosecond ramp used to resolve the 1 ns deposition,
+    then divide the remaining window into equal steps no larger than
+    ``max_step_s``.  Choosing the equal step from the remaining duration also
+    avoids a short, anomalous final step at the end of the window.
+    """
+    if end_after_pulse_s <= 0.0 or max_step_s <= 0.0:
+        raise ValueError("end_after_pulse_s and max_step_s must be positive")
+
+    pulse_steps: list[float] = []
+    t = 0.0
+    dt = 1.0e-9
+    while dt <= max_step_s and t < end_after_pulse_s - 1.0e-15:
+        dt = min(dt, end_after_pulse_s - t)
+        pulse_steps.append(dt)
+        t += dt
+        dt *= 2.0
+    if not pulse_steps or pulse_steps[-1] < 2.0e-9:
+        raise ValueError("fixed post-pulse schedule must resolve the pulse ramp")
+
+    remaining = end_after_pulse_s - t
+    count = max(1, int(math.ceil(remaining / max_step_s)))
+    fixed_step = remaining / count
+    schedule: list[list[object]] = [["18[us]", 1], ["1[us]", 2]]
+    for step in pulse_steps:
+        token = f"{step:.12e}[s]"
+        if schedule[-1][0] == token:
+            schedule[-1][1] = int(schedule[-1][1]) + 1
+        else:
+            schedule.append([token, 1])
+    schedule.append([f"{fixed_step:.12e}[s]", count])
+    return schedule
+
+
+def fixed_segment_post_pulse_schedule(
+    segments: list[tuple[float, float]],
+) -> list[list[object]]:
+    """Pulse-centered schedule with a fixed maximum step in each time band.
+
+    Each pair is ``(band_end_after_pulse_s, max_step_s)``.  The geometric
+    nanosecond pulse ramp is retained, and each band is divided evenly so
+    there is no unusually short remainder step at a band or window boundary.
+    """
+    if not segments or any(end <= 0.0 or step <= 0.0 for end, step in segments):
+        raise ValueError("segments need positive end times and step sizes")
+    if any(segments[i][0] <= segments[i - 1][0] for i in range(1, len(segments))):
+        raise ValueError("segment end times must increase")
+
+    pulse_steps: list[float] = []
+    t = 0.0
+    dt = 1.0e-9
+    first_max = segments[0][1]
+    while dt <= first_max and t < segments[0][0] - 1.0e-15:
+        dt = min(dt, segments[0][0] - t)
+        pulse_steps.append(dt)
+        t += dt
+        dt *= 2.0
+
+    schedule: list[list[object]] = [["18[us]", 1], ["1[us]", 2]]
+    for step in pulse_steps:
+        token = f"{step:.12e}[s]"
+        if schedule[-1][0] == token:
+            schedule[-1][1] = int(schedule[-1][1]) + 1
+        else:
+            schedule.append([token, 1])
+
+    for band_end, max_step in segments:
+        remaining = band_end - t
+        if remaining <= 0.0:
+            continue
+        count = max(1, int(math.ceil(remaining / max_step)))
+        fixed_step = remaining / count
+        token = f"{fixed_step:.12e}[s]"
+        if schedule[-1][0] == token:
+            schedule[-1][1] = int(schedule[-1][1]) + count
+        else:
+            schedule.append([token, count])
+        t = band_end
+    return schedule
+
+
 def trim_schedule(schedule: list[list[object]], window: str) -> list[list[object]]:
     if window == "short":
         return copy.deepcopy(SHORT_STAGES)
@@ -212,6 +295,26 @@ def trim_schedule(schedule: list[list[object]], window: str) -> list[list[object
     if window == "1ms_bdf2h15":
         # First 1 ms after the pulse of 75ms_bdf2h15 (A/B tests of the solver).
         return bdf2_ratio_limited_schedule(end_after_pulse_s=1e-3, cap_scale=1.5, coarse_after_s=500e-6)
+    if window == "1ms_bdf2fixed2p5":
+        return fixed_post_pulse_schedule(end_after_pulse_s=1e-3, max_step_s=2.5e-6)
+    if window == "1ms_bdf2fixed1p25":
+        return fixed_post_pulse_schedule(end_after_pulse_s=1e-3, max_step_s=1.25e-6)
+    if window == "singlepixel_hybrid_1p48ms":
+        # Reuse the validated single-pixel hybrid schedule through its COMSOL
+        # sample at 1.5 ms from restart (1.48 ms after the pulse). The first
+        # seven groups are the validated rise grid; the tail is copied from
+        # case_tes_pulse_singlepixel_prod_v2_original_timegrid_hybrid.sif.
+        return [
+            ["18[us]", 1], ["1[us]", 2], ["1[ns]", 1],
+            ["10[ns]", 10], ["100[ns]", 9], ["1[us]", 9],
+            ["0.625[us]", 144], ["5.26134395146352e-05[s]", 1],
+            ["1.37771551611708e-04[s]", 1], ["1.89614008873657e-04[s]", 1],
+            ["2.5e-04[s]", 1], ["2.5e-04[s]", 1],
+        ]
+    if window == "1ms_bdf2fixed2p5_5":
+        return fixed_segment_post_pulse_schedule(
+            [(500e-6, 2.5e-6), (1e-3, 5e-6)]
+        )
     if window == "75ms_coarse":
         # Coarse schedule intended for BDF2 (bdf_order=2): same pulse
         # deposition grid, then steps that follow the response time scale.

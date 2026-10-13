@@ -1,18 +1,24 @@
 # Legacy workflows
 
-この文書は、既存結果の再現のために残している旧 JSON / 旧 TOML 経路の説明です。
-**新しい計算は `projects/*.toml` と通常の `main.py list/show/check/mesh/run` を使ってください。**
+この文書は、以前の計算経路を再現する方法を説明します。
+新しい計算は `projects/*.toml` と `main.py list/check/mesh/run` を使い、ElmerGPU Phase24
+backend で実行します。
 
-旧経路は通常CLIと混ざらないよう、`legacy` 名前空間からだけ案内します。
+旧経路は `legacy1` / `legacy2` と、後方互換の `legacy` 名前空間に残しています。
 
 ```powershell
-python main.py legacy list
-python main.py legacy check
-python main.py legacy show <case-or-mesh>
-python main.py legacy mesh <mesh>
-python main.py legacy run <case> --dry-run
-python main.py legacy toml show projects/legacy/cases/<name>.toml
+python main.py legacy1 run <project> --dry-run
+python main.py legacy2 list
+python main.py legacy2 check
+python main.py legacy2 show <case-or-mesh>
+python main.py legacy2 mesh <mesh>
+python main.py legacy2 run <case> --dry-run
+python main.py legacy2 toml show projects/legacy/cases/<name>.toml
 ```
+
+`legacy1` は新式 project/model TOML を以前のローカル Elmer backend で実行します。
+`legacy2` は旧 JSON と `src/tes_sim.py` 用の legacy case TOML 経路です。従来の
+`python main.py legacy ...` コマンドも同じ旧 JSON / TOML 経路の入口として維持しています。
 
 旧 JSON を別ファイルから読む場合だけ、legacyサブコマンドの `--project` を使います。
 

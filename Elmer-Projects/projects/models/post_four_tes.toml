@@ -1,6 +1,6 @@
 # Reusable TES model: geometry, materials, layout and mesh only.
 # Run/circuit values live in the project TOML that references this file.
-model_version = 2
+model_version = 3
 
 [parameters]
 abs_dx = "1[mm]"
@@ -90,11 +90,13 @@ absorber_width = "1[mm]"
 id = "west"
 component = "tes_pair"
 origin = ["-5[mm]", "0[mm]"]
+tes_ids = { a = "tes_1", b = "tes_2" }
 
 [[layout.groups]]
 id = "east"
 component = "tes_pair"
 origin = ["5[mm]", "0[mm]"]
+tes_ids = { a = "tes_3", b = "tes_4" }
 
 # Element size and layer counts; run builds a new mesh only when needed.
 [mesh]

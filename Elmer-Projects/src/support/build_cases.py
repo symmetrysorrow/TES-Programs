@@ -1477,6 +1477,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     if template == "steady":
         lines += [
             "  Simulation Type = Steady State",
+            f"  Steady State Min Iterations = {spec.get('steady_state_min_iterations', 1)}",
             f"  Steady State Max Iterations = {spec.get('steady_state_max_iterations', 1)}",
             f"  Output Intervals = {spec.get('output_intervals', 1)}",
         ]
