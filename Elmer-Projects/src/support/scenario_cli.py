@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Mesh: {mesh_status} ({mesh_name}); model: {scenario['model_file'].relative_to(ROOT)}")
             print("Solve: steady (reuse a compatible result or calculate)" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
             print(f"MPI ranks: {args.mpi_procs}")
-            print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmergpu' else 'native Elmer'}")
+            print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmer_wsl' else 'native Elmer'}")
             linear_system = scenario["project"].get("solver", {}).get("linear_system", "")
             if linear_system:
                 print(f"Linear solver: {linear_system} (HYPRE GPU: {'enabled' if linear_system.endswith('_gpu') else 'disabled'})")
@@ -258,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
         runtime_args = solver_runtime_args(scenario) if args.backend == "native" else []
         udf_dir = ensure_circuit_udf() if args.backend == "native" else None
         linear_system = scenario["project"].get("solver", {}).get("linear_system", "")
-        print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmergpu' else 'native Elmer'}")
+        print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmer_wsl' else 'native Elmer'}")
         print(f"Linear solver: {linear_system or '(solver default)'}; HYPRE GPU: {'enabled' if linear_system.endswith('_gpu') else 'disabled'}")
         if args.backend == "elmer_wsl":
             print(f"Solver runtime: /opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}")
