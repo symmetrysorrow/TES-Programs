@@ -8,6 +8,23 @@ TES の Elmer 計算プロジェクトです。日常の計算では `projects/*
 [source layout](docs/source_layout.md)、生成物・結果の配置は
 [directory guide](docs/directory_guide.md) を参照してください。
 
+## CPU専用の導入（外部研究者向け・試験段階）
+
+Windows 11 + Ubuntu 24.04 WSL2 がある環境では、GPUを使わずに
+改造版 Elmer/HYPRE と必要なPythonライブラリを入れるための初回セットアップを
+用意しました。詳細と制限事項は [CPU setup guide](docs/cpu_onboarding.md) を参照してください。
+
+```powershell
+python main.py setup
+.\.venv\Scripts\python.exe main.py run single_pixel_generated --dry-run
+.\.venv\Scripts\python.exe main.py run single_pixel_generated
+```
+
+`single_pixel_generated` はTOMLからメッシュを作る**未検証の試験用**設定です。
+検証済みの `single_pixel_alpha240`（既存 h8 メッシュ）は変更していません。
+生成メッシュとCOMSOL/既存h8の数値一致は、別途検証が必要です。
+`setup` 自体も第三者環境での動作検証前です。
+
 ## 標準計算経路
 
 ```text
@@ -25,8 +42,8 @@ python main.py run <project>
 `HYPRE GPU = Logical True` が有効になります。WSL 環境に GPU 対応
 ElmerSolver/HYPRE がインストールされている必要があります。
 
-旧 `--backend elmergpu` も互換エイリアスとして使えます。現在の WSL ディストリ名
-`ElmerGPU` とインストール先 `/opt/elmer-gpu` は変更しません。
+旧 `--backend elmergpu` も互換エイリアスとして使えます。現在の WSL ディストリ名は既定で `ElmerGPU` です。新しいCPU専用環境は
+`/opt/tes-elmer-cpu` に導入します（旧GPU環境は上書きしません）。
 
 ## 実行
 
