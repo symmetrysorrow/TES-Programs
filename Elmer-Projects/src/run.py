@@ -544,6 +544,17 @@ def restart_result_is_reusable(
     sif_path = ROOT / "workspace/generated/cases" / f"{case_name}.sif"
     if not sif_path.is_file() or inputs.get(sif_path.name) != sha256(sif_path):
         return False
+    # A runtime override can change the actual linear system without changing
+    # the generated SIF. Compare the exact SIF that ElmerSolver executed.
+    runtime_sif = manifest.get("runtime_sif")
+    if runtime_sif:
+        runtime_path = (ROOT / runtime_sif).resolve()
+        if not runtime_path.is_relative_to(ROOT.resolve()):
+            return False
+    else:
+        runtime_path = sif_path
+    if not runtime_path.is_file() or manifest.get("runtime_sif_sha256") != sha256(runtime_path):
+        return False
     # The native executable can be checked locally; WSL paths are not generally
     # accessible to the Windows-side reuse check, so they remain path-pinned.
     if solver is not None:
