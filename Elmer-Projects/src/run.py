@@ -65,6 +65,11 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def normalize_backend_name(backend: str | None) -> str | None:
+    """Canonicalize historical WSL backend labels without changing the execution environment."""
+    return "elmer_wsl" if backend == "elmergpu" else backend
+
+
 def solver_log_errors(log_text: str) -> list[str]:
     """Return genuine solver errors while ignoring native capture diagnostics."""
     ignored_diagnostics = (
@@ -539,18 +544,36 @@ def restart_result_is_reusable(
     sif_path = ROOT / "workspace/generated/cases" / f"{case_name}.sif"
     if not sif_path.is_file() or inputs.get(sif_path.name) != sha256(sif_path):
         return False
+    # A runtime override can change the actual linear system without changing
+    # the generated SIF. Compare the exact SIF that ElmerSolver executed.
+    runtime_sif = manifest.get("runtime_sif")
+    if runtime_sif:
+        runtime_path = (ROOT / runtime_sif).resolve()
+        if not runtime_path.is_relative_to(ROOT.resolve()):
+            return False
+    else:
+        runtime_path = sif_path
+    if not runtime_path.is_file() or manifest.get("runtime_sif_sha256") != sha256(runtime_path):
+        return False
+    # The native executable can be checked locally; WSL paths are not generally
+    # accessible to the Windows-side reuse check, so they remain path-pinned.
+    if solver is not None:
+        solver_path = Path(solver)
+        if solver_path.is_file():
+            hashes = manifest.get("runtime_artifacts_sha256", {})
+            if hashes.get("solver") != sha256(solver_path):
+                return False
     return (
         manifest.get("exit_code") == 0
         and manifest.get("solver_completed") is True
         and not manifest.get("errors")
         and inputs.get(project_path.name) == sha256(project_path)
         and manifest.get("mpi_procs") == mpi_procs
-        and (backend is None or manifest.get("backend") == backend)
+        and (backend is None or normalize_backend_name(manifest.get("backend")) == normalize_backend_name(backend))
         and (
             solver is None
             or manifest.get("solver") == (solver if solver.startswith("/") else str(Path(solver).resolve()))
         )
-        and manifest.get("runtime_sif_sha256")
     )
 
 
@@ -805,7 +828,7 @@ def run_case(
         "udf_dll": str(Path(udf_dll).resolve()) if udf_applied else None,
         "udf_sha256": sha256(Path(udf_dll).resolve()) if udf_applied else None,
         "solver": str(solver_path),
-        "backend": backend,
+        "backend": normalize_backend_name(backend),
         "mpi_procs": mpi_procs,
         "elmer_prefix": str(prefix),
         "runtime_bin": str(Path(runtime_bin).resolve()) if runtime_bin else None,
@@ -904,8 +927,9 @@ def main() -> int:
         default=1,
         help="number of MPI ranks; requires a mesh/partitioning.N directory when N > 1",
     )
-    parser.add_argument("--backend", choices=("native", "elmergpu"), default="native", help=argparse.SUPPRESS)
+    parser.add_argument("--backend", choices=("native", "elmer_wsl", "elmergpu"), default="native", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    args.backend = normalize_backend_name(args.backend)
 
     project_path = Path(args.project)
     if not project_path.is_absolute():

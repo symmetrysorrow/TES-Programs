@@ -1,4 +1,4 @@
-"""Execute compiled project/model cases through the ElmerGPU WSL runtime."""
+"""Execute compiled project/model cases through the Elmer WSL runtime."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from support.scenario_config import ROOT
 from support.reconcile_project import resolve_parameters
 from support.vendored.dimensioned_expression import evaluate_dimensioned_expression
 
-GPU_DISTRO = "ElmerGPU"
-GPU_PREFIX = "/opt/elmer-gpu"
+WSL_DISTRO = "ElmerGPU"
+ELMER_PREFIX = "/opt/elmer-gpu"
 
 STEADY_FAST_KEYWORDS = (
     "Phase24 Prism Lumped Preconditioner = Logical True",
@@ -63,7 +63,7 @@ def configure_fast_case(project_path: Path, case_name: str) -> None:
             start = evaluate_dimensioned_expression(str(pulse["start"]), variables=parameters).value
             duration = evaluate_dimensioned_expression(str(pulse["duration"]), variables=parameters).value
         except (KeyError, TypeError, ValueError) as exc:
-            raise ValueError(f"{case_name}: ElmerGPU pulse start and duration must be dimensioned expressions") from exc
+            raise ValueError(f"{case_name}: Elmer WSL pulse start and duration must be dimensioned expressions") from exc
         event = f"Phase24 BDF1 Step Start Times(2) = Real {start:.17g} {start + duration:.17g}"
         defaults = (event, *defaults)
     case["extra_solver_keywords"] = _merge_keywords(
@@ -104,21 +104,21 @@ def ensure_partition(mesh_dir: Path, mpi_procs: int, *, dry_run: bool = False) -
         return
 
     command = (
-        f"export ELMER_HOME={GPU_PREFIX}/elmer "
-        f"LD_LIBRARY_PATH={GPU_PREFIX}/elmer/lib/elmersolver "
-        f"PATH={GPU_PREFIX}/elmer/bin:$PATH; "
+        f"export ELMER_HOME={ELMER_PREFIX}/elmer "
+        f"LD_LIBRARY_PATH={ELMER_PREFIX}/elmer/lib/elmersolver "
+        f"PATH={ELMER_PREFIX}/elmer/bin:$PATH; "
         f"cd '{_wsl_path(mesh_dir.parent)}' && "
         f"ElmerGrid 2 2 '{mesh_dir.name}' -metiskway {mpi_procs}"
     )
     result = subprocess.run(
-        ["wsl.exe", "-d", GPU_DISTRO, "-u", "root", "--exec", "bash", "-lc", command],
+        ["wsl.exe", "-d", WSL_DISTRO, "-u", "root", "--exec", "bash", "-lc", command],
         cwd=ROOT,
         capture_output=True,
         text=True,
     )
     if result.returncode or not (mesh_dir / f"partitioning.{mpi_procs}").is_dir():
         raise RuntimeError(
-            f"ElmerGPU mesh partitioning failed for {mesh_dir.name} ({mpi_procs} ranks):\n"
+            f"Elmer WSL mesh partitioning failed for {mesh_dir.name} ({mpi_procs} ranks):\n"
             f"{result.stdout[-2000:]}{result.stderr[-2000:]}"
         )
     missing = [path.name for path in expected if not path.is_file() or path.stat().st_size == 0]
@@ -137,20 +137,20 @@ def run_wsl(project: Path, case: str, mesh: str, threads: int = 1, elmer: str = 
 export ROCM_PATH=/opt/rocm HIP_PATH=/opt/rocm HIP_VISIBLE_DEVICES=0
 export HSA_ENABLE_DXG_DETECTION=1
 export PATH=/opt/rocm/bin:/usr/sbin:/usr/bin:/sbin:/bin
-export ELMER_HOME={GPU_PREFIX}/{elmer}
-export LD_LIBRARY_PATH={GPU_PREFIX}/udf:{GPU_PREFIX}/hypre/lib:{GPU_PREFIX}/{elmer}/lib/elmersolver:/opt/rocm/lib:/usr/lib/wsl/lib
+export ELMER_HOME={ELMER_PREFIX}/{elmer}
+export LD_LIBRARY_PATH={ELMER_PREFIX}/udf:{ELMER_PREFIX}/hypre/lib:{ELMER_PREFIX}/{elmer}/lib/elmersolver:/opt/rocm/lib:/usr/lib/wsl/lib
 export OMP_NUM_THREADS={threads}
 export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero OCL_ICD_VENDORS=/opt/elmer-gpu/no-ocl-icd
 {"".join(f"export {kv}" + chr(10) for kv in (extra_env or []))}
 cd '{_wsl_path(ROOT)}'
 export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --backend elmergpu --elmer-solver {GPU_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
+python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --backend elmer_wsl --elmer-solver {ELMER_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
 """
-    log = project.parent / f"{case}.gpu_launcher.log"
+    log = project.parent / f"{case}.wsl_launcher.log"
     start = time.monotonic()
     with log.open("w", encoding="utf-8") as handle:
         result = subprocess.run(
-            ["wsl.exe", "-d", GPU_DISTRO, "-u", "root", "--exec", "bash", "-lc", bash],
+            ["wsl.exe", "-d", WSL_DISTRO, "-u", "root", "--exec", "bash", "-lc", bash],
             cwd=ROOT, stdout=handle, stderr=subprocess.STDOUT,
         )
     return {"case": case, "exit_code": result.returncode,
@@ -159,11 +159,11 @@ python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-p
 
 def run_case(project_path: Path, case_name: str, mesh_name: str, mpi_procs: int) -> None:
     if os.name != "nt":
-        raise RuntimeError("The ElmerGPU backend requires Windows with the ElmerGPU WSL distribution")
+        raise RuntimeError("The Elmer WSL backend requires Windows with the ElmerGPU WSL distribution")
     project_path = project_path.resolve()
     mesh_dir = ROOT / "workspace" / "work" / "meshes" / mesh_name
     if not (mesh_dir / "mesh.header").is_file():
-        raise FileNotFoundError(f"ElmerGPU mesh is missing: {mesh_dir}")
+        raise FileNotFoundError(f"Elmer WSL mesh is missing: {mesh_dir}")
 
     subprocess.run(
         [sys.executable, str(ROOT / "src" / "sync_elmer_parameters.py"), str(project_path)],
@@ -172,6 +172,6 @@ def run_case(project_path: Path, case_name: str, mesh_name: str, mpi_procs: int)
     )
     ensure_partition(mesh_dir, mpi_procs)
     record = run_wsl(project_path, case_name, mesh_name, threads=1, mpi=mpi_procs)
-    print(f"ElmerGPU: {record['elapsed_s']:.0f} s ({record['launcher_log']})")
+    print(f"Elmer WSL: {record['elapsed_s']:.0f} s ({record['launcher_log']})")
     if record["exit_code"]:
-        raise RuntimeError(f"ElmerGPU case {case_name} failed; see {record['launcher_log']}")
+        raise RuntimeError(f"Elmer WSL case {case_name} failed; see {record['launcher_log']}")

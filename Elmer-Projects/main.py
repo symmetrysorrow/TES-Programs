@@ -1,6 +1,6 @@
 """Entry point for Elmer-Projects.
 
-New project/model TOMLs run through the ElmerGPU backend by default.
+New project/model TOMLs run through the Elmer WSL backend by default.
 The former native project runner and older JSON/TOML workflows remain under
 the legacy1 and legacy2 commands.
 """
@@ -88,7 +88,7 @@ def project_action(
     *,
     dry_run: bool = False,
     mpi_procs: int = 1,
-    backend: str = "elmergpu",
+    backend: str = "elmer_wsl",
 ) -> int:
     from support.scenario_cli import main as scenario_main
 
@@ -111,7 +111,7 @@ def add_legacy_json_options(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "TES simulation CLI. Project/model TOMLs run on ElmerGPU by default.\n\n"
+            "TES simulation CLI. Project/model TOMLs run through the Elmer WSL backend by default.\n\n"
             "Folders:\n"
             "  projects/*.toml          run settings and final circuit values\n"
             "  projects/models/*.toml   geometry, materials, layout, and mesh settings\n"
@@ -169,12 +169,12 @@ def build_parser() -> argparse.ArgumentParser:
     mesh = sub.add_parser("mesh", help="build or reuse the mesh for a project")
     mesh.add_argument("name", help="project name or projects/<name>.toml")
 
-    run = sub.add_parser("run", help="run a project on ElmerGPU; build or reuse its mesh automatically")
+    run = sub.add_parser("run", help="run a project on Elmer WSL; build or reuse its mesh automatically")
     run.add_argument("name", help="project name or projects/<name>.toml")
     run.add_argument("--dry-run", action="store_true", help="print the run plan only")
     run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
-    run.add_argument("--backend", choices=("elmergpu", "native"), default="elmergpu",
-                     help="calculation runtime (default: elmergpu)")
+    run.add_argument("--backend", choices=("elmer_wsl", "elmergpu", "native"), default="elmer_wsl",
+                     help="calculation runtime (default: elmer_wsl; elmergpu is a legacy alias)")
 
     legacy1 = sub.add_parser(
         "legacy1",
@@ -438,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
             args.name,
             dry_run=getattr(args, "dry_run", False),
             mpi_procs=getattr(args, "mpi_procs", 1),
-            backend=getattr(args, "backend", "elmergpu"),
+            backend=getattr(args, "backend", "elmer_wsl"),
         )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)

@@ -19,11 +19,15 @@ python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
 ```
 
-`run` は ElmerGPU backend を使います。計算機には `ElmerGPU` WSL distribution と
+`run` は Elmer WSL backend を使います。計算機には `ElmerGPU` WSL distribution と
 `/opt/elmer-gpu` の実行環境が必要です。以前のローカル Elmer 経路を再現する場合は
 `python main.py legacy1 run single_pixel_alpha240` を使えます。旧 JSON / 旧ケース TOML
 形式は `python main.py legacy2 ...` に残しています。
 
+
+既定の backend 名は `elmer_wsl` です。旧 `elmergpu` 指定も互換エイリアスとして
+受け付けます。`ElmerGPU` は現在の WSL ディストリの固有名であり、GPU 演算の指定では
+ありません。CPU/GPU の選択は `[solver] linear_system` によって行います。
 
 ## project と model
 
@@ -70,7 +74,7 @@ beta = 5.03
 
 Use `[circuits.tes_1]` in a project. The referenced model assigns `tes_1` through `layout.groups[].tes_ids`; public IDs are independent of component-local and layout group IDs. Edit the project TOML for circuit and run values, and the model TOML for geometry, mesh settings, and ID mappings.
 
-## Rebuilding the ElmerGPU solver
+## Rebuilding the Elmer solver in WSL
 
 The pinned Elmer/HYPRE source commits, source patches, Ubuntu package versions,
 and build instructions are documented in [`elmergpu_build.md`](elmergpu_build.md).

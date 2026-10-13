@@ -1,5 +1,7 @@
 """The project CLI must keep new and legacy workflows separate."""
 
+import pytest
+
 import main
 
 
@@ -11,11 +13,25 @@ def test_current_project_dry_run_shows_automatic_mesh_step(capsys):
     assert "Solve: steady" in output
 
 
-def test_current_project_show_uses_same_entry_point(capsys):
-    assert main.main(["show", "single_pixel_alpha240"]) == 0
+def test_current_project_dry_run_reports_cpu_solver(capsys):
+    assert main.main(["run", "single_pixel_alpha240", "--dry-run"]) == 0
     output = capsys.readouterr().out
-    assert "pixel.tes" in output
-    assert "240.00" in output
+    assert "HYPRE GPU: disabled" in output
+    assert "Elmer WSL" in output
+
+
+def test_backend_names_are_accepted_and_wsl_is_default(capsys):
+    parser = main.build_parser()
+    assert parser.parse_args(["run", "single_pixel"]).backend == "elmer_wsl"
+    for backend in ("elmer_wsl", "elmergpu"):
+        assert main.main(["run", "single_pixel_alpha240", "--dry-run", "--backend", backend]) == 0
+        assert "Elmer WSL" in capsys.readouterr().out
+
+
+def test_show_is_not_a_standard_command():
+    with pytest.raises(SystemExit) as exc:
+        main.build_parser().parse_args(["show", "single_pixel_alpha240"])
+    assert exc.value.code == 2
 
 
 def test_list_never_reads_legacy_json(monkeypatch, capsys):
@@ -53,8 +69,8 @@ def test_legacy_toml_is_not_accepted_by_normal_run(capsys):
     assert "main.py legacy" in error
 
 
-def test_legacy_json_name_does_not_fallback_from_normal_show(capsys):
-    assert main.main(["show", "case_tes_shunt_internal"]) == 2
+def test_legacy_json_name_does_not_fallback_from_normal_run(capsys):
+    assert main.main(["run", "case_tes_shunt_internal", "--dry-run"]) == 2
     error = capsys.readouterr().err
     assert "unknown project" in error
     assert "main.py legacy" in error

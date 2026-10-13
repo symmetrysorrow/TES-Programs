@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1].parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
     sys.path.insert(0, str(ROOT))
-from support.elmergpu_backend import run_wsl
+from support.elmer_wsl_backend import run_wsl
 
 
 def sync(project: Path) -> None:

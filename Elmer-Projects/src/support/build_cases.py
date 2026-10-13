@@ -1423,6 +1423,25 @@ def _pulse_constants(
     ]
 
 
+def bdf2_predictor_lines(spec: dict) -> list[str]:
+    """Emit the stable solver keyword from either accepted case setting.
+
+    The old JSON field is an input compatibility alias, not a distinct
+    numerical algorithm. Conflicting old/new settings must never be silent.
+    """
+    current = spec.get("bdf2_predictor")
+    historical = spec.get("phase24_bdf2_predictor")
+    if current is not None and historical is not None and current != historical:
+        raise ValueError("conflicting bdf2_predictor and phase24_bdf2_predictor settings")
+    enabled = current if current is not None else historical
+    if not enabled:
+        return []
+    order = int(spec.get("bdf_order", 2 if spec.get("adaptive_time") else 1))
+    if order < 2:
+        raise ValueError("bdf2_predictor requires bdf_order >= 2")
+    return ["  Phase24 BDF2 Predictor = Logical True"]
+
+
 def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
     params = model["parameters"]
     template = spec["template"]
@@ -1487,14 +1506,7 @@ def build_case(case_name: str, spec: dict, model: dict, root: Path) -> str:
             "  Timestepping Method = BDF",
             f"  BDF Order = {spec.get('bdf_order', 2 if spec.get('adaptive_time') else 1)}",
         ]
-        if spec.get("bdf2_predictor", False):
-            if int(spec.get("bdf_order", 2 if spec.get("adaptive_time") else 1)) < 2:
-                raise ValueError(
-                    f"{case_name}: bdf2_predictor requires bdf_order >= 2"
-                )
-            lines += [
-                "  Phase24 BDF2 Predictor = Logical True",
-            ]
+        lines += bdf2_predictor_lines(spec)
         lines += _timestep_lines(spec, params)
         lines += _adaptive_time_lines(spec, params)
         lines.append(
