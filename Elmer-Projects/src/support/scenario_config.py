@@ -33,6 +33,36 @@ CIRCUIT_KEYS = {"I_bias", "R_sh", "L_tes", "R_0", "R_min", "alpha", "beta", "I_0
 PROJECT_CIRCUIT_KEYS = {"I_bias", "R_sh", "L_tes", "R_0", "alpha", "beta"}
 MODEL_FORBIDDEN_PARAMETERS = PROJECT_CIRCUIT_KEYS | {"I_0"}
 
+# Default solver profile for the primary project TOML workflow. Keep these
+# values aligned with tes_sim.py's WSL CPU Release fast profile; project-level
+# [solver] entries below override individual values.
+FAST_SOLVER_DEFAULTS = {
+    "linear_system": "iterative_hypre_pcg_boomeramg",
+    "linear_system_max_iterations": 4000,
+    "linear_system_convergence_tolerance": 1.0e-12,
+    "boomer_amg_relax_type": 8,
+    "boomer_amg_coarsen_type": 8,
+    "boomer_amg_strong_threshold": 0.25,
+    "nonlinear_max_iterations": 120,
+    "nonlinear_convergence_tolerance": 1.0e-6,
+    "nonlinear_relaxation_factor": 1.0,
+    "steady_state_convergence_tolerance": 1.0e-6,
+}
+FAST_STEADY_KEYWORDS = [
+    "TES Inner Circuit Newton = Logical True",
+    "TES Inner Circuit Newton Slope Reuse = Logical True",
+    "Phase24 Prism Lumped Preconditioner = Logical True",
+    "Phase24 Precond Matrix Reuse = Logical True",
+    "Phase24 Coupled Temperature Tolerance = Real 1e-7",
+    "Phase24 Dynamic K Node Cache Verify = Logical False",
+    "Phase24 Dynamic K Node Cache = Logical False",
+    "BoomerAMG Aggressive Levels = Integer 1",
+]
+FAST_TRANSIENT_KEYWORDS = FAST_STEADY_KEYWORDS + [
+    "TES Inner Circuit Predict From Temperature = Logical True",
+    "TES Inner Circuit Step Commit = Logical True",
+]
+
 
 def read_toml(path: Path) -> dict:
     if not path.is_file():
@@ -275,7 +305,8 @@ def load_scenario(project_file: Path) -> dict:
     if contact_diameter != 498.0e-6:
         geometry_identity["stycast_diameter"] = contact_diameter
     mesh_hash = digest({"geometry": geometry_identity, "mesh": mesh_values if source_mesh is None else {"source": source_mesh}, "dimensions": geometry_params})
-    steady_hash = digest({"geometry_mesh": mesh_hash, "parameters": expressions, "tes_circuits": physics["tes_circuits"], "materials": base["materials"], "solver": project.get("solver", {})})
+    effective_solver = {**FAST_SOLVER_DEFAULTS, **project.get("solver", {})}
+    steady_hash = digest({"geometry_mesh": mesh_hash, "parameters": expressions, "tes_circuits": physics["tes_circuits"], "materials": base["materials"], "solver": effective_solver})
     pulse_hash = digest({"steady": steady_hash, "pulse": physics["pulse"], "timesteps": project.get("timesteps"), "window": project.get("window"), "save_field": bool(project.get("save_field", False))})
     return {"name": name, "project_file": project_file, "model_file": model_file, "project": project, "base": base, "context": context, "tes": tes, "geometry": geometry, "mesh": mesh_values, "source_mesh": source_mesh, "physics": physics, "mesh_hash": mesh_hash, "steady_hash": steady_hash, "pulse_hash": pulse_hash}
 
@@ -308,7 +339,13 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         {key: str(value) for key, value in circuits[0].items()}
     )
     steady.update(mesh=mesh_name, series_file=f"{steady_name}_series.csv", iteration_series_file=f"{steady_name}_iterations.csv", state_file=f"workspace/work/meshes/{mesh_name}/{steady_name}.state", output_file_path=f"../workspace/work/meshes/{mesh_name}/{steady_name}.result", tes_circuits=circuits)
+    steady["solver"].update(FAST_SOLVER_DEFAULTS)
     steady["solver"].update(scenario["project"].get("solver", {}))
+    steady["apply_mortar_bcs"] = False
+    steady["phase24_vector_assembly"] = True
+    steady["extra_solver_keywords"] = list(dict.fromkeys(
+        [*steady.get("extra_solver_keywords", []), *FAST_STEADY_KEYWORDS]
+    ))
     project["cases"] = {steady_name: steady}
     if scenario["physics"]["pulse"]:
         pulse = copy.deepcopy(scenario["base"]["cases"]["case_conformal_hybrid_steady_base"])
@@ -323,7 +360,13 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
         pulse["output_result"] = bool(scenario["project"].get("save_field", False))
         if not pulse["output_result"]:
             pulse.pop("output_file_path", None)
+        pulse["solver"].update(FAST_SOLVER_DEFAULTS)
         pulse["solver"].update(scenario["project"].get("solver", {}))
+        pulse["apply_mortar_bcs"] = False
+        pulse["phase24_vector_assembly"] = True
+        pulse["extra_solver_keywords"] = list(dict.fromkeys(
+            [*pulse.get("extra_solver_keywords", []), *FAST_TRANSIENT_KEYWORDS]
+        ))
         if scenario["project"].get("window"):
             pulse["bdf_order"] = 2
             pulse["phase24_bdf2_predictor"] = True

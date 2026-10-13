@@ -435,10 +435,29 @@ def runtime_artifacts(
     solver: Path, prefix: Path, udf_dll: str | None
 ) -> dict[str, str]:
     """Best-effort file hashes for loader-provenance in a run manifest."""
-    paths = {"solver": solver, "libelmersolver": solver.parent / "libelmersolver.dll"}
-    heat = prefix / "share" / "elmersolver" / "lib" / "HeatSolve.dll"
-    if heat.exists():
-        paths["HeatSolve"] = heat
+    paths = {"solver": solver}
+    if os.name == "nt":
+        paths["libelmersolver"] = solver.parent / "libelmersolver.dll"
+        heat = prefix / "share" / "elmersolver" / "lib" / "HeatSolve.dll"
+        if heat.exists():
+            paths["HeatSolve"] = heat
+    else:
+        module_dir = prefix / "lib" / "elmersolver"
+        for name in ("libelmersolver.so", "libmatc.so", "HeatSolve.so"):
+            artifact = module_dir / name
+            if artifact.is_file():
+                paths[name.removesuffix(".so")] = artifact
+        heat = prefix / "share" / "elmersolver" / "lib" / "HeatSolve.so"
+        if heat.is_file():
+            paths["HeatSolve"] = heat
+        udf_dir = Path(os.environ.get("TES_UDF_DIR_WSL", "/opt/elmer-gpu/udf"))
+        for name in ("tes_parallel_circuit.so", "tes_transient_heat_source_t0.so"):
+            artifact = udf_dir / name
+            if artifact.is_file():
+                paths[name.removesuffix(".so")] = artifact
+        hypre = Path(os.environ.get("TES_HYPRE_LIB_WSL", "/opt/elmer-gpu/cpu/hypre/lib")) / "libHYPRE.so"
+        if hypre.is_file():
+            paths["libHYPRE"] = hypre
     if udf_dll:
         paths["udf"] = Path(udf_dll).resolve()
     return {name: sha256(path) for name, path in paths.items() if path.is_file()}

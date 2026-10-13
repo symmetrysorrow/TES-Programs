@@ -81,12 +81,15 @@ def resolve_project_toml(value: str) -> Path:
     return path
 
 
-def project_action(command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 1) -> int:
+def project_action(
+    command: str, value: str, *, dry_run: bool = False, mpi_procs: int = 6,
+    backend: str = "wsl-fast",
+) -> int:
     from support.scenario_cli import main as scenario_main
 
     action = {"show": "summary", "check": "validate", "mesh": "mesh", "run": "run"}[command]
     project_file = resolve_project_toml(value)
-    args = [action, str(project_file), "--mpi-procs", str(mpi_procs)]
+    args = [action, str(project_file), "--mpi-procs", str(mpi_procs), "--backend", backend]
     if dry_run:
         args.append("--dry-run")
     return scenario_main(args)
@@ -130,7 +133,11 @@ def build_parser() -> argparse.ArgumentParser:
     run = sub.add_parser("run", help="run a project; build or reuse its mesh automatically")
     run.add_argument("name", help="project name or projects/<name>.toml")
     run.add_argument("--dry-run", action="store_true", help="print the run plan only")
-    run.add_argument("--mpi-procs", type=int, default=1, help="number of MPI ranks")
+    run.add_argument("--mpi-procs", type=int, default=6, help="number of MPI ranks (default fast route: 6)")
+    run.add_argument(
+        "--backend", choices=("wsl-fast", "windows"), default="wsl-fast",
+        help="solver backend (default: WSL CPU Release fast path)",
+    )
 
     legacy = sub.add_parser(
         "legacy",
@@ -357,7 +364,8 @@ def main(argv: list[str] | None = None) -> int:
             args.command,
             args.name,
             dry_run=getattr(args, "dry_run", False),
-            mpi_procs=getattr(args, "mpi_procs", 1),
+            mpi_procs=getattr(args, "mpi_procs", 6),
+            backend=getattr(args, "backend", "wsl-fast"),
         )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)

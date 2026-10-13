@@ -12,17 +12,137 @@ import argparse
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 from support.scenario_config import CIRCUIT_KEYS, ROOT, PROJECT_DIR, compile_project, load_scenario, quantity, write_project
 from support.reconcile_project import reconcile_project
 
+WSL_DISTRO = os.environ.get("TES_WSL_DISTRO", "ElmerGPU")
+WSL_ELMER_PREFIX = os.environ.get("TES_ELMER_PREFIX_WSL", "/opt/elmer-gpu/cpu/elmer")
+WSL_HYPRE_LIB = os.environ.get("TES_HYPRE_LIB_WSL", "/opt/elmer-gpu/cpu/hypre/lib")
+WSL_UDF_DIR = os.environ.get("TES_UDF_DIR_WSL", "/opt/elmer-gpu/udf")
+
 
 def run_command(argv: list[str], *, cwd: Path = ROOT) -> None:
     subprocess.run(argv, cwd=cwd, check=True)
+
+
+def _wsl_path(path: Path) -> str:
+    resolved = path.resolve()
+    if os.name != "nt" or not resolved.drive:
+        return resolved.as_posix()
+    return f"/mnt/{resolved.drive[0].lower()}{resolved.as_posix()[2:]}"
+
+
+def _wsl_bash(script: str, *, check: bool = True) -> subprocess.CompletedProcess:
+    proc = subprocess.run(
+        ["wsl.exe", "-d", WSL_DISTRO, "-u", "root", "--exec", "bash", "-lc", script],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    if check and proc.returncode:
+        detail = (proc.stdout or "")[-3000:] + (proc.stderr or "")[-3000:]
+        raise RuntimeError(f"WSL ({WSL_DISTRO}) command failed ({proc.returncode}):\n{detail}")
+    return proc
+
+
+def ensure_wsl_partition(mesh_name: str, mpi_procs: int) -> None:
+    if mpi_procs <= 1:
+        return
+    mesh_dir = ROOT / "workspace/work/meshes" / mesh_name
+    if (mesh_dir / f"partitioning.{mpi_procs}").is_dir():
+        return
+    prefix = shlex.quote(WSL_ELMER_PREFIX)
+    hypre = shlex.quote(WSL_HYPRE_LIB)
+    mesh_parent = shlex.quote(_wsl_path(mesh_dir.parent))
+    mesh = shlex.quote(mesh_name)
+    script = (
+        "set -euo pipefail; "
+        f"export ELMER_HOME={prefix}; "
+        f"export PATH={prefix}/bin:$PATH; "
+        f"export LD_LIBRARY_PATH={prefix}/lib/elmersolver:{hypre}:$LD_LIBRARY_PATH; "
+        f"cd {mesh_parent}; ElmerGrid 2 2 {mesh} -metiskway {mpi_procs}"
+    )
+    _wsl_bash(script)
+    if not (mesh_dir / f"partitioning.{mpi_procs}").is_dir():
+        raise RuntimeError(f"WSL ElmerGrid did not create partitioning.{mpi_procs} for {mesh_name}")
+
+
+def run_case_wsl(project: Path, case: str, mesh_name: str, mpi_procs: int) -> None:
+    """Run a generated case with the WSL CPU Release solver on ext4 storage."""
+    project = project.resolve()
+    run_command([sys.executable, str(ROOT / "src" / "sync_elmer_parameters.py"), str(project)])
+    mesh_dir = ROOT / "workspace/work/meshes" / mesh_name
+    sif = ROOT / "workspace/generated/cases" / f"{case}.sif"
+    if not sif.is_file():
+        raise FileNotFoundError(f"generated SIF missing: {sif}")
+    if not mesh_dir.is_dir():
+        raise FileNotFoundError(f"mesh directory missing: {mesh_dir}")
+    if mpi_procs > 1 and not (mesh_dir / f"partitioning.{mpi_procs}").is_dir():
+        raise FileNotFoundError(f"MPI partition missing: {mesh_dir / f'partitioning.{mpi_procs}'}")
+
+    runtime = f"/tmp/tes-main-{os.getpid()}-{uuid.uuid4().hex[:10]}"
+    runtime_q = shlex.quote(runtime)
+    root_wsl = shlex.quote(_wsl_path(ROOT))
+    project_rel = project.relative_to(ROOT).as_posix()
+    mesh_rel = f"workspace/work/meshes/{mesh_name}"
+    project_parent = shlex.quote(f"{runtime}/{Path(project_rel).parent.as_posix()}")
+    stage = "\n".join([
+        "set -euo pipefail",
+        f"RUNTIME={runtime_q}",
+        f"mkdir -p \"$RUNTIME/workspace/generated/cases\" \"$RUNTIME/workspace/work/meshes\" {project_parent}",
+        f"cp -a {shlex.quote(_wsl_path(ROOT / 'src'))} \"$RUNTIME/\"",
+        f"cp -a {shlex.quote(_wsl_path(sif))} \"$RUNTIME/workspace/generated/cases/\"",
+        f"cp -a {shlex.quote(_wsl_path(project))} \"$RUNTIME/{shlex.quote(project_rel)}\"",
+        f"cp -a {shlex.quote(_wsl_path(mesh_dir))} \"$RUNTIME/workspace/work/meshes/\"",
+        f"ln -s {shlex.quote(mesh_rel)} \"$RUNTIME/{shlex.quote(mesh_name)}\"",
+    ])
+    _wsl_bash(stage)
+
+    prefix = shlex.quote(WSL_ELMER_PREFIX)
+    hypre = shlex.quote(WSL_HYPRE_LIB)
+    udf = shlex.quote(WSL_UDF_DIR)
+    solver = shlex.quote(f"{WSL_ELMER_PREFIX}/bin/ElmerSolver_mpi")
+    case_q = shlex.quote(case)
+    project_q = shlex.quote(project_rel)
+    mesh_q = shlex.quote(mesh_rel)
+    execute = "\n".join([
+        "set -euo pipefail",
+        f"RUNTIME={runtime_q}",
+        f"ROOT_WSL={root_wsl}",
+        f"export ELMER_HOME={prefix}",
+        f"export PATH={prefix}/bin:/usr/bin:/bin",
+        f"export LD_LIBRARY_PATH={udf}:{hypre}:{prefix}/lib/elmersolver:/usr/lib/wsl/lib",
+        f"export TES_UDF_DIR_WSL={udf}",
+        f"export TES_HYPRE_LIB_WSL={hypre}",
+        "export OMP_NUM_THREADS=1",
+        "export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero",
+        "export OCL_ICD_VENDORS=/opt/elmer-gpu/no-ocl-icd",
+        "export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1",
+        f"test -f {udf}/tes_parallel_circuit.so",
+        f"test -f {udf}/tes_transient_heat_source_t0.so",
+        f"test -x {solver}",
+        "cd \"$RUNTIME\"",
+        "set +e",
+        f"python3 src/run.py {case_q} --project {project_q} --skip-sync --mpi-procs {mpi_procs} --elmer-solver {solver}",
+        "RC=$?",
+        "set -e",
+        f"mkdir -p \"$ROOT_WSL/outputs/results/{case_q}\" \"$ROOT_WSL/{mesh_q}\"",
+        f"if test -d \"$RUNTIME/outputs/results/{case_q}\"; then cp -a \"$RUNTIME/outputs/results/{case_q}/.\" \"$ROOT_WSL/outputs/results/{case_q}/\"; fi",
+        f"cp -a \"$RUNTIME/{mesh_q}/.\" \"$ROOT_WSL/{mesh_q}/\"",
+        "if test \"$RC\" -eq 0; then rm -rf -- \"$RUNTIME\"; else echo \"WSL runtime retained at $RUNTIME\"; fi",
+        "exit \"$RC\"",
+    ])
+    proc = _wsl_bash(execute, check=False)
+    if proc.stdout:
+        print(proc.stdout, end="")
+    if proc.returncode:
+        detail = (proc.stderr or "")[-3000:]
+        raise RuntimeError(f"WSL case {case} failed ({proc.returncode}). {detail}")
 
 
 def ensure_circuit_udf() -> Path:
@@ -126,7 +246,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("action", choices=("validate", "summary", "explain", "compile", "mesh", "udf", "run"))
     parser.add_argument("project_file", help="project name or projects/<name>.toml")
     parser.add_argument("--dry-run", action="store_true", help="show run plan without building or running")
-    parser.add_argument("--mpi-procs", type=int, default=1)
+    parser.add_argument("--mpi-procs", type=int, default=6)
+    parser.add_argument("--backend", choices=("wsl-fast", "windows"), default="wsl-fast")
     args = parser.parse_args(argv)
     if args.project_file.lower().endswith(".toml"):
         project_file = Path(args.project_file)
@@ -155,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Project: {scenario['name']} ({len(scenario['tes'])} TES)")
             print(f"Mesh: {mesh_status}; model: {scenario['model_file'].relative_to(ROOT)}")
             print("Solve: steady" + (" -> pulse" if scenario["physics"]["pulse"] else ""))
+            print(f"Backend: {args.backend}; MPI ranks: {args.mpi_procs}; threads/rank: 1")
             print("Dry run: no generation or calculation. Remove --dry-run to execute.")
             return 0
         steady_project, _, _, _ = write_project(scenario, steady_only=True)
@@ -166,7 +288,9 @@ def main(argv: list[str] | None = None) -> int:
         mesh_command(scenario, steady_project, mesh_name)
         if args.action == "mesh":
             return 0
-        udf_dir = ensure_circuit_udf()
+        udf_dir = ensure_circuit_udf() if args.backend == "windows" else None
+        if args.backend == "wsl-fast":
+            ensure_wsl_partition(mesh_name, args.mpi_procs)
         # Keep the steady project stable when only pulse parameters change.
         from src.run import restart_result_is_reusable
         result = ROOT / "workspace/work" / "meshes" / mesh_name / f"{steady}.result"
@@ -178,12 +302,18 @@ def main(argv: list[str] | None = None) -> int:
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
         reusable = restart_result_is_reusable(result, steady, steady_project) and all(p.is_file() for p in states)
         if not reusable:
-            run_command([sys.executable, str(ROOT / "src" / "run.py"), steady, "--project", str(steady_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
+            if args.backend == "wsl-fast":
+                run_case_wsl(steady_project, steady, mesh_name, args.mpi_procs)
+            else:
+                run_command([sys.executable, str(ROOT / "src" / "run.py"), steady, "--project", str(steady_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
         else:
             print(f"reusing steady: {steady}")
         if scenario["physics"]["pulse"]:
             pulse_project, _, _, _ = write_project(scenario)
-            run_command([sys.executable, str(ROOT / "src" / "run.py"), pulse, "--project", str(pulse_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
+            if args.backend == "wsl-fast":
+                run_case_wsl(pulse_project, pulse, mesh_name, args.mpi_procs)
+            else:
+                run_command([sys.executable, str(ROOT / "src" / "run.py"), pulse, "--project", str(pulse_project), "--mpi-procs", str(args.mpi_procs), "--runtime-bin", str(udf_dir)])
         return 0
     except (ValueError, OSError, RuntimeError, subprocess.CalledProcessError) as exc:
         print(f"error: {exc}", file=sys.stderr)

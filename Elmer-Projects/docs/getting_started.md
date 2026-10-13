@@ -22,6 +22,18 @@ python main.py run single_pixel_alpha240
 
 `show` は参照する model、TES の ID と位置、各 TES の最終的な `I_bias`、`R_sh`、`alpha` などを表示します。`--dry-run` は生成・計算を行いません。
 
+`python main.py run` の既定実行経路は WSL の CPU Release solver です。既定で6 MPI ranks・各rank 1 threadを使い、メッシュ・SIFをWSL内の一時領域に置いて計算後にログ、系列、restartをプロジェクトへ戻します。既定のWSL設定は `ElmerGPU` distro、`/opt/elmer-gpu/cpu/elmer`、HYPREとUDFを `/opt/elmer-gpu/` 以下に置く構成です。別のWSL配置を使う場合は、実行前に環境変数で場所を指定します。
+
+```powershell
+$env:TES_WSL_DISTRO = "ElmerGPU"
+$env:TES_ELMER_PREFIX_WSL = "/opt/elmer-gpu/cpu/elmer"
+$env:TES_HYPRE_LIB_WSL = "/opt/elmer-gpu/cpu/hypre/lib"
+$env:TES_UDF_DIR_WSL = "/opt/elmer-gpu/udf"
+python main.py run single_pixel_alpha240
+```
+
+既定solver条件はPCG + BoomerAMG、線形許容値 `1e-12`、非線形許容値 `1e-6`です。Vector Assemblyと前処理再利用をON、MATC Dynamic K Node CacheをOFFにします。プロジェクトの `[solver]` は個別のsolver値を上書きできます。別のHYPRE/Phase24対応Windows buildを使う場合は `--backend windows` を指定できます。MPI数は `--mpi-procs` で変更できます。
+
 ## project と model
 
 project は実行条件、model は通常変更しない構造条件です。
