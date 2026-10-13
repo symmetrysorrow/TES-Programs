@@ -144,6 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command")
 
+    sub.add_parser("setup", help="install Python dependencies and the CPU-only Elmer/HYPRE stack in WSL")
     sub.add_parser("list", help="list schema-v3 projects")
 
     check = sub.add_parser(
@@ -423,6 +424,16 @@ def main(argv: list[str] | None = None) -> int:
                 mpi_procs=getattr(args, "mpi_procs", 1),
                 backend="native",
             )
+
+        if args.command == "setup":
+            from support.cpu_setup import setup_cpu
+
+            try:
+                setup_cpu()
+            except (RuntimeError, subprocess.CalledProcessError) as exc:
+                print(f"CPU setup failed: {exc}", file=sys.stderr)
+                return 2
+            return 0
 
         if args.command == "list":
             from support.scenario_config import PROJECT_DIR, read_toml
