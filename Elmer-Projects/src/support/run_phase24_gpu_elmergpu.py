@@ -1,4 +1,4 @@
-"""Run Phase24 steady/transient cases on the RX 9070 XT via the ElmerGPU WSL distro.
+"""Prepare historical steady/transient experiment cases in the ElmerGPU WSL distro.
 
 The case is generated and synced on Windows with the existing Gate 3 / Gate 4
 runners, so the physics and SIF generation are identical to the CPU route.
@@ -11,22 +11,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
-import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1].parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
     sys.path.insert(0, str(ROOT))
-DISTRO = "ElmerGPU"
-PREFIX = "/opt/elmer-gpu"
-
-
-def wsl_path(path: Path) -> str:
-    resolved = path.resolve()
-    return f"/mnt/{resolved.drive[0].lower()}{resolved.as_posix()[2:]}"
+from support.elmergpu_backend import run_wsl
 
 
 def sync(project: Path) -> None:
@@ -35,32 +27,6 @@ def sync(project: Path) -> None:
     (project.parent / "sync.log").write_text(result.stdout + result.stderr, encoding="utf-8")
     if result.returncode:
         raise RuntimeError(f"sync failed; see {project.parent / 'sync.log'}")
-
-
-def run_wsl(project: Path, case: str, mesh: str, threads: int, elmer: str = "elmer", extra_env: list[str] | None = None, mpi: int = 1) -> dict:
-    # Linux Elmer resolves "<mesh>/../workspace/work/..." textually; keep the anchor.
-    (ROOT / mesh).mkdir(parents=True, exist_ok=True)
-    bash = f"""set -euo pipefail
-export ROCM_PATH=/opt/rocm HIP_PATH=/opt/rocm HIP_VISIBLE_DEVICES=0
-export HSA_ENABLE_DXG_DETECTION=1
-export PATH=/opt/rocm/bin:/usr/sbin:/usr/bin:/sbin:/bin
-export ELMER_HOME={PREFIX}/{elmer}
-export LD_LIBRARY_PATH={PREFIX}/udf:{PREFIX}/hypre/lib:{PREFIX}/{elmer}/lib/elmersolver:/opt/rocm/lib:/usr/lib/wsl/lib
-export OMP_NUM_THREADS={threads}
-export PHASE24_MEMORY_TRACE=1
-# hwloc (inside Open MPI, also for 1 rank) would otherwise load the AMD
-# OpenCL ICD and the HSA runtime, whose polling threads steal the cores.
-export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero OCL_ICD_VENDORS=/opt/elmer-gpu/no-ocl-icd
-{"".join(f"export {kv}" + chr(10) for kv in (extra_env or []))}cd '{wsl_path(ROOT)}'
-export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-python3 src/run.py '{case}' --project '{wsl_path(project)}' --skip-sync --mpi-procs {mpi} --elmer-solver {PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
-"""
-    log = project.parent / f"{case}.gpu_launcher.log"
-    start = time.monotonic()
-    with log.open("w", encoding="utf-8") as handle:
-        result = subprocess.run(["wsl.exe", "-d", DISTRO, "-u", "root", "--exec", "bash", "-lc", bash],
-                                cwd=ROOT, stdout=handle, stderr=subprocess.STDOUT)
-    return {"case": case, "exit_code": result.returncode, "elapsed_s": time.monotonic() - start, "launcher_log": str(log)}
 
 
 def main() -> int:

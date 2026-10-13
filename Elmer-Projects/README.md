@@ -1,78 +1,72 @@
 # Elmer-Projects
 
-Source and compiled library locations are described in [docs/source_layout.md](docs/source_layout.md).
+TES の Elmer 計算プロジェクトです。日常の計算では `projects/*.toml` の条件と
+`projects/models/*.toml` の形状・材料・メッシュ設定を編集し、ElmerGPU WSL
+ディストリビューション上でソルバーを実行します。
 
-このリポジトリは、TES の Elmer 熱計算を「編集する場所」と「生成・保存されるもの」を分けて扱う前提で整理しています。
+ソースとコンパイル済みライブラリの配置は
+[source layout](docs/source_layout.md)、生成物・結果の配置は
+[directory guide](docs/directory_guide.md) を参照してください。
 
-**どこに何があるか迷ったら [ディレクトリとデータの案内](docs/directory_guide.md) を参照してください。**
-計算データは `workspace/`（作業データ）と `outputs/`（計算結果・再現用実行）にまとめています。旧形式は [Legacy workflows](docs/legacy_workflows.md) に分離しています。
-`tools/` はローカル実行用の Elmer 配布物です。別途 Elmer をインストールしている場合は使わずに実行できます。
+## 標準計算経路
 
-## ここから始める
+```text
+python main.py run <project>
+  → scenario_cli.py (TOML 読み込み、ケース生成、restart 判定)
+  → elmergpu_backend.py (設定適用、MPI 分割、WSL 起動)
+  → WSL: src/run.py (SIF、manifest、結果・restart 管理)
+  → ElmerSolver
+```
 
-`Elmer-Projects/` で次を実行します。
+ElmerGPU は Windows から WSL の Elmer 実行環境を選ぶバックエンドです。
+これは HYPRE の GPU 演算を強制する指定ではありません。既定の
+`iterative_hypre_pcg_boomeramg` は CPU HYPRE を使います。
+`linear_system` を `_gpu` で終わる対応値にした場合に限り、生成 SIF の
+`HYPRE GPU = Logical True` が有効になります。ElmerGPU 環境に GPU 対応
+ElmerSolver/HYPRE がインストールされている必要があります。
+
+## 実行
+
+対話メニューを使う場合は `questionary` をインストールして `python main.py`
+を実行します。通常の実験は以下のコマンドでも操作できます。
 
 ```powershell
 python -m pip install questionary
 python main.py
-```
-
-メニューから操作と project を選べます。実行時は dry-run（計画の確認）か計算開始かを選びます。従来のコマンド形式も引き続き使えます。
-
-```powershell
 python main.py list
 python main.py run single_pixel_alpha240 --dry-run
 python main.py run single_pixel_alpha240
+python main.py run single_pixel_alpha240 --mpi-procs 4
 ```
 
-`main.py run <project>` keeps the project/model TOML interface and executes the
-steady solve and transient with the ElmerGPU Phase24 backend in WSL. The
-validated fast solver settings are applied to the generated internal case;
-the TOML remains the source for geometry, circuit, pulse, and time-window
-values.
+`--dry-run` はメッシュ生成、MPI 分割、設定書き換え、ソルバー起動を行いません。
+通常の実行では、標準計算プロジェクトに対して必要な MPI 分割を再利用または
+ElmerGrid で生成してから計算します。
 
-Use `python main.py legacy1 run <project>` to reproduce the former local Elmer
-route. The older JSON and `src/tes_sim.py` workflows remain under
-`python main.py legacy2 ...` (`python main.py legacy ...` is kept as an alias).
+`projects/<name>.toml` は回路・パルス・ソルバー条件を、参照先モデル TOML は
+形状・材料・TES 配置・メッシュ条件を管理します。詳しくは
+[計算開始ガイド](docs/getting_started.md) を参照してください。
+`project/model` 間に汎用の上書き連鎖はありません。TES ごとの回路値は project の
+`[circuits."<TES ID>"]` に記述します。
 
-新しい計算の入口は **`projects/<実験名>.toml`** です。project は `model = "models/single_pixel.toml"` のように、同じ `projects/` 配下の model を明示的な相対パスで参照します。
+## Legacy と検証資料
 
-- `projects/*.toml`: その計算で実際に使う回路値、パルス、時間窓、solver 条件
-- `projects/models/*.toml`: 形状、材料、TES 配置、メッシュ
-**project/model 間の汎用 override はありません。** `I_bias`、`R_sh`、`alpha` などの実行時回路値は model に置かず、project の `[circuits."<TES ID>"]` に各 TES の最終値を明示します。ID は安定した参照名としてだけ使い、component → group → project → TES のような値の上書きチェーンは作りません。
+過去のローカル Elmer 実行と旧 JSON / TOML 入力は、再現用に
+`python main.py legacy1 ...`、`python main.py legacy2 ...` として残しています。
+これらは標準経路から独立しています。過去の実験ランナー、記録、Elmer の
+ユーザー定義 SIF キーワードは互換性と再現性のため保持されています。
+`Phase24` などの接頭辞を持つ一部キーワードは ElmerSolver 側との内部
+インターフェースであり、Python の表示名とは別に維持しています。
 
+ディレクトリ構成は [directory guide](docs/directory_guide.md)、旧手順は
+[legacy workflows](docs/legacy_workflows.md) を参照してください。
 
-詳しい編集手順は [シミュレーションの始め方](docs/getting_started.md)、構成方針は [project/model 設計](docs/toml_unification_plan.md) を参照してください。
-
-## まず触る場所
-
-- `projects/*.toml`: 1実験ごとの最終計算条件
-- `projects/models/*.toml`: 再利用する形状・材料・配置・メッシュ
-- `docs/getting_started.md`: 新しい project の編集手順
-
-以前の計算経路や旧入力を再現する場合は、
-[Legacy workflows](docs/legacy_workflows.md) を参照してください。通常CLIから旧入力形式への自動フォールバックはありません。
-
-## Legacy
-
-旧方式は互換用のコマンドに残しています。
-
-```powershell
-python main.py legacy1 run single_pixel_alpha240 --dry-run
-python main.py legacy2 list
-python main.py legacy2 toml show projects/legacy/cases/<名前>.toml
-```
-
-`legacy1` は従来の project/model TOML のローカル Elmer 実行、`legacy2` は旧 JSON と
-`src/tes_sim.py` の入力を使う経路です。`legacy` コマンドも旧 JSON / TOML の互換入口として残ります。詳細は
-[Legacy workflows](docs/legacy_workflows.md) にまとめています。
-
-## ディレクトリ構成
-
-入力から結果までの置き場所、`archive/` と `legacy/` の区別、`.dat` / `.csv` の読み方は
-[ディレクトリとデータの案内](docs/directory_guide.md) にまとめています。
-モデル定義・数値スキームの詳細は [Elmer の技術資料](docs/README_TES_elmer.md) を参照してください。
+モデルと数値スキームの補足は [Elmer TES technical notes](docs/README_TES_elmer.md)、
+project/model の構成方針は [TOML design notes](docs/toml_unification_plan.md)
+を参照してください。
 
 ## Public TES IDs
 
-Models assign stable project-facing TES IDs through `layout.groups[].tes_ids`; project circuits use keys such as `[circuits.tes_1]`. Edit the project TOML for run and circuit values, and the referenced model TOML for geometry, materials, layout mappings, and mesh settings.
+モデルは `layout.groups[].tes_ids` で安定した TES ID を割り当てます。
+回路値は `[circuits.tes_1]` のようなキーで対応付けます。実行条件は project TOML、
+形状・材料・配置・メッシュ条件は参照先の model TOML で編集してください。

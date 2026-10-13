@@ -414,8 +414,8 @@ def compile_project(scenario: dict) -> tuple[dict, str, str, str]:
             "singlepixel_hybrid_1p48ms",
             "1ms_bdf2fixed2p5_5",
         }:
-            from support.run_phase24_gate4_5_nomortar import trim_schedule
-            timesteps = trim_schedule([], scenario["project"]["window"])
+            from support.transient_schedule import project_schedule
+            timesteps = project_schedule(scenario["project"]["window"])
             # These pulse-centered windows start with a 20 us pre-pulse lead
             # (18 us + two 1 us steps).  The steady restart must therefore be
             # positioned at pulse_start - 20 us so those steps land on the

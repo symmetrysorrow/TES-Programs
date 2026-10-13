@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from support.scenario_config import ROOT
@@ -41,8 +42,12 @@ def _merge_keywords(existing: object, defaults: tuple[str, ...], field: str) -> 
     return [*existing, *(item for item in defaults if item.partition("=")[0].strip().casefold() not in present)]
 
 
-def configure_fast_gpu_case(project_path: Path, case_name: str) -> None:
-    """Apply the validated Phase24 fast preset to one generated case."""
+def configure_fast_case(project_path: Path, case_name: str) -> None:
+    """Apply validated shared fast settings to one generated case.
+
+    Phase24-prefixed solver keywords are retained because they are the stable
+    SIF interface implemented by the Elmer build.
+    """
     project = json.loads(project_path.read_text(encoding="utf-8"))
     try:
         case = project["cases"][case_name]
@@ -78,10 +83,24 @@ def _wsl_path(path: Path) -> str:
     return f"/mnt/{resolved.drive[0].lower()}{resolved.as_posix()[2:]}"
 
 
-def ensure_partition(mesh_dir: Path, mpi_procs: int) -> None:
+def ensure_partition(mesh_dir: Path, mpi_procs: int, *, dry_run: bool = False) -> None:
     if mpi_procs < 1:
         raise ValueError("MPI ranks must be at least 1")
-    if mpi_procs == 1 or (mesh_dir / f"partitioning.{mpi_procs}").is_dir():
+    if mpi_procs == 1:
+        return
+
+    partition_dir = mesh_dir / f"partitioning.{mpi_procs}"
+    expected = [partition_dir / f"part.{rank}.{suffix}" for rank in range(1, mpi_procs + 1)
+                for suffix in ("nodes", "elements", "boundary")]
+    if partition_dir.is_dir():
+        missing = [path.name for path in expected if not path.is_file() or path.stat().st_size == 0]
+        if missing:
+            raise RuntimeError(
+                f"incomplete {mpi_procs}-rank mesh partition at {partition_dir}; "
+                f"missing or empty: {', '.join(missing)}"
+            )
+        return
+    if dry_run:
         return
 
     command = (
@@ -102,6 +121,40 @@ def ensure_partition(mesh_dir: Path, mpi_procs: int) -> None:
             f"ElmerGPU mesh partitioning failed for {mesh_dir.name} ({mpi_procs} ranks):\n"
             f"{result.stdout[-2000:]}{result.stderr[-2000:]}"
         )
+    missing = [path.name for path in expected if not path.is_file() or path.stat().st_size == 0]
+    if missing:
+        raise RuntimeError(
+            f"ElmerGrid created an invalid {mpi_procs}-rank partition at {partition_dir}; "
+            f"missing or empty: {', '.join(missing)}"
+        )
+
+
+def run_wsl(project: Path, case: str, mesh: str, threads: int = 1, elmer: str = "elmer",
+            extra_env: list[str] | None = None, mpi: int = 1) -> dict:
+    """Run the common Elmer project runner inside the ElmerGPU WSL distro."""
+    (ROOT / mesh).mkdir(parents=True, exist_ok=True)
+    bash = f"""set -euo pipefail
+export ROCM_PATH=/opt/rocm HIP_PATH=/opt/rocm HIP_VISIBLE_DEVICES=0
+export HSA_ENABLE_DXG_DETECTION=1
+export PATH=/opt/rocm/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export ELMER_HOME={GPU_PREFIX}/{elmer}
+export LD_LIBRARY_PATH={GPU_PREFIX}/udf:{GPU_PREFIX}/hypre/lib:{GPU_PREFIX}/{elmer}/lib/elmersolver:/opt/rocm/lib:/usr/lib/wsl/lib
+export OMP_NUM_THREADS={threads}
+export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero OCL_ICD_VENDORS=/opt/elmer-gpu/no-ocl-icd
+{"".join(f"export {kv}" + chr(10) for kv in (extra_env or []))}
+cd '{_wsl_path(ROOT)}'
+export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --elmer-solver {GPU_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
+"""
+    log = project.parent / f"{case}.gpu_launcher.log"
+    start = time.monotonic()
+    with log.open("w", encoding="utf-8") as handle:
+        result = subprocess.run(
+            ["wsl.exe", "-d", GPU_DISTRO, "-u", "root", "--exec", "bash", "-lc", bash],
+            cwd=ROOT, stdout=handle, stderr=subprocess.STDOUT,
+        )
+    return {"case": case, "exit_code": result.returncode,
+            "elapsed_s": time.monotonic() - start, "launcher_log": str(log)}
 
 
 def run_case(project_path: Path, case_name: str, mesh_name: str, mpi_procs: int) -> None:
@@ -118,9 +171,6 @@ def run_case(project_path: Path, case_name: str, mesh_name: str, mpi_procs: int)
         check=True,
     )
     ensure_partition(mesh_dir, mpi_procs)
-
-    from support.run_phase24_gpu_elmergpu import run_wsl
-
     record = run_wsl(project_path, case_name, mesh_name, threads=1, mpi=mpi_procs)
     print(f"ElmerGPU: {record['elapsed_s']:.0f} s ({record['launcher_log']})")
     if record["exit_code"]:
