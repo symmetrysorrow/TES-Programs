@@ -69,3 +69,8 @@ beta = 5.03
 ## Public TES IDs
 
 Use `[circuits.tes_1]` in a project. The referenced model assigns `tes_1` through `layout.groups[].tes_ids`; public IDs are independent of component-local and layout group IDs. Edit the project TOML for circuit and run values, and the model TOML for geometry, mesh settings, and ID mappings.
+
+## Rebuilding the ElmerGPU solver
+
+The pinned Elmer/HYPRE source commits, source patches, Ubuntu package versions,
+and build instructions are documented in [`elmergpu_build.md`](elmergpu_build.md).
