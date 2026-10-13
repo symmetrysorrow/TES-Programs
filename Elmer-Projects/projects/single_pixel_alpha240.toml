@@ -5,7 +5,10 @@ window = "75ms_bdf2h15"
 # Use the measured fastest CPU solver route for steady and transient runs.
 [solver]
 linear_system = "iterative_hypre_pcg_boomeramg"
-linear_system_convergence_tolerance = 1e-11
+linear_system_convergence_tolerance = 3e-11
+nonlinear_convergence_tolerance = 1e-6
+steady_extra_solver_keywords = ["Phase24 Coupled Temperature Tolerance = Real 1e-7"]
+extra_solver_keywords = ["Phase24 Coupled Temperature Tolerance = Real 1e-7"]
 
 [circuits.tes_1]
 I_bias = "715[uA]"
