@@ -20,6 +20,7 @@ from pathlib import Path
 
 from support.scenario_config import CIRCUIT_KEYS, ROOT, PROJECT_DIR, compile_project, load_scenario, quantity, write_project
 from support.reconcile_project import reconcile_project
+from support.elmer_wsl_backend import ELMER_PREFIX
 
 
 def run_command(argv: list[str], *, cwd: Path = ROOT) -> None:
@@ -314,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError(f"MPI mesh partition missing: {partition}; partition the mesh before --mpi-procs {args.mpi_procs}")
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
         solver = (
-            f"/opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
+            f"{ELMER_PREFIX}/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
             if args.backend == "elmer_wsl" else (runtime_args[1] if runtime_args else None)
         )
         if solver is None:
