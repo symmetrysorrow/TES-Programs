@@ -83,6 +83,8 @@ def test_wsl_launcher_keeps_existing_distro_but_uses_canonical_backend(tmp_path,
     command = command_calls[0]
     assert command[:5] == ["wsl.exe", "-d", "ElmerGPU", "-u", "root"]
     assert "--backend elmer_wsl" in command[-1]
-    assert "/opt/elmer-gpu/elmer/bin/ElmerSolver" in command[-1]
+    assert "/opt/tes-elmer-cpu/elmer/bin/ElmerSolver" in command[-1]
+    assert "/opt/tes-elmer-cpu/venv/bin/python" in command[-1]
+    assert "ROCM_PATH=" not in command[-1]
     assert record["exit_code"] == 0
     assert record["launcher_log"].endswith(".wsl_launcher.log")

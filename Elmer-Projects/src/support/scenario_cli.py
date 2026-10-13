@@ -13,12 +13,14 @@ import hashlib
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 
 from support.scenario_config import CIRCUIT_KEYS, ROOT, PROJECT_DIR, compile_project, load_scenario, quantity, write_project
 from support.reconcile_project import reconcile_project
+from support.elmer_wsl_backend import ELMER_PREFIX
 
 
 def run_command(argv: list[str], *, cwd: Path = ROOT) -> None:
@@ -65,6 +67,26 @@ def ensure_circuit_udf() -> Path:
 def mesh_command(scenario: dict, project: Path, mesh_name: str) -> None:
     target = ROOT / "workspace/work" / "meshes" / mesh_name
     if (target / "mesh.names").exists():
+        if scenario["source_mesh"] is None:
+            provenance = target / "PROVENANCE.json"
+            if not provenance.is_file():
+                raise RuntimeError(
+                    f"Generated mesh {target} is missing PROVENANCE.json; "
+                    "move the old cache aside and regenerate before reuse"
+                )
+            try:
+                recorded = json.loads(provenance.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                raise RuntimeError(f"Generated mesh has invalid provenance: {provenance}") from exc
+            if recorded.get("mesh_hash") != scenario["mesh_hash"]:
+                raise RuntimeError(
+                    f"Generated mesh {target} does not match its TOML configuration; "
+                    "move this cache aside before rebuilding"
+                )
+            required = ("mesh.header", "mesh.nodes", "mesh.elements", "mesh.boundary")
+            missing = [name for name in required if not (target / name).is_file()]
+            if missing:
+                raise RuntimeError(f"Incomplete cached generated mesh {target}: {', '.join(missing)}")
         print(f"reusing {target.relative_to(ROOT)}")
         return
     if scenario["source_mesh"]:
@@ -94,10 +116,21 @@ def mesh_command(scenario: dict, project: Path, mesh_name: str) -> None:
         candidate = prefix / "bin" / ("ElmerGrid.exe" if os.name == "nt" else "ElmerGrid")
         if candidate.is_file():
             elmergrid = str(candidate)
-    if not elmergrid:
-        raise RuntimeError("ElmerGrid not found; set ELMER_HOME or add ElmerGrid to PATH")
     target.parent.mkdir(parents=True, exist_ok=True)
-    run_command([elmergrid, "14", "2", str(msh), "-merge", "1e-10", "-out", str(target)])
+    if elmergrid:
+        run_command([elmergrid, "14", "2", str(msh), "-merge", "1e-10", "-out", str(target)])
+    elif os.name == "nt":
+        # A clean Windows checkout has no host ElmerGrid installation.
+        # Convert the host-generated Gmsh mesh with our bootstrapped CPU Elmer in WSL.
+        from support.elmer_wsl_backend import ELMER_PREFIX, WSL_DISTRO, _wsl_path
+        shell = (
+            shlex.quote(f"{ELMER_PREFIX}/elmer/bin/ElmerGrid") + " 14 2 "
+            + shlex.quote(_wsl_path(msh)) + " -merge 1e-10 -out "
+            + shlex.quote(_wsl_path(target))
+        )
+        run_command(["wsl.exe", "-d", WSL_DISTRO, "-u", "root", "--exec", "bash", "-lc", shell])
+    else:
+        raise RuntimeError("ElmerGrid not found; install ElmerGrid or add it to PATH")
     if not (target / "mesh.names").exists():
         raise RuntimeError("ElmerGrid did not create mesh.names")
     msh_digest = hashlib.sha256()
@@ -282,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError(f"MPI mesh partition missing: {partition}; partition the mesh before --mpi-procs {args.mpi_procs}")
         states = [result.parent / f"{steady}_{i}.state" for i in range(1, len(scenario["tes"]) + 1)]
         solver = (
-            f"/opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
+            f"{ELMER_PREFIX}/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}"
             if args.backend == "elmer_wsl" else (runtime_args[1] if runtime_args else None)
         )
         if solver is None:

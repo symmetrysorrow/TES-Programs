@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(realpath "$SCRIPT_DIR/../../..")"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/../..")"
 PATCH_DIR="$REPO_ROOT/docs"
 LOCK="$PATCH_DIR/elmergpu-sources.lock"
 SOURCE_ROOT="${1:-/root/src}"
