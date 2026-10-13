@@ -39,17 +39,18 @@ ELMER_PREFIX = "/opt/elmer-gpu"
 PULSE_START = 0.02002  # s; the transient windows put the pulse here
 
 # ---------------------------------------------------------------------------
-# Presets: the validated solver routes.  "fast" is the best 75 ms setting
-# (artifacts/phase24_conformal_hybrid/summary.md); linear_tolerance None means
-# "auto": 3e-11 for one TES, 1e-11 for several (larger systems need the
-# tighter tolerance to stay below the 1e-7 K coupled nonlinear criterion).
+# Presets: the validated solver routes.  "fast" is the default CPU Release
+# WSL route used by the 75 ms DualTES/SinglePixel comparison. Keep its solver
+# tolerances and iteration ceiling aligned with those measured SIFs.
 PRESETS: dict[str, dict] = {
     "fast": {
         "elmer": "cpu/elmer",
         "linear_system": "iterative_hypre_pcg_boomeramg",
-        "linear_tolerance": None,
+        "linear_tolerance": 1.0e-12,
+        "linear_max_iterations": 4000,
         "boomer_amg": {"strong_threshold": 0.25, "relax_type": 8, "coarsen_type": 8},
         "nonlinear_tolerance": 1.0e-6,
+        "nonlinear_max_iterations": 120,
         "bdf_order": 2,
         "predictor": True,
         "predictor_max_delta": 1.0e-3,
@@ -60,7 +61,10 @@ PRESETS: dict[str, dict] = {
             "Phase24 Prism Lumped Preconditioner = Logical True",
             "Phase24 Precond Matrix Reuse = Logical True",
             "Phase24 Coupled Temperature Tolerance = Real 1e-7",
+            "Phase24 Dynamic K Node Cache Verify = Logical False",
+            "Phase24 Dynamic K Node Cache = Logical False",
             "TES Inner Circuit Predict From Temperature = Logical True",
+            "TES Inner Circuit Step Commit = Logical True",
             "TES Inner Circuit Newton Slope Reuse = Logical True",
             "BoomerAMG Aggressive Levels = Integer 1",
         ],
@@ -73,6 +77,8 @@ PRESETS: dict[str, dict] = {
             "BoomerAMG Aggressive Levels = Integer 1",
             "TES Inner Circuit Newton = Logical True",
             "Phase24 Coupled Temperature Tolerance = Real 1e-7",
+            "Phase24 Dynamic K Node Cache Verify = Logical False",
+            "Phase24 Dynamic K Node Cache = Logical False",
         ],
     },
 }
@@ -124,7 +130,7 @@ def tes_bodies(cfg: dict) -> list[str]:
 
 
 def resolved(cfg: dict) -> dict:
-    """Preset + [solver] overrides, with the automatic linear tolerance."""
+    """Preset + [solver] overrides; auto tolerance remains available by opt-in."""
     s = dict(PRESETS[cfg["preset"]])
     over = dict(cfg.get("solver", {}))
     if "boomer_amg" in over:
@@ -154,6 +160,9 @@ def _common_args(cfg: dict, s: dict) -> list[str]:
         "--env", f"LD_LIBRARY_PATH={ELMER_PREFIX}/udf:{ELMER_PREFIX}/cpu/hypre/lib:{ELMER_PREFIX}/cpu/elmer/lib/elmersolver",
         "--env", "PHASE24_HYPRE_REPORT=1",
         "--linear-system", s["linear_system"], "--linear-tolerance", repr(float(s["linear_tolerance"])),
+        "--solver-option", f"linear_system_max_iterations={s['linear_max_iterations']}",
+        "--solver-option", f"nonlinear_convergence_tolerance={s['nonlinear_tolerance']!r}",
+        "--solver-option", f"nonlinear_max_iterations={s['nonlinear_max_iterations']}",
         "--case-option", "membrane_k_udf=true", "--case-option", "phase24_vector_assembly=true",
     ]
     for key, value in s["boomer_amg"].items():
@@ -248,7 +257,6 @@ def cmd_transient(cfg: dict) -> str:
     tag = _tag(cfg, "transient" + json.dumps(tr, sort_keys=True))
     args = ["transient", *_common_args(cfg, s), "--tag", tag, "--window", s["window"],
             "--reference-case", steady_case,
-            "--solver-option", f"nonlinear_convergence_tolerance={s['nonlinear_tolerance']!r}",
             "--case-option", f"bdf_order={s['bdf_order']}",
             "--case-option", f"phase24_bdf2_predictor={json.dumps(bool(s['predictor']))}",
             "--case-option", "pulse=" + json.dumps(pulse),
