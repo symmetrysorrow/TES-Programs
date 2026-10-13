@@ -13,8 +13,8 @@ from support.scenario_config import ROOT
 from support.reconcile_project import resolve_parameters
 from support.vendored.dimensioned_expression import evaluate_dimensioned_expression
 
-WSL_DISTRO = "ElmerGPU"
-ELMER_PREFIX = "/opt/elmer-gpu"
+WSL_DISTRO = os.environ.get("TES_WSL_DISTRO", "ElmerGPU")
+ELMER_PREFIX = "/opt/tes-elmer-cpu"
 
 STEADY_FAST_KEYWORDS = (
     "Phase24 Prism Lumped Preconditioner = Logical True",
@@ -134,17 +134,14 @@ def run_wsl(project: Path, case: str, mesh: str, threads: int = 1, elmer: str = 
     """Run the common Elmer project runner inside the ElmerGPU WSL distro."""
     (ROOT / mesh).mkdir(parents=True, exist_ok=True)
     bash = f"""set -euo pipefail
-export ROCM_PATH=/opt/rocm HIP_PATH=/opt/rocm HIP_VISIBLE_DEVICES=0
-export HSA_ENABLE_DXG_DETECTION=1
-export PATH=/opt/rocm/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH={ELMER_PREFIX}/venv/bin:{ELMER_PREFIX}/elmer/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export ELMER_HOME={ELMER_PREFIX}/{elmer}
-export LD_LIBRARY_PATH={ELMER_PREFIX}/udf:{ELMER_PREFIX}/hypre/lib:{ELMER_PREFIX}/{elmer}/lib/elmersolver:/opt/rocm/lib:/usr/lib/wsl/lib
+export LD_LIBRARY_PATH={ELMER_PREFIX}/udf:{ELMER_PREFIX}/hypre/lib:{ELMER_PREFIX}/{elmer}/lib/elmersolver:/usr/lib/wsl/lib
 export OMP_NUM_THREADS={threads}
-export HWLOC_COMPONENTS=-opencl,-rsmi,-levelzero OCL_ICD_VENDORS=/opt/elmer-gpu/no-ocl-icd
 {"".join(f"export {kv}" + chr(10) for kv in (extra_env or []))}
 cd '{_wsl_path(ROOT)}'
 export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-python3 src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --backend elmer_wsl --elmer-solver {ELMER_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
+{ELMER_PREFIX}/venv/bin/python src/run.py '{case}' --project '{_wsl_path(project)}' --skip-sync --mpi-procs {mpi} --backend elmer_wsl --elmer-solver {ELMER_PREFIX}/{elmer}/bin/{'ElmerSolver_mpi' if mpi > 1 else 'ElmerSolver'} --runtime-bin ''
 """
     log = project.parent / f"{case}.wsl_launcher.log"
     start = time.monotonic()
