@@ -173,3 +173,34 @@ def test_restart_rejects_backend_solver_and_state_mismatch(tmp_path, monkeypatch
     assert not run.restart_result_is_reusable(
         result, case, project, required_paths=[state]
     )
+
+
+def test_restart_rejects_rebuilt_accessible_native_solver(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(run, "ROOT", tmp_path)
+    case = "case_steady"
+    mesh = tmp_path / "workspace/work/meshes/mesh"
+    mesh.mkdir(parents=True)
+    result = mesh / f"{case}.result"
+    result.write_bytes(b"complete")
+    project = tmp_path / "project.json"
+    project.write_text("{}", encoding="utf-8")
+    inputs = manifest_inputs(tmp_path, case, project)
+    solver = tmp_path / "ElmerSolver"
+    solver.write_bytes(b"first build")
+    manifest = tmp_path / "outputs/results" / case / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({
+        "exit_code": 0, "errors": [], "solver_completed": True,
+        "runtime_sif_sha256": inputs[f"{case}.sif"],
+        "mpi_procs": 1, "backend": "native",
+        "solver": str(solver.resolve()),
+        "runtime_artifacts_sha256": {"solver": run.sha256(solver)},
+        "inputs_sha256": inputs,
+    }), encoding="utf-8")
+    assert run.restart_result_is_reusable(
+        result, case, project, backend="native", solver=str(solver)
+    )
+    solver.write_bytes(b"updated build")
+    assert not run.restart_result_is_reusable(
+        result, case, project, backend="native", solver=str(solver)
+    )

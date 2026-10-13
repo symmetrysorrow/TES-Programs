@@ -574,7 +574,6 @@ def restart_result_is_reusable(
             solver is None
             or manifest.get("solver") == (solver if solver.startswith("/") else str(Path(solver).resolve()))
         )
-        and manifest.get("runtime_sif_sha256")
     )
 
 
