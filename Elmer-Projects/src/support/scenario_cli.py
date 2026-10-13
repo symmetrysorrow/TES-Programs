@@ -294,7 +294,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Backend: {'Elmer WSL (ElmerGPU distro)' if args.backend == 'elmer_wsl' else 'native Elmer'}")
         print(f"Linear solver: {linear_system or '(solver default)'}; HYPRE GPU: {'enabled' if linear_system.endswith('_gpu') else 'disabled'}")
         if args.backend == "elmer_wsl":
-            print(f"Solver runtime: /opt/elmer-gpu/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}")
+            from support.elmer_wsl_backend import ELMER_PREFIX
+
+            print(f"Solver runtime: {ELMER_PREFIX}/elmer/bin/{'ElmerSolver_mpi' if args.mpi_procs > 1 else 'ElmerSolver'}")
         elif runtime_args:
             print(f"Solver runtime: {runtime_args[1]}")
         if args.backend == "elmer_wsl":

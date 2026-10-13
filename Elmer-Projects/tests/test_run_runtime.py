@@ -44,6 +44,24 @@ class RuntimeSifTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "token"):
                 run.write_runtime_sif(source, root / "outputs/results", str(udf))
 
+    def test_wsl_restart_uses_mesh_relative_restart_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "pulse.sif"
+            source_text = '  Restart File = steady.result\n'
+            source.write_text(source_text)
+            mesh_dir = root / "workspace" / "work" / "meshes" / "generated_mesh"
+            runtime_sif, applied = run.write_runtime_sif(
+                source, root / "outputs" / "results" / "pulse", None,
+                restart_mesh_dir=mesh_dir,
+            )
+            self.assertTrue(applied)
+            self.assertEqual(source.read_text(), source_text)
+            self.assertIn(
+                "Restart File = ../workspace/work/meshes/generated_mesh/steady.result",
+                runtime_sif.read_text(),
+            )
+
     def test_udf_is_not_applied_to_non_udf_dependency(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

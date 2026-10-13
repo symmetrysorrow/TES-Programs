@@ -393,11 +393,12 @@ def configure_mortar_dual_lagrange(text: str) -> str:
 def write_runtime_sif(
     source: Path, out_dir: Path, udf_dll: str | None,
     amgx_config: str | None = None, mesh_dir: Path | None = None,
+    restart_mesh_dir: Path | None = None,
     amgx_constraint_mode: str = "default",
     amgx_constraint_penalty: float = 1.0e4,
 ) -> tuple[Path, bool]:
     """Create an execution-only SIF with optional UDF and AMGX overrides."""
-    if udf_dll is None and amgx_config is None:
+    if udf_dll is None and amgx_config is None and restart_mesh_dir is None:
         return source, False
 
     text = source.read_text(encoding="utf-8")
@@ -428,6 +429,24 @@ def write_runtime_sif(
             constraint_penalty=amgx_constraint_penalty,
         )
         changed = True
+
+    # In WSL Elmer resolves relative Restart File values from the mesh name,
+    # while the generated steady result is stored in workspace/work/meshes.
+    # Emit a runtime-only path that resolves correctly from the mesh anchor.
+    if restart_mesh_dir is not None:
+        mesh_name = restart_mesh_dir.name
+        restart_line = re.compile(r"^(\s*Restart File\s*=\s*)(.+?)\s*$", re.IGNORECASE)
+        rewritten = []
+        for line in text.splitlines():
+            match = restart_line.match(line)
+            if match:
+                value = match.group(2).strip().strip('"')
+                if not Path(value).is_absolute() and "/" not in value and "\\" not in value:
+                    value = f"../workspace/work/meshes/{mesh_name}/{value}"
+                    line = f"{match.group(1)}{value}"
+                    changed = True
+            rewritten.append(line)
+        text = "\n".join(rewritten) + "\n"
 
     if not changed:
         return source, False
@@ -632,6 +651,12 @@ def run_case(
     log_path = out_dir / "solver.log"
     runtime_sif, runtime_override_applied = write_runtime_sif(
         sif, out_dir, udf_dll, amgx_config,
+        restart_mesh_dir=(
+            mesh_dir
+            if normalize_backend_name(backend) == "elmer_wsl"
+            and (spec.get("restart_from") or spec.get("restart_file_base") or spec.get("preexisting_restart"))
+            else None
+        ),
         amgx_constraint_mode=amgx_constraint_mode,
         amgx_constraint_penalty=amgx_constraint_penalty,
     )
@@ -652,6 +677,18 @@ def run_case(
         # by the POSIX filesystem. The real mesh remains under workspace/work.
         mesh_anchor = ROOT / model["meshes"][spec["mesh"]]["dir"]
         mesh_anchor.mkdir(parents=True, exist_ok=True)
+    elif normalize_backend_name(backend) == "elmer_wsl" and (
+        spec.get("restart_from") or spec.get("restart_file_base") or spec.get("preexisting_restart")
+    ):
+        # Elmer prefixes relative restart names with the mesh basename. Keep
+        # that basename as a real directory so `mesh/../workspace/...` resolves
+        # to this checkout's mesh tree rather than following a symlink parent.
+        mesh_anchor = ROOT / mesh_dir.name
+        if not mesh_anchor.exists():
+            mesh_anchor.mkdir(parents=True)
+            created_mesh_anchor = True
+        elif not mesh_anchor.is_dir():
+            raise FileExistsError(f"Elmer restart mesh anchor already exists and is not a directory: {mesh_anchor}")
     elif spec.get("preexisting_restart"):
         # Elmer resolves Restart File relative to the mesh basename even when
         # launched from ROOT.  The actual mesh/restart lives under
@@ -672,7 +709,6 @@ def run_case(
             created_mesh_anchor = True
         elif not mesh_anchor.is_dir():
             raise FileExistsError(f"Elmer restart mesh anchor already exists and is not a directory: {mesh_anchor}")
-
     inputs = {
         project_path.name: sha256(project_path),
         sif.name: sha256(sif),
@@ -703,7 +739,8 @@ def run_case(
     with log_path.open("w", encoding="utf-8") as log:
         command = [str(solver_path), str(runtime_sif)]
         if mpi_procs > 1:
-            command = [mpi_launcher(env), "-n", str(mpi_procs), *command]
+            launcher_args = ["--oversubscribe"] if normalize_backend_name(backend) == "elmer_wsl" else []
+            command = [mpi_launcher(env), *launcher_args, "-n", str(mpi_procs), *command]
         proc = subprocess.run(
             command,
             cwd=ROOT,

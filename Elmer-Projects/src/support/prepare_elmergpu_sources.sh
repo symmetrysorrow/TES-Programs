@@ -39,7 +39,7 @@ checkout_source() {
     fi
     git clone "$url" "$target"
   fi
-  local status head actual_patch expected_patch
+  local status head changed_files expected_files
   status="$(git -C "$target" status --porcelain)"
   head="$(git -C "$target" rev-parse HEAD)"
   if [[ "$head" != "$base" ]]; then
@@ -60,10 +60,18 @@ checkout_source() {
       echo "Source tree has staged changes: $target" >&2
       exit 2
     fi
-    actual_patch="$(git -C "$target" diff --binary HEAD | sha256sum | cut -d ' ' -f 1)"
-    expected_patch="$(sha256sum "$patch" | cut -d ' ' -f 1)"
-    if [[ "$actual_patch" != "$expected_patch" ]]; then
-      echo "Source tree has untracked edits beyond its locked patch: $target" >&2
+    # The locked patches are intentionally generated with --unidiff-zero.
+    # `git diff --binary HEAD` adds context and therefore has a different byte
+    # hash even when the patch is applied exactly. Verify the patch in reverse
+    # and require that it accounts for every modified source file.
+    if ! git -C "$target" apply --unidiff-zero --reverse --check "$patch" >/dev/null 2>&1; then
+      echo "Source tree has edits that do not match its locked patch: $target" >&2
+      exit 2
+    fi
+    changed_files="$(git -C "$target" diff --name-only HEAD | sort)"
+    expected_files="$(sed -n 's#^diff --git a/\([^ ]*\) b/.*#\1#p' "$patch" | sort)"
+    if [[ "$changed_files" != "$expected_files" ]]; then
+      echo "Source tree has modified files outside its locked patch: $target" >&2
       exit 2
     fi
   else
