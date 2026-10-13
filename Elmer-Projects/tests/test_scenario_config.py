@@ -43,7 +43,7 @@ def changed_tree(
 def test_group_expansion_and_explicit_circuits_reuse_mesh() -> None:
     nominal = load_scenario(PROJECTS / "post_four_tes_nominal.toml")
     lower = load_scenario(PROJECTS / "post_four_tes_low_bias.toml")
-    assert [item["id"] for item in nominal["tes"]] == ["west.a", "west.b", "east.a", "east.b"]
+    assert [item["id"] for item in nominal["tes"]] == ["tes_1", "tes_2", "tes_3", "tes_4"]
     assert [item["x"] for item in nominal["tes"]] == pytest.approx([-0.007, -0.003, 0.003, 0.007])
     assert nominal["mesh_hash"] == lower["mesh_hash"]
     assert nominal["steady_hash"] != lower["steady_hash"]
@@ -93,7 +93,7 @@ def test_unknown_tes_id_is_rejected_with_available_ids(tmp_path: Path) -> None:
         tmp_path,
         "post_four_tes_nominal",
         "post_four_tes",
-        project_replace=('"east.b"', '"missing.tes"'),
+        project_replace=("[circuits.tes_4]", "[circuits.missing_tes]"),
     )
     with pytest.raises(ValueError, match="unknown circuit TES IDs.*available IDs"):
         load_scenario(changed)
