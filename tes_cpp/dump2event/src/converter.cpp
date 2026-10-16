@@ -159,6 +159,7 @@ Result read_dump(const std::string& dump_path, const Options& options) {
         // Use the NCOL=4 source particle energy for this history when known.
         const double balance_source = summary.source_energy_available
             ? summary.source_energy : options.input_energy;
+        summary.energy_balance_reference = balance_source;
         summary.energy_consistent = retain_history &&
             std::abs(raw_total_deposit - (balance_source - summary.leaked_energy))
                 <= options.energy_tolerance;
@@ -440,7 +441,7 @@ void write_history_summary(const std::vector<HistorySummary>& summaries, const s
             << summary.normalization_factor << ','
             << summary.source_energy << ','
             << (summary.source_energy_available ? 1 : 0) << ','
-            << (summary.source_energy_available ? summary.source_energy : 0.0) << '\n';
+            << summary.energy_balance_reference << '\n';
     }
 }
 
