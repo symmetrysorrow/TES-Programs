@@ -446,6 +446,28 @@ def TempCalib(data, ValueKey="PeakOpt", ResultKey="PeakOptTemp", Title=None, plo
 # Interactive selection and plotting
 # ---------------------------------------------------------------------------
 
+def _align_keyed_columns(xDf, yDf, xkey, ykey, key_col="key"):
+    """Return x/y columns paired by a validated one-to-one event-key join."""
+    for label, frame in (("x", xDf), ("y", yDf)):
+        if key_col not in frame:
+            raise KeyError(f"{label} frame lacks key column {key_col!r}")
+        if frame[key_col].isna().any():
+            raise ValueError(f"{label} frame contains missing {key_col!r} values")
+        if frame[key_col].duplicated().any():
+            raise ValueError(f"{label} frame contains duplicate {key_col!r} values")
+    if xkey not in xDf:
+        raise KeyError(f"x frame lacks value column {xkey!r}")
+    if ykey not in yDf:
+        raise KeyError(f"y frame lacks value column {ykey!r}")
+    paired = xDf[[key_col, xkey]].merge(
+        yDf[[key_col, ykey]], on=key_col, how="inner", sort=True,
+        validate="one_to_one", suffixes=("_x", "_y"),
+    )
+    x_column = f"{xkey}_x" if xkey == ykey else xkey
+    y_column = f"{ykey}_y" if xkey == ykey else ykey
+    return paired[key_col].to_numpy(), paired[x_column].to_numpy(), paired[y_column].to_numpy()
+
+
 def GetSelectedKey(xDf, yDf, xkey, ykey, key_col="key"):
     def inpolygon(sx, sy, poly_x, poly_y):
         inside = False
@@ -461,21 +483,13 @@ def GetSelectedKey(xDf, yDf, xkey, ykey, key_col="key"):
         return inside
 
     # --- 共通キーのみに絞る ---
-    common_keys = np.intersect1d(xDf[key_col].values, yDf[key_col].values)
-    xDf = xDf[xDf[key_col].isin(common_keys)].reset_index(drop=True)
-    yDf = yDf[yDf[key_col].isin(common_keys)].reset_index(drop=True)
+    keys, x, y = _align_keyed_columns(xDf, yDf, xkey, ykey, key_col)
 
-    if len(xDf) == 0:
+    if len(keys) == 0:
         print("共通するキーが存在しません。")
         return np.array([])
 
     # --- x, y, key 抽出 ---
-    x = xDf[xkey].values
-    y = yDf[ykey].values
-    keys = xDf[key_col].values
-
-    if len(x) != len(y):
-        raise ValueError(f"x({len(x)}) と y({len(y)}) の長さが一致していません")
 
     # --- プロットと選択 ---
     fig, ax = plt.subplots()
@@ -518,7 +532,7 @@ def GetSelectedKey(xDf, yDf, xkey, ykey, key_col="key"):
     for i, (sx, sy) in enumerate(zip(x, y)):
         inside[i] = inpolygon(sx, sy, picked[:, 0], picked[:, 1])
 
-    selected_keys = xDf.loc[inside, key_col].values
+    selected_keys = keys[inside]
 
     #print(f"Selected keys ({len(selected_keys)}件): {selected_keys}")
     return selected_keys
@@ -549,11 +563,17 @@ def Scatter2D(x,y,xlabel=None,ylabel=None,title=None):
     plt.cla()
 
 def KeyIsin(df1,df2):
-    common_keys = set(df1["key"]) & set(df2["key"])
-
-    df1=df1[df1["key"].isin(common_keys)].reset_index(drop=True)
-    df2=df2[df2["key"].isin(common_keys)].reset_index(drop=True)
-    return df1,df2
+    if "key" not in df1 or "key" not in df2:
+        raise KeyError("both frames must contain a 'key' column")
+    keys, _left_probe, _right_probe = _align_keyed_columns(
+        df1.assign(_key_probe=np.arange(len(df1))),
+        df2.assign(_key_probe=np.arange(len(df2))),
+        "_key_probe", "_key_probe", "key",
+    )
+    common = pd.DataFrame({"key": keys})
+    left = common.merge(df1, on="key", how="left", sort=False, validate="one_to_one")
+    right = common.merge(df2, on="key", how="left", sort=False, validate="one_to_one")
+    return left.reset_index(drop=True), right.reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
