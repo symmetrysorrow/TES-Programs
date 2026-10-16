@@ -46,13 +46,17 @@ class DumpEnergyTests(unittest.TestCase):
             dump = root / "dumpall.dat"
             output = root / "events.json"
             summary = root / "summary.csv"
-            # Initial dump preamble, followed by NCOL=4 history marker.
-            dump.write_text("\n".join(["0", "4", "101", *records, "2"]) + "\n")
+            # PHITS opens each history with a complete NCOL=4 particle
+            # record. Only then can the next NCOL header be parsed.
+            initial = ["0", "4", "101", "1 0 14", *["0"] * 7,
+                       "1.0 0", "0", "1.0 0 0", "0 0", "0", "0"]
+            dump.write_text("\n".join([*initial, *records, "2"]) + "\n")
             command = [self.exe, str(dump), str(output), "--input-energy", "1.0",
                        "--save-all", "--history-summary", str(summary)]
             if normalize:
                 command.append("--normalize-deposits")
-            subprocess.run(command, check=True, capture_output=True, text=True)
+            result = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
             doc = json.loads(output.read_text())
             with summary.open(newline="") as handle:
                 rows = list(csv.DictReader(handle))
