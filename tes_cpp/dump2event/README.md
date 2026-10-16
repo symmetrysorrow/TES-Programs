@@ -14,7 +14,9 @@ cmake --build build --config Release
 
 通常運用で指定するのは `--input-energy`、`--save-all` または `--full-energy-only`、必要なら `--full-energy-list` です。`--history-summary`、`--max-histories`、`--summary-only` は診断・開発用です。`PoST_Simulation.py` から実行する場合、これらのCLIフラグを直接指定する必要はありません。
 
-全エネルギー判定は、履歴中にリーク終了がないことを主条件にします。`E_deposit` は各履歴で、入射エネルギーから `NCOL=12` のリークエネルギーを差し引いた値に閉じるよう補正されます。これにより、負の局所沈着値を出力せず、リークのない履歴では沈着エネルギーの総和が入射エネルギーになります。
+全エネルギー判定は、履歴中にリーク終了がないことを主条件にします。**デフォルトではエネルギー総和を入射エネルギーに強制一致させません。** 反応点の `E_deposit` は、親トラックの直前点エネルギー `E` から輸送される二次粒子の運動エネルギー合計を引いた値として記録します（PHITSの `QCLUSTS(7)`、`JCLUSTS(4)` と輸送閾値で集計）。二次粒子が0個の場合は親トラックの `E` を局所付与量に記録します。負の付与量は隠さず残し、元データの矛盾として確認してください。
+
+従来の負値切り捨てと `input_energy - leaked_energy` への全履歴比例正規化は、再現用の **`--normalize-deposits`** 指定時のみ実行します。このモードでも `--history-summary` の `raw_total_deposit`、`negative_deposits`、`energy_consistent` は補正前の値で評価します。 `energy_consistent` は `raw_total_deposit` と `input_energy - leaked_energy` の差に基づきます。リークを検出して早期破棄した履歴の診断値は未完了です（`deposit_records_complete=0`）。エネルギー収支や二次粒子の解釈は、実際のPHITSダンプと[t-deposit]による独立照合が必要です。
 
 すべてのイベントを保存する場合は次のようにします。
 
@@ -30,7 +32,7 @@ dump2event dumpall.dat event.h5 --input-energy 0.663 --full-energy-only
 
 このモードでは、リークが確定した履歴について残りの座標・エネルギー配列を作りません。ただし、全吸収かどうかを判定するため、`dumpall.dat` の入力行を履歴の終端まで読む処理は残ります。
 
-履歴ごとの粒子終端・反応内訳を確認する場合は、`--history-summary history_summary.csv` を追加します。これは、リークした光子が一次光子か二次光子か、履歴に反応や二次粒子があったか、沈着エネルギーがいくらかをCSVに出力します。
+履歴ごとの粒子終端・反応内訳を確認する場合は、`--history-summary history_summary.csv` を追加します。これは、リークした光子が一次光子か二次光子か、履歴に反応や二次粒子があったか、沈着エネルギーがいくらかをCSVに出力します。追加列 `raw_total_deposit`、`negative_deposits`、`deposit_records_complete`、`normalization_factor` を用いると、正規化前のエネルギー収支とデータ欠落を検証できます。
 
 先頭の履歴だけを調べる場合は、`--summary-only --max-histories 1000` を追加するとイベントファイルを書かずに指定件数で停止できます。
 

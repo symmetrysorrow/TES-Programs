@@ -10,6 +10,7 @@ void usage() {
     std::cerr << "Usage: dump2event <dumpall.dat> <event.json> --input-energy <MeV>\n"
                  "Normal options:\n"
                  "  --save-all                     retain all histories\n"
+                 "  --normalize-deposits           opt into legacy energy closure (not recommended)\n"
                  "  --full-energy-only             retain only histories without NCOL=12 leakage\n"
                  "  --full-energy-list <path>      write full-energy event IDs\n"
                  "Diagnostic/development options:\n"
@@ -29,6 +30,7 @@ int main(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--input-energy" && i + 1 < argc) options.input_energy = std::stod(argv[++i]);
         else if (arg == "--save-all") options.save_all = true;
+        else if (arg == "--normalize-deposits") options.normalize_deposits = true;
         else if (arg == "--full-energy-only") options.full_energy_only = true;
         else if (arg == "--full-energy-list" && i + 1 < argc) full_energy_list = argv[++i];
         else if (arg == "--history-summary" && i + 1 < argc) history_summary = argv[++i];
