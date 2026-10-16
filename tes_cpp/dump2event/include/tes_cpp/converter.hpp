@@ -34,6 +34,7 @@ struct HistorySummary {
     // Used for diagnosing polychromatic sources independently of CLI energy.
     double source_energy{};
     bool source_energy_available{};
+    double energy_balance_reference{};
     int reaction_records{};
     double total_deposit{};
     // Signed pre-normalization sum; remains available even in legacy mode.
