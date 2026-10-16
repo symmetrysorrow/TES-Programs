@@ -113,6 +113,7 @@ class DumpEnergyTests(unittest.TestCase):
         self.assertAlmostEqual(sum(sum(p["E_deposit"]) for p in event.values()), 1.173)
         self.assertAlmostEqual(float(diag["source_energy"]), 1.173)
         self.assertEqual(diag["source_energy_available"], "1")
+        self.assertAlmostEqual(float(diag["energy_balance_reference"]), 1.173)
         self.assertEqual(diag["energy_consistent"], "1")
         # This would have failed under the old global input-energy comparison.
         self.assertAlmostEqual(1.332 - float(diag["raw_total_deposit"]), 0.159)
