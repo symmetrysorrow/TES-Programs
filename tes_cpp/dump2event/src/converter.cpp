@@ -154,8 +154,13 @@ Result read_dump(const std::string& dump_path, const Options& options) {
         summary.event_id = event_id;
         summary.total_deposit = total_deposit;
         summary.fully_contained = summary.leaked_particles == 0;
+        // A single CLI input energy is not a valid reference for sources
+        // that sample multiple photon lines (e.g. 60Co 1173/1332 keV).
+        // Use the NCOL=4 source particle energy for this history when known.
+        const double balance_source = summary.source_energy_available
+            ? summary.source_energy : options.input_energy;
         summary.energy_consistent = retain_history &&
-            std::abs(raw_total_deposit - (options.input_energy - summary.leaked_energy))
+            std::abs(raw_total_deposit - (balance_source - summary.leaked_energy))
                 <= options.energy_tolerance;
         // A transport history is fully absorbed when no particle reaches a
         // leakage termination. The deposit sum is retained as a diagnostic,
@@ -227,6 +232,12 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 particle_energy = column[0];
                 energy_at_collision = column[0];
                 collision_position[0] = column[2];
+                if (static_cast<int>(ncol) == 4 &&
+                    static_cast<int>(particle_number) == 1 &&
+                    std::isfinite(energy_at_collision) && energy_at_collision >= 0.0) {
+                    summary.source_energy = energy_at_collision;
+                    summary.source_energy_available = true;
+                }
             }
             if (static_cast<int>(count) == 14) {
                 require_columns(column, 2, line_number);
@@ -399,7 +410,8 @@ void write_history_summary(const std::vector<HistorySummary>& summaries, const s
            "leaked_photons,leaked_primary_photons,leaked_secondary_photons,"
            "reaction_records,leaked_energy,total_deposit,"
            "energy_consistent,full_energy,fully_contained,stored_event,"
-           "raw_total_deposit,negative_deposits,deposit_records_complete,normalization_factor\n";
+           "raw_total_deposit,negative_deposits,deposit_records_complete,normalization_factor,"
+           "source_energy,source_energy_available,energy_balance_reference\n";
     out << std::setprecision(17);
     for (const auto& summary : summaries) {
         out << summary.event_id << ','
@@ -425,7 +437,10 @@ void write_history_summary(const std::vector<HistorySummary>& summaries, const s
             << summary.raw_total_deposit << ','
             << summary.negative_deposits << ','
             << (summary.deposit_records_complete ? 1 : 0) << ','
-            << summary.normalization_factor << '\n';
+            << summary.normalization_factor << ','
+            << summary.source_energy << ','
+            << (summary.source_energy_available ? 1 : 0) << ','
+            << (summary.source_energy_available ? summary.source_energy : 0.0) << '\n';
     }
 }
 
