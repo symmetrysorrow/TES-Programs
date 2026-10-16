@@ -40,7 +40,7 @@ class DumpEnergyTests(unittest.TestCase):
         if not cls.exe:
             raise unittest.SkipTest("build dump2event and set TES_CPP_DUMP2EVENT_EXECUTABLE")
 
-    def convert(self, records, *, normalize=False):
+    def convert(self, records, *, normalize=False, source_energy=1.0, input_energy=1.0):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             dump = root / "dumpall.dat"
@@ -49,9 +49,9 @@ class DumpEnergyTests(unittest.TestCase):
             # PHITS opens each history with a complete NCOL=4 particle
             # record. Only then can the next NCOL header be parsed.
             initial = ["0", "4", "101", "1 0 14", *["0"] * 7,
-                       "1.0 0", "0", "1.0 0 0", "0 0", "0", "0"]
+                       f"{source_energy} 0", "0", f"{source_energy} 0 0", "0 0", "0", "0"]
             dump.write_text("\n".join([*initial, *records, "2"]) + "\n")
-            command = [self.exe, str(dump), str(output), "--input-energy", "1.0",
+            command = [self.exe, str(dump), str(output), "--input-energy", str(input_energy),
                        "--save-all", "--history-summary", str(summary)]
             if normalize:
                 command.append("--normalize-deposits")
@@ -101,6 +101,21 @@ class DumpEnergyTests(unittest.TestCase):
         event, diag = self.convert(records)
         self.assertAlmostEqual(event["1"]["E_deposit"][0], -0.2)
         self.assertEqual(diag["negative_deposits"], "1")
+
+    def test_source_line_energy_overrides_fixed_configured_energy_for_audit(self):
+        # A 60Co-like spectrum with one sampled gamma per source history.
+        # The CLI energy is 1.332 MeV, but the NCOL=4 photon is 1.173 MeV.
+        event, diag = self.convert(
+            record(13, 1, 14, 1.173, 0.0),
+            source_energy=1.173,
+            input_energy=1.332,
+        )
+        self.assertAlmostEqual(sum(sum(p["E_deposit"]) for p in event.values()), 1.173)
+        self.assertAlmostEqual(float(diag["source_energy"]), 1.173)
+        self.assertEqual(diag["source_energy_available"], "1")
+        self.assertEqual(diag["energy_consistent"], "1")
+        # This would have failed under the old global input-energy comparison.
+        self.assertAlmostEqual(1.332 - float(diag["raw_total_deposit"]), 0.159)
 
     def test_parent_type_preserved_for_non_em_secondary(self):
         event, _ = self.convert(record(13, 1, 14, 0.8, 0.0, [(1, 0, 0.3)]))
