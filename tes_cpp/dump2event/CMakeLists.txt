@@ -31,14 +31,16 @@ target_include_directories(tes_cpp_dump2event
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 target_compile_features(tes_cpp_dump2event PUBLIC cxx_std_17)
-if (TARGET hdf5::hdf5_cpp)
+if (HDF5_FOUND)
+    # The unified target includes both HDF5 C++ and its underlying C library.
+    # Linking hdf5::hdf5_cpp alone may omit H5check_version on Linux.
+    target_link_libraries(tes_cpp_dump2event PUBLIC HDF5::HDF5)
+elseif (TARGET hdf5::hdf5_cpp)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5::hdf5_cpp)
 elseif (TARGET hdf5_cpp)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5_cpp)
 elseif (TARGET hdf5_cpp-static)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5_cpp-static)
-elseif (HDF5_FOUND)
-    target_link_libraries(tes_cpp_dump2event PUBLIC HDF5::HDF5)
 endif()
 
 add_executable(dump2event src/main.cpp)
