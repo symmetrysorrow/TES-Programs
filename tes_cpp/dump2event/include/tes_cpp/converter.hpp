@@ -54,6 +54,10 @@ struct Options {
     // Legacy output normalization, explicitly opt-in. The default preserves
     // signed reconstructed deposits for auditing instead of forcing closure.
     bool normalize_deposits{false};
+    // Stream per-reaction energy diagnostics to CSV when nonempty.
+    std::string reaction_audit_path;
+    // Include nonnegative reactions; otherwise write only negative deposits.
+    bool reaction_audit_all{false};
     // false: retain only full-energy events. true: retain every event and report
     // the full-energy event IDs separately.
     bool save_all{false};

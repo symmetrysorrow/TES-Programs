@@ -35,6 +35,8 @@ def convert(
     save_all: bool = False,
     full_energy_only: bool = False,
     normalize_deposits: bool = False,
+    reaction_audit: str | Path | None = None,
+    reaction_audit_all: bool = False,
 ) -> ConversionResult:
     """Convert one PHITS ``dumpall.dat`` file to the ``event.json`` schema."""
     dump_path, output_path = Path(dump_path), Path(output_path)
@@ -48,6 +50,12 @@ def convert(
         command += ["--full-energy-only"]
     if normalize_deposits:
         command += ["--normalize-deposits"]
+    if reaction_audit_all and reaction_audit is None:
+        raise ValueError("reaction_audit_all requires reaction_audit")
+    if reaction_audit is not None:
+        command += ["--reaction-audit", str(reaction_audit)]
+    if reaction_audit_all:
+        command += ["--reaction-audit-all"]
     subprocess.run(command, check=True)
     event_ids = ()
     if (save_all or full_energy_only) and full_energy_path.exists():

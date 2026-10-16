@@ -36,6 +36,26 @@ dump2event dumpall.dat event.h5 --input-energy 0.663 --full-energy-only
 
 先頭の履歴だけを調べる場合は、`--summary-only --max-histories 1000` を追加するとイベントファイルを書かずに指定件数で停止できます。
 
+
+### 反応別エネルギー監査（`--reaction-audit`）
+
+`--reaction-audit reaction_audit.csv` は `NCOL=13/14` のうち、**正規化前の局所エネルギー付与が負になる反応のみ**を1反応1行で逐次CSVに記録します。`--reaction-audit-all` を付けると、正の反応や0の反応も記録でき、比較に使えます。変換やHDF5の `E_deposit` 自体は一切変更しません。
+
+```bash
+dump2event dumpall.dat unused.h5 --input-energy 1.332 \
+  --summary-only --max-histories 10000 \
+  --history-summary history_summary.csv \
+  --reaction-audit reaction_audit.csv
+```
+
+主要列: `event_id`, `particle_id`, `reaction_index`（履歴内の通番）, `ncol`, `jcoll`, `parent_ityp`, `parent_E`, `parent_EC`, `parent_E_minus_EC`, `secondary_count`, `transported_secondary_energy`, `all_secondary_energy`, `dead_secondary_energy`, `below_cutoff_secondary_energy`, `raw_local_deposit`, `history_retained`, `x`, `y`, `z`, `secondaries`。エネルギーの単位はMeVです。
+
+`secondaries` は `index:ITYP:JCLUSTS(4):QCLUSTS(7):transported` をセミコロンで区切ります（例: `0:12:0:0.2:1;1:13:-1:0.05:0`）。最後の値 `transported=1` はコードが親エネルギーから差し引いたことを示します。これは物理的に正しい輸送判定が確認されたという意味ではありません。`NCLSTS=0` では `jcoll` が元データになく空欄です。
+
+監査は履歴保存とは独立のため、途中のリーク後に破棄された履歴にも `history_retained=0` で記録され得ます。`--normalize-deposits` と併用しても監査には補正前の値を記録します。`--summary-only` は `--reaction-audit` だけでも実行できます。
+
+**注意:** このCSVは負値の原因分析のための監査資料です。物理的な付与量の正しさを保証するものではなく、実際のPHITSダンプと独立した `[t-deposit]` の照合が必要です。
+
 ## Python での利用
 
 wheel を作成・導入するとネイティブ CLI も同梱されます。

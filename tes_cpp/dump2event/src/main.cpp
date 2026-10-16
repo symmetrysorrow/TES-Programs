@@ -15,6 +15,8 @@ void usage() {
                  "  --full-energy-list <path>      write full-energy event IDs\n"
                  "Diagnostic/development options:\n"
                  "  --history-summary <path>       write per-history diagnostics\n"
+                 "  --reaction-audit <path>        stream negative-deposit reactions to CSV\n"
+                 "  --reaction-audit-all           also include nonnegative reactions\n"
                  "  --max-histories <N>             stop after N source histories\n"
                  "  --summary-only                 do not write an event file\n";
 }
@@ -34,13 +36,16 @@ int main(int argc, char** argv) {
         else if (arg == "--full-energy-only") options.full_energy_only = true;
         else if (arg == "--full-energy-list" && i + 1 < argc) full_energy_list = argv[++i];
         else if (arg == "--history-summary" && i + 1 < argc) history_summary = argv[++i];
+        else if (arg == "--reaction-audit" && i + 1 < argc) options.reaction_audit_path = argv[++i];
+        else if (arg == "--reaction-audit-all") options.reaction_audit_all = true;
         else if (arg == "--max-histories" && i + 1 < argc) options.max_histories = std::stoi(argv[++i]);
         else if (arg == "--summary-only") summary_only = true;
         else { usage(); return 2; }
     }
     if (options.full_energy_only) options.save_all = false;
     options.collect_full_energy_ids = !full_energy_list.empty();
-    if (summary_only && history_summary.empty()) { usage(); return 2; }
+    if (summary_only && history_summary.empty() && options.reaction_audit_path.empty()) { usage(); return 2; }
+    if (options.reaction_audit_all && options.reaction_audit_path.empty()) { usage(); return 2; }
     try {
         const auto result = tes_cpp::dump2event::read_dump(argv[1], options);
         if (!summary_only) {
@@ -50,8 +55,12 @@ int main(int argc, char** argv) {
         }
         if (!full_energy_list.empty()) tes_cpp::dump2event::write_event_ids(result.full_energy_event_ids, full_energy_list);
         if (!history_summary.empty()) tes_cpp::dump2event::write_history_summary(result.history_summaries, history_summary);
-        if (summary_only)
-            std::cout << "Wrote " << result.history_summaries.size() << " history summaries to " << history_summary << '\n';
+        if (summary_only) {
+            std::cout << "Processed " << result.history_summaries.size() << " histories";
+            if (!history_summary.empty()) std::cout << "; summaries: " << history_summary;
+            if (!options.reaction_audit_path.empty()) std::cout << "; audit: " << options.reaction_audit_path;
+            std::cout << '\n';
+        }
         else
             std::cout << "Wrote " << result.batch.size() << " events to " << argv[2] << '\n';
         return 0;

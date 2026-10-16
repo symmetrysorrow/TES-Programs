@@ -63,6 +63,93 @@ class DumpEnergyTests(unittest.TestCase):
             self.assertEqual(len(rows), 1)
             return doc["101"], rows[0]
 
+
+    def audit(self, records, *, all_reactions=False, summary_only=False,
+              normalize=False, with_history_summary=True):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dump, output = root / "dumpall.dat", root / "events.json"
+            summary, audit = root / "summary.csv", root / "reactions.csv"
+            initial = ["0", "4", "101", "1 0 14", *["0"] * 7,
+                       "1.0 0", "0", "1.0 0 0", "0 0", "0", "0"]
+            dump.write_text("\n".join([*initial, *records, "2"]) + "\n")
+            cmd = [self.exe, str(dump), str(output), "--input-energy", "1.0",
+                   "--reaction-audit", str(audit)]
+            if with_history_summary:
+                cmd += ["--history-summary", str(summary)]
+            if all_reactions:
+                cmd += ["--reaction-audit-all"]
+            if summary_only:
+                cmd += ["--summary-only"]
+            else:
+                cmd += ["--save-all"]
+            if normalize:
+                cmd += ["--normalize-deposits"]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            with audit.open(newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            events = json.loads(output.read_text()) if output.exists() else None
+            return rows, events, summary.exists()
+
+    def test_reaction_audit_negative_and_secondary_statuses(self):
+        records = [
+            *record(13, 1, 14, 0.4, 0.0,
+                    [(12, -1, 0.5), (13, 0, 0.0005), (14, 0, 0.6)]),
+            *record(11, 2, 14, 0.6, 0.6),
+        ]
+        rows, events, _ = self.audit(records)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual((row["event_id"], row["particle_id"],
+                          row["reaction_index"], row["ncol"],
+                          row["jcoll"], row["parent_ityp"]),
+                         ("101", "1", "1", "13", "13", "14"))
+        self.assertEqual(row["secondary_count"], "3")
+        self.assertAlmostEqual(float(row["parent_E"]), 0.4)
+        self.assertAlmostEqual(float(row["parent_EC"]), 0.0)
+        self.assertAlmostEqual(float(row["transported_secondary_energy"]), 0.6)
+        self.assertAlmostEqual(float(row["all_secondary_energy"]), 1.1005)
+        self.assertAlmostEqual(float(row["dead_secondary_energy"]), 0.5)
+        self.assertAlmostEqual(float(row["below_cutoff_secondary_energy"]), 0.0005)
+        self.assertAlmostEqual(float(row["raw_local_deposit"]), -0.2)
+        self.assertEqual(row["history_retained"], "1")
+        descriptors = [s.split(":") for s in row["secondaries"].split(";")]
+        self.assertEqual([d[:3] for d in descriptors],
+                         [["0", "12", "-1"], ["1", "13", "0"], ["2", "14", "0"]])
+        for d, e, counted in zip(descriptors, [0.5, 0.0005, 0.6], ["0", "0", "1"]):
+            self.assertAlmostEqual(float(d[3]), e)
+            self.assertEqual(d[4], counted)
+        self.assertAlmostEqual(events["101"]["1"]["E_deposit"][0], -0.2)
+
+    def test_reaction_audit_all_and_zero_secondary(self):
+        records = record(13, 1, 14, 0.6, 0.0)
+        rows, _, _ = self.audit(records)
+        self.assertEqual(rows, [])
+        rows, events, _ = self.audit(records, all_reactions=True)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["jcoll"], "")
+        self.assertEqual(rows[0]["secondary_count"], "0")
+        self.assertEqual(rows[0]["secondaries"], "")
+        self.assertAlmostEqual(float(rows[0]["raw_local_deposit"]), 0.6)
+        self.assertAlmostEqual(events["101"]["1"]["E_deposit"][0], 0.6)
+
+    def test_reaction_audit_summary_only_and_normalization(self):
+        records = record(13, 1, 14, 0.4, 0.0, [(12, 0, 0.6)])
+        rows, events, summary_exists = self.audit(
+            records, summary_only=True, normalize=True,
+            with_history_summary=False)
+        self.assertIsNone(events)
+        self.assertFalse(summary_exists)
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(float(rows[0]["raw_local_deposit"]), -0.2)
+
+    def test_reaction_audit_does_not_change_event_output(self):
+        records = record(13, 1, 14, 0.4, 0.0, [(12, 0, 0.6)])
+        original, _ = self.convert(records)
+        _, events, _ = self.audit(records)
+        self.assertEqual(original, events["101"])
+
     def test_transported_secondary_is_not_deposited_twice(self):
         records = [
             *record(13, 1, 14, 1.0, 0.0, [(12, 0, 0.7)]),

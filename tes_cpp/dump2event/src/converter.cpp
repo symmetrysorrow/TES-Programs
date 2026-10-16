@@ -100,15 +100,57 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     std::size_t line_number = 0;
     const bool discard_non_full_early = options.full_energy_only || !options.save_all;
 
+    // Stream one row per reaction; avoid holding all audit rows in memory.
+    std::ofstream reaction_audit;
+    if (!options.reaction_audit_path.empty()) {
+        reaction_audit.open(options.reaction_audit_path);
+        if (!reaction_audit)
+            throw std::runtime_error("cannot open reaction audit CSV: " + options.reaction_audit_path);
+        reaction_audit << "event_id,particle_id,reaction_index,ncol,jcoll,parent_ityp,"
+                          "parent_E,parent_EC,parent_E_minus_EC,secondary_count,"
+                          "transported_secondary_energy,all_secondary_energy,"
+                          "dead_secondary_energy,below_cutoff_secondary_energy,"
+                          "raw_local_deposit,history_retained,x,y,z,secondaries\n";
+        reaction_audit << std::setprecision(17);
+    }
+    // Preserve reaction fields across the internal NCOL=17 secondary parser.
+    int reaction_ncol = 0;
+    int reaction_index = 0;
+    bool reaction_jcoll_available = false;
+    double reaction_all_secondary_energy = 0.0;
+    double reaction_dead_secondary_energy = 0.0;
+    double reaction_cutoff_secondary_energy = 0.0;
+    std::ostringstream secondary_details;
+    secondary_details << std::setprecision(17);
+
     // E is the energy at the preceding transport point. At a reaction, the
     // energy carried onward by *transported* secondaries must not also be
     // deposited on the parent. Keep the signed remainder visible: negative
     // values flag inconsistent/duplicate PHITS secondary bookkeeping.
     const auto append_reaction_deposit = [&] {
         const int type = static_cast<int>(particle_type);
-        if (!retain_history || (type != 12 && type != 13 && type != 14)) return;
+        if (type != 12 && type != 13 && type != 14) return;
+        const double local_deposit = deposited_before_collision - secondary_energy_sum;
+        if (reaction_audit.is_open() && (local_deposit < 0.0 || options.reaction_audit_all)) {
+            reaction_audit << static_cast<int>(case_number) << ','
+                << static_cast<int>(particle_number) << ','
+                << reaction_index << ',' << reaction_ncol << ',';
+            if (reaction_jcoll_available) reaction_audit << static_cast<int>(collision_type);
+            reaction_audit << ',' << type << ','
+                << deposited_before_collision << ',' << energy_at_collision << ','
+                << (deposited_before_collision - energy_at_collision) << ','
+                << static_cast<int>(secondary_count) << ','
+                << secondary_energy_sum << ',' << reaction_all_secondary_energy << ','
+                << reaction_dead_secondary_energy << ',' << reaction_cutoff_secondary_energy << ','
+                << local_deposit << ',' << (retain_history ? 1 : 0) << ','
+                << collision_position[0] << ',' << collision_position[1] << ','
+                << collision_position[2] << ",\"" << secondary_details.str() << "\"\n";
+            if (!reaction_audit)
+                throw std::runtime_error("failed writing reaction audit CSV: " + options.reaction_audit_path);
+        }
+        if (!retain_history) return;
         auto& event = history[static_cast<int>(particle_number)];
-        event.energy_deposit.push_back(deposited_before_collision - secondary_energy_sum);
+        event.energy_deposit.push_back(local_deposit);
         event.x_deposit.push_back(collision_position[0]);
         event.y_deposit.push_back(collision_position[1]);
         event.z_deposit.push_back(collision_position[2]);
@@ -207,6 +249,7 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                     history.clear();
                     history[1].ityp = 14;
                     summary = {};
+                    reaction_index = 0;
                     summary_active = true;
                     saw_secondary_particle = false;
                     retain_history = true;
@@ -269,6 +312,8 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 }
                 if (static_cast<int>(ncol) == 13 || static_cast<int>(ncol) == 14) {
                     ++summary.reaction_records;
+                    reaction_ncol = static_cast<int>(ncol);
+                    ++reaction_index;
                 }
                 if (retain_history && (type == 12 || type == 13 || type == 14)) {
                     auto& event = history[static_cast<int>(particle_number)];
@@ -291,6 +336,12 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 secondary_count = column[0];
                 secondary_index = 0;
                 secondary_energy_sum = 0;
+                reaction_jcoll_available = false;
+                reaction_all_secondary_energy = 0.0;
+                reaction_dead_secondary_energy = 0.0;
+                reaction_cutoff_secondary_energy = 0.0;
+                secondary_details.str("");
+                secondary_details.clear();
                 // PHITS emits no MATHZ/JCOLL or secondary records for NCLSTS=0.
                 // Close this reaction now and read the next NCOL header normally.
                 if (secondary_count <= 0) {
@@ -301,6 +352,7 @@ Result read_dump(const std::string& dump_path, const Options& options) {
             if (static_cast<int>(count) == 18) {
                 require_columns(column, 3, line_number);
                 collision_type = column[2];
+                reaction_jcoll_available = true;
                 ncol = 17;
                 count = -1;
                 secondary_index = 0;
@@ -332,8 +384,20 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 // carry energy out of this collision; their energy belongs
                 // in the local deposit.  The same applies to particles below
                 // the configured transport cut-off.
-                if (secondary_status >= 0 && secondary_particle_energy >= threshold)
-                    secondary_energy_sum += secondary_particle_energy;
+                const bool transported = secondary_status >= 0 &&
+                    secondary_particle_energy >= threshold;
+                if (transported) secondary_energy_sum += secondary_particle_energy;
+                if (reaction_audit.is_open()) {
+                    reaction_all_secondary_energy += secondary_particle_energy;
+                    if (secondary_status < 0)
+                        reaction_dead_secondary_energy += secondary_particle_energy;
+                    else if (!transported)
+                        reaction_cutoff_secondary_energy += secondary_particle_energy;
+                    if (secondary_index > 0) secondary_details << ';';
+                    secondary_details << static_cast<int>(secondary_index) << ':'
+                        << secondary_particle_type << ':' << secondary_status << ':'
+                        << secondary_particle_energy << ':' << (transported ? 1 : 0);
+                }
 
                 if (static_cast<int>(secondary_index) == static_cast<int>(secondary_count) - 1) {
                     ncol = 13;
