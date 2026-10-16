@@ -1,0 +1,29 @@
+name: dump2event energy regression tests
+
+on:
+  push:
+    paths:
+      - "tes_cpp/dump2event/**"
+      - "tes_cpp/python/tes_cpp/dump2event.py"
+      - ".github/workflows/dump2event-energy-tests.yml"
+  pull_request:
+    paths:
+      - "tes_cpp/dump2event/**"
+      - "tes_cpp/python/tes_cpp/dump2event.py"
+      - ".github/workflows/dump2event-energy-tests.yml"
+
+jobs:
+  energy-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install HDF5
+        run: sudo apt-get update && sudo apt-get install -y libhdf5-dev
+      - name: Configure
+        run: cmake -S tes_cpp/dump2event -B build/dump2event -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/dump2event --config Release -j 2
+      - name: Run energy accounting tests
+        run: python -m unittest discover -s tes_cpp/dump2event/tests -p 'test_*.py' -v
+        env:
+          TES_CPP_DUMP2EVENT_EXECUTABLE: ${{ github.workspace }}/build/dump2event/dump2event
