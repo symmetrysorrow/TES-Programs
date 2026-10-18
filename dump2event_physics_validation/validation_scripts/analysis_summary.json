@@ -1,0 +1,31 @@
+{
+  "source_negative_only_csv": "D:\\temp\\analysis\\pr6-reaction-audit-10000\\reaction_audit.csv",
+  "source_all_audit_csv": "D:\\temp\\analysis\\pr6-reaction-audit-10000\\reaction_audit_all.csv",
+  "negative_reactions": 12626,
+  "unique_histories_with_negative": 533,
+  "magnitude_abs_MeV": {
+    "min": 8.881784197001252e-16,
+    "median": 0.0017390632017489915,
+    "p90": 0.022551612378800767,
+    "max": 1.020997803999999
+  },
+  "max_abs_parent_E_minus_EC_MeV": 1.0000680839006293e-15,
+  "negative_reaction_rows_with_first_secondary_alone_over_parent": 5608,
+  "complete_history_count_in_summary": 75,
+  "negative_secondary_composition": {
+    "12->12,12": 12456,
+    "12->12,14": 133,
+    "13->14,14,13": 5,
+    "14->14,12": 3,
+    "13->13,12": 29
+  },
+  "audit_example_roles_found": [
+    "event119953_p3_r404",
+    "event318209_p2_r7",
+    "first_secondary_alone_exceeds_parent",
+    "normal_electron_egs5",
+    "parent12_children12_14",
+    "parent13_children13_12",
+    "sum_secondaries_exceeds_parent"
+  ]
+}
