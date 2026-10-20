@@ -31,8 +31,8 @@
   ledger targets. CTest: 1/1 passed. The HDF5 schema code is Python and was
   covered by pytest.
 - Synthetic write benchmark, 10,000 events / 20,000 tracks / 10,000 POINT
-  deposits: 5.674439 s and 2,203,856 bytes on the current Windows workspace
-  environment (about 1,762 events/s). This measures writer overhead and
+  deposits: 4.451698 s and 2,210,984 bytes on the current Windows workspace
+  environment (about 2,246 events/s). This measures writer overhead and
   compression for the synthetic fixture, not a PHITS Dumpall conversion.
 - Existing tracked PHITS validation reports remain: 38,077/38,077 additions
   in 100 histories and 201,971/201,971 additions in the independent 1,000
