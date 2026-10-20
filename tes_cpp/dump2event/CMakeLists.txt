@@ -55,6 +55,9 @@ target_link_libraries(dumpall_record_inspect PRIVATE tes_cpp_dump2event)
 add_executable(dump2event_physical_reconstruct src/physical_dump_reconstruct.cpp)
 target_link_libraries(dump2event_physical_reconstruct PRIVATE tes_cpp_dump2event)
 
+add_executable(dumpall_transport_export src/dumpall_transport_export.cpp)
+target_link_libraries(dumpall_transport_export PRIVATE tes_cpp_dump2event)
+
 include(CTest)
 option(TES_BUILD_DUMP2EVENT_TESTS "Build dump2event unit tests" ON)
 if (TES_BUILD_DUMP2EVENT_TESTS)
