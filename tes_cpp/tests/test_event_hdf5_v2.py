@@ -50,7 +50,7 @@ def test_v2_round_trip_preserves_kinds_offsets_and_metadata(tmp_path):
     assert list(iter_v2_deposits(path)) == [
         (44, {"addition_id": "add-1", "particle_id": 7, "process": "test-point",
               "region_id": 1000, "energy_MeV": 0.25, "kind": "POINT",
-              "start_xyz_cm": (0.0, 0.0, 0.0), "end_xyz_cm": (0.0, 0.0, 0.0),
+              "start_xyz_cm": None, "end_xyz_cm": None,
               "score_xyz_cm": (1.0, 2.0, 3.0), "score_position_valid": True,
               "source_record_id": "line-12", "position_semantics": "validated PHITS score point"}),
         (44, {"addition_id": "add-2", "particle_id": 7, "process": "continuous-loss",

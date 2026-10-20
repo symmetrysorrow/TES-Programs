@@ -55,14 +55,16 @@ measurement.
 `process:utf8`, `region_id:int32`, `energy_MeV:float64`, `energy_valid:bool`,
 `kind:uint8` (`1=POINT`, `2=SEGMENT`, `3=UNRESOLVED`),
 `start_xyz_cm/end_xyz_cm/score_xyz_cm:float64[3]`,
-`score_position_valid:bool`, `source_record_id:utf8`, and
+`start_position_valid/end_position_valid/score_position_valid:bool`,
+`source_record_id:utf8`, and
 `position_semantics:utf8`.
 
 POINT and SEGMENT energy must be finite and nonnegative. UNRESOLVED has
 `energy_valid=false` and is returned as Python `None`, never as a measured zero.
 SEGMENT requires both endpoints. The PHITS representative score coordinate is
-stored separately from those endpoints. A missing score coordinate is masked
-by `score_position_valid=false`.
+stored separately from those endpoints. Missing start, end, or score
+coordinates are masked by their corresponding `*_position_valid=false` field;
+their stored numeric placeholders are not positions.
 
 ### `/provenance`
 

@@ -123,6 +123,7 @@ class EventV2Writer:
             "region_id": np.int32, "energy_MeV": np.float64,
             "energy_valid": np.bool_, "kind": np.uint8,
             "start_xyz_cm": np.float64, "end_xyz_cm": np.float64,
+            "start_position_valid": np.bool_, "end_position_valid": np.bool_,
             "score_xyz_cm": np.float64, "score_position_valid": np.bool_,
             "source_record_id": h5py.string_dtype("utf-8"),
             "position_semantics": h5py.string_dtype("utf-8"),
@@ -180,7 +181,8 @@ class EventV2Writer:
                                       "energy_MeV", "time", "region_id", "time_valid")}
         dbuf = {name: [] for name in ("addition_id", "event_id", "particle_id", "process", "region_id",
                                       "energy_MeV", "energy_valid", "kind", "start_xyz_cm", "end_xyz_cm",
-                                      "score_xyz_cm", "score_position_valid", "source_record_id", "position_semantics")}
+                                      "start_position_valid", "end_position_valid", "score_xyz_cm",
+                                      "score_position_valid", "source_record_id", "position_semantics")}
         track_offsets = []
         for particle in particles:
             pid = int(particle["particle_id"])
@@ -201,6 +203,7 @@ class EventV2Writer:
                 tbuf["source_record_id"].append(str(track["source_record_id"]))
                 tbuf["ncol"].append(int(track["ncol"]))
                 tbuf["particle_id"].append(pid)
+                tbuf["energy_MeV"].append(energy)
                 for axis, value in zip(("x_cm", "y_cm", "z_cm"), xyz):
                     tbuf[axis].append(value)
                 time_valid = track.get("time") is not None
@@ -241,6 +244,8 @@ class EventV2Writer:
             else:
                 start = _vector(deposit.get("start_xyz_cm"), "start_xyz_cm")
                 end = _vector(deposit.get("end_xyz_cm"), "end_xyz_cm")
+            start_valid = deposit.get("start_xyz_cm") is not None
+            end_valid = deposit.get("end_xyz_cm") is not None
             score_valid = deposit.get("score_xyz_cm") is not None
             score = _vector(deposit.get("score_xyz_cm"), "score_xyz_cm")
             pid = int(deposit.get("particle_id", -1))
@@ -251,6 +256,7 @@ class EventV2Writer:
                 "particle_id": pid, "process": str(deposit["process"]),
                 "region_id": int(deposit["region_id"]), "energy_MeV": energy,
                 "energy_valid": valid, "kind": kind,
+                "start_position_valid": start_valid, "end_position_valid": end_valid,
                 "score_position_valid": score_valid,
                 "source_record_id": str(deposit["source_record_id"]),
                 "position_semantics": str(deposit.get("position_semantics", "unresolved")),
@@ -296,14 +302,9 @@ class EventV2Writer:
             if commit:
                 # Validate the completed flat arrays before atomically publishing.
                 with h5py.File(self.temporary_path, "r") as file:
-                    n_events = len(file["events/event_id"])
-                    if len(file["events/particle_offsets"]) != n_events + 1 or len(file["events/deposit_offsets"]) != n_events + 1:
-                        raise RuntimeError("invalid event offset arrays")
-                    if len(file["particles/track_offsets"]) != len(file["particles/particle_id"]) + 1:
-                        raise RuntimeError("invalid track offset array")
-                    for group in ("events", "particles", "tracks", "deposits", "provenance"):
-                        if group not in file:
-                            raise RuntimeError(f"missing schema group /{group}")
+                    _identify(file, self.temporary_path)
+                    if "provenance" not in file or not isinstance(file["provenance"], h5py.Group):
+                        raise RuntimeError("missing schema group /provenance")
                 os.replace(self.temporary_path, self.path)
             else:
                 self.temporary_path.unlink(missing_ok=True)
@@ -332,6 +333,52 @@ def _identify(file, path):
         raise ValueError(f"unsupported {FORMAT_NAME} format_version={version}")
     if _text(file.attrs.get("schema", "")) != "flat-offset-v2":
         raise ValueError(f"{path} declares v2 with an unknown schema")
+    required = {
+        "events": ("event_id", "particle_offsets", "deposit_offsets", "deposit_total_MeV",
+                   "complete", "all_absorption", "unresolved_count"),
+        "particles": ("event_id", "particle_id", "parent_particle_id", "parent_valid", "ityp", "track_offsets"),
+        "tracks": ("source_record_id", "ncol", "particle_id", "x_cm", "y_cm", "z_cm", "energy_MeV", "time", "region_id", "time_valid"),
+        "deposits": ("addition_id", "event_id", "particle_id", "process", "region_id", "energy_MeV",
+                     "energy_valid", "kind", "start_xyz_cm", "end_xyz_cm", "start_position_valid",
+                     "end_position_valid", "score_xyz_cm",
+                     "score_position_valid", "source_record_id", "position_semantics"),
+    }
+    for group_name, dataset_names in required.items():
+        if group_name not in file or not isinstance(file[group_name], h5py.Group):
+            raise ValueError(f"{path} is missing /{group_name}")
+        for dataset_name in dataset_names:
+            if dataset_name not in file[group_name] or not isinstance(file[group_name][dataset_name], h5py.Dataset):
+                raise ValueError(f"{path} is missing /{group_name}/{dataset_name}")
+
+    event_count = len(file["events/event_id"])
+    particle_count = len(file["particles/particle_id"])
+    track_count = len(file["tracks/ncol"])
+    deposit_count = len(file["deposits/event_id"])
+
+    def check_offsets(dataset, expected_length, final_value, label):
+        if len(dataset) != expected_length:
+            raise ValueError(f"{path} has invalid {label} length")
+        previous = 0
+        for start in range(0, len(dataset), 1_000_000):
+            values = np.asarray(dataset[start:start + 1_000_000], dtype=np.int64)
+            if len(values) and (values[0] < previous or np.any(values[1:] < values[:-1])):
+                raise ValueError(f"{path} has non-monotonic {label}")
+            previous = int(values[-1]) if len(values) else previous
+        if int(dataset[0]) != 0 or int(dataset[-1]) != final_value:
+            raise ValueError(f"{path} has invalid {label} endpoints")
+
+    check_offsets(file["events/particle_offsets"], event_count + 1, particle_count, "particle_offsets")
+    check_offsets(file["events/deposit_offsets"], event_count + 1, deposit_count, "deposit_offsets")
+    check_offsets(file["particles/track_offsets"], particle_count + 1, track_count, "track_offsets")
+    for group_name, expected in (("events", event_count), ("particles", particle_count),
+                                 ("tracks", track_count), ("deposits", deposit_count)):
+        group = file[group_name]
+        for name, dataset in group.items():
+            if name not in ("particle_offsets", "deposit_offsets", "track_offsets") and len(dataset) != expected:
+                raise ValueError(f"{path} has inconsistent /{group_name}/{name} length")
+    for name in ("start_xyz_cm", "end_xyz_cm", "score_xyz_cm"):
+        if file[f"deposits/{name}"].shape != (deposit_count, 3):
+            raise ValueError(f"{path} has invalid /deposits/{name} shape")
 
 
 def iter_deposits(path):
@@ -352,8 +399,8 @@ def iter_deposits(path):
                     "region_id": int(deposits["region_id"][row]),
                     "energy_MeV": float(deposits["energy_MeV"][row]) if deposits["energy_valid"][row] else None,
                     "kind": kind,
-                    "start_xyz_cm": tuple(float(x) for x in deposits["start_xyz_cm"][row]),
-                    "end_xyz_cm": tuple(float(x) for x in deposits["end_xyz_cm"][row]),
+                    "start_xyz_cm": tuple(float(x) for x in deposits["start_xyz_cm"][row]) if deposits["start_position_valid"][row] else None,
+                    "end_xyz_cm": tuple(float(x) for x in deposits["end_xyz_cm"][row]) if deposits["end_position_valid"][row] else None,
                     "score_xyz_cm": tuple(float(x) for x in deposits["score_xyz_cm"][row]) if deposits["score_position_valid"][row] else None,
                     "score_position_valid": bool(deposits["score_position_valid"][row]),
                     "source_record_id": _text(deposits["source_record_id"][row]),

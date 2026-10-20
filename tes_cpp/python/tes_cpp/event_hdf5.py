@@ -138,7 +138,7 @@ def json_to_hdf5(json_path, hdf5_path):
 
 
 def iter_events(path):
-    """Yield ``(event_id, particles)`` in the legacy event.json shape."""
+    """Yield event records; legacy formats retain their old shape, v2 yields summaries."""
     with h5py.File(path, "r") as file:
         # Identify the declared format before inspecting its groups.  The v2
         # schema also has /events, but it is a flat dataset container rather
