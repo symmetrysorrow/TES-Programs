@@ -22,6 +22,14 @@ raw-only version explain the prior independent-seed histogram discrepancy.
 Details and the row-level audit are in `INDEPENDENT_SEED_ROOT_CAUSE.md` and
 `validation/independent_seed_1000_ncol10_boundary_audit.csv`.
 
+The previous L1=6 consisted of three adjacent-bin moves in NOCAS 246, 365, and
+461, caused by those omitted NCOL=10 terms. Exact PHITS serialized histogram
+edges and the Fortran half-open comparisons rule out a boundary-rounding
+explanation for those cases. After correction, the tracked PHITS-internal
+comparison has maximum per-history absolute error `7.815970093361102e-14 MeV`
+and histogram L1=0. The separately quoted `2.22e-15 MeV` is the raw-only
+implementation-to-implementation maximum, not the PHITS-internal maximum.
+
 ## Independent-seed result
 
 On the existing 1,000-history independent-seed case, the revised raw-Dumpall

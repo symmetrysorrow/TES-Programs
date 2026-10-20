@@ -32,6 +32,20 @@ arbitrary redistribution, or replacement by zero is used. A zero unresolved
 count in the 1,000-history sample means only that this particular sample did
 not exercise an unsupported row in the selected tally scope.
 
+## Weight accounting confirmed from PHITS 3.341 source
+
+In `src/talls08.f:tdepstregEVENT`, the validated EGS5 `itdfn=0` deposit path
+forms `tlv=ein-ecc` and adds that energy to `trEVENT` without multiplying the
+sum by a particle weight. At each scored contribution PHITS stores
+`sweight(m)=oldwt`; if a later scored contribution in the same history has a
+different `oldwt`, it emits the source weight-change warning. At the NCOL=0/4
+history flush, the tally score is `sweight(m)*ratio`, with `ratio` determined
+by the `part=all` / tally mode branch. Therefore a changing-weight history
+cannot be reconstructed by merely multiplying each raw energy term by that
+term's `OLDWT`, and a unit-weight result does not validate splitting,
+roulette, or importance handling. The 1,000-history comparison described in
+the status report exercised unit weights only.
+
 ## PR #6 integration blockers
 
 Before production integration, the implementation needs validated

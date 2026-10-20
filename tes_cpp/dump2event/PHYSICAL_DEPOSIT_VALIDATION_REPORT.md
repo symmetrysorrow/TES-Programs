@@ -44,8 +44,18 @@ from the independent-seed comparison.
 The comparison is keyed by PHITS internal NOCAS and compares sums before
 binning. It does not infer history identities from the ordinary PHITS
 histogram. Per-history values and bin edges are in
-`validation/independent_seed_1000_history_compare.csv` (generated during
-local validation; not committed if it is too large for this branch).
+`validation/independent_seed_1000_history_compare.csv`; the file is committed
+as a derived result. Raw PHITS diagnostic traces, executable, and the source
+Dumpall remain local and are not committed.
+
+The earlier L1=6 mismatch was traced to omitted NCOL=10 EGS5 boundary losses,
+not floating-point binning. Eight omitted terms sum to
+`0.018778564270171039 MeV`; three histories crossed one serialized PHITS bin
+edge, yielding six count differences across the two adjacent bins. The
+corrected comparison has L1=0. The maximum per-history error of the committed
+PHITS-internal comparison is `7.815970093361102e-14 MeV`; the separate
+`2.22e-15 MeV` value describes the raw-only code-to-code comparison and is not
+the PHITS comparison error.
 
 ## Current implementation rules
 
@@ -69,10 +79,13 @@ placement.
 
 On 2026-10-20, MSVC 19.51 / Visual Studio 18 built `dump2event`,
 `dumpall_record_inspect`, `dump2event_physical_reconstruct`, and
-`test_physical_deposit_engine`. CTest passed 1/1. Python unittest passed
-23/23 with the built converter selected. The default converter processed the
-original 1,000-history sample with `--summary-only --save-all` and reported
-1,000 histories, exit code 0. No Linux/WSL build was run.
+`test_physical_deposit_engine`. CTest passed 1/1. The last documented Python
+run passed 23/23 with the built converter selected. A fresh isolated pytest
+run during review passed 13 tests and skipped 10 comparator tests because
+their large external fixtures were not present. The default converter
+previously processed the original 1,000-history sample with
+`--summary-only --save-all` and reported 1,000 histories, exit code 0. No
+Linux/WSL build was run during this review.
 
 ## Decision
 

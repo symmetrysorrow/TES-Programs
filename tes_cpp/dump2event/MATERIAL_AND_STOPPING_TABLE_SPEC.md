@@ -11,9 +11,17 @@ PHITS material database.
 ## Table schema
 
 `Egs5StoppingTable::read_csv` consumes the HATCH-derived local CSV with one
-row per EGS5 log-energy index and fields:
+row per EGS5 log-energy index and this exact 11-column header:
 
-`medium,material,log_energy_index,eke0,eke1,ededx0,ededx1,phits_density,egs_density`.
+`medium,medname,lelke,eke0,eke1,ededx0,ededx1,pdedx0,pdedx1,phits_density,egs_density`.
+
+The parser uses the `medium`, `medname`, `lelke`, `eke0`, `eke1`, `ededx0`,
+`ededx1`, `phits_density`, and `egs_density` columns. It validates but does
+not use `pdedx0` or `pdedx1` in the electron-deposit calculation. The label
+`medname` must match the explicitly supplied expected material; rows for the
+requested EGS5 medium must have consistent PHITS and EGS5 density metadata.
+Every energy-index row used by the lookup must be present; a missing index
+fails at lookup instead of being interpolated or guessed.
 
 The table is not committed because it is a locally generated/nonpublic PHITS
 artifact. Reproducible runs should record its SHA-256 and explain the HATCH
@@ -23,10 +31,14 @@ source and material setup. The validated local table had SHA-256:
 20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9
 ```
 
-The wrapper manifest additionally hashes the input Dumpall and a canonical
-JSON physics configuration. It rejects PHITS version values other than
-`3.341`. The C++ executable itself takes the table and Dumpall as explicit
-arguments and does not contain local absolute paths.
+The wrapper manifest records SHA-256 for the input Dumpall, stopping-table
+file, canonical JSON physics configuration, and the caller-supplied human
+readable table-source provenance. The source string itself is descriptive
+metadata, not a cryptographic attestation. The wrapper rejects PHITS version
+values other than `3.341`; the C++ constructor independently rejects a
+different version, region/material/medium, cutoff, or non-unit-weight scope.
+The C++ executable takes the table and Dumpall as explicit arguments and
+contains no local absolute paths.
 
 ## Numerical expression
 
