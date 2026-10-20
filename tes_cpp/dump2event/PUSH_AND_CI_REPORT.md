@@ -90,8 +90,11 @@ header, including the two checked-but-unused positron columns.
 
 ### Follow-up push and Actions
 
-The follow-up documentation/script changes are ready for the research branch.
-Commit SHA and the GitHub Actions result for this follow-up are recorded here
-after push. PR #6 was queried during this review: it remains open, Draft, and
-at head `36dec9f139918d233faf0876736f43d1bbdb965c`; no PR #6 change or merge was
+The follow-up documentation/script changes were pushed to the research branch
+as commit `7d305030de49a54fb26ceb807190ad2cb9c279b5`. GitHub Actions run
+[39428338000](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39428338000)
+completed successfully: `energy-regressions` passed setup, checkout, HDF5
+installation, CMake configure, build, and Python energy-accounting tests.
+PR #6 was queried after the push: it remains open, Draft, and at head
+`36dec9f139918d233faf0876736f43d1bbdb965c`; no PR #6 change or merge was
 performed.
