@@ -25,7 +25,10 @@ endif()
 # Keep this as a static library.  A shared MSVC library would require an
 # export definition for the converter functions before dump2event.exe can
 # link against it.
-add_library(tes_cpp_dump2event STATIC src/converter.cpp)
+add_library(tes_cpp_dump2event STATIC
+    src/converter.cpp
+    src/dumpall_record_parser.cpp
+    src/physical_deposit.cpp)
 target_include_directories(tes_cpp_dump2event
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -45,6 +48,21 @@ endif()
 
 add_executable(dump2event src/main.cpp)
 target_link_libraries(dump2event PRIVATE tes_cpp_dump2event)
+
+add_executable(dumpall_record_inspect src/dumpall_inspect.cpp)
+target_link_libraries(dumpall_record_inspect PRIVATE tes_cpp_dump2event)
+
+add_executable(dump2event_physical_reconstruct src/physical_dump_reconstruct.cpp)
+target_link_libraries(dump2event_physical_reconstruct PRIVATE tes_cpp_dump2event)
+
+include(CTest)
+option(TES_BUILD_DUMP2EVENT_TESTS "Build dump2event unit tests" ON)
+if (TES_BUILD_DUMP2EVENT_TESTS)
+    enable_testing()
+    add_executable(test_physical_deposit_engine tests/test_physical_deposit_engine.cpp)
+    target_link_libraries(test_physical_deposit_engine PRIVATE tes_cpp_dump2event)
+    add_test(NAME physical_deposit_engine COMMAND test_physical_deposit_engine)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS tes_cpp_dump2event

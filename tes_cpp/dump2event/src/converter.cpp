@@ -1,4 +1,5 @@
 #include "tes_cpp/converter.hpp"
+#include "tes_cpp/dumpall_record_parser.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -71,7 +72,7 @@ void write_event(std::ostream& out, const EventInfo& event, int indent) {
 
 }  // namespace
 
-Result read_dump(const std::string& dump_path, const Options& options) {
+static Result read_dump_legacy_line_parser(const std::string& dump_path, const Options& options) {
     std::ifstream file(dump_path, std::ios::binary);
     if (!file) throw std::runtime_error("cannot open dump file: " + dump_path);
 
@@ -268,7 +269,9 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 if (static_cast<int>(particle_type) != 12 && static_cast<int>(particle_type) != 13) ++count;
             }
             if (static_cast<int>(count) == 11) {
-                require_columns(column, 2, line_number);
+                // The scalar row at this slot is emitted with one field by
+                // PHITS 3.341 (including the source NCOL=4 preamble).
+                require_columns(column, 1, line_number);
                 deposited_before_collision = column[0];
             }
             if (static_cast<int>(count) == 13) {
@@ -417,6 +420,180 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     // event. Committing here preserves the final event as well.
     commit_history();
     return result;
+}
+
+// Fallback for the PHITS 3.341 ASCII layout written by src/ovly15.f:dumpdat.
+// The legacy line-counter parser remains the compatibility path for its
+// historical fixtures; this record parser handles variable QS/lattice/child
+// blocks and scalar NZST/NCLSTS rows without fixed line assumptions.
+static Result read_dump_structured(const std::string& dump_path, const Options& options) {
+    std::ifstream input(dump_path, std::ios::binary);
+    if (!input) throw std::runtime_error("cannot open dump file: " + dump_path);
+    Result result;
+    History history;
+    HistorySummary summary;
+    bool active = false, retain = true, saw_secondary = false;
+    int event_id = 0, reaction_index = 0;
+    std::ofstream audit;
+    if (!options.reaction_audit_path.empty()) {
+        audit.open(options.reaction_audit_path);
+        if (!audit) throw std::runtime_error("cannot open reaction audit CSV: " + options.reaction_audit_path);
+        audit << "event_id,particle_id,reaction_index,ncol,jcoll,parent_ityp,parent_E,parent_EC,"
+                 "parent_E_minus_EC,secondary_count,transported_secondary_energy,all_secondary_energy,"
+                 "dead_secondary_energy,below_cutoff_secondary_energy,raw_local_deposit,"
+                 "history_retained,x,y,z,secondaries\n" << std::setprecision(17);
+    }
+    const bool discard_non_full_early = options.full_energy_only || !options.save_all;
+    const auto commit = [&] {
+        if (!active) return;
+        for (const auto& [_, particle] : history) {
+            for (const double value : particle.energy_deposit) {
+                summary.raw_total_deposit += value;
+                if (value < 0.0) ++summary.negative_deposits;
+            }
+        }
+        summary.deposit_records_complete = retain;
+        const double source = summary.source_energy_available ? summary.source_energy : options.input_energy;
+        summary.energy_balance_reference = source;
+        summary.energy_consistent = retain && std::abs(summary.raw_total_deposit -
+            (source - summary.leaked_energy)) <= options.energy_tolerance;
+        if (options.normalize_deposits && retain) {
+            const double target = std::max(0.0, source - summary.leaked_energy);
+            double positive_sum = 0.0;
+            for (auto& [_, particle] : history) {
+                for (double& value : particle.energy_deposit) {
+                    if (value < 0.0) value = 0.0;
+                    positive_sum += value;
+                }
+            }
+            if (positive_sum > 0.0) {
+                summary.normalization_factor = target / positive_sum;
+                for (auto& [_, particle] : history)
+                    for (double& value : particle.energy_deposit)
+                        value *= summary.normalization_factor;
+            }
+        }
+        summary.total_deposit = 0.0;
+        for (const auto& [_, particle] : history)
+            summary.total_deposit += std::accumulate(particle.energy_deposit.begin(),
+                                                      particle.energy_deposit.end(), 0.0);
+        summary.fully_contained = summary.leaked_particles == 0;
+        summary.full_energy = summary.fully_contained;
+        summary.had_secondary_particle = saw_secondary;
+        summary.event_id = event_id;
+        summary.stored_event = options.save_all || summary.full_energy;
+        result.history_summaries.push_back(summary);
+        if (summary.stored_event) result.batch.emplace(event_id, history);
+        if ((options.save_all || options.collect_full_energy_ids) && summary.full_energy)
+            result.full_energy_event_ids.push_back(event_id);
+        active = false;
+    };
+
+    const auto parsed = parse_dumpall_records(input, [&](const DumpallRecord& record) {
+        if (record.ncol == 4) {
+            commit();
+            if (options.max_histories > 0 &&
+                static_cast<int>(result.history_summaries.size()) >= options.max_histories) return;
+            history.clear(); summary = {}; reaction_index = 0; saw_secondary = false;
+            retain = true; active = true; event_id = record.nocas;
+            summary.event_id = event_id;
+            if (record.particle_id == 1 && record.energy >= 0.0 && std::isfinite(record.energy)) {
+                summary.source_energy = record.energy;
+                summary.source_energy_available = true;
+            }
+        }
+        if (!active) return;
+        ++summary.particle_records;
+        const int particle_id = record.particle_id;
+        const int type = record.ityp;
+        if (particle_id > 1) saw_secondary = true;
+        if (record.ncol == 11) {
+            ++summary.energy_cutoff_particles;
+            if (type == 14) ++summary.energy_cutoff_photons;
+            if (type == 12 || type == 13) ++summary.energy_cutoff_electrons;
+        }
+        if (record.ncol == 12) {
+            ++summary.leaked_particles;
+            summary.leaked_energy += std::max(0.0, record.energy);
+            if (type == 14) {
+                ++summary.leaked_photons;
+                if (particle_id == 1) ++summary.leaked_primary_photons;
+                else ++summary.leaked_secondary_photons;
+            }
+            if (discard_non_full_early) { history.clear(); retain = false; }
+        }
+        if (type == 12 || type == 13 || type == 14) {
+            if (retain) {
+                auto& particle = history[particle_id];
+                particle.ityp = type;
+                particle.x.push_back(record.x); particle.y.push_back(record.y); particle.z.push_back(record.z);
+                particle.energy.push_back(record.energy);
+            }
+        }
+        if (record.ncol == 11 && retain && (type == 12 || type == 13 || type == 14)) {
+            auto& particle = history[particle_id];
+            particle.energy_deposit.push_back(record.energy);
+            particle.x_deposit.push_back(record.x); particle.y_deposit.push_back(record.y);
+            particle.z_deposit.push_back(record.z);
+        }
+        if (record.ncol != 13 && record.ncol != 14) return;
+        ++summary.reaction_records;
+        ++reaction_index;
+        for (const auto& child : record.secondaries) {
+            ++summary.secondary_particles;
+            if (child.jclusts[3] == 14) ++summary.secondary_photons;
+            if (child.jclusts[3] == 12 || child.jclusts[3] == 13)
+                ++summary.secondary_electrons;
+        }
+        if (type != 12 && type != 13 && type != 14) return;
+        double transported = 0.0, all_secondaries = 0.0, dead = 0.0, below = 0.0;
+        std::ostringstream details;
+        for (std::size_t i = 0; i < record.secondaries.size(); ++i) {
+            const auto& child = record.secondaries[i];
+            const int child_type = child.jclusts[3];
+            const int status = child.jclusts[4];
+            const double energy = child.qclusts[7];
+            const double threshold = child_type == 14 ? options.photon_min_energy :
+                ((child_type == 12 || child_type == 13) ? options.electron_min_energy : 0.0);
+            const bool transported_child = status >= 0 && energy >= threshold;
+            all_secondaries += energy;
+            if (transported_child) transported += energy;
+            else if (status < 0) dead += energy;
+            else below += energy;
+            if (i) details << ';';
+            details << i << ':' << child_type << ':' << status << ':' << energy << ':'
+                    << (transported_child ? 1 : 0);
+        }
+        const double local_deposit = record.energy - transported;
+        if (audit.is_open() && (options.reaction_audit_all || local_deposit < 0.0)) {
+            audit << event_id << ',' << particle_id << ',' << reaction_index << ',' << record.ncol << ',';
+            if (record.nclsts > 0) audit << record.jcoll;
+            audit << ',' << type << ',' << record.energy << ',' << record.ec << ','
+                  << (record.energy - record.ec) << ',' << record.nclsts << ',' << transported << ','
+                  << all_secondaries << ',' << dead << ',' << below << ',' << local_deposit << ','
+                  << (retain ? 1 : 0) << ',' << record.x << ',' << record.y << ',' << record.z
+                  << ",\"" << details.str() << "\"\n";
+        }
+        if (retain) {
+            auto& particle = history[particle_id];
+            particle.energy_deposit.push_back(local_deposit);
+            particle.x_deposit.push_back(record.x); particle.y_deposit.push_back(record.y);
+            particle.z_deposit.push_back(record.z);
+        }
+    });
+    (void)parsed;
+    commit();
+    return result;
+}
+
+Result read_dump(const std::string& dump_path, const Options& options) {
+    try {
+        return read_dump_legacy_line_parser(dump_path, options);
+    } catch (const std::runtime_error&) {
+        // A complete PHITS record parse is required before falling back; this
+        // prevents malformed/truncated files from being accepted silently.
+        return read_dump_structured(dump_path, options);
+    }
 }
 
 void write_event_json(const Batch& batch, const std::string& output_path) {
