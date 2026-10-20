@@ -80,8 +80,14 @@ class EventV2Writer:
         self.file.attrs["length_unit"] = "cm"
         self.file.attrs["schema"] = "flat-offset-v2"
         self.provenance = self.file.create_group("provenance")
-        for key in REQUIRED_PROVENANCE:
-            self.provenance.attrs[key] = str(provenance[key])
+        for key, value in provenance.items():
+            if key == "format":
+                continue
+            if key in REQUIRED_PROVENANCE:
+                self.provenance.attrs[key] = str(value)
+            else:
+                self.provenance.attrs[key] = value if isinstance(
+                    value, (str, int, float, bool, np.integer, np.floating)) else str(value)
         for key in ("dumpall_sha256", "physics_config_sha256", "stopping_table_sha256"):
             if not re.fullmatch(r"[0-9a-fA-F]{64}", str(provenance[key])):
                 self.file.close()
@@ -134,6 +140,7 @@ class EventV2Writer:
                                       ("tracks", self.tracks), ("deposits", self.deposits))
         }
         self._buffered_events = 0
+        self._failed = False
 
     def _total(self, group: str, name: str) -> int:
         return len(getattr(self, group)[name]) + len(self._buffers[group][name])
@@ -142,14 +149,21 @@ class EventV2Writer:
         self._buffers[group][name].extend(values)
 
     def _flush(self) -> None:
-        for group_name, fields in self._buffers.items():
-            group = getattr(self, group_name)
-            for name, values in fields.items():
-                if values:
-                    _append(group[name], values)
-                    fields[name] = []
-        self._buffered_events = 0
-        self.file.flush()
+        try:
+            for group_name, fields in self._buffers.items():
+                group = getattr(self, group_name)
+                for name, values in fields.items():
+                    if values:
+                        _append(group[name], values)
+                        fields[name] = []
+            self._buffered_events = 0
+            self.file.flush()
+        except Exception:
+            # HDF5 dataset writes cannot be rolled back as one transaction.
+            # Poison this private temporary writer and forbid publication or
+            # further appends after a storage failure.
+            self._failed = True
+            raise
 
     @staticmethod
     def _datasets(group, definitions, compression):
@@ -167,13 +181,28 @@ class EventV2Writer:
                      complete: bool, all_absorption: str = "undetermined"):
         if self.file is None:
             raise RuntimeError("writer is closed")
+        if self._failed:
+            raise RuntimeError("writer is unusable after a storage failure")
+        event_id = int(event_id)
+        if event_id < 0 or event_id > np.iinfo(np.int64).max:
+            raise ValueError("event_id is outside the HDF5 int64 range")
         if all_absorption not in ABSORPTION_STATES:
             raise ValueError(f"invalid all_absorption state: {all_absorption}")
-        if int(event_id) in self._event_ids:
+        if all_absorption == "confirmed" and not complete:
+            raise ValueError("all_absorption=confirmed requires a complete event")
+        if event_id in self._event_ids:
             raise ValueError(f"duplicate event_id {event_id}")
         pstart = self._total("particles", "particle_id")
         dstart = self._total("deposits", "event_id")
+        tstart = self._total("tracks", "ncol")
+        track_count = sum(len(particle.get("tracks", ())) for particle in particles)
+        for label, value in (("particle offset", pstart + len(particles)),
+                             ("deposit offset", dstart + len(deposits)),
+                             ("track offset", tstart + track_count)):
+            if value > np.iinfo(np.int64).max:
+                raise OverflowError(f"{label} exceeds the HDF5 int64 range")
         particle_ids = set()
+        new_addition_ids = set()
         known_total = 0.0
         unresolved = 0
         pbuf = {name: [] for name in ("event_id", "particle_id", "parent_particle_id", "parent_valid", "ityp")}
@@ -186,6 +215,8 @@ class EventV2Writer:
         track_offsets = []
         for particle in particles:
             pid = int(particle["particle_id"])
+            if pid < 0 or pid > np.iinfo(np.int64).max:
+                raise ValueError("particle_id is outside the HDF5 int64 range")
             if pid in particle_ids:
                 raise ValueError(f"duplicate particle_id {pid} in event {event_id}")
             particle_ids.add(pid)
@@ -198,10 +229,19 @@ class EventV2Writer:
             for track in particle.get("tracks", ()):
                 xyz = _vector(track.get("xyz_cm"), "track.xyz_cm", required=True)
                 energy = float(track["energy_MeV"])
-                if not np.isfinite(energy):
-                    raise ValueError("track energy must be finite")
-                tbuf["source_record_id"].append(str(track["source_record_id"]))
-                tbuf["ncol"].append(int(track["ncol"]))
+                if not np.isfinite(energy) or energy < 0.0:
+                    raise ValueError("track energy must be finite and nonnegative")
+                source_record_id = str(track["source_record_id"])
+                if not source_record_id:
+                    raise ValueError("track source_record_id must be nonempty")
+                ncol = int(track["ncol"])
+                if ncol < 0 or ncol > np.iinfo(np.int16).max:
+                    raise ValueError("track ncol is outside the HDF5 int16 range")
+                region_id = int(track["region_id"])
+                if region_id < 0 or region_id > np.iinfo(np.int32).max:
+                    raise ValueError("track region_id is outside the HDF5 int32 range")
+                tbuf["source_record_id"].append(source_record_id)
+                tbuf["ncol"].append(ncol)
                 tbuf["particle_id"].append(pid)
                 tbuf["energy_MeV"].append(energy)
                 for axis, value in zip(("x_cm", "y_cm", "z_cm"), xyz):
@@ -212,20 +252,21 @@ class EventV2Writer:
                     raise ValueError("track time must be finite")
                 tbuf["time"].append(time)
                 tbuf["time_valid"].append(time_valid)
-                tbuf["region_id"].append(int(track["region_id"]))
-            track_offsets.append(self._total("tracks", "ncol") + len(tbuf["ncol"]))
+                tbuf["region_id"].append(region_id)
+            track_offsets.append(tstart + len(tbuf["ncol"]))
 
-        for name, values in pbuf.items():
-            self._push("particles", name, values)
-        for name, values in tbuf.items():
-            self._push("tracks", name, values)
-        self._push("particles", "track_offsets", track_offsets)
+        for particle in particles:
+            parent = particle.get("parent_particle_id")
+            if parent is not None and int(parent) not in particle_ids:
+                raise ValueError(f"parent_particle_id {parent} is absent from event {event_id}")
 
         for deposit in deposits:
             addition_id = str(deposit["addition_id"])
-            if addition_id in self._addition_ids:
+            if not addition_id:
+                raise ValueError("addition_id must be nonempty")
+            if addition_id in self._addition_ids or addition_id in new_addition_ids:
                 raise ValueError(f"duplicate addition_id {addition_id}")
-            self._addition_ids.add(addition_id)
+            new_addition_ids.add(addition_id)
             kind_name = str(deposit["kind"]).upper()
             if kind_name not in DEPOSIT_KINDS:
                 raise ValueError(f"invalid deposit kind {kind_name!r}")
@@ -247,18 +288,29 @@ class EventV2Writer:
             start_valid = deposit.get("start_xyz_cm") is not None
             end_valid = deposit.get("end_xyz_cm") is not None
             score_valid = deposit.get("score_xyz_cm") is not None
+            if kind == DEPOSIT_KINDS["POINT"] and not score_valid:
+                raise ValueError("POINT deposit requires score_xyz_cm")
             score = _vector(deposit.get("score_xyz_cm"), "score_xyz_cm")
             pid = int(deposit.get("particle_id", -1))
             if pid >= 0 and pid not in particle_ids:
                 raise ValueError(f"deposit references absent particle_id {pid} in event {event_id}")
+            if pid < -1:
+                raise ValueError("deposit particle_id must be -1 or nonnegative")
+            process = str(deposit["process"])
+            source_record_id = str(deposit["source_record_id"])
+            if not process or not source_record_id:
+                raise ValueError("deposit process and source_record_id must be nonempty")
+            region_id = int(deposit["region_id"])
+            if region_id < 0 or region_id > np.iinfo(np.int32).max:
+                raise ValueError("deposit region_id is outside the HDF5 int32 range")
             fields = {
-                "addition_id": str(deposit["addition_id"]), "event_id": event_id,
-                "particle_id": pid, "process": str(deposit["process"]),
-                "region_id": int(deposit["region_id"]), "energy_MeV": energy,
+                "addition_id": addition_id, "event_id": event_id,
+                "particle_id": pid, "process": process,
+                "region_id": region_id, "energy_MeV": energy,
                 "energy_valid": valid, "kind": kind,
                 "start_position_valid": start_valid, "end_position_valid": end_valid,
                 "score_position_valid": score_valid,
-                "source_record_id": str(deposit["source_record_id"]),
+                "source_record_id": source_record_id,
                 "position_semantics": str(deposit.get("position_semantics", "unresolved")),
             }
             for name, value in fields.items():
@@ -270,19 +322,39 @@ class EventV2Writer:
             else:
                 unresolved += 1
 
-        for name, values in dbuf.items():
-            self._push("deposits", name, values)
-
         if unresolved and complete:
             raise ValueError("an event containing unresolved deposits cannot be complete")
-        self._event_ids.add(int(event_id))
-        self._push("events", "event_id", [event_id])
-        self._push("events", "particle_offsets", [self._total("particles", "particle_id")])
-        self._push("events", "deposit_offsets", [self._total("deposits", "event_id")])
-        self._push("events", "deposit_total_MeV", [known_total])
-        self._push("events", "complete", [bool(complete)])
-        self._push("events", "all_absorption", [all_absorption])
-        self._push("events", "unresolved_count", [unresolved])
+        if not np.isfinite(known_total):
+            raise OverflowError("event deposit total is outside the finite float64 range")
+        # Stage every dataset value locally. No buffers, ID sets, or offsets are
+        # mutated until all validation above has succeeded.
+        staged = {
+            "particles": {**pbuf, "track_offsets": track_offsets},
+            "tracks": tbuf,
+            "deposits": dbuf,
+            "events": {
+                "event_id": [event_id],
+                "particle_offsets": [pstart + len(particles)],
+                "deposit_offsets": [dstart + len(deposits)],
+                "deposit_total_MeV": [known_total],
+                "complete": [bool(complete)],
+                "all_absorption": [all_absorption],
+                "unresolved_count": [unresolved],
+            },
+        }
+        prior_lengths = {group: {name: len(values) for name, values in fields.items()}
+                         for group, fields in self._buffers.items()}
+        try:
+            for group, fields in staged.items():
+                for name, values in fields.items():
+                    self._push(group, name, values)
+        except Exception:
+            for group, fields in self._buffers.items():
+                for name, values in fields.items():
+                    del values[prior_lengths[group][name]:]
+            raise
+        self._event_ids.add(event_id)
+        self._addition_ids.update(new_addition_ids)
         self._buffered_events += 1
         if self._buffered_events >= 256:
             self._flush()
@@ -294,6 +366,8 @@ class EventV2Writer:
         if self.file is None:
             return
         try:
+            if self._failed:
+                raise RuntimeError("cannot publish an HDF5 writer after a storage failure")
             if commit:
                 self._flush()
             self.file.flush()
@@ -385,26 +459,31 @@ def iter_deposits(path):
     """Yield ``(event_id, deposit_mapping)`` without collapsing SEGMENT rows."""
     with h5py.File(Path(path), "r") as file:
         _identify(file, path)
-        events = file["events"]
         deposits = file["deposits"]
-        for index, event_id in enumerate(events["event_id"]):
-            start, end = map(int, (events["deposit_offsets"][index], events["deposit_offsets"][index + 1]))
-            for row in range(start, end):
-                kind_id = int(deposits["kind"][row])
+        count = len(deposits["event_id"])
+        chunk_size = 65536
+        fields = ("addition_id", "event_id", "particle_id", "process", "region_id", "energy_MeV",
+                  "energy_valid", "kind", "start_xyz_cm", "end_xyz_cm", "start_position_valid",
+                  "end_position_valid", "score_xyz_cm", "score_position_valid", "source_record_id",
+                  "position_semantics")
+        for base in range(0, count, chunk_size):
+            arrays = {name: deposits[name][base:base + chunk_size] for name in fields}
+            for row in range(len(arrays["event_id"])):
+                kind_id = int(arrays["kind"][row])
                 kind = next(name for name, value in DEPOSIT_KINDS.items() if value == kind_id)
-                yield int(event_id), {
-                    "addition_id": _text(deposits["addition_id"][row]),
-                    "particle_id": int(deposits["particle_id"][row]),
-                    "process": _text(deposits["process"][row]),
-                    "region_id": int(deposits["region_id"][row]),
-                    "energy_MeV": float(deposits["energy_MeV"][row]) if deposits["energy_valid"][row] else None,
+                yield int(arrays["event_id"][row]), {
+                    "addition_id": _text(arrays["addition_id"][row]),
+                    "particle_id": int(arrays["particle_id"][row]),
+                    "process": _text(arrays["process"][row]),
+                    "region_id": int(arrays["region_id"][row]),
+                    "energy_MeV": float(arrays["energy_MeV"][row]) if arrays["energy_valid"][row] else None,
                     "kind": kind,
-                    "start_xyz_cm": tuple(float(x) for x in deposits["start_xyz_cm"][row]) if deposits["start_position_valid"][row] else None,
-                    "end_xyz_cm": tuple(float(x) for x in deposits["end_xyz_cm"][row]) if deposits["end_position_valid"][row] else None,
-                    "score_xyz_cm": tuple(float(x) for x in deposits["score_xyz_cm"][row]) if deposits["score_position_valid"][row] else None,
-                    "score_position_valid": bool(deposits["score_position_valid"][row]),
-                    "source_record_id": _text(deposits["source_record_id"][row]),
-                    "position_semantics": _text(deposits["position_semantics"][row]),
+                    "start_xyz_cm": tuple(float(x) for x in arrays["start_xyz_cm"][row]) if arrays["start_position_valid"][row] else None,
+                    "end_xyz_cm": tuple(float(x) for x in arrays["end_xyz_cm"][row]) if arrays["end_position_valid"][row] else None,
+                    "score_xyz_cm": tuple(float(x) for x in arrays["score_xyz_cm"][row]) if arrays["score_position_valid"][row] else None,
+                    "score_position_valid": bool(arrays["score_position_valid"][row]),
+                    "source_record_id": _text(arrays["source_record_id"][row]),
+                    "position_semantics": _text(arrays["position_semantics"][row]),
                 }
 
 

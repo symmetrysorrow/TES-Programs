@@ -17,6 +17,7 @@ PROVENANCE = {
     "cutoff_MeV": "0.001",
     "algorithm_version": "test-1",
     "position_semantics": "PHITS score point and transport chord stored separately",
+    "source_input_sha256": "d" * 64,
 }
 
 
@@ -45,7 +46,7 @@ def test_v2_round_trip_preserves_kinds_offsets_and_metadata(tmp_path):
         result = writer.append_event(44, particles, [_point(), _segment()], complete=True,
                                      all_absorption="confirmed")
         assert result["deposit_total_MeV"] == 0.75
-        writer.append_event(45, [{"particle_id": 2, "parent_particle_id": 7, "ityp": 12}], [],
+        writer.append_event(45, [{"particle_id": 2, "parent_particle_id": None, "ityp": 12}], [],
                             complete=True, all_absorption="undetermined")
     assert list(iter_v2_deposits(path)) == [
         (44, {"addition_id": "add-1", "particle_id": 7, "process": "test-point",
@@ -72,6 +73,7 @@ def test_v2_round_trip_preserves_kinds_offsets_and_metadata(tmp_path):
         assert list(file["particles/track_offsets"][:]) == [0, 1, 1]
         assert file["tracks/source_record_id"][0].decode() == "line-12"
         assert file["provenance"].attrs["phits_version"] == "3.341"
+        assert file["provenance"].attrs["source_input_sha256"] == "d" * 64
 
 
 def test_unresolved_energy_is_not_encoded_as_known_zero(tmp_path):
@@ -135,3 +137,63 @@ def test_v2_is_not_admitted_to_legacy_pulse_reader(tmp_path):
     with pytest.raises(ValueError, match="SEGMENT allocation"):
         require_legacy_point_events(path)
     assert list(iter_events(path)) == []
+
+
+@pytest.mark.parametrize("bad_particles,bad_deposits,complete,error", [
+    ([{"particle_id": 7, "ityp": 12, "tracks": [{"source_record_id": "r", "ncol": 14,
+      "xyz_cm": (0, 0, 0), "energy_MeV": 1, "region_id": 1000}]}],
+     [dict(_point(), energy_MeV=-1)], True, "nonnegative"),
+    ([{"particle_id": 7, "ityp": 12}], [dict(_point(), energy_MeV=float("nan"))], True, "finite"),
+    ([{"particle_id": 7, "ityp": 12}], [dict(_point(), energy_MeV=float("inf"))], True, "finite"),
+    ([{"particle_id": 7, "ityp": 12}], [_point(), _point()], True, "duplicate addition_id"),
+    ([{"particle_id": 7, "parent_particle_id": 99, "ityp": 12}], [], True, "parent_particle_id"),
+    ([{"particle_id": 7, "ityp": 12, "tracks": [{"source_record_id": "r", "ncol": 14,
+      "xyz_cm": (0, 0, 0), "energy_MeV": float("nan"), "region_id": 1000}]}],
+     [], True, "track energy must be finite"),
+    ([{"particle_id": 7, "ityp": 12}], [dict(_point(), score_xyz_cm=None)], True, "requires score_xyz_cm"),
+    ([{"particle_id": 7, "ityp": 12}], [dict(_segment(), start_xyz_cm=None)], True, "start_xyz_cm"),
+    ([{"particle_id": 7, "ityp": 12}], [dict(_segment(), end_xyz_cm=None)], True, "end_xyz_cm"),
+    ([{"particle_id": 7, "ityp": 12}], [{"addition_id": "unresolved", "particle_id": 7,
+      "process": "unknown", "region_id": 1000, "energy_MeV": None, "kind": "UNRESOLVED",
+      "source_record_id": "line-u"}], True, "cannot be complete"),
+])
+def test_rejected_event_is_transactional_and_next_event_can_commit(
+        tmp_path, bad_particles, bad_deposits, complete, error):
+    path = tmp_path / "transactional.h5"
+    good_particles = [{"particle_id": 7, "parent_particle_id": None, "ityp": 12}]
+    with EventV2Writer(path, PROVENANCE) as writer:
+        with pytest.raises((ValueError, OverflowError), match=error):
+            writer.append_event(9, bad_particles, bad_deposits, complete=complete)
+        assert writer._event_ids == set()
+        assert writer._addition_ids == set()
+        assert all(not values for group in writer._buffers.values() for values in group.values())
+        writer.append_event(9, good_particles, [_point()], complete=True)
+    assert list(iter_events(path)) == [(9, {"particle_range": (0, 1), "deposit_range": (0, 1),
+                                              "deposit_total_MeV": 0.25, "complete": True,
+                                              "all_absorption": "undetermined", "unresolved_count": 0})]
+    assert len(list(iter_v2_deposits(path))) == 1
+
+
+def test_duplicate_event_id_is_rejected_without_partial_append(tmp_path):
+    path = tmp_path / "duplicate-event.h5"
+    with EventV2Writer(path, PROVENANCE) as writer:
+        writer.append_event(3, [{"particle_id": 7, "ityp": 12}], [_point()], complete=True)
+        with pytest.raises(ValueError, match="duplicate event_id"):
+            writer.append_event(3, [{"particle_id": 8, "ityp": 12}],
+                                [dict(_point(), addition_id="new-add")], complete=True)
+        assert writer._event_ids == {3}
+        assert writer._addition_ids == {"add-1"}
+        assert len(writer._buffers["particles"]["particle_id"]) == 1
+        assert len(writer._buffers["deposits"]["addition_id"]) == 1
+    assert len(list(iter_events(path))) == 1
+    assert len(list(iter_v2_deposits(path))) == 1
+
+
+def test_invalid_absorption_state_is_rejected_without_buffer_changes(tmp_path):
+    path = tmp_path / "bad-absorption.h5"
+    with EventV2Writer(path, PROVENANCE) as writer:
+        with pytest.raises(ValueError, match="invalid all_absorption"):
+            writer.append_event(1, [], [], complete=True, all_absorption="guessed")
+        assert all(not values for group in writer._buffers.values() for values in group.values())
+        writer.append_event(1, [], [], complete=True, all_absorption="undetermined")
+    assert len(list(iter_events(path))) == 1

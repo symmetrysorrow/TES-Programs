@@ -74,6 +74,12 @@ Required attributes: `phits_version`, `dumpall_sha256`,
 missing fields. The workflow that creates these values must record their
 actual sources; placeholder hashes are only suitable for tests.
 
+Additional scalar attributes are preserved when provided, including
+`source_input_sha256`, region/material IDs, weight assumptions, and diagnostic
+mode. These are experiment metadata and do not change the v2 dataset layout.
+The current real-Dumpall Pb experiment records the hashes of the actual PHITS
+input, Dumpall, stopping table, and canonical configuration.
+
 ## Writer and reader API
 
 `tes_cpp.event_hdf5_v2.EventV2Writer` appends event rows into a temporary file.

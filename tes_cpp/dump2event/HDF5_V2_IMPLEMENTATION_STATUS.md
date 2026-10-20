@@ -1,59 +1,57 @@
 # HDF5 v2 implementation status
 
-## Implemented in this change
+Status: experimental storage API with a real-Dumpall diagnostic pipeline. The
+ordinary C++ converter still uses its legacy output by default; no production
+Pb mode has been added to that CLI.
 
-- Added the experimental Python `EventV2Writer` and flat-offset v2 reader.
-- Dataset groups are `/events`, `/particles`, `/tracks`, `/deposits`, and
-  `/provenance`; fields and units are specified in `HDF5_V2_SCHEMA.md`.
-- POINT, SEGMENT, and UNRESOLVED remain distinguishable. Segment endpoints
-  and the PHITS representative score coordinate are separate.
-- Unknown energy is returned as `None` with `energy_valid=false`; it is not
-  scored as zero. Known negative, NaN, or infinite deposit values are rejected.
-- Event, particle, and addition identifiers are checked for duplicates.
-- The writer streams in batches of 256 events to extendible datasets, writes
-  to a unique temporary file, validates offsets, and atomically publishes only
-  after successful close. Failed conversion preserves a preexisting target.
-- The reader dispatches by `format` and `format_version`, supports the Python
-  flat v1 and legacy C++ hierarchy, and rejects unknown versions. v2
-  `iter_events()` yields metadata/ranges; `iter_deposits()` yields typed rows.
-- `Pulse_Ms()` preflights input before creating pulse output and rejects v2.
-  Segment allocation has not been implemented in TES block space.
+## Implemented
 
-## Verification performed
+- `EventV2Writer` writes the flat-offset v2 schema in batches to a private
+  temporary file and atomically publishes only after successful close.
+- `append_event()` validates and stages the full event before mutating buffers,
+  offsets, or global identifiers. Caught validation exceptions leave no event
+  rows behind. A storage failure poisons the temporary writer and blocks later
+  appends/publication.
+- The reader supports v2, Python v1, and the legacy C++ hierarchy. The v2 API
+  preserves POINT, SEGMENT, and UNRESOLVED; unknown energy is never read as a
+  known zero.
+- HDF5 provenance records the actual Dumpall, PHITS input, stopping table, and
+  canonical configuration SHA-256 values for the new experiment.
+- An opt-in validation utility streams raw PHITS records through the existing
+  Pb physical ledger and raw transport exporter into HDF5 v2. It is separate
+  from the ordinary converter and reports unsupported rows as UNRESOLVED.
+- `Pulse_Ms()` still preflights and rejects v2; TES block allocation and pulse
+  generation remain outside this format conversion.
 
-- Focused Python tests: 6 passed after adding v2 and legacy compatibility
-  coverage; comparator tests requiring unavailable external fixtures were
-  skipped in the larger run.
-- Relevant Python regression command:
-  `PYTHONPATH=tes_cpp/python python -m pytest tes_cpp/tests tes_cpp/dump2event/tests -q`
-  — 19 passed, 10 skipped.
-- MSVC 19.51 CMake build: succeeded for the existing converter and physical
-  ledger targets. CTest: 1/1 passed. The HDF5 schema code is Python and was
-  covered by pytest.
-- Synthetic write benchmark, 10,000 events / 20,000 tracks / 10,000 POINT
-  deposits: 4.451698 s and 2,210,984 bytes on the current Windows workspace
-  environment (about 2,246 events/s). This measures writer overhead and
-  compression for the synthetic fixture, not a PHITS Dumpall conversion.
-- Existing tracked PHITS validation reports remain: 38,077/38,077 additions
-  in 100 histories and 201,971/201,971 additions in the independent 1,000
-  history sample, maximum per-history difference
-  `7.815970093361102e-14 MeV`, 150-bin histogram L1 difference 0. These were
-  not rerun by the HDF5 storage change.
+## Real PHITS checks
 
-## Not implemented or not validated
+- 100 histories: 38,077/38,077 HDF5 readback deposits match PHITS internal
+  addition IDs, history, particle, region, energy (maximum error
+  `5.7976626971489864e-15 MeV`), and checked positive position. Missing/extra
+  additions and checked position mismatches: 0.
+- Independent 1,000 histories: 201,971 HDF5 deposits; 150-bin `[t-deposit]`
+  histogram L1 difference 0. This is a histogram-level check, not per-addition
+  internal matching.
+- 10,000 histories: 1,954,742 ledger rows, of which 342 are unresolved. The
+  HDF5 readback histogram differs in 13 bins (L1=18). This is partial and
+  does not pass physical completeness.
 
-- The default C++ converter still writes its legacy event representation.
-  The validated `PhysicalDepositLedger` is still a separate CSV-producing
-  research executable. It has not been connected to a complete streaming
-  Dumpall-to-v2 pipeline; no opt-in physics CLI or HDF5 physical conversion
-  was added here.
-- Accordingly, the existing physical counts do not establish that all PHITS
-  events or all photon/positron/weight cases are supported by v2.
-- The v2 writer has not been driven from the real 10,000-history Dumpall or
-  same-run PHITS internal addition IDs. No new PHITS comparison, deposit
-  position match, or segment endpoint match was executed.
-- HDF5 v2 is not ready for the everyday converter default or
-  `Pulse_Ms()`. Keep the physical model opt-in and experimental until the
-  source-ledger integration and same-addition position/energy checks exist.
-- No change was made to the legacy `E_deposit` formula, the PR #6 source, the
-  original PHITS input, the installed PHITS tree, or the source Dumpall.
+## Limits
+
+- The normal `dump2event` CLI does not yet expose `--physics pb-egs5` or write
+  HDF5 v2. Parent-child linkage and input-particle metadata are not reconstructed.
+- `complete` describes whether the configured ledger slice has unresolved
+  rows; it does not prove complete transport or energy conservation.
+  `all_absorption` remains `undetermined` for every written event.
+- Continuous loss endpoints are preserved as SEGMENT endpoints. Their PHITS
+  representative score coordinate is not inferred from them and remains
+  absent. The 100-history test checks interval endpoints and validated point
+  positions separately.
+- Variable weights, positron annihilation, other photon branches, and the 342
+  unsupported 10,000-history rows remain unresolved. No negative clipping,
+  normalization, or legacy-formula fallback is used.
+- HDF5 files, Dumpalls, PHITS source, stopping tables, and internal trace rows
+  remain local and are not committed.
+
+See [`validation/physical_hdf5_v2_integration/`](validation/physical_hdf5_v2_integration/)
+for the exact counts and run comparisons.
