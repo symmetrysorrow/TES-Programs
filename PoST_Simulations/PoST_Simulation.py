@@ -39,7 +39,10 @@ from lib.tes_noise_model import operating_point as shared_tes_operating_point
 from lib.tes_noise_model import tes_johnson_voltage_asd as shared_tes_johnson_voltage_asd
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
-from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
+from tes_cpp.event_hdf5 import (
+    iter_events as iter_hdf5_events,
+    require_legacy_point_events,
+)
 from lib.pulse_hdf5 import (
     PulseWriter,
     iter_pulse_items as iter_hdf5_pulse_items,
@@ -2832,6 +2835,10 @@ def Pulse_Ms():
             raise FileNotFoundError(
                 f"event.h5 was not found: {event_path}"
             )
+
+        # Preflight before opening pulse_MS.h5. HDF5 v2 preserves continuous
+        # transport segments and cannot be treated as legacy point deposits.
+        require_legacy_point_events(event_path)
 
         with PulseWriter(
             output_path,

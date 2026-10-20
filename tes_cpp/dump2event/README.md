@@ -76,3 +76,13 @@ print(result.full_energy_event_ids)
 ## Experimental PHITS 3.341 deposit ledger
 
 A separate `dump2event_physical_reconstruct` executable is available for a narrow research validation slice. It is opt-in and does not alter the default converter or its legacy `E_deposit` formula. It currently covers only the documented PHITS 3.341 / Pb region 1000 / unit-weight EGS5 case; unsupported rows remain unresolved. It is not a production deposit converter. Read `PHYSICAL_DEPOSIT_EXPERIMENT_STATUS.md`, `UNSUPPORTED_PHYSICS.md`, and `PHYSICAL_DEPOSIT_VALIDATION_REPORT.md` before using it. The stopping table must be supplied locally and is not included in this repository.
+
+## Experimental HDF5 v2 storage API
+
+The Python API now provides an appendable flat-offset v2 writer and typed
+deposit reader. It preserves `POINT`, `SEGMENT`, and `UNRESOLVED` records and
+keeps PHITS score coordinates separate from transport endpoints. This is a
+storage foundation: it is not yet connected to the default C++ converter or
+the CSV physical ledger executable. `Pulse_Ms()` rejects v2 until segment
+allocation is independently validated. See `HDF5_V2_SCHEMA.md` for the format
+and migration rules.

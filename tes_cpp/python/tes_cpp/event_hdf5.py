@@ -140,7 +140,30 @@ def json_to_hdf5(json_path, hdf5_path):
 def iter_events(path):
     """Yield ``(event_id, particles)`` in the legacy event.json shape."""
     with h5py.File(path, "r") as file:
+        # Identify the declared format before inspecting its groups.  The v2
+        # schema also has /events, but it is a flat dataset container rather
+        # than the historical one-group-per-event layout.
+        file_format = file.attrs.get("format", "")
+        if isinstance(file_format, bytes):
+            file_format = file_format.decode("utf-8")
+        if file_format != FORMAT_NAME:
+            raise ValueError(f"{path} is not a {FORMAT_NAME} HDF5 file")
+        version = file.attrs.get("format_version")
+        if version is not None and int(version) == 2:
+            from .event_hdf5_v2 import iter_events as iter_v2_events
+
+            yield from iter_v2_events(path)
+            return
+        if version is not None and int(version) != 1:
+            raise ValueError(
+                f"{path} uses format_version={version}; use the version-specific reader"
+            )
+        if version is None:
+            if "events" not in file or not isinstance(file["events"], h5py.Group):
+                raise ValueError(f"{path} is not a recognized legacy hierarchical HDF5 file")
         if "events" in file:
+            if version is not None:
+                raise ValueError(f"{path} declares flat format_version=1 but contains hierarchical /events")
             for event_id, event in file["events"].items():
                 particles = {}
                 for particle_id, particle in event.items():
@@ -148,8 +171,8 @@ def iter_events(path):
                         **{name: particle[name][:].tolist() for name in ("x", "y", "z", "E", "x_deposit", "y_deposit", "z_deposit", "E_deposit")}}
                 yield event_id, particles
             return
-        if file.attrs.get("format", "") != FORMAT_NAME:
-            raise ValueError(f"{path} is not a {FORMAT_NAME} HDF5 file")
+        if version != FORMAT_VERSION:
+            raise ValueError(f"{path} is not a supported {FORMAT_NAME} v1 flat file")
         ids = file["event_id"]
         event_offsets = file["event_particle_offsets"]
         particle_ids = file["particle_id"]
@@ -167,3 +190,30 @@ def iter_events(path):
                     **{field: file[field][d0:d1].tolist() for field in ("x_deposit", "y_deposit", "z_deposit", "E_deposit")},
                 }
             yield str(event_id), particles
+
+
+def iter_deposits(path):
+    """Read v2 deposit rows while preserving POINT/SEGMENT/UNRESOLVED kind."""
+    from .event_hdf5_v2 import iter_deposits as iter_v2_deposits
+
+    return iter_v2_deposits(path)
+
+
+def require_legacy_point_events(path):
+    """Fail before pulse outputs are opened when a file needs the v2 API."""
+    with h5py.File(path, "r") as file:
+        file_format = file.attrs.get("format", "")
+        if isinstance(file_format, bytes):
+            file_format = file_format.decode("utf-8")
+        version = file.attrs.get("format_version")
+        if file_format != FORMAT_NAME:
+            raise ValueError(f"{path} is not a {FORMAT_NAME} HDF5 file")
+        if version is not None and int(version) == 2:
+            raise ValueError(
+                "Pulse_Ms cannot consume HDF5 v2 transport/deposit records yet; "
+                "SEGMENT allocation requires a separately validated event2pulse model"
+            )
+        if version is not None and int(version) != 1:
+            raise ValueError(f"unsupported event HDF5 format_version={version}")
+        if version is None and ("events" not in file or not isinstance(file["events"], h5py.Group)):
+            raise ValueError(f"{path} is not a recognized legacy hierarchical HDF5 file")
