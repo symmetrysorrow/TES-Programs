@@ -1,0 +1,7 @@
+# PHITS internal-to-raw mapping specification
+
+Mapping key must be established from the diagnostic producer’s explicit identifiers, not inferred from equal energies or nearby rows. Candidate raw identity fields are NOCAS/NOBCH, particle ID, NCOL, JCOLL and within-history reaction ordinal. An internal score-call ordinal is only a valid key if the instrumentation emits that same ordinal at the Dumpall write point or a deterministic one-to-many mapping is proven.
+
+Per-addition correspondence requires raw parent state, child records, weight, region and score coordinates to be recoverable. Distinguish `record matched` from `physics value reconstructed`: a raw record association alone does not establish `tlv`. The existing diagnostic exports internal `tlv`, score region and score coordinates, but the new GNU ASCII Dumpall loses fields in the first NCOL=4 particle tuple. Parsing stops before a complete history can be constructed. Therefore this run has zero one-to-one internal/raw addition mappings and zero reconstructed physics values; internal diagnostics remain oracle data and were not used as reconstruction inputs.
+
+No new event ordering, nearest-energy match, extrapolation, guessed weight or coordinate substitution was used. For future valid files, report unmatched internal calls, raw-only records, duplicate candidates, exact addition IDs, and energy/position/region error independently.

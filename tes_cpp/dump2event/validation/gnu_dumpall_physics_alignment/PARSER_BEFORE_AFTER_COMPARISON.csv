@@ -1,0 +1,8 @@
+case,old_parser_result,current_parser_result,records_read,root
+synthetic complete schema fixture,pass,pass,4,baseline schema fixture
+synthetic valid split particle tuple,fail,pass,4,list-directed numeric tuple spans physical lines
+synthetic clipped particle tuple,fail generic row-count,fail with source/NCOL/field context,0,missing numeric value cannot be reconstructed
+GNU PHITS 3.341 converter fallback,silent partial-history acceptance,explicit structural failure with input path,0,standalone NCOL=1 now mandates structural parser
+GNU PHITS 3.341 gamma 2 MeV thick Pb 20 histories,fail NCOL4 particle tuple,fail closed with exact field context,0,cpcasdump character(80) truncation
+GNU PHITS 3.341 gamma 511 keV thick Pb 20 histories,fail NCOL4 particle tuple,fail closed with exact field context,0,same first NCOL4 shape
+GNU PHITS 3.341 gamma 511 keV thin Pb/vacuum 20 histories,fail NCOL4 particle tuple,fail closed with exact field context,0,same first NCOL4 shape
