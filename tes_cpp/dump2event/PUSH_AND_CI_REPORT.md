@@ -28,8 +28,17 @@
 
 ## Push and Actions
 
-Commit and push are pending. GitHub CLI is not installed; Git remote read
-access works. The commit will be pushed directly with Git after a final staged
-diff review. Actions status will be queried for the pushed SHA using the
-GitHub integration. PR #6 is not the target branch and remains untouched; this
-experimental change is not approved for integration into PR #6.
+- Commit: `7ecb2e830ca09dc26e3d96519fa6edbe84478abb` (`Add experimental
+  PHITS deposit reconstruction ledger`).
+- Pushed to `origin/feat/dump2event-physical-validation-20261020`; remote ref
+  was read back and matched the commit SHA.
+- GitHub Actions run [39393118635](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39393118635)
+  completed successfully on `ubuntu-latest` at 2026-10-20 08:25:19 UTC.
+  HDF5 setup, CMake configure, build, and energy accounting tests all passed.
+- PR #6 was queried after the push and is still open, `draft=true`, and based
+  on its original head branch `fix/dump2event-energy-audit-20261016`. No PR #6
+  operation or merge was performed.
+
+The research branch is pushed, but PR #6 integration is blocked by the
+unsupported physics listed in `UNSUPPORTED_PHYSICS.md`; this is not a complete
+physical deposit converter.
