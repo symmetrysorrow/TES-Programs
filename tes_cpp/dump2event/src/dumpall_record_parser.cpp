@@ -11,8 +11,8 @@
 namespace tes_cpp::dump2event {
 namespace {
 
-std::vector<double> parse_row(const std::string& line, std::size_t line_no,
-                              std::size_t start, int ncol, std::size_t expected) {
+std::vector<double> parse_values(const std::string& line, std::size_t line_no,
+                                 std::size_t start, int ncol) {
     std::vector<double> values;
     const char* p = line.c_str();
     while (*p) {
@@ -27,6 +27,12 @@ std::vector<double> parse_row(const std::string& line, std::size_t line_no,
         values.push_back(value);
         p = end;
     }
+    return values;
+}
+
+std::vector<double> parse_row(const std::string& line, std::size_t line_no,
+                              std::size_t start, int ncol, std::size_t expected) {
+    auto values = parse_values(line, line_no, start, ncol);
     if (values.size() != expected)
         throw std::runtime_error("Dumpall line " + std::to_string(line_no) +
             " (record at line " + std::to_string(start) + ", NCOL=" +
@@ -36,12 +42,35 @@ std::vector<double> parse_row(const std::string& line, std::size_t line_no,
 }
 
 std::vector<double> next_row(std::istream& input, std::string& line, std::size_t& line_no,
-                             std::size_t start, int ncol, std::size_t expected) {
+                             std::size_t start, int ncol, std::size_t expected,
+                             const std::string& field = "field row",
+                             const std::string& source_name = "<stream>") {
     if (!std::getline(input, line))
-        throw std::runtime_error("Dumpall EOF inside record at line " +
+        throw std::runtime_error(source_name + ": EOF inside " + field + " in record at line " +
             std::to_string(start) + " (NCOL=" + std::to_string(ncol) + ")");
     ++line_no;
-    return parse_row(line, line_no, start, ncol, expected);
+    auto values = parse_values(line, line_no, start, ncol);
+    while (values.size() < expected) {
+        if (!std::getline(input, line))
+            throw std::runtime_error(source_name + ": EOF inside " + field +
+                " in record at line " + std::to_string(start) + " (NCOL=" +
+                std::to_string(ncol) + "); got " + std::to_string(values.size()) +
+                " of " + std::to_string(expected) + " numeric values");
+        ++line_no;
+        const auto continuation = parse_values(line, line_no, start, ncol);
+        if (continuation.empty())
+            throw std::runtime_error(source_name + ": empty continuation row at line " +
+                std::to_string(line_no) + " (record at line " +
+                std::to_string(start) + ", NCOL=" + std::to_string(ncol) + ")");
+        values.insert(values.end(), continuation.begin(), continuation.end());
+    }
+    if (values.size() != expected)
+        throw std::runtime_error(source_name + ": line " + std::to_string(line_no) +
+            " (record at line " + std::to_string(start) + ", NCOL=" +
+            std::to_string(ncol) + ", field=" + field + "): combined physical rows contain " +
+            std::to_string(values.size()) + " numeric values; expected " +
+            std::to_string(expected) + ". Possible truncation or malformed logical row; values were not inferred.");
+    return values;
 }
 
 int integer(double value, const std::string& field, std::size_t start, int ncol) {
@@ -55,7 +84,8 @@ int integer(double value, const std::string& field, std::size_t start, int ncol)
 }  // namespace
 
 DumpallParseSummary parse_dumpall_records(std::istream& input,
-    const std::function<void(const DumpallRecord&)>& callback) {
+    const std::function<void(const DumpallRecord&)>& callback,
+    const std::string& source_name) {
     DumpallParseSummary summary;
     std::string line;
     std::size_t line_no = 0;
@@ -89,14 +119,17 @@ DumpallParseSummary parse_dumpall_records(std::istream& input,
         record.ncol = ncol;
         record.line_start = line_no;
         if (ncol == 4) {
-            const auto history = next_row(input, line, line_no, record.line_start, ncol, 4);
+            const auto history = next_row(input, line, line_no, record.line_start, ncol, 4,
+                                          "NOCAS/NOBCH/RCASC/RSOUIN", source_name);
             record.nocas = integer(history[0], "NOCAS", record.line_start, ncol);
             record.nobch = integer(history[1], "NOBCH", record.line_start, ncol);
             record.rcasc = history[2];
             record.rsouin = history[3];
             ++summary.histories;
         }
-        const auto particle = next_row(input, line, line_no, record.line_start, ncol, 8);
+        const auto particle = next_row(input, line, line_no, record.line_start, ncol, 8,
+            "particle header (particle_id, material_id, ITYP, KTYP, JTYP, MTYP, RTYP, OLDWT)",
+            source_name);
         record.particle_id = integer(particle[0], "particle ID", record.line_start, ncol);
         record.material_id = integer(particle[1], "material ID", record.line_start, ncol);
         record.ityp = integer(particle[2], "ITYP", record.line_start, ncol);
@@ -106,10 +139,12 @@ DumpallParseSummary parse_dumpall_records(std::istream& input,
         record.rtyp = particle[6];
         record.oldwt = particle[7];
         if (record.ityp == 12 || record.ityp == 13) {
-            record.qs = next_row(input, line, line_no, record.line_start, ncol, 1)[0];
+            record.qs = next_row(input, line, line_no, record.line_start, ncol, 1,
+                                 "QS", source_name)[0];
             record.has_qs = true;
         }
-        const auto regions = next_row(input, line, line_no, record.line_start, ncol, 4);
+        const auto regions = next_row(input, line, line_no, record.line_start, ncol, 4,
+                                      "IBLZ1/IBLZ2/ILEV1/ILEV2", source_name);
         record.region_before = integer(regions[0], "region before", record.line_start, ncol);
         record.region_after = integer(regions[1], "region after", record.line_start, ncol);
         record.lattice_level_before = integer(regions[2], "lattice level before", record.line_start, ncol);
@@ -118,47 +153,58 @@ DumpallParseSummary parse_dumpall_records(std::istream& input,
             throw std::runtime_error("negative lattice level at Dumpall line " +
                                      std::to_string(record.line_start));
         for (int i = 0; i < record.lattice_level_before; ++i) {
-            const auto lattice = next_row(input, line, line_no, record.line_start, ncol, 5);
+            const auto lattice = next_row(input, line, line_no, record.line_start, ncol, 5,
+                                          "lattice-before indices", source_name);
             std::array<int, 5> indices{};
             for (std::size_t k = 0; k < lattice.size(); ++k)
                 indices[k] = integer(lattice[k], "lattice-before index", record.line_start, ncol);
             record.lattice_before.push_back(indices);
         }
         for (int i = 0; i < record.lattice_level_after; ++i) {
-            const auto lattice = next_row(input, line, line_no, record.line_start, ncol, 5);
+            const auto lattice = next_row(input, line, line_no, record.line_start, ncol, 5,
+                                          "lattice-after indices", source_name);
             std::array<int, 5> indices{};
             for (std::size_t k = 0; k < lattice.size(); ++k)
                 indices[k] = integer(lattice[k], "lattice-after index", record.line_start, ncol);
             record.lattice_after.push_back(indices);
         }
-        const auto geometry = next_row(input, line, line_no, record.line_start, ncol, 5);
+        const auto geometry = next_row(input, line, line_no, record.line_start, ncol, 5,
+                                       "COSTHA/angular direction/NSURF", source_name);
         record.costha = geometry[0];
         record.angular_direction = {geometry[1], geometry[2], geometry[3]};
         record.nsurf = integer(geometry[4], "NSURF", record.line_start, ncol);
-        const auto name_counts = next_row(input, line, line_no, record.line_start, ncol, 4);
+        const auto name_counts = next_row(input, line, line_no, record.line_start, ncol, 4,
+                                          "particle name/counters", source_name);
         record.particle_name = integer(name_counts[0], "particle name", record.line_start, ncol);
         for (std::size_t k = 0; k < record.particle_counters.size(); ++k)
             record.particle_counters[k] = integer(name_counts[k + 1], "particle counter",
                                                    record.line_start, ncol);
-        const auto transport = next_row(input, line, line_no, record.line_start, ncol, 4);
+        const auto transport = next_row(input, line, line_no, record.line_start, ncol, 4,
+                                        "WT/U/V/W", source_name);
         record.weight = transport[0];
         record.direction = {transport[1], transport[2], transport[3]};
-        const auto e = next_row(input, line, line_no, record.line_start, ncol, 5);
+        const auto e = next_row(input, line, line_no, record.line_start, ncol, 5,
+                                "E/T/X/Y/Z", source_name);
         record.energy = e[0]; record.time = e[1]; record.x = e[2]; record.y = e[3]; record.z = e[4];
-        const auto ec = next_row(input, line, line_no, record.line_start, ncol, 5);
+        const auto ec = next_row(input, line, line_no, record.line_start, ncol, 5,
+                                 "EC/TC/XC/YC/ZC", source_name);
         record.ec = ec[0]; record.tc = ec[1]; record.xc = ec[2]; record.yc = ec[3]; record.zc = ec[4];
-        const auto spin = next_row(input, line, line_no, record.line_start, ncol, 3);
+        const auto spin = next_row(input, line, line_no, record.line_start, ncol, 3,
+                                   "SPX/SPY/SPZ", source_name);
         record.spin = {spin[0], spin[1], spin[2]};
-        record.nzst = integer(next_row(input, line, line_no, record.line_start, ncol, 1)[0],
+        record.nzst = integer(next_row(input, line, line_no, record.line_start, ncol, 1,
+                                       "NZST", source_name)[0],
                               "NZST", record.line_start, ncol);
         if (ncol == 13 || ncol == 14) {
-            record.nclsts = integer(next_row(input, line, line_no, record.line_start, ncol, 1)[0],
+            record.nclsts = integer(next_row(input, line, line_no, record.line_start, ncol, 1,
+                                             "NCLSTS", source_name)[0],
                                     "NCLSTS", record.line_start, ncol);
             if (record.nclsts < 0)
                 throw std::runtime_error("negative NCLSTS at Dumpall line " +
                                          std::to_string(record.line_start));
             if (record.nclsts > 0) {
-                const auto collision = next_row(input, line, line_no, record.line_start, ncol, 4);
+                const auto collision = next_row(input, line, line_no, record.line_start, ncol, 4,
+                                                "MATHZ/MATHN/JCOLL/KCOLL", source_name);
                 record.mathz = integer(collision[0], "MATHZ", record.line_start, ncol);
                 record.mathn = integer(collision[1], "MATHN", record.line_start, ncol);
                 record.jcoll = integer(collision[2], "JCOLL", record.line_start, ncol);
@@ -167,13 +213,17 @@ DumpallParseSummary parse_dumpall_records(std::istream& input,
                 for (int i = 0; i < record.nclsts; ++i) {
                     DumpallSecondary secondary;
                     secondary.iclust = integer(next_row(input, line, line_no, record.line_start,
-                                                         ncol, 1)[0], "ICLUSTS", record.line_start, ncol);
-                    const auto j = next_row(input, line, line_no, record.line_start, ncol, 9);
+                                                         ncol, 1, "ICLUSTS", source_name)[0],
+                                               "ICLUSTS", record.line_start, ncol);
+                    const auto j = next_row(input, line, line_no, record.line_start, ncol, 9,
+                                            "JCLUSTS(0:8)", source_name);
                     for (std::size_t k = 0; k < j.size(); ++k)
                         secondary.jclusts[k] = integer(j[k], "JCLUSTS", record.line_start, ncol);
-                    const auto q = next_row(input, line, line_no, record.line_start, ncol, 13);
+                    const auto q = next_row(input, line, line_no, record.line_start, ncol, 13,
+                                            "QCLUSTS(0:12)", source_name);
                     std::copy(q.begin(), q.end(), secondary.qclusts.begin());
-                    const auto counts = next_row(input, line, line_no, record.line_start, ncol, 3);
+                    const auto counts = next_row(input, line, line_no, record.line_start, ncol, 3,
+                                                 "JCOUNT(1:3)", source_name);
                     for (std::size_t k = 0; k < counts.size(); ++k)
                         secondary.jcounts[k] = integer(counts[k], "JCOUNT", record.line_start, ncol);
                     record.secondaries.push_back(secondary);

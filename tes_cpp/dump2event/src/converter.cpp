@@ -580,13 +580,27 @@ static Result read_dump_structured(const std::string& dump_path, const Options& 
             particle.x_deposit.push_back(record.x); particle.y_deposit.push_back(record.y);
             particle.z_deposit.push_back(record.z);
         }
-    });
+    }, dump_path);
     (void)parsed;
     commit();
     return result;
 }
 
 Result read_dump(const std::string& dump_path, const Options& options) {
+    // PHITS 3.341 dumpdat files start with a standalone NCOL=1 marker. Once
+    // that signature is present, require the schema parser to validate the
+    // complete stream; do not let the legacy line-counter parser reinterpret
+    // a truncated modern record as a shorter, apparently valid history.
+    {
+        std::ifstream probe(dump_path, std::ios::binary);
+        if (!probe) throw std::runtime_error("cannot open dump file: " + dump_path);
+        std::string first_line;
+        if (std::getline(probe, first_line)) {
+            const auto first_values = parse_numbers(first_line, 1);
+            if (first_values.size() == 1 && first_values.front() == 1.0)
+                return read_dump_structured(dump_path, options);
+        }
+    }
     try {
         return read_dump_legacy_line_parser(dump_path, options);
     } catch (const std::runtime_error&) {

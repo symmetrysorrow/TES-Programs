@@ -1,5 +1,6 @@
 #include "tes_cpp/physical_deposit.hpp"
 #include "tes_cpp/dumpall_record_parser.hpp"
+#include "tes_cpp/converter.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -58,6 +59,53 @@ int main() try {
     require(parsed.records == 4 && parsed_callbacks == 4 && parsed.histories == 1 &&
             parsed.terminal_ncol == 2 && parsed.by_ncol[14] == 2 && parsed.by_ncol[15] == 1,
             "structured Dumpall records and terminators");
+    auto wrapped_record = record;
+    const std::string unwrapped_particle = "1 1 1 1\n1 0 14 22 0 0 0 1\n";
+    const auto wrapped_at = wrapped_record.find(unwrapped_particle);
+    require(wrapped_at != std::string::npos, "wrapped-row fixture source found");
+    wrapped_record.replace(wrapped_at, unwrapped_particle.size(),
+                           "1 1 1 1\n1 0 14 22 0 0\n0 1\n");
+    std::istringstream wrapped_dump(wrapped_record);
+    const auto wrapped = parse_dumpall_records(wrapped_dump, [](const DumpallRecord&) {});
+    require(wrapped.records == parsed.records && wrapped.histories == parsed.histories &&
+            wrapped.terminal_ncol == 2,
+            "list-directed numeric field rows may wrap across physical lines");
+    auto clipped_particle = record;
+    clipped_particle.replace(unwrapped_particle.size() ?
+        clipped_particle.find(unwrapped_particle) : std::string::npos,
+        unwrapped_particle.size(), "1 1 1 1\n1 0 14 22 0 0 0.000\n2000 1000 0 0\n");
+    bool clipped_context = false;
+    try {
+        std::istringstream clipped_dump(clipped_particle);
+        (void)parse_dumpall_records(clipped_dump, [](const DumpallRecord&) {},
+                                    "gnu-clipped-fixture.dumpall");
+    } catch (const std::runtime_error& error) {
+        const std::string message = error.what();
+        clipped_context = message.find("gnu-clipped-fixture.dumpall") != std::string::npos &&
+            message.find("NCOL=4") != std::string::npos &&
+            message.find("particle header") != std::string::npos &&
+            message.find("not inferred") != std::string::npos;
+    }
+    require(clipped_context,
+            "truncated NCOL=4 particle field fails closed with input and field context");
+    const auto clipped_path = std::filesystem::temp_directory_path() /
+        "tes_cpp_gnu_clipped_ncol4.dumpall";
+    {
+        std::ofstream clipped_file(clipped_path, std::ios::binary);
+        clipped_file << clipped_particle;
+    }
+    bool converter_rejected_clipped = false;
+    try {
+        Options clipped_options;
+        clipped_options.input_energy = 1.0;
+        (void)read_dump(clipped_path.string(), clipped_options);
+    } catch (const std::runtime_error& error) {
+        converter_rejected_clipped = std::string(error.what()).find(
+            clipped_path.string()) != std::string::npos;
+    }
+    std::filesystem::remove(clipped_path);
+    require(converter_rejected_clipped,
+            "modern NCOL=1 dump with malformed NCOL=4 must not fall back to legacy parser");
     must_throw([&] { std::istringstream truncated(record.substr(0, record.size() - 2));
         (void)parse_dumpall_records(truncated, [](const DumpallRecord&) {}); },
         "truncated Dumpall must fail closed");

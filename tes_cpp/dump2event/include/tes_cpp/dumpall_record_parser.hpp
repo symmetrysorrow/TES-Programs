@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <functional>
 #include <istream>
+#include <string>
 #include <vector>
 
 namespace tes_cpp::dump2event {
@@ -56,6 +57,7 @@ struct DumpallParseSummary {
 // Requires a normal NCOL=2 end marker; malformed/truncated records throw with
 // their starting line and NCOL context.
 DumpallParseSummary parse_dumpall_records(std::istream& input,
-    const std::function<void(const DumpallRecord&)>& callback);
+    const std::function<void(const DumpallRecord&)>& callback,
+    const std::string& source_name = "<stream>");
 
 }  // namespace tes_cpp::dump2event

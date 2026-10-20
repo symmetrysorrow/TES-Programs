@@ -173,7 +173,7 @@ int main(int argc, char** argv) try {
             }
         }
 
-    });
+    }, argv[1]);
     std::cout << "records=" << summary.records << " histories=" << summary.histories
               << " additions=" << next_id << " reconstructed=" << reconstructed
               << " unresolved=" << unresolved_count << " unsupported=" << unsupported_count
