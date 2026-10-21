@@ -11,6 +11,7 @@ import csv
 import hashlib
 import itertools
 import json
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -35,6 +36,50 @@ def physics_config(source_input: Path):
         "source_input_sha256": sha256(source_input),
         "position_semantics": "raw transport chords and raw child point; scorer representative coordinate kept separate",
     }
+
+
+def validate_source_input(path: Path) -> None:
+    """Fail closed unless the input explicitly matches the validated Pb slice."""
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    active = ""
+    sections: dict[str, list[str]] = {}
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            active = re.sub(r"\s+", "", line[1:-1]).lower()
+            sections.setdefault(active, [])
+        elif active:
+            sections[active].append(line.lower())
+    def values(section: str) -> dict[str, str]:
+        found = {}
+        for line in sections.get(section, []):
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            found[re.sub(r"\s+", "", key)] = value.strip()
+        return found
+    params = values("parameters")
+    required_params = {"icntl": "0", "maxcas": "10000", "maxbch": "1",
+                       "negs": "1", "e-mode": "2", "emin(12)": "0.001",
+                       "emin(13)": "0.001", "emin(14)": "0.001"}
+    for key, expected in required_params.items():
+        got = params.get(key)
+        if got is None or float(got.split()[0]) != float(expected):
+            raise ValueError(f"source input must set [{key}]={expected}; found {got!r}")
+    source = sections.get("source", [])
+    if not any(re.match(r"1\.173(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source) or \
+       not any(re.match(r"1\.332(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source):
+        raise ValueError("source input must explicitly contain 1.173 and 1.332 MeV unit-intensity lines")
+    tally = values("t-deposit")
+    expected_tally = {"mesh": "reg", "reg": "1000", "part": "all", "deposit": "0",
+                      "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
+                      "emin": "0.0", "emax": "1.5"}
+    for key, expected in expected_tally.items():
+        got = tally.get(key)
+        if got is None or got.lower() != expected.lower():
+            raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
 
 
 def groups(path: Path):
@@ -132,7 +177,7 @@ def run(args, writer: EventV2Writer) -> dict:
                     pos = tuple(float(raw[k]) for k in ("x", "y", "z"))
                     start = end = None
                     score = pos
-                    semantics = "raw child position; local point validated only for the supported dead-electron branch"
+                    semantics = "raw child position; local point validated for dead charged e-/e+ secondary branches"
                 elif kind == "POINT" and energy == 0.0:
                     record = by_source_record.get(raw["source_line"])
                     if record is None:
@@ -194,13 +239,14 @@ def main() -> int:
             raise FileExistsError(f"refusing to overwrite existing output: {args.output}")
         if not args.source_input.is_file():
             raise FileNotFoundError(args.source_input)
+        validate_source_input(args.source_input)
         # The writer is held open only for this conversion. Output publication is
         # atomic; input data and existing destinations are never modified.
         physics = physics_config(args.source_input)
         config = {"phits_version": "3.341", "dumpall_sha256": sha256(args.dumpall),
                   "physics_config_sha256": hashlib.sha256(json.dumps(physics, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
                   "stopping_table_sha256": sha256(args.stopping_table), "material": "Pb",
-                  "medium": "2", "cutoff_MeV": "0.001", "algorithm_version": "pb-egs5-exp-v1",
+                  "medium": "2", "cutoff_MeV": "0.001", "algorithm_version": "pb-egs5-exp-v2-positron",
                   "position_semantics": physics["position_semantics"],
                   "source_input_sha256": physics["source_input_sha256"],
                   "unsupported_processes": physics["unsupported_processes"],

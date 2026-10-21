@@ -75,7 +75,7 @@ print(result.full_energy_event_ids)
 
 ## Experimental PHITS 3.341 deposit ledger
 
-A separate `dump2event_physical_reconstruct` executable is available for a narrow research validation slice. It is opt-in and does not alter the default converter or its legacy `E_deposit` formula. It currently covers only the documented PHITS 3.341 / Pb region 1000 / unit-weight EGS5 case; unsupported rows remain unresolved. It is not a production deposit converter. Read `PHYSICAL_DEPOSIT_EXPERIMENT_STATUS.md`, `UNSUPPORTED_PHYSICS.md`, and `PHYSICAL_DEPOSIT_VALIDATION_REPORT.md` before using it. The stopping table must be supplied locally and is not included in this repository.
+A separate `dump2event_physical_reconstruct` executable is available for a narrow research validation slice. It is opt-in and does not alter the default converter or its legacy `E_deposit` formula. Same-run PHITS 3.341 validation now covers Pb region 1000 / material 2 / EGS5 medium 2 / unit weights, including electron continuous/boundary/cutoff, dead electron secondaries, positron continuous stopping (PDedx), and dead positron kinetic residuals above the conservative scoring guard. It is not a general PHITS physics model or production converter: photon-specific raw-only accounting, variable weights, other materials/regions, and independent-seed internal-addition matching remain unverified. Read the positron closure reports under `validation/positron_10000_closure/` before using it. The stopping table must be supplied locally and is not included in this repository.
 
 ## Experimental HDF5 v2 storage API
 

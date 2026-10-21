@@ -55,3 +55,23 @@ Pb mode has been added to that CLI.
 
 See [`validation/physical_hdf5_v2_integration/`](validation/physical_hdf5_v2_integration/)
 for the exact counts and run comparisons.
+
+## 2026-10-21 same-run positron closure update
+
+An isolated PHITS 3.341 diagnostic build and the same 10,000-history Pb run
+closed the earlier 342 unresolved additions and identified 1,460 positron
+continuous-loss additions that had been misclassified as exact zero. The
+separate experimental ledger now uses PHITS EGS5 positron PDedx coefficients
+for primary transport and QCLUSTS(7) kinetic residual for the validated dead
+positron secondary branch. A newly written HDF5 v2 has 1,954,742/1,954,742
+known nonnegative deposits. Same-run internal addition comparison has zero
+unresolved, energy, region, or checked positive-position mismatches; maximum
+addition error is `5.865533753146579e-15 MeV`. The 150-bin PHITS history
+histogram has L1 count difference 0 (the PHITS printed decimal residual is
+`1.554312234475219e-14`).
+
+This result is scoped to that PHITS 3.341 seed, Pb region 1000, medium 2,
+unit weights, explicit 1 keV cutoffs and supplied matching stopping table.
+Variable weights, other materials, photon-process-specific raw-only ledgers,
+and independent-seed internal-addition validation remain unverified. This
+does not change the default converter or PR #6.

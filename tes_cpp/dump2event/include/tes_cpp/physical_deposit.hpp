@@ -21,7 +21,7 @@ struct Egs5StoppingRow {
     int medium{};
     std::string material;
     int log_energy_index{};
-    double eke0{}, eke1{}, ededx0{}, ededx1{};
+    double eke0{}, eke1{}, ededx0{}, ededx1{}, pdedx0{}, pdedx1{};
     double phits_density{}, egs_density{};
 };
 
@@ -30,6 +30,7 @@ public:
     static Egs5StoppingTable read_csv(const std::string& path, int expected_medium,
                                       const std::string& expected_material);
     double stopping_power(double kinetic_energy_mev, int medium) const;
+    double positron_stopping_power(double kinetic_energy_mev, int medium) const;
     const std::string& material() const noexcept { return material_; }
     int medium() const noexcept { return medium_; }
     double phits_density() const noexcept { return phits_density_; }
@@ -46,7 +47,9 @@ enum class DepositProcess {
     egs5_electron_continuous,
     egs5_electron_boundary,
     egs5_electron_cutoff,
+    egs5_positron_continuous,
     dead_electron_secondary,
+    dead_positron_secondary,
     exact_zero,
     unsupported
 };

@@ -97,6 +97,17 @@ int main(int argc, char** argv) try {
             write_result(input, "egs5_electron_cutoff", record.x, record.y, record.z,
                          record.xc, record.yc, record.zc, -1);
             primary_written = true;
+        } else if ((record.ncol == 13 || record.ncol == 14) && record.ityp == 13) {
+            DepositInput input;
+            input.particle_id = record.particle_id; input.particle_type = record.ityp;
+            input.ncol = record.ncol; input.jcoll = record.jcoll;
+            input.process = DepositProcess::egs5_positron_continuous;
+            input.energy_mev = record.energy; input.energy_c_mev = record.ec;
+            input.transport_weight = record.weight; input.old_weight = record.oldwt;
+            input.segment_length_cm = chord;
+            write_result(input, "egs5_positron_continuous", record.x, record.y, record.z,
+                         record.xc, record.yc, record.zc, -1);
+            primary_written = true;
         }
 
         if (!primary_written && (record.ncol == 10 || record.ncol == 13 || record.ncol == 14) &&
@@ -143,7 +154,7 @@ int main(int argc, char** argv) try {
                     ++unsupported_count;
                     continue;
                 }
-                if (child.jclusts[3] != 12) {
+                if (child.jclusts[3] != 12 && child.jclusts[3] != 13) {
                     DepositInput input;
                     input.particle_id = record.particle_id; input.particle_type = record.ityp;
                     input.ncol = record.ncol; input.jcoll = record.jcoll;
@@ -161,13 +172,16 @@ int main(int argc, char** argv) try {
                 DepositInput input;
                 input.particle_id = record.particle_id; input.particle_type = record.ityp;
                 input.ncol = record.ncol; input.jcoll = record.jcoll;
-                input.process = DepositProcess::dead_electron_secondary;
+                input.process = child.jclusts[3] == 12 ? DepositProcess::dead_electron_secondary :
+                                                         DepositProcess::dead_positron_secondary;
                 input.transport_weight = record.weight; input.old_weight = record.oldwt;
                 input.secondary_particle_type = child.jclusts[3];
                 input.secondary_status = child.jclusts[4]; input.secondary_energy_mev = child_energy;
                 input.secondary_weight = child.qclusts[8];
                 input.secondary_xyz_cm = {child.qclusts[10], child.qclusts[11], child.qclusts[12]};
-                write_result(input, "dead_electron_secondary", child.qclusts[10], child.qclusts[11],
+                write_result(input, child.jclusts[3] == 12 ? "dead_electron_secondary" :
+                                                             "dead_positron_secondary",
+                             child.qclusts[10], child.qclusts[11],
                              child.qclusts[12], child.qclusts[10], child.qclusts[11],
                              child.qclusts[12], static_cast<int>(i));
             }
@@ -177,7 +191,7 @@ int main(int argc, char** argv) try {
     std::cout << "records=" << summary.records << " histories=" << summary.histories
               << " additions=" << next_id << " reconstructed=" << reconstructed
               << " unresolved=" << unresolved_count << " unsupported=" << unsupported_count
-              << " status=EXPERIMENTAL_PARTIAL terminator=NCOL=" << summary.terminal_ncol << '\n';
+              << " status=EXPERIMENTAL_SLICE terminator=NCOL=" << summary.terminal_ncol << '\n';
     return unresolved_count == 0 ? 0 : 1;
 } catch (const std::exception& error) {
     std::cerr << "dump2event_physical_reconstruct: " << error.what() << '\n';

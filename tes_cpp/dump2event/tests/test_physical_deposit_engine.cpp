@@ -115,13 +115,15 @@ int main() try {
         std::ofstream table(path);
         table << "medium,medname,lelke,eke0,eke1,ededx0,ededx1,pdedx0,pdedx1,phits_density,egs_density\n";
         table << "1,CU,1,10,1,9,0,0,0,8.9,8.9\n";
-        table << "2,PB,1,10,1,9,0,0,0,11.35,11.35\n";
-        table << "2,PB,3,10,1,4,0,0,0,11.35,11.35\n";
-        table << "2,PB,7,10,1,3,0,0,0,11.35,11.35\n";
+        table << "2,PB,1,10,1,9,0,8,0,11.35,11.35\n";
+        table << "2,PB,3,10,1,4,0,3,0,11.35,11.35\n";
+        table << "2,PB,7,10,1,3,0,2,0,11.35,11.35\n";
     }
     const auto table = Egs5StoppingTable::read_csv(path.string(), 2, "Pb");
     require(table.material() == "PB" && table.medium() == 2, "material/medium parse");
     require(std::abs(table.stopping_power(0.1, 2) - 3.0) < 1e-14, "EGS5 table lookup");
+    require(std::abs(table.positron_stopping_power(0.1, 2) - 2.0) < 1e-14,
+            "EGS5 positron table lookup uses PDedx coefficients");
     PhysicalDepositContext context{"3.341", 1000, "Pb", 2, 0.001, true};
     PhysicalDepositLedger ledger(context, table);
 
@@ -139,6 +141,15 @@ int main() try {
     const auto c13 = ledger.add(repeated_collision);
     require(c13.status == "reconstructed" && std::abs(*c13.energy_mev - 0.6) < 1e-14,
             "NCOL=13 EGS5 electron continuous loss");
+
+    auto positron = continuous;
+    positron.addition_id = "p1"; positron.particle_type = 13;
+    positron.process = DepositProcess::egs5_positron_continuous;
+    positron.energy_mev = positron.energy_c_mev = 0.1;
+    positron.old_weight = positron.transport_weight = 1.0;
+    const auto p = ledger.add(positron);
+    require(p.status == "reconstructed" && std::abs(*p.energy_mev - 0.4) < 1e-14 &&
+            p.position_status == "segment", "positron continuous loss uses PDedx and raw segment");
 
     auto boundary = continuous;
     boundary.addition_id = "a1c"; boundary.ncol = 10; boundary.jcoll = 0;
@@ -170,6 +181,14 @@ int main() try {
     const auto d_low = ledger.add(below_transport_cutoff);
     require(d_low.status == "reconstructed" && *d_low.energy_mev == 0.0007,
             "dead-secondary tally threshold is not the 1 keV transport cutoff");
+    auto dead_positron = dead;
+    dead_positron.addition_id = "p2"; dead_positron.secondary_particle_type = 13;
+    dead_positron.process = DepositProcess::dead_positron_secondary;
+    dead_positron.secondary_energy_mev = 0.001;
+    const auto dp = ledger.add(dead_positron);
+    require(dp.status == "reconstructed" && *dp.energy_mev == 0.001 &&
+            dp.position_status == "secondary_point",
+            "dead secondary positron local kinetic residual, without rest mass");
     auto below_score_guard = dead;
     below_score_guard.addition_id = "a3c";
     below_score_guard.secondary_energy_mev = 5.0e-7;

@@ -6,12 +6,15 @@ reconstruction:
 
 - Any PHITS release other than 3.341, region/material/EGS5 medium other than
   Pb region 1000 / material 2 / medium 2, or non-unit parent/secondary weight.
-- Photon collisions and photon transport losses; positron slowing, stopping
-  and annihilation, including rest-mass energy and annihilation photon escape.
+- Photon reaction-specific raw-only energy accounting and independent scoring
+  of photon escape/absorption. Positron continuous stopping and dead-positron
+  Q7 kinetic residuals above the guard were internally validated only for the
+  one 10,000-history Pb run documented under `validation/positron_10000_closure/`.
+  This does not validate arbitrary annihilation, changing weights, or other
+  material/region cases.
 - Nuclear, neutron, heavy charged particle, kerma, dose, and other tally
   scoring branches.
-- Dead charged secondaries other than the validated electron case, or
-  secondary kinetic energy `<= 1e-6 MeV`. The tally threshold depends on
+- Dead charged secondaries with kinetic energy `<= 1e-6 MeV`. The tally threshold depends on
   `esmin`, which is not serialized in Dumpall; such candidates remain
   unresolved instead of being silently counted or dropped.
 - NCOL=11 stopping records for non-electrons. They are emitted as unresolved
@@ -26,7 +29,7 @@ reconstruction:
 - Full event JSON/HDF5 output, production CLI integration, and automatic
   representation of unresolved energy in the existing converter.
 
-The program labels every run `EXPERIMENTAL_PARTIAL`. Unsupported candidate
+The program labels every run `EXPERIMENTAL_SLICE`. Unsupported candidate
 rows have unresolved status/reasons; no clipping, global normalization,
 arbitrary redistribution, or replacement by zero is used. A zero unresolved
 count in the 1,000-history sample means only that this particular sample did

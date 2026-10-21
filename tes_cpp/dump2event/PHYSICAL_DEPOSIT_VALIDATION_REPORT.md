@@ -94,3 +94,9 @@ unit-weight validation slice and with all unresolved rows reviewed. It is not
 ready for PR #6: no general scoring branch coverage, positron rest-mass
 accounting, arbitrary material/weight handling, voxel allocation, or full
 reconstruction of all PHITS tally modes has been validated.
+
+## 2026-10-21 positron closure update
+
+A same-seed PHITS 3.341 diagnostic run on the 10,000-history Pb sample was performed. The experimental reconstruction now resolves the previous 342 rows (326 NCOL=14 positron continuous, 7 NCOL=13 annihilation-parent positron continuous, 9 dead positron secondary) and corrects 1,460 positron rows previously recorded as zero because raw E equaled EC. All 1,802 additions match same-run internal tlv within 1e-12 MeV. The new HDF5 v2 contains 1,954,742/1,954,742 known rows; same-run internal join has zero energy/region/checked-location mismatches and maximum row error 5.865533753146579e-15 MeV. The 150-bin history distribution matches PHITS with count L1=0. See `validation/positron_10000_closure/`.
+
+This is a same-run, Pb region 1000, material/medium 2, unit-weight result. It does not validate changing weights, other materials or regions, photon-process-specific raw-only accounting, or independent-seed internal joins. It is research-only, does not change the default converter, and does not make PR #6 ready to merge.

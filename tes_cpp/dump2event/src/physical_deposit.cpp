@@ -80,6 +80,7 @@ Egs5StoppingTable Egs5StoppingTable::read_csv(const std::string& path, int expec
         Egs5StoppingRow row{medium, material, index,
             number(f[3], line_number, "eke0"), number(f[4], line_number, "eke1"),
             number(f[5], line_number, "ededx0"), number(f[6], line_number, "ededx1"),
+            number(f[7], line_number, "pdedx0"), number(f[8], line_number, "pdedx1"),
             number(f[9], line_number, "phits_density"), number(f[10], line_number, "egs_density")};
         if (index <= 0 || row.phits_density <= 0.0 || row.egs_density <= 0.0)
             throw std::runtime_error("stopping table contains invalid index or density");
@@ -118,6 +119,26 @@ double Egs5StoppingTable::stopping_power(double kinetic_energy_mev, int medium) 
     return value;
 }
 
+double Egs5StoppingTable::positron_stopping_power(double kinetic_energy_mev, int medium) const {
+    if (medium != medium_) throw std::runtime_error("requested EGS5 medium does not match table");
+    if (!std::isfinite(kinetic_energy_mev) || kinetic_energy_mev < 0.0)
+        throw std::runtime_error("invalid kinetic energy for positron stopping-power lookup");
+    const double log_energy = std::log(std::max(kinetic_energy_mev, 0.001));
+    const auto& base = rows_.at(1);
+    const double raw_index = base.eke1 * log_energy + base.eke0;
+    if (!std::isfinite(raw_index) || raw_index < 1.0 ||
+        raw_index > static_cast<double>(std::numeric_limits<int>::max()))
+        throw std::runtime_error("EGS5 positron stopping-power index is outside table bounds");
+    const int index = static_cast<int>(raw_index); // PHITS/EGS5 integer truncation
+    const auto found = rows_.find(index);
+    if (found == rows_.end()) throw std::runtime_error("EGS5 stopping-power table lacks positron index " +
+                                                       std::to_string(index));
+    const double value = found->second.pdedx1 * log_energy + found->second.pdedx0;
+    if (!std::isfinite(value) || value < 0.0)
+        throw std::runtime_error("EGS5 positron stopping-power table produced invalid stopping power");
+    return value;
+}
+
 PhysicalDepositLedger::PhysicalDepositLedger(PhysicalDepositContext context,
                                                const Egs5StoppingTable& table)
     : context_(std::move(context)), table_(table) {
@@ -149,6 +170,14 @@ DepositResult PhysicalDepositLedger::add(const DepositInput& in) {
         result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
                   "EGS5 stopping power at raw Dumpall E multiplied by raw endpoint chord",
                   value, "segment", in.source_line};
+    } else if (in.process == DepositProcess::egs5_positron_continuous &&
+               (in.ncol == 13 || in.ncol == 14) && in.particle_type == 13 &&
+               finite_nonnegative(in.energy_mev) && finite_nonnegative(in.segment_length_cm)) {
+        const double value = in.old_weight *
+            table_.positron_stopping_power(in.energy_mev, context_.medium) * in.segment_length_cm;
+        result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
+                  "PHITS 3.341 EGS5 positron tlv = OLDWT * PDedx(E) * raw endpoint chord",
+                  value, "segment", in.source_line};
     } else if (in.process == DepositProcess::egs5_electron_boundary && in.ncol == 10 &&
                in.particle_type == 12 &&
                finite_nonnegative(in.energy_mev) && finite_nonnegative(in.segment_length_cm)) {
@@ -174,6 +203,16 @@ DepositResult PhysicalDepositLedger::add(const DepositInput& in) {
         result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
                   "dead secondary electron QCLUSTS(7) above conservative PHITS score guard, unit QCLUSTS(8)",
                   in.secondary_energy_mev, "secondary_point", in.source_line};
+    } else if (in.process == DepositProcess::dead_positron_secondary &&
+               (in.ncol == 13 || in.ncol == 14) &&
+               in.secondary_particle_type == 13 && in.secondary_status < 0 &&
+               finite_nonnegative(in.secondary_energy_mev) &&
+               in.secondary_energy_mev > kDeadSecondaryScoreGuardMeV &&
+               in.secondary_weight == 1.0 && std::isfinite(in.secondary_xyz_cm[0]) &&
+               std::isfinite(in.secondary_xyz_cm[1]) && std::isfinite(in.secondary_xyz_cm[2])) {
+        result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
+                  "dead secondary positron QCLUSTS(7) above conservative PHITS score guard, unit weight",
+                  in.secondary_energy_mev, "secondary_point", in.source_line};
     } else if (in.process == DepositProcess::exact_zero &&
                (in.ncol == 10 || in.ncol == 13 || in.ncol == 14) &&
                finite_nonnegative(in.energy_mev) && finite_nonnegative(in.energy_c_mev) &&
@@ -193,7 +232,9 @@ const char* to_string(DepositProcess process) noexcept {
     case DepositProcess::egs5_electron_continuous: return "egs5_electron_continuous";
     case DepositProcess::egs5_electron_boundary: return "egs5_electron_boundary";
     case DepositProcess::egs5_electron_cutoff: return "egs5_electron_cutoff";
+    case DepositProcess::egs5_positron_continuous: return "egs5_positron_continuous";
     case DepositProcess::dead_electron_secondary: return "dead_electron_secondary";
+    case DepositProcess::dead_positron_secondary: return "dead_positron_secondary";
     case DepositProcess::exact_zero: return "exact_zero";
     default: return "unsupported";
     }
