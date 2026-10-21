@@ -15,4 +15,6 @@ Push is limited to experimental opt-in wiring and evidence reports, not a valida
 
 ## Push and CI
 
-Pending the authorized push and GitHub Actions result for the final branch head. Record the SHA, remote head, and workflow URL/status after verification. This report does not claim that the independent-seed or same-run raw/internal provenance gates passed.
+The authorized research branch push moved `origin/feat/dump2event-physical-validation-20261020` from `59f4712ccc73fb3e9ea2a684dabf46238aea1e5e` to `17a47d630455a6018d96c07b8d1b5653fd1315f7`. GitHub Actions run [39546687595](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39546687595) ran on that exact SHA and completed successfully. Configure, build, C++ regression tests, and v1/v2 plus Python tests all succeeded.
+
+This report is a documentation-only follow-up to that tested commit. The final remote SHA and the workflow run triggered by this report update are recorded in the turn's final status; no source code changed after run 39546687595. This report does not claim that the independent-seed or same-run raw/internal provenance gates passed.
