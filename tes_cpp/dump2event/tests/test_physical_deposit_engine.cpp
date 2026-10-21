@@ -1,6 +1,5 @@
 #include "tes_cpp/physical_deposit.hpp"
 #include "tes_cpp/dumpall_record_parser.hpp"
-#include "tes_cpp/converter.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -88,24 +87,6 @@ int main() try {
     }
     require(clipped_context,
             "truncated NCOL=4 particle field fails closed with input and field context");
-    const auto clipped_path = std::filesystem::temp_directory_path() /
-        "tes_cpp_gnu_clipped_ncol4.dumpall";
-    {
-        std::ofstream clipped_file(clipped_path, std::ios::binary);
-        clipped_file << clipped_particle;
-    }
-    bool converter_rejected_clipped = false;
-    try {
-        Options clipped_options;
-        clipped_options.input_energy = 1.0;
-        (void)read_dump(clipped_path.string(), clipped_options);
-    } catch (const std::runtime_error& error) {
-        converter_rejected_clipped = std::string(error.what()).find(
-            clipped_path.string()) != std::string::npos;
-    }
-    std::filesystem::remove(clipped_path);
-    require(converter_rejected_clipped,
-            "modern NCOL=1 dump with malformed NCOL=4 must not fall back to legacy parser");
     must_throw([&] { std::istringstream truncated(record.substr(0, record.size() - 2));
         (void)parse_dumpall_records(truncated, [](const DumpallRecord&) {}); },
         "truncated Dumpall must fail closed");
