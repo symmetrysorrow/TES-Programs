@@ -52,3 +52,11 @@ install(TARGETS dump2event_physical_reconstruct dumpall_transport_export
     RUNTIME DESTINATION ${TES_CPP_DUMP2EVENT_INSTALL_DIR})
 install(FILES validation/build_physical_hdf5_v2.py
     DESTINATION ${CMAKE_INSTALL_DATADIR}/tes_cpp_dump2event)
+
+# Package a strictly byte-verified Pb HATCH resource if one has been
+# installed into the repository after redistribution permission is confirmed.
+# Do not fabricate or download unrelated stopping-power coefficients.
+set(TES_VERIFIED_PB_TABLE "${CMAKE_CURRENT_SOURCE_DIR}/data/pb_egs5_phits3341.csv")
+if (EXISTS "${TES_VERIFIED_PB_TABLE}")
+    install(FILES "${TES_VERIFIED_PB_TABLE}" DESTINATION "${TES_CPP_DUMP2EVENT_INSTALL_DIR}")
+endif()
