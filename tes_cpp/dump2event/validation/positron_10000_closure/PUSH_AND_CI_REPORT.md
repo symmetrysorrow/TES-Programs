@@ -14,6 +14,10 @@
 
 ## Push and GitHub Actions
 
-Push is explicitly authorized for this independent research branch after the above gates. The first implementation commit SHA, branch push result, and Actions run URL/status will be recorded after the remote operation. Any Action failure will be investigated before this report is finalized.
+Push was completed to the authorized independent research branch. The implementation commit is `f1f87f24a4d0fe8224f33621c4968f1355aff0f8` (`feat: validate PHITS positron deposit reconstruction`). The push updated `origin/feat/dump2event-physical-validation-20261020` from `f7f505be30fa7609297db2d116856d8123f9c127`.
+
+GitHub Actions run [39539451114](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39539451114), workflow `dump2event energy regression tests`, was triggered by `push` for that exact commit. It completed successfully (`conclusion=success`, run attempt 1; created 2026-10-21 03:35:55 UTC, updated 03:36:26 UTC). No workflow failure remains to investigate.
+
+At final review, the research worktree is on `feat/dump2event-physical-validation-20261020` at `f1f87f24a4d0fe8224f33621c4968f1355aff0f8`. The only untracked paths are two pre-existing research directories, `tes_cpp/dump2event/validation/extended_physics_20261020/` and `tes_cpp/dump2event/validation/weighted_cutoff_positron_photon/`; neither was staged or modified for this push.
 
 Research status remains experimental and scoped. This push is not a claim of general PHITS physics completeness or readiness to integrate into PR #6.
