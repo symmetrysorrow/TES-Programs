@@ -35,5 +35,6 @@ See `tes_cpp/dump2event/BI_VALIDATION_PLAN.md`.
 `tes_cpp/dump2event/data/pb_egs5_phits3341.csv`に正確な実測済み
 HATCH係数を入れて配布・インストールすれば、自動でSHA-256を検証して使用します。
 現時点では元CSVの公開再配布条件が未確認で、公開Gitには本体がありません。
-よって必要な場合はCLIの`--stopping-table`、Python APIの
-`stopping_table=...`で私有表を指定してください。
+その場合、対話UIはこれまでどおりユーザーにprivateなPb係数表の場所を尋ねます。
+CLIの`--stopping-table`、Python APIの`stopping_table=...`でも指定できます。
+表が同梱された環境では選択画面が省略されます。
