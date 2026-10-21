@@ -53,6 +53,7 @@ def _fake_hdf5(path):
         events = handle.create_group("events")
         events.create_dataset("event_id", data=[1, 2])
         events.create_dataset("unresolved_count", data=[0, 0])
+        events.create_dataset("complete", data=[True, True])
         particles = handle.create_group("particles")
         particles.create_dataset("particle_id", data=[1, 2])
         tracks = handle.create_group("tracks")
