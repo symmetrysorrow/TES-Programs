@@ -9,6 +9,7 @@ import build_physical_hdf5_v2 as build
 
 VALID = """[Parameters]
 icntl = 0
+bitrseed = 0101101011001010010111000011100101101001110000111011001010010111
 maxcas = 10000
 maxbch = 1
 negs = 1
@@ -17,6 +18,7 @@ emin(12) = 0.001
 emin(13) = 0.001
 emin(14) = 0.001
 [Source]
+totfact = 1.0
 1.173 1
 1.332 1
 [Material]

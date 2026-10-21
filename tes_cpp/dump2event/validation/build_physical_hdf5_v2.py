@@ -36,12 +36,17 @@ def sha256(path: Path) -> str:
 
 
 def physics_config(source_input: Path, config_path: Path | None = None):
+    source_text = source_input.read_text(encoding="utf-8-sig", errors="replace")
+    seed_match = re.search(r"(?im)^\s*bitrseed\s*=\s*([01]{64})\s*(?:#.*)?$", source_text)
+    if not seed_match:
+        raise ValueError("PHITS source input must declare a 64-bit binary bitrseed for reproducible provenance")
     return {
         "phits_version": "3.341", "region_id": 1000, "region_material": "PB",
         "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
         "weights": "unit-weight validated slice only", "diagnostic_mode": True,
         "unsupported_processes": "stored UNRESOLVED; never old-formula fallback",
         "source_input_sha256": sha256(source_input),
+        "source_seed_bits": seed_match.group(1),
         "physics_config_file_sha256": sha256(config_path) if config_path else "legacy-input-mode",
         "position_semantics": "raw transport chords and raw child point; scorer representative coordinate kept separate",
     }
@@ -70,13 +75,16 @@ def validate_source_input(path: Path) -> None:
             found[re.sub(r"\s+", "", key)] = value.strip()
         return found
     params = values("parameters")
-    required_params = {"maxbch": "1",
+    required_params = {"icntl": "0", "maxbch": "1",
                        "negs": "1", "e-mode": "2", "emin(12)": "0.001",
                        "emin(13)": "0.001", "emin(14)": "0.001"}
     for key, expected in required_params.items():
         got = params.get(key)
         if got is None or float(got.split()[0]) != float(expected):
             raise ValueError(f"source input must set [{key}]={expected}; found {got!r}")
+    seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else ""
+    if not re.fullmatch(r"[01]{64}", seed):
+        raise ValueError("source input must set an explicit 64-bit binary bitrseed")
     material_lines = sections.get("material", [])
     if not any(re.match(r"mat\s*\[\s*2\s*\]\s+pb\s+1(?:\s|$)", line) for line in material_lines):
         raise ValueError("source input must define mat[2] as pure Pb")
@@ -84,6 +92,8 @@ def validate_source_input(path: Path) -> None:
     if not any(re.match(r"1000\s+2\s+-9\.78(?:\s|$)", line) for line in cell_lines):
         raise ValueError("source input must define region 1000 with Dumpall material 2 and Pb density -9.78")
     source = sections.get("source", [])
+    if not any(re.match(r"totfact\s*=\s*1(?:\.0*)?(?:\s|$)", line) for line in source):
+        raise ValueError("source input must use unit totfact=1")
     if not any(re.match(r"1\.173(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source) or \
        not any(re.match(r"1\.332(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source):
         raise ValueError("source input must explicitly contain 1.173 and 1.332 MeV unit-intensity lines")
