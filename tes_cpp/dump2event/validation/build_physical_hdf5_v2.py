@@ -528,10 +528,51 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
     }
 
 
+# Pinned to the exact, same-run-PHITS-validated historical HATCH CSV.
+# This data file is NOT automatically published here: verify distribution
+# permission before adding it to a public Git repository.
+BUNDLED_PB_TABLE_NAME = "pb_egs5_phits3341.csv"
+BUNDLED_PB_TABLE_SHA256 = "20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9"
+
+
+def resolve_stopping_table(explicit: Path | None) -> Path:
+    """Select an explicitly provided table or an exact, checksum-pinned bundled Pb table.
+
+    No unverified physics table is silently substituted, and no synthetic
+    fixture is ever a valid default.
+    """
+    if explicit is not None:
+        if not explicit.is_file():
+            raise FileNotFoundError(f"explicit stopping table was not found: {explicit}")
+        return explicit
+
+    home = Path(__file__).resolve().parent
+    candidates = [
+        home / BUNDLED_PB_TABLE_NAME,              # installed alongside driver
+        home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            actual = sha256(candidate)
+            if actual != BUNDLED_PB_TABLE_SHA256:
+                raise ValueError(
+                    f"bundled Pb HATCH coefficient checksum mismatch: {candidate} "
+                    f"(expected {BUNDLED_PB_TABLE_SHA256}, got {actual})"
+                )
+            return candidate
+    raise FileNotFoundError(
+        "verified Pb HATCH coefficient table is not bundled. "
+        "Install the byte-verified table as tes_cpp/dump2event/data/"
+        + BUNDLED_PB_TABLE_NAME +
+        " after checking redistribution rights, or specify --stopping-table explicitly."
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dumpall", type=Path, required=True)
-    parser.add_argument("--stopping-table", type=Path, required=True)
+    parser.add_argument("--stopping-table", type=Path,
+                        help="optional override; omitted means the checksum-pinned bundled Pb HATCH CSV")
     parser.add_argument("--source-input", type=Path,
                         help="legacy: PHITS input whose settings are validated")
     parser.add_argument("--physics-config", type=Path,
@@ -547,6 +588,7 @@ def main() -> int:
     try:
         if args.output.exists():
             raise FileExistsError(f"refusing to overwrite existing output: {args.output}")
+        args.stopping_table = resolve_stopping_table(args.stopping_table)
         if bool(args.source_input) == bool(args.physics_config):
             raise ValueError("provide exactly one of --physics-config or legacy --source-input")
         if args.physics_config:
