@@ -111,6 +111,20 @@ class CMakeBuild(build_ext):
         if not driver.is_file():
             raise FileNotFoundError(f"Pb HDF5 v2 driver was not found: {driver}")
         shutil.copy2(driver, package_bin / driver.name)
+        # Optional source-controlled HATCH coefficients. The exact CSV must
+        # be added only after confirming that public redistribution is allowed.
+        # Missing table does not block development builds, but conversions
+        # without an explicit --stopping-table will fail closed.
+        bundled = ROOT / "tes_cpp" / "dump2event" / "data" / "pb_egs5_phits3341.csv"
+        if bundled.is_file():
+            import hashlib
+            expected = "20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9"
+            actual = hashlib.sha256(bundled.read_bytes()).hexdigest()
+            if actual != expected:
+                raise ValueError(f"Bundled Pb HATCH CSV SHA-256 mismatch: {actual}")
+            shutil.copy2(bundled, package_bin / bundled.name)
+        else:
+            print("WARNING: verified Pb HATCH data not bundled; use explicit --stopping-table")
         print("TES native tools built successfully.")
 
     def build_extensions(self):

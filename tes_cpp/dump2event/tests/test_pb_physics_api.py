@@ -37,6 +37,15 @@ class PbPhysicsApiTests(unittest.TestCase):
         self.assertEqual(result.output_path, self.output)
         self.assertTrue(run.call_args.kwargs["check"])
 
+    def test_bundled_table_can_be_selected_without_explicit_argument(self):
+        with patch.object(module, "_executable", return_value="dump2event"), \
+             patch.object(module.subprocess, "run") as run:
+            module.dump2event(self.dump, self.output, physics_config=self.config)
+        command = run.call_args.args[0]
+        self.assertIn("--physics-config", command)
+        self.assertNotIn("--stopping-table", command)
+        self.assertTrue(run.call_args.kwargs["check"])
+
     def test_pb_physics_explicit_alias_is_accepted(self):
         with patch.object(module, "_executable", return_value="dump2event"), \
              patch.object(module.subprocess, "run") as run:

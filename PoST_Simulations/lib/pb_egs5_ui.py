@@ -81,6 +81,19 @@ def _inspect_v2(path: Path) -> dict[str, object]:
         }
 
 
+def _bundled_table_present() -> bool:
+    """Use the bundled resource when present; the driver checks its exact SHA."""
+    name = "pb_egs5_phits3341.csv"
+    repo_path = Path(__file__).resolve().parents[2] / "tes_cpp" / "dump2event" / "data" / name
+    if repo_path.is_file():
+        return True
+    try:
+        from importlib.resources import files
+        return files("tes_cpp").joinpath("bin", name).is_file()
+    except (ImportError, ModuleNotFoundError):
+        return False
+
+
 def run_pb_egs5_ui(questionary, convert):
     """Prompt for real input paths, call the existing physics API, then inspect v2.
 
@@ -109,10 +122,15 @@ def run_pb_egs5_ui(questionary, convert):
         raise ValueError("BiはPHITS同一runの内部スコア照合と専用HATCH表の実証が未完了です。"
                          "物理ledgerは研究用ですが、Bi HDF5 v2の生成は承認されていません。")
 
-    table_path = _ask_path(questionary, "privateなPb HATCH停止能CSVを指定してください")
-    if table_path is None:
-        return None
-    table_path = _checked_input(table_path, "停止能CSV")
+    table_path = None
+    if _bundled_table_present():
+        print("検証済み同梱Pb HATCH停止能表を自動使用します（ドライバーでSHA-256照合）。")
+    else:
+        print("この環境には同梱Pb係数表がありません。元の非公開CSVを指定してください。")
+        table_path = _ask_path(questionary, "元の検証済みPb HATCH停止能CSVを指定してください")
+        if table_path is None:
+            return None
+        table_path = _checked_input(table_path, "停止能CSV")
 
     output_path = _ask_path(
         questionary,
@@ -141,7 +159,7 @@ def run_pb_egs5_ui(questionary, convert):
         output_path,
         physics="pb-egs5",
         physics_config=config_path,
-        stopping_table=table_path,
+        **({"stopping_table": table_path} if table_path is not None else {}),
     )
     info = _inspect_v2(Path(result.output_path))
     print(

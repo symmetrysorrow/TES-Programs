@@ -136,3 +136,21 @@ def test_bi_menu_rejects_unvalidated_material_before_conversion(tmp_path):
             lambda *args, **kwargs: pytest.fail("Bi must not enter converter yet"),
         )
     assert not output.exists()
+
+
+def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
+    raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: True)
+    dialog = FakeQuestionary([raw, config, output])
+    kwargs_seen = []
+
+    def convert(*args, **kwargs):
+        kwargs_seen.append(kwargs)
+        _fake_hdf5(output)
+        return SimpleNamespace(output_path=output)
+
+    run_pb_egs5_ui(dialog, convert)
+    assert len(dialog.default_paths) == 3  # no stopping-table picker
+    assert "stopping_table" not in kwargs_seen[0]
+    assert kwargs_seen[0]["physics_config"] == config.resolve()

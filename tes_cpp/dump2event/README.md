@@ -22,7 +22,7 @@ cmake -S tes_cpp -B tes_cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build tes_cpp/build --config Release
 
 tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5 `
-  --physics-config pb_config.json --stopping-table pb_hatch_private.csv
+  --physics-config pb_config.json
 ```
 
 環境によって実行ファイルの位置が異なります。
@@ -42,7 +42,6 @@ from tes_cpp import dump2event
 result = dump2event(
     "dumpall.dat", "event_pb_egs5_v2.h5",
     physics_config="pb_config.json",
-    stopping_table="pb_hatch_private.csv",
 )
 print(result.output_path)
 ```
@@ -76,3 +75,25 @@ source guard and HATCH SHA-256 input validation, but **normal Bi HDF5 v2
 publication is blocked** until independent Bi `[t-deposit]` oracle matching.
 Do not substitute Pb EDedx/PDedx or density for Bi; do not run expensive new
 10,000-history simulations to bypass this gate. See `BI_VALIDATION_PLAN.md`.
+
+### Pb HATCH table included by default (after source-data import)
+
+The preferred setup is to keep the **exact PHITS 3.341/Pb HATCH CSV** in
+`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`, install it with the package,
+and automatically verify its SHA-256 before using it. The validated historical
+file is exactly 130,754 bytes and has the SHA-256:
+
+```text
+20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9
+```
+
+`--stopping-table <path>` remains supported for private local tables and
+legacy workflows, but when omitted the native CLI delegates to the Python
+driver to resolve the verified bundled resource. No guessing or network fetch
+occurs: missing/changed bundled data cause a hard error. The table bytes have
+**not** yet been committed because this repository is public, the actual
+historical CSV is available only on a private local Windows installation,
+and permission to publicly redistribute PHITS-generated coefficients has
+not yet been checked. See `data/README.md` and
+`tools/import_verified_pb_table.py`. Until the verified data file is imported,
+use the previous explicit `--stopping-table` argument.
