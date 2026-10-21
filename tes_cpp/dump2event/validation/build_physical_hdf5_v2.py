@@ -172,7 +172,9 @@ def resolved_physics(settings: dict, source_input: Path) -> dict:
         "energy_unit": str(settings["energy_unit"]),
         "deposit_mode": str(settings["deposit_mode"]),
         "algorithm_version": "pb-egs5-exp-v3-score-gate",
-        "material_validation_status": material_settings(settings)["validation_status"],
+        **({"material_validation_status": "BI_PENDING_PHITS_ORACLE",
+            "cell_density_g_cm3": material_settings(settings)["cell_density_g_cm3"]}
+           if settings["region_material"] == "Bi" else {}),
         **source_definition(sections.get("source", [])),
     }
 
@@ -546,7 +548,8 @@ def main() -> int:
         provenance = provenance_metadata(physics_data, args.physics_config,
                                          args.source_input, args.dumpall, args.stopping_table,
                                          args.converter_executable, args.reconstructor, args.track_exporter)
-        config = {**provenance, "material": "Pb", "medium": "2", "cutoff_MeV": "0.001",
+        config = {**provenance, "material": physics_data["region_material"],
+                  "medium": str(physics_data["egs5_medium"]), "cutoff_MeV": "0.001",
                   "algorithm_version": "pb-egs5-exp-v3-score-gate",
                   "position_semantics": physics["position_semantics"],
                   "unsupported_processes": physics["unsupported_processes"],
@@ -563,7 +566,9 @@ def main() -> int:
                   "region_id": physics["region_id"], "dumpall_material_id": physics["dumpall_material_id"],
                   "region_material": physics["region_material"], "egs5_medium": physics["egs5_medium"]}
         started = time.perf_counter()
-        with tempfile.TemporaryDirectory(prefix="dump2event-pb-", dir=args.output.parent) as scratch:
+        # load_physics_config refuses Bi until an independent same-run PHITS
+        # scoring oracle validates that material and source configuration.
+        with tempfile.TemporaryDirectory(prefix="dump2event-egs5-", dir=args.output.parent) as scratch:
             if args.work_dir:
                 args.work_dir.mkdir(parents=True, exist_ok=True)
             else:
