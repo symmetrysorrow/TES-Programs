@@ -109,10 +109,8 @@ def run_pb_egs5_ui(questionary, convert):
         raise ValueError("BiはPHITS同一runの内部スコア照合と専用HATCH表の実証が未完了です。"
                          "物理ledgerは研究用ですが、Bi HDF5 v2の生成は承認されていません。")
 
-    table_path = _ask_path(questionary, "privateなPb HATCH停止能CSVを指定してください")
-    if table_path is None:
-        return None
-    table_path = _checked_input(table_path, "停止能CSV")
+    print("Pb HATCH停止能表は検証済みの同梱データを使用します。")
+    print("同梱されていない場合は変換を拒否し、取得方法を表示します。")
 
     output_path = _ask_path(
         questionary,
@@ -141,7 +139,6 @@ def run_pb_egs5_ui(questionary, convert):
         output_path,
         physics="pb-egs5",
         physics_config=config_path,
-        stopping_table=table_path,
     )
     info = _inspect_v2(Path(result.output_path))
     print(
