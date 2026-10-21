@@ -1,3 +1,13 @@
-﻿# Thread merge validation
+# Threaded Dumpall merge validation status
 
-**Not tested in this task.** The standalone line-copy probe did not use PHITS thread files and did not exercise `cpcasdump` ordering, history-header sorting, marker handling, or concurrent output. Historical reports say one 100-history artifact was called lossless, but provide no recoverable PHITS source diff or matching executable identity. No claim of zero omissions or order changes is made.
+A small 100-history run was launched with `$OMP=2` using the existing `phits_WinGfort_lossless_nohook.exe`. Inspection of the source makefile shows its default `USEOMP` is commented out; the `$OMP=2` input does not make that binary an OpenMP build. That run exited 0 and produced a valid single-thread-format Dumpall, but it is **not** evidence of threaded merge.
+
+A fresh isolated copy of `C:\PHITS\src` was patched with the chunked cpcasdump writer and GNU-Fortran-16 compatibility rename, then built with:
+
+```text
+mingw32-make -f makefile ENVFLAGS=WinGfort USEOMP=true -j4
+```
+
+The build failed at `mod_ompparallel.o`; the assembler emitted `Error: unknown pseudo-op: .tls_common`. No OpenMP PHITS binary was produced. `C:\PHITS`, the original input, and the original Dumpall were not changed.
+
+**Status:** multi-thread serialization merge order remains unvalidated. Do not infer it from the serial runs.

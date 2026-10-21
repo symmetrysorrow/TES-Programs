@@ -1,7 +1,17 @@
-﻿# Lossless writer implementation status
+# Lossless writer implementation and observed limits
 
-A standalone GNU Fortran probe used non-advancing formatted reads in 4,096-character chunks and wrote the transferred characters without numeric parsing. It compiled with the installed MSYS2 GNU Fortran 16.1.0. Measured synthetic payloads of 17, 80, 81, 600, and 9,000 characters plus an empty record retained their character content.
+The accepted serialization repair is the non-advancing chunk loop in `cpcasdump` described in `GNU_CPCASDUMP_ROOT_CAUSE.md`. The 4,096-character buffer is a repeated I/O chunk, not a maximum record length; records longer than the chunk are read in multiple iterations. It preserves logical record content without numeric parsing.
 
-The probe normalized line endings to the platform-native output and appended a record terminator when the input's final record had no linefeed. Thus it is **not** the PHITS writer fix required here. Exact CRLF/LF and unterminated-EOF preservation, multi-thread merge order, NCOL=4 schema, NCOL=2 termination, and end-to-end PHITS operation remain untested. No PHITS source was changed, copied into the repository, or compiled. No production patch is offered from this probe.
+## Executed validations
 
-Probe files and console outputs are local under `D:\temp\gnu_lossless_copy_probe_20261021`; they are not part of the repository.
+- GNU Fortran 16.1.0 synthetic copier: 5-, 80-, 81-, 12,000-character records, empty record, and unterminated final record. All 6 record payloads and boundaries matched; the final record received a newline on output.
+- Repaired PHITS 3.341 100-history raw: 38,345 records / 100 NCOL=4 headers; terminal NCOL=2; max line 338; 267,683 lines above 80.
+- Repaired PHITS 3.341 independent-seed 1,000-history raw: 198,060 records / 1,000 headers; terminal NCOL=2; max line 338; 1,378,712 lines above 80.
+- 100-history no-hook and diagnostic-sequence runs with the same seed and writer have identical Dumpall SHA-256 and `[t-deposit]` SHA-256. This supports non-perturbation for that tested serial configuration.
+
+## Not established
+
+- Exact byte preservation of CRLF versus LF or of an absent final newline; Fortran formatted record I/O normalizes the final terminator.
+- OpenMP/threaded merge order. The installed makefile defaults to `USEOMP` off. A fresh `USEOMP=true` build failed at assembler `.tls_common`; no threaded PHITS output is claimed.
+- A fresh rebuild of the exact historical diagnostic executable from the recorded source tree; the new 1,000-history run records its binary hash, but not a new source-to-binary reproducible build log.
+- 10,000-history conversion through the normal HDF5 v2 CLI in this turn.
