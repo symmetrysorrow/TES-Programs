@@ -131,3 +131,15 @@ def test_pb_contract_unchanged(tmp_path):
     contract.write_text(json.dumps(data), encoding="utf-8")
     parsed, _ = builder.load_physics_config(contract)
     assert builder.material_settings(parsed)["validation_status"] == "PB_SAME_RUN_VALIDATED"
+
+
+def test_bi_hatch_hash_must_match_exact_private_csv_bytes(tmp_path):
+    import hashlib
+    _, data, _ = fixture(tmp_path)
+    table = tmp_path / "fake_bi_coefficients.csv"
+    table.write_bytes(b"synthetic test-only coefficients")
+    data["stopping_table_sha256"] = hashlib.sha256(table.read_bytes()).hexdigest()
+    assert builder.validate_material_stopping_table(data, table) == data["stopping_table_sha256"]
+    table.write_bytes(b"tampered synthetic bytes")
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        builder.validate_material_stopping_table(data, table)
