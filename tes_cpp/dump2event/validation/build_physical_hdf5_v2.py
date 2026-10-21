@@ -143,6 +143,23 @@ def material_settings(contract: dict) -> dict:
     }
 
 
+def validate_material_stopping_table(contract: dict, table_path: Path) -> str:
+    """Verify bytes against the explicitly provided HATCH hash, if available.
+
+    This only establishes file identity and material provenance; it is not
+    a PHITS scoring-oracle validation of Bi.
+    """
+    model = material_settings(contract)
+    if not table_path.is_file():
+        raise FileNotFoundError(f"EGS5 HATCH table does not exist: {table_path}")
+    digest = sha256(table_path)
+    expected = model.get("stopping_table_sha256")
+    if expected is not None and digest != expected:
+        raise ValueError(f"{model['region_material']} HATCH stopping-table SHA-256 mismatch")
+    return digest
+
+
+
 def resolved_physics(settings: dict, source_input: Path) -> dict:
     """Return canonical effective model settings, excluding paths and byte hashes."""
     text = source_input.read_text(encoding="utf-8-sig", errors="replace")
