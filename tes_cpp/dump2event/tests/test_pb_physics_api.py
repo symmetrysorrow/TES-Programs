@@ -1,5 +1,5 @@
-import sys
 import importlib
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,9 +11,9 @@ module = importlib.import_module("tes_cpp.dump2event")
 
 class PbPhysicsApiTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        root = Path(self.tmp.name)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
         self.dump = root / "dump.dat"
         self.dump.write_text("fixture")
         self.config = root / "config.json"
@@ -22,39 +22,65 @@ class PbPhysicsApiTests(unittest.TestCase):
         self.table.write_text("fixture")
         self.output = root / "event.h5"
 
-    def test_default_api_keeps_input_energy_path(self):
+    def test_default_api_is_pb_egs5_hdf5_v2(self):
         with patch.object(module, "_executable", return_value="dump2event"), \
              patch.object(module.subprocess, "run") as run:
-            module.dump2event(self.dump, self.output, input_energy=1.17)
-        args = run.call_args.args[0]
-        self.assertIn("--input-energy", args)
-        self.assertNotIn("--physics", args)
+            result = module.dump2event(self.dump, self.output,
+                                       physics_config=self.config,
+                                       stopping_table=self.table)
+        command = run.call_args.args[0]
+        self.assertEqual(command[:3], ["dump2event", str(self.dump), str(self.output)])
+        self.assertIn("--physics-config", command)
+        self.assertIn("--stopping-table", command)
+        self.assertNotIn("--input-energy", command)
+        self.assertNotIn("--normalize-deposits", command)
+        self.assertEqual(result.output_path, self.output)
+        self.assertTrue(run.call_args.kwargs["check"])
 
-    def test_pb_mode_is_explicit_hdf5_v2_opt_in(self):
+    def test_pb_physics_explicit_alias_is_accepted(self):
         with patch.object(module, "_executable", return_value="dump2event"), \
              patch.object(module.subprocess, "run") as run:
             module.dump2event(self.dump, self.output, physics="pb-egs5",
                               physics_config=self.config, stopping_table=self.table)
-        args = run.call_args.args[0]
-        self.assertIn("--physics", args)
-        self.assertIn("pb-egs5", args)
-        self.assertIn("--hdf5-version", args)
-        self.assertIn("2", args)
+        self.assertTrue(run.called)
 
-    def test_pb_mode_requires_explicit_config_and_table(self):
+    def test_requires_config_and_table(self):
         with self.assertRaisesRegex(ValueError, "requires physics_config"):
-            module.dump2event(self.dump, self.output, physics="pb-egs5")
+            module.dump2event(self.dump, self.output)
 
-    def test_pb_mode_rejects_legacy_normalization(self):
-        with self.assertRaisesRegex(ValueError, "not supported"):
-            module.dump2event(self.dump, self.output, physics="pb-egs5",
-                              physics_config=self.config, stopping_table=self.table,
-                              normalize_deposits=True)
+    def test_rejects_legacy_input_energy_and_filtering(self):
+        for obsolete in ({"input_energy": 2.0}, {"save_all": True},
+                         {"normalize_deposits": True}, {"full_energy_only": True},
+                         {"reaction_audit": "audit.csv"}):
+            with self.subTest(obsolete=obsolete):
+                with self.assertRaisesRegex(ValueError, "old dump2event options"):
+                    module.dump2event(self.dump, self.output,
+                                      physics_config=self.config,
+                                      stopping_table=self.table,
+                                      **obsolete)
 
-    def test_pb_mode_rejects_missing_file_before_launch(self):
+    def test_rejects_unsupported_physics(self):
+        with self.assertRaisesRegex(ValueError, "only PHITS"):
+            module.dump2event(self.dump, self.output, physics="legacy",
+                              physics_config=self.config, stopping_table=self.table)
+
+    def test_rejects_missing_stopping_table(self):
         with self.assertRaises(FileNotFoundError):
-            module.dump2event(self.dump, self.output, physics="pb-egs5",
-                              physics_config=self.config, stopping_table=self.table.with_name("missing.csv"))
+            module.dump2event(self.dump, self.output,
+                              physics_config=self.config,
+                              stopping_table=self.table.with_name("missing.csv"))
+
+    def test_rejects_legacy_output_extensions(self):
+        with self.assertRaisesRegex(ValueError, "HDF5 v2"):
+            module.dump2event(self.dump, self.output.with_suffix(".json"),
+                              physics_config=self.config, stopping_table=self.table)
+
+    def test_existing_output_is_never_replaced(self):
+        self.output.write_text("must stay unchanged")
+        with self.assertRaises(FileExistsError):
+            module.dump2event(self.dump, self.output,
+                              physics_config=self.config, stopping_table=self.table)
+        self.assertEqual(self.output.read_text(), "must stay unchanged")
 
 
 if __name__ == "__main__":

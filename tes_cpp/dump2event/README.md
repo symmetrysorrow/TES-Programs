@@ -1,97 +1,68 @@
-# tes_cpp dump2event
+# dump2event — Pb EGS5 physical deposition → HDF5 v2
 
-`dumpall.dat` をイベント単位の `event.json` に変換する、依存なしの C++17 ライブラリと `dump2event` CLI です。Pulse 計算・Eigen・Visual Studio 固有の設定には依存しません。
+**現在の唯一の変換方式は、PHITS 3.341／Pb／EGS5のスコア再構成です。**
+旧式の親エネルギー差・負値補正・全履歴エネルギー正規化方式、JSON出力、
+HDF5 v1の新規変換出力、`--input-energy`、`--save-all`、
+`--full-energy-only`、`--normalize-deposits`、旧reaction-auditオプションは
+変換器から削除しました。旧引数の指定はエラーになります。
 
-## CMake での利用
+## 対応する物理条件
 
-```powershell
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-.\build\Release\dump2event.exe dumpall.dat event.json --input-energy 1.0
-```
+PHITS 3.341、Pb region 1000、Dumpall material ID 2、EGS5 medium 2、
+1 keV電子・陽電子cutoff、単位重み、対象`[t-deposit]`設定、同一runに対応する
+明示的Pb HATCH停止能テーブル。これ以外は検証済みとみなさず、fail-closedで
+拒否します。検証できた2 MeV・1,000履歴では同一runの内部加算
+**5,978,912/5,978,912**件が一致しました（最大差約4.68e-14 MeV）。
+これは任意のPHITS入力・全吸収・SEGMENT内の熱分布の保証ではありません。
 
-`--input-energy` の単位は dumpall.dat 内のエネルギーと同じ単位です。既存アプリで `InputPara.E / 1000` を渡しているため、通常は MeV です。
-
-通常運用で指定するのは `--input-energy`、`--save-all` または `--full-energy-only`、必要なら `--full-energy-list` です。`--history-summary`、`--max-histories`、`--summary-only` は診断・開発用です。`PoST_Simulation.py` から実行する場合、これらのCLIフラグを直接指定する必要はありません。
-
-全エネルギー判定は、履歴中にリーク終了がないことを主条件にします。**デフォルトではエネルギー総和を入射エネルギーに強制一致させません。** 反応点の `E_deposit` は、親トラックの直前点エネルギー `E` から輸送される二次粒子の運動エネルギー合計を引いた値として記録します（PHITSの `QCLUSTS(7)`、`JCLUSTS(4)` と輸送閾値で集計）。二次粒子が0個の場合は親トラックの `E` を局所付与量に記録します。負の付与量は隠さず残し、元データの矛盾として確認してください。
-
-従来の負値切り捨てと `input_energy - leaked_energy` への全履歴比例正規化は、再現用の **`--normalize-deposits`** 指定時のみ実行します。このモードでも `--history-summary` の `raw_total_deposit`、`negative_deposits`、`energy_consistent` は補正前の値で評価します。 `energy_consistent` は `raw_total_deposit` と `source_energy - leaked_energy` の差に基づきます（一次エネルギーが読めない場合は `input_energy` を使用）。リークを検出して早期破棄した履歴の診断値は未完了です（`deposit_records_complete=0`）。エネルギー収支や二次粒子の解釈は、実際のPHITSダンプと[t-deposit]による独立照合が必要です。
-
-すべてのイベントを保存する場合は次のようにします。
+## ビルド・実行
 
 ```powershell
-dump2event dumpall.dat event.json --input-energy 1.0 --save-all --full-energy-list FullEnergyList.dat
+cmake -S tes_cpp -B tes_cpp/build -DCMAKE_BUILD_TYPE=Release
+cmake --build tes_cpp/build --config Release
+
+tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5 `
+  --physics-config pb_config.json --stopping-table pb_hatch_private.csv
 ```
 
-初回解析で全吸収イベントだけを保存し、リーク (`NCOL=12`) を検出した履歴をその場で破棄する場合は次のようにします。
+環境によって実行ファイルの位置が異なります。
+従来の明示オプション `--physics pb-egs5 --hdf5-version 2` も移行用に
+受け付けますが、変換方式の選択肢は一つだけです。
 
-```powershell
-dump2event dumpall.dat event.h5 --input-energy 0.663 --full-energy-only
-```
+設定JSONは `validation/pb_physics_cli_integration/pb_config.example.json` を
+参考にしてください。JSONの`phits_input`は実在するPHITS入力を指し、
+停止能CSVはユーザーが保有するprivateな正しい表でなければなりません。
+PHITSソース、元Dumpall、HATCH実測表、内部traceは配布しません。
 
-このモードでは、リークが確定した履歴について残りの座標・エネルギー配列を作りません。ただし、全吸収かどうかを判定するため、`dumpall.dat` の入力行を履歴の終端まで読む処理は残ります。
-
-履歴ごとの粒子終端・反応内訳を確認する場合は、`--history-summary history_summary.csv` を追加します。これは、リークした光子が一次光子か二次光子か、履歴に反応や二次粒子があったか、沈着エネルギーがいくらかをCSVに出力します。追加列 `raw_total_deposit`、`negative_deposits`、`deposit_records_complete`、`normalization_factor` を用いると、正規化前のエネルギー収支とデータ欠落を検証できます。さらに `source_energy` と `source_energy_available` は `NCOL=4` の一次粒子から読み取った履歴ごとの入射エネルギーです。異なるγ線が混在する場合、`energy_consistent` は可能な限りこの実測値で計算します（`source_energy_available=0` ならCLIの `--input-energy` にフォールバック）。 `energy_balance_reference` は利用した値です。現状は各履歴に単一の一次源粒子があるケースを想定しており、同じ履歴で複数の独立した源粒子が放出される設定は別途検証が必要です。
-
-先頭の履歴だけを調べる場合は、`--summary-only --max-histories 1000` を追加するとイベントファイルを書かずに指定件数で停止できます。
-
-
-### 反応別エネルギー監査（`--reaction-audit`）
-
-`--reaction-audit reaction_audit.csv` は `NCOL=13/14` のうち、**正規化前の局所エネルギー付与が負になる反応のみ**を1反応1行で逐次CSVに記録します。`--reaction-audit-all` を付けると、正の反応や0の反応も記録でき、比較に使えます。変換やHDF5の `E_deposit` 自体は一切変更しません。
-
-```bash
-dump2event dumpall.dat unused.h5 --input-energy 1.332 \
-  --summary-only --max-histories 10000 \
-  --history-summary history_summary.csv \
-  --reaction-audit reaction_audit.csv
-```
-
-主要列: `event_id`, `particle_id`, `reaction_index`（履歴内の通番）, `ncol`, `jcoll`, `parent_ityp`, `parent_E`, `parent_EC`, `parent_E_minus_EC`, `secondary_count`, `transported_secondary_energy`, `all_secondary_energy`, `dead_secondary_energy`, `below_cutoff_secondary_energy`, `raw_local_deposit`, `history_retained`, `x`, `y`, `z`, `secondaries`。エネルギーの単位はMeVです。
-
-`secondaries` は `index:ITYP:JCLUSTS(4):QCLUSTS(7):transported` をセミコロンで区切ります（例: `0:12:0:0.2:1;1:13:-1:0.05:0`）。最後の値 `transported=1` はコードが親エネルギーから差し引いたことを示します。これは物理的に正しい輸送判定が確認されたという意味ではありません。`NCLSTS=0` では `jcoll` が元データになく空欄です。
-
-監査は履歴保存とは独立のため、途中のリーク後に破棄された履歴にも `history_retained=0` で記録され得ます。`--normalize-deposits` と併用しても監査には補正前の値を記録します。`--summary-only` は `--reaction-audit` だけでも実行できます。
-
-**注意:** このCSVは負値の原因分析のための監査資料です。物理的な付与量の正しさを保証するものではなく、実際のPHITSダンプと独立した `[t-deposit]` の照合が必要です。
-
-## Python での利用
-
-wheel を作成・導入するとネイティブ CLI も同梱されます。
-
-```powershell
-python -m pip install .
-```
+通常Python API：
 
 ```python
-from tes_cpp_dump2event import convert
+from tes_cpp import dump2event
 
-result = convert("dumpall.dat", "event.json", input_energy=1.0, save_all=True)
-print(result.full_energy_event_ids)
+result = dump2event(
+    "dumpall.dat", "event_pb_egs5_v2.h5",
+    physics_config="pb_config.json",
+    stopping_table="pb_hatch_private.csv",
+)
+print(result.output_path)
 ```
 
-開発中に CMake でビルドした実行ファイルを使う場合は、`TES_CPP_DUMP2EVENT_EXECUTABLE` にそのパスを設定してください。
+従来の`input_energy`等は拒否します。出力先が既存の場合も拒否します。
+CLIはnative ledger・transport exporter・Pythonドライバーを使用するため、
+Pythonパッケージから利用する場合はリポジトリルートの`python -m pip install .`
+で必要な補助実行ファイルをインストールしてください。
 
-## Experimental PHITS 3.341 Pb HDF5 v2 mode
+## UI・下流の制約
 
-The default CLI and its legacy `E_deposit` calculation are unchanged. An explicit experimental opt-in is available:
+`PoST_Simulations/PoST_Simulation.py --interactive` の
+`Dump2Event`を選ぶと、物理条件・停止能表・入出力を明示してHDF5 v2を生成します。
+旧変換メニューはなくなりました。
 
-```powershell
-dump2event dumpall.dat event.h5 --physics pb-egs5 --hdf5-version 2 `
-  --physics-config pb_config.json --stopping-table pb_egs5.csv
-```
+HDF5 v2はPOINT／SEGMENT／UNRESOLVED、PHITS代表スコア点・区間端点、
+履歴・粒子ID・provenanceを区別して保存します。
+**`Pulse_Ms()`は未変更の旧点付与モデルであり、HDF5 v2を明示拒否します。**
+新しい`event2pulse`がPOINT/SEGMENTの空間熱配分を検証して実装するまで
+自動接続しません。全吸収判定も証明されていない場合はundeterminedです。
 
-The JSON must name a PHITS input and explicitly declare the validated PHITS 3.341, Pb region 1000/material 2/EGS5 medium 2, 1 keV cutoffs, unit-weight, MeV, and `[t-deposit]` contract. `validation/pb_physics_cli_integration/pb_config.example.json` is a template. The local stopping-power table is required and is not included. The mode reuses the experimental physical ledger and streaming HDF5 v2 writer. It rejects non-unit weights, bad input settings, malformed/incomplete Dumpall, negative deposits, unsupported score rows, and existing output paths; it does not fall back to the default reaction-difference formula.
-
-This route is not approved for production use. In particular, the earlier 10k HDF5/internal comparison has an unresolved raw-file lineage mismatch, the later GNU Dumpall is truncated at an NCOL=4 particle header, and no new independent-seed internal-addition test or successful integrated CLI conversion has been completed. Gamma-specific accounting and variable weights remain unsupported. See `validation/pb_physics_cli_integration/FINAL_DECISION.md` and the positron closure reports before using the experimental option.
-
-## Experimental HDF5 v2 storage API
-
-The Python API now provides an appendable flat-offset v2 writer and typed
-deposit reader. It preserves `POINT`, `SEGMENT`, and `UNRESOLVED` records and
-keeps PHITS score coordinates separate from transport endpoints. This is a
-storage foundation: it is not yet connected to the default C++ converter or
-the CSV physical ledger executable. `Pulse_Ms()` rejects v2 until segment
-allocation is independently validated. See `HDF5_V2_SCHEMA.md` for the format
-and migration rules.
+スキーマは`HDF5_V2_SCHEMA.md`、物理検証・適用範囲は
+`validation/dead_secondary_threshold_and_gamma_10k/FINAL_DECISION.md`を参照してください。

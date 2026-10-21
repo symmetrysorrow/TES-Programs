@@ -73,7 +73,6 @@ PULSE_MS_PEAK_AVERAGE_HALF_WIDTH = 5
 output = "H:\\hata\\new_noise_test"
 event_root = None
 use_mirrored_events = None
-dump_save_all_override = None
 
 
 def _read_save_all(parameters):
@@ -2630,78 +2629,7 @@ def Pulse_Noise():
 
 
 def Dump2Event():
-    """Convert external dumpall.dat files into event.h5 files.
-
-    ``input.json`` supplies the input energy, ``SaveAll`` policy, and position list, while the
-    dump/event files themselves can live under ``event_root``. If mirrored
-    events are enabled, only the lower-numbered position in each symmetric
-    pair is converted. If no external root is configured, the existing
-    ``output`` layout is used. ``SaveAll=false`` retains only full-energy
-    histories; ``SaveAll=true`` retains every history.
-    """
-
-    with open(
-        f"{output}/input.json",
-        "r",
-        encoding="utf-8",
-    ) as f:
-        para = json.load(f)
-
-    input_energy_mev = (
-        float(
-            para["E"]
-        )
-        / 1000.0
-    )
-    save_all = _read_save_all(para)
-    if dump_save_all_override is not None:
-        save_all = dump_save_all_override
-
-    data_root = _event_data_root()
-    mirror_events = (
-        _read_use_mirrored_events(para)
-        if use_mirrored_events is None
-        else use_mirrored_events
-    )
-    positions = _event_positions_to_convert(
-        para["position"],
-        para["n_abs"],
-        mirror_events,
-    )
-
-    for posi in tqdm.tqdm(
-        positions,
-        desc="dumpall to event",
-    ):
-
-        position_directory = data_root / str(posi)
-
-        dump_path = (
-            position_directory / "dumpall.dat"
-        )
-
-        event_path = (
-            position_directory / "event.h5"
-        )
-
-        if not os.path.isfile(
-            dump_path
-        ):
-            raise FileNotFoundError(
-                f"dumpall.dat was not found: {dump_path}"
-            )
-
-        dump2event(
-            dump_path,
-            event_path,
-            input_energy=input_energy_mev,
-            save_all=save_all,
-            full_energy_only=not save_all,
-        )
-
-
-def Dump2EventPbEgs5():
-    """Run the separate experimental Pb physical converter (HDF5 v2 only)."""
+    """Convert Pb EGS5 PHITS Dumpall to physical HDF5 v2 (only converter)."""
     return run_pb_egs5_ui(questionary, dump2event)
 
 
@@ -3245,7 +3173,6 @@ def _run_selected_actions(selected_actions):
         "show_samples": ("ShowSamples", ShowSamples),
         "pulse_noise": ("Pulse_Noise", Pulse_Noise),
         "dump_to_event": ("Dump2Event", Dump2Event),
-        "dump_to_event_pb_egs5": ("Dump2EventPbEgs5", Dump2EventPbEgs5),
         "pulse_ms": ("Pulse_Ms", Pulse_Ms),
         "pulse_ms_noise": ("Pulse_MS_Noise", Pulse_MS_Noise),
     }
@@ -3261,16 +3188,15 @@ def _run_selected_actions(selected_actions):
         "show_samples",
         "pulse_noise",
         "dump_to_event",
-        "dump_to_event_pb_egs5",
         "pulse_ms",
         "pulse_ms_noise",
     )
 
     selected_actions = set(selected_actions)
-    if "dump_to_event_pb_egs5" in selected_actions and selected_actions.intersection(
-        {"dump_to_event", "pulse_ms", "pulse_ms_noise"}
+    if "dump_to_event" in selected_actions and selected_actions.intersection(
+        {"pulse_ms", "pulse_ms_noise"}
     ):
-        raise ValueError("HDF5 v2物理変換は旧Dump2Event/Pulse_Msと同時実行できません")
+        raise ValueError("HDF5 v2物理変換は未対応のPulse_Msと同時実行できません")
     for action_key in execution_order:
         if action_key not in selected_actions:
             continue
@@ -3283,7 +3209,7 @@ def _run_selected_actions(selected_actions):
 def _run_interactive():
     """Ask which simulation steps should be executed."""
 
-    global event_root, use_mirrored_events, dump_save_all_override
+    global event_root, use_mirrored_events
 
     choices = [
         questionary.Choice(
@@ -3311,12 +3237,8 @@ def _run_interactive():
             value="pulse_noise",
         ),
         questionary.Choice(
-            "外部dumpall.dat を event.h5 に変換 (Dump2Event)",
+            "Pb EGS5物理depositをHDF5 v2へ変換（パルス未接続）",
             value="dump_to_event",
-        ),
-        questionary.Choice(
-            "Pb EGS5物理depositをHDF5 v2へ変換（実験用・パルス未接続）",
-            value="dump_to_event_pb_egs5",
         ),
         questionary.Choice(
             "外部event.h5 から複数相互作用パルスを生成 (Pulse_Ms)",
@@ -3342,16 +3264,13 @@ def _run_interactive():
         print("処理が選択されていません。")
         return
 
-    if "dump_to_event_pb_egs5" in selected_actions and set(selected_actions).intersection(
-        {"dump_to_event", "pulse_ms", "pulse_ms_noise"}
+    if "dump_to_event" in selected_actions and set(selected_actions).intersection(
+        {"pulse_ms", "pulse_ms_noise"}
     ):
-        print("HDF5 v2物理変換を従来のDump2Event/Pulse_Msと同時には実行できません。")
+        print("HDF5 v2物理変換は未対応のPulse_Msと同時実行できません。")
         return
 
-    external_data_actions = {
-        "dump_to_event",
-        "pulse_ms",
-    }
+    external_data_actions = {"pulse_ms"}
     if external_data_actions.intersection(selected_actions) and event_root is None:
         data_root = questionary.path(
             "dumpall.dat / event.h5 のルートを指定してください",
@@ -3375,22 +3294,6 @@ def _run_interactive():
             default=configured_mirror_events,
         ).ask()
         if use_mirrored_events is None:
-            print("キャンセルしました。")
-            return
-
-    if "dump_to_event" in selected_actions:
-        with open(
-            Path(output) / "input.json",
-            "r",
-            encoding="utf-8",
-        ) as f:
-            parameters = json.load(f)
-        configured_save_all = _read_save_all(parameters)
-        dump_save_all_override = questionary.confirm(
-            "全イベントを保存しますか？ (SaveAll=true、OFFなら全吸収イベントのみ)",
-            default=configured_save_all,
-        ).ask()
-        if dump_save_all_override is None:
             print("キャンセルしました。")
             return
 

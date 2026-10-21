@@ -121,13 +121,18 @@ both segment endpoints and score-coordinate validity.
 
 ## Scope and migration
 
-The current experimental C++ `PhysicalDepositLedger` remains a separate
-PHITS-3.341/Pb/unit-weight EGS5 ledger executable that writes CSV. It has not
-yet been wired into the default converter or this v2 writer. That separation is
-intentional until a streaming raw-Dumpall adapter can provide complete track,
-particle, provenance, and failure-state information without silently falling
-back to the legacy signed reaction formula. The default converter and v1 writer
-remain unchanged.
+The native `dump2event` CLI and both public Python wrappers now use the
+PHITS 3.341 Pb/unit-weight EGS5 `PhysicalDepositLedger` plus raw-transport
+exporter and streaming HDF5 v2 writer as their **only output converter**.
+The obsolete signed reaction-difference converter, energy normalizer, and
+legacy JSON/HDF5 v1 converter output path have been removed. The physical
+contract JSON, matching Pb HATCH coefficients, and valid Dumpall are mandatory;
+unsupported conditions fail closed. Explicit `--physics pb-egs5` remains an
+accepted alias but no longer selects a different conversion algorithm.
+
+The legacy v1/hierarchical **readers** remain temporarily available for old
+data and for the preexisting `Pulse_Ms` workflow; they are not alternate
+dump2event output modes. Do not interpret historical legacy files as v2.
 
 `Pulse_Ms()` currently consumes point-deposit legacy files. It preflights the
 format and rejects v2 before opening its pulse output. Segment-to-block
