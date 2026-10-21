@@ -19,6 +19,9 @@
 
 ## Push and CI
 
-To be filled with the commit SHA, push result, and GitHub Actions run for this update after push. The prior report-only commit `5f0c5049c439cdc7580c4442ac2b00525ce8d19f` and its Actions success are historical and do not validate this update.
+- Commit: `43b81439dbce6dab2936ac16a2ca3b105819abd9` (`Document PHITS physical deposit CLI validation`).
+- Push to `origin/feat/dump2event-physical-validation-20261020`: succeeded.
+- GitHub Actions run [39569564105](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39569564105): **success**; the build, C++ regressions, and Python/v1/v2 regression steps all completed successfully.
+- The earlier report-only run `39550926664` also succeeded, but is separate from this commit's result.
 
 PR #6 remains separate and untouched; no merge or PR update is part of this work.
