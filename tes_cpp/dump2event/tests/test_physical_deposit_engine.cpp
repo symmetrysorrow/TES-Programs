@@ -99,6 +99,11 @@ int main() try {
         table << "2,PB,1,10,1,9,0,8,0,11.35,11.35\n";
         table << "2,PB,3,10,1,4,0,3,0,11.35,11.35\n";
         table << "2,PB,7,10,1,3,0,2,0,11.35,11.35\n";
+        // Synthetic coefficient fixture for Bi code-path tests only.
+        // These numbers are NOT HATCH measurements and validate no Bi physics.
+        table << "5,BI,1,10,1,9,0,8,0,10,10\\n";
+        table << "5,BI,3,10,1,4,0,3,0,10,10\\n";
+
     }
     const auto table = Egs5StoppingTable::read_csv(path.string(), 2, "Pb");
     require(table.material() == "PB" && table.medium() == 2, "material/medium parse");
@@ -117,6 +122,31 @@ int main() try {
                 ScoreGateDecision::invalid, "negative secondary kinetic energy is invalid");
     PhysicalDepositContext context{"3.341", 1000, "Pb", 2, 0.001, true, 1.0e-6};
     PhysicalDepositLedger ledger(context, table);
+
+    // Bi must require explicit research-only gating, even if a matching
+    // synthetic coefficient table is provided. No PHITS oracle has been run.
+    const auto bi_table = Egs5StoppingTable::read_csv(path.string(), 5, "Bi");
+    must_throw([&] {
+        PhysicalDepositLedger no_bi({"3.341", 2007, "Bi", 5, 0.001, true,
+                                    1.0e-6, 17, false}, bi_table);
+    }, "unvalidated Bi must be rejected in ordinary ledger mode");
+    PhysicalDepositLedger bi_research({"3.341", 2007, "Bi", 5, 0.001, true,
+                                     1.0e-6, 17, true}, bi_table);
+    DepositInput bi_step;
+    bi_step.addition_id = "bi-synthetic-1";
+    bi_step.event_id = 1; bi_step.particle_id = 1; bi_step.region_id = 2007;
+    bi_step.particle_type = 12; bi_step.process = DepositProcess::egs5_electron_continuous;
+    bi_step.ncol = 14; bi_step.jcoll = 14; bi_step.energy_mev = 0.1;
+    bi_step.segment_length_cm = 0.2;
+    const auto bi_result = bi_research.add(bi_step);
+    require(bi_result.status == "reconstructed" &&
+            std::abs(*bi_result.energy_mev - 0.8) < 1e-14,
+            "synthetic Bi coefficients read by medium 5 with independent material ID 17");
+    must_throw([&] {
+        PhysicalDepositLedger wrong_bi_medium({"3.341", 2007, "Bi", 2, 0.001, true,
+                                             1.0e-6, 17, true}, bi_table);
+    }, "Bi EGS5 medium must match the supplied HATCH table");
+
 
     DepositInput continuous;
     continuous.addition_id = "a1"; continuous.event_id = 3; continuous.particle_id = 2;
