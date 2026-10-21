@@ -92,7 +92,10 @@ class CMakeBuild(build_ext):
         super().run()
         package_bin = Path(self.build_lib) / "tes_cpp" / "bin"
         package_bin.mkdir(parents=True, exist_ok=True)
-        names = ["posi2pulse.exe", "dump2event.exe"] if os.name == "nt" else ["posi2pulse", "dump2event"]
+        names = (["posi2pulse.exe", "dump2event.exe", "dump2event_physical_reconstruct.exe",
+                  "dumpall_transport_export.exe"] if os.name == "nt" else
+                 ["posi2pulse", "dump2event", "dump2event_physical_reconstruct",
+                  "dumpall_transport_export"])
         # Search only the native CMake output directory.  This also avoids
         # accidentally finding the packaged copy on a subsequent build.
         native_bin = ROOT / "tes_cpp" / "build"
@@ -101,6 +104,13 @@ class CMakeBuild(build_ext):
             if not candidates:
                 raise FileNotFoundError(f"CMake did not produce {name}")
             shutil.copy2(candidates[0], package_bin / name)
+        # The opt-in Pb physics converter launches this Python driver from
+        # alongside dump2event; keep the script and both helper binaries in
+        # the installed tes_cpp/bin directory, not only the source worktree.
+        driver = ROOT / "tes_cpp" / "dump2event" / "validation" / "build_physical_hdf5_v2.py"
+        if not driver.is_file():
+            raise FileNotFoundError(f"Pb HDF5 v2 driver was not found: {driver}")
+        shutil.copy2(driver, package_bin / driver.name)
         print("TES native tools built successfully.")
 
     def build_extensions(self):
