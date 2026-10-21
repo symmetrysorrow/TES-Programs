@@ -32,6 +32,15 @@ int main(int argc, char** argv) try {
     std::size_t reconstructed = 0, unresolved_count = 0, unsupported_count = 0;
     const auto summary = parse_dumpall_records(dump, [&](const DumpallRecord& record) {
         if (record.ncol == 4) event_id = record.nocas;
+        if (record.ncol >= 10 && record.ncol <= 15) {
+            if (record.weight != 1.0 || record.oldwt != 1.0)
+                throw std::runtime_error("validated Pb reconstruction rejects non-unit WT/OLDWT at line " +
+                                         std::to_string(record.line_start));
+            for (const auto& child : record.secondaries)
+                if (child.qclusts[8] != 1.0)
+                    throw std::runtime_error("validated Pb reconstruction rejects non-unit secondary weight at line " +
+                                             std::to_string(record.line_start));
+        }
         if (record.ncol < 10 || record.ncol > 15 || record.region_before != context.region_id) return;
         if (record.material_id != context.medium)
             throw std::runtime_error("region 1000 maps to material ID " +

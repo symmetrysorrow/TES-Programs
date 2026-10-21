@@ -78,3 +78,7 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # scikit-build-core uses this install location when producing a Python wheel.
 set(TES_CPP_DUMP2EVENT_INSTALL_DIR "tes_cpp_dump2event/bin" CACHE STRING "Install directory for dump2event executable")
 install(TARGETS dump2event RUNTIME DESTINATION ${TES_CPP_DUMP2EVENT_INSTALL_DIR})
+install(TARGETS dump2event_physical_reconstruct dumpall_transport_export
+    RUNTIME DESTINATION ${TES_CPP_DUMP2EVENT_INSTALL_DIR})
+install(FILES validation/build_physical_hdf5_v2.py
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/tes_cpp_dump2event)

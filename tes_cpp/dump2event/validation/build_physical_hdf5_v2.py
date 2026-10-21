@@ -13,8 +13,16 @@ import itertools
 import json
 import re
 import subprocess
+import sys
 import time
+import tempfile
 from pathlib import Path
+
+# Permit the installed/standalone validation driver to import the repository's
+# small HDF5 v2 writer without requiring callers to edit PYTHONPATH.
+_python_root = Path(__file__).resolve().parents[2] / "python"
+if _python_root.is_dir() and str(_python_root) not in sys.path:
+    sys.path.insert(0, str(_python_root))
 
 from tes_cpp.event_hdf5_v2 import EventV2Writer, iter_deposits, iter_events
 
@@ -27,13 +35,14 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def physics_config(source_input: Path):
+def physics_config(source_input: Path, config_path: Path | None = None):
     return {
         "phits_version": "3.341", "region_id": 1000, "region_material": "PB",
         "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
         "weights": "unit-weight validated slice only", "diagnostic_mode": True,
         "unsupported_processes": "stored UNRESOLVED; never old-formula fallback",
         "source_input_sha256": sha256(source_input),
+        "physics_config_file_sha256": sha256(config_path) if config_path else "legacy-input-mode",
         "position_semantics": "raw transport chords and raw child point; scorer representative coordinate kept separate",
     }
 
@@ -61,13 +70,19 @@ def validate_source_input(path: Path) -> None:
             found[re.sub(r"\s+", "", key)] = value.strip()
         return found
     params = values("parameters")
-    required_params = {"icntl": "0", "maxcas": "10000", "maxbch": "1",
+    required_params = {"maxbch": "1",
                        "negs": "1", "e-mode": "2", "emin(12)": "0.001",
                        "emin(13)": "0.001", "emin(14)": "0.001"}
     for key, expected in required_params.items():
         got = params.get(key)
         if got is None or float(got.split()[0]) != float(expected):
             raise ValueError(f"source input must set [{key}]={expected}; found {got!r}")
+    material_lines = sections.get("material", [])
+    if not any(re.match(r"mat\s*\[\s*2\s*\]\s+pb\s+1(?:\s|$)", line) for line in material_lines):
+        raise ValueError("source input must define mat[2] as pure Pb")
+    cell_lines = sections.get("cell", [])
+    if not any(re.match(r"1000\s+2\s+-9\.78(?:\s|$)", line) for line in cell_lines):
+        raise ValueError("source input must define region 1000 with Dumpall material 2 and Pb density -9.78")
     source = sections.get("source", [])
     if not any(re.match(r"1\.173(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source) or \
        not any(re.match(r"1\.332(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source):
@@ -80,6 +95,29 @@ def validate_source_input(path: Path) -> None:
         got = tally.get(key)
         if got is None or got.lower() != expected.lower():
             raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
+
+
+def load_physics_config(path: Path) -> tuple[dict, Path]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    expected = {
+        "phits_version": "3.341", "region_id": 1000, "region_material": "Pb",
+        "dumpall_material_id": 2, "egs5_medium": 2,
+        "electron_cutoff_MeV": 0.001, "positron_cutoff_MeV": 0.001,
+        "weight_mode": "unit", "energy_unit": "MeV", "deposit_mode": "t-deposit-output-deposit",
+    }
+    for key, value in expected.items():
+        if data.get(key) != value:
+            raise ValueError(f"physics config {key} must be {value!r}; found {data.get(key)!r}")
+    source_value = data.get("phits_input")
+    if not source_value:
+        raise ValueError("physics config must name the PHITS input in 'phits_input'")
+    source_input = Path(source_value)
+    if not source_input.is_absolute():
+        source_input = (path.parent / source_input).resolve()
+    if not source_input.is_file():
+        raise FileNotFoundError(f"PHITS input from physics config not found: {source_input}")
+    validate_source_input(source_input)
+    return data, source_input
 
 
 def groups(path: Path):
@@ -210,6 +248,8 @@ def run(args, writer: EventV2Writer) -> dict:
         raise ValueError("track or deposit input contains events absent from the raw event stream")
     if negative_count:
         raise ValueError(f"negative physical energies found: {negative_count}")
+    if unresolved_count:
+        raise ValueError(f"unsupported scoring branches remain ({unresolved_count}); refusing to publish complete HDF5 v2")
     return {
         "input_dumpall": str(args.dumpall), "input_bytes": args.dumpall.stat().st_size,
         "dumpall_sha256": sha256(args.dumpall), "stopping_table_sha256": sha256(args.stopping_table),
@@ -227,22 +267,33 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dumpall", type=Path, required=True)
     parser.add_argument("--stopping-table", type=Path, required=True)
-    parser.add_argument("--source-input", type=Path, required=True,
-                        help="PHITS input whose settings are summarized in the provenance")
+    parser.add_argument("--source-input", type=Path,
+                        help="legacy: PHITS input whose settings are validated")
+    parser.add_argument("--physics-config", type=Path,
+                        help="explicit JSON contract for the experimental Pb EGS5 mode")
     parser.add_argument("--reconstructor", type=Path, required=True)
     parser.add_argument("--track-exporter", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--work-dir", type=Path, required=True)
+    parser.add_argument("--work-dir", type=Path,
+                        help="optional scratch directory (otherwise a private temporary directory is used)")
     args = parser.parse_args()
     try:
         if args.output.exists():
             raise FileExistsError(f"refusing to overwrite existing output: {args.output}")
-        if not args.source_input.is_file():
-            raise FileNotFoundError(args.source_input)
-        validate_source_input(args.source_input)
+        if bool(args.source_input) == bool(args.physics_config):
+            raise ValueError("provide exactly one of --physics-config or legacy --source-input")
+        if args.physics_config:
+            physics_data, args.source_input = load_physics_config(args.physics_config)
+        else:
+            if not args.source_input.is_file():
+                raise FileNotFoundError(args.source_input)
+            validate_source_input(args.source_input)
+            physics_data = None
         # The writer is held open only for this conversion. Output publication is
         # atomic; input data and existing destinations are never modified.
-        physics = physics_config(args.source_input)
+        physics = physics_config(args.source_input, args.physics_config)
+        if physics_data is not None:
+            physics["physics_settings"] = physics_data
         config = {"phits_version": "3.341", "dumpall_sha256": sha256(args.dumpall),
                   "physics_config_sha256": hashlib.sha256(json.dumps(physics, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
                   "stopping_table_sha256": sha256(args.stopping_table), "material": "Pb",
@@ -251,11 +302,21 @@ def main() -> int:
                   "source_input_sha256": physics["source_input_sha256"],
                   "unsupported_processes": physics["unsupported_processes"],
                   "weights": physics["weights"], "diagnostic_mode": True,
+                  "complete_semantics": "per-event candidate scoring complete only when no UNRESOLVED rows remain",
+                  "dumpall_structure_semantics": "conversion requires terminal NCOL=2",
+                  "transport_physics_completeness": "undetermined",
+                  "energy_balance_status": "not assessed",
+                  "all_absorption": "undetermined",
                   "region_id": physics["region_id"], "dumpall_material_id": physics["dumpall_material_id"],
                   "region_material": physics["region_material"], "egs5_medium": physics["egs5_medium"]}
         started = time.perf_counter()
-        with EventV2Writer(args.output, config) as writer:
-            result = run(args, writer)
+        with tempfile.TemporaryDirectory(prefix="dump2event-pb-", dir=args.output.parent) as scratch:
+            if args.work_dir:
+                args.work_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                args.work_dir = Path(scratch)
+            with EventV2Writer(args.output, config) as writer:
+                result = run(args, writer)
         result["output_bytes"] = args.output.stat().st_size
         result["elapsed_seconds"] = time.perf_counter() - started
         print(json.dumps(result, indent=2))
