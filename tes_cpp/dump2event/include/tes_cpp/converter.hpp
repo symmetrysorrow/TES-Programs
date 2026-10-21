@@ -30,8 +30,18 @@ struct HistorySummary {
     int leaked_primary_photons{};
     int leaked_secondary_photons{};
     double leaked_energy{};
+    // NCOL=4 source particle EC, measured per source history (MeV).
+    // Used for diagnosing polychromatic sources independently of CLI energy.
+    double source_energy{};
+    bool source_energy_available{};
+    double energy_balance_reference{};
     int reaction_records{};
     double total_deposit{};
+    // Signed pre-normalization sum; remains available even in legacy mode.
+    double raw_total_deposit{};
+    int negative_deposits{};
+    double normalization_factor{1.0};
+    bool deposit_records_complete{true};
     bool energy_consistent{};
     bool full_energy{};
     bool fully_contained{};
@@ -41,6 +51,13 @@ struct HistorySummary {
 struct Options {
     // Unit must match the energy recorded in dumpall.dat (MeV in the current app).
     double input_energy{};
+    // Legacy output normalization, explicitly opt-in. The default preserves
+    // signed reconstructed deposits for auditing instead of forcing closure.
+    bool normalize_deposits{false};
+    // Stream per-reaction energy diagnostics to CSV when nonempty.
+    std::string reaction_audit_path;
+    // Include nonnegative reactions; otherwise write only negative deposits.
+    bool reaction_audit_all{false};
     // false: retain only full-energy events. true: retain every event and report
     // the full-energy event IDs separately.
     bool save_all{false};

@@ -25,24 +25,47 @@ endif()
 # Keep this as a static library.  A shared MSVC library would require an
 # export definition for the converter functions before dump2event.exe can
 # link against it.
-add_library(tes_cpp_dump2event STATIC src/converter.cpp)
+add_library(tes_cpp_dump2event STATIC
+    src/converter.cpp
+    src/dumpall_record_parser.cpp
+    src/physical_deposit.cpp)
 target_include_directories(tes_cpp_dump2event
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 target_compile_features(tes_cpp_dump2event PUBLIC cxx_std_17)
-if (TARGET hdf5::hdf5_cpp)
+if (HDF5_FOUND)
+    # The unified target includes both HDF5 C++ and its underlying C library.
+    # Linking hdf5::hdf5_cpp alone may omit H5check_version on Linux.
+    target_link_libraries(tes_cpp_dump2event PUBLIC HDF5::HDF5)
+elseif (TARGET hdf5::hdf5_cpp)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5::hdf5_cpp)
 elseif (TARGET hdf5_cpp)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5_cpp)
 elseif (TARGET hdf5_cpp-static)
     target_link_libraries(tes_cpp_dump2event PUBLIC hdf5_cpp-static)
-elseif (HDF5_FOUND)
-    target_link_libraries(tes_cpp_dump2event PUBLIC HDF5::HDF5)
 endif()
 
 add_executable(dump2event src/main.cpp)
 target_link_libraries(dump2event PRIVATE tes_cpp_dump2event)
+
+add_executable(dumpall_record_inspect src/dumpall_inspect.cpp)
+target_link_libraries(dumpall_record_inspect PRIVATE tes_cpp_dump2event)
+
+add_executable(dump2event_physical_reconstruct src/physical_dump_reconstruct.cpp)
+target_link_libraries(dump2event_physical_reconstruct PRIVATE tes_cpp_dump2event)
+
+add_executable(dumpall_transport_export src/dumpall_transport_export.cpp)
+target_link_libraries(dumpall_transport_export PRIVATE tes_cpp_dump2event)
+
+include(CTest)
+option(TES_BUILD_DUMP2EVENT_TESTS "Build dump2event unit tests" ON)
+if (TES_BUILD_DUMP2EVENT_TESTS)
+    enable_testing()
+    add_executable(test_physical_deposit_engine tests/test_physical_deposit_engine.cpp)
+    target_link_libraries(test_physical_deposit_engine PRIVATE tes_cpp_dump2event)
+    add_test(NAME physical_deposit_engine COMMAND test_physical_deposit_engine)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS tes_cpp_dump2event
@@ -55,3 +78,7 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # scikit-build-core uses this install location when producing a Python wheel.
 set(TES_CPP_DUMP2EVENT_INSTALL_DIR "tes_cpp_dump2event/bin" CACHE STRING "Install directory for dump2event executable")
 install(TARGETS dump2event RUNTIME DESTINATION ${TES_CPP_DUMP2EVENT_INSTALL_DIR})
+install(TARGETS dump2event_physical_reconstruct dumpall_transport_export
+    RUNTIME DESTINATION ${TES_CPP_DUMP2EVENT_INSTALL_DIR})
+install(FILES validation/build_physical_hdf5_v2.py
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/tes_cpp_dump2event)

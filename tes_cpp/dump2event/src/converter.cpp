@@ -1,4 +1,5 @@
 #include "tes_cpp/converter.hpp"
+#include "tes_cpp/dumpall_record_parser.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -71,7 +72,7 @@ void write_event(std::ostream& out, const EventInfo& event, int indent) {
 
 }  // namespace
 
-Result read_dump(const std::string& dump_path, const Options& options) {
+static Result read_dump_legacy_line_parser(const std::string& dump_path, const Options& options) {
     std::ifstream file(dump_path, std::ios::binary);
     if (!file) throw std::runtime_error("cannot open dump file: " + dump_path);
 
@@ -86,6 +87,8 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     double energy_at_collision = 0;
     double particle_energy = 0;
     double secondary_energy_sum = 0;
+    double secondary_particle_energy = 0;
+    int secondary_particle_type = 0;
     double secondary_count = 0;
     double secondary_index = 0;
     double secondary_status = 0;
@@ -98,38 +101,111 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     std::size_t line_number = 0;
     const bool discard_non_full_early = options.full_energy_only || !options.save_all;
 
+    // Stream one row per reaction; avoid holding all audit rows in memory.
+    std::ofstream reaction_audit;
+    if (!options.reaction_audit_path.empty()) {
+        reaction_audit.open(options.reaction_audit_path);
+        if (!reaction_audit)
+            throw std::runtime_error("cannot open reaction audit CSV: " + options.reaction_audit_path);
+        reaction_audit << "event_id,particle_id,reaction_index,ncol,jcoll,parent_ityp,"
+                          "parent_E,parent_EC,parent_E_minus_EC,secondary_count,"
+                          "transported_secondary_energy,all_secondary_energy,"
+                          "dead_secondary_energy,below_cutoff_secondary_energy,"
+                          "raw_local_deposit,history_retained,x,y,z,secondaries\n";
+        reaction_audit << std::setprecision(17);
+    }
+    // Preserve reaction fields across the internal NCOL=17 secondary parser.
+    int reaction_ncol = 0;
+    int reaction_index = 0;
+    bool reaction_jcoll_available = false;
+    double reaction_all_secondary_energy = 0.0;
+    double reaction_dead_secondary_energy = 0.0;
+    double reaction_cutoff_secondary_energy = 0.0;
+    std::ostringstream secondary_details;
+    secondary_details << std::setprecision(17);
+
+    // E is the energy at the preceding transport point. At a reaction, the
+    // energy carried onward by *transported* secondaries must not also be
+    // deposited on the parent. Keep the signed remainder visible: negative
+    // values flag inconsistent/duplicate PHITS secondary bookkeeping.
+    const auto append_reaction_deposit = [&] {
+        const int type = static_cast<int>(particle_type);
+        if (type != 12 && type != 13 && type != 14) return;
+        const double local_deposit = deposited_before_collision - secondary_energy_sum;
+        if (reaction_audit.is_open() && (local_deposit < 0.0 || options.reaction_audit_all)) {
+            reaction_audit << static_cast<int>(case_number) << ','
+                << static_cast<int>(particle_number) << ','
+                << reaction_index << ',' << reaction_ncol << ',';
+            if (reaction_jcoll_available) reaction_audit << static_cast<int>(collision_type);
+            reaction_audit << ',' << type << ','
+                << deposited_before_collision << ',' << energy_at_collision << ','
+                << (deposited_before_collision - energy_at_collision) << ','
+                << static_cast<int>(secondary_count) << ','
+                << secondary_energy_sum << ',' << reaction_all_secondary_energy << ','
+                << reaction_dead_secondary_energy << ',' << reaction_cutoff_secondary_energy << ','
+                << local_deposit << ',' << (retain_history ? 1 : 0) << ','
+                << collision_position[0] << ',' << collision_position[1] << ','
+                << collision_position[2] << ",\"" << secondary_details.str() << "\"\n";
+            if (!reaction_audit)
+                throw std::runtime_error("failed writing reaction audit CSV: " + options.reaction_audit_path);
+        }
+        if (!retain_history) return;
+        auto& event = history[static_cast<int>(particle_number)];
+        event.energy_deposit.push_back(local_deposit);
+        event.x_deposit.push_back(collision_position[0]);
+        event.y_deposit.push_back(collision_position[1]);
+        event.z_deposit.push_back(collision_position[2]);
+    };
+
     const auto commit_history = [&] {
         if (!summary_active) return;
 
-        // NCOL=13/14 secondary bookkeeping can contain duplicate/dead EGS5
-        // entries.  Do not expose the resulting negative local values. Keep
-        // their spatial locations, then close the history energy budget using
-        // the source energy minus the energy carried out by NCOL=12 leaks.
-        const double target_deposit = std::max(
-            0.0, options.input_energy - summary.leaked_energy);
-        double positive_sum = 0.0;
-        for (auto& [_, event] : history) {
-            for (double& value : event.energy_deposit) {
-                if (value < 0.0) value = 0.0;
-                positive_sum += value;
+        // Evaluate energy conservation BEFORE any optional legacy correction.
+        double raw_total_deposit = 0.0;
+        for (const auto& [_, event] : history) {
+            for (double value : event.energy_deposit) {
+                raw_total_deposit += value;
+                if (value < 0.0) ++summary.negative_deposits;
             }
         }
-        if (positive_sum > 0.0) {
-            const double scale = target_deposit / positive_sum;
-            for (auto& [_, event] : history)
-                for (double& value : event.energy_deposit) value *= scale;
+        summary.raw_total_deposit = raw_total_deposit;
+        summary.deposit_records_complete = retain_history;
+
+        if (options.normalize_deposits && retain_history) {
+            // Historical behavior, offered only for reproducibility.
+            const double target = std::max(0.0, options.input_energy - summary.leaked_energy);
+            double positive_sum = 0.0;
+            for (auto& [_, event] : history) {
+                for (double& value : event.energy_deposit) {
+                    if (value < 0.0) value = 0.0;
+                    positive_sum += value;
+                }
+            }
+            if (positive_sum > 0.0) {
+                summary.normalization_factor = target / positive_sum;
+                for (auto& [_, event] : history)
+                    for (double& value : event.energy_deposit)
+                        value *= summary.normalization_factor;
+            }
         }
 
         double total_deposit = 0.0;
-        for (const auto& [_, event] : history) {
+        for (const auto& [_, event] : history)
             total_deposit += std::accumulate(
                 event.energy_deposit.begin(), event.energy_deposit.end(), 0.0);
-        }
         const int event_id = static_cast<int>(case_number);
         summary.event_id = event_id;
         summary.total_deposit = total_deposit;
         summary.fully_contained = summary.leaked_particles == 0;
-        summary.energy_consistent = std::abs(total_deposit - options.input_energy) <= options.energy_tolerance;
+        // A single CLI input energy is not a valid reference for sources
+        // that sample multiple photon lines (e.g. 60Co 1173/1332 keV).
+        // Use the NCOL=4 source particle energy for this history when known.
+        const double balance_source = summary.source_energy_available
+            ? summary.source_energy : options.input_energy;
+        summary.energy_balance_reference = balance_source;
+        summary.energy_consistent = retain_history &&
+            std::abs(raw_total_deposit - (balance_source - summary.leaked_energy))
+                <= options.energy_tolerance;
         // A transport history is fully absorbed when no particle reaches a
         // leakage termination. The deposit sum is retained as a diagnostic,
         // but it is not reliable enough for this decision because PHITS may
@@ -174,6 +250,7 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                     history.clear();
                     history[1].ityp = 14;
                     summary = {};
+                    reaction_index = 0;
                     summary_active = true;
                     saw_secondary_particle = false;
                     retain_history = true;
@@ -192,7 +269,9 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 if (static_cast<int>(particle_type) != 12 && static_cast<int>(particle_type) != 13) ++count;
             }
             if (static_cast<int>(count) == 11) {
-                require_columns(column, 2, line_number);
+                // The scalar row at this slot is emitted with one field by
+                // PHITS 3.341 (including the source NCOL=4 preamble).
+                require_columns(column, 1, line_number);
                 deposited_before_collision = column[0];
             }
             if (static_cast<int>(count) == 13) {
@@ -200,6 +279,12 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 particle_energy = column[0];
                 energy_at_collision = column[0];
                 collision_position[0] = column[2];
+                if (static_cast<int>(ncol) == 4 &&
+                    static_cast<int>(particle_number) == 1 &&
+                    std::isfinite(energy_at_collision) && energy_at_collision >= 0.0) {
+                    summary.source_energy = energy_at_collision;
+                    summary.source_energy_available = true;
+                }
             }
             if (static_cast<int>(count) == 14) {
                 require_columns(column, 2, line_number);
@@ -230,6 +315,8 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 }
                 if (static_cast<int>(ncol) == 13 || static_cast<int>(ncol) == 14) {
                     ++summary.reaction_records;
+                    reaction_ncol = static_cast<int>(ncol);
+                    ++reaction_index;
                 }
                 if (retain_history && (type == 12 || type == 13 || type == 14)) {
                     auto& event = history[static_cast<int>(particle_number)];
@@ -247,48 +334,48 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                     }
                 }
             }
-            if (static_cast<int>(count) == 17) secondary_count = column[0];
+            if (static_cast<int>(count) == 17) {
+                require_columns(column, 1, line_number);
+                secondary_count = column[0];
+                secondary_index = 0;
+                secondary_energy_sum = 0;
+                reaction_jcoll_available = false;
+                reaction_all_secondary_energy = 0.0;
+                reaction_dead_secondary_energy = 0.0;
+                reaction_cutoff_secondary_energy = 0.0;
+                secondary_details.str("");
+                secondary_details.clear();
+                // PHITS emits no MATHZ/JCOLL or secondary records for NCLSTS=0.
+                // Close this reaction now and read the next NCOL header normally.
+                if (secondary_count <= 0) {
+                    append_reaction_deposit();
+                    count = -1;
+                }
+            }
             if (static_cast<int>(count) == 18) {
                 require_columns(column, 3, line_number);
                 collision_type = column[2];
+                reaction_jcoll_available = true;
                 ncol = 17;
                 count = -1;
                 secondary_index = 0;
                 secondary_energy_sum = 0;
                 secondary_status = 0;
-                // NCOL=13/14 with no produced particles means that the
-                // parent particle is absorbed at this collision.  There is
-                // no secondary record from which to trigger the append below,
-                // so account for the incoming energy here.
-                if (secondary_count <= 0) {
-                    const int type = static_cast<int>(particle_type);
-                    if (retain_history && (type == 12 || type == 13 || type == 14)) {
-                        auto& event = history[static_cast<int>(particle_number)];
-                        const double local_deposit = std::max(0.0, deposited_before_collision - energy_at_collision);
-                        event.energy_deposit.push_back(local_deposit);
-                        event.x_deposit.push_back(collision_position[0]);
-                        event.y_deposit.push_back(collision_position[1]);
-                        event.z_deposit.push_back(collision_position[2]);
-                    }
-                    ncol = 13;
-                    count = -1;
-                    continue;
-                }
             }
         }
 
         if (static_cast<int>(ncol) == 17) {
             if (static_cast<int>(count) == 1) {
                 require_columns(column, 5, line_number);
-                particle_type = column[3];
+                secondary_particle_type = static_cast<int>(column[3]);
                 secondary_status = column[4];
             }
             if (static_cast<int>(count) == 5) {
                 require_columns(column, 2, line_number);
-                particle_energy = column[1];
+                secondary_particle_energy = column[1];
             }
             if (static_cast<int>(count) == 8) {
-                const int type = static_cast<int>(particle_type);
+                const int type = secondary_particle_type;
                 ++summary.secondary_particles;
                 if (type == 14) ++summary.secondary_photons;
                 if (type == 12 || type == 13) ++summary.secondary_electrons;
@@ -300,26 +387,24 @@ Result read_dump(const std::string& dump_path, const Options& options) {
                 // carry energy out of this collision; their energy belongs
                 // in the local deposit.  The same applies to particles below
                 // the configured transport cut-off.
-                if (secondary_status >= 0 && particle_energy >= threshold)
-                    secondary_energy_sum += particle_energy;
+                const bool transported = secondary_status >= 0 &&
+                    secondary_particle_energy >= threshold;
+                if (transported) secondary_energy_sum += secondary_particle_energy;
+                if (reaction_audit.is_open()) {
+                    reaction_all_secondary_energy += secondary_particle_energy;
+                    if (secondary_status < 0)
+                        reaction_dead_secondary_energy += secondary_particle_energy;
+                    else if (!transported)
+                        reaction_cutoff_secondary_energy += secondary_particle_energy;
+                    if (secondary_index > 0) secondary_details << ';';
+                    secondary_details << static_cast<int>(secondary_index) << ':'
+                        << secondary_particle_type << ':' << secondary_status << ':'
+                        << secondary_particle_energy << ':' << (transported ? 1 : 0);
+                }
 
                 if (static_cast<int>(secondary_index) == static_cast<int>(secondary_count) - 1) {
                     ncol = 13;
-                    const int parent_type = static_cast<int>(particle_type);
-                    if (retain_history && (parent_type == 12 || parent_type == 13 || parent_type == 14)) {
-                        auto& event = history[static_cast<int>(particle_number)];
-                        // E is the energy at the preceding event point and
-                        // EC is the energy at this event point.  For a
-                        // reaction, the generated particles are a transport
-                        // bookkeeping record; the local deposition on the
-                        // parent track is the non-negative loss E-EC.
-                        const double local_deposit = std::max(
-                            0.0, deposited_before_collision - energy_at_collision);
-                        event.energy_deposit.push_back(local_deposit);
-                        event.x_deposit.push_back(collision_position[0]);
-                        event.y_deposit.push_back(collision_position[1]);
-                        event.z_deposit.push_back(collision_position[2]);
-                    }
+                    append_reaction_deposit();
                 } else {
                     ++secondary_index;
                 }
@@ -335,6 +420,194 @@ Result read_dump(const std::string& dump_path, const Options& options) {
     // event. Committing here preserves the final event as well.
     commit_history();
     return result;
+}
+
+// Fallback for the PHITS 3.341 ASCII layout written by src/ovly15.f:dumpdat.
+// The legacy line-counter parser remains the compatibility path for its
+// historical fixtures; this record parser handles variable QS/lattice/child
+// blocks and scalar NZST/NCLSTS rows without fixed line assumptions.
+static Result read_dump_structured(const std::string& dump_path, const Options& options) {
+    std::ifstream input(dump_path, std::ios::binary);
+    if (!input) throw std::runtime_error("cannot open dump file: " + dump_path);
+    Result result;
+    History history;
+    HistorySummary summary;
+    bool active = false, retain = true, saw_secondary = false;
+    int event_id = 0, reaction_index = 0;
+    std::ofstream audit;
+    if (!options.reaction_audit_path.empty()) {
+        audit.open(options.reaction_audit_path);
+        if (!audit) throw std::runtime_error("cannot open reaction audit CSV: " + options.reaction_audit_path);
+        audit << "event_id,particle_id,reaction_index,ncol,jcoll,parent_ityp,parent_E,parent_EC,"
+                 "parent_E_minus_EC,secondary_count,transported_secondary_energy,all_secondary_energy,"
+                 "dead_secondary_energy,below_cutoff_secondary_energy,raw_local_deposit,"
+                 "history_retained,x,y,z,secondaries\n" << std::setprecision(17);
+    }
+    const bool discard_non_full_early = options.full_energy_only || !options.save_all;
+    const auto commit = [&] {
+        if (!active) return;
+        for (const auto& [_, particle] : history) {
+            for (const double value : particle.energy_deposit) {
+                summary.raw_total_deposit += value;
+                if (value < 0.0) ++summary.negative_deposits;
+            }
+        }
+        summary.deposit_records_complete = retain;
+        const double source = summary.source_energy_available ? summary.source_energy : options.input_energy;
+        summary.energy_balance_reference = source;
+        summary.energy_consistent = retain && std::abs(summary.raw_total_deposit -
+            (source - summary.leaked_energy)) <= options.energy_tolerance;
+        if (options.normalize_deposits && retain) {
+            const double target = std::max(0.0, source - summary.leaked_energy);
+            double positive_sum = 0.0;
+            for (auto& [_, particle] : history) {
+                for (double& value : particle.energy_deposit) {
+                    if (value < 0.0) value = 0.0;
+                    positive_sum += value;
+                }
+            }
+            if (positive_sum > 0.0) {
+                summary.normalization_factor = target / positive_sum;
+                for (auto& [_, particle] : history)
+                    for (double& value : particle.energy_deposit)
+                        value *= summary.normalization_factor;
+            }
+        }
+        summary.total_deposit = 0.0;
+        for (const auto& [_, particle] : history)
+            summary.total_deposit += std::accumulate(particle.energy_deposit.begin(),
+                                                      particle.energy_deposit.end(), 0.0);
+        summary.fully_contained = summary.leaked_particles == 0;
+        summary.full_energy = summary.fully_contained;
+        summary.had_secondary_particle = saw_secondary;
+        summary.event_id = event_id;
+        summary.stored_event = options.save_all || summary.full_energy;
+        result.history_summaries.push_back(summary);
+        if (summary.stored_event) result.batch.emplace(event_id, history);
+        if ((options.save_all || options.collect_full_energy_ids) && summary.full_energy)
+            result.full_energy_event_ids.push_back(event_id);
+        active = false;
+    };
+
+    const auto parsed = parse_dumpall_records(input, [&](const DumpallRecord& record) {
+        if (record.ncol == 4) {
+            commit();
+            if (options.max_histories > 0 &&
+                static_cast<int>(result.history_summaries.size()) >= options.max_histories) return;
+            history.clear(); summary = {}; reaction_index = 0; saw_secondary = false;
+            retain = true; active = true; event_id = record.nocas;
+            summary.event_id = event_id;
+            if (record.particle_id == 1 && record.energy >= 0.0 && std::isfinite(record.energy)) {
+                summary.source_energy = record.energy;
+                summary.source_energy_available = true;
+            }
+        }
+        if (!active) return;
+        ++summary.particle_records;
+        const int particle_id = record.particle_id;
+        const int type = record.ityp;
+        if (particle_id > 1) saw_secondary = true;
+        if (record.ncol == 11) {
+            ++summary.energy_cutoff_particles;
+            if (type == 14) ++summary.energy_cutoff_photons;
+            if (type == 12 || type == 13) ++summary.energy_cutoff_electrons;
+        }
+        if (record.ncol == 12) {
+            ++summary.leaked_particles;
+            summary.leaked_energy += std::max(0.0, record.energy);
+            if (type == 14) {
+                ++summary.leaked_photons;
+                if (particle_id == 1) ++summary.leaked_primary_photons;
+                else ++summary.leaked_secondary_photons;
+            }
+            if (discard_non_full_early) { history.clear(); retain = false; }
+        }
+        if (type == 12 || type == 13 || type == 14) {
+            if (retain) {
+                auto& particle = history[particle_id];
+                particle.ityp = type;
+                particle.x.push_back(record.x); particle.y.push_back(record.y); particle.z.push_back(record.z);
+                particle.energy.push_back(record.energy);
+            }
+        }
+        if (record.ncol == 11 && retain && (type == 12 || type == 13 || type == 14)) {
+            auto& particle = history[particle_id];
+            particle.energy_deposit.push_back(record.energy);
+            particle.x_deposit.push_back(record.x); particle.y_deposit.push_back(record.y);
+            particle.z_deposit.push_back(record.z);
+        }
+        if (record.ncol != 13 && record.ncol != 14) return;
+        ++summary.reaction_records;
+        ++reaction_index;
+        for (const auto& child : record.secondaries) {
+            ++summary.secondary_particles;
+            if (child.jclusts[3] == 14) ++summary.secondary_photons;
+            if (child.jclusts[3] == 12 || child.jclusts[3] == 13)
+                ++summary.secondary_electrons;
+        }
+        if (type != 12 && type != 13 && type != 14) return;
+        double transported = 0.0, all_secondaries = 0.0, dead = 0.0, below = 0.0;
+        std::ostringstream details;
+        for (std::size_t i = 0; i < record.secondaries.size(); ++i) {
+            const auto& child = record.secondaries[i];
+            const int child_type = child.jclusts[3];
+            const int status = child.jclusts[4];
+            const double energy = child.qclusts[7];
+            const double threshold = child_type == 14 ? options.photon_min_energy :
+                ((child_type == 12 || child_type == 13) ? options.electron_min_energy : 0.0);
+            const bool transported_child = status >= 0 && energy >= threshold;
+            all_secondaries += energy;
+            if (transported_child) transported += energy;
+            else if (status < 0) dead += energy;
+            else below += energy;
+            if (i) details << ';';
+            details << i << ':' << child_type << ':' << status << ':' << energy << ':'
+                    << (transported_child ? 1 : 0);
+        }
+        const double local_deposit = record.energy - transported;
+        if (audit.is_open() && (options.reaction_audit_all || local_deposit < 0.0)) {
+            audit << event_id << ',' << particle_id << ',' << reaction_index << ',' << record.ncol << ',';
+            if (record.nclsts > 0) audit << record.jcoll;
+            audit << ',' << type << ',' << record.energy << ',' << record.ec << ','
+                  << (record.energy - record.ec) << ',' << record.nclsts << ',' << transported << ','
+                  << all_secondaries << ',' << dead << ',' << below << ',' << local_deposit << ','
+                  << (retain ? 1 : 0) << ',' << record.x << ',' << record.y << ',' << record.z
+                  << ",\"" << details.str() << "\"\n";
+        }
+        if (retain) {
+            auto& particle = history[particle_id];
+            particle.energy_deposit.push_back(local_deposit);
+            particle.x_deposit.push_back(record.x); particle.y_deposit.push_back(record.y);
+            particle.z_deposit.push_back(record.z);
+        }
+    }, dump_path);
+    (void)parsed;
+    commit();
+    return result;
+}
+
+Result read_dump(const std::string& dump_path, const Options& options) {
+    // PHITS 3.341 dumpdat files start with a standalone NCOL=1 marker. Once
+    // that signature is present, require the schema parser to validate the
+    // complete stream; do not let the legacy line-counter parser reinterpret
+    // a truncated modern record as a shorter, apparently valid history.
+    {
+        std::ifstream probe(dump_path, std::ios::binary);
+        if (!probe) throw std::runtime_error("cannot open dump file: " + dump_path);
+        std::string first_line;
+        if (std::getline(probe, first_line)) {
+            const auto first_values = parse_numbers(first_line, 1);
+            if (first_values.size() == 1 && first_values.front() == 1.0)
+                return read_dump_structured(dump_path, options);
+        }
+    }
+    try {
+        return read_dump_legacy_line_parser(dump_path, options);
+    } catch (const std::runtime_error&) {
+        // A complete PHITS record parse is required before falling back; this
+        // prevents malformed/truncated files from being accepted silently.
+        return read_dump_structured(dump_path, options);
+    }
 }
 
 void write_event_json(const Batch& batch, const std::string& output_path) {
@@ -392,7 +665,9 @@ void write_history_summary(const std::vector<HistorySummary>& summaries, const s
            "leaked_particles,"
            "leaked_photons,leaked_primary_photons,leaked_secondary_photons,"
            "reaction_records,leaked_energy,total_deposit,"
-           "energy_consistent,full_energy,fully_contained,stored_event\n";
+           "energy_consistent,full_energy,fully_contained,stored_event,"
+           "raw_total_deposit,negative_deposits,deposit_records_complete,normalization_factor,"
+           "source_energy,source_energy_available,energy_balance_reference\n";
     out << std::setprecision(17);
     for (const auto& summary : summaries) {
         out << summary.event_id << ','
@@ -414,7 +689,14 @@ void write_history_summary(const std::vector<HistorySummary>& summaries, const s
             << (summary.energy_consistent ? 1 : 0) << ','
             << (summary.full_energy ? 1 : 0) << ','
             << (summary.fully_contained ? 1 : 0) << ','
-            << (summary.stored_event ? 1 : 0) << '\n';
+            << (summary.stored_event ? 1 : 0) << ','
+            << summary.raw_total_deposit << ','
+            << summary.negative_deposits << ','
+            << (summary.deposit_records_complete ? 1 : 0) << ','
+            << summary.normalization_factor << ','
+            << summary.source_energy << ','
+            << (summary.source_energy_available ? 1 : 0) << ','
+            << summary.energy_balance_reference << '\n';
     }
 }
 

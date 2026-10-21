@@ -1,0 +1,45 @@
+name: dump2event energy regression tests
+
+on:
+  push:
+    paths:
+      - "tes_cpp/dump2event/**"
+      - "tes_cpp/python/tes_cpp/dump2event.py"
+      - "tes_cpp/python/tes_cpp/event_hdf5*.py"
+      - "tes_cpp/tests/**"
+      - "tes_cpp/python/tes_cpp/event_hdf5_v2.py"
+      - "PoST_Simulations/PoST_Simulation.py"
+      - ".github/workflows/dump2event-energy-tests.yml"
+  pull_request:
+    paths:
+      - "tes_cpp/dump2event/**"
+      - "tes_cpp/python/tes_cpp/dump2event.py"
+      - "tes_cpp/python/tes_cpp/event_hdf5*.py"
+      - "tes_cpp/tests/**"
+      - "tes_cpp/python/tes_cpp/event_hdf5_v2.py"
+      - "PoST_Simulations/PoST_Simulation.py"
+      - ".github/workflows/dump2event-energy-tests.yml"
+
+jobs:
+  energy-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python test dependencies
+        run: python -m pip install --upgrade pip pytest numpy h5py
+      - name: Install HDF5
+        run: sudo apt-get update && sudo apt-get install -y libhdf5-dev
+      - name: Configure
+        run: cmake -S tes_cpp/dump2event -B build/dump2event -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/dump2event --config Release -j 2
+      - name: Run C++ regression tests
+        run: ctest --test-dir build/dump2event --output-on-failure
+      - name: Run v1/v2 and Python regression tests
+        run: python -m pytest tes_cpp/tests tes_cpp/dump2event/tests -q -rs
+        env:
+          TES_CPP_DUMP2EVENT_EXECUTABLE: ${{ github.workspace }}/build/dump2event/dump2event
+          PYTHONPATH: tes_cpp/python

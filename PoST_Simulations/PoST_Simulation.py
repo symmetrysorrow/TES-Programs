@@ -33,13 +33,17 @@ if str(_tes_cpp_python) not in sys.path:
     sys.path.insert(0, str(_tes_cpp_python))
 
 from lib import general
+from lib.pb_egs5_ui import run_pb_egs5_ui
 from lib.tes_noise_model import noise_components as shared_tes_noise_components
 from lib.tes_noise_model import linearized_matrix as shared_tes_linearized_matrix
 from lib.tes_noise_model import operating_point as shared_tes_operating_point
 from lib.tes_noise_model import tes_johnson_voltage_asd as shared_tes_johnson_voltage_asd
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
-from tes_cpp.event_hdf5 import iter_events as iter_hdf5_events
+from tes_cpp.event_hdf5 import (
+    iter_events as iter_hdf5_events,
+    require_legacy_point_events,
+)
 from lib.pulse_hdf5 import (
     PulseWriter,
     iter_pulse_items as iter_hdf5_pulse_items,
@@ -2696,6 +2700,11 @@ def Dump2Event():
         )
 
 
+def Dump2EventPbEgs5():
+    """Run the separate experimental Pb physical converter (HDF5 v2 only)."""
+    return run_pb_egs5_ui(questionary, dump2event)
+
+
 def Pulse_Ms():
     """
     Synthesize one CH0/CH1 pulse for each event in every position folder.
@@ -2832,6 +2841,10 @@ def Pulse_Ms():
             raise FileNotFoundError(
                 f"event.h5 was not found: {event_path}"
             )
+
+        # Preflight before opening pulse_MS.h5. HDF5 v2 preserves continuous
+        # transport segments and cannot be treated as legacy point deposits.
+        require_legacy_point_events(event_path)
 
         with PulseWriter(
             output_path,
@@ -3232,6 +3245,7 @@ def _run_selected_actions(selected_actions):
         "show_samples": ("ShowSamples", ShowSamples),
         "pulse_noise": ("Pulse_Noise", Pulse_Noise),
         "dump_to_event": ("Dump2Event", Dump2Event),
+        "dump_to_event_pb_egs5": ("Dump2EventPbEgs5", Dump2EventPbEgs5),
         "pulse_ms": ("Pulse_Ms", Pulse_Ms),
         "pulse_ms_noise": ("Pulse_MS_Noise", Pulse_MS_Noise),
     }
@@ -3247,11 +3261,16 @@ def _run_selected_actions(selected_actions):
         "show_samples",
         "pulse_noise",
         "dump_to_event",
+        "dump_to_event_pb_egs5",
         "pulse_ms",
         "pulse_ms_noise",
     )
 
     selected_actions = set(selected_actions)
+    if "dump_to_event_pb_egs5" in selected_actions and selected_actions.intersection(
+        {"dump_to_event", "pulse_ms", "pulse_ms_noise"}
+    ):
+        raise ValueError("HDF5 v2物理変換は旧Dump2Event/Pulse_Msと同時実行できません")
     for action_key in execution_order:
         if action_key not in selected_actions:
             continue
@@ -3296,6 +3315,10 @@ def _run_interactive():
             value="dump_to_event",
         ),
         questionary.Choice(
+            "Pb EGS5物理depositをHDF5 v2へ変換（実験用・パルス未接続）",
+            value="dump_to_event_pb_egs5",
+        ),
+        questionary.Choice(
             "外部event.h5 から複数相互作用パルスを生成 (Pulse_Ms)",
             value="pulse_ms",
         ),
@@ -3317,6 +3340,12 @@ def _run_interactive():
 
     if not selected_actions:
         print("処理が選択されていません。")
+        return
+
+    if "dump_to_event_pb_egs5" in selected_actions and set(selected_actions).intersection(
+        {"dump_to_event", "pulse_ms", "pulse_ms_noise"}
+    ):
+        print("HDF5 v2物理変換を従来のDump2Event/Pulse_Msと同時には実行できません。")
         return
 
     external_data_actions = {

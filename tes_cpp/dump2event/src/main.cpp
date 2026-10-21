@@ -4,22 +4,140 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <cstdlib>
+#include <vector>
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 namespace {
 void usage() {
     std::cerr << "Usage: dump2event <dumpall.dat> <event.json> --input-energy <MeV>\n"
                  "Normal options:\n"
                  "  --save-all                     retain all histories\n"
+                 "  --normalize-deposits           opt into legacy energy closure (not recommended)\n"
                  "  --full-energy-only             retain only histories without NCOL=12 leakage\n"
                  "  --full-energy-list <path>      write full-energy event IDs\n"
                  "Diagnostic/development options:\n"
                  "  --history-summary <path>       write per-history diagnostics\n"
+                 "  --reaction-audit <path>        stream negative-deposit reactions to CSV\n"
+                 "  --reaction-audit-all           also include nonnegative reactions\n"
                  "  --max-histories <N>             stop after N source histories\n"
                  "  --summary-only                 do not write an event file\n";
+    std::cerr << "Experimental opt-in HDF5 v2 mode:\n"
+                 "  dump2event <dumpall> <event.h5> --physics pb-egs5 --hdf5-version 2\n"
+                 "      --physics-config <pb_config.json> --stopping-table <pb_egs5.csv>\n"
+                 "  Requires PHITS 3.341 / Pb region 1000 / unit weights / validated cutoffs.\n";
+}
+
+std::string shell_quote(const std::string& value) {
+#ifdef _WIN32
+    std::string out = "\"";
+    for (char c : value) { if (c == '"') out += "\\\""; else out += c; }
+    out += '"';
+    return out;
+#else
+    std::string out = "'";
+    for (char c : value) { if (c == '\'') out += "'\\''"; else out += c; }
+    out += '\'';
+    return out;
+#endif
+}
+
+std::filesystem::path find_physics_driver(const std::filesystem::path& executable) {
+    if (const char* configured = std::getenv("TES_CPP_PB_PHYSICS_DRIVER")) {
+        const std::filesystem::path path(configured);
+        if (std::filesystem::is_regular_file(path)) return path;
+        throw std::runtime_error("TES_CPP_PB_PHYSICS_DRIVER does not name a file");
+    }
+    auto parent = std::filesystem::absolute(executable).parent_path();
+    for (int depth = 0; depth < 10 && !parent.empty(); ++depth) {
+        const auto repo = parent / "tes_cpp" / "dump2event" / "validation" / "build_physical_hdf5_v2.py";
+        if (std::filesystem::is_regular_file(repo)) return repo;
+        const auto installed = parent / "share" / "tes_cpp_dump2event" / "build_physical_hdf5_v2.py";
+        if (std::filesystem::is_regular_file(installed)) return installed;
+        const auto adjacent = parent / "build_physical_hdf5_v2.py";
+        if (std::filesystem::is_regular_file(adjacent)) return adjacent;
+        parent = parent.parent_path();
+    }
+    throw std::runtime_error("Pb physics driver not found; set TES_CPP_PB_PHYSICS_DRIVER");
+}
+
+int run_pb_physics(int argc, char** argv) {
+    if (argc < 4) { usage(); return 2; }
+    std::string config, stopping;
+    for (int i = 3; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--physics" && i + 1 < argc) {
+            if (std::string(argv[++i]) != "pb-egs5") throw std::runtime_error("only --physics pb-egs5 is supported");
+        } else if (arg == "--hdf5-version" && i + 1 < argc) {
+            if (std::string(argv[++i]) != "2") throw std::runtime_error("Pb physics mode requires --hdf5-version 2");
+        } else if (arg == "--physics-config" && i + 1 < argc) config = argv[++i];
+        else if (arg == "--stopping-table" && i + 1 < argc) stopping = argv[++i];
+        else throw std::runtime_error("unknown or incomplete Pb physics option: " + arg);
+    }
+    if (config.empty() || stopping.empty())
+        throw std::runtime_error("Pb physics mode requires --physics-config and --stopping-table");
+    const std::filesystem::path input(argv[1]), output(argv[2]);
+    if (!std::filesystem::is_regular_file(input)) throw std::runtime_error("Dumpall input does not exist");
+    if (!std::filesystem::is_regular_file(config)) throw std::runtime_error("physics config does not exist");
+    if (!std::filesystem::is_regular_file(stopping)) throw std::runtime_error("stopping table does not exist");
+    if (output.extension() != ".h5" && output.extension() != ".hdf5")
+        throw std::runtime_error("Pb physical mode writes HDF5 v2; output extension must be .h5 or .hdf5");
+    const auto exe = std::filesystem::absolute(argv[0]);
+    auto reconstructor = exe.parent_path() / "dump2event_physical_reconstruct";
+    auto exporter = exe.parent_path() / "dumpall_transport_export";
+#ifdef _WIN32
+    reconstructor += ".exe"; exporter += ".exe";
+#endif
+    if (!std::filesystem::is_regular_file(reconstructor) || !std::filesystem::is_regular_file(exporter))
+        throw std::runtime_error("physical ledger/export helper binaries must be alongside dump2event");
+    const auto driver = find_physics_driver(exe);
+    const char* configured_python = std::getenv("TES_CPP_PYTHON");
+#ifdef _WIN32
+    const std::string python = configured_python ? configured_python : "python";
+#else
+    const std::string python = configured_python ? configured_python : "python3";
+#endif
+    std::vector<std::string> args{python, driver.string(), "--dumpall", input.string(),
+        "--physics-config", config, "--stopping-table", stopping,
+        "--reconstructor", reconstructor.string(), "--track-exporter", exporter.string(),
+        "--converter-executable", exe.string(), "--output", output.string()};
+#ifdef _WIN32
+    std::vector<std::wstring> wide_args;
+    wide_args.reserve(args.size() + 1);
+    for (const auto& arg : args) wide_args.push_back(std::filesystem::path(arg).wstring());
+    std::vector<const wchar_t*> argv_wide;
+    argv_wide.reserve(wide_args.size() + 1);
+    for (const auto& arg : wide_args) argv_wide.push_back(arg.c_str());
+    argv_wide.push_back(nullptr);
+    const intptr_t status = _wspawnvp(_P_WAIT, argv_wide[0], argv_wide.data());
+    if (status == -1) throw std::runtime_error("failed to launch Python Pb HDF5 driver");
+#else
+    std::string command;
+    for (const auto& arg : args) { if (!command.empty()) command += ' '; command += shell_quote(arg); }
+    const int status = std::system(command.c_str());
+#endif
+    if (status != 0) {
+        std::cerr << "dump2event: experimental Pb reconstruction failed; subprocess status=" << status << '\n';
+        return 1;
+    }
+    return 0;
 }
 }
 
 int main(int argc, char** argv) {
+    if (argc >= 4 && std::string(argv[3]) == "--physics") {
+        try { return run_pb_physics(argc, argv); }
+        catch (const std::exception& error) {
+            std::cerr << "dump2event: " << error.what() << '\n';
+            return 2;
+        }
+    }
     if (argc < 5) { usage(); return 2; }
     tes_cpp::dump2event::Options options;
     std::string full_energy_list;
@@ -29,16 +147,20 @@ int main(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--input-energy" && i + 1 < argc) options.input_energy = std::stod(argv[++i]);
         else if (arg == "--save-all") options.save_all = true;
+        else if (arg == "--normalize-deposits") options.normalize_deposits = true;
         else if (arg == "--full-energy-only") options.full_energy_only = true;
         else if (arg == "--full-energy-list" && i + 1 < argc) full_energy_list = argv[++i];
         else if (arg == "--history-summary" && i + 1 < argc) history_summary = argv[++i];
+        else if (arg == "--reaction-audit" && i + 1 < argc) options.reaction_audit_path = argv[++i];
+        else if (arg == "--reaction-audit-all") options.reaction_audit_all = true;
         else if (arg == "--max-histories" && i + 1 < argc) options.max_histories = std::stoi(argv[++i]);
         else if (arg == "--summary-only") summary_only = true;
         else { usage(); return 2; }
     }
     if (options.full_energy_only) options.save_all = false;
     options.collect_full_energy_ids = !full_energy_list.empty();
-    if (summary_only && history_summary.empty()) { usage(); return 2; }
+    if (summary_only && history_summary.empty() && options.reaction_audit_path.empty()) { usage(); return 2; }
+    if (options.reaction_audit_all && options.reaction_audit_path.empty()) { usage(); return 2; }
     try {
         const auto result = tes_cpp::dump2event::read_dump(argv[1], options);
         if (!summary_only) {
@@ -48,8 +170,12 @@ int main(int argc, char** argv) {
         }
         if (!full_energy_list.empty()) tes_cpp::dump2event::write_event_ids(result.full_energy_event_ids, full_energy_list);
         if (!history_summary.empty()) tes_cpp::dump2event::write_history_summary(result.history_summaries, history_summary);
-        if (summary_only)
-            std::cout << "Wrote " << result.history_summaries.size() << " history summaries to " << history_summary << '\n';
+        if (summary_only) {
+            std::cout << "Processed " << result.history_summaries.size() << " histories";
+            if (!history_summary.empty()) std::cout << "; summaries: " << history_summary;
+            if (!options.reaction_audit_path.empty()) std::cout << "; audit: " << options.reaction_audit_path;
+            std::cout << '\n';
+        }
         else
             std::cout << "Wrote " << result.batch.size() << " events to " << argv[2] << '\n';
         return 0;

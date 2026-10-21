@@ -1,0 +1,17 @@
+# Unresolved physics and validation limits
+
+- The opt-in Pb reconstruction remains restricted to PHITS 3.341, Pb region 1000/material 2, EGS5 medium 2, unit weights, the validated cutoffs, and explicitly supported ledger branches. A successful conversion is not proof that all transport physics is complete.
+- The 0.511 MeV source is below the usual 1.022 MeV pair-production threshold; this run did not produce positrons and is not evidence for positron reconstruction.
+- The 2 MeV 100-history run produced positrons and tested their transport and local ledger contributions. It is a finite-sample validation, not a general proof of every annihilation/escape history.
+- The PHITS unit=3 tally uses the configured 0–1.5 MeV histogram. Event totals above 1.5 MeV are overflow and are not counted in the in-range bin comparison.
+- The 10,000-history normal CLI attempt failed before HDF5 publication because the supplied raw Dumpall has a malformed NCOL=4 particle-header layout. The original file was left unchanged; no fields were guessed or repaired in place.
+- The 1,000-history mono-gamma outcomes and the 10,000-history CLI failure do not justify enabling the experimental physics mode by default or integrating it into PR #6.
+- Histogram agreement is distribution agreement. It does not demonstrate complete absorption, correct segment-to-point allocation, or arbitrary-seed completeness.
+
+## 2 MeV / 1,000 history threshold case
+
+The raw-only reconstruction produced 5,978,912 reconstructed rows and one unresolved `unsupported_secondary_threshold` row; the CLI therefore refused to publish HDF5 v2 (exit 1). The unresolved candidate is NOCAS 398, particle 180, raw record line 39,594,769, NCOL=13/JCOLL=13, photon parent, dead electron secondary at `(-0.89993733682112143,-0.0080077241081570032,-3.4727350725342681) cm`, with QCLUSTS child kinetic energy `7.5933446597176157e-7 MeV` and weight 1. The corresponding raw Dumpall excerpt is retained outside Git.
+
+The PHITS 3.341 source path is threshold-gated: `talls08.f` tests `QCLUSTS(7) > eletb(1)` for dead secondaries before scoring; `tallsm1.f` initializes `eletb(1)=min(esmin,1e-6 MeV)`; when accepted, the normal branch adds `ein-ecc`. The actual `esmin` value was not echoed in this run, so the per-run threshold is not assumed from the C++ 1e-6 MeV guard. For this raw record, DUMP sequence 2,334,984 has two PHITS TALLYSEQ increments (0 and 0.001096 MeV). The reconstructed rows for that source are exact zero, the unresolved 7.593e-7 MeV child, and a separate dead electron contribution of 0.001096 MeV. Its two internal additions align with the exact-zero and 0.001096 MeV rows; no separate internal increment corresponds to the small child.
+
+Across the run, the 5,978,912 reconstructed raw-ledger rows align in order with all 5,978,912 PHITS internal additions. Event/particle/NCOL/region mismatches are zero; 120,354 raw JCOLL differences are limited to NCOL=10/11, where PHITS carries the originating JCOLL while the Dumpall terminal header stores zero. Maximum increment error is 4.683146231920787e-14 MeV; maximum event-sum error is 6.756817327868703e-13 MeV. The raw-ledger 150-bin history distribution also matches PHITS exactly (L1=0; 87 zero, 0 underflow, 275 overflow, 638 in-range). The unresolved row therefore does not prevent agreement for scored tally increments, but HDF5 v2 publication remains withheld and the full position-by-position HDF5 comparison was not performed for this run.
