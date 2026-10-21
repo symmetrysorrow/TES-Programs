@@ -28,3 +28,12 @@ rejected **before** any HDF5 conversion because material-specific HATCH
 coefficients and same-run PHITS score-addition validation have not been
 established. The UI must never silently substitute Pb settings for Bi.
 See `tes_cpp/dump2event/BI_VALIDATION_PLAN.md`.
+
+## Pb停止能表は原則として自動選択
+
+現在の対話UIはPb停止能CSVを毎回選択しません。
+`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`に正確な実測済み
+HATCH係数を入れて配布・インストールすれば、自動でSHA-256を検証して使用します。
+現時点では元CSVの公開再配布条件が未確認で、公開Gitには本体がありません。
+よって必要な場合はCLIの`--stopping-table`、Python APIの
+`stopping_table=...`で私有表を指定してください。
