@@ -67,7 +67,7 @@ def _fake_hdf5(path):
 
 def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
-    fake = FakeQuestionary([raw, config, table, output])
+    fake = FakeQuestionary([raw, config, output])
     calls = []
 
     def convert(*args, **kwargs):
@@ -80,7 +80,6 @@ def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     assert calls == [((raw.resolve(), output), {
         "physics": "pb-egs5",
         "physics_config": config.resolve(),
-        "stopping_table": table.resolve(),
     })]
     assert _inspect_v2(output)["deposits"] == 2
     assert "event_pb_egs5_v2.h5" in fake.default_paths[-1]
@@ -90,7 +89,7 @@ def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
     output.write_text("do not replace")
     with pytest.raises(FileExistsError):
-        run_pb_egs5_ui(FakeQuestionary([raw, config, table, output]),
+        run_pb_egs5_ui(FakeQuestionary([raw, config, output]),
                        lambda *args, **kwargs: pytest.fail("unexpected converter call"))
     assert output.read_text() == "do not replace"
 
@@ -106,7 +105,7 @@ def test_pb_ui_rejects_missing_phits_input(tmp_path):
 def test_pb_ui_cancelled_before_conversion(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
     assert run_pb_egs5_ui(
-        FakeQuestionary([raw, config, table, output], confirmed=False),
+        FakeQuestionary([raw, config, output], confirmed=False),
         lambda *args, **kwargs: pytest.fail("unexpected converter call"),
     ) is None
     assert not output.exists()
