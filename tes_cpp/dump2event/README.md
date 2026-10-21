@@ -73,9 +73,18 @@ print(result.full_energy_event_ids)
 
 開発中に CMake でビルドした実行ファイルを使う場合は、`TES_CPP_DUMP2EVENT_EXECUTABLE` にそのパスを設定してください。
 
-## Experimental PHITS 3.341 deposit ledger
+## Experimental PHITS 3.341 Pb HDF5 v2 mode
 
-A separate `dump2event_physical_reconstruct` executable is available for a narrow research validation slice. It is opt-in and does not alter the default converter or its legacy `E_deposit` formula. Same-run PHITS 3.341 validation now covers Pb region 1000 / material 2 / EGS5 medium 2 / unit weights, including electron continuous/boundary/cutoff, dead electron secondaries, positron continuous stopping (PDedx), and dead positron kinetic residuals above the conservative scoring guard. It is not a general PHITS physics model or production converter: photon-specific raw-only accounting, variable weights, other materials/regions, and independent-seed internal-addition matching remain unverified. Read the positron closure reports under `validation/positron_10000_closure/` before using it. The stopping table must be supplied locally and is not included in this repository.
+The default CLI and its legacy `E_deposit` calculation are unchanged. An explicit experimental opt-in is available:
+
+```powershell
+dump2event dumpall.dat event.h5 --physics pb-egs5 --hdf5-version 2 `
+  --physics-config pb_config.json --stopping-table pb_egs5.csv
+```
+
+The JSON must name a PHITS input and explicitly declare the validated PHITS 3.341, Pb region 1000/material 2/EGS5 medium 2, 1 keV cutoffs, unit-weight, MeV, and `[t-deposit]` contract. `validation/pb_physics_cli_integration/pb_config.example.json` is a template. The local stopping-power table is required and is not included. The mode reuses the experimental physical ledger and streaming HDF5 v2 writer. It rejects non-unit weights, bad input settings, malformed/incomplete Dumpall, negative deposits, unsupported score rows, and existing output paths; it does not fall back to the default reaction-difference formula.
+
+This route is not approved for production use. In particular, the earlier 10k HDF5/internal comparison has an unresolved raw-file lineage mismatch, the later GNU Dumpall is truncated at an NCOL=4 particle header, and no new independent-seed internal-addition test or successful integrated CLI conversion has been completed. Gamma-specific accounting and variable weights remain unsupported. See `validation/pb_physics_cli_integration/FINAL_DECISION.md` and the positron closure reports before using the experimental option.
 
 ## Experimental HDF5 v2 storage API
 
