@@ -154,9 +154,15 @@ PhysicalDepositLedger::PhysicalDepositLedger(PhysicalDepositContext context,
     : context_(std::move(context)), table_(table) {
     if (context_.phits_version != "3.341")
         throw std::runtime_error("experimental deposit model supports PHITS 3.341 only");
-    if (context_.region_id != 1000 || upper(context_.region_material) != "PB" ||
-        context_.medium != 2 || table_.medium() != 2 || table_.material() != "PB")
-        throw std::runtime_error("experimental deposit model supports Pb region 1000 / EGS5 medium 2 only");
+    const auto material = upper(context_.region_material);
+    const bool pb_validated = material == "PB" && context_.region_id == 1000 &&
+        context_.medium == 2 && context_.dumpall_material_id == 2;
+    const bool bi_research = material == "BI" && context_.bi_research_only &&
+        context_.region_id > 0 && context_.medium > 0 && context_.dumpall_material_id > 0;
+    if (!pb_validated && !bi_research)
+        throw std::runtime_error("only validated Pb settings or explicitly unvalidated Bi research are supported");
+    if (table_.medium() != context_.medium || table_.material() != material)
+        throw std::runtime_error("EGS5 stopping table medium/material mismatch");
     if (context_.electron_cutoff_mev != 0.001)
         throw std::runtime_error("experimental deposit model requires the validated 1 keV electron cutoff");
     if (!context_.unit_weights_only)
@@ -169,7 +175,7 @@ DepositResult PhysicalDepositLedger::add(const DepositInput& in) {
         throw std::runtime_error("duplicate physical tally addition ID: " + in.addition_id);
     DepositResult result = unresolved(in, "process or record conditions are outside validated scope");
     if (in.region_id != context_.region_id) {
-        result.reason = "record region is outside configured Pb region 1000";
+        result.reason = "record region is outside the configured scoring region";
     } else if (!finite_nonnegative(in.transport_weight) || !finite_nonnegative(in.old_weight) ||
                in.transport_weight != 1.0 || in.old_weight != 1.0) {
         result.reason = "validated reconstruction requires transport and old weights equal to 1";
