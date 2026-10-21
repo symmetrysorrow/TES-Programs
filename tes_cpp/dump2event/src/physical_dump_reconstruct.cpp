@@ -12,11 +12,13 @@
 using namespace tes_cpp::dump2event;
 
 int main(int argc, char** argv) try {
-    if (argc != 6) {
+    if (argc != 6 && argc != 11) {
         std::cerr << "Usage: dump2event_physical_reconstruct <ASCII dumpall> "
                      "<egs5_stopping_power_coefficients.csv> <ledger.csv> "
                      "<not_scored_candidates.csv> <eletb1_MeV>\n"
-                     "Scope: PHITS 3.341; Pb region 1000; EGS5 medium 2; 1 keV cutoff; unit weights.\n";
+                     "Scope: PHITS 3.341; validated Pb region 1000/medium 2; unit weights.\n"
+                     "Research-only Bi: append Bi <region-id> <material-id> <egs5-medium> --research-bi\n"
+                     "Bi research results must not be published as HDF5.\n";
         return 2;
     }
     const double score_threshold = std::stod(argv[5]);
@@ -28,8 +30,17 @@ int main(int argc, char** argv) try {
     if (!out) throw std::runtime_error("cannot open output ledger");
     std::ofstream not_scored(argv[4]);
     if (!not_scored) throw std::runtime_error("cannot open non-scored candidate audit");
-    const auto table = Egs5StoppingTable::read_csv(argv[2], 2, "PB");
-    PhysicalDepositContext context{"3.341", 1000, "PB", 2, 0.001, true, score_threshold};
+    const bool bi_research = argc == 11;
+    if (bi_research && (std::string(argv[6]) != "Bi" ||
+                        std::string(argv[10]) != "--research-bi"))
+        throw std::runtime_error("Bi research mode requires explicit Bi ... --research-bi");
+    const int region = bi_research ? std::stoi(argv[7]) : 1000;
+    const int material_id = bi_research ? std::stoi(argv[8]) : 2;
+    const int medium = bi_research ? std::stoi(argv[9]) : 2;
+    const std::string element = bi_research ? "BI" : "PB";
+    const auto table = Egs5StoppingTable::read_csv(argv[2], medium, element);
+    PhysicalDepositContext context{"3.341", region, element, medium, 0.001, true,
+                                   score_threshold, material_id, bi_research};
     PhysicalDepositLedger ledger(context, table);
     out << "addition_id,event_id,particle_id,source_line,region_id,ncol,jcoll,parent_ityp,parent_E_MeV,"
            "parent_EC_MeV,weight,old_weight,process,status,E_deposit_MeV,position_status,"
@@ -44,17 +55,18 @@ int main(int argc, char** argv) try {
         if (record.ncol == 4) event_id = record.nocas;
         if (record.ncol >= 10 && record.ncol <= 15) {
             if (record.weight != 1.0 || record.oldwt != 1.0)
-                throw std::runtime_error("validated Pb reconstruction rejects non-unit WT/OLDWT at line " +
+                throw std::runtime_error("Pb/Bi EGS5 reconstruction rejects non-unit WT/OLDWT at line " +
                                          std::to_string(record.line_start));
             for (const auto& child : record.secondaries)
                 if (child.qclusts[8] != 1.0)
-                    throw std::runtime_error("validated Pb reconstruction rejects non-unit secondary weight at line " +
+                    throw std::runtime_error("Pb/Bi EGS5 reconstruction rejects non-unit secondary weight at line " +
                                              std::to_string(record.line_start));
         }
         if (record.ncol < 10 || record.ncol > 15 || record.region_before != context.region_id) return;
-        if (record.material_id != context.medium)
-            throw std::runtime_error("region 1000 maps to material ID " +
-                std::to_string(record.material_id) + ", expected EGS5 medium 2");
+        if (record.material_id != context.dumpall_material_id)
+            throw std::runtime_error("scoring region maps to Dumpall material ID " +
+                std::to_string(record.material_id) + ", expected " +
+                std::to_string(context.dumpall_material_id));
 
         const auto write_result = [&](DepositInput input, const char* process,
                                       double x, double y, double z,
@@ -211,7 +223,8 @@ int main(int argc, char** argv) try {
         }
 
     }, argv[1]);
-    std::cout << "records=" << summary.records << " histories=" << summary.histories
+    std::cout << (bi_research ? "BI_RESEARCH_UNVALIDATED " : "")
+              << "records=" << summary.records << " histories=" << summary.histories
               << " additions=" << next_id << " reconstructed=" << reconstructed
               << " unresolved=" << unresolved_count << " unsupported=" << unsupported_count
               << " not_scored_by_phits=" << not_scored_count

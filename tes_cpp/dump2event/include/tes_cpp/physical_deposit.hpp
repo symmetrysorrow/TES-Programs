@@ -17,9 +17,9 @@ enum class ScoreGateDecision { scored, not_scored, unresolved, invalid };
 ScoreGateDecision classify_dead_secondary_score(double kinetic_energy_mev,
                                                   std::optional<double> eletb1_mev) noexcept;
 
-// Explicitly scoped to the PHITS 3.341 / EGS5 lead validation described in
-// PHYSICAL_DEPOSIT_IMPLEMENTATION_PLAN.md. This is an experimental ledger
-// engine, not a general PHITS physics implementation.
+// Common PHITS 3.341 EGS5 stopping-power mathematics for Pb/Bi.
+// Only the Pb settings have been validated against same-run PHITS scoring.
+// Bi research mode must not be published as production HDF5 v2.
 struct Egs5StoppingRow {
     int medium{};
     std::string material;
@@ -66,6 +66,8 @@ struct PhysicalDepositContext {
     // This validated slice only covers unit particle weights and region 1000.
     bool unit_weights_only{true};
     std::optional<double> dead_secondary_score_threshold_mev{};
+    int dumpall_material_id{2};  // Distinct from EGS5 medium, even when numerically equal
+    bool bi_research_only{false};  // Never enables unvalidated Bi in public converter
 };
 
 struct DepositInput {

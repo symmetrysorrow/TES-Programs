@@ -66,3 +66,13 @@ HDF5 v2はPOINT／SEGMENT／UNRESOLVED、PHITS代表スコア点・区間端点�
 
 スキーマは`HDF5_V2_SCHEMA.md`、物理検証・適用範囲は
 `validation/dead_secondary_threshold_and_gamma_10k/FINAL_DECISION.md`を参照してください。
+
+## Pb / Bi material preparation
+
+The converter now recognizes **Pb and Bi** as the only selectable material
+identities. Pb remains the only material with approved PHITS same-run internal
+score verification. Bi has an explicit research-only material/medium mapping,
+source guard and HATCH SHA-256 input validation, but **normal Bi HDF5 v2
+publication is blocked** until independent Bi `[t-deposit]` oracle matching.
+Do not substitute Pb EDedx/PDedx or density for Bi; do not run expensive new
+10,000-history simulations to bypass this gate. See `BI_VALIDATION_PLAN.md`.

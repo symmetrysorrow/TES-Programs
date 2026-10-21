@@ -87,7 +87,7 @@ def run_pb_egs5_ui(questionary, convert):
     The caller injects questionary and tes_cpp.dump2event so this module does
     not duplicate any physics and can be tested with small mock inputs.
     """
-    print("PHITS 3.341 / Pb / EGS5 / 単位重み専用の実験的物理再構成です。")
+    print("PHITS 3.341 / Pb・Bi / EGS5物理再構成です。Pbのみ実測承認済み、Biは検証待ちです。")
     print("物理条件が異なる場合は変換が拒否されます。")
     print("HDF5 v2はPulse_Msへ直接渡せません。TES熱配分は未検証です。")
 
@@ -96,12 +96,18 @@ def run_pb_egs5_ui(questionary, convert):
         return None
     dump_path = _checked_input(dump_path, "Dumpall")
 
-    config_path = _ask_path(questionary, "Pb物理設定JSONを指定してください")
+    config_path = _ask_path(questionary, "Pb/Bi物理設定JSONを指定してください")
     if config_path is None:
         return None
     config_path = _checked_input(config_path, "物理設定JSON")
     phits_input = _read_contract_input(config_path)
-    print(f"設定に紐づくPHITS入力: {phits_input}")
+    configured_material = json.loads(config_path.read_text(encoding="utf-8-sig")).get("region_material", "Pb")
+    if configured_material not in ("Pb", "Bi"):
+        raise ValueError(f"非対応の材料です: {configured_material!r}（Pb/Biのみ）")
+    print(f"材料: {configured_material}、設定に紐づくPHITS入力: {phits_input}")
+    if configured_material == "Bi":
+        raise ValueError("BiはPHITS同一runの内部スコア照合と専用HATCH表の実証が未完了です。"
+                         "物理ledgerは研究用ですが、Bi HDF5 v2の生成は承認されていません。")
 
     table_path = _ask_path(questionary, "privateなPb HATCH停止能CSVを指定してください")
     if table_path is None:
