@@ -19,3 +19,12 @@ private Pb HATCH停止能CSV、出力先HDF5 v2を選択します。
 同時実行による誤接続も拒否します。全吸収や輸送全体の完全性を意味しません。
 
 テスト：`python -m pytest tes_cpp/dump2event/tests/test_pb_egs5_menu_ui.py -q`
+
+## Bi research status
+
+The material is read from the PHITS physics contract JSON (`region_material`).
+Pb is the previously validated single-material route. Bi is recognized but
+rejected **before** any HDF5 conversion because material-specific HATCH
+coefficients and same-run PHITS score-addition validation have not been
+established. The UI must never silently substitute Pb settings for Bi.
+See `tes_cpp/dump2event/BI_VALIDATION_PLAN.md`.
