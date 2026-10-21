@@ -1,62 +1,42 @@
 # tes_cpp
 
-PHITS の `dumpall.dat` 変換とパルス生成を同じ C++／Python パッケージで提供します。CLI は `dump2event` と `posi2pulse` です。
+PHITS 3.341のPb／EGS5物理deposit再構成と、独立したTESパルス関連ツールを
+提供するC++／Pythonパッケージです。
 
-```python
-from tes_cpp import posi2pulse
-
-# Python のリストとして受け取る
-pulses = posi2pulse("input.json", [1, 5, 10])
-
-# JSON ファイルに保存する（戻り値は Path）
-path = posi2pulse("input.json", [1, 5, 10], output_path="pulses.json")
-```
+## dump2event（HDF5 v2専用）
 
 ```python
 from tes_cpp import dump2event
 
-dump2event("dumpall.dat", "event.json", input_energy=1.0)
+result = dump2event(
+    "dumpall.dat", "event_pb_egs5_v2.h5",
+    physics_config="pb_config.json",
+    stopping_table="pb_hatch_private.csv",
+)
+print(result.output_path)
 ```
 
-position は既存コードと同じ、1 始まりの absorber block 番号です。JSON 出力は、再現用の
-`input`、共通の `time`、位置番号をキーとする `pulses` で構成されます。
+古い反応差分式／総和補正を使う変換器は削除しました。
+現在はPb、EGS5、単位重み等の検証済み条件のみサポートし、
+条件に合わなければエラーです。HDF5 v2を旧`Pulse_Ms`へ渡してはいけません。
+検証済み条件・入力設定は`dump2event/README.md`、
+HDF5構造は`dump2event/HDF5_V2_SCHEMA.md`を参照してください。
 
-```json
-{
-  "input": { "...": "input.json の内容" },
-  "time": [0.0, "..."],
-  "pulses": {
-    "1": { "ch0": ["..."], "ch1": ["..."] }
-  }
-}
+## posi2pulse
+
+```python
+from tes_cpp import posi2pulse
+pulses = posi2pulse("input.json", [1, 5, 10])
+# 現在のパルスAPI。新しいHDF5 v2の熱配分は未対応です。
 ```
 
-## `pulse_model.py` との一致確認
-
-`simu_py/input.json` を両実装に与え、`position` に含まれる全位置の
-CH0/CH1 と時刻配列を比較します。先に `posi2pulse` をビルドしてから実行します。
+### ビルド
 
 ```powershell
-python tes_cpp/tests/compare_with_pulse_model.py --executable build/tes_cpp/posi2pulse/Release/posi2pulse.exe
+cmake -S tes_cpp -B tes_cpp/build -DCMAKE_BUILD_TYPE=Release
+cmake --build tes_cpp/build --config Release
+python -m pip install .
 ```
 
-既定の許容差は相対誤差 `1e-8`、絶対誤差 `1e-16` です。別の同形式の
-入力は `--input path/to/input.json`、別のビルド成果物は `--executable` で指定できます。
-
-```powershell
-# TES-Programs のルートから実行する。build/ は配布物に含めない。
-cmake -S tes_cpp -B build/tes_cpp -DCMAKE_BUILD_TYPE=Release
-cmake --build build/tes_cpp --config Release
-
-# Python パッケージとして使う場合
-python -m pip install ./tes_cpp
-```
-
-ビルド時には CMake が Eigen 3.4、nlohmann/json 3.11 を自動取得します。ネットワークを使わない環境では、事前に CMake の `find_package` で検出できる場所に両依存を導入してください。
-
-`dump2json/` と `posi2pulse/` は兄弟の CMake コンポーネントです。ルートの
-`tes_cpp/CMakeLists.txt` は両方をまとめてビルドし、各サブディレクトリは単独でも
-構成できます。
-
-生成された `build/`、`tes_cpp/build-*` と `CMakeCache.txt` はマシン固有の
-絶対パスを含むため、配布物には含めず、展開先で上記の構成コマンドを実行します。
+外部のPHITS配布ソース・private停止能係数表や生Dumpallはパッケージへ
+組み込まず、実行時にユーザーが指定します。
