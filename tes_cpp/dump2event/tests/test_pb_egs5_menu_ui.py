@@ -67,7 +67,7 @@ def _fake_hdf5(path):
 
 def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
-    fake = FakeQuestionary([raw, config, output])
+    fake = FakeQuestionary([raw, config, table, output])
     calls = []
 
     def convert(*args, **kwargs):
@@ -80,6 +80,7 @@ def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     assert calls == [((raw.resolve(), output), {
         "physics": "pb-egs5",
         "physics_config": config.resolve(),
+        "stopping_table": table.resolve(),
     })]
     assert _inspect_v2(output)["deposits"] == 2
     assert "event_pb_egs5_v2.h5" in fake.default_paths[-1]
@@ -89,7 +90,7 @@ def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
     output.write_text("do not replace")
     with pytest.raises(FileExistsError):
-        run_pb_egs5_ui(FakeQuestionary([raw, config, output]),
+        run_pb_egs5_ui(FakeQuestionary([raw, config, table, output]),
                        lambda *args, **kwargs: pytest.fail("unexpected converter call"))
     assert output.read_text() == "do not replace"
 
@@ -105,7 +106,7 @@ def test_pb_ui_rejects_missing_phits_input(tmp_path):
 def test_pb_ui_cancelled_before_conversion(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
     assert run_pb_egs5_ui(
-        FakeQuestionary([raw, config, output], confirmed=False),
+        FakeQuestionary([raw, config, table, output], confirmed=False),
         lambda *args, **kwargs: pytest.fail("unexpected converter call"),
     ) is None
     assert not output.exists()
@@ -135,3 +136,21 @@ def test_bi_menu_rejects_unvalidated_material_before_conversion(tmp_path):
             lambda *args, **kwargs: pytest.fail("Bi must not enter converter yet"),
         )
     assert not output.exists()
+
+
+def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
+    raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: True)
+    dialog = FakeQuestionary([raw, config, output])
+    kwargs_seen = []
+
+    def convert(*args, **kwargs):
+        kwargs_seen.append(kwargs)
+        _fake_hdf5(output)
+        return SimpleNamespace(output_path=output)
+
+    run_pb_egs5_ui(dialog, convert)
+    assert len(dialog.default_paths) == 3  # no stopping-table picker
+    assert "stopping_table" not in kwargs_seen[0]
+    assert kwargs_seen[0]["physics_config"] == config.resolve()
