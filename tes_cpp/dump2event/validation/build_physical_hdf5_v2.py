@@ -35,21 +35,157 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def canonical_json(value: object) -> bytes:
+    """Stable UTF-8 representation for semantic configuration hashes."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def source_definition(source_lines: list[str]) -> dict:
+    """Parse only the explicitly supported unit-intensity source definitions."""
+    values: dict[str, str] = {}
+    energies: list[tuple[float, float]] = []
+    for line in source_lines:
+        if "=" in line:
+            key, value = line.split("=", 1)
+            values[re.sub(r"\s+", "", key).lower()] = value.strip()
+            continue
+        fields = line.split()
+        if len(fields) == 2:
+            try:
+                energies.append((float(fields[0]), float(fields[1])))
+            except ValueError:
+                continue
+    allowed = (([1.173, 1.332], "co60-lines"), ([0.511], "mono-gamma-511keV"),
+               ([2.0], "mono-gamma-2MeV"))
+    match = None
+    for expected, mode in allowed:
+        if len(energies) == len(expected) and all(
+                abs(got[0] - want) < 1e-12 and abs(got[1] - 1.0) < 1e-12
+                for got, want in zip(energies, expected)):
+            match = (expected, mode)
+            break
+    if match is None:
+        raise ValueError("source must be unit-intensity Co-60 lines or mono gamma at 0.511/2.0 MeV")
+    expected, mode = match
+    if values.get("totfact", "").split()[:1] not in (["1"], ["1.0"], ["1.00"]):
+        raise ValueError("source must set unit totfact=1")
+    if mode != "co60-lines":
+        if values.get("proj", "").lower() != "photon":
+            raise ValueError("mono gamma source must set proj=photon")
+        if values.get("e-type", "") != "8" or values.get("ne", "") != "1":
+            raise ValueError("mono gamma source must set e-type=8 and ne=1")
+        if values.get("wgt", "1").split()[:1] not in (["1"], ["1.0"], ["1.00"]):
+            raise ValueError("mono gamma source must use unit wgt=1")
+    return {"source_mode": mode, "source_particle": "photon", "source_energies_MeV": expected}
+
+
+def resolved_physics(settings: dict, source_input: Path) -> dict:
+    """Return canonical effective model settings, excluding paths and byte hashes."""
+    text = source_input.read_text(encoding="utf-8-sig", errors="replace")
+    sections: dict[str, list[str]] = {}
+    active = ""
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            active = re.sub(r"\s+", "", line[1:-1]).lower()
+            sections.setdefault(active, [])
+        elif active:
+            sections[active].append(line)
+    return {
+        "phits_version": str(settings["phits_version"]),
+        "region_id": int(settings["region_id"]),
+        "region_material": str(settings["region_material"]).upper(),
+        "dumpall_material_id": int(settings["dumpall_material_id"]),
+        "egs5_medium": int(settings["egs5_medium"]),
+        "electron_cutoff_MeV": float(settings["electron_cutoff_MeV"]),
+        "positron_cutoff_MeV": float(settings["positron_cutoff_MeV"]),
+        "weight_mode": str(settings["weight_mode"]).lower(),
+        "energy_unit": str(settings["energy_unit"]),
+        "deposit_mode": str(settings["deposit_mode"]),
+        "algorithm_version": "pb-egs5-exp-v2-positron",
+        **source_definition(sections.get("source", [])),
+    }
+
+
 def physics_config(source_input: Path, config_path: Path | None = None):
     source_text = source_input.read_text(encoding="utf-8-sig", errors="replace")
     seed_match = re.search(r"(?im)^\s*bitrseed\s*=\s*([01]{64})\s*(?:#.*)?$", source_text)
     if not seed_match:
         raise ValueError("PHITS source input must declare a 64-bit binary bitrseed for reproducible provenance")
+    sections: dict[str, list[str]] = {}
+    active = ""
+    for raw in source_text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            active = re.sub(r"\s+", "", line[1:-1]).lower()
+            sections.setdefault(active, [])
+        elif active:
+            sections[active].append(line)
+    source = source_definition(sections.get("source", []))
     return {
         "phits_version": "3.341", "region_id": 1000, "region_material": "PB",
         "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
         "weights": "unit-weight validated slice only", "diagnostic_mode": True,
+        **source,
         "unsupported_processes": "stored UNRESOLVED; never old-formula fallback",
         "source_input_sha256": sha256(source_input),
         "source_seed_bits": seed_match.group(1),
-        "physics_config_file_sha256": sha256(config_path) if config_path else "legacy-input-mode",
         "position_semantics": "raw transport chords and raw child point; scorer representative coordinate kept separate",
     }
+
+
+def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
+                        source_input: Path, dumpall: Path, stopping_table: Path,
+                        converter_executable: Path | None = None,
+                        reconstructor: Path | None = None,
+                        track_exporter: Path | None = None) -> dict:
+    """Build distinct byte-level and semantic hashes for the HDF5 v2 provenance."""
+    settings = physics_settings or {
+        "phits_version": "3.341", "region_id": 1000, "region_material": "Pb",
+        "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
+        "positron_cutoff_MeV": 0.001, "weight_mode": "unit", "energy_unit": "MeV",
+        "deposit_mode": "t-deposit-output-deposit",
+    }
+    resolved = resolved_physics(settings, source_input)
+    resolved_hash = hashlib.sha256(canonical_json(resolved)).hexdigest()
+    input_hash = sha256(source_input)
+    physics = physics_config(source_input)
+    metadata = {
+        "provenance_schema_revision": 2,
+        # Kept as a v2 compatibility alias, now defined identically to resolved_physics_sha256.
+        "physics_config_sha256": resolved_hash,
+        "resolved_physics_sha256": resolved_hash,
+        "phits_input_sha256": input_hash,
+        "source_input_sha256": input_hash,
+        "dumpall_sha256": sha256(dumpall),
+        "stopping_table_sha256": sha256(stopping_table),
+        "phits_version": str(settings["phits_version"]),
+        "resolved_physics_json": canonical_json(resolved).decode("utf-8"),
+        "source_mode": physics["source_mode"],
+        "source_energy_MeV": ",".join(format(x, ".12g") for x in physics["source_energies_MeV"]),
+        "reconstruction_algorithm_version": "pb-egs5-exp-v2-positron",
+        "validation_scope": "PHITS-3.341; Pb region 1000; unit-weight; validated EGS5 process subset",
+        "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
+        "driver_sha256": sha256(Path(__file__).resolve()),
+    }
+    if config_path is not None:
+        metadata["physics_contract_sha256"] = sha256(config_path)
+        contract = json.loads(config_path.read_text(encoding="utf-8"))
+        phits_executable_sha = contract.get("phits_executable_sha256")
+        if phits_executable_sha is not None:
+            if not re.fullmatch(r"[0-9a-fA-F]{64}", str(phits_executable_sha)):
+                raise ValueError("phits_executable_sha256 in physics contract must be a 64-character SHA-256 digest")
+            metadata["phits_executable_sha256"] = str(phits_executable_sha).lower()
+    for key, path in (("converter_executable_sha256", converter_executable),
+                      ("reconstructor_executable_sha256", reconstructor),
+                      ("transport_exporter_sha256", track_exporter)):
+        if path is not None:
+            metadata[key] = sha256(path)
+    return metadata
 
 
 def validate_source_input(path: Path) -> None:
@@ -91,12 +227,7 @@ def validate_source_input(path: Path) -> None:
     cell_lines = sections.get("cell", [])
     if not any(re.match(r"1000\s+2\s+-9\.78(?:\s|$)", line) for line in cell_lines):
         raise ValueError("source input must define region 1000 with Dumpall material 2 and Pb density -9.78")
-    source = sections.get("source", [])
-    if not any(re.match(r"totfact\s*=\s*1(?:\.0*)?(?:\s|$)", line) for line in source):
-        raise ValueError("source input must use unit totfact=1")
-    if not any(re.match(r"1\.173(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source) or \
-       not any(re.match(r"1\.332(?:\.0*)?\s+1(?:\.0*)?$", line) for line in source):
-        raise ValueError("source input must explicitly contain 1.173 and 1.332 MeV unit-intensity lines")
+    source_definition(sections.get("source", []))
     tally = values("t-deposit")
     expected_tally = {"mesh": "reg", "reg": "1000", "part": "all", "deposit": "0",
                       "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
@@ -155,7 +286,7 @@ def take(group_iter, current, event_id):
     return [], current
 
 
-def run(args, writer: EventV2Writer) -> dict:
+def run(args, writer: EventV2Writer, provenance: dict) -> dict:
     for path in (args.dumpall, args.stopping_table, args.reconstructor, args.track_exporter):
         if not path.is_file():
             raise FileNotFoundError(path)
@@ -175,8 +306,6 @@ def run(args, writer: EventV2Writer) -> dict:
     if parse_run.returncode != 0:
         raise RuntimeError(f"raw transport export failed: rc={parse_run.returncode}\n{parse_run.stderr}")
 
-    config = physics_config(args.source_input)
-    config_hash = hashlib.sha256(json.dumps(config, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     track_groups = iter(groups(track_path))
     ledger_groups = iter(groups(ledger_path))
     next_tracks = next(track_groups, None)
@@ -263,8 +392,7 @@ def run(args, writer: EventV2Writer) -> dict:
     return {
         "input_dumpall": str(args.dumpall), "input_bytes": args.dumpall.stat().st_size,
         "dumpall_sha256": sha256(args.dumpall), "stopping_table_sha256": sha256(args.stopping_table),
-        "source_input_sha256": config["source_input_sha256"],
-        "physics_config_sha256": config_hash, "phits_version": "3.341",
+        **provenance,
         "physical_ledger_exit_code": ledger_run.returncode,
         "physical_ledger_stdout": ledger_run.stdout.strip(), "transport_export_stdout": parse_run.stdout.strip(),
         "events": event_count, "particles": particle_count, "tracks": track_count,
@@ -283,6 +411,8 @@ def main() -> int:
                         help="explicit JSON contract for the experimental Pb EGS5 mode")
     parser.add_argument("--reconstructor", type=Path, required=True)
     parser.add_argument("--track-exporter", type=Path, required=True)
+    parser.add_argument("--converter-executable", type=Path,
+                        help="the dump2event executable that launched this driver")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--work-dir", type=Path,
                         help="optional scratch directory (otherwise a private temporary directory is used)")
@@ -301,17 +431,16 @@ def main() -> int:
             physics_data = None
         # The writer is held open only for this conversion. Output publication is
         # atomic; input data and existing destinations are never modified.
-        physics = physics_config(args.source_input, args.physics_config)
-        if physics_data is not None:
-            physics["physics_settings"] = physics_data
-        config = {"phits_version": "3.341", "dumpall_sha256": sha256(args.dumpall),
-                  "physics_config_sha256": hashlib.sha256(json.dumps(physics, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
-                  "stopping_table_sha256": sha256(args.stopping_table), "material": "Pb",
-                  "medium": "2", "cutoff_MeV": "0.001", "algorithm_version": "pb-egs5-exp-v2-positron",
+        physics = physics_config(args.source_input)
+        provenance = provenance_metadata(physics_data, args.physics_config,
+                                         args.source_input, args.dumpall, args.stopping_table,
+                                         args.converter_executable, args.reconstructor, args.track_exporter)
+        config = {**provenance, "material": "Pb", "medium": "2", "cutoff_MeV": "0.001",
+                  "algorithm_version": "pb-egs5-exp-v2-positron",
                   "position_semantics": physics["position_semantics"],
-                  "source_input_sha256": physics["source_input_sha256"],
                   "unsupported_processes": physics["unsupported_processes"],
                   "weights": physics["weights"], "diagnostic_mode": True,
+                  "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
                   "complete_semantics": "per-event candidate scoring complete only when no UNRESOLVED rows remain",
                   "dumpall_structure_semantics": "conversion requires terminal NCOL=2",
                   "transport_physics_completeness": "undetermined",
@@ -326,7 +455,7 @@ def main() -> int:
             else:
                 args.work_dir = Path(scratch)
             with EventV2Writer(args.output, config) as writer:
-                result = run(args, writer)
+                result = run(args, writer, provenance)
         result["output_bytes"] = args.output.stat().st_size
         result["elapsed_seconds"] = time.perf_counter() - started
         print(json.dumps(result, indent=2))

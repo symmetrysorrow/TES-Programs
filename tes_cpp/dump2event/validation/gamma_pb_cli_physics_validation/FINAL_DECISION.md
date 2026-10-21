@@ -1,0 +1,7 @@
+# Final decision
+
+The exact-sequence PHITS 3.341 runs completed at 100 and 1,000 histories for 0.511 MeV; 2 MeV completed at 100 and 1,000 histories. Same-run HDF5 v2 publication and addition/position comparisons succeeded for 0.511 MeV at 100/1,000 histories and 2 MeV at 100 histories. For 2 MeV/1,000, the ordinary Pb CLI correctly refused publication because one sub-1e-6 MeV dead electron secondary lacks an explicit resolved PHITS `esmin` threshold. The 5,978,912 supported raw-ledger additions match PHITS internals within 4.69e-14 MeV, and the raw-only unit=3 150-bin history histogram matches exactly; complete HDF5 and full spatial readback remain unavailable for that run.
+
+HDF5 v2 provenance now distinguishes contract-byte and resolved-physics hashes, checks canonical resolved JSON, records executable/input/source/data digests, and verifies CLI/HDF5 readback. The ordinary default converter smoke test remains successful. The independent-seed Co-60 histogram difference remains unexplained, and the existing Co-60 10,000-history CLI run still fails closed on a malformed NCOL=4 row. No fresh 10,000-history mono-gamma run was made.
+
+**Decision:** keep `pb-egs5` opt-in as a research path. The supported 0.511 MeV and 2 MeV/100 slices passed; partial physics remains fail-closed. Push is appropriate only as explicitly experimental code with the unresolved 2 MeV threshold case and independent-seed limitation documented. Do not modify or promote PR #6.

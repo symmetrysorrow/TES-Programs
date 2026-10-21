@@ -106,7 +106,7 @@ int run_pb_physics(int argc, char** argv) {
     std::vector<std::string> args{python, driver.string(), "--dumpall", input.string(),
         "--physics-config", config, "--stopping-table", stopping,
         "--reconstructor", reconstructor.string(), "--track-exporter", exporter.string(),
-        "--output", output.string()};
+        "--converter-executable", exe.string(), "--output", output.string()};
 #ifdef _WIN32
     std::vector<std::wstring> wide_args;
     wide_args.reserve(args.size() + 1);

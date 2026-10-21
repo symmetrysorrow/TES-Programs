@@ -1,0 +1,7 @@
+# Photon and electron energy accounting
+
+The normal CLI HDF5 v2 output is checked against PHITS `tlv` addition-by-addition, rather than comparing only parent-minus-child energy. At 0.511 MeV, 250,938/250,938 additions were reconstructed, with zero negative or unresolved rows; at 2 MeV, 549,639/549,639 additions were reconstructed, also with zero negative or unresolved rows. Maximum HDF5-to-`tlv` differences were respectively `2.1765141772212004e-14` and `4.5173934037912034e-14 MeV`.
+
+The observed 2 MeV ledger classifies 534,262 continuous EGS5 electron contributions (83.14071710840383 MeV), 11,011 electron cutoff contributions (11.076523887160953 MeV), 10 electron boundary contributions (0.02143825466993763 MeV), 4 dead electron secondaries from electron-parent records (0.0012814053952309168 MeV), and 270 dead electron secondaries from photon-parent records (0.7899957718337252 MeV). Their locations and regions were also matched to PHITS internal scoring rows in the 100-history join.
+
+This is not a claim that the tally score is an event-wide energy-balance proof. Escaping photons and electrons remain transport energy; histogram under/overflow and zero-deposit events are counted separately. Pair-production rest mass is not scored as a second local term in addition to the emitted annihilation photons. The 0.511 MeV case produced no positrons; the 2 MeV sample had 13 transported positron tracks.

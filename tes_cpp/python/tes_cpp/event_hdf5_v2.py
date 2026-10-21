@@ -6,6 +6,8 @@ It is a storage/API layer; it does not reconstruct physics or assign TES blocks.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -88,11 +90,45 @@ class EventV2Writer:
             else:
                 self.provenance.attrs[key] = value if isinstance(
                     value, (str, int, float, bool, np.integer, np.floating)) else str(value)
-        for key in ("dumpall_sha256", "physics_config_sha256", "stopping_table_sha256"):
+        hash_keys = ["dumpall_sha256", "physics_config_sha256", "stopping_table_sha256"]
+        for key in ("physics_contract_sha256", "resolved_physics_sha256", "phits_input_sha256",
+                    "converter_executable_sha256", "reconstructor_executable_sha256",
+                    "transport_exporter_sha256", "driver_sha256", "phits_executable_sha256"):
+            if key in provenance:
+                hash_keys.append(key)
+        for key in hash_keys:
             if not re.fullmatch(r"[0-9a-fA-F]{64}", str(provenance[key])):
                 self.file.close()
                 self.temporary_path.unlink(missing_ok=True)
                 raise ValueError(f"{key} must be a 64-character SHA-256 hex digest")
+        revision = int(provenance.get("provenance_schema_revision", 1))
+        if revision >= 2:
+            if ("resolved_physics_sha256" not in provenance or
+                    "physics_contract_sha256" not in provenance or
+                    "resolved_physics_json" not in provenance):
+                self.file.close()
+                self.temporary_path.unlink(missing_ok=True)
+                raise ValueError("provenance revision 2 requires contract SHA, resolved JSON, and resolved SHA")
+            if str(provenance["physics_config_sha256"]).lower() != str(provenance["resolved_physics_sha256"]).lower():
+                self.file.close()
+                self.temporary_path.unlink(missing_ok=True)
+                raise ValueError("physics_config_sha256 is a compatibility alias and must equal resolved_physics_sha256")
+            try:
+                parsed = json.loads(str(provenance["resolved_physics_json"]))
+                canonical = json.dumps(parsed, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+            except (TypeError, ValueError) as error:
+                self.file.close()
+                self.temporary_path.unlink(missing_ok=True)
+                raise ValueError("resolved_physics_json must be valid canonical JSON") from error
+            if canonical.decode("utf-8") != str(provenance["resolved_physics_json"]):
+                self.file.close()
+                self.temporary_path.unlink(missing_ok=True)
+                raise ValueError("resolved_physics_json must use sorted compact canonical UTF-8 JSON")
+            resolved_digest = hashlib.sha256(canonical).hexdigest()
+            if resolved_digest != str(provenance["resolved_physics_sha256"]).lower():
+                self.file.close()
+                self.temporary_path.unlink(missing_ok=True)
+                raise ValueError("resolved_physics_sha256 does not match resolved_physics_json")
 
         self.events = self.file.create_group("events")
         self.particles = self.file.create_group("particles")

@@ -77,8 +77,33 @@ actual sources; placeholder hashes are only suitable for tests.
 Additional scalar attributes are preserved when provided, including
 `source_input_sha256`, region/material IDs, weight assumptions, and diagnostic
 mode. These are experiment metadata and do not change the v2 dataset layout.
-The current real-Dumpall Pb experiment records the hashes of the actual PHITS
-input, Dumpall, stopping table, and canonical configuration.
+Provenance revision 2 distinguishes byte identity from semantic settings:
+
+| Attribute | Meaning |
+|---|---|
+| `physics_contract_sha256` | SHA-256 of the exact user-supplied JSON contract bytes, including whitespace and key order. |
+| `resolved_physics_sha256` | SHA-256 of the canonical UTF-8 JSON for the resolved, supported semantic settings. |
+| `physics_config_sha256` | Compatibility alias for `resolved_physics_sha256`; revision 2 requires equality. |
+| `phits_input_sha256` / `source_input_sha256` | SHA-256 of the exact PHITS input bytes used for the run. |
+| `dumpall_sha256` | SHA-256 of the exact converted Dumpall bytes. |
+| `stopping_table_sha256` | SHA-256 of the exact stopping coefficient table bytes. |
+| `phits_executable_sha256` | Optional SHA-256 supplied by the run contract for the PHITS executable. |
+| `converter_executable_sha256` | SHA-256 of the `dump2event` executable that launched the v2 driver. |
+| `reconstructor_executable_sha256` / `transport_exporter_sha256` | SHA-256 of the C++ physical-ledger and raw-transport helper executables. |
+| `driver_sha256` | SHA-256 of the Python HDF5 v2 builder script. |
+
+Revision 2 also stores `resolved_physics_json`, the canonical semantic object
+whose digest is `resolved_physics_sha256`. It deliberately excludes file paths,
+random seed text, and byte-level hashes. The PHITS input byte digest separately
+identifies those exact input bytes. Readers treat a v2 file with no
+`provenance_schema_revision` as revision 1 and preserve its existing meaning;
+the on-disk datasets and version number do not change.
+
+The resolved object is limited to the settings explicitly parsed by the
+experimental Pb workflow. It is not a complete canonicalization of every PHITS
+geometry, source, or transport card; consumers must retain the PHITS input hash
+and must not interpret this field as proof that all input semantics were
+captured.
 
 ## Writer and reader API
 
