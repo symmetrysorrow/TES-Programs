@@ -3237,7 +3237,7 @@ def _run_interactive():
             value="pulse_noise",
         ),
         questionary.Choice(
-            "Pb EGS5物理depositをHDF5 v2へ変換（パルス未接続）",
+            "Pb EGS5物理deposit → HDF5 v2（Biは物理検証待ち）",
             value="dump_to_event",
         ),
         questionary.Choice(
