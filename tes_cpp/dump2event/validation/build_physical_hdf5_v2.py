@@ -108,6 +108,41 @@ def resolved_esmin_MeV(source_input: Path, phits_version: str) -> float:
     return value
 
 
+def material_settings(contract: dict) -> dict:
+    """Resolve explicit Pb/Bi single-material contracts without inventing Bi properties."""
+    element = contract.get("region_material")
+    if element not in ("Pb", "Bi"):
+        raise ValueError("region_material must be Pb or Bi (no alloys/other materials)")
+    if element == "Pb":
+        expected = {"region_id": 1000, "dumpall_material_id": 2, "egs5_medium": 2}
+        for key, value in expected.items():
+            if contract.get(key) != value:
+                raise ValueError(f"validated Pb {key} must be {value}")
+        density = contract.get("cell_density_g_cm3", 9.78)
+        if type(density) not in (int, float) or float(density) != 9.78:
+            raise ValueError("validated Pb cell density must be 9.78 g/cm3")
+        return {**expected, "region_material": "Pb", "cell_density_g_cm3": 9.78,
+                "validation_status": "PB_SAME_RUN_VALIDATED"}
+    for key in ("region_id", "dumpall_material_id", "egs5_medium"):
+        value = contract.get(key)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"Bi {key} must be an explicitly configured positive integer")
+    density = contract.get("cell_density_g_cm3")
+    if type(density) not in (int, float) or not (float("inf") > float(density) > 0.0):
+        raise ValueError("Bi cell_density_g_cm3 is required; never infer a Pb or tabulated density")
+    hash_value = contract.get("stopping_table_sha256")
+    if not isinstance(hash_value, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", hash_value):
+        raise ValueError("Bi requires the exact private HATCH stopping_table_sha256")
+    return {
+        "region_material": "Bi", "region_id": contract["region_id"],
+        "dumpall_material_id": contract["dumpall_material_id"],
+        "egs5_medium": contract["egs5_medium"],
+        "cell_density_g_cm3": float(density),
+        "stopping_table_sha256": hash_value.lower(),
+        "validation_status": "BI_PENDING_PHITS_ORACLE",
+    }
+
+
 def resolved_physics(settings: dict, source_input: Path) -> dict:
     """Return canonical effective model settings, excluding paths and byte hashes."""
     text = source_input.read_text(encoding="utf-8-sig", errors="replace")
@@ -137,6 +172,7 @@ def resolved_physics(settings: dict, source_input: Path) -> dict:
         "energy_unit": str(settings["energy_unit"]),
         "deposit_mode": str(settings["deposit_mode"]),
         "algorithm_version": "pb-egs5-exp-v3-score-gate",
+        "material_validation_status": material_settings(settings)["validation_status"],
         **source_definition(sections.get("source", [])),
     }
 
@@ -223,8 +259,10 @@ def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
     return metadata
 
 
-def validate_source_input(path: Path) -> None:
-    """Fail closed unless the input explicitly matches the validated Pb slice."""
+def validate_source_input(path: Path, contract: dict | None = None) -> None:
+    """Validate a one-material PHITS scoring input without asserting Bi oracle closure."""
+    model = material_settings(contract or {"region_material": "Pb", "region_id": 1000,
+                                                "dumpall_material_id": 2, "egs5_medium": 2})
     text = path.read_text(encoding="utf-8-sig", errors="replace")
     active = ""
     sections: dict[str, list[str]] = {}
@@ -257,18 +295,32 @@ def validate_source_input(path: Path) -> None:
     if not re.fullmatch(r"[01]{64}", seed):
         raise ValueError("source input must set an explicit 64-bit binary bitrseed")
     material_lines = sections.get("material", [])
-    if not any(re.match(r"mat\s*\[\s*2\s*\]\s+pb\s+1(?:\s|$)", line) for line in material_lines):
-        raise ValueError("source input must define mat[2] as pure Pb")
+    material_id = model["dumpall_material_id"]
+    element = model["region_material"].lower()
+    expected_material = rf"mat\s*\[\s*{material_id}\s*\]\s+{element}\s+1(?:\s|$)"
+    if not any(re.match(expected_material, line) for line in material_lines):
+        raise ValueError(f"source input must define mat[{material_id}] as pure {model['region_material']}")
     cell_lines = sections.get("cell", [])
-    if not any(re.match(r"1000\s+2\s+-9\.78(?:\s|$)", line) for line in cell_lines):
-        raise ValueError("source input must define region 1000 with Dumpall material 2 and Pb density -9.78")
+    region = model["region_id"]
+    density = model["cell_density_g_cm3"]
+    # Match only the region's single-cell definition, never an unrelated material.
+    cell_matches = [
+        re.match(rf"^{region}\s+(\d+)\s+(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)(?:\s|$)", line)
+        for line in cell_lines if re.match(rf"^{region}(?:\s|$)", line)
+    ]
+    if len(cell_matches) != 1 or cell_matches[0] is None:
+        raise ValueError(f"source input must define exactly one simple cell for region {region}")
+    found_material = int(cell_matches[0].group(1))
+    found_density = float(cell_matches[0].group(2))
+    if found_material != material_id or found_density != -density:
+        raise ValueError(f"region {region} requires material {material_id} and density -{density:g}")
     source_definition(sections.get("source", []))
     esmin = resolved_esmin_MeV(path, "3.341")
     # Force evaluation now; the exact score gate is captured in physics config and provenance.
     if not (esmin > 0.0 and esmin < float("inf")):
         raise ValueError("PHITS 3.341 esmin did not resolve to a finite positive value")
     tally = values("t-deposit")
-    expected_tally = {"mesh": "reg", "reg": "1000", "part": "all", "deposit": "0",
+    expected_tally = {"mesh": "reg", "reg": str(model["region_id"]), "part": "all", "deposit": "0",
                       "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
                       "emin": "0.0", "emax": "1.5"}
     for key, expected in expected_tally.items():
@@ -277,11 +329,11 @@ def validate_source_input(path: Path) -> None:
             raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
 
 
-def load_physics_config(path: Path) -> tuple[dict, Path]:
+def load_physics_config(path: Path, *, allow_pending_bi: bool = False) -> tuple[dict, Path]:
     data = json.loads(path.read_text(encoding="utf-8"))
+    model = material_settings(data)
     expected = {
-        "phits_version": "3.341", "region_id": 1000, "region_material": "Pb",
-        "dumpall_material_id": 2, "egs5_medium": 2,
+        "phits_version": "3.341",
         "electron_cutoff_MeV": 0.001, "positron_cutoff_MeV": 0.001,
         "weight_mode": "unit", "energy_unit": "MeV", "deposit_mode": "t-deposit-output-deposit",
     }
@@ -296,7 +348,9 @@ def load_physics_config(path: Path) -> tuple[dict, Path]:
         source_input = (path.parent / source_input).resolve()
     if not source_input.is_file():
         raise FileNotFoundError(f"PHITS input from physics config not found: {source_input}")
-    validate_source_input(source_input)
+    validate_source_input(source_input, data)
+    if model["region_material"] == "Bi" and not allow_pending_bi:
+        raise ValueError("Bi physics is not yet PHITS-oracle validated; HDF5 publication is disabled")
     resolved_esmin = resolved_esmin_MeV(source_input, str(data["phits_version"]))
     if float(data.get("esmin_MeV", float("nan"))) != resolved_esmin:
         raise ValueError(f"physics config esmin_MeV {data.get('esmin_MeV')!r} does not match resolved PHITS value {resolved_esmin}")
