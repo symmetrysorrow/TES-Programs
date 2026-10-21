@@ -1,3 +1,9 @@
+"""PHITS 3.341 / Pb EGS5 -> HDF5 v2 physical converter.
+
+The old signed reaction-difference / normalization converter is removed.
+Only the bounded physical score reconstruction is supported.  No automatic
+TES position allocation or Pulse_Ms handoff is performed.
+"""
 from __future__ import annotations
 
 import os
@@ -11,7 +17,6 @@ from shutil import which
 @dataclass(frozen=True)
 class Dump2EventResult:
     output_path: Path
-    full_energy_event_ids: tuple[int, ...]
 
 
 def _executable() -> str:
@@ -38,67 +43,43 @@ def dump2event(
     dump_path: str | Path,
     output_path: str | Path,
     *,
-    input_energy: float | None = None,
-    save_all: bool = False,
-    full_energy_only: bool = False,
-    normalize_deposits: bool = False,
-    reaction_audit: str | Path | None = None,
-    reaction_audit_all: bool = False,
-    physics: str | None = None,
     physics_config: str | Path | None = None,
     stopping_table: str | Path | None = None,
+    physics: str = "pb-egs5",
+    **removed_legacy_options: object,
 ) -> Dump2EventResult:
-    """Convert ``dumpall.dat`` into event JSON or ``.h5`` data.
+    """Convert a validated Pb/EGS5 Dumpall into an HDF5 v2 event ledger.
 
-    HDF5 conversion is streaming, so Python never loads the full native JSON
-    document into memory. ``physics="pb-egs5"`` selects an experimental,
-    fail-closed PHITS 3.341 / Pb / unit-weight HDF5 v2 path; it does not change
-    the default conversion behavior.
+    Required input contract: PHITS 3.341, Pb region 1000, material 2,
+    EGS5 medium 2, 1-keV charged cutoffs, unit weights and the matching
+    private stopping-power table.  The native driver validates the PHITS
+    input and fails closed for unsupported physics.
+
+    Any former legacy option (including input_energy, save_all, and
+    full_energy_only) raises instead of selecting an unphysical formula.
     """
+    if removed_legacy_options:
+        raise ValueError(
+            "old dump2event options were removed: "
+            + ", ".join(sorted(removed_legacy_options))
+            + "; use physics_config and stopping_table for HDF5 v2"
+        )
+    if physics != "pb-egs5":
+        raise ValueError("only PHITS 3.341 Pb/EGS5 physical reconstruction is supported")
+    if physics_config is None or stopping_table is None:
+        raise ValueError("Pb EGS5 requires physics_config and stopping_table")
+    dump = Path(dump_path)
+    config = Path(physics_config)
+    table = Path(stopping_table)
     output = Path(output_path)
-    command = [_executable(), str(dump_path), str(output)]
-    if physics is not None:
-        if physics != "pb-egs5":
-            raise ValueError("physics must be None or the experimental 'pb-egs5' mode")
-        if physics_config is None or stopping_table is None:
-            raise ValueError("pb-egs5 requires physics_config and stopping_table")
-        config = Path(physics_config)
-        table = Path(stopping_table)
-        if not config.is_file():
-            raise FileNotFoundError(f"physics_config does not exist: {config}")
-        if not table.is_file():
-            raise FileNotFoundError(f"stopping_table does not exist: {table}")
-        if output.suffix.lower() not in {".h5", ".hdf5"}:
-            raise ValueError("pb-egs5 mode writes HDF5 v2; output must end in .h5 or .hdf5")
-        if save_all or full_energy_only or normalize_deposits or reaction_audit or reaction_audit_all:
-            raise ValueError("legacy event-selection/audit options are not supported in pb-egs5 mode")
-        command += ["--physics", physics, "--hdf5-version", "2",
-                    "--physics-config", str(config), "--stopping-table", str(table)]
-    else:
-        if physics_config is not None or stopping_table is not None:
-            raise ValueError("physics_config/stopping_table require explicit physics='pb-egs5'")
-        if input_energy is None:
-            raise ValueError("input_energy is required for the default converter")
-        command += ["--input-energy", str(input_energy)]
-    index_path = output.with_name("FullEnergyList.dat")
-    if save_all:
-        command += ["--save-all"]
-    if save_all or full_energy_only:
-        command += ["--full-energy-list", str(index_path)]
-    if full_energy_only:
-        command += ["--full-energy-only"]
-    if normalize_deposits:
-        if physics is not None:
-            raise ValueError("--normalize-deposits is incompatible with pb-egs5 physical reconstruction")
-        command += ["--normalize-deposits"]
-    if reaction_audit_all and reaction_audit is None:
-        raise ValueError("reaction_audit_all requires reaction_audit")
-    if reaction_audit is not None:
-        command += ["--reaction-audit", str(reaction_audit)]
-    if reaction_audit_all:
-        command += ["--reaction-audit-all"]
+    if output.suffix.lower() not in {".h5", ".hdf5"}:
+        raise ValueError("physical dump2event output must be HDF5 v2 (.h5/.hdf5)")
+    for name, path in (("Dumpall", dump), ("physics_config", config), ("stopping_table", table)):
+        if not path.is_file():
+            raise FileNotFoundError(f"{name} does not exist: {path}")
+    if output.exists():
+        raise FileExistsError(f"output already exists; will not overwrite: {output}")
+    command = [_executable(), str(dump), str(output),
+               "--physics-config", str(config), "--stopping-table", str(table)]
     subprocess.run(command, check=True)
-    event_ids = ()
-    if (save_all or full_energy_only) and index_path.exists():
-        event_ids = tuple(int(line) for line in index_path.read_text().splitlines() if line)
-    return Dump2EventResult(output_path=output, full_energy_event_ids=event_ids)
+    return Dump2EventResult(output_path=output)
