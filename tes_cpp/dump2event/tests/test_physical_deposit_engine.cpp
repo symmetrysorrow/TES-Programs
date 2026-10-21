@@ -103,6 +103,7 @@ int main() try {
         // These numbers are NOT HATCH measurements and validate no Bi physics.
         table << "5,BI,1,10,1,9,0,8,0,10,10\n";
         table << "5,BI,3,10,1,4,0,3,0,10,10\n";
+        table << "5,BI,7,10,1,4,0,3,0,10,10\n";
 
     }
     const auto table = Egs5StoppingTable::read_csv(path.string(), 2, "Pb");
