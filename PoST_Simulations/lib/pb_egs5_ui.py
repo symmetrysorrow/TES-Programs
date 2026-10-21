@@ -58,11 +58,17 @@ def _inspect_v2(path: Path) -> dict[str, object]:
         deposits = source["deposits"]
         count = len(events["event_id"])
         unresolved = 0
-        # Event-level counters are small compared with the deposit ledger.
+        incomplete = 0
+        if "complete" not in events:
+            raise ValueError("HDF5 v2の/events/completeがありません")
+        # Read only small batches of event summaries; never load the deposits.
         for chunk_start in range(0, count, 10_000):
-            unresolved += int(events["unresolved_count"][chunk_start:chunk_start + 10_000].sum())
-        if unresolved:
-            raise ValueError(f"未解決depositを含むファイルです: {unresolved}件")
+            sl = slice(chunk_start, chunk_start + 10_000)
+            unresolved += int(events["unresolved_count"][sl].sum())
+            complete = events["complete"][sl]
+            incomplete += int(len(complete) - complete.sum())
+        if unresolved or incomplete:
+            raise ValueError(f"未解決または未完了のscoreがあります: unresolved={unresolved}, incomplete={incomplete}")
         return {
             "events": count,
             "deposits": len(deposits["addition_id"]),
