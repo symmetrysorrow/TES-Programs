@@ -125,3 +125,14 @@ def test_pb_ui_rejects_wrong_schema_and_unresolved_hdf5(tmp_path):
         handle["events"]["unresolved_count"][0] = 1
     with pytest.raises(ValueError, match="未解決"):
         _inspect_v2(output)
+
+
+def test_bi_menu_rejects_unvalidated_material_before_conversion(tmp_path):
+    raw, config, table, output = _inputs(tmp_path)
+    config.write_text(json.dumps({"phits_input": "source.inp", "region_material": "Bi"}))
+    with pytest.raises(ValueError, match="Bi.*未完了"):
+        run_pb_egs5_ui(
+            FakeQuestionary([raw, config]),
+            lambda *args, **kwargs: pytest.fail("Bi must not enter converter yet"),
+        )
+    assert not output.exists()
