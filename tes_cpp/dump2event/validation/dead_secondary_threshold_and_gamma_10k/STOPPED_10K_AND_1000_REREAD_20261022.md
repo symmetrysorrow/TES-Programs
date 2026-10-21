@@ -29,7 +29,7 @@
   -Executable 'H:\TES-Programs-validation\esmin_gate_diagnostic\phits_WinGfort_diag_minimal_10k_O2.exe'
 ```
 
-停止後の出力は19ファイル、論理サイズ合計75,980,375,565 bytes（70.762 GiB）。主要ファイルはDumpall 39,103,713,156 bytes、内部trace 23,248,221,345 bytes、tally sequence 7,546,685,328 bytes、Dumpall sequence 5,058,679,248 bytes。途中データを削除・解析して正常run扱いすることはしていない。
+停止対象の初回確認時点では15ファイル、論理サイズ合計25,927,994,368 bytes。C:空き容量は144,345,436,160 bytesだった。その後、PIDと実行ファイルを再確認して停止処理を行うまでrunが出力を続け、停止後の19ファイルは論理サイズ合計75,980,375,565 bytes（70.762 GiB）になっていた。主要ファイルはDumpall 39,103,713,156 bytes、内部trace 23,248,221,345 bytes、tally sequence 7,546,685,328 bytes、Dumpall sequence 5,058,679,248 bytes。途中データを削除・解析して正常run扱いすることはしていない。
 
 | C:の空き容量観測 | 空きbytes |
 |---|---:|

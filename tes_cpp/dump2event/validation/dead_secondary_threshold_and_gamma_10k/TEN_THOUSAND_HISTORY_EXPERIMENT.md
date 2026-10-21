@@ -29,7 +29,7 @@
 ```
 
 - 対象PHITS PID 41452と実行ファイルを照合後にそのPIDだけ停止した。driver記録は `finish=2026-10-22T01:34:18.7698007+09:00`, `exit_code=-1`。正常終了を示すPHITS終端記録はなく、途中の `gamma_2mev_10k_phits.out` が残っている。
-- 停止後は19ファイル、論理サイズ合計75,980,375,565 bytes。Dumpall 39,103,713,156 bytes、内部trace 23,248,221,345 bytes、tally sequence 7,546,685,328 bytes、Dumpall sequence 5,058,679,248 bytes。これらは破棄・再利用せず、未完了データとして保管。
+- 初回の停止対象確認時は15ファイル、論理サイズ合計25,927,994,368 bytes、C:空き144,345,436,160 bytes。その後、PIDを再確認して停止するまで書き込みが続き、停止後は19ファイル、論理サイズ75,980,375,565 bytesとなった。Dumpall 39,103,713,156 bytes、内部trace 23,248,221,345 bytes、tally sequence 7,546,685,328 bytes、Dumpall sequence 5,058,679,248 bytes。これらは破棄・再利用せず、未完了データとして保管。
 - C:空き容量の停止直前/直後 `Get-PSDrive` 観測は144,345,436,160 / 144,296,779,776 bytes。後続観測でWMI値と約1.74 GB差があったため、runの物理割当量は断定しない。
 - NCOL=2終端、正常終了履歴数、Dumpall/tally/traceの正常runとしてのハッシュ、HDF5 v2、全加算join、t-depositヒストグラム比較は未確認。中断Dumpallを正常PHITS入力として扱わない。
 
