@@ -3,11 +3,12 @@
 ## Push
 
 - Branch: `feat/dump2event-physical-validation-20261020`
-- Pushed HEAD: `98cd6c21b7baff608632008bf8afc9a5e00c96f2`
+- Pushed HEAD at report update: `60cde10f2b35b1b00c50803deb657ef2392cfdf6`
 - Included commits:
   - `83b7ba56` — PHITS 3.341 dead-secondary score gate
   - `fd843124` — 2 MeV HDF5 addition join
   - `98cd6c21` — interrupted 10k run status and fresh 1k HDF5 readback record
+  - `60cde10f` — push and CI report
 - The working tree still contains uncommitted 10k helper/report files and protected research folders. They were not staged or pushed.
 
 ## Local verification
@@ -21,7 +22,8 @@
 
 ## GitHub and PR #6
 
-- GitHub Actions run [39638078534](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39638078534) for pushed commit `98cd6c21` completed successfully; job `energy-regressions` succeeded.
+- GitHub Actions run [39638078534](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39638078534) for commit `98cd6c21` completed successfully; job `energy-regressions` succeeded.
+- GitHub Actions run [39638346141](https://github.com/symmetrysorrow/TES-Programs/actions/runs/39638346141) for the following report commit `60cde10f` also completed successfully; job `energy-regressions` succeeded.
 - PR #6 was checked after push: open, Draft, not merged, head remains `36dec9f139918d233faf0876736f43d1bbdb965c`. No change was made to that PR.
 - The independent 10,000-history PHITS run was stopped at the user's request and exited `-1`; no successful 10k replay/conversion/join is claimed. Its incomplete output is not a validation run.
 
