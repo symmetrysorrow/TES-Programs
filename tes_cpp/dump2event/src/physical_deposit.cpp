@@ -10,6 +10,16 @@
 #include <utility>
 
 namespace tes_cpp::dump2event {
+
+ScoreGateDecision classify_dead_secondary_score(double kinetic_energy_mev,
+                                                  std::optional<double> eletb1_mev) noexcept {
+    if (!std::isfinite(kinetic_energy_mev) || kinetic_energy_mev < 0.0)
+        return ScoreGateDecision::invalid;
+    if (!eletb1_mev || !std::isfinite(*eletb1_mev) || *eletb1_mev <= 0.0)
+        return ScoreGateDecision::unresolved;
+    return kinetic_energy_mev > *eletb1_mev ? ScoreGateDecision::scored :
+                                              ScoreGateDecision::not_scored;
+}
 namespace {
 
 std::string upper(std::string value) {
@@ -196,22 +206,22 @@ DepositResult PhysicalDepositLedger::add(const DepositInput& in) {
     } else if (in.process == DepositProcess::dead_electron_secondary &&
                (in.ncol == 13 || in.ncol == 14) &&
                in.secondary_particle_type == 12 && in.secondary_status < 0 &&
-               finite_nonnegative(in.secondary_energy_mev) &&
-               in.secondary_energy_mev > kDeadSecondaryScoreGuardMeV &&
+               classify_dead_secondary_score(in.secondary_energy_mev,
+                   context_.dead_secondary_score_threshold_mev) == ScoreGateDecision::scored &&
                in.secondary_weight == 1.0 && std::isfinite(in.secondary_xyz_cm[0]) &&
                std::isfinite(in.secondary_xyz_cm[1]) && std::isfinite(in.secondary_xyz_cm[2])) {
         result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
-                  "dead secondary electron QCLUSTS(7) above conservative PHITS score guard, unit QCLUSTS(8)",
+                  "dead secondary electron QCLUSTS(7) strictly above resolved PHITS eletb(1), unit QCLUSTS(8)",
                   in.secondary_energy_mev, "secondary_point", in.source_line};
     } else if (in.process == DepositProcess::dead_positron_secondary &&
                (in.ncol == 13 || in.ncol == 14) &&
                in.secondary_particle_type == 13 && in.secondary_status < 0 &&
-               finite_nonnegative(in.secondary_energy_mev) &&
-               in.secondary_energy_mev > kDeadSecondaryScoreGuardMeV &&
+               classify_dead_secondary_score(in.secondary_energy_mev,
+                   context_.dead_secondary_score_threshold_mev) == ScoreGateDecision::scored &&
                in.secondary_weight == 1.0 && std::isfinite(in.secondary_xyz_cm[0]) &&
                std::isfinite(in.secondary_xyz_cm[1]) && std::isfinite(in.secondary_xyz_cm[2])) {
         result = {in.addition_id, in.event_id, in.particle_id, in.region_id, "reconstructed",
-                  "dead secondary positron QCLUSTS(7) above conservative PHITS score guard, unit weight",
+                  "dead secondary positron QCLUSTS(7) strictly above resolved PHITS eletb(1), unit weight",
                   in.secondary_energy_mev, "secondary_point", in.source_line};
     } else if (in.process == DepositProcess::exact_zero &&
                (in.ncol == 10 || in.ncol == 13 || in.ncol == 14) &&

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Stream the validated Pb-only experimental ledger and raw tracks into HDF5 v2.
 
 This is an opt-in research utility. It does not call the ordinary converter and
@@ -79,6 +79,35 @@ def source_definition(source_lines: list[str]) -> dict:
     return {"source_mode": mode, "source_particle": "photon", "source_energies_MeV": expected}
 
 
+def resolved_esmin_MeV(source_input: Path, phits_version: str) -> float:
+    """Resolve PHITS's global [Parameters] esmin, using only the pinned 3.341 default."""
+    if phits_version != "3.341":
+        raise ValueError("dead-secondary score gate is validated only for PHITS 3.341")
+    active = ""
+    params: dict[str, str] = {}
+    for raw in source_input.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            active = re.sub(r"\s+", "", line[1:-1]).lower()
+        elif active == "parameters" and "=" in line:
+            key, value = line.split("=", 1)
+            params[re.sub(r"\s+", "", key).lower()] = value.strip()
+    explicit = params.get("esmin")
+    if explicit is None:
+        # PHITS 3.341 read02.f maps the `esmin` input name to parz(162).
+        # The checked-in default table initializes parz(162) to exactly 1.0e-3 MeV (confirmed from read02.f data parz(161:170), element 2).
+        return 1.0e-3
+    try:
+        value = float(explicit.split()[0])
+    except (ValueError, IndexError) as error:
+        raise ValueError(f"invalid [Parameters] esmin: {explicit!r}") from error
+    if not (value > 0.0 and value < float("inf")):
+        raise ValueError("[Parameters] esmin must be finite and positive")
+    return value
+
+
 def resolved_physics(settings: dict, source_input: Path) -> dict:
     """Return canonical effective model settings, excluding paths and byte hashes."""
     text = source_input.read_text(encoding="utf-8-sig", errors="replace")
@@ -101,10 +130,13 @@ def resolved_physics(settings: dict, source_input: Path) -> dict:
         "egs5_medium": int(settings["egs5_medium"]),
         "electron_cutoff_MeV": float(settings["electron_cutoff_MeV"]),
         "positron_cutoff_MeV": float(settings["positron_cutoff_MeV"]),
+        "esmin_MeV": float(settings["esmin_MeV"]),
+        "dead_secondary_score_threshold_MeV": min(float(settings["esmin_MeV"]), 1.0e-6),
+        "dead_secondary_score_rule": "PHITS-3.341-tdepstregEVENT-QCLUSTS7-gt-eletb1-v1",
         "weight_mode": str(settings["weight_mode"]).lower(),
         "energy_unit": str(settings["energy_unit"]),
         "deposit_mode": str(settings["deposit_mode"]),
-        "algorithm_version": "pb-egs5-exp-v2-positron",
+        "algorithm_version": "pb-egs5-exp-v3-score-gate",
         **source_definition(sections.get("source", [])),
     }
 
@@ -129,6 +161,8 @@ def physics_config(source_input: Path, config_path: Path | None = None):
     return {
         "phits_version": "3.341", "region_id": 1000, "region_material": "PB",
         "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
+        "esmin_MeV": resolved_esmin_MeV(source_input, "3.341"),
+        "dead_secondary_score_threshold_MeV": min(resolved_esmin_MeV(source_input, "3.341"), 1.0e-6),
         "weights": "unit-weight validated slice only", "diagnostic_mode": True,
         **source,
         "unsupported_processes": "stored UNRESOLVED; never old-formula fallback",
@@ -148,6 +182,7 @@ def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
         "phits_version": "3.341", "region_id": 1000, "region_material": "Pb",
         "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
         "positron_cutoff_MeV": 0.001, "weight_mode": "unit", "energy_unit": "MeV",
+        "esmin_MeV": 1.0e-3,
         "deposit_mode": "t-deposit-output-deposit",
     }
     resolved = resolved_physics(settings, source_input)
@@ -167,7 +202,7 @@ def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
         "resolved_physics_json": canonical_json(resolved).decode("utf-8"),
         "source_mode": physics["source_mode"],
         "source_energy_MeV": ",".join(format(x, ".12g") for x in physics["source_energies_MeV"]),
-        "reconstruction_algorithm_version": "pb-egs5-exp-v2-positron",
+        "reconstruction_algorithm_version": "pb-egs5-exp-v3-score-gate",
         "validation_scope": "PHITS-3.341; Pb region 1000; unit-weight; validated EGS5 process subset",
         "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
         "driver_sha256": sha256(Path(__file__).resolve()),
@@ -228,6 +263,10 @@ def validate_source_input(path: Path) -> None:
     if not any(re.match(r"1000\s+2\s+-9\.78(?:\s|$)", line) for line in cell_lines):
         raise ValueError("source input must define region 1000 with Dumpall material 2 and Pb density -9.78")
     source_definition(sections.get("source", []))
+    esmin = resolved_esmin_MeV(path, "3.341")
+    # Force evaluation now; the exact score gate is captured in physics config and provenance.
+    if not (esmin > 0.0 and esmin < float("inf")):
+        raise ValueError("PHITS 3.341 esmin did not resolve to a finite positive value")
     tally = values("t-deposit")
     expected_tally = {"mesh": "reg", "reg": "1000", "part": "all", "deposit": "0",
                       "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
@@ -258,6 +297,12 @@ def load_physics_config(path: Path) -> tuple[dict, Path]:
     if not source_input.is_file():
         raise FileNotFoundError(f"PHITS input from physics config not found: {source_input}")
     validate_source_input(source_input)
+    resolved_esmin = resolved_esmin_MeV(source_input, str(data["phits_version"]))
+    if float(data.get("esmin_MeV", float("nan"))) != resolved_esmin:
+        raise ValueError(f"physics config esmin_MeV {data.get('esmin_MeV')!r} does not match resolved PHITS value {resolved_esmin}")
+    expected_threshold = min(resolved_esmin, 1.0e-6)
+    if float(data.get("dead_secondary_score_threshold_MeV", float("nan"))) != expected_threshold:
+        raise ValueError("physics config dead_secondary_score_threshold_MeV does not equal min(esmin,1e-6)")
     return data, source_input
 
 
@@ -293,10 +338,13 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.work_dir.mkdir(parents=True, exist_ok=True)
     ledger_path = args.work_dir / "physical_ledger.csv"
+    not_scored_path = args.work_dir / "not_scored_candidates.csv"
     event_path = args.work_dir / "raw_events.csv"
     track_path = args.work_dir / "raw_tracks.csv"
+    threshold = float(args.dead_secondary_score_threshold_MeV)
     ledger_run = subprocess.run([str(args.reconstructor), str(args.dumpall),
-                                 str(args.stopping_table), str(ledger_path)],
+                                 str(args.stopping_table), str(ledger_path),
+                                 str(not_scored_path), format(threshold, ".17g")],
                                 check=False, text=True, capture_output=True)
     if ledger_run.returncode not in (0, 1) or not ledger_path.is_file():
         raise RuntimeError(f"physical reconstruction failed: rc={ledger_run.returncode}\n{ledger_run.stderr}")
@@ -305,6 +353,10 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
                                check=False, text=True, capture_output=True)
     if parse_run.returncode != 0:
         raise RuntimeError(f"raw transport export failed: rc={parse_run.returncode}\n{parse_run.stderr}")
+    with not_scored_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        not_scored_rows = list(csv.DictReader(handle))
+    if any(row.get("classification") != "NOT_SCORED_BY_PHITS" for row in not_scored_rows):
+        raise ValueError("non-scored candidate audit contains an unexpected classification")
 
     track_groups = iter(groups(track_path))
     ledger_groups = iter(groups(ledger_path))
@@ -395,6 +447,8 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
         **provenance,
         "physical_ledger_exit_code": ledger_run.returncode,
         "physical_ledger_stdout": ledger_run.stdout.strip(), "transport_export_stdout": parse_run.stdout.strip(),
+        "not_scored_by_phits_candidates": len(not_scored_rows),
+        "not_scored_candidate_audit": str(not_scored_path),
         "events": event_count, "particles": particle_count, "tracks": track_count,
         "deposits": deposit_count, "unresolved": unresolved_count, "negative": negative_count,
         "output": str(args.output),
@@ -432,16 +486,22 @@ def main() -> int:
         # The writer is held open only for this conversion. Output publication is
         # atomic; input data and existing destinations are never modified.
         physics = physics_config(args.source_input)
+        args.dead_secondary_score_threshold_MeV = float(
+            physics_data["dead_secondary_score_threshold_MeV"] if physics_data else
+            physics["dead_secondary_score_threshold_MeV"])
         provenance = provenance_metadata(physics_data, args.physics_config,
                                          args.source_input, args.dumpall, args.stopping_table,
                                          args.converter_executable, args.reconstructor, args.track_exporter)
         config = {**provenance, "material": "Pb", "medium": "2", "cutoff_MeV": "0.001",
-                  "algorithm_version": "pb-egs5-exp-v2-positron",
+                  "algorithm_version": "pb-egs5-exp-v3-score-gate",
                   "position_semantics": physics["position_semantics"],
                   "unsupported_processes": physics["unsupported_processes"],
                   "weights": physics["weights"], "diagnostic_mode": True,
                   "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
-                  "complete_semantics": "per-event candidate scoring complete only when no UNRESOLVED rows remain",
+                  "complete_semantics": "per-event scoring complete only when no in-scope scored candidate is UNRESOLVED; proven not-scored candidates are excluded from deposits and preserved in audit",
+                  "dead_secondary_score_rule": "PHITS-3.341-tdepstregEVENT-QCLUSTS7-gt-eletb1-v1",
+                  "dead_secondary_score_threshold_MeV": format(float(physics_data["dead_secondary_score_threshold_MeV"] if physics_data else physics["dead_secondary_score_threshold_MeV"]), ".17g"),
+                  "esmin_MeV": format(float(physics_data["esmin_MeV"] if physics_data else physics["esmin_MeV"]), ".17g"),
                   "dumpall_structure_semantics": "conversion requires terminal NCOL=2",
                   "transport_physics_completeness": "undetermined",
                   "energy_balance_status": "not assessed",

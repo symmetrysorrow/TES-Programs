@@ -124,7 +124,17 @@ int main() try {
     require(std::abs(table.stopping_power(0.1, 2) - 3.0) < 1e-14, "EGS5 table lookup");
     require(std::abs(table.positron_stopping_power(0.1, 2) - 2.0) < 1e-14,
             "EGS5 positron table lookup uses PDedx coefficients");
-    PhysicalDepositContext context{"3.341", 1000, "Pb", 2, 0.001, true};
+    require(classify_dead_secondary_score(7.5933446597176157e-7, 1.0e-6) ==
+                ScoreGateDecision::not_scored, "below runtime dead-secondary score threshold");
+    require(classify_dead_secondary_score(1.0e-6, 1.0e-6) ==
+                ScoreGateDecision::not_scored, "score threshold comparison is strict greater-than");
+    require(classify_dead_secondary_score(std::nextafter(1.0e-6, 1.0), 1.0e-6) ==
+                ScoreGateDecision::scored, "above runtime dead-secondary score threshold");
+    require(classify_dead_secondary_score(0.0, std::nullopt) ==
+                ScoreGateDecision::unresolved, "unknown score threshold fails closed");
+    require(classify_dead_secondary_score(-1.0, 1.0e-6) ==
+                ScoreGateDecision::invalid, "negative secondary kinetic energy is invalid");
+    PhysicalDepositContext context{"3.341", 1000, "Pb", 2, 0.001, true, 1.0e-6};
     PhysicalDepositLedger ledger(context, table);
 
     DepositInput continuous;
@@ -180,7 +190,7 @@ int main() try {
     below_transport_cutoff.secondary_energy_mev = 0.0007;
     const auto d_low = ledger.add(below_transport_cutoff);
     require(d_low.status == "reconstructed" && *d_low.energy_mev == 0.0007,
-            "dead-secondary tally threshold is not the 1 keV transport cutoff");
+            "dead secondary above score gate is reconstructed even below transport cutoff");
     auto dead_positron = dead;
     dead_positron.addition_id = "p2"; dead_positron.secondary_particle_type = 13;
     dead_positron.process = DepositProcess::dead_positron_secondary;
@@ -192,8 +202,10 @@ int main() try {
     auto below_score_guard = dead;
     below_score_guard.addition_id = "a3c";
     below_score_guard.secondary_energy_mev = 5.0e-7;
-    require(ledger.add(below_score_guard).status == "unresolved",
-            "secondary below Dumpall-independent PHITS score guard must remain unresolved");
+    require(ledger.add(below_score_guard).status == "unresolved" &&
+            classify_dead_secondary_score(5.0e-7, context.dead_secondary_score_threshold_mev) ==
+                ScoreGateDecision::not_scored,
+            "not-scored candidate is distinct from an actual deposit row");
 
     auto zero = continuous;
     zero.addition_id = "a4"; zero.process = DepositProcess::exact_zero;
@@ -208,9 +220,9 @@ int main() try {
     unsupported.addition_id = "a6"; unsupported.process = DepositProcess::unsupported;
     require(ledger.add(unsupported).status == "unresolved", "unsupported process must fail closed");
     must_throw([&] { ledger.add(continuous); }, "duplicate addition ID must fail");
-    must_throw([&] { PhysicalDepositLedger bad({"3.342",1000,"Pb",2,0.001,true},table); },
+    must_throw([&] { PhysicalDepositLedger bad({"3.342",1000,"Pb",2,0.001,true,1.0e-6},table); },
                "wrong PHITS version must fail");
-    must_throw([&] { PhysicalDepositLedger bad({"3.341",2000,"Pb",2,0.001,true},table); },
+    must_throw([&] { PhysicalDepositLedger bad({"3.341",2000,"Pb",2,0.001,true,1.0e-6},table); },
                "wrong region must fail");
     std::filesystem::remove(path);
     std::cout << "physical deposit engine checks passed\n";

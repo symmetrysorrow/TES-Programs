@@ -1,4 +1,4 @@
-import json
+﻿import json
 import sys
 from pathlib import Path
 
@@ -48,7 +48,7 @@ emax=1.5
 SETTINGS = {
     "phits_version": "3.341", "phits_input": "input.inp", "region_id": 1000,
     "region_material": "Pb", "dumpall_material_id": 2, "egs5_medium": 2,
-    "electron_cutoff_MeV": 0.001, "positron_cutoff_MeV": 0.001,
+    "electron_cutoff_MeV": 0.001, "positron_cutoff_MeV": 0.001, "esmin_MeV": 1.0e-3,
     "weight_mode": "unit", "energy_unit": "MeV",
     "deposit_mode": "t-deposit-output-deposit",
 }
@@ -74,6 +74,19 @@ def test_mono_gamma_source_guard_accepts_only_supported_energy_and_explicit_phot
         build.source_definition(["totfact=1", "e-type=8", "ne=1", "0.511 1"])
     with pytest.raises(ValueError, match="0.511/2.0 MeV"):
         build.source_definition(["totfact=1", "proj=photon", "e-type=8", "ne=1", "0.662 1"])
+
+
+def test_phits_341_esmin_default_and_explicit_score_gate_resolution(tmp_path):
+    source = tmp_path / "default_esmin.inp"
+    source.write_text(SOURCE, encoding="utf-8")
+    assert build.resolved_esmin_MeV(source, "3.341") == 1.0e-3
+    assert min(build.resolved_esmin_MeV(source, "3.341"), 1.0e-6) == 1.0e-6
+    explicit = tmp_path / "explicit_esmin.inp"
+    explicit.write_text(SOURCE.replace("icntl=0", "icntl=0\nesmin=5.0e-7"), encoding="utf-8")
+    assert build.resolved_esmin_MeV(explicit, "3.341") == 5.0e-7
+    assert min(build.resolved_esmin_MeV(explicit, "3.341"), 1.0e-6) == 5.0e-7
+    with pytest.raises(ValueError, match="only for PHITS 3.341"):
+        build.resolved_esmin_MeV(source, "3.342")
 
 
 def test_raw_contract_hash_is_distinct_from_canonical_resolved_hash(tmp_path):

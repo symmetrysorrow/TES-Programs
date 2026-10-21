@@ -9,10 +9,13 @@
 
 namespace tes_cpp::dump2event {
 
-// PHITS 3.341 constructs eletb(1)=min(esmin,1e-6 MeV).  Values at or below
-// this conservative upper bound are left unresolved because esmin is not
-// serialized in Dumpall and the exact score/no-score decision is unavailable.
-inline constexpr double kDeadSecondaryScoreGuardMeV = 1.0e-6;
+enum class ScoreGateDecision { scored, not_scored, unresolved, invalid };
+
+// PHITS 3.341 t-deposit uses a strict QCLUSTS(7) > eletb(1) test for dead
+// charged secondaries, with eletb(1)=min(esmin,1e-6 MeV).  The effective
+// threshold must come from the run's resolved PHITS settings, never a guess.
+ScoreGateDecision classify_dead_secondary_score(double kinetic_energy_mev,
+                                                  std::optional<double> eletb1_mev) noexcept;
 
 // Explicitly scoped to the PHITS 3.341 / EGS5 lead validation described in
 // PHYSICAL_DEPOSIT_IMPLEMENTATION_PLAN.md. This is an experimental ledger
@@ -62,6 +65,7 @@ struct PhysicalDepositContext {
     double electron_cutoff_mev{};
     // This validated slice only covers unit particle weights and region 1000.
     bool unit_weights_only{true};
+    std::optional<double> dead_secondary_score_threshold_mev{};
 };
 
 struct DepositInput {
