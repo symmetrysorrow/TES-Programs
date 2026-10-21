@@ -1,3 +1,4 @@
+"""Standalone wrapper around the Pb/EGS5 physical HDF5 v2 converter."""
 from __future__ import annotations
 
 import os
@@ -11,53 +12,51 @@ from shutil import which
 @dataclass(frozen=True)
 class ConversionResult:
     output_path: Path
-    full_energy_event_ids: tuple[int, ...]
 
 
 def _executable() -> str:
     configured = os.environ.get("TES_CPP_DUMP2EVENT_EXECUTABLE")
     if configured:
         return configured
-    bundled = files("tes_cpp_dump2event").joinpath("bin", "dump2event.exe" if os.name == "nt" else "dump2event")
+    name = "dump2event.exe" if os.name == "nt" else "dump2event"
+    bundled = files("tes_cpp_dump2event").joinpath("bin", name)
     if bundled.is_file():
         return str(bundled)
-    command = which("dump2event")
-    if command:
-        return command
-    raise RuntimeError("dump2event executable was not found; set TES_CPP_DUMP2EVENT_EXECUTABLE")
+    found = which("dump2event")
+    if found:
+        return found
+    raise RuntimeError("dump2event executable not found; set TES_CPP_DUMP2EVENT_EXECUTABLE")
 
 
 def convert(
     dump_path: str | Path,
     output_path: str | Path,
     *,
-    input_energy: float,
-    save_all: bool = False,
-    full_energy_only: bool = False,
-    normalize_deposits: bool = False,
-    reaction_audit: str | Path | None = None,
-    reaction_audit_all: bool = False,
+    physics_config: str | Path | None = None,
+    stopping_table: str | Path | None = None,
+    physics: str = "pb-egs5",
+    **removed_legacy_options: object,
 ) -> ConversionResult:
-    """Convert one PHITS ``dumpall.dat`` file to the ``event.json`` schema."""
-    dump_path, output_path = Path(dump_path), Path(output_path)
-    command = [_executable(), str(dump_path), str(output_path), "--input-energy", str(input_energy)]
-    full_energy_path = output_path.with_name("FullEnergyList.dat")
-    if save_all:
-        command += ["--save-all"]
-    if save_all or full_energy_only:
-        command += ["--full-energy-list", str(full_energy_path)]
-    if full_energy_only:
-        command += ["--full-energy-only"]
-    if normalize_deposits:
-        command += ["--normalize-deposits"]
-    if reaction_audit_all and reaction_audit is None:
-        raise ValueError("reaction_audit_all requires reaction_audit")
-    if reaction_audit is not None:
-        command += ["--reaction-audit", str(reaction_audit)]
-    if reaction_audit_all:
-        command += ["--reaction-audit-all"]
-    subprocess.run(command, check=True)
-    event_ids = ()
-    if (save_all or full_energy_only) and full_energy_path.exists():
-        event_ids = tuple(int(line) for line in full_energy_path.read_text().splitlines() if line)
-    return ConversionResult(output_path=output_path, full_energy_event_ids=event_ids)
+    """Convert PHITS 3.341 Pb/EGS5 Dumpall to HDF5 v2 (only supported mode)."""
+    if removed_legacy_options:
+        raise ValueError("obsolete converter options are unsupported: " +
+                         ", ".join(sorted(removed_legacy_options)))
+    if physics != "pb-egs5":
+        raise ValueError("only PHITS 3.341 Pb EGS5 physics is supported")
+    if physics_config is None or stopping_table is None:
+        raise ValueError("Pb EGS5 requires physics_config and stopping_table")
+    dump = Path(dump_path)
+    config = Path(physics_config)
+    table = Path(stopping_table)
+    output = Path(output_path)
+    if output.suffix.lower() not in {".h5", ".hdf5"}:
+        raise ValueError("output must be HDF5 v2 (.h5/.hdf5)")
+    for name, path in (("Dumpall", dump), ("physics_config", config), ("stopping_table", table)):
+        if not path.is_file():
+            raise FileNotFoundError(f"{name} does not exist: {path}")
+    if output.exists():
+        raise FileExistsError(f"will not overwrite existing HDF5: {output}")
+    subprocess.run([_executable(), str(dump), str(output),
+                    "--physics-config", str(config),
+                    "--stopping-table", str(table)], check=True)
+    return ConversionResult(output_path=output)
