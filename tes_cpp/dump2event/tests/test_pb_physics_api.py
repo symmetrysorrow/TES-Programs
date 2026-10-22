@@ -25,13 +25,11 @@ class PbPhysicsApiTests(unittest.TestCase):
     def test_default_api_is_pb_egs5_hdf5_v2(self):
         with patch.object(module, "_executable", return_value="dump2event"), \
              patch.object(module.subprocess, "run") as run:
-            result = module.dump2event(self.dump, self.output,
-                                       physics_config=self.config,
-                                       stopping_table=self.table)
+            result = module.dump2event(self.dump, self.output)
         command = run.call_args.args[0]
         self.assertEqual(command[:3], ["dump2event", str(self.dump), str(self.output)])
-        self.assertIn("--physics-config", command)
-        self.assertIn("--stopping-table", command)
+        self.assertNotIn("--physics-config", command)
+        self.assertNotIn("--stopping-table", command)
         self.assertNotIn("--input-energy", command)
         self.assertNotIn("--normalize-deposits", command)
         self.assertEqual(result.output_path, self.output)
@@ -53,9 +51,11 @@ class PbPhysicsApiTests(unittest.TestCase):
                               physics_config=self.config, stopping_table=self.table)
         self.assertTrue(run.called)
 
-    def test_requires_config_and_table(self):
-        with self.assertRaisesRegex(ValueError, "requires physics_config"):
+    def test_two_argument_api_is_supported(self):
+        with patch.object(module, "_executable", return_value="dump2event"), \
+             patch.object(module.subprocess, "run") as run:
             module.dump2event(self.dump, self.output)
+        self.assertEqual(run.call_args.args[0][1:3], [str(self.dump), str(self.output)])
 
     def test_rejects_legacy_input_energy_and_filtering(self):
         for obsolete in ({"input_energy": 2.0}, {"save_all": True},
@@ -64,7 +64,6 @@ class PbPhysicsApiTests(unittest.TestCase):
             with self.subTest(obsolete=obsolete):
                 with self.assertRaisesRegex(ValueError, "old dump2event options"):
                     module.dump2event(self.dump, self.output,
-                                      physics_config=self.config,
                                       stopping_table=self.table,
                                       **obsolete)
 

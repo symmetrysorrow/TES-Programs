@@ -21,8 +21,7 @@ PHITS 3.341、Pb region 1000、Dumpall material ID 2、EGS5 medium 2、
 cmake -S tes_cpp -B tes_cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build tes_cpp/build --config Release
 
-tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5 `
-  --physics-config pb_config.json
+tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5
 ```
 
 環境によって実行ファイルの位置が異なります。
@@ -41,7 +40,6 @@ from tes_cpp import dump2event
 
 result = dump2event(
     "dumpall.dat", "event_pb_egs5_v2.h5",
-    physics_config="pb_config.json",
 )
 print(result.output_path)
 ```
@@ -76,40 +74,61 @@ publication is blocked** until independent Bi `[t-deposit]` oracle matching.
 Do not substitute Pb EDedx/PDedx or density for Bi; do not run expensive new
 10,000-history simulations to bypass this gate. See `BI_VALIDATION_PLAN.md`.
 
-### Pb HATCH table included by default (after source-data import)
+### Bundled Pb HATCH table
 
 The preferred setup is to keep the **exact PHITS 3.341/Pb HATCH CSV** in
-`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`, install it with the package,
-and automatically verify its SHA-256 before using it. The validated historical
+`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`; package builds install it and
+automatically verify its SHA-256 before using it. The validated historical
 file is exactly 130,754 bytes and has the SHA-256:
 
 ```text
 20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9
 ```
 
-`--stopping-table <path>` remains supported for private local tables and
-legacy workflows, but when omitted the native CLI delegates to the Python
-driver to resolve the verified bundled resource. No guessing or network fetch
-occurs: missing/changed bundled data cause a hard error. The table bytes have
-**not** yet been committed because this repository is public, the actual
-historical CSV is available only on a private local Windows installation,
-and permission to publicly redistribute PHITS-generated coefficients has
-not yet been checked. See `data/README.md` and
-`tools/import_verified_pb_table.py`. Until the verified data file is imported,
-use the previous explicit `--stopping-table` argument.
+`--stopping-table <path>` remains available for diagnostics, but is not needed
+for normal use. The native CLI delegates to the Python driver, which resolves
+the verified bundled resource. No guessing or network fetch occurs: missing
+or changed bundled data cause a hard error. Permission from a PHITS
+administrator was obtained for individual-use scope; the GitHub repository is
+private and currently has only the owner as a collaborator. Do not publish the
+CSV, mirror it, or expand access beyond that scope. See `data/README.md` and
+`tools/import_verified_pb_table.py`.
 
 #### Private Pb table setup
 
-The exact historical HATCH CSV remains private because its redistribution
-rights have not been established. Set `TES_CPP_PB_HATCH_TABLE` once to the
-verified local file; the normal CLI then needs no table path:
+For installations that do not include the bundled resource, set
+`TES_CPP_PB_HATCH_TABLE` to the verified local file. On this branch, the
+bundled resource takes precedence and the environment variable is unnecessary:
 
 ```powershell
 $env:TES_CPP_PB_HATCH_TABLE = 'D:\private\egs5_stopping_power_coefficients.csv'
-dump2event input.dumpall output.h5 --physics-config pb_config.json
+dump2event input.dumpall output.h5
 ```
 
 The Python API and PoST UI use the same resolver. Explicit table paths are
 also accepted only when their bytes match the pinned SHA-256 above. Missing
 or modified coefficients fail before conversion; HDF5 v2 provenance records
 the SHA-256 of the actual table used.
+
+
+## Automatic Pb run association
+
+The normal two-path command and Python call need no physics JSON or table path:
+
+```powershell
+dump2event input.dumpall output.h5
+```
+
+Automatic mode accepts exactly one sibling `*.inp` whose `[Parameters] file(15)`
+resolves to that Dumpall and whose configured `[Parameters] file(6)` log is
+present and reports `Version = 3.341`. The input must pass the existing Pb
+source, geometry, material, cutoff, tally, seed, and unit-weight checks.
+Relative run output paths follow the co-located convention: PHITS input, log,
+and Dumpall share a directory. Missing or ambiguous pairs fail with an error.
+The generated effective contract, its SHA-256, input/log hashes, source seed,
+and bundled table hash are stored in HDF5 v2 provenance.
+
+`--physics-config` and `--stopping-table` remain available for diagnostics.
+Explicit contracts still must identify the uniquely associated input and pass
+the same source and physics validators. PoST asks for Dumpall and HDF5 output;
+it only asks for a private CSV if the verified bundled table is unavailable.

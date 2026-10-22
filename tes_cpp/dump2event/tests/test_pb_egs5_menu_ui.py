@@ -65,9 +65,11 @@ def _fake_hdf5(path):
         prov.attrs["algorithm_version"] = "test"
 
 
-def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
+def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
-    fake = FakeQuestionary([raw, config, table, output])
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
+    fake = FakeQuestionary([raw, table, output])
     calls = []
 
     def convert(*args, **kwargs):
@@ -79,34 +81,39 @@ def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     assert result.output_path == output
     assert calls == [((raw.resolve(), output), {
         "physics": "pb-egs5",
-        "physics_config": config.resolve(),
         "stopping_table": table.resolve(),
     })]
     assert _inspect_v2(output)["deposits"] == 2
     assert "event_pb_egs5_v2.h5" in fake.default_paths[-1]
 
 
-def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path):
+def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
     output.write_text("do not replace")
     with pytest.raises(FileExistsError):
-        run_pb_egs5_ui(FakeQuestionary([raw, config, table, output]),
+        run_pb_egs5_ui(FakeQuestionary([raw, table, output]),
                        lambda *args, **kwargs: pytest.fail("unexpected converter call"))
     assert output.read_text() == "do not replace"
 
 
-def test_pb_ui_rejects_missing_phits_input(tmp_path):
-    raw, config, table, output = _inputs(tmp_path)
-    config.write_text(json.dumps({"phits_input": "missing.inp"}))
-    with pytest.raises(FileNotFoundError, match="PHITS入力"):
-        run_pb_egs5_ui(FakeQuestionary([raw, config]),
-                       lambda *args, **kwargs: pytest.fail("unexpected converter call"))
+def test_pb_ui_leaves_phits_pair_validation_to_fail_closed_converter(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
+    raw, _, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
+    def reject_pair(*_args, **_kwargs):
+        raise ValueError("no matching input/log pair")
+    with pytest.raises(ValueError, match="no matching input/log pair"):
+        run_pb_egs5_ui(FakeQuestionary([raw, table, output]), reject_pair)
 
 
-def test_pb_ui_cancelled_before_conversion(tmp_path):
+def test_pb_ui_cancelled_before_conversion(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
     assert run_pb_egs5_ui(
-        FakeQuestionary([raw, config, table, output], confirmed=False),
+        FakeQuestionary([raw, table, output], confirmed=False),
         lambda *args, **kwargs: pytest.fail("unexpected converter call"),
     ) is None
     assert not output.exists()
@@ -127,21 +134,12 @@ def test_pb_ui_rejects_wrong_schema_and_unresolved_hdf5(tmp_path):
         _inspect_v2(output)
 
 
-def test_ui_rejects_non_pb_material_before_conversion(tmp_path):
-    raw, config, table, output = _inputs(tmp_path)
-    config.write_text(json.dumps({"phits_input": "source.inp", "region_material": "Bi"}))
-    with pytest.raises(ValueError, match="Pbのみ利用可能"):
-        run_pb_egs5_ui(
-            FakeQuestionary([raw, config]),
-            lambda *args, **kwargs: pytest.fail("non-Pb must not enter converter"),
-        )
-    assert not output.exists()
 
 def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkeypatch):
     import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
-    monkeypatch.setattr(ui, "_bundled_table_present", lambda: True)
-    dialog = FakeQuestionary([raw, config, output])
+    assert ui._bundled_table_present() is True
+    dialog = FakeQuestionary([raw, output])
     kwargs_seen = []
 
     def convert(*args, **kwargs):
@@ -150,14 +148,34 @@ def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkey
         return SimpleNamespace(output_path=output)
 
     run_pb_egs5_ui(dialog, convert)
-    assert len(dialog.default_paths) == 3  # no stopping-table picker
+    assert len(dialog.default_paths) == 2  # only Dumpall and output
     assert "stopping_table" not in kwargs_seen[0]
-    assert kwargs_seen[0]["physics_config"] == config.resolve()
+    assert "physics_config" not in kwargs_seen[0]
+
+
+def test_pb_ui_detects_scikit_build_installed_table(monkeypatch, tmp_path):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
+    prefix = tmp_path / "prefix"
+    module_dir = prefix / "python" / "tes_cpp" / "lib"
+    module_dir.mkdir(parents=True)
+    monkeypatch.setattr(ui, "__file__", str(module_dir / "pb_egs5_ui.py"))
+    table = prefix / "tes_cpp" / "bin" / "pb_egs5_phits3341.csv"
+    table.parent.mkdir(parents=True)
+    table.write_bytes(b"software test placeholder")
+    class FakeDigest:
+        def hexdigest(self):
+            return "20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9"
+    monkeypatch.setattr(ui.hashlib, "sha256", lambda _data: FakeDigest())
+    assert ui._bundled_table_present() is True
 
 
 def test_modified_private_table_environment_setting_fails_closed(tmp_path, monkeypatch):
     import PoST_Simulations.lib.pb_egs5_ui as ui
     _, _, table, _ = _inputs(tmp_path)
+    fake_ui = tmp_path / "isolated" / "lib" / "pb_egs5_ui.py"
+    fake_ui.parent.mkdir(parents=True)
+    fake_ui.write_text("", encoding="utf-8")
+    monkeypatch.setattr(ui, "__file__", str(fake_ui))
     table.write_bytes(b"private but not valid pinned bytes")
     monkeypatch.setenv("TES_CPP_PB_HATCH_TABLE", str(table))
     with pytest.raises(ValueError, match="SHA-256 mismatch"):

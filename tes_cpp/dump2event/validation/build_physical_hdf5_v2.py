@@ -228,6 +228,116 @@ def physics_config(source_input: Path, config_path: Path | None = None):
     }
 
 
+def _input_values(path: Path, section: str) -> dict[str, str]:
+    """Read the last explicit key/value occurrence in one PHITS section."""
+    active = ""
+    found: dict[str, str] = {}
+    for raw in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            active = re.sub(r"\s+", "", line[1:-1]).lower()
+        elif active == section and "=" in line:
+            key, value = line.split("=", 1)
+            found[re.sub(r"\s+", "", key).lower()] = value.strip()
+    return found
+
+
+def resolve_run_pair(dumpall: Path) -> tuple[Path, Path, str]:
+    """Find exactly one sibling PHITS input whose file(15) names this Dumpall.
+
+    Relative file(15)/file(6) paths use the enforced co-located-run convention:
+    the PHITS input, outputs and Dumpall must be in the same directory. The
+    referenced PHITS log must identify the actual executable version.
+    """
+    dump = dumpall.resolve(strict=True)
+    if not dump.is_file():
+        raise FileNotFoundError(f"Dumpall is not a regular file: {dump}")
+    candidates: list[tuple[Path, Path, str]] = []
+    for input_path in sorted(dump.parent.glob("*.inp")):
+        params = _input_values(input_path, "parameters")
+        raw_output = params.get("file(15)")
+        raw_log = params.get("file(6)")
+        if not raw_output or not raw_log:
+            continue
+        output_ref = Path(raw_output.strip().strip("\"'"))
+        log_ref = Path(raw_log.strip().strip("\"'"))
+        if output_ref.is_absolute():
+            output_path = output_ref.resolve()
+        elif output_ref.parent == Path("."):
+            # PHITS is required to be run from the directory containing its
+            # input/output pair; bare file names are unambiguous there.
+            output_path = (input_path.parent / output_ref).resolve()
+        else:
+            output_path = (input_path.parent / output_ref).resolve()
+        if output_path != dump:
+            continue
+        log_path = log_ref if log_ref.is_absolute() else (input_path.parent / log_ref).resolve()
+        if not log_path.is_file():
+            continue
+        log_text = log_path.read_text(encoding="utf-8-sig", errors="replace")
+        versions = set(re.findall(r"(?im)^\s*Version\s*=\s*([0-9]+\.[0-9]+)\s*$", log_text))
+        if versions != {"3.341"}:
+            raise ValueError(
+                f"PHITS run log {log_path} must identify exactly Version = 3.341; found {sorted(versions)}"
+            )
+        candidates.append((input_path.resolve(), log_path, "3.341"))
+    if len(candidates) != 1:
+        details = ", ".join(str(item[0]) for item in candidates) or "none"
+        reason = "no matching input/log pair" if not candidates else "multiple matching inputs"
+        raise ValueError(
+            f"cannot uniquely associate Dumpall {dump}: {reason} ({details}); "
+            "expected one sibling *.inp with matching [Parameters] file(15), "
+            "a present [Parameters] file(6) log, and PHITS Version = 3.341"
+        )
+    return candidates[0]
+
+
+def build_automatic_physics_contract(dumpall: Path) -> tuple[dict, Path, Path]:
+    """Build the pinned Pb contract from one unambiguous same-run input/log pair."""
+    source_input, run_log, version = resolve_run_pair(dumpall)
+    validate_source_input(source_input)
+    params = _input_values(source_input, "parameters")
+    if params.get("icntl", "").split()[:1] != ["0"]:
+        raise ValueError("automatic Pb mode requires a normal PHITS run with icntl=0")
+    if params.get("dumpall", "").split()[:1] != ["-1"]:
+        raise ValueError("automatic Pb mode requires dumpall=-1 in the matching PHITS input")
+    if params.get("maxbch", "").split()[:1] != ["1"]:
+        raise ValueError("automatic Pb mode requires maxbch=1")
+    try:
+        maxcas = int(params["maxcas"].split()[0])
+    except (KeyError, ValueError, IndexError) as error:
+        raise ValueError("matching PHITS input must explicitly set a positive maxcas") from error
+    if maxcas <= 0:
+        raise ValueError("matching PHITS input maxcas must be positive")
+    seed = params.get("bitrseed", "").split()[0]
+    esmin = resolved_esmin_MeV(source_input, version)
+    contract = {
+        "phits_version": version,
+        "phits_input": str(source_input),
+        "phits_input_sha256": sha256(source_input),
+        "phits_run_log": str(run_log),
+        "phits_run_log_sha256": sha256(run_log),
+        "source_seed_bits": seed,
+        "maxcas": maxcas,
+        "maxbch": 1,
+        "region_id": 1000,
+        "region_material": "Pb",
+        "dumpall_material_id": 2,
+        "egs5_medium": 2,
+        "electron_cutoff_MeV": 0.001,
+        "positron_cutoff_MeV": 0.001,
+        "esmin_MeV": esmin,
+        "dead_secondary_score_threshold_MeV": min(esmin, 1.0e-6),
+        "weight_mode": "unit",
+        "energy_unit": "MeV",
+        "deposit_mode": "t-deposit-output-deposit",
+    }
+    validate_source_input(source_input, contract)
+    return contract, source_input, run_log
+
+
 def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
                         source_input: Path, dumpall: Path, stopping_table: Path,
                         converter_executable: Path | None = None,
@@ -349,7 +459,8 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
             raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
 
 
-def load_physics_config(path: Path, *, allow_pending_bi: bool = False) -> tuple[dict, Path]:
+def load_physics_config(path: Path, *, dumpall: Path | None = None,
+                        allow_pending_bi: bool = False) -> tuple[dict, Path]:
     data = json.loads(path.read_text(encoding="utf-8"))
     model = material_settings(data)
     expected = {
@@ -368,6 +479,17 @@ def load_physics_config(path: Path, *, allow_pending_bi: bool = False) -> tuple[
         source_input = (path.parent / source_input).resolve()
     if not source_input.is_file():
         raise FileNotFoundError(f"PHITS input from physics config not found: {source_input}")
+    if dumpall is not None:
+        paired_input, _run_log, run_version = resolve_run_pair(dumpall)
+        if paired_input != source_input.resolve():
+            raise ValueError(
+                f"physics config PHITS input {source_input.resolve()} is not the unique input "
+                f"associated with Dumpall {dumpall.resolve()} ({paired_input})"
+            )
+        if run_version != data["phits_version"]:
+            raise ValueError(
+                f"physics config PHITS version {data['phits_version']!r} does not match run log {run_version!r}"
+            )
     validate_source_input(source_input, data)
     if model["region_material"] == "Bi" and not allow_pending_bi:
         raise ValueError("Bi physics is not yet PHITS-oracle validated; HDF5 publication is disabled")
@@ -552,6 +674,10 @@ def resolve_stopping_table(explicit: Path | None) -> Path:
         candidates = [
             home / BUNDLED_PB_TABLE_NAME,  # Python package install beside driver
             home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
+            home.parent.parent / "tes_cpp" / "bin" / BUNDLED_PB_TABLE_NAME,  # scikit-build/CMake install prefix
+            # CMake/scikit-build installs native assets in the Python package
+            # directory while placing this driver under share/.
+            home.parent.parent / "tes_cpp_dump2event" / "bin" / BUNDLED_PB_TABLE_NAME,
             home.parent.parent / "bin" / BUNDLED_PB_TABLE_NAME,  # CMake prefix/bin
         ]
         configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
@@ -598,15 +724,23 @@ def main() -> int:
         if args.output.exists():
             raise FileExistsError(f"refusing to overwrite existing output: {args.output}")
         args.stopping_table = resolve_stopping_table(args.stopping_table)
-        if bool(args.source_input) == bool(args.physics_config):
-            raise ValueError("provide exactly one of --physics-config or legacy --source-input")
+        if args.physics_config and args.source_input:
+            raise ValueError("provide only one of --physics-config and --source-input")
+        automatic_contract = None
         if args.physics_config:
-            physics_data, args.source_input = load_physics_config(args.physics_config)
-        else:
+            physics_data, args.source_input = load_physics_config(
+                args.physics_config, dumpall=args.dumpall)
+        elif args.source_input:
             if not args.source_input.is_file():
                 raise FileNotFoundError(args.source_input)
             validate_source_input(args.source_input)
+            paired_input, _run_log, _version = resolve_run_pair(args.dumpall)
+            if paired_input != args.source_input.resolve():
+                raise ValueError("--source-input does not match the unique PHITS input associated with Dumpall")
             physics_data = None
+        else:
+            automatic_contract, args.source_input, run_log = build_automatic_physics_contract(args.dumpall)
+            physics_data = automatic_contract
         # The writer is held open only for this conversion. Output publication is
         # atomic; input data and existing destinations are never modified.
         physics = physics_config(args.source_input)
@@ -616,6 +750,17 @@ def main() -> int:
         provenance = provenance_metadata(physics_data, args.physics_config,
                                          args.source_input, args.dumpall, args.stopping_table,
                                          args.converter_executable, args.reconstructor, args.track_exporter)
+        if automatic_contract is not None:
+            automatic_json = canonical_json(automatic_contract)
+            automatic_hash = hashlib.sha256(automatic_json).hexdigest()
+            provenance.update({
+                "physics_config_origin": "auto-associated-same-folder-phits-input",
+                "physics_contract_json": automatic_json.decode("utf-8"),
+                "physics_contract_sha256": automatic_hash,
+                "generated_physics_config_json": automatic_json.decode("utf-8"),
+                "generated_physics_config_sha256": automatic_hash,
+                "phits_run_log_sha256": automatic_contract["phits_run_log_sha256"],
+            })
         config = {**provenance, "material": physics_data["region_material"],
                   "medium": str(physics_data["egs5_medium"]), "cutoff_MeV": "0.001",
                   "algorithm_version": "pb-egs5-exp-v3-score-gate",
