@@ -129,9 +129,18 @@ The normal two-path command and Python call need no physics JSON or table path:
 dump2event input.dumpall output.h5
 ```
 
-Automatic mode accepts exactly one sibling `*.inp` whose `[Parameters] file(15)`
-resolves to that Dumpall and whose configured `[Parameters] file(6)` log is
-present and reports `Version = 3.341`. The input must pass Pb source type/energy, geometry, material, charged-particle transport mode,
+Automatic mode accepts exactly one sibling `*.inp` whose explicit or
+PHITS-reported effective `[Parameters] file(15)` resolves to that Dumpall and
+whose configured `file(6)` log (default `phits.out`) reports `Version = 3.341`.
+PHITS defaults are resolved before validation. For EGS5, omitted
+`emin(12:14)` values use the PHITS defaults for `negs=1/2`. PHITS 3.341
+also aligns `emin(12)` to `emin(13)` when they differ; the resolver records
+that effective value and its source. In the `dump_662` input, explicit
+`emin(13)=0.001` causes omitted `emin(12)` to be adjusted to 0.001 MeV, which
+matches the validated electron cutoff. If both charged cutoffs are omitted,
+their 0.1 MeV defaults remain outside the current validated scope and are
+rejected. See the [PHITS EGS5 parameter defaults](https://phits.jaea.go.jp/manual/PHITS-en/chapters/sections/parameters/parameters_13.html).
+The input must pass Pb source type/energy, geometry, material, charged-particle transport mode,
 cutoff, and unit-weight checks; `[t-deposit]`, an explicit `bitrseed`,
 `maxcas`, and `maxbch=1` are no longer mandatory.
 Relative run output paths follow the co-located convention: PHITS input, log,
@@ -169,7 +178,7 @@ set `emax` at or above the largest source photon energy (e.g.
 `emax=2.0` for 2-MeV input). The `[t-deposit]` region, output, unit,
 and other established strict gates are unchanged.
 
-The existing source-input pairing (same-folder `file(15)` Dumpall and
+The existing source-input pairing (same-folder effective `file(15)` Dumpall and
 `file(6)` PHITS 3.341 log), explicit 64-bit `bitrseed`, Pb material
 and density, 1-keV charged cutoffs, SHA-pinned Pb HATCH table,
 unit-weight requirements, and unsupported-process `UNRESOLVED` handling
@@ -186,8 +195,9 @@ The Dumpall-derived energy calculation does **not** consume a PHITS
 `[t-deposit]` file, any `[t-deposit]` histogram, the PHITS random
 `bitrseed`, or the requested number of histories (`maxcas`). Those are
 no longer mandatory declarations. `maxbch` is metadata only; the event
-exporter enforces **strictly increasing NOCAS identifiers** and rejects
-nonunique histories rather than guessing how to combine batches.
+exporter preserves Dumpall event order; NOCAS identifiers must be positive and
+unique, but they do not need to be numerically increasing. Duplicate
+identifiers are rejected rather than guessed to represent different batches.
 
 The `[t-deposit]` section may be absent or contain a different histogram
 specification: its presence and binning do not alter the reconstructed

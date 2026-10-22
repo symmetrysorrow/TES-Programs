@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from decimal import Decimal, InvalidOperation
 import hashlib
 import itertools
 import json
@@ -43,6 +44,8 @@ def canonical_json(value: object) -> bytes:
 
 
 MAX_SOURCE_GAMMA_ENERGY_MEV = 2.0
+PHITS_3341_EGS5_EMIN_DEFAULTS_MEV = {12: 0.1, 13: 0.1, 14: 0.001}
+VALIDATED_EGS5_CUTOFFS_MEV = {12: 0.001, 13: 0.001, 14: 0.001}
 
 
 def source_definition(source_lines: list[str]) -> dict:
@@ -150,6 +153,63 @@ def resolved_esmin_MeV(source_input: Path, phits_version: str) -> float:
     return value
 
 
+def _parameter_number(raw: str, name: str) -> float:
+    """Parse a PHITS numeric token, including Fortran D exponents."""
+    try:
+        token = raw.split()[0].replace("D", "E").replace("d", "e")
+        value = float(token)
+    except (ValueError, IndexError) as error:
+        raise ValueError(f"invalid [Parameters] {name}: {raw!r}") from error
+    if not math.isfinite(value):
+        raise ValueError(f"[Parameters] {name} must be finite")
+    return value
+
+
+def resolved_egs5_cutoffs(source_input: Path, phits_version: str) -> dict:
+    """Resolve EGS5 emin(12:14) from explicit values or PHITS 3.341 defaults."""
+    if phits_version != "3.341":
+        raise ValueError("EGS5 cutoff defaults are pinned only for PHITS 3.341")
+    params = _input_values(source_input, "parameters")
+    raw_negs = params.get("negs")
+    negs = _parameter_number(raw_negs, "negs") if raw_negs is not None else -1.0
+    if negs not in (1.0, 2.0):
+        source = "explicit" if raw_negs is not None else "PHITS default"
+        raise ValueError(f"EGS5 cutoff resolution requires negs=1 or 2; effective value is {negs:g} ({source})")
+    values: dict[int, float] = {}
+    sources: dict[str, str] = {}
+    for index, default in PHITS_3341_EGS5_EMIN_DEFAULTS_MEV.items():
+        key = f"emin({index})"
+        raw = params.get(key)
+        values[index] = default if raw is None else _parameter_number(raw, key)
+        if values[index] <= 0.0:
+            raise ValueError(f"[Parameters] {key} must be positive; found {values[index]!r}")
+        sources[key] = "phits_default" if raw is None else "explicit"
+    # PHITS 3.341 enforces emin(12) == emin(13). If they differ, the run
+    # reports "emin(12) is adjusted to emin(13)" and uses the positron value
+    # for both charged cutoffs. Resolve the effective value, not the raw
+    # independent default for emin(12).
+    if values[12] != values[13]:
+        values[12] = values[13]
+        sources["emin(12)"] = "phits_adjusted_to_emin13"
+    return {
+        "electron_cutoff_MeV": values[12],
+        "positron_cutoff_MeV": values[13],
+        "photon_cutoff_MeV": values[14],
+        "emin_sources": sources,
+    }
+
+
+def _resolved_run_path(input_path: Path, raw_path: str) -> Path:
+    reference = Path(raw_path.strip().strip("\"'"))
+    return reference.resolve() if reference.is_absolute() else (input_path.parent / reference).resolve()
+
+
+def _log_parameter(log_text: str, key: str) -> str | None:
+    pattern = rf"(?im)^\s*{re.escape(key)}\s*=\s*(.*?)\s*(?:#.*)?$"
+    matches = re.findall(pattern, log_text)
+    return matches[-1].strip().strip("\"'") if matches else None
+
+
 def material_settings(contract: dict) -> dict:
     """Resolve explicit Pb/Bi single-material contracts without inventing Bi properties."""
     element = contract.get("region_material")
@@ -224,6 +284,8 @@ def resolved_physics(settings: dict, source_input: Path) -> dict:
         "egs5_medium": int(settings["egs5_medium"]),
         "electron_cutoff_MeV": float(settings["electron_cutoff_MeV"]),
         "positron_cutoff_MeV": float(settings["positron_cutoff_MeV"]),
+        "photon_cutoff_MeV": float(settings.get("photon_cutoff_MeV", 0.001)),
+        "emin_sources": settings.get("emin_sources", {}),
         "esmin_MeV": float(settings["esmin_MeV"]),
         "dead_secondary_score_threshold_MeV": min(float(settings["esmin_MeV"]), 1.0e-6),
         "dead_secondary_score_rule": "PHITS-3.341-tdepstregEVENT-QCLUSTS7-gt-eletb1-v1",
@@ -255,9 +317,14 @@ def physics_config(source_input: Path, config_path: Path | None = None):
         elif active:
             sections[active].append(line)
     source = source_definition(sections.get("source", []))
+    cutoffs = resolved_egs5_cutoffs(source_input, "3.341")
     return {
         "phits_version": "3.341", "region_id": 1000, "region_material": "PB",
-        "dumpall_material_id": 2, "egs5_medium": 2, "electron_cutoff_MeV": 0.001,
+        "dumpall_material_id": 2, "egs5_medium": 2,
+        "electron_cutoff_MeV": cutoffs["electron_cutoff_MeV"],
+        "positron_cutoff_MeV": cutoffs["positron_cutoff_MeV"],
+        "photon_cutoff_MeV": cutoffs["photon_cutoff_MeV"],
+        "emin_sources": cutoffs["emin_sources"],
         "esmin_MeV": resolved_esmin_MeV(source_input, "3.341"),
         "dead_secondary_score_threshold_MeV": min(resolved_esmin_MeV(source_input, "3.341"), 1.0e-6),
         "weights": "unit-weight validated slice only", "diagnostic_mode": True,
@@ -297,11 +364,12 @@ def _input_values(path: Path, section: str) -> dict[str, str]:
 
 
 def resolve_run_pair(dumpall: Path) -> tuple[Path, Path, str]:
-    """Find exactly one sibling PHITS input whose file(15) names this Dumpall.
+    """Find exactly one sibling PHITS input/log pair for this Dumpall.
 
-    Relative file(15)/file(6) paths use the enforced co-located-run convention:
-    the PHITS input, outputs and Dumpall must be in the same directory. The
-    referenced PHITS log must identify the actual executable version.
+    Explicit file(15) is preferred; if omitted, use its effective value echoed
+    by PHITS (or the documented dumpall.dat default). An omitted file(6) uses
+    the documented phits.out default. Relative paths use the co-located-run
+    convention. The referenced log must identify the executable version.
     """
     dump = dumpall.resolve(strict=True)
     if not dump.is_file():
@@ -309,39 +377,43 @@ def resolve_run_pair(dumpall: Path) -> tuple[Path, Path, str]:
     candidates: list[tuple[Path, Path, str]] = []
     for input_path in sorted(dump.parent.glob("*.inp")):
         params = _input_values(input_path, "parameters")
-        raw_output = params.get("file(15)")
-        raw_log = params.get("file(6)")
-        if not raw_output or not raw_log:
+        explicit_output = params.get("file(15)")
+        if explicit_output and _resolved_run_path(input_path, explicit_output) != dump:
             continue
-        output_ref = Path(raw_output.strip().strip("\"'"))
-        log_ref = Path(raw_log.strip().strip("\"'"))
-        if output_ref.is_absolute():
-            output_path = output_ref.resolve()
-        elif output_ref.parent == Path("."):
-            # PHITS is required to be run from the directory containing its
-            # input/output pair; bare file names are unambiguous there.
-            output_path = (input_path.parent / output_ref).resolve()
-        else:
-            output_path = (input_path.parent / output_ref).resolve()
-        if output_path != dump:
-            continue
-        log_path = log_ref if log_ref.is_absolute() else (input_path.parent / log_ref).resolve()
+        raw_log = params.get("file(6)", "phits.out")
+        log_path = _resolved_run_path(input_path, raw_log)
         if not log_path.is_file():
             continue
         log_text = log_path.read_text(encoding="utf-8-sig", errors="replace")
-        versions = set(re.findall(r"(?im)^\s*Version\s*=\s*([0-9]+\.[0-9]+)\s*$", log_text))
+        versions = set(re.findall(
+            r"(?im)^\s*\|?\s*Version\s*=\s*([0-9]+\.[0-9]+)\s*\|?\s*$", log_text
+        ))
         if versions != {"3.341"}:
             raise ValueError(
                 f"PHITS run log {log_path} must identify exactly Version = 3.341; found {sorted(versions)}"
             )
+        # PHITS echoes effective defaults in its parameter report. Use that
+        # run-time value when file(15) was omitted from the source input.
+        logged_output = _log_parameter(log_text, "file(15)")
+        raw_output = params.get("file(15)") or logged_output or "dumpall.dat"
+        output_path = _resolved_run_path(input_path, raw_output)
+        if output_path != dump:
+            continue
+        if logged_output is not None:
+            logged_path = _resolved_run_path(input_path, logged_output)
+            if logged_path != output_path:
+                raise ValueError(
+                    f"PHITS input {input_path} file(15) resolves to {output_path}, "
+                    f"but run log {log_path} reports {logged_path}"
+                )
         candidates.append((input_path.resolve(), log_path, "3.341"))
     if len(candidates) != 1:
         details = ", ".join(str(item[0]) for item in candidates) or "none"
         reason = "no matching input/log pair" if not candidates else "multiple matching inputs"
         raise ValueError(
             f"cannot uniquely associate Dumpall {dump}: {reason} ({details}); "
-            "expected one sibling *.inp with matching [Parameters] file(15), "
-            "a present [Parameters] file(6) log, and PHITS Version = 3.341"
+            "expected one sibling *.inp whose explicit or PHITS-default file(15) "
+            "matches the Dumpall, a file(6) or default phits.out log, and PHITS Version = 3.341"
         )
     return candidates[0]
 
@@ -352,29 +424,44 @@ def build_automatic_physics_contract(dumpall: Path) -> tuple[dict, Path, Path]:
     validate_source_input(source_input)
     params = _input_values(source_input, "parameters")
     # The Dumpall stream carries NOCAS per event and is parsed by the native
-    # transporter. Neither a maxcas count nor a maxbch setting is used to
-    # compute an energy deposit. The HDF5 writer requires strictly increasing
-    # NOCAS, so repeated IDs across batches are rejected at conversion.
-    # Keep present settings for provenance without requiring their presence.
+    # transporter. Preserve its event order; NOCAS values need to be unique,
+    # but PHITS may emit them in a non-monotonic order. Neither a maxcas count
+    # nor a maxbch setting is used to compute an energy deposit. Keep present
+    # settings for provenance without requiring their presence.
     seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else None
+    logged_file15 = _log_parameter(run_log.read_text(encoding="utf-8-sig", errors="replace"), "file(15)")
+    effective_file15 = params.get("file(15)") or logged_file15 or "dumpall.dat"
     maxcas_raw = params.get("maxcas", "").split()[:1]
     maxbch_raw = params.get("maxbch", "").split()[:1]
     try:
-        maxcas = int(maxcas_raw[0]) if maxcas_raw else None
-        maxbch = int(maxbch_raw[0]) if maxbch_raw else None
-    except ValueError as error:
-        raise ValueError("explicit maxcas/maxbch must be integers") from error
+        maxcas_decimal = Decimal(maxcas_raw[0].replace("D", "E").replace("d", "e")) if maxcas_raw else None
+        maxbch_decimal = Decimal(maxbch_raw[0].replace("D", "E").replace("d", "e")) if maxbch_raw else None
+        if (maxcas_decimal is not None and
+                (not maxcas_decimal.is_finite() or maxcas_decimal != maxcas_decimal.to_integral_value())):
+            raise ValueError("maxcas is not an integer-valued number")
+        if (maxbch_decimal is not None and
+                (not maxbch_decimal.is_finite() or maxbch_decimal != maxbch_decimal.to_integral_value())):
+            raise ValueError("maxbch is not an integer-valued number")
+        maxcas = int(maxcas_decimal) if maxcas_decimal is not None else None
+        maxbch = int(maxbch_decimal) if maxbch_decimal is not None else None
+    except (InvalidOperation, ValueError) as error:
+        raise ValueError("explicit maxcas/maxbch must be integer-valued PHITS numbers") from error
     if maxcas is not None and maxcas <= 0:
         raise ValueError("explicit maxcas must be positive")
     if maxbch is not None and maxbch <= 0:
         raise ValueError("explicit maxbch must be positive")
     esmin = resolved_esmin_MeV(source_input, version)
+    cutoffs = resolved_egs5_cutoffs(source_input, version)
     contract = {
         "phits_version": version,
         "phits_input": str(source_input),
         "phits_input_sha256": sha256(source_input),
         "phits_run_log": str(run_log),
         "phits_run_log_sha256": sha256(run_log),
+        "phits_file6_status": "explicit" if params.get("file(6)") else "phits_default",
+        "phits_file15_status": ("explicit" if params.get("file(15)") else
+                                 "phits_log_effective" if logged_file15 is not None else "phits_default"),
+        "phits_file15_effective": str(_resolved_run_path(source_input, effective_file15)),
         "source_seed_bits": seed,
         "source_seed_status": "explicit" if seed else "not_explicit_in_input",
         "maxcas": maxcas,
@@ -385,8 +472,10 @@ def build_automatic_physics_contract(dumpall: Path) -> tuple[dict, Path, Path]:
         "region_material": "Pb",
         "dumpall_material_id": 2,
         "egs5_medium": 2,
-        "electron_cutoff_MeV": 0.001,
-        "positron_cutoff_MeV": 0.001,
+        "electron_cutoff_MeV": cutoffs["electron_cutoff_MeV"],
+        "positron_cutoff_MeV": cutoffs["positron_cutoff_MeV"],
+        "photon_cutoff_MeV": cutoffs["photon_cutoff_MeV"],
+        "emin_sources": cutoffs["emin_sources"],
         "esmin_MeV": esmin,
         "dead_secondary_score_threshold_MeV": min(esmin, 1.0e-6),
         "weight_mode": "unit",
@@ -475,18 +564,30 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
             found[re.sub(r"\s+", "", key)] = value.strip()
         return found
     params = values("parameters")
-    required_params = {"negs": "1", "e-mode": "2", "emin(12)": "0.001",
-                       "emin(13)": "0.001", "emin(14)": "0.001"}
-    for key, expected in required_params.items():
-        got = params.get(key)
-        if got is None or float(got.split()[0]) != float(expected):
-            raise ValueError(f"source input must set [{key}]={expected}; found {got!r}")
-    # icntl is an execution mode; an explicitly incompatible setting still
-    # fails. Its absence is not a missing physical transport coefficient.
-    if "icntl" in params and params["icntl"].split()[:1] != ["0"]:
-        raise ValueError("explicit icntl must be 0 for a normal Dumpall transport run")
-    if "dumpall" in params and params["dumpall"].split()[:1] != ["-1"]:
-        raise ValueError("explicit dumpall must be -1 for this Dumpall format")
+    # Resolve omitted settings to PHITS defaults before enforcing the
+    # converter's supported mode. A different effective cutoff is not silently
+    # treated as the validated 1 keV setting.
+    mode_values = {"negs": ("1", "-1"), "e-mode": ("2", "0"),
+                   "icntl": ("0", "0"), "dumpall": ("-1", "0")}
+    for key, (expected, default) in mode_values.items():
+        raw = params.get(key)
+        actual = raw.split()[0] if raw is not None else default
+        source = "explicit" if raw is not None else "PHITS default"
+        if _parameter_number(actual, key) != float(expected):
+            raise ValueError(
+                f"effective [{key}]={actual} ({source}); this conversion requires {expected}"
+            )
+    cutoffs = resolved_egs5_cutoffs(path, "3.341")
+    cutoff_keys = {12: "electron_cutoff_MeV", 13: "positron_cutoff_MeV", 14: "photon_cutoff_MeV"}
+    for index, expected in VALIDATED_EGS5_CUTOFFS_MEV.items():
+        key = f"emin({index})"
+        actual = cutoffs[cutoff_keys[index]]
+        source = cutoffs["emin_sources"][key]
+        if actual != expected:
+            raise ValueError(
+                f"effective [{key}]={actual:g} MeV ({source}); the validated Pb "
+                f"reconstruction requires {expected:g} MeV"
+            )
     seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else None
     if seed is not None and not re.fullmatch(r"[01]{64}", seed):
         raise ValueError("explicit bitrseed must contain exactly 64 binary digits")
@@ -581,12 +682,14 @@ def groups(path: Path):
 def take(group_iter, current, event_id):
     if current is None:
         current = next(group_iter, None)
-    if current is not None and current[0] < event_id:
-        raise ValueError(f"input event {current[0]} is missing from event list")
-    if current is not None and current[0] == event_id:
-        rows = current[1]
-        return rows, next(group_iter, None)
-    return [], current
+    if current is None:
+        return [], None
+    if current[0] != event_id:
+        raise ValueError(
+            f"input event stream is not aligned with raw event order: "
+            f"expected event {event_id}, found {current[0]}"
+        )
+    return current[1], next(group_iter, None)
 
 
 def run(args, writer: EventV2Writer, provenance: dict) -> dict:
@@ -622,11 +725,13 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
     next_ledger = next(ledger_groups, None)
     event_count = track_count = particle_count = deposit_count = unresolved_count = 0
     negative_count = duplicate_ids = 0
+    seen_event_ids = set()
     with event_path.open("r", encoding="utf-8-sig", newline="") as event_stream:
         for row in csv.DictReader(event_stream):
             event_id = int(row["event_id"])
-            if event_id <= 0 or (event_count and event_id <= last_event):
-                raise ValueError("raw event IDs must be positive and strictly increasing")
+            if event_id <= 0 or event_id in seen_event_ids:
+                raise ValueError("raw event IDs must be positive and unique")
+            seen_event_ids.add(event_id)
             raw_tracks, next_tracks = take(track_groups, next_tracks, event_id)
             raw_deposits, next_ledger = take(ledger_groups, next_ledger, event_id)
 
@@ -692,7 +797,6 @@ def run(args, writer: EventV2Writer, provenance: dict) -> dict:
             writer.append_event(event_id, particles, deposits, complete=complete,
                                 all_absorption="undetermined")
             event_count += 1
-            last_event = event_id
     if next_tracks is not None or next_ledger is not None:
         raise ValueError("track or deposit input contains events absent from the raw event stream")
     if negative_count:
