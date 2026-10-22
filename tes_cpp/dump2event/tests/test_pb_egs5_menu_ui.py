@@ -65,8 +65,10 @@ def _fake_hdf5(path):
         prov.attrs["algorithm_version"] = "test"
 
 
-def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
+def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
     fake = FakeQuestionary([raw, config, table, output])
     calls = []
 
@@ -86,8 +88,10 @@ def test_pb_ui_routes_explicit_api_and_does_not_run_pulse(tmp_path):
     assert "event_pb_egs5_v2.h5" in fake.default_paths[-1]
 
 
-def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path):
+def test_pb_ui_rejects_existing_output_without_running_converter(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
     output.write_text("do not replace")
     with pytest.raises(FileExistsError):
         run_pb_egs5_ui(FakeQuestionary([raw, config, table, output]),
@@ -103,8 +107,10 @@ def test_pb_ui_rejects_missing_phits_input(tmp_path):
                        lambda *args, **kwargs: pytest.fail("unexpected converter call"))
 
 
-def test_pb_ui_cancelled_before_conversion(tmp_path):
+def test_pb_ui_cancelled_before_conversion(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
+    monkeypatch.setattr(ui, "_bundled_table_present", lambda: False)
     assert run_pb_egs5_ui(
         FakeQuestionary([raw, config, table, output], confirmed=False),
         lambda *args, **kwargs: pytest.fail("unexpected converter call"),
@@ -140,7 +146,7 @@ def test_ui_rejects_non_pb_material_before_conversion(tmp_path):
 def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkeypatch):
     import PoST_Simulations.lib.pb_egs5_ui as ui
     raw, config, table, output = _inputs(tmp_path)
-    monkeypatch.setattr(ui, "_bundled_table_present", lambda: True)
+    assert ui._bundled_table_present() is True
     dialog = FakeQuestionary([raw, config, output])
     kwargs_seen = []
 
@@ -158,6 +164,10 @@ def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkey
 def test_modified_private_table_environment_setting_fails_closed(tmp_path, monkeypatch):
     import PoST_Simulations.lib.pb_egs5_ui as ui
     _, _, table, _ = _inputs(tmp_path)
+    fake_ui = tmp_path / "isolated" / "lib" / "pb_egs5_ui.py"
+    fake_ui.parent.mkdir(parents=True)
+    fake_ui.write_text("", encoding="utf-8")
+    monkeypatch.setattr(ui, "__file__", str(fake_ui))
     table.write_bytes(b"private but not valid pinned bytes")
     monkeypatch.setenv("TES_CPP_PB_HATCH_TABLE", str(table))
     with pytest.raises(ValueError, match="SHA-256 mismatch"):

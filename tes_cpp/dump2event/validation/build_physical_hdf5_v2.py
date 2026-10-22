@@ -552,6 +552,9 @@ def resolve_stopping_table(explicit: Path | None) -> Path:
         candidates = [
             home / BUNDLED_PB_TABLE_NAME,  # Python package install beside driver
             home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
+            # CMake/scikit-build installs native assets in the Python package
+            # directory while placing this driver under share/.
+            home.parent.parent / "tes_cpp_dump2event" / "bin" / BUNDLED_PB_TABLE_NAME,
             home.parent.parent / "bin" / BUNDLED_PB_TABLE_NAME,  # CMake prefix/bin
         ]
         configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")

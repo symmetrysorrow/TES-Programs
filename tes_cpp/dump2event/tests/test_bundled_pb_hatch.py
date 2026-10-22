@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "validation"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 import build_physical_hdf5_v2 as pb
 
 
@@ -23,6 +24,11 @@ def test_explicit_missing_table_reports_path(tmp_path):
 def test_private_environment_table_is_checksum_pinned(monkeypatch, tmp_path):
     table = tmp_path / "private.csv"
     table.write_text("not the verified historical table", encoding="utf-8")
+    # Exercise the environment fallback in an isolated, table-free install.
+    driver = tmp_path / "validation" / "build_physical_hdf5_v2.py"
+    driver.parent.mkdir(parents=True)
+    driver.write_text("", encoding="utf-8")
+    monkeypatch.setattr(pb, "__file__", str(driver))
     monkeypatch.setenv("TES_CPP_PB_HATCH_TABLE", str(table))
     with pytest.raises(ValueError, match="checksum mismatch"):
         pb.resolve_stopping_table(None)
@@ -64,7 +70,7 @@ def test_cmake_installed_bin_path_is_discovered(monkeypatch, tmp_path):
     driver_dir.mkdir(parents=True)
     driver = driver_dir / "build_physical_hdf5_v2.py"
     driver.write_text("", encoding="utf-8")
-    table = prefix / "bin" / pb.BUNDLED_PB_TABLE_NAME
+    table = prefix / "tes_cpp_dump2event" / "bin" / pb.BUNDLED_PB_TABLE_NAME
     table.parent.mkdir(parents=True)
     table.write_text("test-only path fixture; never physics data", encoding="utf-8")
     monkeypatch.setattr(pb, "__file__", str(driver))
@@ -73,6 +79,21 @@ def test_cmake_installed_bin_path_is_discovered(monkeypatch, tmp_path):
     # This synthetic fixture is never accepted or used as physical input.
     monkeypatch.setattr(pb, "sha256", lambda _: pb.BUNDLED_PB_TABLE_SHA256)
     assert pb.resolve_stopping_table(None) == table
+
+
+def test_python_console_entry_point_invokes_bundled_executable(monkeypatch):
+    from types import SimpleNamespace
+    import tes_cpp_dump2event.cli as cli
+
+    calls = []
+    monkeypatch.setattr(cli, "_executable", lambda: r"C:\installed\dump2event.exe")
+    monkeypatch.setattr(cli.sys, "argv", ["dump2event", "in.dumpall", "out.h5",
+                                          "--physics-config", "pb.json"])
+    monkeypatch.setattr(cli.subprocess, "run", lambda argv, check:
+                        calls.append((argv, check)) or SimpleNamespace(returncode=0))
+    assert cli.main() == 0
+    assert calls == [([r"C:\installed\dump2event.exe", "in.dumpall", "out.h5",
+                       "--physics-config", "pb.json"], False)]
 
 
 def test_importer_refuses_fake_coefficients(tmp_path):

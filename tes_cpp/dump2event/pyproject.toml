@@ -5,8 +5,12 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "tes-cpp-dump2event"
 version = "0.1.0"
-description = "Fast, portable conversion from PHITS dumpall.dat to event.json"
+description = "PHITS 3.341 Pb EGS5 Dumpall to physical-deposit HDF5 v2 conversion"
 requires-python = ">=3.9"
+dependencies = ["h5py>=3.8"]
+
+[project.scripts]
+dump2event = "tes_cpp_dump2event.cli:main"
 
 [tool.scikit-build]
 wheel.packages = ["python/tes_cpp_dump2event"]

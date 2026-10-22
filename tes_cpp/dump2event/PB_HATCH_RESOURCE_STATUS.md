@@ -1,88 +1,82 @@
-﻿# Pb HATCH table availability, rights review, and installation behavior
+# Pb HATCH resource and installation status
 
 Date: 2026-10-22 (Asia/Tokyo)
 
-## Verified source bytes
+## Data provenance and scope
 
-The original file exists in the local, untracked validation directory:
+The table was copied byte-for-byte from the previously validated local source:
 
-`dump2event_physics_validation/egs5_stopping_power_reconstruction/runs/n100_stopping_probe_v2/egs5_stopping_power_coefficients.csv` relative to the main checkout
-
-Measured values:
+`dump2event_physics_validation/egs5_stopping_power_reconstruction/runs/n100_stopping_probe_v2/egs5_stopping_power_coefficients.csv`
 
 - Size: 130,754 bytes
 - SHA-256: `20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9`
-- CSV header: `medium,medname,lelke,eke0,eke1,ededx0,ededx1,pdedx0,pdedx1,phits_density,egs_density`
-- Data rows: 600 total; medium 2/PB: 150
-- Medium 2 indices: unique `lelke` 1 through 150
-- PHITS and EGS5 density values: 9.78 g/cm3
+- Rows: 600; medium 2/PB: 150; `lelke`: 1–150
+- PHITS/EGS5 density: 9.78 g/cm³
+- Destination in this branch: `tes_cpp/dump2event/data/pb_egs5_phits3341.csv`
 
-The original file was read only. No coefficient values were changed, reconstructed, or substituted. The similarly named `n100_stopping_probe` copy was not selected.
+The original and destination were checked with the existing importer's
+`validate_original` routine. The GitHub connector confirmed the repository is
+Private; an authenticated GitHub collaborators query returned only
+`symmetrysorrow`. The repository owner reports receiving permission from
+PHITS administrator Nobuyuki Shikko for this table within the individual-use
+scope. This does not authorize public distribution, mirroring, commercial use,
+or broader repository access. The official EGS5 notice limits the manual and
+included software to non-commercial use; the bundle remains restricted to
+the stated private individual-use scope. See the [PHITS application and
+pledge](https://phits.jaea.go.jp/image/application_format.pdf) and [EGS5
+copyright notice](https://rcwww.kek.jp/research/egs/slac730-page2.pdf).
 
-## Public redistribution review
+## Installation behavior
 
-**Decision: redistribution permission is not established; the CSV is not included in Git.**
-
-The PHITS official download/licensing page states that PHITS is supplied under an individual-use license and each user must obtain a license. It does not grant a public redistribution right for HATCH-generated output data. The installed `C:\PHITS\readme-eng.txt` points to license agreements in the distribution's `document` directory. A filename inventory of its 50 files found no PHITS license/agreement document; the `C:\PHITS\document\license` subdirectory contains third-party tool licenses. No PHITS output-data redistribution clause was found locally.
-
-The EGS5 manual's SLAC notice says the manual and included software are for non-commercial use and that notices must remain attached to copies/derivatives of the manual/software and documents/software containing such material. That notice does not specifically classify or grant redistribution rights for HATCH-generated coefficient CSV output. Whether this table is covered as a derivative/output is therefore unresolved. We did not infer permission merely because it was produced by a local run.
-
-Sources:
-
-- PHITS official Japanese licensing/download procedure: https://phits.jaea.go.jp/getj.html (individual license condition)
-- EGS5 official KEK-hosted manual, SLAC Software Notices, printed page i / PDF page 1: https://rcwww.kek.jp/research/egs/egs5_manual/slac730-150228.pdf
-- Local PHITS package note: `C:\PHITS\readme-eng.txt`, lines describing `document` as containing updated-feature documents and license agreements
-
-A written clarification from the relevant PHITS/EGS5 rightsholders would be needed before the CSV can be added to the public repository.
-
-## Code and local use
-
-The resource resolver now enforces the historical SHA-256 for all routes, including an explicit `--stopping-table` path. It rejects arbitrary, altered, or wrong-table CSVs. Search order without an explicit path is:
-
-1. `TES_CPP_PB_HATCH_TABLE` (private per-user installation)
-2. CSV beside the Python driver (setuptools/Python package install)
-3. source-tree `tes_cpp/dump2event/data/`
-4. `<CMake install prefix>/bin/`
-
-The installed CMake layout previously placed the driver under `share/tes_cpp_dump2event` while binaries/resources belong in `bin`; the resolver now checks the prefix `bin` directory. `setup.py` copies the driver beside the executable and can copy a table only if one has been legitimately installed into the source resource directory.
-
-PoST's interactive flow checks the same user environment setting, validates its checksum before skipping the table picker, and rejects non-Pb material. It does not offer Bi as a usable path. HDF5 v2 provenance continues to store the SHA-256 of the exact table passed to the converter.
-
-Example once-per-user setup:
-
-```powershell
-[Environment]::SetEnvironmentVariable(
-  "TES_CPP_PB_HATCH_TABLE",
-  "D:\private\egs5_stopping_power_coefficients.csv",
-  "User")
-```
-
-Then the requested normal command is:
+The normal invocation is:
 
 ```powershell
 dump2event input.dumpall output.h5 --physics-config pb_config.json
 ```
 
-No coefficient CSV was copied into this worktree or staged for Git.
+The installed package's console entry point invokes the bundled native CLI.
+The CLI locates the HDF5 v2 driver; the driver resolves the exact bundled CSV
+and verifies its SHA-256. `TES_CPP_PB_HATCH_TABLE`, `--stopping-table`, and the
+Python API's `stopping_table` argument are optional compatibility/diagnostic
+overrides, not requirements. PoST skips the CSV picker when the checked
+resource is available. Unsupported material or modified/missing table bytes
+remain fail-closed. No physics formula or HDF5 schema changed.
 
-## Existing data and regression checks
+## Verification
 
-Read-only inspection of the existing the existing `gamma_2mev_1000.h5` in the local `two_mev_1000` validation directory found HDF5 v2, PHITS 3.341, algorithm `pb-egs5-exp-v3-score-gate`, and the same stopping-table SHA-256. The file was not regenerated or modified.
+Branch: `feat/pb-hatch-private-bundle-20261022`
+Base: `origin/main` at `5f129bfa2c4dce6c31ef7230f486c45d87655b89`
 
-The archived report for this file records 5,978,912/5,978,912 internal additions matched, 0 addition/event/region/coordinate mismatches, and maximum energy difference `4.680023729664029e-14 MeV`. This resource task changed only resolution and UI behavior, not physics equations; that recorded physical validation remains the prior evidence.
+- MSVC 19.51.36260 Release build: passed.
+- CTest: 1/1 passed.
+- Focused dump2event Python/UI tests: 81 passed, 7 skipped, 5 subtests passed.
+- `pip install .` in a clean Python 3.14 virtual environment: passed. The
+  Windows wheel (`tes_cpp_dump2event-0.1.0-cp314-cp314-win_amd64.whl`,
+  352,834 bytes, SHA-256 `ad9094854a2d76c559bdcdb85477f91de94ffdd6cb2c11c31bfd1541448175d7`)
+  contains the `dump2event.exe` console entry point, native CLI, physical
+  reconstructor, transport exporter, HDF5 v2 driver/writer, and CSV.
+- Installed-wheel resource resolution with `TES_CPP_PB_HATCH_TABLE` removed
+  selected the packaged file and returned the expected SHA-256. CMake install
+  resolution without the variable also selected the installed CSV.
+- Source-tree PoST test confirmed the real packaged CSV suppresses its
+  stopping-table picker.
+- The archived 2 MeV/1,000-history validation report records 5,978,912 of
+  5,978,912 PHITS additions matched and matching provenance SHA-256. The HDF5
+  itself was not present in the checked repo/worktree paths, so it was not
+  reread or regenerated in this task.
+- Broad Python suite: 565 passed, 10 skipped, 5 subtests passed; 3 unrelated
+  `PoST_Simulations` diagnostic tests failed: a high-frequency slope of
+  `-39.436646 dB/decade` outside its `-40.0 ±0.5` tolerance, a missing
+  `rms_residual_dB` fixture key, and a missing `SimpleNamespace` import. All
+  `tes_cpp/dump2event` tests pass.
+- The importer's source-validation routine was used. Its CLI privacy check
+  requires GitHub CLI, which is not installed here; privacy and collaborator
+  scope were independently checked through authenticated GitHub services.
 
-New software checks cover checksum rejection for explicit and environment table paths, missing/corrupt resources, source/package path discovery, and Pb-only UI flow. Results:
+## GitHub status
 
-- MSVC Release CMake build: success with MSVC 19.51.36260.0
-- CTest (`tes_cpp/build/dump2event`): 1/1 passed
-- pytest (`tes_cpp/dump2event/tests`): 77 passed, 7 skipped
-- `pip install . --no-deps --target <temporary-install-directory>`: success; generated platform wheel `tes_programs-0.1.0-cp314-cp314-win_amd64.whl` (281,606 bytes)
-- Installed package smoke check: CLI, both physical helper binaries, and the Python driver were present; with `TES_CPP_PB_HATCH_TABLE` set to the exact private CSV, the installed driver resolved and SHA-verified it.
-- The first packaging attempt used `--no-build-isolation` and failed because the global Python 3.14 environment has no `setuptools.build_meta`. The isolated pip build then succeeded without installing build dependencies globally.
-- Existing `gamma_2mev_1000.h5` was read without rewriting: HDF5 v2, PHITS 3.341, and table SHA-256 match. The stored audit report records 5,978,912/5,978,912 additions matched (max difference `4.680023729664029e-14 MeV`, zero ID/region/coordinate mismatches).
-
-## Git state and merge gate
-
-Work is isolated in `D:\github\TES-Programs-pb-hatch-20261022`, branch `feat/pb-hatch-resource-20261022`, based on `origin/main` commit `4582f6441ed688ddacd5b96b6dc483ce7af6a7a3`. Main checkout and the existing research worktree were left untouched. PR #6 was not edited. The verified CSV, PHITS distribution/source, Dumpall, PHITS inputs, diagnostic traces, and HDF5 files are not included.
-
-Because the CSV is absent, local installation still requires the existing private file to be located via `TES_CPP_PB_HATCH_TABLE` (or explicit path); true out-of-box conversion without that per-user resource is not possible until redistribution is authorized.
+No changes were made to PR #6; GitHub reports it open. The CSV is only in
+this local feature branch until the branch is pushed to the Private repository.
+Record the feature commit, PR, and Actions result here after publication. Do
+not merge if the private-repository Actions runner fails before executing
+steps; report local tests separately in that case.

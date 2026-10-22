@@ -76,33 +76,31 @@ publication is blocked** until independent Bi `[t-deposit]` oracle matching.
 Do not substitute Pb EDedx/PDedx or density for Bi; do not run expensive new
 10,000-history simulations to bypass this gate. See `BI_VALIDATION_PLAN.md`.
 
-### Pb HATCH table included by default (after source-data import)
+### Bundled Pb HATCH table
 
 The preferred setup is to keep the **exact PHITS 3.341/Pb HATCH CSV** in
-`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`, install it with the package,
-and automatically verify its SHA-256 before using it. The validated historical
+`tes_cpp/dump2event/data/pb_egs5_phits3341.csv`; package builds install it and
+automatically verify its SHA-256 before using it. The validated historical
 file is exactly 130,754 bytes and has the SHA-256:
 
 ```text
 20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9
 ```
 
-`--stopping-table <path>` remains supported for private local tables and
-legacy workflows, but when omitted the native CLI delegates to the Python
-driver to resolve the verified bundled resource. No guessing or network fetch
-occurs: missing/changed bundled data cause a hard error. The table bytes have
-**not** yet been committed because this repository is public, the actual
-historical CSV is available only on a private local Windows installation,
-and permission to publicly redistribute PHITS-generated coefficients has
-not yet been checked. See `data/README.md` and
-`tools/import_verified_pb_table.py`. Until the verified data file is imported,
-use the previous explicit `--stopping-table` argument.
+`--stopping-table <path>` remains available for diagnostics, but is not needed
+for normal use. The native CLI delegates to the Python driver, which resolves
+the verified bundled resource. No guessing or network fetch occurs: missing
+or changed bundled data cause a hard error. Permission from a PHITS
+administrator was obtained for individual-use scope; the GitHub repository is
+private and currently has only the owner as a collaborator. Do not publish the
+CSV, mirror it, or expand access beyond that scope. See `data/README.md` and
+`tools/import_verified_pb_table.py`.
 
 #### Private Pb table setup
 
-The exact historical HATCH CSV remains private because its redistribution
-rights have not been established. Set `TES_CPP_PB_HATCH_TABLE` once to the
-verified local file; the normal CLI then needs no table path:
+For installations that do not include the bundled resource, set
+`TES_CPP_PB_HATCH_TABLE` to the verified local file. On this branch, the
+bundled resource takes precedence and the environment variable is unnecessary:
 
 ```powershell
 $env:TES_CPP_PB_HATCH_TABLE = 'D:\private\egs5_stopping_power_coefficients.csv'
