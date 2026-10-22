@@ -18,7 +18,7 @@ print(result.output_path)
 
 古い反応差分式／総和補正を使う変換器は削除しました。
 現在はPb、EGS5、単位重み等の検証済み条件のみサポートし、
-条件に合わなければエラーです。HDF5 v2を旧`Pulse_Ms`へ渡してはいけません。
+条件に合わなければエラーです。`Pulse_Ms`はHDF5 v2に対応しますが、SEGMENTのエネルギー付与位置は線分内一様dE/dsという近似モデルで分配します。
 検証済み条件・入力設定は`dump2event/README.md`、
 HDF5構造は`dump2event/HDF5_V2_SCHEMA.md`を参照してください。
 
