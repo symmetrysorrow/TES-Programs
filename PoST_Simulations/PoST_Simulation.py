@@ -3063,17 +3063,30 @@ def _run_selected_actions(selected_actions):
     )
 
     selected_actions = set(selected_actions)
-    if "dump_to_event" in selected_actions and selected_actions.intersection(
-        {"pulse_ms", "pulse_ms_noise"}
-    ):
-        raise ValueError("HDF5 v2物理変換は未対応のPulse_Msと同時実行できません")
+    # The converter UI produces one v2 file.  Chain that file into Pulse_Ms
+    # only when there is exactly one requested source position; otherwise
+    # conversion remains a separate per-position step.
+    chain_v2 = {"dump_to_event", "pulse_ms"} <= selected_actions
+    if chain_v2:
+        with open(Path(output) / "input.json", encoding="utf-8") as source:
+            positions = json.load(source)["position"]
+        if len(positions) != 1:
+            raise ValueError(
+                "Dump2Event→Pulse_Msの一括実行は1位置のみ対応です。"
+                "複数位置では位置ごとにv2ファイルを配置してからPulse_Msを実行してください"
+            )
     for action_key in execution_order:
         if action_key not in selected_actions:
             continue
 
         action_name, action = actions[action_key]
         print(f"\n=== {action_name} ===")
-        action()
+        result = action()
+        if chain_v2 and action_key == "dump_to_event":
+            if result is None:
+                return  # cancelled in the converter UI
+            global event_root
+            event_root = str(result.output_path)
 
 
 def _run_interactive():
@@ -3134,13 +3147,7 @@ def _run_interactive():
         print("処理が選択されていません。")
         return
 
-    if "dump_to_event" in selected_actions and set(selected_actions).intersection(
-        {"pulse_ms", "pulse_ms_noise"}
-    ):
-        print("HDF5 v2物理変換は未対応のPulse_Msと同時実行できません。")
-        return
-
-    external_data_actions = {"pulse_ms"}
+    external_data_actions = {"pulse_ms"} if "dump_to_event" not in selected_actions else set()
     if external_data_actions.intersection(selected_actions) and event_root is None:
         data_root = questionary.path(
             "dumpall.dat / event.h5 のルートを指定してください",
@@ -3193,8 +3200,9 @@ if __name__ == "__main__":
         "--event-root",
         default=None,
         help=(
-            "Root directory containing position/<id>/dumpall.dat and "
-            "event.h5. pulse_MS outputs remain under --output."
+            "Position folders containing event.h5 or event_pb_egs5_v2.h5; "
+            "also accepts one .h5 file if input.json selects one position. "
+            "pulse_MS outputs remain under --output."
         ),
     )
     script_args = parser.parse_args()
