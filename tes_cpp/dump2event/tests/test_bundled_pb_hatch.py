@@ -216,7 +216,7 @@ def test_auto_contract_optional_seed_counts_and_execution_parameters(tmp_path):
     # Remove optional PHITS INPUT declarations. The actual Dumpall pairing
     # and PHITS 3.341 run log still exist and are checked independently.
     minimal = re.sub(
-        r"(?im)^\\s*(?:bitrseed|maxcas|maxbch|icntl|dumpall)\\s*=.*(?:\\n|$)",
+        r"(?im)^\s*(?:bitrseed|maxcas|maxbch|icntl|dumpall)\s*=.*(?:\n|$)",
         "",
         raw,
     )
