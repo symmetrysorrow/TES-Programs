@@ -9,7 +9,7 @@ HDF5 v1の新規変換出力、`--input-energy`、`--save-all`、
 ## 対応する物理条件
 
 PHITS 3.341、Pb region 1000、Dumpall material ID 2、EGS5 medium 2、
-1 keV電子・陽電子cutoff、単位重み、対象`[t-deposit]`設定、同一runに対応する
+1 keV電子・陽電子cutoff、単位重み、同一runに対応する
 明示的Pb HATCH停止能テーブル。これ以外は検証済みとみなさず、fail-closedで
 拒否します。検証できた2 MeV・1,000履歴では同一runの内部加算
 **5,978,912/5,978,912**件が一致しました（最大差約4.68e-14 MeV）。
@@ -131,8 +131,9 @@ dump2event input.dumpall output.h5
 
 Automatic mode accepts exactly one sibling `*.inp` whose `[Parameters] file(15)`
 resolves to that Dumpall and whose configured `[Parameters] file(6)` log is
-present and reports `Version = 3.341`. The input must pass the existing Pb
-source, geometry, material, cutoff, tally, seed, and unit-weight checks.
+present and reports `Version = 3.341`. The input must pass Pb source type/energy, geometry, material, charged-particle transport mode,
+cutoff, and unit-weight checks; `[t-deposit]`, an explicit `bitrseed`,
+`maxcas`, and `maxbch=1` are no longer mandatory.
 Relative run output paths follow the co-located convention: PHITS input, log,
 and Dumpall share a directory. Missing or ambiguous pairs fail with an error.
 The generated effective contract, its SHA-256, input/log hashes, source seed,
@@ -177,3 +178,43 @@ continue to apply. In particular a `dump_662` run with no matching
 
 Physical scoring equivalence was demonstrated for previously validated
 inputs, not automatically for all gamma energies in this numeric interval.
+
+
+## Minimal required PHITS input for V2 conversion
+
+The Dumpall-derived energy calculation does **not** consume a PHITS
+`[t-deposit]` file, any `[t-deposit]` histogram, the PHITS random
+`bitrseed`, or the requested number of histories (`maxcas`). Those are
+no longer mandatory declarations. `maxbch` is metadata only; the event
+exporter enforces **strictly increasing NOCAS identifiers** and rejects
+nonunique histories rather than guessing how to combine batches.
+
+The `[t-deposit]` section may be absent or contain a different histogram
+specification: its presence and binning do not alter the reconstructed
+physical ledger. When present, the provenance reports
+`t_deposit_status=configured_not_used`; when absent, `absent`.
+No PHITS tally results are silently used or inferred.
+
+An absent `bitrseed` is recorded as
+`source_seed_status=not_explicit_in_input` and
+`source_seed_bits=null` in the generated contract; no seed is fabricated.
+When a seed is explicitly supplied, its 64-bit binary format is checked.
+The source-input and Dumpall byte SHA-256 hashes remain mandatory provenance.
+If `maxcas` and `maxbch` are present, their positive integer values are
+recorded; an absent value is `null`.
+
+Optional `[Source]` declarations `totfact` and `ne` may be omitted,
+but explicit non-unit `totfact` and contradictory `ne` still fail.
+An unambiguous discrete photon source (`proj=photon`, `e-type=8`,
+positive finite line energy `<=2 MeV`, unit line intensities), the exact
+Pb geometry/material, PHITS 3.341 run version, EGS5 electron transport
+mode, 1 keV relevant charged-particle cutoffs, and **unit weights on the
+actual Dumpall records** remain required. The PHITS source-input pairing
+still requires a unique `file(15)` Dumpall target and a `file(6)` run log
+confirming PHITS 3.341.
+
+Removing a tally or source metadata requirement does **not** extend the
+physics process validation: unknown additions remain UNRESOLVED and prevent
+publishing a falsely complete HDF5 v2. The existing same-run PHITS scoring
+comparison only supports the previously checked runs, not arbitrary
+<=2-MeV photon source geometries or physics processes.

@@ -133,10 +133,10 @@ def test_tally_histogram_bounds_are_separate_from_incident_energy(tmp_path):
     path.write_text(SOURCE.replace("0.511 1", "2.0 1").replace(
         "emax=1.5", "emax=2.0"), encoding="utf-8")
     build.validate_source_input(path)
+    # Any histogram binning is optional for Dumpall reconstruction.
     path.write_text(SOURCE.replace("0.511 1", "2.0 1").replace(
         "emax=1.5", "emax=1.7"), encoding="utf-8")
-    with pytest.raises(ValueError, match="emax"):
-        build.validate_source_input(path)
+    build.validate_source_input(path)
     path.write_text(SOURCE.replace("0.511 1", "0.662 1").replace(
         "emax=1.5", "emax=0.7"), encoding="utf-8")
     build.validate_source_input(path)
@@ -262,3 +262,91 @@ def test_explicit_phits_executable_hash_is_validated_and_recorded(tmp_path):
     config.write_text(json.dumps(dict(SETTINGS, phits_executable_sha256="not-a-hash")), encoding="utf-8")
     with pytest.raises(ValueError, match="phits_executable_sha256"):
         build.provenance_metadata(dict(SETTINGS), config, source, dumpall, table)
+
+
+def _without_tally_or_seed(source_text: str) -> str:
+    source_text = source_text.split("[t-deposit]", 1)[0]
+    return "\n".join(
+        line for line in source_text.splitlines()
+        if not line.lstrip().lower().startswith("bitrseed")
+    ) + "\n"
+
+
+def test_dumpall_contract_does_not_require_t_deposit_seed_batch_count_or_icntl(tmp_path):
+    source = tmp_path / "minimal.inp"
+    minimal = _without_tally_or_seed(SOURCE)
+    minimal = "\n".join(
+        line for line in minimal.splitlines()
+        if not line.lstrip().lower().startswith("icntl")
+    ) + "\n"
+    source.write_text(minimal, encoding="utf-8")
+    build.validate_source_input(source)
+    effective = build.physics_config(source)
+    assert effective["source_seed_bits"] is None
+    assert not build._input_section_present(source, "t-deposit")
+
+    settings = dict(SETTINGS)
+    dummy_config = tmp_path / "contract.json"
+    dummy_config.write_text(json.dumps(settings), encoding="utf-8")
+    dump = tmp_path / "dumpall.dat"
+    dump.write_bytes(b"raw mock dump")
+    table = tmp_path / "table.csv"
+    table.write_bytes(b"mock stopping power bytes")
+    metadata = build.provenance_metadata(settings, dummy_config, source, dump, table)
+    assert metadata["t_deposit_status"] == "absent"
+    assert metadata["source_seed_status"] == "not_explicit_in_input"
+    assert metadata["phits_input_sha256"] == build.sha256(source)
+
+
+def test_t_deposit_histogram_not_used_or_required_even_if_different(tmp_path):
+    source = tmp_path / "other_tally.inp"
+    source.write_text(SOURCE.replace("emax=1.5", "emax=8.0").replace(
+        "unit=3", "unit=1").replace("reg=1000", "reg=9999"), encoding="utf-8")
+    build.validate_source_input(source)
+    source.write_text(SOURCE.split("[t-deposit]")[0], encoding="utf-8")
+    build.validate_source_input(source)
+
+
+@pytest.mark.parametrize("required", [
+    "negs=1", "e-mode=2", "emin(12)=0.001",
+    "emin(13)=0.001", "emin(14)=0.001",
+])
+def test_transport_mode_and_cutoff_settings_still_required(tmp_path, required):
+    path = tmp_path / "wrong.inp"
+    path.write_text(_without_tally_or_seed(SOURCE).replace(required, ""), encoding="utf-8")
+    with pytest.raises(ValueError, match="source input must set"):
+        build.validate_source_input(path)
+
+
+def test_explicit_incompatible_mode_and_nonunit_source_still_fail(tmp_path):
+    path = tmp_path / "wrong.inp"
+    path.write_text(_without_tally_or_seed(SOURCE).replace("icntl=0", "icntl=1"),
+                    encoding="utf-8")
+    with pytest.raises(ValueError, match="icntl"):
+        build.validate_source_input(path)
+    path.write_text(_without_tally_or_seed(SOURCE).replace("wgt=1.0", "wgt=0.5"),
+                    encoding="utf-8")
+    with pytest.raises(ValueError, match="unit"):
+        build.validate_source_input(path)
+
+
+def test_source_ne_and_totfact_can_be_omitted_when_discrete_lines_are_present():
+    lines = ["proj=photon", "e-type=8", "0.663 1"]
+    result = build.source_definition(lines)
+    assert result["source_energies_MeV"] == [0.663]
+    with pytest.raises(ValueError, match="ne"):
+        build.source_definition(lines + ["ne=2"])
+    with pytest.raises(ValueError, match="unit"):
+        build.source_definition(lines + ["totfact=2"])
+
+
+def test_optional_seed_changes_byte_hash_not_semantic_physics_hash(tmp_path):
+    source, config, dumpall, table = _files(tmp_path)
+    old = build.provenance_metadata(dict(SETTINGS), config, source, dumpall, table)
+    source.write_text(SOURCE.replace(
+        "bitrseed = 0101101011001010010111000011100101101001110000111010101010101010\n",
+        ""), encoding="utf-8")
+    new = build.provenance_metadata(dict(SETTINGS), config, source, dumpall, table)
+    assert new["source_seed_status"] == "not_explicit_in_input"
+    assert new["source_input_sha256"] != old["source_input_sha256"]
+    assert new["resolved_physics_sha256"] == old["resolved_physics_sha256"]
