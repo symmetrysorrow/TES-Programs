@@ -33,6 +33,12 @@ def event_format_version(path) -> int:
             raise ValueError(f"{path} is not a {FORMAT_NAME} event file")
         version = source.attrs.get("format_version")
         if version is not None and int(version) == 2:
+            if source.attrs.get("schema") != "flat-offset-v2":
+                raise ValueError("unsupported HDF5 v2 schema")
+            if source.attrs.get("energy_unit") != "MeV" or source.attrs.get("length_unit") != "cm":
+                raise ValueError("HDF5 v2 must declare MeV energies and cm coordinates")
+            if "provenance" not in source or source["provenance"].attrs.get("material") != "Pb":
+                raise ValueError("Pulse_Ms only supports Pb physical HDF5 v2 inputs")
             return 2
     require_legacy_point_events(path)
     return 1
@@ -65,6 +71,8 @@ def allocate_deposit(energy_by_block, deposit, *, length_mm: float, mirror_x: bo
     """
     energy = deposit.get("energy_MeV")
     kind = deposit.get("kind")
+    if int(deposit.get("region_id", -1)) != 1000:
+        raise ValueError("Pulse_Ms only supports the validated Pb region_id=1000")
     if kind not in ("POINT", "SEGMENT") or energy is None:
         raise ValueError(f"unresolved or unknown v2 deposit kind: {kind!r}")
     energy = float(energy)
