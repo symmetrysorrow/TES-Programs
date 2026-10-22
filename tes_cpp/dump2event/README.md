@@ -97,3 +97,19 @@ and permission to publicly redistribute PHITS-generated coefficients has
 not yet been checked. See `data/README.md` and
 `tools/import_verified_pb_table.py`. Until the verified data file is imported,
 use the previous explicit `--stopping-table` argument.
+
+#### Private Pb table setup
+
+The exact historical HATCH CSV remains private because its redistribution
+rights have not been established. Set `TES_CPP_PB_HATCH_TABLE` once to the
+verified local file; the normal CLI then needs no table path:
+
+```powershell
+$env:TES_CPP_PB_HATCH_TABLE = 'D:\private\egs5_stopping_power_coefficients.csv'
+dump2event input.dumpall output.h5 --physics-config pb_config.json
+```
+
+The Python API and PoST UI use the same resolver. Explicit table paths are
+also accepted only when their bytes match the pinned SHA-256 above. Missing
+or modified coefficients fail before conversion; HDF5 v2 provenance records
+the SHA-256 of the actual table used.

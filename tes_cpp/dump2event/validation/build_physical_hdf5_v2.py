@@ -11,6 +11,7 @@ import csv
 import hashlib
 import itertools
 import json
+import os
 import re
 import subprocess
 import sys
@@ -542,29 +543,35 @@ def resolve_stopping_table(explicit: Path | None) -> Path:
     fixture is ever a valid default.
     """
     if explicit is not None:
-        if not explicit.is_file():
-            raise FileNotFoundError(f"explicit stopping table was not found: {explicit}")
-        return explicit
-
-    home = Path(__file__).resolve().parent
-    candidates = [
-        home / BUNDLED_PB_TABLE_NAME,              # installed alongside driver
-        home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
-    ]
+        candidates = [explicit]
+    else:
+        candidates = []
+        configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
+        if configured:
+            candidates.append(Path(configured).expanduser())
+        home = Path(__file__).resolve().parent
+        candidates.extend([
+            home / BUNDLED_PB_TABLE_NAME,  # Python package install beside driver
+            home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
+            home.parent.parent / "bin" / BUNDLED_PB_TABLE_NAME,  # CMake prefix/bin
+        ])
     for candidate in candidates:
         if candidate.is_file():
             actual = sha256(candidate)
             if actual != BUNDLED_PB_TABLE_SHA256:
                 raise ValueError(
-                    f"bundled Pb HATCH coefficient checksum mismatch: {candidate} "
+                    f"Pb HATCH coefficient checksum mismatch: {candidate} "
                     f"(expected {BUNDLED_PB_TABLE_SHA256}, got {actual})"
                 )
             return candidate
+    if explicit is not None:
+        raise FileNotFoundError(f"explicit stopping table was not found: {explicit}")
     raise FileNotFoundError(
         "verified Pb HATCH coefficient table is not bundled. "
         "Install the byte-verified table as tes_cpp/dump2event/data/"
         + BUNDLED_PB_TABLE_NAME +
-        " after checking redistribution rights, or specify --stopping-table explicitly."
+        "; set TES_CPP_PB_HATCH_TABLE for a private installation, or specify "
+        "--stopping-table with the exact SHA-256-pinned CSV."
     )
 
 

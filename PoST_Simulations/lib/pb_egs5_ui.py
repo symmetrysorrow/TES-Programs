@@ -7,6 +7,8 @@ SEGMENT records that require a separately validated TES allocation model.
 from __future__ import annotations
 
 import json
+import os
+import hashlib
 from pathlib import Path
 
 
@@ -82,16 +84,26 @@ def _inspect_v2(path: Path) -> dict[str, object]:
 
 
 def _bundled_table_present() -> bool:
-    """Use the bundled resource when present; the driver checks its exact SHA."""
+    """Report an installed private/bundled table only after its pinned hash matches."""
     name = "pb_egs5_phits3341.csv"
+    expected = "20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9"
+    configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
     repo_path = Path(__file__).resolve().parents[2] / "tes_cpp" / "dump2event" / "data" / name
-    if repo_path.is_file():
-        return True
+    candidates = ([Path(configured).expanduser()] if configured else [])
+    candidates.append(repo_path)
     try:
         from importlib.resources import files
-        return files("tes_cpp").joinpath("bin", name).is_file()
     except (ImportError, ModuleNotFoundError):
-        return False
+        pass
+    else:
+        candidates.append(Path(str(files("tes_cpp").joinpath("bin", name))))
+    for candidate in candidates:
+        if candidate.is_file():
+            digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+            if digest != expected:
+                raise ValueError(f"Pb HATCH CSV SHA-256 mismatch at {candidate}: {digest}")
+            return True
+    return False
 
 
 def run_pb_egs5_ui(questionary, convert):
@@ -100,7 +112,7 @@ def run_pb_egs5_ui(questionary, convert):
     The caller injects questionary and tes_cpp.dump2event so this module does
     not duplicate any physics and can be tested with small mock inputs.
     """
-    print("PHITS 3.341 / Pb・Bi / EGS5物理再構成です。Pbのみ実測承認済み、Biは検証待ちです。")
+    print("PHITS 3.341 / Pb / EGS5物理再構成です。検証済み条件はPbのみです。")
     print("物理条件が異なる場合は変換が拒否されます。")
     print("HDF5 v2はPulse_Msへ直接渡せません。TES熱配分は未検証です。")
 
@@ -109,18 +121,15 @@ def run_pb_egs5_ui(questionary, convert):
         return None
     dump_path = _checked_input(dump_path, "Dumpall")
 
-    config_path = _ask_path(questionary, "Pb/Bi物理設定JSONを指定してください")
+    config_path = _ask_path(questionary, "Pb物理設定JSONを指定してください")
     if config_path is None:
         return None
     config_path = _checked_input(config_path, "物理設定JSON")
     phits_input = _read_contract_input(config_path)
     configured_material = json.loads(config_path.read_text(encoding="utf-8-sig")).get("region_material", "Pb")
-    if configured_material not in ("Pb", "Bi"):
-        raise ValueError(f"非対応の材料です: {configured_material!r}（Pb/Biのみ）")
-    print(f"材料: {configured_material}、設定に紐づくPHITS入力: {phits_input}")
-    if configured_material == "Bi":
-        raise ValueError("BiはPHITS同一runの内部スコア照合と専用HATCH表の実証が未完了です。"
-                         "物理ledgerは研究用ですが、Bi HDF5 v2の生成は承認されていません。")
+    if configured_material != "Pb":
+        raise ValueError(f"非対応の材料です: {configured_material!r}（Pbのみ利用可能）")
+    print(f"材料: Pb、設定に紐づくPHITS入力: {phits_input}")
 
     table_path = None
     if _bundled_table_present():

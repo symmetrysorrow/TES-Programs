@@ -19,6 +19,8 @@ import sys
 
 from setuptools import find_packages, setup
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
+from setuptools.dist import Distribution
 
 
 ROOT = Path(__file__).resolve().parent
@@ -131,6 +133,24 @@ class CMakeBuild(build_ext):
         super().build_extensions()
 
 
+class CMakeBuildPy(build_py):
+    """Run the native build before package-data discovery and wheel assembly.
+
+    This project has command-line binaries rather than Python extension
+    modules. Setuptools otherwise skips ``build_ext`` entirely during a
+    normal ``pip install .``, silently producing a Python-only wheel.
+    """
+    def run(self):
+        self.run_command("build_ext")
+        super().run()
+
+
+class BinaryDistribution(Distribution):
+    """Mark wheels as platform-specific because they contain native binaries."""
+    def has_ext_modules(self):
+        return True
+
+
 setup(
     name="tes-programs",
     version="0.1.0",
@@ -142,5 +162,6 @@ setup(
     install_requires=["h5py>=3.8", "numpy>=1.23"],
     # Keep setuptools' package build output alongside the CMake output.
     options={"build": {"build_base": str(ROOT / "tes_cpp" / "build" / "python")}},
-    cmdclass={"build_ext": CMakeBuild},
+    distclass=BinaryDistribution,
+    cmdclass={"build_ext": CMakeBuild, "build_py": CMakeBuildPy},
 )
