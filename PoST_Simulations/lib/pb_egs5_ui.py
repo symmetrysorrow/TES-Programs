@@ -1,7 +1,7 @@
-"""Interactive, opt-in PHITS Pb EGS5 -> HDF5 v2 conversion.
+"""Interactive PHITS Pb EGS5 -> physical HDF5 v2 conversion.
 
-This UI intentionally does not call Pulse_Ms.  The v2 deposit schema has
-SEGMENT records that require a separately validated TES allocation model.
+Conversion is separate from pulse synthesis; Pulse_Ms now offers an explicitly
+approximate, uniform-chord spatial model for POINT and SEGMENT records.
 """
 
 from __future__ import annotations
@@ -120,7 +120,7 @@ def run_pb_egs5_ui(questionary, convert):
     """
     print("PHITS 3.341 / Pb / EGS5物理再構成です。検証済み条件はPbのみです。")
     print("物理条件が異なる場合は変換が拒否されます。")
-    print("HDF5 v2はPulse_Msへ直接渡せません。TES熱配分は未検証です。")
+    print("HDF5 v2はPulse_Msで処理できます。SEGMENT内の熱配分には一様線分近似を使います。")
 
     dump_path = _ask_path(questionary, "無損失のDumpallファイルを指定してください")
     if dump_path is None:
@@ -176,5 +176,5 @@ def run_pb_egs5_ui(questionary, convert):
     )
     print(f"provenance: PHITS={info['phits_version']}, algorithm={info['algorithm']}")
     print(f"resolved_physics_sha256={info['resolved_sha256']}")
-    print("注意: スコア再構成の成功は全吸収やSEGMENT内の熱分配の証明ではありません。")
+    print("注意: スコア再構成は全吸収やSEGMENT内の熱分配を証明しません。Pulse_Msは近似モデルです。")
     return result
