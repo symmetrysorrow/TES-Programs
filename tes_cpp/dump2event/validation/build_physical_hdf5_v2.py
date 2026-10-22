@@ -76,8 +76,11 @@ def source_definition(source_lines: list[str]) -> dict:
         energies.append(energy)
     if not energies:
         raise ValueError("photon source must declare at least one discrete energy line")
+    # Omitted totfact uses PHITS normal source normalization. It is not
+    # consulted by the Dumpall score reconstruction. If explicitly supplied,
+    # retain the unit-intensity boundary of the validated implementation.
     try:
-        totfact = float(values.get("totfact", "nan"))
+        totfact = float(values.get("totfact", "1"))
         wgt = float(values.get("wgt", "1"))
     except ValueError as error:
         raise ValueError("photon source totfact and wgt must be numeric unit weights") from error
@@ -89,9 +92,12 @@ def source_definition(source_lines: list[str]) -> dict:
     # did not require these three fields for this exact two-line source, so
     # omitted fields are accepted ONLY for the original validated Co-60 pair.
     co60 = energies == [1.173, 1.332]
-    required = ("proj", "e-type", "ne")
+    # ne is metadata for the line count, not an input to reconstruction.
+    # If PHITS accepted a source without explicit ne, the line list already
+    # defines the count; if supplied, reject contradictory values.
+    required = ("proj", "e-type")
     if not co60 and any(key not in values for key in required):
-        raise ValueError("photon source requires proj=photon, e-type=8 and ne matching its lines")
+        raise ValueError("photon source requires proj=photon and e-type=8")
     if "proj" in values and values["proj"].lower() != "photon":
         raise ValueError("photon source requires proj=photon")
     if "e-type" in values and values["e-type"] != "8":
@@ -234,9 +240,9 @@ def resolved_physics(settings: dict, source_input: Path) -> dict:
 
 def physics_config(source_input: Path, config_path: Path | None = None):
     source_text = source_input.read_text(encoding="utf-8-sig", errors="replace")
+    # The seed establishes run reproducibility, not local deposit physics.
+    # Missing seeds must never be invented or represented as a known seed.
     seed_match = re.search(r"(?im)^\s*bitrseed\s*=\s*([01]{64})\s*(?:#.*)?$", source_text)
-    if not seed_match:
-        raise ValueError("PHITS source input must declare a 64-bit binary bitrseed for reproducible provenance")
     sections: dict[str, list[str]] = {}
     active = ""
     for raw in source_text.splitlines():
@@ -258,9 +264,20 @@ def physics_config(source_input: Path, config_path: Path | None = None):
         **source,
         "unsupported_processes": "stored UNRESOLVED; never old-formula fallback",
         "source_input_sha256": sha256(source_input),
-        "source_seed_bits": seed_match.group(1),
+        "source_seed_bits": seed_match.group(1) if seed_match else None,
         "position_semantics": "raw transport chords and raw child point; scorer representative coordinate kept separate",
     }
+
+
+def _input_section_present(path: Path, section: str) -> bool:
+    """Report a PHITS section without making its settings part of the solver."""
+    name = re.sub(r"\\s+", "", section).lower()
+    for raw in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        candidate = raw.split("#", 1)[0].strip()
+        if candidate.startswith("[") and candidate.endswith("]"):
+            if re.sub(r"\\s+", "", candidate[1:-1]).lower() == name:
+                return True
+    return False
 
 
 def _input_values(path: Path, section: str) -> dict[str, str]:
@@ -334,19 +351,23 @@ def build_automatic_physics_contract(dumpall: Path) -> tuple[dict, Path, Path]:
     source_input, run_log, version = resolve_run_pair(dumpall)
     validate_source_input(source_input)
     params = _input_values(source_input, "parameters")
-    if params.get("icntl", "").split()[:1] != ["0"]:
-        raise ValueError("automatic Pb mode requires a normal PHITS run with icntl=0")
-    if params.get("dumpall", "").split()[:1] != ["-1"]:
-        raise ValueError("automatic Pb mode requires dumpall=-1 in the matching PHITS input")
-    if params.get("maxbch", "").split()[:1] != ["1"]:
-        raise ValueError("automatic Pb mode requires maxbch=1")
+    # The Dumpall stream carries NOCAS per event and is parsed by the native
+    # transporter. Neither a maxcas count nor a maxbch setting is used to
+    # compute an energy deposit. The HDF5 writer requires strictly increasing
+    # NOCAS, so repeated IDs across batches are rejected at conversion.
+    # Keep present settings for provenance without requiring their presence.
+    seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else None
+    maxcas_raw = params.get("maxcas", "").split()[:1]
+    maxbch_raw = params.get("maxbch", "").split()[:1]
     try:
-        maxcas = int(params["maxcas"].split()[0])
-    except (KeyError, ValueError, IndexError) as error:
-        raise ValueError("matching PHITS input must explicitly set a positive maxcas") from error
-    if maxcas <= 0:
-        raise ValueError("matching PHITS input maxcas must be positive")
-    seed = params.get("bitrseed", "").split()[0]
+        maxcas = int(maxcas_raw[0]) if maxcas_raw else None
+        maxbch = int(maxbch_raw[0]) if maxbch_raw else None
+    except ValueError as error:
+        raise ValueError("explicit maxcas/maxbch must be integers") from error
+    if maxcas is not None and maxcas <= 0:
+        raise ValueError("explicit maxcas must be positive")
+    if maxbch is not None and maxbch <= 0:
+        raise ValueError("explicit maxbch must be positive")
     esmin = resolved_esmin_MeV(source_input, version)
     contract = {
         "phits_version": version,
@@ -355,8 +376,11 @@ def build_automatic_physics_contract(dumpall: Path) -> tuple[dict, Path, Path]:
         "phits_run_log": str(run_log),
         "phits_run_log_sha256": sha256(run_log),
         "source_seed_bits": seed,
+        "source_seed_status": "explicit" if seed else "not_explicit_in_input",
         "maxcas": maxcas,
-        "maxbch": 1,
+        "maxbch": maxbch,
+        "maxcas_status": "explicit" if maxcas is not None else "not_explicit_in_input",
+        "maxbch_status": "explicit" if maxbch is not None else "not_explicit_in_input",
         "region_id": 1000,
         "region_material": "Pb",
         "dumpall_material_id": 2,
@@ -405,7 +429,9 @@ def provenance_metadata(physics_settings: dict | None, config_path: Path | None,
         "source_energy_MeV": ",".join(format(x, ".12g") for x in physics["source_energies_MeV"]),
         "reconstruction_algorithm_version": "pb-egs5-exp-v3-score-gate",
         "validation_scope": "PHITS-3.341; Pb region 1000; unit-weight; validated EGS5 process subset",
-        "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
+        "tally_semantics": "Dumpall reconstructed locally; PHITS [t-deposit] is optional and not read; transport-step position remains a segment",
+        "t_deposit_status": "configured_not_used" if _input_section_present(source_input, "t-deposit") else "absent",
+        "source_seed_status": "explicit" if physics["source_seed_bits"] else "not_explicit_in_input",
         "driver_sha256": sha256(Path(__file__).resolve()),
     }
     if config_path is not None:
@@ -449,16 +475,21 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
             found[re.sub(r"\s+", "", key)] = value.strip()
         return found
     params = values("parameters")
-    required_params = {"icntl": "0", "maxbch": "1",
-                       "negs": "1", "e-mode": "2", "emin(12)": "0.001",
+    required_params = {"negs": "1", "e-mode": "2", "emin(12)": "0.001",
                        "emin(13)": "0.001", "emin(14)": "0.001"}
     for key, expected in required_params.items():
         got = params.get(key)
         if got is None or float(got.split()[0]) != float(expected):
             raise ValueError(f"source input must set [{key}]={expected}; found {got!r}")
-    seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else ""
-    if not re.fullmatch(r"[01]{64}", seed):
-        raise ValueError("source input must set an explicit 64-bit binary bitrseed")
+    # icntl is an execution mode; an explicitly incompatible setting still
+    # fails. Its absence is not a missing physical transport coefficient.
+    if "icntl" in params and params["icntl"].split()[:1] != ["0"]:
+        raise ValueError("explicit icntl must be 0 for a normal Dumpall transport run")
+    if "dumpall" in params and params["dumpall"].split()[:1] != ["-1"]:
+        raise ValueError("explicit dumpall must be -1 for this Dumpall format")
+    seed = params.get("bitrseed", "").split()[0] if params.get("bitrseed") else None
+    if seed is not None and not re.fullmatch(r"[01]{64}", seed):
+        raise ValueError("explicit bitrseed must contain exactly 64 binary digits")
     material_lines = sections.get("material", [])
     material_id = model["dumpall_material_id"]
     element = model["region_material"].lower()
@@ -484,28 +515,10 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
     # Force evaluation now; the exact score gate is captured in physics config and provenance.
     if not (esmin > 0.0 and esmin < float("inf")):
         raise ValueError("PHITS 3.341 esmin did not resolve to a finite positive value")
-    tally = values("t-deposit")
-    expected_tally = {"mesh": "reg", "reg": str(model["region_id"]), "part": "all", "deposit": "0",
-                      "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
-                      "emin": "0.0"}
-    for key, expected in expected_tally.items():
-        got = tally.get(key)
-        if got is None or got.lower() != expected.lower():
-            raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
-    # emax configures the scoring HISTOGRAM, not the gamma source energy or
-    # the EGS5 stopping table. Preserve the validated legacy 1.5-MeV binning
-    # (even for 2-MeV photons); for other binning demand enough histogram
-    # range to cover the largest declared source energy.
-    try:
-        tally_emax = float(tally["emax"])
-    except (KeyError, ValueError) as error:
-        raise ValueError("source input [t-deposit] requires numeric emax") from error
-    if not (math.isfinite(tally_emax) and tally_emax > 0 and
-            (tally_emax == 1.5 or tally_emax >= max(source["source_energies_MeV"]))):
-        raise ValueError(
-            "[t-deposit] emax must be 1.5 MeV (validated legacy histogram) or "
-            "cover the highest declared photon source energy"
-        )
+    # [t-deposit] affects independent PHITS tally output, NOT the Dumpall
+    # records or our reconstruction. No tally section/binning is required.
+    # Never treat its absence (or a different histogram) as a failure of the
+    # material/cutoff/Dumpall transport contract.
 
 
 def load_physics_config(path: Path, *, dumpall: Path | None = None,
@@ -816,7 +829,7 @@ def main() -> int:
                   "position_semantics": physics["position_semantics"],
                   "unsupported_processes": physics["unsupported_processes"],
                   "weights": physics["weights"], "diagnostic_mode": True,
-                  "tally_semantics": "PHITS [t-deposit] unit=3 output=deposit; transport-step position remains a segment",
+                  "tally_semantics": "Dumpall reconstructed locally; [t-deposit] optional and not used; transport-step position remains a segment",
                   "complete_semantics": "per-event scoring complete only when no in-scope scored candidate is UNRESOLVED; proven not-scored candidates are excluded from deposits and preserved in audit",
                   "dead_secondary_score_rule": "PHITS-3.341-tdepstregEVENT-QCLUSTS7-gt-eletb1-v1",
                   "dead_secondary_score_threshold_MeV": format(float(physics_data["dead_secondary_score_threshold_MeV"] if physics_data else physics["dead_secondary_score_threshold_MeV"]), ".17g"),
