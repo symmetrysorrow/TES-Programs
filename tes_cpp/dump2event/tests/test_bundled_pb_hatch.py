@@ -207,3 +207,37 @@ def test_checked_in_pb_hatch_bytes_are_exact():
     assert payload.count(b"\r\n") == 601
     assert payload.count(b"\n") == 601
     assert pb.sha256(bundled) == pb.BUNDLED_PB_TABLE_SHA256
+
+
+def test_auto_contract_optional_seed_counts_and_execution_parameters(tmp_path):
+    import re
+    dump, source = _make_run_pair(tmp_path)
+    raw = source.read_text(encoding="utf-8")
+    # Remove optional PHITS INPUT declarations. The actual Dumpall pairing
+    # and PHITS 3.341 run log still exist and are checked independently.
+    minimal = re.sub(
+        r"(?im)^\s*(?:bitrseed|maxcas|maxbch|icntl|dumpall)\s*=.*(?:\n|$)",
+        "",
+        raw,
+    )
+    source.write_text(minimal, encoding="utf-8")
+    contract, selected, run_log = pb.build_automatic_physics_contract(dump)
+    assert selected == source.resolve()
+    assert run_log == (tmp_path / "phits.out").resolve()
+    assert contract["source_seed_bits"] is None
+    assert contract["source_seed_status"] == "not_explicit_in_input"
+    assert contract["maxcas"] is None
+    assert contract["maxbch"] is None
+    assert contract["region_material"] == "Pb"
+
+
+def test_batch_count_is_metadata_not_an_energy_reconstruction_coefficient(tmp_path):
+    dump, source = _make_run_pair(tmp_path)
+    text = source.read_text(encoding="utf-8")
+    assert "maxbch = 1" in text.lower().replace("  ", " ")
+    source.write_text(text.replace("maxbch = 1", "maxbch = 2"), encoding="utf-8")
+    contract, _, _ = pb.build_automatic_physics_contract(dump)
+    assert contract["maxbch"] == 2
+    # Actual duplicate/repeated NOCAS values still fail in the streaming
+    # event writer; this test only checks that the metadata is not an
+    # artificial blocker before Dumpall is parsed.
