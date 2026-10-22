@@ -75,8 +75,12 @@ Base: `origin/main` at `5f129bfa2c4dce6c31ef7230f486c45d87655b89`
 
 ## GitHub status
 
-No changes were made to PR #6; GitHub reports it open. The CSV is only in
-this local feature branch until the branch is pushed to the Private repository.
-Record the feature commit, PR, and Actions result here after publication. Do
-not merge if the private-repository Actions runner fails before executing
-steps; report local tests separately in that case.
+The feature commit `b5fbdfe3a973f7beafe70f9c73838b4a42cdc6a7` was pushed to the
+Private repository on branch `feat/pb-hatch-private-bundle-20261022`. PR #14
+is open at https://github.com/symmetrysorrow/TES-Programs/pull/14.
+
+GitHub Actions run #119 (`39730893431`) failed. The job metadata has no steps
+or logs, matching the repository's recent pre-job runner failures; this does
+not establish a source-code test failure. The Actions service/runner cause is
+unresolved, so the PR remains unmerged pending a runnable CI result. PR #6
+remains open and Draft at head `36dec9f139918d233faf0876736f43d1bbdb965c`.
