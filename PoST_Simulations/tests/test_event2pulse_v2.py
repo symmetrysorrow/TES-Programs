@@ -182,3 +182,43 @@ def test_old_flat_v1_events_remain_usable(tmp_path, monkeypatch):
         assert list(output["event_id"].asstr()) == ["7"]
         np.testing.assert_allclose(output["ch0"][0], [1.0, 0.0])
         assert output.attrs["energy_allocation_model"] == "legacy_point_block"
+
+
+def test_interactive_action_chain_passes_new_v2_path(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import PoST_Simulation as sim
+
+    (tmp_path / "input.json").write_text(json.dumps({"position": [2]}), encoding="utf-8")
+    monkeypatch.setattr(sim, "output", str(tmp_path))
+    monkeypatch.setattr(sim, "event_root", None)
+    selected = tmp_path / "event_v2.h5"
+    called = []
+
+    monkeypatch.setattr(sim, "Dump2Event", lambda: SimpleNamespace(output_path=selected))
+    monkeypatch.setattr(sim, "Pulse_Ms", lambda: called.append(sim.event_root))
+    sim._run_selected_actions(["dump_to_event", "pulse_ms"])
+    assert called == [str(selected)]
+
+
+def test_interactive_action_chain_rejects_ambiguous_multi_position(tmp_path, monkeypatch):
+    import PoST_Simulation as sim
+
+    (tmp_path / "input.json").write_text(json.dumps({"position": [1, 2]}), encoding="utf-8")
+    monkeypatch.setattr(sim, "output", str(tmp_path))
+    monkeypatch.setattr(sim, "Dump2Event", lambda: pytest.fail("must not convert multiple positions"))
+    with pytest.raises(ValueError, match="1位置"):
+        sim._run_selected_actions(["dump_to_event", "pulse_ms"])
+
+
+def test_root_directory_accepts_new_default_converter_filename(tmp_path):
+    import PoST_Simulation as sim
+
+    directory = tmp_path / "events" / "1"
+    directory.mkdir(parents=True)
+    path = directory / "event_pb_egs5_v2.h5"
+    _write_v2(path, [_point("p", 1, 0)])
+    assert sim._resolve_ms_event_path(tmp_path / "events", 1, allow_single_file=False) == path
+
+    (directory / "event.h5").write_bytes(b"ambiguous")
+    with pytest.raises(ValueError, match="ambiguous"):
+        sim._resolve_ms_event_path(tmp_path / "events", 1, allow_single_file=False)
