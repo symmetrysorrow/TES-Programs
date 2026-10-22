@@ -40,6 +40,11 @@ from lib.tes_noise_model import operating_point as shared_tes_operating_point
 from lib.tes_noise_model import tes_johnson_voltage_asd as shared_tes_johnson_voltage_asd
 from tes_cpp import dump2event
 from tes_cpp import posi2pulse
+from tes_cpp.event2pulse import (
+    SEGMENT_ALLOCATION_MODEL,
+    event_format_version,
+    iter_v2_block_energies,
+)
 from tes_cpp.event_hdf5 import (
     iter_events as iter_hdf5_events,
     require_legacy_point_events,
@@ -2633,285 +2638,150 @@ def Dump2Event():
     return run_pb_egs5_ui(questionary, dump2event)
 
 
+def _iter_legacy_block_energies(event_path, n_abs, length_mm, *, mirror_x=False):
+    """Maintain the historical point-only HDF5 reader and its x-range behavior."""
+    for event_id, event in iter_hdf5_events(event_path):
+        if not isinstance(event, dict):
+            raise ValueError(f"event.h5 event {event_id} is not an object")
+        energies_by_block = np.zeros(n_abs, dtype=float)
+        for particle in event.values():
+            positions = particle.get("x_deposit", [])
+            energies = particle.get("E_deposit", [])
+            if len(positions) != len(energies):
+                raise ValueError(f"event.h5 event {event_id} has mismatched x_deposit and E_deposit lengths")
+            for x, energy in zip(positions, energies):
+                x, energy = float(x), float(energy)
+                if not np.isfinite(x) or not np.isfinite(energy) or energy < 0:
+                    raise ValueError(f"event {event_id} has invalid legacy deposit data")
+                if mirror_x:
+                    x = -x
+                fraction = (x * 10.0 + length_mm / 2.0) / length_mm
+                if 0.0 <= fraction <= 1.0:
+                    block_index = min(n_abs - 1, int(fraction * n_abs))
+                    energies_by_block[block_index] += energy
+        yield event_id, energies_by_block
+
+
+def _resolve_ms_event_path(root, source_position, *, allow_single_file):
+    """Accept both converter output names, without guessing between two files."""
+    if root.is_file():
+        if not allow_single_file:
+            raise ValueError("single HDF5 event input requires exactly one selected position")
+        return root
+    folder = root / str(source_position)
+    candidates = [folder / "event.h5", folder / "event_pb_egs5_v2.h5"]
+    existing = [candidate for candidate in candidates if candidate.is_file()]
+    if not existing:
+        raise FileNotFoundError(f"no event.h5 or event_pb_egs5_v2.h5 in {folder}")
+    if len(existing) > 1:
+        raise ValueError(f"ambiguous event input in {folder}: {existing}")
+    return existing[0]
+
+
 def Pulse_Ms():
+    """Generate streaming CH0/CH1 multi-site pulses from legacy or physical v2.
+
+    In HDF5 v2, POINT scores use their score coordinates, and SEGMENT energies
+    are distributed by uniform path length along the transport chord.  This
+    spatial allocation is an explicit TES modelling approximation, *not* an
+    experimentally validated intra-segment EGS5 heat density.  Deposit times
+    are not used; all block reference waveforms share the original time grid.
     """
-    Synthesize one CH0/CH1 pulse for each event in every position folder.
+    import tempfile
 
-    For each input.json position, read event.h5 from ``event_root`` and
-    write pulse_MS.h5 under ``output``. In mirrored-event mode, the
-    lower-numbered symmetric position is used as the source and its x
-    coordinates are reflected for the higher-numbered position. event.h5
-    stores event IDs as its outer keys; all deposits in one event are summed
-    into a single pulse.
-    """
+    with open(Path(output) / "input.json", "r", encoding="utf-8") as source:
+        para = json.load(source)
 
-    with open(
-        f"{output}/input.json",
-        "r",
-        encoding="utf-8",
-    ) as f:
-        para = json.load(f)
+    reference_pulses = LoadPulses()
+    n_abs = int(para["n_abs"])
+    length_mm = float(para["length"])
+    reference_energy_kev = float(para["E"])
+    if n_abs < 1 or not np.isfinite(length_mm) or length_mm <= 0:
+        raise ValueError("input.json n_abs/length must be positive")
+    if not np.isfinite(reference_energy_kev) or reference_energy_kev <= 0:
+        raise ValueError("input.json E must be positive")
+    if set(range(1, n_abs + 1)) - reference_pulses.keys():
+        raise ValueError("pulses.h5 does not contain all absorber positions")
 
-    reference_pulses = (
-        LoadPulses()
-    )
-
-    n_abs = int(
-        para["n_abs"]
-    )
-
-    length_mm = float(
-        para["length"]
-    )
-
-    reference_energy_kev = float(
-        para["E"]
-    )
-
+    time = np.asarray(reference_pulses[1]["time"], dtype=float)
+    if time.ndim != 1 or not len(time) or not np.all(np.isfinite(time)):
+        raise ValueError("reference time must be a nonempty finite vector")
+    ch0_templates, ch1_templates = [], []
+    for block in range(1, n_abs + 1):
+        reference = reference_pulses[block]
+        if not np.array_equal(time, np.asarray(reference["time"])):
+            raise ValueError(f"block {block} reference time axis differs")
+        ch0 = np.asarray(reference["ch0"], dtype=float)
+        ch1 = np.asarray(reference["ch1"], dtype=float)
+        if ch0.shape != time.shape or ch1.shape != time.shape:
+            raise ValueError(f"block {block} pulse length does not match time")
+        if not np.all(np.isfinite(ch0)) or not np.all(np.isfinite(ch1)):
+            raise ValueError(f"block {block} has a non-finite reference pulse")
+        ch0_templates.append(ch0)
+        ch1_templates.append(ch1)
+    ch0_templates = np.asarray(ch0_templates)
+    ch1_templates = np.asarray(ch1_templates)
     event_data_root = _event_data_root()
-
-    if (
-        length_mm <= 0
-        or reference_energy_kev <= 0
-    ):
-        raise ValueError(
-            "input.json length and E must be positive"
-        )
-
-    if (
-        set(
-            range(
-                1,
-                n_abs + 1,
-            )
-        )
-        - reference_pulses.keys()
-    ):
-        raise ValueError(
-            "pulses.h5 does not contain all absorber positions"
-        )
-
-    def block_from_x_deposit(
-        x_deposit_cm,
-    ):
-
-        x_mm = (
-            float(
-                x_deposit_cm
-            )
-            * 10.0
-        )
-
-        fraction = (
-            x_mm
-            + length_mm
-            / 2.0
-        ) / length_mm
-
-        if (
-            fraction < 0.0
-            or fraction > 1.0
-        ):
-            return None
-
-        return min(
-            n_abs,
-            int(
-                fraction
-                * n_abs
-            )
-            + 1,
-        )
-
-    time = (
-        reference_pulses[
-            1
-        ][
-            "time"
-        ]
-    )
-
-    sample_count = len(
-        time
-    )
-
     mirror_events = (
         _read_use_mirrored_events(para)
         if use_mirrored_events is None
         else use_mirrored_events
     )
-    for posi in tqdm.tqdm(
-        para["position"],
-        desc="MS pulse positions",
-    ):
+    positions = para["position"]
+    if event_data_root.is_file() and len(positions) != 1:
+        raise ValueError("for multiple selected positions, place a separate HDF5 file in each position directory")
 
-        position_directory = Path(output) / str(posi)
+    for posi in tqdm.tqdm(positions, desc="MS pulse positions"):
         source_position, mirror_x = _event_source_position(
-            posi,
-            n_abs,
-            mirror_events,
+            posi, n_abs, mirror_events
         )
-        event_directory = event_data_root / str(source_position)
-
-        position_directory.mkdir(parents=True, exist_ok=True)
-
-        event_path = (
-            event_directory / "event.h5"
+        event_path = _resolve_ms_event_path(
+            event_data_root, source_position, allow_single_file=len(positions) == 1
         )
-
-        output_path = (
-            position_directory / "pulse_MS.h5"
-        )
-
-        if not os.path.isfile(
-            event_path
-        ):
-            raise FileNotFoundError(
-                f"event.h5 was not found: {event_path}"
+        # Recognize v2 explicitly: iter_events(v2) yields summaries, not particles.
+        version = event_format_version(event_path)
+        if version == 2:
+            event_items = iter_v2_block_energies(
+                event_path, n_abs, length_mm, mirror_x=mirror_x
+            )
+            print(f"Pulse_Ms {posi}: SEGMENT allocation = {SEGMENT_ALLOCATION_MODEL} (approximation)")
+        else:
+            require_legacy_point_events(event_path)
+            event_items = _iter_legacy_block_energies(
+                event_path, n_abs, length_mm, mirror_x=mirror_x
             )
 
-        # Preflight before opening pulse_MS.h5. HDF5 v2 preserves continuous
-        # transport segments and cannot be treated as legacy point deposits.
-        require_legacy_point_events(event_path)
+        position_directory = Path(output) / str(posi)
+        position_directory.mkdir(parents=True, exist_ok=True)
+        output_path = position_directory / "pulse_MS.h5"
 
-        with PulseWriter(
-            output_path,
-            time,
-            para,
-        ) as f:
-
-            for (
-                index,
-                (
-                    event_id,
-                    event,
-                ),
-            ) in enumerate(
-                tqdm.tqdm(
-                    iter_hdf5_events(
-                        event_path
-                    ),
-                    desc=(
-                        f"MS pulses {posi}"
-                        if source_position == posi
-                        else f"MS pulses {posi} (source {source_position})"
-                    ),
-                    leave=False,
+        # Write atomically; invalid/incomplete v2 events must not leave a partial
+        # pulse file or overwrite previously generated results.
+        handle, temporary_name = tempfile.mkstemp(
+            prefix=".pulse_MS.", suffix=".h5", dir=position_directory
+        )
+        os.close(handle)
+        temporary_path = Path(temporary_name)
+        try:
+            with PulseWriter(temporary_path, time, para) as writer:
+                writer.file.attrs["source_event_format_version"] = version
+                writer.file.attrs["source_event_path"] = str(event_path)
+                writer.file.attrs["energy_allocation_model"] = (
+                    SEGMENT_ALLOCATION_MODEL if version == 2 else "legacy_point_block"
                 )
-            ):
-
-                energy_by_block = np.zeros(
-                    n_abs,
-                    dtype=float,
-                )
-
-                if not isinstance(
-                    event,
-                    dict,
+                writer.file.attrs["deposit_time_model"] = "simultaneous_reference_waveforms"
+                for event_id, energy_by_block in tqdm.tqdm(
+                    event_items, desc=f"MS pulses {posi}", leave=False
                 ):
-                    raise ValueError(
-                        f"event.h5 event {event_id} is not an object"
+                    weights = np.asarray(energy_by_block, dtype=float) * (
+                        1000.0 / reference_energy_kev
                     )
-
-                for particle in event.values():
-
-                    positions = particle.get(
-                        "x_deposit",
-                        [],
-                    )
-
-                    energies = particle.get(
-                        "E_deposit",
-                        [],
-                    )
-
-                    if (
-                        len(positions)
-                        != len(energies)
-                    ):
-                        raise ValueError(
-                            f"event.h5 event {event_id} has mismatched "
-                            "x_deposit and E_deposit lengths"
-                        )
-
-                    for (
-                        x_deposit,
-                        e_deposit_mev,
-                    ) in zip(
-                        positions,
-                        energies,
-                    ):
-
-                        if mirror_x:
-                            x_deposit = -float(x_deposit)
-
-                        block = block_from_x_deposit(x_deposit)
-
-                        if block is not None:
-                            energy_by_block[
-                                block - 1
-                            ] += float(
-                                e_deposit_mev
-                            )
-
-                ch0 = np.zeros(
-                    sample_count,
-                    dtype=float,
-                )
-
-                ch1 = np.zeros(
-                    sample_count,
-                    dtype=float,
-                )
-
-                for (
-                    block,
-                    energy_mev,
-                ) in enumerate(
-                    energy_by_block,
-                    start=1,
-                ):
-
-                    if energy_mev == 0.0:
-                        continue
-
-                    scale = (
-                        energy_mev
-                        * 1000.0
-                        / reference_energy_kev
-                    )
-
-                    reference = (
-                        reference_pulses[
-                            block
-                        ]
-                    )
-
-                    ch0 += (
-                        scale
-                        * np.asarray(
-                            reference[
-                                "ch0"
-                            ],
-                            dtype=float,
-                        )
-                    )
-
-                    ch1 += (
-                        scale
-                        * np.asarray(
-                            reference[
-                                "ch1"
-                            ],
-                            dtype=float,
-                        )
-                    )
-
-                f.append(
-                    event_id,
-                    ch0,
-                    ch1,
-                )
+                    ch0 = weights @ ch0_templates
+                    ch1 = weights @ ch1_templates
+                    writer.append(event_id, ch0, ch1)
+            os.replace(temporary_path, output_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
 
 
 def _legacy_MS_Noise():
