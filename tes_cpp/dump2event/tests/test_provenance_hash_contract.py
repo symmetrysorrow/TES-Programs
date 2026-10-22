@@ -66,14 +66,89 @@ def _files(tmp_path, json_text=None):
     return source, config, dumpall, table
 
 
-def test_mono_gamma_source_guard_accepts_only_supported_energy_and_explicit_photon(tmp_path):
+@pytest.mark.parametrize("energy", [0.0005, 0.511, 0.662, 1.173, 1.5, 1.999999, 2.0])
+def test_mono_gamma_accepts_positive_energy_at_or_below_2mev(tmp_path, energy):
+    source = SOURCE.replace("0.511 1", f"{energy} 1")
     path = tmp_path / "trace.inp"
-    path.write_text(SOURCE, encoding="utf-8")
+    path.write_text(source, encoding="utf-8")
     build.validate_source_input(path)
+    parsed = build.source_definition(
+        ["totfact=1", "wgt=1", "proj=photon", "e-type=8", "ne=1", f"{energy} 1"]
+    )
+    assert parsed["source_particle"] == "photon"
+    assert parsed["source_energies_MeV"] == [energy]
+
+
+@pytest.mark.parametrize("bad_energy", [
+    "0", "-0.1", "2.000001", "3", "nan", "inf", "-inf", "1e309", "not-a-number"
+])
+def test_mono_gamma_rejects_nonphysical_or_above_2mev_energy(bad_energy):
+    source = ["totfact=1", "proj=photon", "e-type=8", "ne=1", f"{bad_energy} 1"]
+    with pytest.raises(ValueError, match="energy"):
+        build.source_definition(source)
+
+
+def test_source_guards_energy_line_counts_and_unit_weights():
+    valid = ["totfact=1", "proj=photon", "e-type=8", "ne=2", "0.662 1", "1.8 1"]
+    parsed = build.source_definition(valid)
+    assert parsed["source_mode"] == "discrete-gamma-lines"
+    assert parsed["source_energies_MeV"] == [0.662, 1.8]
     with pytest.raises(ValueError, match="proj=photon"):
-        build.source_definition(["totfact=1", "e-type=8", "ne=1", "0.511 1"])
-    with pytest.raises(ValueError, match="0.511/2.0 MeV"):
-        build.source_definition(["totfact=1", "proj=photon", "e-type=8", "ne=1", "0.662 1"])
+        build.source_definition(["totfact=1", "e-type=8", "ne=1", "0.662 1"])
+    with pytest.raises(ValueError, match="ne"):
+        build.source_definition(["totfact=1", "proj=photon", "e-type=8", "ne=1",
+                                 "0.662 1", "1.8 1"])
+    for bad_weight in ("0", "0.5", "nan", "inf"):
+        with pytest.raises(ValueError, match="unit-intensity"):
+            build.source_definition(["totfact=1", "proj=photon", "e-type=8",
+                                     "ne=1", f"0.662 {bad_weight}"])
+    for bad_totfact in ("0", "2", "nan", "inf"):
+        with pytest.raises(ValueError, match="unit"):
+            build.source_definition(["totfact=" + bad_totfact, "proj=photon",
+                                     "e-type=8", "ne=1", "0.662 1"])
+    with pytest.raises(ValueError, match="unit"):
+        build.source_definition(["totfact=1", "wgt=0.5", "proj=photon",
+                                 "e-type=8", "ne=1", "0.662 1"])
+    with pytest.raises(ValueError, match="e-type=8"):
+        build.source_definition(["totfact=1", "proj=photon", "e-type=2",
+                                 "ne=1", "0.662 1"])
+
+
+def test_legacy_photon_modes_keep_provenance_names():
+    src = lambda rows: build.source_definition(rows)
+    assert src(["totfact=1", "0.511 1", "proj=photon", "e-type=8",
+                "ne=1"])["source_mode"] == "mono-gamma-511keV"
+    assert src(["totfact=1", "2.0 1", "proj=photon", "e-type=8",
+                "ne=1"])["source_mode"] == "mono-gamma-2MeV"
+    # Historic Co-60 source syntax was allowed without proj/e-type/ne.
+    assert src(["totfact=1", "1.173 1", "1.332 1"])["source_mode"] == "co60-lines"
+
+
+def test_tally_histogram_bounds_are_separate_from_incident_energy(tmp_path):
+    path = tmp_path / "trace.inp"
+    # Preserve the previously verified 2-MeV, 1.5-MeV-histogram setup.
+    path.write_text(SOURCE.replace("0.511 1", "2.0 1"), encoding="utf-8")
+    build.validate_source_input(path)
+    # A histogram spanning the full available photon energy is also valid.
+    path.write_text(SOURCE.replace("0.511 1", "2.0 1").replace(
+        "emax=1.5", "emax=2.0"), encoding="utf-8")
+    build.validate_source_input(path)
+    path.write_text(SOURCE.replace("0.511 1", "2.0 1").replace(
+        "emax=1.5", "emax=1.7"), encoding="utf-8")
+    with pytest.raises(ValueError, match="emax"):
+        build.validate_source_input(path)
+    path.write_text(SOURCE.replace("0.511 1", "0.662 1").replace(
+        "emax=1.5", "emax=0.7"), encoding="utf-8")
+    build.validate_source_input(path)
+
+
+def test_mono_gamma_energy_changes_resolved_physics_hash(tmp_path):
+    source, config, dumpall, table = _files(tmp_path)
+    base = build.provenance_metadata(dict(SETTINGS), config, source, dumpall, table)
+    source.write_text(SOURCE.replace("0.511 1", "0.662 1"), encoding="utf-8")
+    changed = build.provenance_metadata(dict(SETTINGS), config, source, dumpall, table)
+    assert changed["resolved_physics_sha256"] != base["resolved_physics_sha256"]
+    assert changed["source_energy_MeV"] == "0.662"
 
 
 def test_phits_341_esmin_default_and_explicit_score_gate_resolution(tmp_path):

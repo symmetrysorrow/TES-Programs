@@ -11,6 +11,7 @@ import csv
 import hashlib
 import itertools
 import json
+import math
 import os
 import re
 import subprocess
@@ -41,44 +42,78 @@ def canonical_json(value: object) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
+MAX_SOURCE_GAMMA_ENERGY_MEV = 2.0
+
+
 def source_definition(source_lines: list[str]) -> dict:
-    """Parse only the explicitly supported unit-intensity source definitions."""
+    """Accept only unit-weight discrete photon lines in (0, 2] MeV.
+
+    This is a source syntax gate, NOT an independent PHITS scoring validation
+    at every energy. The verified Pb HATCH material/cutoff and per-process
+    reconstruction guards still apply separately.
+    """
     values: dict[str, str] = {}
-    energies: list[tuple[float, float]] = []
+    energies: list[float] = []
     for line in source_lines:
         if "=" in line:
             key, value = line.split("=", 1)
-            values[re.sub(r"\s+", "", key).lower()] = value.strip()
+            key = re.sub(r"\s+", "", key).lower()
+            if key in values:
+                raise ValueError(f"duplicate photon source setting: {key}")
+            values[key] = value.strip()
             continue
         fields = line.split()
-        if len(fields) == 2:
-            try:
-                energies.append((float(fields[0]), float(fields[1])))
-            except ValueError:
-                continue
-    allowed = (([1.173, 1.332], "co60-lines"), ([0.511], "mono-gamma-511keV"),
-               ([2.0], "mono-gamma-2MeV"))
-    match = None
-    for expected, mode in allowed:
-        if len(energies) == len(expected) and all(
-                abs(got[0] - want) < 1e-12 and abs(got[1] - 1.0) < 1e-12
-                for got, want in zip(energies, expected)):
-            match = (expected, mode)
-            break
-    if match is None:
-        raise ValueError("source must be unit-intensity Co-60 lines or mono gamma at 0.511/2.0 MeV")
-    expected, mode = match
-    if values.get("totfact", "").split()[:1] not in (["1"], ["1.0"], ["1.00"]):
-        raise ValueError("source must set unit totfact=1")
-    if mode != "co60-lines":
-        if values.get("proj", "").lower() != "photon":
-            raise ValueError("mono gamma source must set proj=photon")
-        if values.get("e-type", "") != "8" or values.get("ne", "") != "1":
-            raise ValueError("mono gamma source must set e-type=8 and ne=1")
-        if values.get("wgt", "1").split()[:1] not in (["1"], ["1.0"], ["1.00"]):
-            raise ValueError("mono gamma source must use unit wgt=1")
-    return {"source_mode": mode, "source_particle": "photon", "source_energies_MeV": expected}
+        if len(fields) != 2:
+            raise ValueError(f"unsupported photon source energy row: {line!r}")
+        try:
+            energy, intensity = map(float, fields)
+        except ValueError as error:
+            raise ValueError(f"invalid photon source energy row: {line!r}") from error
+        if not (math.isfinite(energy) and 0.0 < energy <= MAX_SOURCE_GAMMA_ENERGY_MEV):
+            raise ValueError("photon source energy must be finite, >0 and <=2.0 MeV")
+        if not (math.isfinite(intensity) and intensity == 1.0):
+            raise ValueError("only unit-intensity photon lines are supported")
+        energies.append(energy)
+    if not energies:
+        raise ValueError("photon source must declare at least one discrete energy line")
+    try:
+        totfact = float(values.get("totfact", "nan"))
+        wgt = float(values.get("wgt", "1"))
+    except ValueError as error:
+        raise ValueError("photon source totfact and wgt must be numeric unit weights") from error
+    if not (math.isfinite(totfact) and totfact == 1.0 and
+            math.isfinite(wgt) and wgt == 1.0):
+        raise ValueError("photon source requires unit totfact=1 and wgt=1")
 
+    # Preserve historical Co-60 inputs and provenance names. Earlier versions
+    # did not require these three fields for this exact two-line source, so
+    # omitted fields are accepted ONLY for the original validated Co-60 pair.
+    co60 = energies == [1.173, 1.332]
+    required = ("proj", "e-type", "ne")
+    if not co60 and any(key not in values for key in required):
+        raise ValueError("photon source requires proj=photon, e-type=8 and ne matching its lines")
+    if "proj" in values and values["proj"].lower() != "photon":
+        raise ValueError("photon source requires proj=photon")
+    if "e-type" in values and values["e-type"] != "8":
+        raise ValueError("photon source requires e-type=8")
+    if "ne" in values:
+        try:
+            declared_ne = int(values["ne"])
+        except ValueError as error:
+            raise ValueError("photon source ne must be an integer") from error
+        if declared_ne != len(energies):
+            raise ValueError("photon source ne must equal number of energy lines")
+
+    if co60:
+        mode = "co60-lines"
+    elif energies == [0.511]:
+        mode = "mono-gamma-511keV"
+    elif energies == [2.0]:
+        mode = "mono-gamma-2MeV"
+    else:
+        mode = "mono-gamma" if len(energies) == 1 else "discrete-gamma-lines"
+    return {"source_mode": mode, "source_particle": "photon",
+            "source_energies_MeV": energies}
 
 def resolved_esmin_MeV(source_input: Path, phits_version: str) -> float:
     """Resolve PHITS's global [Parameters] esmin, using only the pinned 3.341 default."""
@@ -444,7 +479,7 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
     found_density = float(cell_matches[0].group(2))
     if found_material != material_id or found_density != -density:
         raise ValueError(f"region {region} requires material {material_id} and density -{density:g}")
-    source_definition(sections.get("source", []))
+    source = source_definition(sections.get("source", []))
     esmin = resolved_esmin_MeV(path, "3.341")
     # Force evaluation now; the exact score gate is captured in physics config and provenance.
     if not (esmin > 0.0 and esmin < float("inf")):
@@ -452,11 +487,25 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
     tally = values("t-deposit")
     expected_tally = {"mesh": "reg", "reg": str(model["region_id"]), "part": "all", "deposit": "0",
                       "unit": "3", "output": "deposit", "e-type": "2", "ne": "150",
-                      "emin": "0.0", "emax": "1.5"}
+                      "emin": "0.0"}
     for key, expected in expected_tally.items():
         got = tally.get(key)
         if got is None or got.lower() != expected.lower():
             raise ValueError(f"source input [t-deposit] {key} must be {expected!r}; found {got!r}")
+    # emax configures the scoring HISTOGRAM, not the gamma source energy or
+    # the EGS5 stopping table. Preserve the validated legacy 1.5-MeV binning
+    # (even for 2-MeV photons); for other binning demand enough histogram
+    # range to cover the largest declared source energy.
+    try:
+        tally_emax = float(tally["emax"])
+    except (KeyError, ValueError) as error:
+        raise ValueError("source input [t-deposit] requires numeric emax") from error
+    if not (math.isfinite(tally_emax) and tally_emax > 0 and
+            (tally_emax == 1.5 or tally_emax >= max(source["source_energies_MeV"]))):
+        raise ValueError(
+            "[t-deposit] emax must be 1.5 MeV (validated legacy histogram) or "
+            "cover the highest declared photon source energy"
+        )
 
 
 def load_physics_config(path: Path, *, dumpall: Path | None = None,
