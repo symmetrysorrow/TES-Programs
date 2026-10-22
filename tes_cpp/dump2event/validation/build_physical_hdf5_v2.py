@@ -76,7 +76,7 @@ def source_definition(source_lines: list[str]) -> dict:
         energies.append(energy)
     if not energies:
         raise ValueError("photon source must declare at least one discrete energy line")
-    # Omitted totfact uses PHITS normal source normalization. It is not
+    # Omitted totfact is not inferred as a PHITS tally normalization; it is not
     # consulted by the Dumpall score reconstruction. If explicitly supplied,
     # retain the unit-intensity boundary of the validated implementation.
     try:
@@ -271,11 +271,11 @@ def physics_config(source_input: Path, config_path: Path | None = None):
 
 def _input_section_present(path: Path, section: str) -> bool:
     """Report a PHITS section without making its settings part of the solver."""
-    name = re.sub(r"\\s+", "", section).lower()
+    name = re.sub(r"\s+", "", section).lower()
     for raw in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
         candidate = raw.split("#", 1)[0].strip()
         if candidate.startswith("[") and candidate.endswith("]"):
-            if re.sub(r"\\s+", "", candidate[1:-1]).lower() == name:
+            if re.sub(r"\s+", "", candidate[1:-1]).lower() == name:
                 return True
     return False
 
