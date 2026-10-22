@@ -20,8 +20,10 @@ Pb mode has been added to that CLI.
 - An opt-in validation utility streams raw PHITS records through the existing
   Pb physical ledger and raw transport exporter into HDF5 v2. It is separate
   from the ordinary converter and reports unsupported rows as UNRESOLVED.
-- `Pulse_Ms()` still preflights and rejects v2; TES block allocation and pulse
-  generation remain outside this format conversion.
+- Update (2026-10-22): `Pulse_Ms()` now supports v2 POINT and SEGMENT
+  records via a separate explicit uniform-chord allocation approximation.
+  This is a TES modelling assumption, not proof of the actual intra-segment
+  EGS5 stopping-power density; invalid/incomplete records still fail closed.
 
 ## Real PHITS checks
 
