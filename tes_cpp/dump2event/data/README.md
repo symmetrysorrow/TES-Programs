@@ -71,3 +71,45 @@ also checks `<CMake-prefix>/bin`; Python package installs check beside the
 driver and executable. Explicit `--stopping-table` / `stopping_table=...`
 paths remain supported, but are location overrides only: every path must
 match the pinned SHA-256 or conversion is refused.
+
+
+## One-time import after switching to a private GitHub repository
+
+Repository privacy must be **confirmed live** before copying the historical
+coefficients into a Git checkout. Repository visibility can change, and the
+original public-status documentation is not evidence that it is private now.
+A private GitHub repository reduces exposure but does **not automatically grant
+PHITS/EGS5 redistribution rights**. Keep access limited to licensed users and
+check the license where applicable.
+
+On the Windows main checkout, where the original HATCH CSV was previously
+verified under `dump2event_physics_validation/...`:
+
+```powershell
+cd D:\github\TES-Programs
+gh repo view --json isPrivate --jq .isPrivate
+# Must print true; stop if it is false or fails.
+python tes_cpp/dump2event/tools/import_verified_pb_table.py --confirm-private-repository
+git status --short
+git add tes_cpp/dump2event/data/pb_egs5_phits3341.csv
+git commit -m "data: bundle exact validated PHITS 3.341 Pb HATCH coefficients"
+git push
+```
+
+The importer defaults to the **exact**, previously verified local original in
+`dump2event_physics_validation/egs5_stopping_power_reconstruction/runs/n100_stopping_probe_v2/egs5_stopping_power_coefficients.csv`.
+Pass an explicit source path if operating in a separate Git worktree.
+It fails closed if GitHub CLI cannot confirm `isPrivate=true`, if the historical
+CSV is missing or different, or if its SHA-256/schema/rows do not match.
+**It copies only, never commits or pushes automatically.**
+
+After the source-controlled table exists, `pip install .` includes the table
+in the platform wheel alongside the native executable and Python driver.
+The runtime prefers the verified packaged file to a legacy user environment
+variable, so `TES_CPP_PB_HATCH_TABLE` is not required. The PoST menu also
+skips the CSV path picker. Keep the explicit `--stopping-table` override for
+diagnostics, still subject to the same SHA-256.
+
+Before the file is committed, users must still select the private CSV or use
+the environment fallback. The installer cannot bundle bytes that are not
+present in the Git checkout.
