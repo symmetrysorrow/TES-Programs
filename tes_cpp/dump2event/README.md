@@ -21,8 +21,7 @@ PHITS 3.341、Pb region 1000、Dumpall material ID 2、EGS5 medium 2、
 cmake -S tes_cpp -B tes_cpp/build -DCMAKE_BUILD_TYPE=Release
 cmake --build tes_cpp/build --config Release
 
-tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5 `
-  --physics-config pb_config.json
+tes_cpp/build/dump2event/Release/dump2event.exe input.dumpall output_v2.h5
 ```
 
 環境によって実行ファイルの位置が異なります。
@@ -41,7 +40,6 @@ from tes_cpp import dump2event
 
 result = dump2event(
     "dumpall.dat", "event_pb_egs5_v2.h5",
-    physics_config="pb_config.json",
 )
 print(result.output_path)
 ```
@@ -104,10 +102,33 @@ bundled resource takes precedence and the environment variable is unnecessary:
 
 ```powershell
 $env:TES_CPP_PB_HATCH_TABLE = 'D:\private\egs5_stopping_power_coefficients.csv'
-dump2event input.dumpall output.h5 --physics-config pb_config.json
+dump2event input.dumpall output.h5
 ```
 
 The Python API and PoST UI use the same resolver. Explicit table paths are
 also accepted only when their bytes match the pinned SHA-256 above. Missing
 or modified coefficients fail before conversion; HDF5 v2 provenance records
 the SHA-256 of the actual table used.
+
+
+## Automatic Pb run association
+
+The normal two-path command and Python call need no physics JSON or table path:
+
+```powershell
+dump2event input.dumpall output.h5
+```
+
+Automatic mode accepts exactly one sibling `*.inp` whose `[Parameters] file(15)`
+resolves to that Dumpall and whose configured `[Parameters] file(6)` log is
+present and reports `Version = 3.341`. The input must pass the existing Pb
+source, geometry, material, cutoff, tally, seed, and unit-weight checks.
+Relative run output paths follow the co-located convention: PHITS input, log,
+and Dumpall share a directory. Missing or ambiguous pairs fail with an error.
+The generated effective contract, its SHA-256, input/log hashes, source seed,
+and bundled table hash are stored in HDF5 v2 provenance.
+
+`--physics-config` and `--stopping-table` remain available for diagnostics.
+Explicit contracts still must identify the uniquely associated input and pass
+the same source and physics validators. PoST asks for Dumpall and HDF5 output;
+it only asks for a private CSV if the verified bundled table is unavailable.

@@ -55,6 +55,11 @@ def dump2event(
     private stopping-power table.  The native driver validates the PHITS
     input and fails closed for unsupported physics.
 
+    If no physics contract is provided, the native driver uniquely associates
+    a sibling PHITS input through [Parameters] file(15), verifies its run log,
+    and constructs the pinned Pb contract internally. Missing or ambiguous
+    association fails closed.
+
     Any former legacy option (including input_energy, save_all, and
     full_energy_only) raises instead of selecting an unphysical formula.
     """
@@ -62,26 +67,28 @@ def dump2event(
         raise ValueError(
             "old dump2event options were removed: "
             + ", ".join(sorted(removed_legacy_options))
-            + "; use physics_config and stopping_table for HDF5 v2"
+            + "; only PHITS-paired Pb HDF5 v2 conversion is supported"
         )
     if physics != "pb-egs5":
         raise ValueError("only PHITS 3.341 Pb/EGS5 physical reconstruction is supported")
-    if physics_config is None:
-        raise ValueError("Pb EGS5 requires physics_config")
     dump = Path(dump_path)
-    config = Path(physics_config)
+    config = Path(physics_config) if physics_config is not None else None
     table = Path(stopping_table) if stopping_table is not None else None
     output = Path(output_path)
     if output.suffix.lower() not in {".h5", ".hdf5"}:
         raise ValueError("physical dump2event output must be HDF5 v2 (.h5/.hdf5)")
-    for name, path in (("Dumpall", dump), ("physics_config", config)):
+    for name, path in (("Dumpall", dump),):
         if not path.is_file():
             raise FileNotFoundError(f"{name} does not exist: {path}")
+    if config is not None and not config.is_file():
+        raise FileNotFoundError(f"physics_config does not exist: {config}")
     if table is not None and not table.is_file():
         raise FileNotFoundError(f"explicit stopping_table does not exist: {table}")
     if output.exists():
         raise FileExistsError(f"output already exists; will not overwrite: {output}")
-    command = [_executable(), str(dump), str(output), "--physics-config", str(config)]
+    command = [_executable(), str(dump), str(output)]
+    if config is not None:
+        command += ["--physics-config", str(config)]
     if table is not None:
         command += ["--stopping-table", str(table)]
     subprocess.run(command, check=True)

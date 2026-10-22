@@ -43,22 +43,24 @@ def convert(
                          ", ".join(sorted(removed_legacy_options)))
     if physics != "pb-egs5":
         raise ValueError("only PHITS 3.341 Pb EGS5 physics is supported")
-    if physics_config is None:
-        raise ValueError("Pb EGS5 requires physics_config")
     dump = Path(dump_path)
-    config = Path(physics_config)
+    config = Path(physics_config) if physics_config is not None else None
     table = Path(stopping_table) if stopping_table is not None else None
     output = Path(output_path)
     if output.suffix.lower() not in {".h5", ".hdf5"}:
         raise ValueError("output must be HDF5 v2 (.h5/.hdf5)")
-    for name, path in (("Dumpall", dump), ("physics_config", config)):
+    for name, path in (("Dumpall", dump),):
         if not path.is_file():
             raise FileNotFoundError(f"{name} does not exist: {path}")
+    if config is not None and not config.is_file():
+        raise FileNotFoundError(f"physics_config does not exist: {config}")
     if table is not None and not table.is_file():
         raise FileNotFoundError(f"explicit stopping_table does not exist: {table}")
     if output.exists():
         raise FileExistsError(f"will not overwrite existing HDF5: {output}")
-    command = [_executable(), str(dump), str(output), "--physics-config", str(config)]
+    command = [_executable(), str(dump), str(output)]
+    if config is not None:
+        command += ["--physics-config", str(config)]
     if table is not None:
         command += ["--stopping-table", str(table)]
     subprocess.run(command, check=True)

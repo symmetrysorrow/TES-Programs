@@ -70,11 +70,10 @@ int run_pb_physics(int argc, char** argv) {
         else if (arg == "--stopping-table" && i + 1 < argc) stopping = argv[++i];
         else throw std::runtime_error("unknown or incomplete Pb physics option: " + arg);
     }
-    if (config.empty())
-        throw std::runtime_error("Pb physics mode requires --physics-config");
     const std::filesystem::path input(argv[1]), output(argv[2]);
     if (!std::filesystem::is_regular_file(input)) throw std::runtime_error("Dumpall input does not exist");
-    if (!std::filesystem::is_regular_file(config)) throw std::runtime_error("physics config does not exist");
+    if (!config.empty() && !std::filesystem::is_regular_file(config))
+        throw std::runtime_error("physics config does not exist");
     if (!stopping.empty() && !std::filesystem::is_regular_file(stopping))
         throw std::runtime_error("explicit stopping table does not exist");
     if (output.extension() != ".h5" && output.extension() != ".hdf5")
@@ -95,9 +94,12 @@ int run_pb_physics(int argc, char** argv) {
     const std::string python = configured_python ? configured_python : "python3";
 #endif
     std::vector<std::string> args{python, driver.string(), "--dumpall", input.string(),
-        "--physics-config", config,
         "--reconstructor", reconstructor.string(), "--track-exporter", exporter.string(),
         "--converter-executable", exe.string(), "--output", output.string()};
+    if (!config.empty()) {
+        args.emplace_back("--physics-config");
+        args.push_back(config);
+    }
     if (!stopping.empty()) {
         args.emplace_back("--stopping-table");
         args.push_back(stopping);

@@ -31,9 +31,15 @@ copyright notice](https://rcwww.kek.jp/research/egs/slac730-page2.pdf).
 The normal invocation is:
 
 ```powershell
-dump2event input.dumpall output.h5 --physics-config pb_config.json
+dump2event input.dumpall output.h5
 ```
 
+The standard command needs only the Dumpall and new HDF5 paths. The native driver
+uniquely associates one sibling PHITS input through `file(15)`, checks its
+`file(6)` run log reports PHITS 3.341, and validates run-specific seed/source,
+cutoff, material, geometry, tally and weight settings. Ambiguous or missing
+associations fail closed; no physics JSON is generated on disk. The exact
+generated effective contract and SHA-256 are saved in HDF5 v2 provenance.
 The installed package's console entry point invokes the bundled native CLI.
 The CLI locates the HDF5 v2 driver; the driver resolves the exact bundled CSV
 and verifies its SHA-256. `TES_CPP_PB_HATCH_TABLE`, `--stopping-table`, and the
@@ -49,7 +55,7 @@ Base: `origin/main` at `5f129bfa2c4dce6c31ef7230f486c45d87655b89`
 
 - MSVC 19.51.36260 Release build: passed.
 - CTest: 1/1 passed.
-- Focused dump2event Python/UI tests: 81 passed, 7 skipped, 5 subtests passed.
+- Focused dump2event Python/UI tests before the automatic-association follow-up: 81 passed, 7 skipped, 5 subtests passed.
 - `pip install .` in a clean Python 3.14 virtual environment: passed. The
   Windows wheel (`tes_cpp_dump2event-0.1.0-cp314-cp314-win_amd64.whl`,
   352,834 bytes, SHA-256 `ad9094854a2d76c559bdcdb85477f91de94ffdd6cb2c11c31bfd1541448175d7`)
@@ -84,3 +90,38 @@ or logs, matching the repository's recent pre-job runner failures; this does
 not establish a source-code test failure. The Actions service/runner cause is
 unresolved, so the PR remains unmerged pending a runnable CI result. PR #6
 remains open and Draft at head `36dec9f139918d233faf0876736f43d1bbdb965c`.
+
+
+## Automatic Pb settings follow-up (2026-10-22)
+
+The default CLI and Python API now take only Dumpall and output paths. The
+converter scans sibling `*.inp` files and accepts exactly one whose `[Parameters]
+file(15)` resolves to the selected Dumpall. The referenced `[Parameters] file(6)`
+log must exist and contain exactly `Version = 3.341`. The selected input then
+passes the existing Pb source, region/material/density, cutoff, tally, `esmin`,
+seed, `maxcas`/`maxbch`, and unit-weight gates. Explicit physics JSON remains
+available; when used, it must point to the unique input associated with that
+Dumpall and the run-log version must match. No missing value is guessed.
+
+The internally generated contract JSON and its SHA-256 are added to HDF5 v2
+provenance alongside resolved-physics and source/table hashes. The normal Python
+API is `tes_cpp.dump2event.dump2event(dump_path, output_path)`; the PoST dialog
+no longer asks for a physics JSON and only offers a private CSV picker when the
+verified bundled table is unavailable. A wheel-layout test found and fixed the
+CMake/scikit-build table path so both the installed driver and UI locate the
+resource under `<prefix>/tes_cpp/bin`.
+
+Verification for this follow-up:
+
+- Windows MSVC 19.51 Release build: passed; CTest 1/1 passed.
+- Focused dump2event pytest: 84 passed, 7 skipped, 5 subtests passed.
+- `pip install . --no-deps --target ...` from `tes_cpp/`: passed; wheel size
+  519,284 bytes, SHA-256 `10da46bb9a7c54fccd2b0d54a57f780bc077b1357620ca3d98981975bc6f0480`.
+- Installed native CLI invoked with exactly two paths on a software-only fixture.
+  It resolved the sibling input, PHITS log, private table, and generated
+  provenance, then correctly rejected the deliberately invalid fake Dumpall
+  at transport-record parsing. This is an auto-configuration/dispatch smoke
+  test, **not** a successful conversion of physical data.
+- No real Dumpall was converted in this follow-up. The synthetic CLI smoke exit
+  code was 1 with `Dumpall line 1 ... NCOL=0: invalid or non-finite numeric token`.
+  Full physical conversion remains unverified by this change.

@@ -64,13 +64,52 @@ def test_exact_sha_pin_unchanged():
     )
 
 
+def _make_run_pair(folder, input_name="trace.inp"):
+    template = (Path(__file__).resolve().parents[1] / "validation" /
+                "positron_10000_closure" / "trace_10000_diagnostic_template.inp")
+    text = template.read_text(encoding="utf-8-sig")
+    text = text.replace("file(15) = dumpall.dat", "file(15) = dumpall.dat")
+    source = folder / input_name
+    source.write_text(text, encoding="utf-8")
+    (folder / "phits.out").write_text("PHITS run\nVersion = 3.341\n", encoding="utf-8")
+    dump = folder / "dumpall.dat"
+    dump.write_text("software fixture only", encoding="ascii")
+    return dump, source
+
+
+def test_automatic_contract_uses_unique_same_folder_input_and_run_log(tmp_path):
+    dump, source = _make_run_pair(tmp_path)
+    contract, selected, run_log = pb.build_automatic_physics_contract(dump)
+    assert selected == source.resolve()
+    assert run_log == (tmp_path / "phits.out").resolve()
+    assert contract["phits_version"] == "3.341"
+    assert contract["source_seed_bits"]
+    assert contract["esmin_MeV"] == 0.001
+    assert contract["region_id"] == 1000
+    assert contract["region_material"] == "Pb"
+
+
+def test_automatic_pair_rejects_ambiguous_input_candidates(tmp_path):
+    dump, _ = _make_run_pair(tmp_path)
+    _make_run_pair(tmp_path, "another.inp")
+    with pytest.raises(ValueError, match="multiple matching inputs"):
+        pb.resolve_run_pair(dump)
+
+
+def test_automatic_pair_rejects_wrong_runtime_version(tmp_path):
+    dump, _ = _make_run_pair(tmp_path)
+    (tmp_path / "phits.out").write_text("Version = 3.35\n", encoding="ascii")
+    with pytest.raises(ValueError, match="Version = 3.341"):
+        pb.resolve_run_pair(dump)
+
+
 def test_cmake_installed_bin_path_is_discovered(monkeypatch, tmp_path):
     prefix = tmp_path / "prefix"
     driver_dir = prefix / "share" / "tes_cpp_dump2event"
     driver_dir.mkdir(parents=True)
     driver = driver_dir / "build_physical_hdf5_v2.py"
     driver.write_text("", encoding="utf-8")
-    table = prefix / "tes_cpp_dump2event" / "bin" / pb.BUNDLED_PB_TABLE_NAME
+    table = prefix / "tes_cpp" / "bin" / pb.BUNDLED_PB_TABLE_NAME
     table.parent.mkdir(parents=True)
     table.write_text("test-only path fixture; never physics data", encoding="utf-8")
     monkeypatch.setattr(pb, "__file__", str(driver))
