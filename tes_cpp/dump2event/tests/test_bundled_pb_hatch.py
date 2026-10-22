@@ -86,3 +86,54 @@ def test_importer_refuses_fake_coefficients(tmp_path):
     fake.write_text("medium,medname,lelke\n2,PB,1\n", encoding="utf-8")
     with pytest.raises(ValueError, match="SHA-256"):
         importer.validate_original(fake)
+
+
+
+def test_bundled_table_precedes_stale_environment_override(monkeypatch, tmp_path):
+    driver = tmp_path / "validation" / "build_physical_hdf5_v2.py"
+    driver.parent.mkdir(parents=True)
+    driver.write_text("", encoding="utf-8")
+    packaged = driver.parent / pb.BUNDLED_PB_TABLE_NAME
+    packaged.write_text("synthetic package fixture", encoding="utf-8")
+    stale = tmp_path / "stale.csv"
+    stale.write_text("an invalid legacy private path", encoding="utf-8")
+    monkeypatch.setattr(pb, "__file__", str(driver))
+    monkeypatch.setenv("TES_CPP_PB_HATCH_TABLE", str(stale))
+    # Stub digest only on the selected packaged fixture; never used in physics.
+    original_sha = pb.sha256
+    monkeypatch.setattr(
+        pb, "sha256",
+        lambda path: pb.BUNDLED_PB_TABLE_SHA256 if Path(path) == packaged else original_sha(path),
+    )
+    assert pb.resolve_stopping_table(None) == packaged
+
+
+def test_private_importer_requires_confirmed_github_visibility(monkeypatch):
+    import importlib.util
+    from subprocess import CompletedProcess
+    target = Path(__file__).resolve().parents[1] / "tools" / "import_verified_pb_table.py"
+    spec = importlib.util.spec_from_file_location("pb_private_import", target)
+    importer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(importer)
+    monkeypatch.setattr(importer.subprocess, "run", lambda *args, **kwargs:
+                        CompletedProcess(args[0], 0, stdout="false"))
+    with pytest.raises(RuntimeError, match="NOT private"):
+        importer.require_private_github_repository()
+    monkeypatch.setattr(importer.subprocess, "run", lambda *args, **kwargs:
+                        CompletedProcess(args[0], 0, stdout="true"))
+    importer.require_private_github_repository()
+
+
+def test_private_importer_rejects_missing_github_cli(monkeypatch):
+    import importlib.util
+    target = Path(__file__).resolve().parents[1] / "tools" / "import_verified_pb_table.py"
+    spec = importlib.util.spec_from_file_location("pb_private_import_missing_gh", target)
+    importer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(importer)
+
+    def missing_gh(*args, **kwargs):
+        raise FileNotFoundError("gh missing")
+
+    monkeypatch.setattr(importer.subprocess, "run", missing_gh)
+    with pytest.raises(RuntimeError, match="Cannot confirm GitHub privacy"):
+        importer.require_private_github_repository()

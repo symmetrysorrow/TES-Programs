@@ -87,16 +87,18 @@ def _bundled_table_present() -> bool:
     """Report an installed private/bundled table only after its pinned hash matches."""
     name = "pb_egs5_phits3341.csv"
     expected = "20fd86eb0b57483bd19f20a8388d2c1ecb0431a02fa99f0933e2c3c4748514e9"
-    configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
     repo_path = Path(__file__).resolve().parents[2] / "tes_cpp" / "dump2event" / "data" / name
-    candidates = ([Path(configured).expanduser()] if configured else [])
-    candidates.append(repo_path)
+    candidates = [repo_path]
     try:
         from importlib.resources import files
     except (ImportError, ModuleNotFoundError):
         pass
     else:
         candidates.append(Path(str(files("tes_cpp").joinpath("bin", name))))
+    # Environment configuration is an optional backward-compatible fallback.
+    configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
+    if configured:
+        candidates.append(Path(configured).expanduser())
     for candidate in candidates:
         if candidate.is_file():
             digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
