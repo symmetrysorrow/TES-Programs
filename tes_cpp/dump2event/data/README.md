@@ -52,3 +52,22 @@ explicitly via CLI or Python as before.
 
 Pb only; no Bi data, fake numbers, PHITS source files or other
 restricted output are part of this resource.
+
+## Private local installation (no public CSV copy)
+
+Set `TES_CPP_PB_HATCH_TABLE` once in the user's environment to the exact
+verified private CSV. This does not modify the source file. For example in
+PowerShell:
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+  "TES_CPP_PB_HATCH_TABLE",
+  "D:\private\egs5_stopping_power_coefficients.csv",
+  "User")
+```
+
+The CLI, Python driver and PoST menu discover this setting. A CMake install
+also checks `<CMake-prefix>/bin`; Python package installs check beside the
+driver and executable. Explicit `--stopping-table` / `stopping_table=...`
+paths remain supported, but are location overrides only: every path must
+match the pinned SHA-256 or conversion is refused.

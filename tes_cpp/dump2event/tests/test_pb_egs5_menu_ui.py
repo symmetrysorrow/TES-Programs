@@ -127,16 +127,15 @@ def test_pb_ui_rejects_wrong_schema_and_unresolved_hdf5(tmp_path):
         _inspect_v2(output)
 
 
-def test_bi_menu_rejects_unvalidated_material_before_conversion(tmp_path):
+def test_ui_rejects_non_pb_material_before_conversion(tmp_path):
     raw, config, table, output = _inputs(tmp_path)
     config.write_text(json.dumps({"phits_input": "source.inp", "region_material": "Bi"}))
-    with pytest.raises(ValueError, match="Bi.*未完了"):
+    with pytest.raises(ValueError, match="Pbのみ利用可能"):
         run_pb_egs5_ui(
             FakeQuestionary([raw, config]),
-            lambda *args, **kwargs: pytest.fail("Bi must not enter converter yet"),
+            lambda *args, **kwargs: pytest.fail("non-Pb must not enter converter"),
         )
     assert not output.exists()
-
 
 def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkeypatch):
     import PoST_Simulations.lib.pb_egs5_ui as ui
@@ -154,3 +153,12 @@ def test_pb_ui_uses_bundled_table_without_picker_when_installed(tmp_path, monkey
     assert len(dialog.default_paths) == 3  # no stopping-table picker
     assert "stopping_table" not in kwargs_seen[0]
     assert kwargs_seen[0]["physics_config"] == config.resolve()
+
+
+def test_modified_private_table_environment_setting_fails_closed(tmp_path, monkeypatch):
+    import PoST_Simulations.lib.pb_egs5_ui as ui
+    _, _, table, _ = _inputs(tmp_path)
+    table.write_bytes(b"private but not valid pinned bytes")
+    monkeypatch.setenv("TES_CPP_PB_HATCH_TABLE", str(table))
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        ui._bundled_table_present()
