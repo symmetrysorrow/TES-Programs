@@ -17,8 +17,10 @@ namespace {
 void usage() {
     std::cerr << "Usage (PHITS 3.341 / Pb EGS5, HDF5 v2 only):\n"
                  "  dump2event <dumpall> <output.h5>\n"
-                 "    --physics-config <pb_config.json> [--stopping-table <pb_egs5.csv>]\n"
+                 "    [--physics-config <pb_config.json>] [--stopping-table <pb_egs5.csv>]\n"
                  "    [--physics pb-egs5] [--hdf5-version 2]\n"
+                 "  Without --physics-config, identify one sibling PHITS *.inp by\n"
+                 "  [Parameters] file(15), and verify PHITS 3.341 via file(6) log.\n"
                  "  The legacy reaction-difference formula and JSON/HDF5 v1 output\n"
                  "  have been removed. Only the validated Pb unit-weight contract\n"
                  "  is supported; invalid or unsupported inputs fail closed.\n";
