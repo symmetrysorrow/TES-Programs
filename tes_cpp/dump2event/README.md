@@ -57,9 +57,19 @@ Pythonパッケージから利用する場合はリポジトリルートの`pyth
 
 HDF5 v2はPOINT／SEGMENT／UNRESOLVED、PHITS代表スコア点・区間端点、
 履歴・粒子ID・provenanceを区別して保存します。
-**`Pulse_Ms()`は未変更の旧点付与モデルであり、HDF5 v2を明示拒否します。**
-新しい`event2pulse`がPOINT/SEGMENTの空間熱配分を検証して実装するまで
-自動接続しません。全吸収判定も証明されていない場合はundeterminedです。
+**`Pulse_Ms()`はHDF5 v2のPOINT/SEGMENTを読み込めます。**
+POINTはPHITSスコア座標で、SEGMENTは始点〜終点の線分を各absorber blockと
+交差させ、交差した線分長に比例する割合でエネルギーを分配します。
+これは線分内の停止能(dE/ds)が一様という**明示的な近似**であり、
+EGS5の真の空間熱分布を検証したことにはなりません。
+不完全/未解決イベント、Pb以外の物質、座標範囲外depositは拒否します。
+全吸収判定がundeterminedでも、既知の付与エネルギーパルスは計算できます。
+
+各位置のイベントファイルは`<event-root>/<posi>/event.h5`または
+`<event-root>/<posi>/event_pb_egs5_v2.h5`に置いてください。1位置のみなら
+`--event-root`にHDF5ファイル自体を指定可能です。複数位置を一度に
+dump2event→Pulse_Msへ渡す場合は、先に位置ごとに変換してください。
+出力`pulse_MS.h5`の属性に空間配分モデルを記録します。
 
 スキーマは`HDF5_V2_SCHEMA.md`、物理検証・適用範囲は
 `validation/dead_secondary_threshold_and_gamma_10k/FINAL_DECISION.md`を参照してください。
