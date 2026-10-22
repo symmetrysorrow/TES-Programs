@@ -510,7 +510,7 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
     found_density = float(cell_matches[0].group(2))
     if found_material != material_id or found_density != -density:
         raise ValueError(f"region {region} requires material {material_id} and density -{density:g}")
-    source = source_definition(sections.get("source", []))
+    source_definition(sections.get("source", []))
     esmin = resolved_esmin_MeV(path, "3.341")
     # Force evaluation now; the exact score gate is captured in physics config and provenance.
     if not (esmin > 0.0 and esmin < float("inf")):
