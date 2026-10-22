@@ -545,16 +545,18 @@ def resolve_stopping_table(explicit: Path | None) -> Path:
     if explicit is not None:
         candidates = [explicit]
     else:
-        candidates = []
-        configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
-        if configured:
-            candidates.append(Path(configured).expanduser())
+        # Prefer the immutable, SHA-pinned distribution resource over any old
+        # per-user environment variable. The environment path is compatibility
+        # fallback only when no bundled table is installed.
         home = Path(__file__).resolve().parent
-        candidates.extend([
+        candidates = [
             home / BUNDLED_PB_TABLE_NAME,  # Python package install beside driver
             home.parent / "data" / BUNDLED_PB_TABLE_NAME,  # repository source tree
             home.parent.parent / "bin" / BUNDLED_PB_TABLE_NAME,  # CMake prefix/bin
-        ])
+        ]
+        configured = os.environ.get("TES_CPP_PB_HATCH_TABLE")
+        if configured:
+            candidates.append(Path(configured).expanduser())
     for candidate in candidates:
         if candidate.is_file():
             actual = sha256(candidate)
