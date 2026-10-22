@@ -142,3 +142,38 @@ and bundled table hash are stored in HDF5 v2 provenance.
 Explicit contracts still must identify the uniquely associated input and pass
 the same source and physics validators. PoST asks for Dumpall and HDF5 output;
 it only asks for a private CSV if the verified bundled table is unavailable.
+
+
+## Gamma-ray source energy scope: (0, 2] MeV
+
+The source-input validator accepts **any finite, positive incident photon energy
+up to and including 2.0 MeV**. A previously hardcoded allowlist
+(Co-60 1.173/1.332 MeV, 0.511 MeV, 2.0 MeV) no longer blocks intermediate
+energies such as 0.662 or 0.663 MeV. These are **input-syntax** acceptances,
+not proof of new PHITS same-run deposit accuracy at each energy.
+
+For generic discrete photon lines, require `[Source] proj=photon`,
+`e-type=8`, integer `ne` equal to the actual number of energy lines,
+`totfact=1`, `wgt=1` if provided, and intensity **1 on every line**.
+Non-finite, zero, negative, and >2-MeV energies fail closed. The exact
+historical two-line Co-60 syntax is retained for backward compatibility.
+Source energies and modes remain part of the resolved physics provenance.
+
+`[t-deposit]` is a separate **deposit-energy histogram** setting, not the
+input gamma energy and not the EGS5 electron/positron stopping-power table.
+The validated legacy `emax=1.5` histogram stays acceptable, including for
+2-MeV input, to avoid invalidating past runs; it does **not** cover deposits
+above 1.5 MeV in the histogram. When choosing a new histogram bin range,
+set `emax` at or above the largest source photon energy (e.g.
+`emax=2.0` for 2-MeV input). The `[t-deposit]` region, output, unit,
+and other established strict gates are unchanged.
+
+The existing source-input pairing (same-folder `file(15)` Dumpall and
+`file(6)` PHITS 3.341 log), explicit 64-bit `bitrseed`, Pb material
+and density, 1-keV charged cutoffs, SHA-pinned Pb HATCH table,
+unit-weight requirements, and unsupported-process `UNRESOLVED` handling
+continue to apply. In particular a `dump_662` run with no matching
+`[t-deposit]` or seed **still fails**, regardless of its accepted energy.
+
+Physical scoring equivalence was demonstrated for previously validated
+inputs, not automatically for all gamma energies in this numeric interval.
