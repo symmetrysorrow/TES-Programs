@@ -795,11 +795,15 @@ def main() -> int:
         elif args.source_input:
             if not args.source_input.is_file():
                 raise FileNotFoundError(args.source_input)
-            validate_source_input(args.source_input)
-            paired_input, _run_log, _version = resolve_run_pair(args.dumpall)
+            # Follow the same canonical validated contract as automatic mode.
+            # Previously this branch left physics_data=None and crashed when
+            # building the HDF5 material provenance.
+            paired_contract, paired_input, _run_log = build_automatic_physics_contract(args.dumpall)
             if paired_input != args.source_input.resolve():
                 raise ValueError("--source-input does not match the unique PHITS input associated with Dumpall")
-            physics_data = None
+            args.source_input = paired_input
+            automatic_contract = paired_contract
+            physics_data = paired_contract
         else:
             automatic_contract, args.source_input, run_log = build_automatic_physics_contract(args.dumpall)
             physics_data = automatic_contract
