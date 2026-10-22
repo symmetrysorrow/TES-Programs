@@ -568,7 +568,7 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
     # converter's supported mode. A different effective cutoff is not silently
     # treated as the validated 1 keV setting.
     mode_values = {"negs": ("1", "-1"), "e-mode": ("2", "0"),
-                   "icntl": ("0", "0"), "dumpall": ("-1", "0")}
+                   "icntl": ("0", "0")}
     for key, (expected, default) in mode_values.items():
         raw = params.get(key)
         actual = raw.split()[0] if raw is not None else default
@@ -577,6 +577,10 @@ def validate_source_input(path: Path, contract: dict | None = None) -> None:
             raise ValueError(
                 f"effective [{key}]={actual} ({source}); this conversion requires {expected}"
             )
+    # Existing Dumpall files remain usable when the source input omits the
+    # output-mode declaration. If declared, it must match this format.
+    if "dumpall" in params and _parameter_number(params["dumpall"], "dumpall") != -1.0:
+        raise ValueError("explicit dumpall must be -1 for this Dumpall format")
     cutoffs = resolved_egs5_cutoffs(path, "3.341")
     cutoff_keys = {12: "electron_cutoff_MeV", 13: "positron_cutoff_MeV", 14: "photon_cutoff_MeV"}
     for index, expected in VALIDATED_EGS5_CUTOFFS_MEV.items():
