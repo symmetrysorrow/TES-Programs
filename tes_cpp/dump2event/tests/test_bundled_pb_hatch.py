@@ -197,3 +197,13 @@ def test_private_importer_rejects_missing_github_cli(monkeypatch):
     monkeypatch.setattr(importer.subprocess, "run", missing_gh)
     with pytest.raises(RuntimeError, match="Cannot confirm GitHub privacy"):
         importer.require_private_github_repository()
+
+
+def test_checked_in_pb_hatch_bytes_are_exact():
+    """Reject accidental CRLF normalization even when all CSV values stay unchanged."""
+    bundled = Path(__file__).resolve().parents[1] / "data" / pb.BUNDLED_PB_TABLE_NAME
+    payload = bundled.read_bytes()
+    assert len(payload) == 130_754
+    assert payload.count(b"\r\n") == 601
+    assert payload.count(b"\n") == 601
+    assert pb.sha256(bundled) == pb.BUNDLED_PB_TABLE_SHA256
