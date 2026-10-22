@@ -116,11 +116,11 @@ def test_private_importer_requires_confirmed_github_visibility(monkeypatch):
     importer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(importer)
     monkeypatch.setattr(importer.subprocess, "run", lambda *args, **kwargs:
-                        CompletedProcess(args[0], 0, stdout="false\\n"))
+                        CompletedProcess(args[0], 0, stdout="false"))
     with pytest.raises(RuntimeError, match="NOT private"):
         importer.require_private_github_repository()
     monkeypatch.setattr(importer.subprocess, "run", lambda *args, **kwargs:
-                        CompletedProcess(args[0], 0, stdout="true\\n"))
+                        CompletedProcess(args[0], 0, stdout="true"))
     importer.require_private_github_repository()
 
 
