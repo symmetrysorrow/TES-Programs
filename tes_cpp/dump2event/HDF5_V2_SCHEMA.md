@@ -1,8 +1,9 @@
 # dump2event HDF5 v2 schema
 
 Status: experimental storage/API layer. This schema preserves physics evidence;
-it does not claim that every PHITS process is reconstructed or ready for
-`Pulse_Ms`.
+it does not claim that every PHITS process or the intra-SEGMENT stopping-power
+profile is reconstructed. Pulse_Ms can now use it with an explicitly documented
+uniform-chord TES spatial-allocation approximation.
 
 ## File identity and compatibility
 
@@ -130,10 +131,19 @@ contract JSON, matching Pb HATCH coefficients, and valid Dumpall are mandatory;
 unsupported conditions fail closed. Explicit `--physics pb-egs5` remains an
 accepted alias but no longer selects a different conversion algorithm.
 
-The legacy v1/hierarchical **readers** remain temporarily available for old
-data and for the preexisting `Pulse_Ms` workflow; they are not alternate
-dump2event output modes. Do not interpret historical legacy files as v2.
+The legacy v1/hierarchical **readers** remain available for old data and
+`Pulse_Ms`; they are not alternate dump2event output modes.
 
-`Pulse_Ms()` currently consumes point-deposit legacy files. It preflights the
-format and rejects v2 before opening its pulse output. Segment-to-block
-allocation needs a separately validated `event2pulse` model.
+`PoST_Simulations/PoST_Simulation.py` now detects HDF5 v2 and reads
+`/events` summaries and `/deposits` as two aligned streams. POINT energy is
+assigned by `score_xyz_cm[0]`. SEGMENT energy is allocated to the absorber
+blocks intersected by its straight start-to-end chord, proportional to chord
+path length in each block (uniform dE/ds assumption). For projected zero-length
+chords, it remains in one block. The separate PHITS score coordinate is **not**
+treated as a point substitute for the segment. This is an **explicit modelling
+approximation**, not a validated microscopic EGS5 energy-loss distribution.
+The source event's Pb material, region 1000, MeV/cm units, event completeness,
+energy totals and coordinate range must validate or no new pulse is committed.
+All deposits use the same reference-pulse time origin; per-deposit time delays
+are not reconstructed. `pulse_MS.h5` records `energy_allocation_model` and
+`source_event_format_version` for downstream interpretation.

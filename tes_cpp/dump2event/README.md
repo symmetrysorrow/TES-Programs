@@ -57,9 +57,19 @@ Pythonパッケージから利用する場合はリポジトリルートの`pyth
 
 HDF5 v2はPOINT／SEGMENT／UNRESOLVED、PHITS代表スコア点・区間端点、
 履歴・粒子ID・provenanceを区別して保存します。
-**`Pulse_Ms()`は未変更の旧点付与モデルであり、HDF5 v2を明示拒否します。**
-新しい`event2pulse`がPOINT/SEGMENTの空間熱配分を検証して実装するまで
-自動接続しません。全吸収判定も証明されていない場合はundeterminedです。
+**`Pulse_Ms()`はHDF5 v2のPOINT/SEGMENTを読み込めます。**
+POINTはPHITSスコア座標で、SEGMENTは始点〜終点の線分を各absorber blockと
+交差させ、交差した線分長に比例する割合でエネルギーを分配します。
+これは線分内の停止能(dE/ds)が一様という**明示的な近似**であり、
+EGS5の真の空間熱分布を検証したことにはなりません。
+不完全/未解決イベント、Pb以外の物質、座標範囲外depositは拒否します。
+全吸収判定がundeterminedでも、既知の付与エネルギーパルスは計算できます。
+
+各位置のイベントファイルは`<event-root>/<posi>/event.h5`または
+`<event-root>/<posi>/event_pb_egs5_v2.h5`に置いてください。1位置のみなら
+`--event-root`にHDF5ファイル自体を指定可能です。複数位置を一度に
+dump2event→Pulse_Msへ渡す場合は、先に位置ごとに変換してください。
+出力`pulse_MS.h5`の属性に空間配分モデルを記録します。
 
 スキーマは`HDF5_V2_SCHEMA.md`、物理検証・適用範囲は
 `validation/dead_secondary_threshold_and_gamma_10k/FINAL_DECISION.md`を参照してください。
@@ -119,9 +129,18 @@ The normal two-path command and Python call need no physics JSON or table path:
 dump2event input.dumpall output.h5
 ```
 
-Automatic mode accepts exactly one sibling `*.inp` whose `[Parameters] file(15)`
-resolves to that Dumpall and whose configured `[Parameters] file(6)` log is
-present and reports `Version = 3.341`. The input must pass Pb source type/energy, geometry, material, charged-particle transport mode,
+Automatic mode accepts exactly one sibling `*.inp` whose explicit or
+PHITS-reported effective `[Parameters] file(15)` resolves to that Dumpall and
+whose configured `file(6)` log (default `phits.out`) reports `Version = 3.341`.
+PHITS defaults are resolved before validation. For EGS5, omitted
+`emin(12:14)` values use the PHITS defaults for `negs=1/2`. PHITS 3.341
+also aligns `emin(12)` to `emin(13)` when they differ; the resolver records
+that effective value and its source. In the `dump_662` input, explicit
+`emin(13)=0.001` causes omitted `emin(12)` to be adjusted to 0.001 MeV, which
+matches the validated electron cutoff. If both charged cutoffs are omitted,
+their 0.1 MeV defaults remain outside the current validated scope and are
+rejected. See the [PHITS EGS5 parameter defaults](https://phits.jaea.go.jp/manual/PHITS-en/chapters/sections/parameters/parameters_13.html).
+The input must pass Pb source type/energy, geometry, material, charged-particle transport mode,
 cutoff, and unit-weight checks; `[t-deposit]`, an explicit `bitrseed`,
 `maxcas`, and `maxbch=1` are no longer mandatory.
 Relative run output paths follow the co-located convention: PHITS input, log,
@@ -159,7 +178,7 @@ set `emax` at or above the largest source photon energy (e.g.
 `emax=2.0` for 2-MeV input). The `[t-deposit]` region, output, unit,
 and other established strict gates are unchanged.
 
-The existing source-input pairing (same-folder `file(15)` Dumpall and
+The existing source-input pairing (same-folder effective `file(15)` Dumpall and
 `file(6)` PHITS 3.341 log), explicit 64-bit `bitrseed`, Pb material
 and density, 1-keV charged cutoffs, SHA-pinned Pb HATCH table,
 unit-weight requirements, and unsupported-process `UNRESOLVED` handling
@@ -176,8 +195,9 @@ The Dumpall-derived energy calculation does **not** consume a PHITS
 `[t-deposit]` file, any `[t-deposit]` histogram, the PHITS random
 `bitrseed`, or the requested number of histories (`maxcas`). Those are
 no longer mandatory declarations. `maxbch` is metadata only; the event
-exporter enforces **strictly increasing NOCAS identifiers** and rejects
-nonunique histories rather than guessing how to combine batches.
+exporter preserves Dumpall event order; NOCAS identifiers must be positive and
+unique, but they do not need to be numerically increasing. Duplicate
+identifiers are rejected rather than guessed to represent different batches.
 
 The `[t-deposit]` section may be absent or contain a different histogram
 specification: its presence and binning do not alter the reconstructed

@@ -210,8 +210,9 @@ def require_legacy_point_events(path):
             raise ValueError(f"{path} is not a {FORMAT_NAME} HDF5 file")
         if version is not None and int(version) == 2:
             raise ValueError(
-                "Pulse_Ms cannot consume HDF5 v2 transport/deposit records yet; "
-                "SEGMENT allocation requires a separately validated event2pulse model"
+                "The legacy point-deposit adapter cannot read HDF5 v2; "
+                "Pulse_Ms uses tes_cpp.event2pulse for POINT/SEGMENT allocation "
+                "with an explicit uniform-chord approximation"
             )
         if version is not None and int(version) != 1:
             raise ValueError(f"unsupported event HDF5 format_version={version}")
